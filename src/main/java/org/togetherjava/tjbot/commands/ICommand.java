@@ -10,7 +10,7 @@ import org.togetherjava.tjbot.commands.example.CommandExample;
  * <br> A second example will come for sub-commands.
  *
  */
-public abstract class AbstractCommand {
+public interface ICommand {
 
     /**
      * The commands name.
@@ -18,7 +18,7 @@ public abstract class AbstractCommand {
      * @return
      *  The commands name as a {@link String}
      */
-    public abstract String getCommandName();
+    String getCommandName();
 
     /**
      * The command's description.
@@ -26,7 +26,7 @@ public abstract class AbstractCommand {
      * @return
      *  The commands description as a {@link String}
      */
-    public abstract String getDescription();
+    String getDescription();
 
     /**
      * Whenever the command is only for guilds, optional method.
@@ -34,7 +34,7 @@ public abstract class AbstractCommand {
      * @return
      *  Whenever the command is only for guilds as a {@link Boolean}
      */
-    public boolean isGuildOnly() {
+    default boolean isGuildOnly() {
         return false;
     }
 
@@ -47,7 +47,7 @@ public abstract class AbstractCommand {
      * @return
      *  The changed {@link CommandData}
      */
-    public CommandData addOptions(CommandData commandData) {
+    default CommandData addOptions(CommandData commandData) {
         return commandData;
     }
 
@@ -58,5 +58,5 @@ public abstract class AbstractCommand {
      * @param event
      *  The relating {@link SlashCommandEvent}
      */
-    public abstract void execute(SlashCommandEvent event);
+    void execute(SlashCommandEvent event);
 }

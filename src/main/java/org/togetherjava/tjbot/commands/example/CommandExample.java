@@ -2,18 +2,17 @@ package org.togetherjava.tjbot.commands.example;
 
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
-import org.togetherjava.tjbot.commands.AbstractCommand;
+import org.togetherjava.tjbot.commands.ICommand;
 
 /**
  * Example command
  *
  */
-public class CommandExample extends AbstractCommand {
+public class CommandExample implements ICommand {
 
     /**
      * The command name is example, so it returns example.
@@ -65,8 +64,8 @@ public class CommandExample extends AbstractCommand {
                 new OptionData(OptionType.USER, "User", "User that will be pinged!", true),
                 // * adds the second option
                 new OptionData(OptionType.STRING, "Amount of pings", "Amount of times the user will be pinged, default 1").addChoices(
-                        new Command.Choice("Once", "1"),
-                        new Command.Choice("Twice", "2")
+                        new net.dv8tion.jda.api.interactions.commands.Command.Choice("Once", "1"),
+                        new net.dv8tion.jda.api.interactions.commands.Command.Choice("Twice", "2")
                 ).setRequired(true)
         );
     }

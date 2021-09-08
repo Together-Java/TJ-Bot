@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import org.togetherjava.tjbot.commands.AbstractCommand;
+import org.togetherjava.tjbot.commands.ICommand;
 
 /**
  * Subcommands example!
@@ -26,7 +26,7 @@ import org.togetherjava.tjbot.commands.AbstractCommand;
  * `{@code tempban 6s Tijs#0001}` and `{@code permban Tijs#0001}`
  *
  */
-public class SubCommandExample extends AbstractCommand {
+public class SubCommandExample implements ICommand {
 
     /**
      * The command name is subcommands-example, so it returns subcommands-example
