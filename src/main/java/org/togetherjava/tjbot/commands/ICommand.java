@@ -13,16 +13,26 @@ import org.togetherjava.tjbot.commands.example.CommandExample;
 public interface ICommand {
 
     /**
-     * The commands name.
+     * <p> The command's name.
      *
+     * <p> <b>Requirements!</b>
+     *  <ul>
+     *      <li>Lowercase</li>
+     *      <li>Alphanumeric (with dash)</li>
+     *      <li>1 to 32 characters long</li>
+     *  </ul>
      * @return
      *  The commands name as a {@link String}
      */
     String getCommandName();
 
     /**
-     * The command's description.
+     * <p> The command's description.
      *
+     * <p> <b>Requirements!</b>
+     *  <ul>
+     *      <li>1 to 100 characters long</li>
+     *  </ul>
      * @return
      *  The commands description as a {@link String}
      */

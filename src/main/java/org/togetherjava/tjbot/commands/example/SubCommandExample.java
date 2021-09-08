@@ -64,17 +64,17 @@ public class SubCommandExample implements ICommand {
                 // * adds the subcommand here
                 new SubcommandData("ping", "Ping an user! Yes you're allowed to spam again!")
                         // * adds the User option, it's hard to ping nothing so it's required.
-                        .addOption(OptionType.USER, "User", "User to ping", true),
+                        .addOption(OptionType.USER, "user", "User to ping", true),
                 // * adds another subcommand
                 new SubcommandData("hello", "Send hello and optionally you can ping an user.")
                         // * this time it's not required, so no need for that boolean, making it shorter.
-                        .addOption(OptionType.USER, "User", "User to ping!")
+                        .addOption(OptionType.USER, "user", "User to ping!")
         );
     }
 
     /**
      * The execute method!
-     * <br> Here it check what subcommand the user ran.
+     * <br> Here it checks what subcommand the user ran.
      * <br> After that that command gets ran.
      *
      * @param event
@@ -86,14 +86,14 @@ public class SubCommandExample implements ICommand {
         switch(event.getSubcommandName()) {
             // * if it's "ping", run the ping command.
             case "ping" -> {
-                User userToPing = event.getOption("User").getAsUser();
+                User userToPing = event.getOption("user").getAsUser();
 
                 event.reply(userToPing.getAsMention() + " pinging like this is useless ;)").setEphemeral(true).queue();
             }
 
             // * if it's "Hello", run the hello command.
             case "hello" -> {
-                OptionMapping userOption = event.getOption("User");
+                OptionMapping userOption = event.getOption("user");
 
                 if (userOption == null) {
                     event.reply("Hello!").queue();

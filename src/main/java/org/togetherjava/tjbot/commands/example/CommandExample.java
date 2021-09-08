@@ -61,9 +61,9 @@ public class CommandExample implements ICommand {
     public CommandData addOptions(CommandData commandData) {
         return commandData.addOptions(
                 // * add the first option
-                new OptionData(OptionType.USER, "User", "User that will be pinged!", true),
+                new OptionData(OptionType.USER, "user", "User that will be pinged!", true),
                 // * adds the second option
-                new OptionData(OptionType.STRING, "Amount of pings", "Amount of times the user will be pinged, default 1").addChoices(
+                new OptionData(OptionType.STRING, "times-to-ping", "Amount of times the user will be pinged, default 1").addChoices(
                         new net.dv8tion.jda.api.interactions.commands.Command.Choice("Once", "1"),
                         new net.dv8tion.jda.api.interactions.commands.Command.Choice("Twice", "2")
                 ).setRequired(true)
@@ -83,8 +83,8 @@ public class CommandExample implements ICommand {
     public void execute(SlashCommandEvent event) {
 
         // * gets the option as a user
-        User userToMention = event.getOption("User").getAsUser();
-        int timesToPing = Integer.parseInt(event.getOption("Amount of pings").getAsString());
+        User userToMention = event.getOption("user").getAsUser();
+        int timesToPing = Integer.parseInt(event.getOption("times-to-ping").getAsString());
 
         event.reply("It'll only ping once, you spammer!").setEphemeral(true).queue();
         event.getChannel().sendMessage(userToMention.getAsMention().repeat(timesToPing)).queue();
