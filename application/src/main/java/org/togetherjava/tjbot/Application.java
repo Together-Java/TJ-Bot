@@ -28,6 +28,7 @@ public enum Application {
         try {
             JDA jda = JDABuilder.createDefault(token)
                                 .addEventListeners(new PingPongListener())
+                                .addEventListeners(new DatabaseListener())
                                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");
