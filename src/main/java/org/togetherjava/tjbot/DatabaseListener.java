@@ -33,7 +33,6 @@ public final class DatabaseListener extends ListenerAdapter implements AutoClose
 
             return connection;
         } catch (SQLException | IOException e) {
-            logger.error("Failed to connect to database or to create table", e);
             throw new IllegalStateException(e);
         }
     }

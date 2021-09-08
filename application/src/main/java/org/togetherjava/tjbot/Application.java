@@ -24,6 +24,14 @@ public enum Application {
         }
         String token = args[0];
 
+        try {
+            runBot(token);
+        } catch (Exception t) {
+            logger.error("Unknown error", t);
+        }
+    }
+
+    public static void runBot(String token) {
         logger.info("Starting bot...");
         try {
             JDA jda = JDABuilder.createDefault(token)
@@ -36,6 +44,7 @@ public enum Application {
             logger.error("Failed to login", e);
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting for setup to complete", e);
+            Thread.currentThread().interrupt();
         }
     }
 }
