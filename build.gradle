@@ -29,6 +29,8 @@ test {
 
 spotless {
     java {
+        removeUnusedImports()
+
         eclipse().configFile('meta/formatting/google-style-eclipse.xml')
     }
 }
