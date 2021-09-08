@@ -30,6 +30,7 @@ public enum Main {
 					.addEventListeners(new PingPongListener())
 					.build();
 			jda.awaitReady();
+
 			logger.info("Bot is ready");
 		} catch (LoginException e) {
 			logger.error("Failed to login", e);
