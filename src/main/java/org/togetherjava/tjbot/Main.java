@@ -26,10 +26,9 @@ public enum Main {
 
         logger.info("Starting bot...");
         try {
-            JDA jda = JDABuilder
-                    .createDefault(token)
-                    .addEventListeners(new PingPongListener())
-                    .build();
+            JDA jda = JDABuilder.createDefault(token)
+                                .addEventListeners(new PingPongListener())
+                                .build();
             jda.awaitReady();
             logger.info("Bot is ready");
         } catch (LoginException e) {
