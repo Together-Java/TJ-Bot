@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id "com.diffplug.spotless" version "5.15.0"
 }
 
 group 'org.togetherjava'
@@ -24,4 +25,10 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+spotless {
+    java {
+        eclipse().configFile('meta/formatting/google-style-eclipse.xml')
+    }
 }
