@@ -31,6 +31,7 @@ test {
     useJUnitPlatform()
 }
 
+compileJava.dependsOn 'spotlessApply'
 spotless {
     java {
         eclipse().configFile('meta/formatting/google-style-eclipse.xml')
