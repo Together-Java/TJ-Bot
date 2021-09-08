@@ -1,0 +1,13 @@
+package org.togetherjava.formatter.tokenizer;
+
+import java.util.List;
+
+public record Token(String content, TokenType type) {
+    private static final List<TokenType> displayTypes =
+            List.of(TokenType.IDENTIFIER, TokenType.UNKNOWN, TokenType.STRING);
+
+    @Override
+    public String toString() {
+        return type().name() + (displayTypes.contains(type()) ? "(" + content() + ")" : "");
+    }
+}
