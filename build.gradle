@@ -6,6 +6,9 @@ plugins {
 group 'org.togetherjava'
 version '1.0-SNAPSHOT'
 
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
+
 repositories {
     mavenCentral()
     maven {
