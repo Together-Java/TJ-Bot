@@ -4,7 +4,7 @@ import java.util.List;
 
 public record Token(String content, TokenType type) {
     private static final List<TokenType> displayTypes =
-            List.of(TokenType.IDENTIFIER, TokenType.UNKNOWN, TokenType.STRING);
+            List.of(TokenType.IDENTIFIER, TokenType.UNKNOWN, TokenType.STRING, TokenType.COMMENT);
 
     @Override
     public String toString() {
