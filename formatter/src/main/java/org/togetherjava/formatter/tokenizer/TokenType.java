@@ -59,7 +59,9 @@ public enum TokenType {
     SMALLER("<"),
     NOT("!"),
     ASSIGN("="),
+    PLUSPLUS("++"),
     PLUS("+"),
+    MINUSMINUS("--"),
     MINUS("-"),
 
     // this has to be other DIVIDE or else it'll be seen as two divides
