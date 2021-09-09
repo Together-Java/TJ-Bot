@@ -41,7 +41,7 @@ public enum TokenType {
     CHAR("char"),
     // general tokens
     OPEN_PARENTHESIS("("),
-    CLOSE_PARANTHESIS(")"),
+    CLOSE_PARENTHESIS(")"),
     OPEN_BRACES("{"),
     CLOSE_BRACES("}"),
     OPEN_BRACKETS("["),
