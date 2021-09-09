@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +40,21 @@ public class CommandHandler extends ListenerAdapter {
         }
     }
 
-    // TODO: onButtonClick
-    // TODO: onSelectionMenu
+    @Override
+    public void onButtonClick(@NotNull ButtonClickEvent event) {
+        Command command = commandMap.get(event.getComponentId().split("-")[0]);
+
+        if (command != null) {
+            command.onButtonClick(event);
+        }
+    }
+
+    @Override
+    public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
+        Command command = commandMap.get(event.getComponentId().split("-")[0]);
+
+        if (command != null) {
+            command.onSelectionMenu(event);
+        }
+    }
 }
