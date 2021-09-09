@@ -18,31 +18,36 @@ public class Lexer {
     }
 
     public List<Token> tokenize(List<String> lines) {
-        return lines.stream().map(line -> {
-            List<Token> tokens = new ArrayList<>();
-            int index = 0;
-            String content;
+        return lines.stream()
+                    .map(this::tokenizeLine)
+                    .flatMap(List::stream)
+                    .toList();
+    }
 
-            while (!(content = line.substring(index)).isEmpty()) {
-                tokenCheck: {
-                    for (TokenType token : TokenType.values()) {
-                        Matcher matcher = token.getRegex().matcher(content);
+    private List<Token> tokenizeLine(String line) {
+        List<Token> tokens = new ArrayList<>();
+        int index = 0;
+        String content;
 
-                        if (matcher.find()) {
-                            String found = matcher.group();
+        while (!(content = line.substring(index)).isEmpty()) {
+            tokenCheck: {
+                for (TokenType token : TokenType.values()) {
+                    Matcher matcher = token.getRegex().matcher(content);
 
-                            tokens.add(new Token(found, token));
-                            index += found.length();
+                    if (matcher.find()) {
+                        String found = matcher.group();
 
-                            break tokenCheck;
-                        }
+                        tokens.add(new Token(found, token));
+                        index += found.length();
+
+                        break tokenCheck;
                     }
-
-                    throw new TokenizationException("Token not found for '" + content + "'");
                 }
-            }
 
-            return tokens;
-        }).flatMap(List::stream).toList();
+                throw new TokenizationException("Token not found for '" + content + "'");
+            }
+        }
+
+        return tokens;
     }
 }
