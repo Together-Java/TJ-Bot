@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
 
-public enum Main {
+public enum Application {
     ;
 
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     /**
      * Starts the application.
