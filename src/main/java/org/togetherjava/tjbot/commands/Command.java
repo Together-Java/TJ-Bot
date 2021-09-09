@@ -90,4 +90,6 @@ public interface Command {
      *  The reating {@link ButtonClickEvent}
      */
     default void onSelectionMenu(SelectionMenuEvent event) {}
+
+    // TODO: generateButtonId(String... args)? not sure
 }
