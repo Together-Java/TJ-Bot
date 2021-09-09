@@ -28,7 +28,7 @@ public class Lexer {
                     Matcher matcher = token.getRegex().matcher(content);
 
                     if (matcher.find()) {
-                        String found = matcher.group();
+                        String found = matcher.group(1);
 
                         tokens.add(new Token(found, token));
                         index += found.length();
