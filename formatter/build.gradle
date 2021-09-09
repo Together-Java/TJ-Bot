@@ -1,0 +1,6 @@
+plugins {
+    id 'java'
+}
+
+group 'org.togetherjava'
+version '1.0-SNAPSHOT'
