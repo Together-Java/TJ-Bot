@@ -19,6 +19,7 @@ public enum TokenType {
     RETURN("return"),
     PACKAGE("package"),
     THIS("this"),
+    YIELD("yield"),
     // access modifiers
     PUBLIC("public"),
     PRIVATE("private"),
