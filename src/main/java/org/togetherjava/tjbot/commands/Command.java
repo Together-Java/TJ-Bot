@@ -12,7 +12,7 @@ import org.togetherjava.tjbot.commands.example.CommandExample;
  * <br> A second example will come for sub-commands.
  *
  */
-public interface ICommand {
+public interface Command {
 
     /**
      * <p> The command's name.

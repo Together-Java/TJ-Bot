@@ -6,13 +6,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
-import org.togetherjava.tjbot.commands.ICommand;
+import org.togetherjava.tjbot.commands.Command;
 
 /**
  * Example command
  *
  */
-public class CommandExample implements ICommand {
+public class CommandExample implements Command {
 
     /**
      * The command name is example, so it returns example.
