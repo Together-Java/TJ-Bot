@@ -8,6 +8,14 @@ public record Token(String content, TokenType type) {
 
     @Override
     public String toString() {
-        return type().name() + (displayTypes.contains(type()) ? "(" + content() + ")" : "");
+        return type().name() + displayMe();
+    }
+
+    private String displayMe() {
+        if (displayTypes.contains(type())) {
+            return "(" + content() + ")";
+        }
+
+        return "";
     }
 }
