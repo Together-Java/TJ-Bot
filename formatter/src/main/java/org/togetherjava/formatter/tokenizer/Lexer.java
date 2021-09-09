@@ -7,12 +7,6 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class Lexer {
-    private static final Lexer instance = new Lexer();
-
-    public static Lexer getInstance() {
-        return instance;
-    }
-
     public List<Token> tokenize(String input) {
         return tokenize(Arrays.asList(input.split("\n")));
     }
