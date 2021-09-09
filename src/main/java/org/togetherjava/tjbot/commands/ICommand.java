@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.togetherjava.tjbot.commands.example.CommandExample;
@@ -68,5 +70,24 @@ public interface ICommand {
      * @param event
      *  The relating {@link SlashCommandEvent}
      */
-    void execute(SlashCommandEvent event);
+    default void onSlashCommand(SlashCommandEvent event) {}
+
+    /**
+     * The execute method for when a button related to this command gets clicked.
+     * <br> Check <a href="https://github.com/DV8FromTheWorld/JDA/wiki/Interactions#buttons">JDA's buttons Wiki article</a> for more information.
+     *
+     * @param event
+     *  The reating {@link ButtonClickEvent}
+     */
+    default void onButtonClick(ButtonClickEvent event) {}
+
+    /**
+     * The execute method for when a selection menu related to this command gets clicked.
+     * <br> JDA has no dedicated guide for selection menu's, they work the same as buttons.
+     * <br> Check <a href="https://github.com/DV8FromTheWorld/JDA/wiki/Interactions#buttons">JDA's buttons Wiki article</a> for more information.
+     *
+     * @param event
+     *  The reating {@link ButtonClickEvent}
+     */
+    default void onSelectionMenu(SelectionMenuEvent event) {}
 }

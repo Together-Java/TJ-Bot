@@ -80,7 +80,7 @@ public class CommandExample implements ICommand {
      *  A {@link SlashCommandEvent} to respond to.
      */
     @Override
-    public void execute(SlashCommandEvent event) {
+    public void onSlashCommand(SlashCommandEvent event) {
 
         // * gets the option as a user
         User userToMention = event.getOption("user").getAsUser();
