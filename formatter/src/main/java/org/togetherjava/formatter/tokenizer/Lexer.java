@@ -43,6 +43,6 @@ public class Lexer {
             }
 
             return tokens;
-        }).flatMap(List::stream).collect(Collectors.toList());
+        }).flatMap(List::stream).toList();
     }
 }
