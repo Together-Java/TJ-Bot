@@ -28,6 +28,7 @@ public enum TokenType {
     CATCH("catch", true),
     TRY("try", true),
     ELSE_IF("else if", true), // not really a keyword but required for formatting
+    ELSE("else", true),
     // access modifiers
     PUBLIC("public", true),
     PRIVATE("private", true),
