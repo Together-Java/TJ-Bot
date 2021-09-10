@@ -3,7 +3,7 @@ name: CodeQL
 on:
   push:
     branches: [master, develop]
-  pull_request:
+  pull_request_target:
     # The branches below must be a subset of the branches above
     branches: [master, develop]
   schedule:
@@ -27,7 +27,7 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v1
       with:
-        java-version: 16
+        java-version: ${{ secrets.JAVA_VERSION }}
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
