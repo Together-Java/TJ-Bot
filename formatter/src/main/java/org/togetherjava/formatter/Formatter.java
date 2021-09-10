@@ -24,7 +24,8 @@ public class Formatter {
             TokenType.SMALLER, TokenType.BIGGER, TokenType.COMMA, TokenType.FOR, TokenType.IF,
             TokenType.WHILE, TokenType.PLUSPLUS, TokenType.MINUSMINUS, TokenType.RETURN,
             TokenType.THIS, TokenType.PUBLIC, TokenType.PROTECTED, TokenType.PRIVATE, TokenType.TRY,
-            TokenType.CATCH, TokenType.PACKAGE, TokenType.METHOD_REFERENCE, TokenType.ELSE_IF);
+            TokenType.CATCH, TokenType.PACKAGE, TokenType.METHOD_REFERENCE, TokenType.ELSE_IF,
+            TokenType.ELSE);
 
     /**
      * Formats the given tokens
@@ -102,7 +103,7 @@ public class Formatter {
             iteration: {
                 if (type == TokenType.OPEN_BRACES) {
                     if (lastToken == TokenType.CLOSE_PARENTHESIS
-                            || lastToken == TokenType.IDENTIFIER || lastToken == TokenType.TRY) {
+                            || lastToken == TokenType.IDENTIFIER || lastToken == TokenType.TRY || lastToken == TokenType.ELSE) {
                         result.append(" ");
                     }
 
@@ -134,7 +135,8 @@ public class Formatter {
                     break iteration;
                 } else if (type == TokenType.IDENTIFIER && (lastToken == TokenType.CLOSE_BRACES
                         || lastToken == TokenType.OPEN_BRACES
-                        || lastToken == TokenType.SEMICOLON)) {
+                        || lastToken == TokenType.SEMICOLON
+                        || lastToken == TokenType.UNKNOWN)) {
                     append(result, token);
 
                     break iteration;
