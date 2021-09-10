@@ -20,6 +20,8 @@ public enum TokenType {
     PACKAGE("package", true),
     THIS("this", true),
     YIELD("yield", true),
+    CATCH("catch", true),
+    TRY("try", true),
     // access modifiers
     PUBLIC("public", true),
     PRIVATE("private", true),
@@ -46,8 +48,6 @@ public enum TokenType {
     CLOSE_BRACES("}"),
     OPEN_BRACKETS("["),
     CLOSE_BRACKETS("]"),
-    OPEN_DIAMOND("<"),
-    CLOSE_DIAMOND(">"),
     SEMICOLON(";"),
     COLON(":"),
     COMMA(","),
