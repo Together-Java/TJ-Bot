@@ -2,6 +2,8 @@
 
 TJ-Bot is a classic Discord bot with a slim but modern set of dependencies.
 
+![Tech Stack Diagram](https://i.imgur.com/yp9dixn.png)
+
 ## Core
 
 The project stays up to date with the latest Java version.
