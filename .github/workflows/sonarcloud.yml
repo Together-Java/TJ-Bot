@@ -14,7 +14,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 16
+          java-version: ${{ secrets.JAVA_VERSION }}
       - name: Cache SonarCloud packages
         uses: actions/cache@v1
         with:
