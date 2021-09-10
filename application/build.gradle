@@ -1,6 +1,14 @@
+buildscript {
+    dependencies {
+        classpath 'org.xerial:sqlite-jdbc:3.36.0.3'
+    }
+}
+
 plugins {
     id 'application'
     id 'com.google.cloud.tools.jib' version '3.1.4'
+    id "org.flywaydb.flyway" version "7.15.0"
+    id 'nu.studer.jooq' version '6.0.1'
 }
 
 repositories {
@@ -22,14 +30,61 @@ jib {
     }
 }
 
+var databaseUrl = "jdbc:sqlite:${rootProject.buildDir}/database.db"
+
+flyway {
+    url = databaseUrl
+    locations = ["filesystem:src/main/resources/db"]
+}
+
+jooq {
+    version = "3.15.2"
+
+    configurations {
+        main {
+            generationTool {
+                jdbc {
+                    driver = 'org.sqlite.JDBC'
+                    url = databaseUrl
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.sqlite.SQLiteDatabase'
+                        excludes = 'flyway_schema_history|sqlite_sequence'
+                    }
+                    generate {
+                        records = true
+                        immutablePojos = true
+                        fluentSetters = true
+                    }
+                    target {
+                        packageName = 'org.togetherjavabbot.tjbot.db.generated'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.generateJooq {
+    dependsOn("flywayMigrate")
+}
+
+var sqliteVersion = "3.36.0.3"
+
 dependencies {
     implementation 'net.dv8tion:JDA:4.3.0_324'
-    implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
-    
+
+    implementation "org.xerial:sqlite-jdbc:${sqliteVersion}"
+    implementation 'org.flywaydb:flyway-core:7.15.0'
+    implementation 'org.jooq:jooq:3.15.2'
+    jooqGenerator "org.xerial:sqlite-jdbc:${sqliteVersion}"
+
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1'
-    
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
