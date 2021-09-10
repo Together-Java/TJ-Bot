@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
  * @author illuminator3
  */
 public class Lexer {
-    private static final Pattern commentPatcherRegex = Pattern.compile("(/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)");
+    private static final Pattern commentPatcherRegex =
+            Pattern.compile("(/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)");
 
     /**
      * Tokenizes the given input by tokenizing each line individually (splitting by \n)
@@ -33,10 +34,7 @@ public class Lexer {
      * @author illuminator3
      */
     public List<Token> tokenize(List<String> lines) {
-        return lines.stream()
-                    .map(this::tokenizeLine)
-                    .flatMap(List::stream)
-                    .toList();
+        return lines.stream().map(this::tokenizeLine).flatMap(List::stream).toList();
     }
 
     /**

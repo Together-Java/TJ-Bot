@@ -15,6 +15,17 @@ import java.util.stream.IntStream;
  */
 public class Formatter {
     /**
+     * List of tokens who should not be put after a space
+     */
+    private static final List<TokenType> NON_SPACE_TOKENS = List.of(TokenType.DOT,
+            TokenType.SEMICOLON, TokenType.NOT, TokenType.OPEN_PARENTHESIS,
+            TokenType.CLOSE_PARENTHESIS, TokenType.OPEN_BRACKETS, TokenType.CLOSE_BRACKETS,
+            TokenType.SMALLER, TokenType.BIGGER, TokenType.COMMA, TokenType.FOR, TokenType.IF,
+            TokenType.WHILE, TokenType.PLUSPLUS, TokenType.MINUSMINUS, TokenType.RETURN,
+            TokenType.THIS, TokenType.PUBLIC, TokenType.PROTECTED, TokenType.PRIVATE, TokenType.TRY,
+            TokenType.CATCH, TokenType.PACKAGE, TokenType.METHOD_REFERENCE, TokenType.ELSE_IF);
+
+    /**
      * Formats the given tokens
      *
      * @param tokens tokens to format
@@ -27,7 +38,9 @@ public class Formatter {
 
         for (Section section : sections) {
             if (section.isCodeSection()) {
-                result.append("```java\n").append(writeCodeSection(section.tokens())).append("\n```");
+                result.append("```java\n")
+                      .append(writeCodeSection(section.tokens()))
+                      .append("\n```");
             } else {
                 result.append(revert(section.tokens()));
             }
@@ -75,7 +88,8 @@ public class Formatter {
 
             iteration: {
                 if (type == TokenType.OPEN_BRACES) {
-                    if (lastToken == TokenType.CLOSE_PARENTHESIS || lastToken == TokenType.IDENTIFIER || lastToken == TokenType.TRY) {
+                    if (lastToken == TokenType.CLOSE_PARENTHESIS
+                            || lastToken == TokenType.IDENTIFIER || lastToken == TokenType.TRY) {
                         result.append(" ");
                     }
 
@@ -105,11 +119,14 @@ public class Formatter {
                     lastNewLine = true;
 
                     break iteration;
-                } else if (type == TokenType.IDENTIFIER && (lastToken == TokenType.CLOSE_BRACES || lastToken == TokenType.OPEN_BRACES || lastToken == TokenType.SEMICOLON)) {
+                } else if (type == TokenType.IDENTIFIER && (lastToken == TokenType.CLOSE_BRACES
+                        || lastToken == TokenType.OPEN_BRACES
+                        || lastToken == TokenType.SEMICOLON)) {
                     append(result, token);
 
                     break iteration;
-                } else if (type == TokenType.COMMENT || type == TokenType.SEMICOLON || type == TokenType.ANNOTATION) {
+                } else if (type == TokenType.COMMENT || type == TokenType.SEMICOLON
+                        || type == TokenType.ANNOTATION) {
                     if (type == TokenType.COMMENT) {
                         result.append(" ");
                     }
@@ -123,18 +140,17 @@ public class Formatter {
                     }
 
                     break iteration;
-                } else if (
-                    (type == TokenType.OPEN_PARENTHESIS && lastToken != TokenType.IDENTIFIER && lastToken != TokenType.NOT && lastToken != TokenType.BIGGER && lastToken != TokenType.OPEN_PARENTHESIS) ||
-                    lastToken == TokenType.PUBLIC ||
-                    lastToken == TokenType.PRIVATE ||
-                    lastToken == TokenType.PROTECTED ||
-                    (lastToken == TokenType.BIGGER && type != TokenType.OPEN_PARENTHESIS) ||
-                    lastToken == TokenType.RETURN ||
-                    lastToken == TokenType.COMMA ||
-                    lastToken == TokenType.CATCH ||
-                    (lastToken == TokenType.CLOSE_PARENTHESIS && type != TokenType.CLOSE_PARENTHESIS && type != TokenType.DOT && type != TokenType.COMMA) ||
-                    lastToken == TokenType.PACKAGE
-                ) {
+                } else if ((type == TokenType.OPEN_PARENTHESIS && lastToken != TokenType.IDENTIFIER
+                        && lastToken != TokenType.NOT && lastToken != TokenType.BIGGER
+                        && lastToken != TokenType.OPEN_PARENTHESIS) || lastToken == TokenType.PUBLIC
+                        || lastToken == TokenType.PRIVATE || lastToken == TokenType.PROTECTED
+                        || (lastToken == TokenType.BIGGER && type != TokenType.OPEN_PARENTHESIS)
+                        || lastToken == TokenType.RETURN || lastToken == TokenType.COMMA
+                        || lastToken == TokenType.CATCH
+                        || (lastToken == TokenType.CLOSE_PARENTHESIS
+                                && type != TokenType.CLOSE_PARENTHESIS && type != TokenType.DOT
+                                && type != TokenType.COMMA)
+                        || lastToken == TokenType.PACKAGE) {
                     result.append(" ");
                 }
 
@@ -154,35 +170,7 @@ public class Formatter {
                     forClosed = false;
                 }
 
-                List<TokenType> check = List.of(
-                    TokenType.DOT,
-                    TokenType.SEMICOLON,
-                    TokenType.NOT,
-                    TokenType.OPEN_PARENTHESIS,
-                    TokenType.CLOSE_PARENTHESIS,
-                    TokenType.OPEN_BRACKETS,
-                    TokenType.CLOSE_BRACKETS,
-                    TokenType.SMALLER,
-                    TokenType.BIGGER,
-                    TokenType.COMMA,
-                    TokenType.FOR,
-                    TokenType.IF,
-                    TokenType.WHILE,
-                    TokenType.PLUSPLUS,
-                    TokenType.MINUSMINUS,
-                    TokenType.RETURN,
-                    TokenType.THIS,
-                    TokenType.PUBLIC,
-                    TokenType.PROTECTED,
-                    TokenType.PRIVATE,
-                    TokenType.TRY,
-                    TokenType.CATCH,
-                    TokenType.PACKAGE,
-                    TokenType.METHOD_REFERENCE,
-                    TokenType.ELSE_IF
-                );
-
-                if (!(check.contains(type) || check.contains(lastToken))) {
+                if (!(NON_SPACE_TOKENS.contains(type) || NON_SPACE_TOKENS.contains(lastToken))) {
                     result.append(" ");
                 }
 
@@ -267,7 +255,8 @@ public class Formatter {
     }
 
     /**
-     * Sectionizes a given list of tokens into sections who are code sections and sections who are not
+     * Sectionizes a given list of tokens into sections who are code sections and sections who are
+     * not
      *
      * @param indexedTokens indexed tokens
      * @return list of sections
@@ -302,12 +291,14 @@ public class Formatter {
      *
      * @author illuminator3
      */
-    private static record Section(List<Token> tokens, boolean isCodeSection) {}
+    private static record Section(List<Token> tokens, boolean isCodeSection) {
+    }
 
     /**
      * IndexedToken POJR
      *
      * @author illuminator3
      */
-    private static record IndexedToken(Token token, boolean isCode) {}
+    private static record IndexedToken(Token token, boolean isCode) {
+    }
 }
