@@ -276,9 +276,9 @@ public class Formatter {
      * @return indexed tokens
      * @author illuminator3
      */
-    private List<IndexedToken> indexTokens(List<Token> tokens) {
+    private List<CheckedToken> indexTokens(List<Token> tokens) {
         return tokens.stream()
-                     .map(token -> new IndexedToken(token, isTokenPartOfCode(token)))
+                     .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
                      .toList();
     }
 
@@ -296,19 +296,19 @@ public class Formatter {
     /**
      * Sectionizes a given list of tokens into sections who are code sections and sections who are not
      *
-     * @param indexedTokens indexed tokens
+     * @param checkedTokens indexed tokens
      * @return list of sections
      * @author illuminator3
      */
-    private List<Section> sectionize(List<IndexedToken> indexedTokens) {
-        IndexedToken first = indexedTokens.get(0);
+    private List<Section> sectionize(List<CheckedToken> checkedTokens) {
+        CheckedToken first = checkedTokens.get(0);
         Section currSec = new Section(new ArrayList<>(), first.isCode());
         List<Section> result = new ArrayList<>();
 
         currSec.tokens().add(first.token());
 
-        for (int i = 1; i < indexedTokens.size(); i++) {
-            IndexedToken next = indexedTokens.get(i);
+        for (int i = 1; i < checkedTokens.size(); i++) {
+            CheckedToken next = checkedTokens.get(i);
 
             if (currSec.isCodeSection() != next.isCode()) {
                 result.add(currSec);
@@ -337,6 +337,6 @@ public class Formatter {
      *
      * @author illuminator3
      */
-    private static record IndexedToken(Token token, boolean isCode) {
+    private static record CheckedToken(Token token, boolean isCode) {
     }
 }
