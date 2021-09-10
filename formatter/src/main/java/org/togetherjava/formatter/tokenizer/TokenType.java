@@ -2,6 +2,11 @@ package org.togetherjava.formatter.tokenizer;
 
 import java.util.regex.Pattern;
 
+/**
+ * Represents every possible token that can be lexed by the lexer
+ *
+ * @author illuminator3
+ */
 public enum TokenType {
     // keywords
     CLASS("class", true),

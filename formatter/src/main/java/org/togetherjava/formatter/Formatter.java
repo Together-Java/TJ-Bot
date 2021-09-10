@@ -8,7 +8,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * Formatter which can format a given string into a string which contains code blocks etc
+ *
+ * @author illuminator3
+ */
 public class Formatter {
+    /**
+     * Formats the given tokens
+     *
+     * @param tokens tokens to format
+     * @return resulting code
+     * @author illuminator3
+     */
     public String format(List<Token> tokens) {
         List<Section> sections = sectionize(indexTokens(tokens));
         StringBuilder result = new StringBuilder();
@@ -24,10 +36,24 @@ public class Formatter {
         return result.toString();
     }
 
+    /**
+     * Reverts the tokens into the "original state" before the tokenization occurred
+     *
+     * @param tokens tokens to revert
+     * @return original state
+     * @author illuminator3
+     */
     private String revert(List<Token> tokens) {
         return tokens.stream().map(Token::content).collect(Collectors.joining());
     }
 
+    /**
+     * Writes and formats a given code section (in form of a list of tokens) into a StringBuilder
+     *
+     * @param tokens tokens to write
+     * @return written code sections
+     * @author illuminator3
+     */
     private StringBuilder writeCodeSection(List<Token> tokens) {
         purgeWhitespaces(tokens = makeMutable(tokens));
 
@@ -169,22 +195,56 @@ public class Formatter {
         return new StringBuilder(result.toString().replaceAll("([;}])\n\n", "$1\n"));
     }
 
+    /**
+     * Puts the needed indentation into a StringBuilder
+     *
+     * @param indentation indentation level
+     * @param sb string builder
+     * @author illuminator3
+     */
     private void putIndentation(int indentation, StringBuilder sb) {
         IntStream.range(0, indentation).forEach(n -> sb.append("\t"));
     }
 
+    /**
+     * Appends a token to a StringBuilder
+     *
+     * @param sb string builder
+     * @param token token to append
+     * @author illuminator3
+     */
     private void append(StringBuilder sb, Token token) {
         sb.append(token.content());
     }
 
+    /**
+     * Makes a list mutable
+     *
+     * @param in (im)mutable list
+     * @return mutable list
+     * @author illuminator3
+     */
     private <T> List<T> makeMutable(List<T> in) {
         return new ArrayList<>(in);
     }
 
+    /**
+     * Removes every whitespace from a given list of tokens
+     *
+     * @param tokens tokens to remove whitesapces from
+     * @author illuminator3
+     */
     private void purgeWhitespaces(List<Token> tokens) {
         tokens.removeIf(t -> t.type() == TokenType.WHITSPACE);
     }
 
+    /**
+     * Indexes tokens to contain information about whether they are code tokens or not
+     *
+     * @param tokens not-indexed tokens
+     * @return indexed tokens
+     * @author illuminator3
+     */
     private List<IndexedToken> indexTokens(List<Token> tokens) {
         List<IndexedToken> result = new ArrayList<>();
 
@@ -195,10 +255,24 @@ public class Formatter {
         return result;
     }
 
+    /**
+     * Checks if a given token is a code token
+     *
+     * @param token token to check
+     * @return true if it's a code token, false if not
+     * @author illuminator3
+     */
     private boolean isCodeToken(Token token) {
         return token.type() != TokenType.UNKNOWN;
     }
 
+    /**
+     * Sectionizes a given list of tokens into sections who are code sections and sections who are not
+     *
+     * @param indexedTokens indexed tokens
+     * @return list of sections
+     * @author illuminator3
+     */
     private List<Section> sectionize(List<IndexedToken> indexedTokens) {
         IndexedToken first = indexedTokens.get(0);
         Section currSec = new Section(new ArrayList<>(), first.isCode());
@@ -223,6 +297,17 @@ public class Formatter {
         return result;
     }
 
+    /**
+     * Section POJR
+     *
+     * @author illuminator3
+     */
     private static record Section(List<Token> tokens, boolean isCodeSection) {}
+
+    /**
+     * IndexedToken POJR
+     *
+     * @author illuminator3
+     */
     private static record IndexedToken(Token token, boolean isCode) {}
 }
