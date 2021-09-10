@@ -22,6 +22,7 @@ public enum TokenType {
     YIELD("yield", true),
     CATCH("catch", true),
     TRY("try", true),
+    ELSE_IF("else if", true), // not really a keyword but required for formatting
     // access modifiers
     PUBLIC("public", true),
     PRIVATE("private", true),
@@ -71,6 +72,8 @@ public enum TokenType {
     PLUS("+"),
     MINUSMINUS("--"),
     MINUS("-"),
+    BOOL_AND("&&"),
+    BOOL_OR("||"),
 
     // this has to be other DIVIDE or else it'll be seen as two divides
     COMMENT(Pattern.compile("^(//.*|/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)")),
@@ -93,7 +96,7 @@ public enum TokenType {
         if (!isKeyword) {
             this.regex = Pattern.compile("^(\\Q" + spattern + "\\E)");
         } else {
-            this.regex = Pattern.compile("^(\\Q" + spattern + "\\E)[^a-z]");
+            this.regex = Pattern.compile("^(\\Q" + spattern + "\\E)[^a-zA-Z]");
         }
 
         this.isKeyword = isKeyword;
@@ -105,7 +108,6 @@ public enum TokenType {
     }
 
     TokenType(String spattern) {
-//        this(Pattern.compile("^(\\Q" + spattern + "\\E)"));
         this(spattern, false);
     }
 
