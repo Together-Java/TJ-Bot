@@ -1,0 +1,24 @@
+name: Docker Publish
+
+on:
+  push:
+    branches:
+      - 'master'
+      - 'develop'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ secrets.JAVA_VERSION }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build and Publish Docker Image
+        env:
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: ./gradlew jib

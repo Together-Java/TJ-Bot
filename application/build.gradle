@@ -16,7 +16,13 @@ repositories {
 
 jib {
     from.image = 'adoptopenjdk/openjdk16:alpine-slim'
-    to.image = 'togetherjava/tjbot:latest'
+    to {
+        image = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:latest'
+        auth {
+            username = System.getenv('REGISTRY_USER')
+            password = System.getenv('REGISTRY_PASSWORD')
+        }
+    }
 }
 
 dependencies {
