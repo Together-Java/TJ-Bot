@@ -7,7 +7,7 @@ If you want to join the party, please have a look at:
 * [[Code Guidelines]]
 
 We also have several guides explaining the infrastructure, architecture and flow of the project:
-* ...
+* [[Tech Stack]]
 
 As well as some tutorials regarding on how to maintain the project:
 * [[How to access the VPS]]
