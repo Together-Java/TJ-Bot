@@ -62,7 +62,7 @@ jooq {
                         fluentSetters = true
                     }
                     target {
-                        packageName = 'org.togetherjavabbot.tjbot.db.generated'
+                        packageName = 'org.togetherjava.tjbot.db.generated'
                     }
                 }
             }
