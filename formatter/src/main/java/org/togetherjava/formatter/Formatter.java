@@ -1,5 +1,6 @@
 package org.togetherjava.formatter;
 
+import org.togetherjava.formatter.tokenizer.Lexer;
 import org.togetherjava.formatter.tokenizer.Token;
 import org.togetherjava.formatter.tokenizer.TokenType;
 
@@ -47,6 +48,18 @@ public class Formatter {
         }
 
         return result.toString();
+    }
+
+    /**
+     * Formats the given string using a given lexer
+     *
+     * @param input input to format
+     * @param lexer lexer to use
+     * @return resulting code
+     * @author illuminator3
+     */
+    public String format(String input, Lexer lexer) {
+        return format(lexer.tokenize(input));
     }
 
     /**
