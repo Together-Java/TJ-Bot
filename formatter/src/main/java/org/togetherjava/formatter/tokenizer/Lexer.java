@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Lexer {
+    private static final Pattern commentPatcherRegex = Pattern.compile("(/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)");
+
     public List<Token> tokenize(String input) {
-        return tokenize(Arrays.asList(input.split("\n")));
+        return tokenize(Arrays.asList(patchComments(input).split("\n")));
     }
 
     public List<Token> tokenize(List<String> lines) {
@@ -42,5 +45,17 @@ public class Lexer {
         }
 
         return tokens;
+    }
+
+    private String patchComments(String input) {
+        Matcher matcher = commentPatcherRegex.matcher(input);
+
+        while (matcher.find()) {
+            String s = matcher.group();
+
+            input = input.replace(s, s.replace("\n", " "));
+        }
+
+        return input;
     }
 }

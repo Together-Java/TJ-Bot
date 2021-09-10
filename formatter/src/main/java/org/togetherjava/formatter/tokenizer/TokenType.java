@@ -65,7 +65,7 @@ public enum TokenType {
     MINUS("-"),
 
     // this has to be other DIVIDE or else it'll be seen as two divides
-    COMMENT(Pattern.compile("^(//.*)")),
+    COMMENT(Pattern.compile("^(//.*|/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)")),
 
     DIVIDE("/"),
     MULTIPLY("*"),
