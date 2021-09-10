@@ -45,7 +45,7 @@ Your `feature`-branch will be based off the `develop` branch. The model we are u
 
 ### Create a pull request
 
-When you are done, you will create a [pull request](https://github.com/Together-Java/TJ-Bot/pulls) to request feedback from the rest of the community. At this point, your code will be automatically tested against our **style guidelines** (Spotless, SonarCloud, CodeQL, and more).
+When you are done, you will create a [pull request](https://github.com/Together-Java/TJ-Bot/pulls) to request feedback from the rest of the community. At this point, your code will be automatically tested against our [[code guidelines|Code Guidelines]] (Spotless, SonarCloud, CodeQL, and more).
 
 Each pull request should be clear, concise and informative. Please consider checking these resources: [writing a great pull request](https://www.pullrequest.com/blog/writing-a-great-pull-request-description/) and [unwritten guide to pull requests](https://www.atlassian.com/blog/git/written-unwritten-guide-pull-requests).
 
