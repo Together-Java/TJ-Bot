@@ -1,9 +1,35 @@
-name: SonarCloud
+name: Basic checks
 
-on: [push, pull_request_target]
+on: [pull_request_target]
 
 jobs:
-  build:
+  spotless:
+    name: "Spotless"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ secrets.JAVA_VERSION }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Check
+        run: ./gradlew spotlessCheck
+
+  gradle-test:
+    name: "Gradle Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ secrets.JAVA_VERSION }}
+      - uses: actions/checkout@v2
+      - name: Check
+        run: ./gradlew test
+
+  sonar:
     name: Build
     runs-on: ubuntu-latest
     steps:
