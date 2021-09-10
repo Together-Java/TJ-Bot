@@ -23,10 +23,6 @@ dependencies {
 
 Jar downloads are available from the [release section](https://github.com/Together-Java/TJ-Bot/releases).
 
-# Documentation
-
-Please see our  for details.
-
 # Getting started
 
 * [Documentation](https://github.com/Together-Java/TJ-Bot/wiki): as general entry point to the project
