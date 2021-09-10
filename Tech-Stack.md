@@ -36,7 +36,7 @@ The quality of the code is ensured by [Spotless](https://github.com/diffplug/spo
 TJ-Bot/meta/formatting/google-style-eclipse.xml
 ```
 
-Additionally, we use static code analyse by [SonarCube](https://sonarcloud.io/dashboard?id=Together-Java_TJ-Bot).
+Additionally, we use static code analyse by [SonarCloud](https://sonarcloud.io/dashboard?id=Together-Java_TJ-Bot).
 
 Further, the code is checked automatically by [CodeQL](https://codeql.github.com/docs/) and dependencies are kept up to date with the aid of [Dependabot](https://dependabot.com/)
 
