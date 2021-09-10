@@ -204,7 +204,7 @@ public class Formatter {
      * @author illuminator3
      */
     private void putIndentation(int indentation, StringBuilder sb) {
-        IntStream.range(0, indentation).forEach(n -> sb.append("\t"));
+        IntStream.range(0, indentation).forEach(n -> sb.append("    "));
     }
 
     /**
