@@ -19,8 +19,8 @@ jib {
     to {
         image = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:latest'
         auth {
-            username = System.getenv('REGISTRY_USER')
-            password = System.getenv('REGISTRY_PASSWORD')
+            username = System.getenv('REGISTRY_USER') ?: ''
+            password = System.getenv('REGISTRY_PASSWORD') ?: ''
         }
     }
 }
