@@ -6,8 +6,8 @@ import org.togetherjava.formatter.tokenizer.TokenType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Formatter which can format a given string into a string which contains code blocks etc
@@ -16,9 +16,35 @@ import java.util.stream.IntStream;
  */
 public class Formatter {
     /**
-     * List of tokens who should not be put after a space
+     * Set of tokens who should not be put after a space:<br>
+     * - DOT<br>
+     * - SEMICOLON<br>
+     * - NOT<br>
+     * - OPEN_PARENTHESIS<br>
+     * - CLOSE_PARENTHESIS<br>
+     * - OPEN_BRACKETS<br>
+     * - CLOSE_BRACKETS<br>
+     * - SMALLER<br>
+     * - BIGGER<br>
+     * - COMMA<br>
+     * - FOR<br>
+     * - IF<br>
+     * - WHILE<br>
+     * - PLUSPLUS<br>
+     * - MINUSMINUS<br>
+     * - RET URN<br>
+     * - THIS<br>
+     * - PUBLIC<br>
+     * - PROTECTED<br>
+     * - PRIVATE<br>
+     * - TRY<br>
+     * - CATCH<br>
+     * - PACKAGE<br>
+     * - METHOD_REFERENCE<br>
+     * - ELSE_IF<br>
+     * - ELSE<br>
      */
-    private static final List<TokenType> NON_SPACE_TOKENS = List.of(TokenType.DOT,
+    private static final Set<TokenType> NON_SPACE_TOKENS = Set.of(TokenType.DOT,
             TokenType.SEMICOLON, TokenType.NOT, TokenType.OPEN_PARENTHESIS,
             TokenType.CLOSE_PARENTHESIS, TokenType.OPEN_BRACKETS, TokenType.CLOSE_BRACKETS,
             TokenType.SMALLER, TokenType.BIGGER, TokenType.COMMA, TokenType.FOR, TokenType.IF,
@@ -44,7 +70,7 @@ public class Formatter {
                       .append(writeCodeSection(section.tokens()))
                       .append("\n```");
             } else {
-                result.append(revert(section.tokens()));
+                result.append(joinTokens(section.tokens()));
             }
         }
 
@@ -64,13 +90,13 @@ public class Formatter {
     }
 
     /**
-     * Reverts the tokens into the "original state" before the tokenization occurred
+     * Joins given tokens together and normalizes whitespaces
      *
-     * @param tokens tokens to revert
-     * @return original state
+     * @param tokens tokens to join
+     * @return joined form of the tokens
      * @author illuminator3
      */
-    private String revert(List<Token> tokens) {
+    private String joinTokens(List<Token> tokens) {
         return tokens.stream().map(Token::content).collect(Collectors.joining());
     }
 
@@ -82,7 +108,9 @@ public class Formatter {
      * @author illuminator3
      */
     private StringBuilder writeCodeSection(List<Token> tokens) {
-        purgeWhitespaces(tokens = makeMutable(tokens));
+        List<Token> normalizedTokens = makeMutable(tokens);
+
+        purgeWhitespaces(normalizedTokens);
 
         TokenType lastToken = TokenType.UNKNOWN;
         StringBuilder result = new StringBuilder();
@@ -91,7 +119,7 @@ public class Formatter {
         boolean forClosed = true;
         int forClosingLevel = 0;
 
-        for (Token token : tokens) {
+        for (Token token : normalizedTokens) {
             TokenType type = token.type();
 
             if (lastNewLine && type != TokenType.CLOSE_BRACES) {
@@ -206,7 +234,7 @@ public class Formatter {
      * @author illuminator3
      */
     private void putIndentation(int indentation, StringBuilder sb) {
-        IntStream.range(0, indentation).forEach(n -> sb.append("    "));
+        sb.append("    ".repeat(indentation));
     }
 
     /**
@@ -238,7 +266,7 @@ public class Formatter {
      * @author illuminator3
      */
     private void purgeWhitespaces(List<Token> tokens) {
-        tokens.removeIf(t -> t.type() == TokenType.WHITSPACE);
+        tokens.removeIf(t -> t.type() == TokenType.WHITESPACE);
     }
 
     /**
@@ -249,29 +277,24 @@ public class Formatter {
      * @author illuminator3
      */
     private List<IndexedToken> indexTokens(List<Token> tokens) {
-        List<IndexedToken> result = new ArrayList<>();
-
-        for (Token token : tokens) {
-            result.add(new IndexedToken(token, isCodeToken(token)));
-        }
-
-        return result;
+        return tokens.stream()
+                     .map(token -> new IndexedToken(token, isTokenPartOfCode(token)))
+                     .toList();
     }
 
     /**
-     * Checks if a given token is a code token
+     * Checks if a given token could be part of code
      *
      * @param token token to check
      * @return true if it's a code token, false if not
      * @author illuminator3
      */
-    private boolean isCodeToken(Token token) {
+    private boolean isTokenPartOfCode(Token token) {
         return token.type() != TokenType.UNKNOWN;
     }
 
     /**
-     * Sectionizes a given list of tokens into sections who are code sections and sections who are
-     * not
+     * Sectionizes a given list of tokens into sections who are code sections and sections who are not
      *
      * @param indexedTokens indexed tokens
      * @return list of sections

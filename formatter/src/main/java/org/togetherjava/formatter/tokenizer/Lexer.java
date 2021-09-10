@@ -12,6 +12,9 @@ import java.util.regex.Pattern;
  * @author illuminator3
  */
 public class Lexer {
+    /**
+     * Regex to match multi-line Java comments (including Javadoc)
+     */
     private static final Pattern commentPatcherRegex =
             Pattern.compile("(/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)");
 
@@ -50,25 +53,26 @@ public class Lexer {
         String content;
 
         while (!(content = line.substring(index)).isEmpty()) {
-            tokenCheck: {
-                for (TokenType token : TokenType.values()) {
-                    Matcher matcher = token.getRegex().matcher(content);
+            Token token = findToken(content);
 
-                    if (matcher.find()) {
-                        String found = matcher.group(1);
+            index += token.content().length();
 
-                        tokens.add(new Token(found, token));
-                        index += found.length();
-
-                        break tokenCheck;
-                    }
-                }
-
-                throw new TokenizationException("Token not found for '" + content + "'");
-            }
+            tokens.add(token);
         }
 
         return tokens;
+    }
+
+    private Token findToken(String content) {
+        for (TokenType type : TokenType.values()) {
+            Matcher matcher = type.getRegex().matcher(content);
+
+            if (matcher.find()) {
+                return new Token(matcher.group(1), type);
+            }
+        }
+
+        throw new TokenizationException("Token not found for '" + content + "'");
     }
 
     /**

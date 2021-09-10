@@ -50,9 +50,9 @@ class LexerTest {
                 System.out.println("hi");
             }
 
-            if (type != TokenType.WHITSPACE) {
+            if (type != TokenType.WHITESPACE) {
                 expected.add(type);
-                expected.add(TokenType.WHITSPACE);
+                expected.add(TokenType.WHITESPACE);
             }
         }
 

@@ -81,7 +81,7 @@ public enum TokenType {
     BOOL_AND("&&"),
     BOOL_OR("||"),
 
-    // this has to be other DIVIDE or else it'll be seen as two divides
+    // this has to be over DIVIDE or else it'll be seen as 2x DIVIDE
     COMMENT(Pattern.compile("^(//.*|/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)")),
 
     DIVIDE("/"),
@@ -92,17 +92,17 @@ public enum TokenType {
     NUMBER(Pattern.compile("^((0[xb])?([0-9_]+|[0-9_]*(\\.\\d*))[dDfFlL]?)")),
     STRING(Pattern.compile("^(\"[^\"]*\")")),
     IDENTIFIER(Pattern.compile("^([a-zA-Z][a-zA-Z0-9_]*)")),
-    WHITSPACE(Pattern.compile("^(\s+)")),
+    WHITESPACE(Pattern.compile("^(\s+)")),
     UNKNOWN(Pattern.compile("^(.)"));
 
     private final Pattern regex;
     private final boolean isKeyword;
 
-    TokenType(String spattern, boolean isKeyword) {
+    TokenType(String pattern, boolean isKeyword) {
         if (!isKeyword) {
-            this.regex = Pattern.compile("^(\\Q" + spattern + "\\E)");
+            this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")");
         } else {
-            this.regex = Pattern.compile("^(\\Q" + spattern + "\\E)[^a-zA-Z]");
+            this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")[^a-zA-Z]");
         }
 
         this.isKeyword = isKeyword;
