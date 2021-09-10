@@ -27,7 +27,7 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v1
       with:
-        java-version: 16
+        java-version: ${{ secrets.JAVA_VERSION }}
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
