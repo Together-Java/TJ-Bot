@@ -103,9 +103,9 @@ public class Database {
     /**
      * Acquires a transaction that can only read from the database.
      *
-     * @param handler the handler that is executed within the context of the transaction. The handler
-     *                will be called once and its return value returned from the transaction.
-     * @param <T>     the handler's return type
+     * @param handler the handler that is executed within the context of the transaction. The
+     *        handler will be called once and its return value returned from the transaction.
+     * @param <T> the handler's return type
      * @return whatever the handler returned#
      * @throws DatabaseException if an error occurs in the passed handler function
      */
@@ -127,7 +127,7 @@ public class Database {
      * Acquires a transaction that can only read from the database.
      *
      * @param handler the handler that is executed within the context of the transaction. It has no
-     *                return value.
+     *        return value.
      * @throws DatabaseException if an error occurs in the passed handler function
      */
     public void readTransaction(CheckedConsumer<DSLContext, DataAccessException> handler) {
@@ -140,9 +140,9 @@ public class Database {
     /**
      * Acquires a transaction that can read and write to the database.
      *
-     * @param handler the handler that is executed within the context of the transaction. The handler
-     *                will be called once and its return value returned from the transaction.
-     * @param <T>     the handler's return type
+     * @param handler the handler that is executed within the context of the transaction. The
+     *        handler will be called once and its return value returned from the transaction.
+     * @param <T> the handler's return type
      * @return whatever the handler returned
      * @throws DatabaseException if an error occurs in the passed handler function
      */
@@ -167,7 +167,7 @@ public class Database {
      * Acquires a transaction that can read and write to the database.
      *
      * @param handler the handler that is executed within the context of the transaction. It has no
-     *                return value.
+     *        return value.
      * @throws DatabaseException if an error occurs in the passed handler function
      */
     public void writeTransaction(CheckedConsumer<DSLContext, DataAccessException> handler) {
