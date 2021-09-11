@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'develop'
+      - 'master'
 
 env:
   JAVA_VERSION: 16
@@ -24,3 +25,5 @@ jobs:
           REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
           REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         run: ./gradlew jib
+      - name: Re-Deploy
+        run: "curl -H 'Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}' https://togetherjava.duckdns.org:5003/v1/update"
