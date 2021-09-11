@@ -30,11 +30,26 @@ jib {
     }
 }
 
-var databaseUrl = "jdbc:sqlite:${rootProject.buildDir}/database.db"
+var databaseFile = new File(rootProject.buildDir, "database.db")
+var databaseUrl = "jdbc:sqlite:${databaseFile}"
+
+tasks.register("createBuildDirectoryIfNeeded") {
+    doLast {
+        if (!databaseFile.parentFile.exists()) {
+            databaseFile.parentFile.mkdirs()
+        }
+    }
+    // https://github.com/gradle/gradle/issues/2488
+    mustRunAfter(project.tasks.findByPath('clean'))
+}
 
 flyway {
     url = databaseUrl
     locations = ["filesystem:src/main/resources/db"]
+}
+
+tasks.flywayMigrate {
+    dependsOn("createBuildDirectoryIfNeeded")
 }
 
 jooq {
