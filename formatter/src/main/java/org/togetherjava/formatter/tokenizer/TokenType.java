@@ -102,7 +102,7 @@ public enum TokenType {
         if (!isKeyword) {
             this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")");
         } else {
-            this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")[^a-zA-Z]");
+            this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")(?![^a-zA-Z])");
         }
 
         this.isKeyword = isKeyword;
