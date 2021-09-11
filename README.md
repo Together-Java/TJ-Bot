@@ -11,6 +11,11 @@
 
 TJ-Bot is a Discord Bot used on the [Together Java](https://discord.gg/togetherjava) server. It is maintained by the community, anyone can contribute.
 
+# Getting started
+
+* [Documentation](https://github.com/Together-Java/TJ-Bot/wiki): as general entry point to the project
+* [Contributing](https://github.com/Together-Java/TJ-Bot/wiki/Contributing): if you want to improve the bot
+
 # Download
 
 ## Using a build tool
@@ -29,7 +34,7 @@ dependencies {
     implementation 'com.github.Together-Java:TJ-Bot:<tag>'
 }
 ```
-You can replace `<tag>` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version
+You can replace `<tag>` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version.
 
 ### Maven
 
@@ -48,15 +53,10 @@ Then add the dependency:
     <version>[tag]</version>
 </dependency>
 ```
-You can replace `[tag]` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version
+You can replace `[tag]` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version.
 
 ---
 
 ## Jar downloads
 
 Jar downloads are available from the [release section](https://github.com/Together-Java/TJ-Bot/releases).
-
-# Getting started
-
-* [Documentation](https://github.com/Together-Java/TJ-Bot/wiki): as general entry point to the project
-* [Contributing](https://github.com/Together-Java/TJ-Bot/wiki/Contributing): if you want to improve the bot

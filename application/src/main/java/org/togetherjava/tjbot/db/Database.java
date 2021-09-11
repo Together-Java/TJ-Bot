@@ -25,12 +25,9 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public final class Database {
 
-    /**
-     * The DSL context for this database.
-     */
     private final DSLContext dslContext;
     /**
-     * Lock used to implement thread-safety across this class. Any database modifying method should
+     * Lock used to implement thread-safety across this class. Any database modifying method must
      * use this lock.
      */
     private final Lock writeLock = new ReentrantLock();
@@ -44,7 +41,7 @@ public final class Database {
     public Database(String jdbcUrl) throws SQLException {
         SQLiteConfig sqliteConfig = new SQLiteConfig();
         sqliteConfig.enforceForeignKeys(true);
-        // In WAL mode only concurrent writes pose a problem, so we synchronize on those
+        // In WAL mode only concurrent writes pose a problem, so we synchronize those
         sqliteConfig.setJournalMode(SQLiteConfig.JournalMode.WAL);
 
         SQLiteDataSource dataSource = new SQLiteDataSource(sqliteConfig);
@@ -196,11 +193,6 @@ public final class Database {
         });
     }
 
-    /**
-     * Gets the DSL context for this database.
-     *
-     * @return the DSL context
-     */
     private DSLContext getDslContext() {
         return dslContext;
     }

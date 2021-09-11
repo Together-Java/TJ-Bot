@@ -21,9 +21,7 @@ import org.slf4j.LoggerFactory;
  * </pre>
  */
 public final class PingPongListener extends ListenerAdapter {
-    /**
-     * Logger for this class
-     */
+
     private static final Logger logger = LoggerFactory.getLogger(PingPongListener.class);
 
     /**
