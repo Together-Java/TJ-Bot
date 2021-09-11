@@ -12,11 +12,40 @@ import org.togetherjava.tjbot.db.generated.tables.records.StorageRecord;
 
 import java.util.Optional;
 
+/**
+ * Implementation of an example command to illustrate how to use a database.
+ * <p>
+ * The implemented commands are {@code !dbput} and {@code !dbget}. They act like some sort of simple
+ * {@code Map<String, String>}, allowing the user to store and retrieve key-value pairs from the
+ * database.
+ * <p>
+ * For example:
+ *
+ * <pre>
+ * {@code
+ * !dbput hello Hello World!
+ * // TJ-Bot: Saved under 'hello'.
+ * !dbget hello
+ * // TJ-Bot: Saved message: Hello World!
+ * }
+ * </pre>
+ */
 public final class DatabaseListener extends ListenerAdapter {
+    /**
+     * Logger for this class.
+     */
     private static final Logger logger = LoggerFactory.getLogger(DatabaseListener.class);
 
+    /**
+     * The database instance used by this command.
+     */
     private final Database database;
 
+    /**
+     * Creates a new command listener, using the given database
+     *
+     * @param database the database to store the key-value pairs in
+     */
     public DatabaseListener(Database database) {
         this.database = database;
     }
@@ -38,8 +67,18 @@ public final class DatabaseListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Handler for the {@code !dbput} command.
+     * <p>
+     * If the message is in the wrong format, it will respond to the user instead of throwing any
+     * exceptions.
+     *
+     * @param message the message to react to. For example {@code !dbput hello Hello World!}.
+     * @param event the event the message belongs to, mainly used to respond back to the user
+     */
     private void handlePutMessage(String message, MessageReceivedEvent event) {
         // !dbput hello Hello World!
+        // Parse message
         logger.info("#{}: Received '!dbput' command", event.getResponseNumber());
         String[] data = message.split(" ", 3);
         if (data.length != 3) {
@@ -51,6 +90,7 @@ public final class DatabaseListener extends ListenerAdapter {
         String key = data[1];
         String value = data[2];
 
+        // Save the value in the database
         try {
             database.writeTransaction(ctx -> {
                 StorageRecord storageRecord =
@@ -67,8 +107,18 @@ public final class DatabaseListener extends ListenerAdapter {
         }
     }
 
+    /**
+     * Handler for the {@code !dbget} command.
+     * <p>
+     * If the message is in the wrong format, it will respond to the user instead of throwing any
+     * exceptions.
+     *
+     * @param message the message to react to. For example {@code !dbget hello}.
+     * @param event the event the message belongs to, mainly used to respond back to the user
+     */
     private void handleGetMessage(String message, MessageReceivedEvent event) {
         // !dbget hello
+        // Parse message
         logger.info("#{}: Received '!dbget' command", event.getResponseNumber());
         String[] data = message.split(" ", 2);
         if (data.length != 2) {
@@ -79,6 +129,7 @@ public final class DatabaseListener extends ListenerAdapter {
         }
         String key = data[1];
 
+        // Retrieve the value from the database
         try {
             Optional<StorageRecord> foundValue = database.read(context -> {
                 return Optional.ofNullable(context.selectFrom(Storage.STORAGE)

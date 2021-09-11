@@ -12,6 +12,11 @@ public class DatabaseException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = -4215197259643585552L;
 
+    /**
+     * Creates a new instance of this exception with the given underlying cause.
+     *
+     * @param cause The cause of the exception
+     */
     public DatabaseException(Exception cause) {
         super(cause);
     }

@@ -10,6 +10,9 @@ import javax.security.auth.login.LoginException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 
+/***
+ * Main class of the application. Use {@link #main(String[])} to start an instance of it.
+ */
 public enum Application {
     ;
 
@@ -21,6 +24,7 @@ public enum Application {
      * @param args command line arguments - [the token of the bot, the path to the database]
      */
     public static void main(final String[] args) {
+        // Parse arguments
         if (args.length != 2) {
             throw new IllegalArgumentException("Expected two arguments but " + args.length
                     + " arguments were provided. The first argument must be the token of the bot"
@@ -29,6 +33,7 @@ public enum Application {
         String token = args[0];
         String databasePath = args[1];
 
+        // Start
         try {
             runBot(token, Path.of(databasePath));
         } catch (Exception t) {
@@ -36,6 +41,12 @@ public enum Application {
         }
     }
 
+    /**
+     * Runs an instance of the bot, connecting to the given token and using the given database.
+     *
+     * @param token the Discord Bot token to connect with
+     * @param databasePath the path to the database to use
+     */
     public static void runBot(String token, Path databasePath) {
         logger.info("Starting bot...");
         try {

@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.util;
 
 /**
+ * {@link java.util.function.Function} extension that can possibly throw an exception.
+ * <p>
  * Represents a function that accepts a single input argument, returns a result and could possibly
  * throw an exception.
  *
@@ -14,11 +16,11 @@ public interface CheckedFunction<T, R, E extends Throwable> {
     /**
      * Performs this operation on the given argument.
      *
-     * @param t the input argument
+     * @param input the input argument
      * @return R on successful evaluation
      * @throws E an exception if any occurs during the execution of the operation
      */
-    R accept(T t) throws E;
+    R accept(T input) throws E;
 
 }
 
