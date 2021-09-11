@@ -53,9 +53,10 @@ public final class DatabaseListener extends ListenerAdapter {
 
         try {
             database.writeTransaction(ctx -> {
-                StorageRecord record = ctx.newRecord(Storage.STORAGE).setKey(key).setValue(value);
-                if (record.update() == 0) {
-                    record.insert();
+                StorageRecord storageRecord =
+                        ctx.newRecord(Storage.STORAGE).setKey(key).setValue(value);
+                if (storageRecord.update() == 0) {
+                    storageRecord.insert();
                 }
             });
 
@@ -79,11 +80,10 @@ public final class DatabaseListener extends ListenerAdapter {
         String key = data[1];
 
         try {
-            Optional<StorageRecord> foundValue = database.read(ctx -> {
-                return ctx.selectFrom(Storage.STORAGE)
-                          .where(Storage.STORAGE.KEY.eq(key))
-                          .stream()
-                          .findFirst();
+            Optional<StorageRecord> foundValue = database.read(context -> {
+                return Optional.ofNullable(context.selectFrom(Storage.STORAGE)
+                                                  .where(Storage.STORAGE.KEY.eq(key))
+                                                  .fetchOne());
             });
             if (foundValue.isEmpty()) {
                 event.getChannel().sendMessage("Nothing found for the key '" + key + "'").queue();
