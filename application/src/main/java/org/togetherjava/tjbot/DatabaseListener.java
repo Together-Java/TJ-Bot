@@ -44,8 +44,8 @@ public final class DatabaseListener extends ListenerAdapter {
         String[] data = message.split(" ", 3);
         if (data.length != 3) {
             event.getChannel()
-                 .sendMessage("Sorry, your message was in the wrong format, try '!dbput key value'")
-                 .queue();
+                .sendMessage("Sorry, your message was in the wrong format, try '!dbput key value'")
+                .queue();
             return;
         }
         String key = data[1];
@@ -73,8 +73,8 @@ public final class DatabaseListener extends ListenerAdapter {
         String[] data = message.split(" ", 2);
         if (data.length != 2) {
             event.getChannel()
-                 .sendMessage("Sorry, your message was in the wrong format, try '!dbget key'")
-                 .queue();
+                .sendMessage("Sorry, your message was in the wrong format, try '!dbget key'")
+                .queue();
             return;
         }
         String key = data[1];
@@ -82,8 +82,8 @@ public final class DatabaseListener extends ListenerAdapter {
         try {
             Optional<StorageRecord> foundValue = database.read(context -> {
                 return Optional.ofNullable(context.selectFrom(Storage.STORAGE)
-                                                  .where(Storage.STORAGE.KEY.eq(key))
-                                                  .fetchOne());
+                    .where(Storage.STORAGE.KEY.eq(key))
+                    .fetchOne());
             });
             if (foundValue.isEmpty()) {
                 event.getChannel().sendMessage("Nothing found for the key '" + key + "'").queue();

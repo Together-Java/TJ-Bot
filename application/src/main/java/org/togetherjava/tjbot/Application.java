@@ -42,9 +42,9 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                                .addEventListeners(new PingPongListener())
-                                .addEventListeners(new DatabaseListener(database))
-                                .build();
+                .addEventListeners(new PingPongListener())
+                .addEventListeners(new DatabaseListener(database))
+                .build();
             jda.awaitReady();
             logger.info("Bot is ready");
         } catch (LoginException e) {
