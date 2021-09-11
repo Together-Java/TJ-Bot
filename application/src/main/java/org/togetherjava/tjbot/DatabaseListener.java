@@ -81,9 +81,9 @@ public final class DatabaseListener extends ListenerAdapter {
 
         try {
             Optional<StorageRecord> foundValue = database.read(context -> {
-                try (var query = context.selectFrom(Storage.STORAGE)) {
-                    return query.where(Storage.STORAGE.KEY.eq(key)).stream().findFirst();
-                }
+                return Optional.ofNullable(context.selectFrom(Storage.STORAGE)
+                                                  .where(Storage.STORAGE.KEY.eq(key))
+                                                  .fetchOne());
             });
             if (foundValue.isEmpty()) {
                 event.getChannel().sendMessage("Nothing found for the key '" + key + "'").queue();
