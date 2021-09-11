@@ -31,18 +31,13 @@ import java.util.Optional;
  * </pre>
  */
 public final class DatabaseListener extends ListenerAdapter {
-    /**
-     * Logger for this class.
-     */
+
     private static final Logger logger = LoggerFactory.getLogger(DatabaseListener.class);
 
-    /**
-     * The database instance used by this command.
-     */
     private final Database database;
 
     /**
-     * Creates a new command listener, using the given database
+     * Creates a new command listener, using the given database.
      *
      * @param database the database to store the key-value pairs in
      */
@@ -78,7 +73,6 @@ public final class DatabaseListener extends ListenerAdapter {
      */
     private void handlePutMessage(String message, MessageReceivedEvent event) {
         // !dbput hello Hello World!
-        // Parse message
         logger.info("#{}: Received '!dbput' command", event.getResponseNumber());
         String[] data = message.split(" ", 3);
         if (data.length != 3) {
@@ -90,7 +84,6 @@ public final class DatabaseListener extends ListenerAdapter {
         String key = data[1];
         String value = data[2];
 
-        // Save the value in the database
         try {
             database.writeTransaction(ctx -> {
                 StorageRecord storageRecord =
@@ -118,7 +111,6 @@ public final class DatabaseListener extends ListenerAdapter {
      */
     private void handleGetMessage(String message, MessageReceivedEvent event) {
         // !dbget hello
-        // Parse message
         logger.info("#{}: Received '!dbget' command", event.getResponseNumber());
         String[] data = message.split(" ", 2);
         if (data.length != 2) {
@@ -129,7 +121,6 @@ public final class DatabaseListener extends ListenerAdapter {
         }
         String key = data[1];
 
-        // Retrieve the value from the database
         try {
             Optional<StorageRecord> foundValue = database.read(context -> {
                 return Optional.ofNullable(context.selectFrom(Storage.STORAGE)

@@ -24,7 +24,6 @@ public enum Application {
      * @param args command line arguments - [the token of the bot, the path to the database]
      */
     public static void main(final String[] args) {
-        // Parse arguments
         if (args.length != 2) {
             throw new IllegalArgumentException("Expected two arguments but " + args.length
                     + " arguments were provided. The first argument must be the token of the bot"
@@ -33,7 +32,6 @@ public enum Application {
         String token = args[0];
         String databasePath = args[1];
 
-        // Start
         try {
             runBot(token, Path.of(databasePath));
         } catch (Exception t) {
