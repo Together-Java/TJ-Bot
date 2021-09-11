@@ -16,23 +16,35 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * The main database class.
+ * The main database class used by the application.
+ * <p>
+ * Create an instance using {@link #Database(String)} and prefer to re-use it. The underlying
+ * connections are handled automatically by the system.
+ * <p>
+ * Instances of this class are thread-safe and can be used to concurrently write to the database.
  */
 public final class Database {
 
+    /**
+     * The DSL context for this database.
+     */
     private final DSLContext dslContext;
+    /**
+     * Lock used to implement thread-safety across this class. Any database modifying method should
+     * use this lock.
+     */
     private final Lock writeLock = new ReentrantLock();
 
     /**
-     * Creates a new database.
+     * Creates an instance of a new database.
      *
-     * @param jdbcUrl the url to the database
+     * @param jdbcUrl the url to the database in the format expected by JDBC
      * @throws SQLException if no connection could be established
      */
     public Database(String jdbcUrl) throws SQLException {
         SQLiteConfig sqliteConfig = new SQLiteConfig();
         sqliteConfig.enforceForeignKeys(true);
-        // In WAL mode only concurrent writes pose a problem so we synchronize on those
+        // In WAL mode only concurrent writes pose a problem, so we synchronize on those
         sqliteConfig.setJournalMode(SQLiteConfig.JournalMode.WAL);
 
         SQLiteDataSource dataSource = new SQLiteDataSource(sqliteConfig);
@@ -45,10 +57,12 @@ public final class Database {
     }
 
     /**
-     * Acquires read access to the database.
+     * Acquires read-only access to the database.
      *
-     * @return a way to interact with the database in a read only way
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @param action the action to apply to the DSL context, e.g. a query
+     * @param <T> the type returned by the given action
+     * @return the result returned by the given action
+     * @throws DatabaseException if an error occurs in the given action
      */
     public <T> T read(
             CheckedFunction<? super DSLContext, T, ? extends DataAccessException> action) {
@@ -60,9 +74,10 @@ public final class Database {
     }
 
     /**
-     * Acquires read access to the database.
+     * Acquires read-only access to the database.
      *
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @param action the action that consumes the DSL context, e.g. a query
+     * @throws DatabaseException if an error occurs in the given action
      */
     public void read(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         read(context -> {
@@ -74,8 +89,10 @@ public final class Database {
     /**
      * Acquires read and write access to the database.
      *
-     * @return a way to interact with the database
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @param action the action to apply to the DSL context, e.g. a query
+     * @param <T> the type returned by the given action
+     * @return the result returned by the given action
+     * @throws DatabaseException if an error occurs in the given action
      */
     public <T> T write(
             CheckedFunction<? super DSLContext, T, ? extends DataAccessException> action) {
@@ -92,7 +109,8 @@ public final class Database {
     /**
      * Acquires read and write access to the database.
      *
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @param action the action to apply to the DSL context, e.g. a query
+     * @throws DatabaseException if an error occurs in the given action
      */
     public void write(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         write(context -> {
@@ -107,8 +125,8 @@ public final class Database {
      * @param handler the handler that is executed within the context of the transaction. The
      *        handler will be called once and its return value returned from the transaction.
      * @param <T> the handler's return type
-     * @return whatever the handler returned
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @return the object that is returned by the given handler
+     * @throws DatabaseException if an error occurs in the given handler function
      */
     public <T> T readTransaction(
             CheckedFunction<? super DSLContext, T, DataAccessException> handler) {
@@ -128,7 +146,7 @@ public final class Database {
      *
      * @param handler the handler that is executed within the context of the transaction. It has no
      *        return value.
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @throws DatabaseException if an error occurs in the given handler function
      */
     public void readTransaction(
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
@@ -142,10 +160,10 @@ public final class Database {
      * Acquires a transaction that can read and write to the database.
      *
      * @param handler the handler that is executed within the context of the transaction. The
-     *        handler will be called once and its return value returned from the transaction.
-     * @param <T> the handler's return type
-     * @return whatever the handler returned
-     * @throws DatabaseException if an error occurs in the passed handler function
+     *        handler will be called once and its return value is returned from the transaction.
+     * @param <T> the return type of the handler
+     * @return the object that is returned by the given handler
+     * @throws DatabaseException if an error occurs in the given handler function
      */
     public <T> T writeTransaction(
             CheckedFunction<? super DSLContext, T, DataAccessException> handler) {
@@ -168,7 +186,7 @@ public final class Database {
      *
      * @param handler the handler that is executed within the context of the transaction. It has no
      *        return value.
-     * @throws DatabaseException if an error occurs in the passed handler function
+     * @throws DatabaseException if an error occurs in the given handler function
      */
     public void writeTransaction(
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
@@ -179,7 +197,9 @@ public final class Database {
     }
 
     /**
-     * @return the database dsl context
+     * Gets the DSL context for this database.
+     *
+     * @return the DSL context
      */
     private DSLContext getDslContext() {
         return dslContext;
