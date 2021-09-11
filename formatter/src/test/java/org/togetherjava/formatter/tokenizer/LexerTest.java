@@ -54,4 +54,10 @@ class LexerTest {
 
         assertEquals(expected, tokens);
     }
+
+    @Test
+    @DisplayName("Identifier doesn't get recognized as keyword")
+    void testIdentifierKeyword() {
+        assertEquals(TokenType.IDENTIFIER, lexer.tokenize("format").get(0).type());
+    }
 }
