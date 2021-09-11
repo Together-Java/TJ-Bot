@@ -38,7 +38,7 @@ class LexerTest {
     }
 
     @Test
-    @DisplayName("Given input returns expected result")
+    @DisplayName("All tokens get tokenized correctly")
     void testInput() {
         String testString =
             "class enum record interface import if for while null extends implements new return package this yield catch try else if else public private protected static sealed non-sealed final abstract void int long short byte boolean float double char ( ) { } [ ] ; :: : , += -= *= /= %= &= |= == != >= > <= < ! = ++ + -- - && || /* a */ / * . @annotation 0 \"string\" identifier ` ";
