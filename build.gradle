@@ -21,6 +21,7 @@ sonarqube {
 }
 
 subprojects {
+    apply plugin: "java"
     apply plugin: "com.diffplug.spotless"
     apply plugin: "org.sonarqube"
 
