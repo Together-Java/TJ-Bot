@@ -46,10 +46,6 @@ class LexerTest {
                         expected = new ArrayList<>();
 
         for (TokenType type : TokenType.values()) {
-            if (type == TokenType.UNKNOWN) {
-                System.out.println("hi");
-            }
-
             if (type != TokenType.WHITESPACE) {
                 expected.add(type);
                 expected.add(TokenType.WHITESPACE);
