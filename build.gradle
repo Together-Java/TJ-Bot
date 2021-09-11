@@ -33,4 +33,27 @@ subprojects {
             eclipse().configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }
     }
+
+    configurations {
+        umlDoclet
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        umlDoclet 'nl.talsmasoftware:umldoclet:2.0.14'
+    }
+
+    javadoc {
+        exclude 'build/generated/**'
+        exclude 'build/generated-src/**'
+        source = sourceSets.main.allJava
+//        destinationDir = reporting.file("docs/uml")
+        options.docletpath = configurations.umlDoclet.files as List
+        options.doclet = "nl.talsmasoftware.umldoclet.UMLDoclet"
+//    options.addStringOption "private"
+        options.addStringOption "-show-members", "private"
+    }
 }
