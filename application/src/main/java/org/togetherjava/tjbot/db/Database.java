@@ -107,7 +107,7 @@ public final class Database {
      * @param handler the handler that is executed within the context of the transaction. The
      *        handler will be called once and its return value returned from the transaction.
      * @param <T> the handler's return type
-     * @return whatever the handler returned#
+     * @return whatever the handler returned
      * @throws DatabaseException if an error occurs in the passed handler function
      */
     public <T> T readTransaction(
