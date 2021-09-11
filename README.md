@@ -13,13 +13,46 @@ TJ-Bot is a Discord Bot used on the [Together Java](https://discord.gg/togetherj
 
 # Download
 
-Gradle:
+## Using a build tool
 
-```xml
+### Gradle
+
+First add the jitpack repository:
+```gradle
+repositories {
+    maven { url 'https://jitpack.io' }
+} 
+```
+Then add the dependency:
+```gradle
 dependencies {
-  implementation 'org.togetherjava:TJ-Bot:1.0-SNAPSHOT'
+    implementation 'com.github.Together-Java:TJ-Bot:<tag>'
 }
 ```
+You can replace `<tag>` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version
+
+### Maven
+
+First add the jitpack repository:
+```xml
+<repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+<repository>
+```
+Then add the dependency:
+```xml
+<dependency>
+    <groupId>com.github.Together-Java</groupId>
+    <artifactId>TJ-Bot</artifactId>
+    <version>[tag]</version>
+</dependency>
+```
+You can replace `[tag]` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version
+
+---
+
+## Jar downloads
 
 Jar downloads are available from the [release section](https://github.com/Together-Java/TJ-Bot/releases).
 
