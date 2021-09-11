@@ -11,6 +11,8 @@ public class DatabaseException extends RuntimeException {
      */
     @Serial
     private static final long serialVersionUID = -4215197259643585552L;
+    
+    public DatabaseException(Exception cause) {
         super(cause);
     }
 }
