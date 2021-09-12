@@ -57,7 +57,7 @@ public enum TokenType {
     CLOSE_BRACKETS("]"),
     SEMICOLON(";"),
     METHOD_REFERENCE("::"),
-    COLON(":"),
+    COLON(":", false, true), // technically not a "real" operator but used in an enhanced for loop
     COMMA(","),
     PLUS_EQUALS("+=", false, true),
     MINUS_EQUALS("-=", false, true),
