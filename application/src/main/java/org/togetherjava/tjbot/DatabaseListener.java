@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -51,6 +52,15 @@ public final class DatabaseListener extends ListenerAdapter {
             return;
         }
         if (!event.isFromType(ChannelType.TEXT)) {
+            return;
+        }
+        if (event.isWebhookMessage()) {
+            return;
+        }
+        if (event.isFromType(ChannelType.PRIVATE)) {
+            return;
+        }
+        if (!event.getMember().hasPermission(Permission.MESSAGE_MANAGE)) {
             return;
         }
 
