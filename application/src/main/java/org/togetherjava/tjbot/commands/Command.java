@@ -15,7 +15,8 @@ import java.util.List;
 
 /**
  * The class all commands have to abstract. <br>
- * Instead of implementing this interface, you can also extend {@link org.togetherjava.tjbot.commands.example.AbstractCommand}.
+ * Instead of implementing this interface, you can also extend
+ * {@link org.togetherjava.tjbot.commands.example.AbstractCommand}.
  *
  * Look at {@link CommandExample} for an example. <br>
  * Or look at {@link SubCommandExample} for an example with subcommands.
