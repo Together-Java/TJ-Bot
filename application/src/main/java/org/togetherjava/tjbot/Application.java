@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandHandler;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.security.auth.login.LoginException;
@@ -53,6 +54,7 @@ public enum Application {
             JDA jda = JDABuilder.createDefault(token)
                 .addEventListeners(new PingPongListener())
                 .addEventListeners(new DatabaseListener(database))
+                .addEventListeners(new CommandHandler())
                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");
