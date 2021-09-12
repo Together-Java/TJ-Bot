@@ -89,6 +89,7 @@ public enum TokenType {
     MULTIPLY("*", false, true),
     DOT("."),
     // other
+    WILDCARD("?"),
     ANNOTATION(Pattern.compile("^(@[a-zA-Z][a-zA-Z0-9_]*)")),
     NUMBER(Pattern.compile("^((0[xb])?([0-9_]+|[0-9_]*(\\.\\d*))[dDfFlL]?)")),
     STRING(Pattern.compile("^(\"[^\"]*\")")),
