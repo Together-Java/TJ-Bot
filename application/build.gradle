@@ -19,10 +19,12 @@ repositories {
     }
 }
 
+var outputImage = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
+
 jib {
     from.image = 'adoptopenjdk/openjdk16:alpine-slim'
     to {
-        image = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:latest'
+        image = outputImage
         auth {
             username = System.getenv('REGISTRY_USER') ?: ''
             password = System.getenv('REGISTRY_PASSWORD') ?: ''
