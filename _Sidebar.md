@@ -15,5 +15,6 @@
 
 * [[Discord Bot Details]]
 * [[How to access the VPS]]
+* [[View the logs]]
 * [[Shutdown or restart of the bot]]
 * [[Reset or edit the databases]]
