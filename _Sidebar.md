@@ -13,6 +13,7 @@
 
 #### Maintenance
 
+* [[Discord Bot Details]]
 * [[How to access the VPS]]
 * [[Shutdown or restart of the bot]]
-* [[Discord Bot Details]]
+* [[Reset or edit the databases]]
