@@ -9,45 +9,45 @@ import java.util.regex.Pattern;
  */
 public enum TokenType {
     // keywords
-    CLASS("class", true),
-    ENUM("enum", true),
-    RECORD("record", true),
-    INTERFACE("interface", true),
-    IMPORT("import", true),
-    IF("if", true),
-    FOR("for", true),
-    WHILE("while", true),
-    NULL("null", true),
-    EXTENDS("extends", true),
-    IMPLEMENTS("implements", true),
-    NEW("new", true),
-    RETURN("return", true),
-    PACKAGE("package", true),
-    THIS("this", true),
-    YIELD("yield", true),
-    CATCH("catch", true),
-    TRY("try", true),
-    ELSE_IF("else if", true), // not really a keyword but required for formatting
-    ELSE("else", true),
+    CLASS("class", true, false),
+    ENUM("enum", true, false),
+    RECORD("record", true, false),
+    INTERFACE("interface", true, false),
+    IMPORT("import", true, false),
+    IF("if", true, false),
+    FOR("for", true, false),
+    WHILE("while", true, false),
+    NULL("null", true, false),
+    EXTENDS("extends", true, false),
+    IMPLEMENTS("implements", true, false),
+    NEW("new", true, false),
+    RETURN("return", true, false),
+    PACKAGE("package", true, false),
+    THIS("this", true, false),
+    YIELD("yield", true, false),
+    CATCH("catch", true, false),
+    TRY("try", true, false),
+    ELSE_IF("else if", true, false), // not really a keyword but required for formatting
+    ELSE("else", true, false),
     // access modifiers
-    PUBLIC("public", true),
-    PRIVATE("private", true),
-    PROTECTED("protected", true),
-    STATIC("static", true),
-    SEALED("sealed", true),
-    NON_SEALED("non-sealed", true),
-    FINAL("final", true),
-    ABSTRACT("abstract", true),
+    PUBLIC("public", true, false),
+    PRIVATE("private", true, false),
+    PROTECTED("protected", true, false),
+    STATIC("static", true, false),
+    SEALED("sealed", true, false),
+    NON_SEALED("non-sealed", true, false),
+    FINAL("final", true, false),
+    ABSTRACT("abstract", true, false),
     // primitive types
-    VOID("void", true),
-    INT("int", true),
-    LONG("long", true),
-    SHORT("short", true),
-    BYTE("byte", true),
-    BOOLEAN("boolean", true),
-    FLOAT("float", true),
-    DOUBLE("double", true),
-    CHAR("char", true),
+    VOID("void", true, false),
+    INT("int", true, false),
+    LONG("long", true, false),
+    SHORT("short", true, false),
+    BYTE("byte", true, false),
+    BOOLEAN("boolean", true, false),
+    FLOAT("float", true, false),
+    DOUBLE("double", true, false),
+    CHAR("char", true, false),
     // general tokens
     OPEN_PARENTHESIS("("),
     CLOSE_PARENTHESIS(")"),
@@ -59,33 +59,33 @@ public enum TokenType {
     METHOD_REFERENCE("::"),
     COLON(":"),
     COMMA(","),
-    PLUS_EQUALS("+="),
-    MINUS_EQUALS("-="),
-    MULTIPLY_EQUALS("*="),
-    DIVIDE_EQUALS("/="),
-    MODULO_EQUALS("%="),
-    AND_EQUALS("&="),
-    OR_EQUALS("|="),
-    EQUALS("=="),
-    NOT_EQUALS("!="),
-    BIGGER_OR_EQUALS(">="),
-    BIGGER(">"),
-    SMALLER_OR_EQUALS("<="),
-    SMALLER("<"),
+    PLUS_EQUALS("+=", false, true),
+    MINUS_EQUALS("-=", false, true),
+    MULTIPLY_EQUALS("*=", false, true),
+    DIVIDE_EQUALS("/=", false, true),
+    MODULO_EQUALS("%=", false, true),
+    AND_EQUALS("&=", false, true),
+    OR_EQUALS("|=", false, true),
+    EQUALS("==", false, true),
+    NOT_EQUALS("!=", false, true),
+    BIGGER_OR_EQUALS(">=", false, true),
+    BIGGER(">", false, true),
+    SMALLER_OR_EQUALS("<=", false, true),
+    SMALLER("<", false, true),
     NOT("!"),
-    ASSIGN("="),
+    ASSIGN("=", false, true),
     PLUSPLUS("++"),
-    PLUS("+"),
+    PLUS("+", false, true),
     MINUSMINUS("--"),
-    MINUS("-"),
-    BOOL_AND("&&"),
-    BOOL_OR("||"),
+    MINUS("-", false, true),
+    BOOL_AND("&&", false, true),
+    BOOL_OR("||", false, true),
 
     // this has to be over DIVIDE or else it'll be seen as 2x DIVIDE
     COMMENT(Pattern.compile("^(//.*|/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)")),
 
-    DIVIDE("/"),
-    MULTIPLY("*"),
+    DIVIDE("/", false, true),
+    MULTIPLY("*", false, true),
     DOT("."),
     // other
     ANNOTATION(Pattern.compile("^(@[a-zA-Z][a-zA-Z0-9_]*)")),
@@ -96,9 +96,9 @@ public enum TokenType {
     UNKNOWN(Pattern.compile("^(.)"));
 
     private final Pattern regex;
-    private final boolean isKeyword;
+    private final boolean isKeyword, isOperator;
 
-    TokenType(String pattern, boolean isKeyword) {
+    TokenType(String pattern, boolean isKeyword, boolean isOperator) {
         if (!isKeyword) {
             this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")");
         } else {
@@ -106,15 +106,17 @@ public enum TokenType {
         }
 
         this.isKeyword = isKeyword;
+        this.isOperator = isOperator;
     }
 
     TokenType(Pattern regex) {
         this.regex = regex;
         this.isKeyword = false;
+        this.isOperator = false;
     }
 
     TokenType(String spattern) {
-        this(spattern, false);
+        this(spattern, false, false);
     }
 
     public Pattern getRegex() {
@@ -123,5 +125,9 @@ public enum TokenType {
 
     public boolean isKeyword() {
         return isKeyword;
+    }
+
+    public boolean isOperator() {
+        return isOperator;
     }
 }
