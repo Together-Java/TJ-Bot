@@ -29,6 +29,7 @@ public enum TokenType {
     TRY("try", true, false),
     ELSE_IF("else if", true, false), // not really a keyword but required for formatting
     ELSE("else", true, false),
+    SUPER("super", true, false),
     // access modifiers
     PUBLIC("public", true, false),
     PRIVATE("private", true, false),
