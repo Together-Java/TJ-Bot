@@ -27,7 +27,6 @@ class FormatterTest {
                 public static void main(String[] args) {
                     System.out.println("Hello World!");
                 }
-                
                 ```""", formatter.format("public static\nvoid main ( String [ ]args){ System.out. println( \"Hello World!\"      );}", lexer));
     }
 
@@ -42,7 +41,6 @@ class FormatterTest {
                     result.add(s.trim());
                 }
                 return result;
-
                 ```""", formatter.format("List<String>input=new ArrayList<>();List<String> result=new ArrayList<>();for(String s:input){result.add(s.trim());}return result;", lexer));
     }
 
@@ -55,7 +53,6 @@ class FormatterTest {
                     if () {
                         if () {
                             if () {
-
                 ```""", formatter.format("if(){if(){if(){if(){", lexer));
     }
 
@@ -65,10 +62,8 @@ class FormatterTest {
         assertEquals("""
                 ```java
                 while (if () e) {
-                
                 }
                 }
-
                 ```""", formatter.format("while(if()e){}}", lexer));
     }
 
@@ -78,15 +73,61 @@ class FormatterTest {
         assertEquals("""
                 ```java
                 if (1) {
-                
                 }
                 else if (2) {
-                
                 }
                 else {
-                
                 }
-
                 ```""", formatter.format("if(1){}else if(2){}else{}", lexer));
+    }
+
+    @Test
+    @DisplayName("For int loop working correctly")
+    void testForInt() {
+        assertEquals("""
+                ```java
+                for (int i = 0; i < 3; i++) {
+                }
+                ```""", formatter.format("for(int i=0;i<3;i++){}", lexer));
+    }
+
+    @Test
+    @DisplayName("Diamond operator rendering correctly")
+    void testDiamondOperator() {
+        assertEquals("""
+                ```java
+                List<String> list = new ArrayList<>();
+                ```""", formatter.format("List<String>list=new ArrayList < > ( ) ;", lexer));
+    }
+
+    @Test
+    @DisplayName("BIGGER and SMALLER rendering correctly")
+    void testBiggerAndSmaller() {
+        assertEquals("""
+                ```java
+                3 < 2 && 2 > 3
+                ```""", formatter.format("3<2&&2>3", lexer));
+    }
+
+    @Test
+    @DisplayName("Comment renders correctly")
+    void testComment() {
+        assertEquals("""
+                ```java
+                // this is a comment
+                void foo() {
+                }
+                ```""", formatter.format("// this is a comment\nvoid foo() {}", lexer));
+    }
+
+    @Test
+    @DisplayName("Annotation renders correctly")
+    void testAnnotation() {
+        assertEquals("""
+                ```java
+                @MyAnnotation
+                void foo() {
+                }
+                ```""", formatter.format("@MyAnnotation\nvoid foo() {}", lexer));
     }
 }

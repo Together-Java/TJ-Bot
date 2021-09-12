@@ -67,8 +67,8 @@ public class Formatter {
         for (Section section : sections) {
             if (section.isCodeSection()) {
                 result.append("```java\n")
-                      .append(writeCodeSection(section.tokens()))
-                      .append("\n```");
+                        .append(writeCodeSection(section.tokens()))
+                        .append("\n```");
             } else {
                 result.append(joinTokens(section.tokens()));
             }
@@ -101,129 +101,18 @@ public class Formatter {
     }
 
     /**
-     * Writes and formats a given code section (in form of a list of tokens) into a StringBuilder
+     * Writes and formats a given code section (in form of a list of tokens) into a StringBuilder using a {@link CodeSectionFormatter}
      *
      * @param tokens tokens to write
      * @return written code sections
      * @author illuminator3
      */
     private StringBuilder writeCodeSection(List<Token> tokens) {
-        List<Token> normalizedTokens = makeMutable(tokens);
+        CodeSectionFormatter formatter = new CodeSectionFormatter(tokens);
 
-        purgeWhitespaces(normalizedTokens);
+        formatter.format();
 
-        TokenType lastToken = TokenType.UNKNOWN;
-        StringBuilder result = new StringBuilder();
-        boolean lastNewLine = false;
-        int indentation = 0;
-        boolean forClosed = true;
-        int forClosingLevel = 0;
-
-        for (Token token : normalizedTokens) {
-            TokenType type = token.type();
-
-            if (lastNewLine && type != TokenType.CLOSE_BRACES) {
-                putIndentation(indentation, result);
-            }
-
-            lastNewLine = false;
-
-            iteration: {
-                if (type == TokenType.OPEN_BRACES) {
-                    if (lastToken == TokenType.CLOSE_PARENTHESIS
-                            || lastToken == TokenType.IDENTIFIER || lastToken == TokenType.TRY || lastToken == TokenType.ELSE) {
-                        result.append(" ");
-                    }
-
-                    append(result, token);
-
-                    result.append("\n");
-
-                    lastNewLine = true;
-                    indentation++;
-
-                    break iteration;
-                } else if (lastToken == TokenType.CLOSE_BRACKETS && type != TokenType.SEMICOLON) {
-                    result.append(" ");
-
-                    append(result, token);
-
-                    break iteration;
-                } else if (type == TokenType.CLOSE_BRACES) {
-                    result.append("\n");
-
-                    putIndentation(--indentation, result);
-
-                    append(result, token);
-
-                    result.append("\n");
-
-                    lastNewLine = true;
-
-                    break iteration;
-                } else if (type == TokenType.IDENTIFIER && (lastToken == TokenType.CLOSE_BRACES
-                        || lastToken == TokenType.OPEN_BRACES
-                        || lastToken == TokenType.SEMICOLON
-                        || lastToken == TokenType.UNKNOWN)) {
-                    append(result, token);
-
-                    break iteration;
-                } else if (type == TokenType.COMMENT || type == TokenType.SEMICOLON
-                        || type == TokenType.ANNOTATION) {
-                    if (type == TokenType.COMMENT) {
-                        result.append(" ");
-                    }
-
-                    append(result, token);
-
-                    if (forClosed) {
-                        result.append("\n");
-
-                        lastNewLine = true;
-                    }
-
-                    break iteration;
-                } else if ((type == TokenType.OPEN_PARENTHESIS && lastToken != TokenType.IDENTIFIER
-                        && lastToken != TokenType.NOT && lastToken != TokenType.BIGGER
-                        && lastToken != TokenType.OPEN_PARENTHESIS) || lastToken == TokenType.PUBLIC
-                        || lastToken == TokenType.PRIVATE || lastToken == TokenType.PROTECTED
-                        || (lastToken == TokenType.BIGGER && type != TokenType.OPEN_PARENTHESIS)
-                        || lastToken == TokenType.RETURN || lastToken == TokenType.COMMA
-                        || lastToken == TokenType.CATCH
-                        || (lastToken == TokenType.CLOSE_PARENTHESIS
-                                && type != TokenType.CLOSE_PARENTHESIS && type != TokenType.DOT
-                                && type != TokenType.COMMA)
-                        || lastToken == TokenType.PACKAGE) {
-                    result.append(" ");
-                }
-
-                if (!forClosed) {
-                    if (type == TokenType.OPEN_PARENTHESIS) {
-                        forClosingLevel++;
-                    } else if (type == TokenType.CLOSE_PARENTHESIS) {
-                        forClosingLevel--;
-                    }
-
-                    if (forClosingLevel == 0) {
-                        forClosed = true;
-                    }
-                }
-
-                if (type == TokenType.FOR) {
-                    forClosed = false;
-                }
-
-                if (!(NON_SPACE_TOKENS.contains(type) || NON_SPACE_TOKENS.contains(lastToken))) {
-                    result.append(" ");
-                }
-
-                append(result, token);
-            }
-
-            lastToken = type;
-        }
-
-        return new StringBuilder(result.toString().replaceAll("([;}])\n\n", "$1\n"));
+        return formatter.result();
     }
 
     /**
@@ -278,8 +167,8 @@ public class Formatter {
      */
     private List<CheckedToken> indexTokens(List<Token> tokens) {
         return tokens.stream()
-                     .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
-                     .toList();
+                .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
+                .toList();
     }
 
     /**
