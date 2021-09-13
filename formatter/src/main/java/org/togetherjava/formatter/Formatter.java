@@ -103,10 +103,9 @@ public class Formatter {
     }
 
     /**
-     * Sectionizes a given list of tokens into sections who are code sections and sections who are
-     * not
+     * Sectionizes a given list of tokens
      *
-     * @param checkedTokens indexed tokens
+     * @param checkedTokens checked tokens
      * @return list of sections
      * @author illuminator3
      */
