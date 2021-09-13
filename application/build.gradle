@@ -9,6 +9,7 @@ plugins {
     id 'com.google.cloud.tools.jib' version '3.1.4'
     id "org.flywaydb.flyway" version "7.15.0"
     id 'nu.studer.jooq' version '6.0.1'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 repositories {
@@ -86,6 +87,16 @@ jooq {
 
 tasks.generateJooq {
     dependsOn("flywayMigrate")
+}
+
+application {
+    mainClass = "org.togetherjava.tjbot.Application"
+}
+
+shadowJar {
+    archiveBaseName.set('TJ-Bot')
+    archiveClassifier.set('')
+    archiveVersion.set('')
 }
 
 var sqliteVersion = "3.36.0.3"
