@@ -173,7 +173,8 @@ class FormatterTest {
                 (s, e, d) -> {
                     System.out.println("Hello World");
                 };
-                ```""", formatter.format("(s,e,d)->{System.out.println(\"Hello World\");};", lexer));
+                ```""",
+                formatter.format("(s,e,d)->{System.out.println(\"Hello World\");};", lexer));
     }
 
     @Test
@@ -195,6 +196,7 @@ class FormatterTest {
                 (String s, Object b) -> {
                     System.out.println("Hello World");
                 };
-                ```""", formatter.format("(String s,Object b)->{System.out.println(\"Hello World\");};", lexer));
+                ```""", formatter.format(
+                "(String s,Object b)->{System.out.println(\"Hello World\");};", lexer));
     }
 }

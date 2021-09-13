@@ -91,10 +91,11 @@ class CodeSectionFormatter {
                 || type == TokenType.CLOSE_BRACKETS // put a space after e.g. 'try' or 'else' and
                                                     // ] or if it's an operator
                 || type == TokenType.COMMA // for e.g. multiarg method calls or method parameters
-                || (type == TokenType.IDENTIFIER
-                && !queue.isEmpty()
-                && queue.peek().type() == TokenType.IDENTIFIER); // for double identifier
-                                                                 // in e.g. method declaration or enhanced for loops
+                || (type == TokenType.IDENTIFIER && !queue.isEmpty()
+                        && queue.peek().type() == TokenType.IDENTIFIER); // for double identifier
+                                                                         // in e.g. method
+                                                                         // declaration or enhanced
+                                                                         // for loops
     }
 
     private void updateEnhancedLevel(TokenType type) {
