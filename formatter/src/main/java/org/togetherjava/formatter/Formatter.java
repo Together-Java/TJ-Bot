@@ -16,44 +16,6 @@ import java.util.stream.Collectors;
  */
 public class Formatter {
     /**
-     * Set of tokens who should not be put after a space:<br>
-     * - DOT<br>
-     * - SEMICOLON<br>
-     * - NOT<br>
-     * - OPEN_PARENTHESIS<br>
-     * - CLOSE_PARENTHESIS<br>
-     * - OPEN_BRACKETS<br>
-     * - CLOSE_BRACKETS<br>
-     * - SMALLER<br>
-     * - BIGGER<br>
-     * - COMMA<br>
-     * - FOR<br>
-     * - IF<br>
-     * - WHILE<br>
-     * - PLUSPLUS<br>
-     * - MINUSMINUS<br>
-     * - RET URN<br>
-     * - THIS<br>
-     * - PUBLIC<br>
-     * - PROTECTED<br>
-     * - PRIVATE<br>
-     * - TRY<br>
-     * - CATCH<br>
-     * - PACKAGE<br>
-     * - METHOD_REFERENCE<br>
-     * - ELSE_IF<br>
-     * - ELSE<br>
-     */
-    private static final Set<TokenType> NON_SPACE_TOKENS = Set.of(TokenType.DOT,
-            TokenType.SEMICOLON, TokenType.NOT, TokenType.OPEN_PARENTHESIS,
-            TokenType.CLOSE_PARENTHESIS, TokenType.OPEN_BRACKETS, TokenType.CLOSE_BRACKETS,
-            TokenType.SMALLER, TokenType.BIGGER, TokenType.COMMA, TokenType.FOR, TokenType.IF,
-            TokenType.WHILE, TokenType.PLUSPLUS, TokenType.MINUSMINUS, TokenType.RETURN,
-            TokenType.THIS, TokenType.PUBLIC, TokenType.PROTECTED, TokenType.PRIVATE, TokenType.TRY,
-            TokenType.CATCH, TokenType.PACKAGE, TokenType.METHOD_REFERENCE, TokenType.ELSE_IF,
-            TokenType.ELSE);
-
-    /**
      * Formats the given tokens
      *
      * @param tokens tokens to format
@@ -113,49 +75,6 @@ public class Formatter {
         formatter.format();
 
         return formatter.result();
-    }
-
-    /**
-     * Puts the needed indentation into a StringBuilder
-     *
-     * @param indentation indentation level
-     * @param sb string builder
-     * @author illuminator3
-     */
-    private void putIndentation(int indentation, StringBuilder sb) {
-        sb.append("    ".repeat(indentation));
-    }
-
-    /**
-     * Appends a token to a StringBuilder
-     *
-     * @param sb string builder
-     * @param token token to append
-     * @author illuminator3
-     */
-    private void append(StringBuilder sb, Token token) {
-        sb.append(token.content());
-    }
-
-    /**
-     * Makes a list mutable
-     *
-     * @param in (im)mutable list
-     * @return mutable list
-     * @author illuminator3
-     */
-    private <T> List<T> makeMutable(List<T> in) {
-        return new ArrayList<>(in);
-    }
-
-    /**
-     * Removes every whitespace from a given list of tokens
-     *
-     * @param tokens tokens to remove whitesapces from
-     * @author illuminator3
-     */
-    private void purgeWhitespaces(List<Token> tokens) {
-        tokens.removeIf(t -> t.type() == TokenType.WHITESPACE);
     }
 
     /**
