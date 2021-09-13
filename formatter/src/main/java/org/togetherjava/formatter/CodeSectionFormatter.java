@@ -2,6 +2,8 @@ package org.togetherjava.formatter;
 
 import org.togetherjava.formatter.tokenizer.Token;
 import org.togetherjava.formatter.tokenizer.TokenType;
+import org.togetherjava.formatter.util.SkippableLookaheadArrayDeque;
+import org.togetherjava.formatter.util.SkippableLookaheadQueue;
 
 import java.util.*;
 

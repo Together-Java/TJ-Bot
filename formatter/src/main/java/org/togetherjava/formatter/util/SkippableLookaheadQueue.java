@@ -1,4 +1,4 @@
-package org.togetherjava.formatter;
+package org.togetherjava.formatter.util;
 
 import java.util.function.Predicate;
 
