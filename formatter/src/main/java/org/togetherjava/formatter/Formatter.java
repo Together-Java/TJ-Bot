@@ -29,8 +29,8 @@ public class Formatter {
         for (Section section : sections) {
             if (section.isCodeSection()) {
                 result.append("```java\n")
-                        .append(writeCodeSection(section.tokens()))
-                        .append("\n```");
+                      .append(writeCodeSection(section.tokens()))
+                      .append("\n```");
             } else {
                 result.append(joinTokens(section.tokens()));
             }
@@ -63,7 +63,8 @@ public class Formatter {
     }
 
     /**
-     * Writes and formats a given code section (in form of a list of tokens) into a StringBuilder using a {@link CodeSectionFormatter}
+     * Writes and formats a given code section (in form of a list of tokens) into a StringBuilder
+     * using a {@link CodeSectionFormatter}
      *
      * @param tokens tokens to write
      * @return written code sections
@@ -86,8 +87,8 @@ public class Formatter {
      */
     private List<CheckedToken> indexTokens(List<Token> tokens) {
         return tokens.stream()
-                .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
-                .toList();
+                     .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
+                     .toList();
     }
 
     /**
@@ -102,7 +103,8 @@ public class Formatter {
     }
 
     /**
-     * Sectionizes a given list of tokens into sections who are code sections and sections who are not
+     * Sectionizes a given list of tokens into sections who are code sections and sections who are
+     * not
      *
      * @param checkedTokens indexed tokens
      * @return list of sections

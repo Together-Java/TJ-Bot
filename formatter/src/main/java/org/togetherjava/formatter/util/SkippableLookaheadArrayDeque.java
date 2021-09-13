@@ -5,7 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class SkippableLookaheadArrayDeque<E> extends LookaheadArrayDeque<E> implements SkippableLookaheadQueue<E> {
+public class SkippableLookaheadArrayDeque<E> extends LookaheadArrayDeque<E>
+        implements SkippableLookaheadQueue<E> {
     public SkippableLookaheadArrayDeque() {
         super();
     }

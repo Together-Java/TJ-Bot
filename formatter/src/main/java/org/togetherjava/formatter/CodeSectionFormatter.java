@@ -70,9 +70,12 @@ class CodeSectionFormatter {
 
         result.append(token.content());
 
-        if (isKeyword(token) || isOperator(token) || isParenthesisRule(token) || type == TokenType.CLOSE_BRACKETS) { // put a space after e.g. 'try' or 'else' and ] or if it's an operator
+        if (isKeyword(token) || isOperator(token) || isParenthesisRule(token)
+                || type == TokenType.CLOSE_BRACKETS) { // put a space after e.g. 'try' or 'else' and
+                                                       // ] or if it's an operator
             result.append(' ');
-        } else if (shouldPutNewLineAfter(type)) { // put a new line after { and ; and } and comments and annotations
+        } else if (shouldPutNewLineAfter(type)) { // put a new line after { and ; and } and comments
+                                                  // and annotations
             appendNewLine();
 
             if (type == TokenType.SEMICOLON) {
@@ -82,7 +85,8 @@ class CodeSectionFormatter {
             applyIndentation = true;
         }
 
-        if (type == TokenType.IDENTIFIER && enhancedLevel != -1 && !queue.isEmpty() && queue.peek().type() == TokenType.IDENTIFIER) {
+        if (type == TokenType.IDENTIFIER && enhancedLevel != -1 && !queue.isEmpty()
+                && queue.peek().type() == TokenType.IDENTIFIER) {
             result.append(' ');
         }
     }
@@ -90,7 +94,7 @@ class CodeSectionFormatter {
     private void updateEnhancedLevel(TokenType type) {
         if (enhancedLevel != -1) {
             switch (type) {
-                case OPEN_PARENTHESIS  -> enhancedLevel++;
+                case OPEN_PARENTHESIS -> enhancedLevel++;
                 case CLOSE_PARENTHESIS -> enhancedLevel--;
             }
         }
@@ -113,18 +117,22 @@ class CodeSectionFormatter {
 
         result.append(token.content());
 
-        if (type == TokenType.COMMA || type == TokenType.WILDCARD || type == TokenType.EXTENDS || type == TokenType.SUPER) {
+        if (type == TokenType.COMMA || type == TokenType.WILDCARD || type == TokenType.EXTENDS
+                || type == TokenType.SUPER) {
             result.append(' ');
         }
 
-        //------------------------------------------------
+        // ------------------------------------------------
 
         switch (type) {
             case SMALLER -> genericDepth++;
-            case BIGGER  -> genericDepth--;
+            case BIGGER -> genericDepth--;
         }
 
-        if (genericDepth == 0 && !queue.isEmpty() && queue.peek().type() != TokenType.OPEN_PARENTHESIS) { // last closing except if there's an opening parenthesis after it
+        if (genericDepth == 0 && !queue.isEmpty()
+                && queue.peek().type() != TokenType.OPEN_PARENTHESIS) { // last closing except if
+                                                                        // there's an opening
+                                                                        // parenthesis after it
             result.append(' ');
         }
     }
@@ -148,7 +156,7 @@ class CodeSectionFormatter {
 
                 switch (nextType) {
                     case SMALLER -> depth++;
-                    case BIGGER  -> depth--;
+                    case BIGGER -> depth--;
                 }
             }
 
@@ -161,11 +169,15 @@ class CodeSectionFormatter {
     }
 
     private boolean isValidGeneric(TokenType type) {
-        return type == TokenType.WILDCARD || type == TokenType.SMALLER || type == TokenType.BIGGER || type == TokenType.COMMA || type == TokenType.DOT || type == TokenType.EXTENDS || type == TokenType.SUPER || type == TokenType.IDENTIFIER;
+        return type == TokenType.WILDCARD || type == TokenType.SMALLER || type == TokenType.BIGGER
+                || type == TokenType.COMMA || type == TokenType.DOT || type == TokenType.EXTENDS
+                || type == TokenType.SUPER || type == TokenType.IDENTIFIER;
     }
 
     private boolean shouldPutNewLineAfter(TokenType type) {
-        return type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON || type == TokenType.CLOSE_BRACES || type == TokenType.COMMENT || type == TokenType.ANNOTATION;
+        return type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
+                || type == TokenType.CLOSE_BRACES || type == TokenType.COMMENT
+                || type == TokenType.ANNOTATION;
     }
 
     private boolean isIndexedForLoop(TokenType type) {
@@ -185,7 +197,8 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Parenthesis rule: append a space after a closing parenthesis if the next token isn't another closing parenthesis, an operator or a semicolon
+     * Parenthesis rule: append a space after a closing parenthesis if the next token isn't another
+     * closing parenthesis, an operator or a semicolon
      */
     private boolean isParenthesisRule(Token token) {
         if (queue.isEmpty()) {
@@ -195,7 +208,9 @@ class CodeSectionFormatter {
         Token next = queue.peek();
         TokenType nextType = next.type();
 
-        return token.type() == TokenType.CLOSE_PARENTHESIS && nextType != TokenType.CLOSE_PARENTHESIS && nextType != TokenType.SEMICOLON && !isOperator(next);
+        return token.type() == TokenType.CLOSE_PARENTHESIS
+                && nextType != TokenType.CLOSE_PARENTHESIS && nextType != TokenType.SEMICOLON
+                && !isOperator(next);
     }
 
     /**
@@ -223,7 +238,7 @@ class CodeSectionFormatter {
 
     private void updateIndentation(TokenType type) {
         switch (type) {
-            case OPEN_BRACES  -> indentation++;
+            case OPEN_BRACES -> indentation++;
             case CLOSE_BRACES -> indentation--;
         }
     }

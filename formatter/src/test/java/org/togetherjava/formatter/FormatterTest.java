@@ -27,7 +27,9 @@ class FormatterTest {
                 public static void main(String[] args) {
                     System.out.println("Hello World!");
                 }
-                ```""", formatter.format("public static\nvoid main ( String [ ]args){ System.out. println( \"Hello World!\"      );}", lexer));
+                ```""", formatter.format(
+                "public static\nvoid main ( String [ ]args){ System.out. println( \"Hello World!\"      );}",
+                lexer));
     }
 
     @Test
@@ -41,7 +43,9 @@ class FormatterTest {
                     result.add(s.trim());
                 }
                 return result;
-                ```""", formatter.format("List<String>input=new ArrayList<>();List<String> result=new ArrayList<>();for(String s:input){result.add(s.trim());}return result;", lexer));
+                ```""", formatter.format(
+                "List<String>input=new ArrayList<>();List<String> result=new ArrayList<>();for(String s:input){result.add(s.trim());}return result;",
+                lexer));
     }
 
     @Test
