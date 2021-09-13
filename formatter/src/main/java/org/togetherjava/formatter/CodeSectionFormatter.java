@@ -49,65 +49,81 @@ class CodeSectionFormatter {
         }
 
         if (genericDepth != 0) {
-            if (type == TokenType.EXTENDS || type == TokenType.SUPER) {
-                result.append(' ');
+            handleGeneric(token);
+
+            return;
+        }
+
+        checkFor(type);
+        updateEnhancedLevel(type);
+        put(token);
+    }
+
+    private void put(Token token) {
+        TokenType type = token.type();
+
+        if (isOperator(token)) { // apply space before an operator (like +, - and *)
+            result.append(' ');
+        }
+
+        result.append(token.content());
+
+        if (isKeyword(token) || isOperator(token) || isParenthesisRule(token) || type == TokenType.CLOSE_BRACKETS) { // put a space after e.g. 'try' or 'else' and ] or if it's an operator
+            result.append(' ');
+        } else if (shouldPutNewLineAfter(type)) { // put a new line after { and ; and } and comments and annotations
+            appendNewLine();
+
+            if (type == TokenType.SEMICOLON) {
+                forLevel--;
             }
 
-            result.append(token.content());
+            applyIndentation = true;
+        }
 
-            if (type == TokenType.COMMA || type == TokenType.WILDCARD || type == TokenType.EXTENDS || type == TokenType.SUPER) {
-                result.append(' ');
-            }
+        if (type == TokenType.IDENTIFIER && enhancedLevel != -1 && !queue.isEmpty() && queue.peek().type() == TokenType.IDENTIFIER) {
+            result.append(' ');
+        }
+    }
 
-            //------------------------------------------------
-
+    private void updateEnhancedLevel(TokenType type) {
+        if (enhancedLevel != -1) {
             switch (type) {
-                case SMALLER -> genericDepth++;
-                case BIGGER  -> genericDepth--;
+                case OPEN_PARENTHESIS  -> enhancedLevel++;
+                case CLOSE_PARENTHESIS -> enhancedLevel--;
             }
+        }
+    }
 
-            if (genericDepth == 0 && !queue.isEmpty() && queue.peek().type() != TokenType.OPEN_PARENTHESIS) { // last closing except if there's an opening parenthesis after it
-                result.append(' ');
-            }
-        } else {
-            if (isIndexedForLoop(type)) { // if it's a for int loop then set the forLevel to 2
-                forLevel = 2;
-            } else if (isEnhancedForLoop(type)) {
-                enhancedLevel = 0;
-            }
+    private void checkFor(TokenType type) {
+        if (isIndexedForLoop(type)) { // if it's a for int loop then set the forLevel to 2
+            forLevel = 2;
+        } else if (isEnhancedForLoop(type)) {
+            enhancedLevel = 0;
+        }
+    }
 
-            //------------------------------------------------
+    private void handleGeneric(Token token) {
+        TokenType type = token.type();
 
-            if (enhancedLevel != -1) {
-                switch (type) {
-                    case OPEN_PARENTHESIS  -> enhancedLevel++;
-                    case CLOSE_PARENTHESIS -> enhancedLevel--;
-                }
-            }
+        if (type == TokenType.EXTENDS || type == TokenType.SUPER) {
+            result.append(' ');
+        }
 
-            //------------------------------------------------
+        result.append(token.content());
 
-            if (isOperator(token)) { // apply space before an operator (like +, - and *)
-                result.append(' ');
-            }
+        if (type == TokenType.COMMA || type == TokenType.WILDCARD || type == TokenType.EXTENDS || type == TokenType.SUPER) {
+            result.append(' ');
+        }
 
-            result.append(token.content());
+        //------------------------------------------------
 
-            if (isKeyword(token) || isOperator(token) || isParenthesisRule(token) || type == TokenType.CLOSE_BRACKETS) { // put a space after e.g. 'try' or 'else' and ] or if it's an operator
-                result.append(' ');
-            } else if (shouldPutNewLineAfter(type)) { // put a new line after { and ; and } and comments and annotations
-                appendNewLine();
+        switch (type) {
+            case SMALLER -> genericDepth++;
+            case BIGGER  -> genericDepth--;
+        }
 
-                if (type == TokenType.SEMICOLON) {
-                    forLevel--;
-                }
-
-                applyIndentation = true;
-            }
-
-            if (type == TokenType.IDENTIFIER && enhancedLevel != -1 && !queue.isEmpty() && queue.peek().type() == TokenType.IDENTIFIER) {
-                result.append(' ');
-            }
+        if (genericDepth == 0 && !queue.isEmpty() && queue.peek().type() != TokenType.OPEN_PARENTHESIS) { // last closing except if there's an opening parenthesis after it
+            result.append(' ');
         }
     }
 
