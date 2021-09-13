@@ -86,6 +86,25 @@ class FormatterTest {
     }
 
     @Test
+    @DisplayName("Multiargument method invocation renders correctly")
+    void testMultiargMethodInvoc() {
+        assertEquals("""
+                ```java
+                foo(1, 2, 3, b);
+                ```""", formatter.format("foo(1,2,3,b);", lexer));
+    }
+
+    @Test
+    @DisplayName("Method declaration renders correctly")
+    void testMethodDeclaration() {
+        assertEquals("""
+                ```java
+                void foo(int a, int b, Object c) {
+                }
+                ```""", formatter.format("void foo(int a, int b, Object c){}", lexer));
+    }
+
+    @Test
     @DisplayName("For int loop working correctly")
     void testForInt() {
         assertEquals("""
@@ -133,5 +152,49 @@ class FormatterTest {
                 void foo() {
                 }
                 ```""", formatter.format("@MyAnnotation\nvoid foo() {}", lexer));
+    }
+
+    @Test
+    @DisplayName("Lambda renders correctly")
+    void testLambda() {
+        assertEquals("""
+                ```java
+                () -> {
+                    System.out.println("Hello World");
+                };
+                ```""", formatter.format("()->{System.out.println(\"Hello World\");};", lexer));
+    }
+
+    @Test
+    @DisplayName("Lambda with parameters renders correctly")
+    void testLambdaParams() {
+        assertEquals("""
+                ```java
+                (s, e, d) -> {
+                    System.out.println("Hello World");
+                };
+                ```""", formatter.format("(s,e,d)->{System.out.println(\"Hello World\");};", lexer));
+    }
+
+    @Test
+    @DisplayName("Lambda with parenthesis parameter renders correctly")
+    void testLambdaNoParenParams() {
+        assertEquals("""
+                ```java
+                s -> {
+                    System.out.println("Hello World");
+                };
+                ```""", formatter.format("s->{System.out.println(\"Hello World\");};", lexer));
+    }
+
+    @Test
+    @DisplayName("Lambda with typed parameters renders correctly")
+    void testLambdaTypeParams() {
+        assertEquals("""
+                ```java
+                (String s, Object b) -> {
+                    System.out.println("Hello World");
+                };
+                ```""", formatter.format("(String s,Object b)->{System.out.println(\"Hello World\");};", lexer));
     }
 }
