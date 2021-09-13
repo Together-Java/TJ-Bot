@@ -150,7 +150,8 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Checks if a given token type belongs to a for loop (uses {@link SkippableLookaheadQueue#peek(int, Predicate)}
+     * Checks if a given token type belongs to a for loop (uses
+     * {@link SkippableLookaheadQueue#peek(int, Predicate)}
      *
      * @param type current token type
      * @author illuminator3
@@ -199,7 +200,8 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Checks if a given token type belongs to a generic type declaration (uses {@link org.togetherjava.formatter.util.LookaheadQueue#peek(int)}
+     * Checks if a given token type belongs to a generic type declaration (uses
+     * {@link org.togetherjava.formatter.util.LookaheadQueue#peek(int)}
      *
      * @param type current token type
      * @return wether the token type belongs to a generic type declaration
@@ -268,7 +270,8 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Checks if there's an indexed for loop ahead (uses {@link SkippableLookaheadQueue#peek(int, Predicate)})
+     * Checks if there's an indexed for loop ahead (uses
+     * {@link SkippableLookaheadQueue#peek(int, Predicate)})
      *
      * @param type current token type
      * @return wether there's an indexed for loop or not
@@ -279,7 +282,8 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Checks if there's an enhanced for loop ahead (uses {@link SkippableLookaheadQueue#peek(int, Predicate)})
+     * Checks if there's an enhanced for loop ahead (uses
+     * {@link SkippableLookaheadQueue#peek(int, Predicate)})
      *
      * @param type current token type
      * @return wether there's an enhanced for loop or not
