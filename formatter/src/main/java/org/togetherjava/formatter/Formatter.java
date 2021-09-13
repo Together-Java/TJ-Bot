@@ -141,7 +141,7 @@ public class Formatter {
     }
 
     /**
-     * IndexedToken POJR
+     * CheckedToken POJR
      *
      * @author illuminator3
      */
