@@ -199,7 +199,7 @@ class FormatterTest {
                 (String s, Object b) -> {
                     System.out.println("Hello World");
                 };
-                ```""", formatter.format(
-                "(String s,Object b)->{System.out.println(\"Hello World\");};", lexer));
+                ```""", formatter
+            .format("(String s,Object b)->{System.out.println(\"Hello World\");};", lexer));
     }
 }

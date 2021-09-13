@@ -28,8 +28,8 @@ public class Formatter {
         for (Section section : sections) {
             if (section.isCodeSection()) {
                 result.append("```java\n")
-                      .append(writeCodeSection(section.tokens()))
-                      .append("\n```");
+                    .append(writeCodeSection(section.tokens()))
+                    .append("\n```");
             } else {
                 result.append(joinTokens(section.tokens()));
             }
@@ -86,8 +86,8 @@ public class Formatter {
      */
     private List<CheckedToken> indexTokens(List<Token> tokens) {
         return tokens.stream()
-                     .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
-                     .toList();
+            .map(token -> new CheckedToken(token, isTokenPartOfCode(token)))
+            .toList();
     }
 
     /**
