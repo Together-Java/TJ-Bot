@@ -60,6 +60,9 @@ public enum TokenType {
     METHOD_REFERENCE("::"),
     COLON(":", false, true), // technically not a "real" operator but used in an enhanced for loop
     COMMA(","),
+    ARROW("->", false, true), // used in lambdas
+                              // I also wouldn't count this as an operator but again, it's required
+                              // for formatting
     PLUS_EQUALS("+=", false, true),
     MINUS_EQUALS("-=", false, true),
     MULTIPLY_EQUALS("*=", false, true),

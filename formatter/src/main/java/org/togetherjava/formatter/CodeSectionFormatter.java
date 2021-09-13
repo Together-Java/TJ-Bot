@@ -176,8 +176,13 @@ class CodeSectionFormatter {
 
     private boolean shouldPutNewLineAfter(TokenType type) {
         return type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
-                || type == TokenType.CLOSE_BRACES || type == TokenType.COMMENT
-                || type == TokenType.ANNOTATION;
+                || type == TokenType.COMMENT || type == TokenType.ANNOTATION
+                || (type == TokenType.CLOSE_BRACES && !queue.isEmpty()
+                        && queue.peek().type() != TokenType.SEMICOLON); // don't put new lines after
+                                                                        // braces if they're part
+                                                                        // of a lambda:
+                                                                        // () -> {
+                                                                        // };
     }
 
     private boolean isIndexedForLoop(TokenType type) {
