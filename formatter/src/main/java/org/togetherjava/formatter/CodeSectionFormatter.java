@@ -6,7 +6,13 @@ import org.togetherjava.formatter.util.SkippableLookaheadArrayDeque;
 import org.togetherjava.formatter.util.SkippableLookaheadQueue;
 
 import java.util.*;
+import java.util.function.Predicate;
 
+/**
+ * Formatter which specifically formats code tokens (that are part of a section)
+ *
+ * @author illuminator3
+ */
 class CodeSectionFormatter {
     private final StringBuilder result = new StringBuilder();
     private final SkippableLookaheadQueue<Token> queue;
@@ -27,10 +33,21 @@ class CodeSectionFormatter {
         purgeWhitespaces(this.queue);
     }
 
+    /**
+     * Removes all whitespaces from the given queue
+     *
+     * @param queue the queue to remove whitespaces from
+     * @author illuminator3
+     */
     private static void purgeWhitespaces(Queue<Token> queue) {
         queue.removeIf(t -> t.type() == TokenType.WHITESPACE);
     }
 
+    /**
+     * Starts the formatting process
+     *
+     * @author illuminator3
+     */
     void format() {
         Token next;
 
@@ -41,6 +58,12 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Consumes the next token
+     *
+     * @param token token to consume
+     * @author illuminator3
+     */
     private void consume(Token token) {
         TokenType type = token.type();
 
@@ -61,6 +84,12 @@ class CodeSectionFormatter {
         put(token);
     }
 
+    /**
+     * Puts the next token into the result
+     *
+     * @param token token to put
+     * @author illuminator3
+     */
     private void put(Token token) {
         TokenType type = token.type();
 
@@ -84,6 +113,13 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Checks if a space should be put after a given token
+     *
+     * @param token token to check
+     * @return wether a space should be put after that token
+     * @author illuminator3
+     */
     private boolean shouldPutSpaceAfter(Token token) {
         TokenType type = token.type();
 
@@ -98,6 +134,12 @@ class CodeSectionFormatter {
                                                                          // for loops
     }
 
+    /**
+     * Updates the enhanced for loop level
+     *
+     * @param type current token type
+     * @author illuminator3
+     */
     private void updateEnhancedLevel(TokenType type) {
         if (enhancedLevel != -1) {
             switch (type) {
@@ -107,6 +149,12 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Checks if a given token type belongs to a for loop (uses {@link SkippableLookaheadQueue#peek(int, Predicate)}
+     *
+     * @param type current token type
+     * @author illuminator3
+     */
     private void checkFor(TokenType type) {
         if (isIndexedForLoop(type)) { // if it's a for int loop then set the forLevel to 2
             forLevel = 2;
@@ -115,6 +163,12 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Handles the case of being inside a generic type declaration
+     *
+     * @param token current token
+     * @author illuminator3
+     */
     private void handleGeneric(Token token) {
         TokenType type = token.type();
 
@@ -144,6 +198,13 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Checks if a given token type belongs to a generic type declaration (uses {@link org.togetherjava.formatter.util.LookaheadQueue#peek(int)}
+     *
+     * @param type current token type
+     * @return wether the token type belongs to a generic type declaration
+     * @author illuminator3
+     */
     private boolean checkGeneric(TokenType type) {
         if (type == TokenType.SMALLER) {
             int depth = 1;
@@ -175,12 +236,26 @@ class CodeSectionFormatter {
         return false;
     }
 
+    /**
+     * Checks if a given token type would be valid inside a generic type declaration
+     *
+     * @param type token type to check
+     * @return wether it's valid inside a generic type declaration
+     * @author illuminator3
+     */
     private boolean isValidGeneric(TokenType type) {
         return type == TokenType.WILDCARD || type == TokenType.SMALLER || type == TokenType.BIGGER
                 || type == TokenType.COMMA || type == TokenType.DOT || type == TokenType.EXTENDS
                 || type == TokenType.SUPER || type == TokenType.IDENTIFIER;
     }
 
+    /**
+     * Checks if a new line should be put after a given token type
+     *
+     * @param type token type to check
+     * @return wether a new line should be put after that token
+     * @author illuminator3
+     */
     private boolean shouldPutNewLineAfter(TokenType type) {
         return type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
                 || type == TokenType.COMMENT || type == TokenType.ANNOTATION
@@ -192,14 +267,34 @@ class CodeSectionFormatter {
                                                                         // };
     }
 
+    /**
+     * Checks if there's an indexed for loop ahead (uses {@link SkippableLookaheadQueue#peek(int, Predicate)})
+     *
+     * @param type current token type
+     * @return wether there's an indexed for loop or not
+     * @author illuminator3
+     */
     private boolean isIndexedForLoop(TokenType type) {
         return type == TokenType.FOR && !internalEnhancedFor();
     }
 
+    /**
+     * Checks if there's an enhanced for loop ahead (uses {@link SkippableLookaheadQueue#peek(int, Predicate)})
+     *
+     * @param type current token type
+     * @return wether there's an enhanced for loop or not
+     * @author illuminator3
+     */
     private boolean isEnhancedForLoop(TokenType type) {
         return type == TokenType.FOR && internalEnhancedFor();
     }
 
+    /**
+     * Checks if there's an enhanced for loop ahead without checking the current token type
+     *
+     * @return wether there's an enhanced for loop ahead
+     * @author illuminator3
+     */
     private boolean internalEnhancedFor() {
         return queue.peek(3, t -> {
             TokenType ttype = t.type();
@@ -211,6 +306,9 @@ class CodeSectionFormatter {
     /**
      * Parenthesis rule: append a space after a closing parenthesis if the next token isn't another
      * closing parenthesis, an operator or a semicolon
+     *
+     * @return wether a space should be put after the parenthesis
+     * @author illuminator3
      */
     private boolean isParenthesisRule(Token token) {
         if (queue.isEmpty()) {
@@ -240,14 +338,34 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Checks if a given token is a keyword using {@link TokenType#isKeyword()}
+     *
+     * @param token token to check
+     * @return wether the given token is a keyword
+     * @author illuminator3
+     */
     private boolean isKeyword(Token token) {
         return token.type().isKeyword();
     }
 
+    /**
+     * Checks if a given token is an operator using {@link TokenType#isOperator()}
+     *
+     * @param token token to check
+     * @return wether the given token is an operator
+     * @author illuminator3
+     */
     private boolean isOperator(Token token) {
         return token.type().isOperator();
     }
 
+    /**
+     * Updates the indentation based on the current token type
+     *
+     * @param type current token type
+     * @author illuminator3
+     */
     private void updateIndentation(TokenType type) {
         switch (type) {
             case OPEN_BRACES -> indentation++;
@@ -255,6 +373,11 @@ class CodeSectionFormatter {
         }
     }
 
+    /**
+     * Applies the current indentation
+     *
+     * @author illuminator3
+     */
     private void applyIndentation() {
         if (applyIndentation) {
             result.append("    ".repeat(Math.max(0, indentation)));

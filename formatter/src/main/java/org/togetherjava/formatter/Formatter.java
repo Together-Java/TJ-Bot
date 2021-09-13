@@ -6,7 +6,6 @@ import org.togetherjava.formatter.tokenizer.TokenType;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
