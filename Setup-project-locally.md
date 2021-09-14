@@ -74,3 +74,45 @@ You can also just execute Gradle from the command line.
 
 ![Gradle command line start](https://i.imgur.com/YcVjVxZ.png)
 ![Gradle command line end](https://i.imgur.com/WGextPN.png)
+
+## Start the bot
+
+Last but not least, you want to start the bot with your bot token and let it connect to your private bot with which you can interact from one of your servers.
+
+For this step, you need to hold your bot token ready, you can find it at the [Discord Developer Portal](https://discord.com/developers/applications).
+
+![Discord Developer Portal - Bot Token](https://i.imgur.com/IB5W8vZ.png)
+
+### IntelliJ
+
+1. in the Gradle view, right click the `run` task and hit `Modify run configuration...`  
+2. in the `Run` section, enter the command `run --args='<your_token_here> db/database.db'`  
+  2.1. replace `<your_token_here>` with your bot token  
+  2.2. the second argument is the path to where you want to create the database at, `db/database.db` is fine
+3. select the run configuration you just created and click on the run button
+
+![Gradle UI run](https://i.imgur.com/R0G9CId.png)
+![Gradle UI edit run configuration command](https://i.imgur.com/kooVMkh.png)
+![Gradle run config](https://i.imgur.com/ht51DZw.png)
+![Bot runs](https://i.imgur.com/KdsSsx0.png)
+
+### Command line, runnable jar
+
+1. build a runnable jar of the project by executing `gradle shadowJar`  
+  1.1. the jar can now be found at `TJ-Bot\application\build\libs`
+2. run `java -jar TJ-Bot.jar "<your_token_here>" "../../../build/database.db"`  
+  2.1. replace `<your_token_here>` with your bot token  
+  2.2. the second argument is the path to where the database was generated at; by default this is at `TJ-Bot\build\database.db`, so you need `../../../build/database.db`
+
+![shadowJar](https://i.imgur.com/jGMVAv4.png)
+![jar](https://i.imgur.com/Xv6HIFG.png)
+![java jar](https://i.imgur.com/rX7HgGb.png)
+
+### Have fun
+
+The bot is now running and connected to your server, hurray 🎉
+
+You can now execute commands and see the bot do its magic:
+
+![Bot in Discord](https://i.imgur.com/TtYs0OZ.png)
+![Bot in Console](https://i.imgur.com/z3QUSaz.png)
