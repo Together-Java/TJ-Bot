@@ -168,8 +168,8 @@ class CodeSectionFormatter {
         // ------------------------------------------------
 
         switch (type) {
-            case SMALLER -> genericDepth++;
-            case BIGGER -> genericDepth--;
+            case LESS_THAN -> genericDepth++;
+            case GREATER_THAN -> genericDepth--;
         }
 
         if (genericDepth == 0 && !queue.isEmpty()
@@ -189,7 +189,7 @@ class CodeSectionFormatter {
      * @author illuminator3
      */
     private boolean checkGeneric(TokenType type) {
-        if (type == TokenType.SMALLER) {
+        if (type == TokenType.LESS_THAN) {
             int depth = 1;
 
             for (int i = 0;; i++) {
@@ -206,8 +206,8 @@ class CodeSectionFormatter {
                 }
 
                 switch (nextType) {
-                    case SMALLER -> depth++;
-                    case BIGGER -> depth--;
+                    case LESS_THAN -> depth++;
+                    case GREATER_THAN -> depth--;
                 }
             }
 
@@ -227,7 +227,7 @@ class CodeSectionFormatter {
      * @author illuminator3
      */
     private boolean isValidGeneric(TokenType type) {
-        return type == TokenType.WILDCARD || type == TokenType.SMALLER || type == TokenType.BIGGER
+        return type == TokenType.WILDCARD || type == TokenType.LESS_THAN || type == TokenType.GREATER_THAN
                 || type == TokenType.COMMA || type == TokenType.DOT || type == TokenType.EXTENDS
                 || type == TokenType.SUPER || type == TokenType.IDENTIFIER;
     }
