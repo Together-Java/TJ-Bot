@@ -167,9 +167,10 @@ class CodeSectionFormatter {
 
         // ------------------------------------------------
 
-        switch (type) {
-            case LESS_THAN -> genericDepth++;
-            case GREATER_THAN -> genericDepth--;
+        if (type == TokenType.LESS_THAN) {
+            genericDepth++;
+        } else if (type == TokenType.GREATER_THAN) {
+            genericDepth--;
         }
 
         if (genericDepth == 0 && !queue.isEmpty()
@@ -205,9 +206,10 @@ class CodeSectionFormatter {
                     return false;
                 }
 
-                switch (nextType) {
-                    case LESS_THAN -> depth++;
-                    case GREATER_THAN -> depth--;
+                if (nextType == TokenType.LESS_THAN) {
+                    depth++;
+                } else if (nextType == TokenType.GREATER_THAN) {
+                    depth--;
                 }
             }
 
@@ -352,9 +354,10 @@ class CodeSectionFormatter {
      * @author illuminator3
      */
     private void updateIndentation(TokenType type) {
-        switch (type) {
-            case OPEN_BRACES -> indentation++;
-            case CLOSE_BRACES -> indentation--;
+        if (type == TokenType.OPEN_BRACES) {
+            indentation++;
+        } else if (type == TokenType.CLOSE_BRACES) {
+            indentation--;
         }
     }
 
