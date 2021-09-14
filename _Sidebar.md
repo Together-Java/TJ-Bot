@@ -6,6 +6,7 @@
 
 * [[Contributing]]
 * [[Code Guidelines]]
+* [[Setup project locally]]
 
 #### Project documentation
 
