@@ -1,2 +1,4 @@
 rootProject.name = 'TJ-Bot'
-include('application')
+
+include 'application'
+include 'database'

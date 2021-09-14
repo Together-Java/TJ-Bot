@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.util;
+package org.togetherjava.tjbot.db.util;
 
 /**
  * {@link java.util.function.Function} extension that can possibly throw an exception.
