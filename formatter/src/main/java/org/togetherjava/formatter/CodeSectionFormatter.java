@@ -229,9 +229,10 @@ class CodeSectionFormatter {
      * @author illuminator3
      */
     private boolean isValidGeneric(TokenType type) {
-        return type == TokenType.WILDCARD || type == TokenType.LESS_THAN || type == TokenType.GREATER_THAN
-                || type == TokenType.COMMA || type == TokenType.DOT || type == TokenType.EXTENDS
-                || type == TokenType.SUPER || type == TokenType.IDENTIFIER;
+        return type == TokenType.WILDCARD || type == TokenType.LESS_THAN
+                || type == TokenType.GREATER_THAN || type == TokenType.COMMA
+                || type == TokenType.DOT || type == TokenType.EXTENDS || type == TokenType.SUPER
+                || type == TokenType.IDENTIFIER;
     }
 
     /**
