@@ -102,7 +102,7 @@ public class Formatter {
     }
 
     /**
-     * Sectionizes a given list of tokens
+     * Sectionizes a given list of tokens into sections who are either code sections or non-code sections. It decides so by using the internal {@code isTokenPartOfCode} method.
      *
      * @param checkedTokens checked tokens
      * @return list of sections
