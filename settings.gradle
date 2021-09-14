@@ -2,3 +2,4 @@ rootProject.name = 'TJ-Bot'
 
 include 'application'
 include 'database'
+include 'formatter'
