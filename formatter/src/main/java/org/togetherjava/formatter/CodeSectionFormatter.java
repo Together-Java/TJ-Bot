@@ -21,7 +21,6 @@ class CodeSectionFormatter {
     private boolean applyIndentation;
     private int forLevel;
     private int genericDepth;
-    private int enhancedLevel = -1;
 
     CodeSectionFormatter(List<Token> tokens) {
         this(new SkippableLookaheadArrayDeque<>(tokens));
@@ -80,7 +79,6 @@ class CodeSectionFormatter {
         }
 
         checkFor(type);
-        updateEnhancedLevel(type);
         put(token);
     }
 
@@ -135,21 +133,6 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Updates the enhanced for loop level
-     *
-     * @param type current token type
-     * @author illuminator3
-     */
-    private void updateEnhancedLevel(TokenType type) {
-        if (enhancedLevel != -1) {
-            switch (type) {
-                case OPEN_PARENTHESIS -> enhancedLevel++;
-                case CLOSE_PARENTHESIS -> enhancedLevel--;
-            }
-        }
-    }
-
-    /**
      * Checks if a given token type belongs to a for loop (uses
      * {@link SkippableLookaheadQueue#peek(int, Predicate)}
      *
@@ -159,8 +142,6 @@ class CodeSectionFormatter {
     private void checkFor(TokenType type) {
         if (isIndexedForLoop(type)) { // if it's a for int loop then set the forLevel to 2
             forLevel = 2;
-        } else if (isEnhancedForLoop(type)) {
-            enhancedLevel = 0;
         }
     }
 
