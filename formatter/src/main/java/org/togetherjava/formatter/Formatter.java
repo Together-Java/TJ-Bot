@@ -110,24 +110,24 @@ public class Formatter {
      */
     private List<Section> sectionize(List<CheckedToken> checkedTokens) {
         CheckedToken first = checkedTokens.get(0);
-        Section currSec = new Section(new ArrayList<>(), first.isCode());
+        Section currentSection = new Section(new ArrayList<>(), first.isCode());
         List<Section> result = new ArrayList<>();
 
-        currSec.tokens().add(first.token());
+        currentSection.tokens().add(first.token());
 
         for (int i = 1; i < checkedTokens.size(); i++) {
             CheckedToken next = checkedTokens.get(i);
 
-            if (currSec.isCodeSection() != next.isCode()) {
-                result.add(currSec);
+            if (currentSection.isCodeSection() != next.isCode()) {
+                result.add(currentSection);
 
-                currSec = new Section(new ArrayList<>(), next.isCode());
+                currentSection = new Section(new ArrayList<>(), next.isCode());
             }
 
-            currSec.tokens().add(next.token());
+            currentSection.tokens().add(next.token());
         }
 
-        result.add(currSec);
+        result.add(currentSection);
 
         return result;
     }
