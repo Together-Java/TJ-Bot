@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -30,12 +31,10 @@ public class CommandHandler extends ListenerAdapter {
     private final Map<String, Command> commandMap;
 
     public CommandHandler() {
-        commandList.addAll(List.of(new ReloadCommand(this)
-        // add your command here
-        ));
+        commandList.addAll(List.of(new ReloadCommand(this)));
 
         commandMap = commandList.stream()
-            .collect(Collectors.toMap(Command::getCommandName, command -> command));
+            .collect(Collectors.toMap(Command::getCommandName, Function.identity()));
     }
 
     @Override
@@ -79,7 +78,7 @@ public class CommandHandler extends ListenerAdapter {
 
     /**
      * Gets the arguments as a {@link List} and gets the {@link Command} by the event.
-     * 
+     *
      * @param event a {@link GenericComponentInteractionCreateEvent}
      * @param onSucceed a {@link BiConsumer} that takes the command and the arguments
      */
