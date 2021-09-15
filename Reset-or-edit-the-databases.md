@@ -2,7 +2,7 @@
 
 In order to reset of edit the databases used by the bot, one has to login to the VPS and navigate to the corresponding directory. Only members of the [Moderator](https://github.com/orgs/Together-Java/teams/moderators)-Team can do the following steps.
 
-See [[How to access the VPS]] for details of the login process.
+See [[Access the VPS]] for details of the login process.
 
 # Guide
 
