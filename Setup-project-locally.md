@@ -7,7 +7,7 @@ This tutorial shows how to download, setup and start the **TJ-Bot** project loca
 * your favorite Java IDE or text editor, e.g. [IntelliJ](https://www.jetbrains.com/idea/download/) or [Eclipse](https://www.eclipse.org/downloads/)
 * [`git`](https://git-scm.com/downloads) installed (or any GUI or IDE plugin)
 * [`gradle`](https://gradle.org/releases/) installed (or any GUI or IDE plugin)
-* your own [Discord](https://discord.com/)-Bot, tied to a server
+* your own [Discord](https://discord.com/)-Bot, tied to a server (see [[Create Discord server and bot]])
   * a token of that bot
 
 ## What you will learn
@@ -80,6 +80,9 @@ You can also just execute Gradle from the command line.
 Last but not least, you want to start the bot with your bot token and let it connect to your private bot with which you can interact from one of your servers.
 
 For this step, you need to hold your bot token ready, you can find it at the [Discord Developer Portal](https://discord.com/developers/applications).
+
+See the following guide if you still have to create a server and a bot first:
+* [[Create Discord server and bot]]
 
 ![Discord Developer Portal - Bot Token](https://i.imgur.com/IB5W8vZ.png)
 
