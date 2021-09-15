@@ -6,6 +6,7 @@
 
 * [[Contributing]]
 * [[Code Guidelines]]
+* [[Create Discord server and bot]]
 * [[Setup project locally]]
 
 #### Project documentation
