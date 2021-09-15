@@ -52,7 +52,6 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                .addEventListeners(new PingPongListener())
                 .addEventListeners(new DatabaseListener(database))
                 .addEventListeners(new CommandHandler())
                 .build();

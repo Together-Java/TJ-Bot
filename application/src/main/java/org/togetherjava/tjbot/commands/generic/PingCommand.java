@@ -17,13 +17,23 @@ public class PingCommand extends AbstractCommand {
                 false);
     }
 
+    /**
+     * When the slash command is `/ping`, then the bot returns with the value `Pong!`
+     * @param event The relating {@link SlashCommandEvent}
+     */
+    /**
+     * Handler for the {@code /ping} command. Will ignore any message that is not exactly
+     * {@code /ping}.
+     *
+     * @param event the event the message belongs to
+     */
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
         if (!"/ping".equals(event.getCommandString())) {
             return;
         }
 
-        logger.info("#{}: Received '!ping' command", event.getResponseNumber());
+        logger.info("#{}: Received 'ping' command", event.getResponseNumber());
 
         event.getChannel().sendMessage("Pong!").queue();
     }
