@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.db;
 
-
 import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
@@ -8,8 +7,8 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
-import org.togetherjava.tjbot.util.CheckedConsumer;
-import org.togetherjava.tjbot.util.CheckedFunction;
+import org.togetherjava.tjbot.db.util.CheckedConsumer;
+import org.togetherjava.tjbot.db.util.CheckedFunction;
 
 import java.sql.SQLException;
 import java.util.concurrent.locks.Lock;
@@ -47,7 +46,10 @@ public final class Database {
         SQLiteDataSource dataSource = new SQLiteDataSource(sqliteConfig);
         dataSource.setUrl(jdbcUrl);
 
-        Flyway flyway = Flyway.configure().dataSource(dataSource).locations("/db").load();
+        Flyway flyway = Flyway.configure()
+            .dataSource(dataSource)
+            .locations("/org/togetherjava/tjbot/db")
+            .load();
         flyway.migrate();
 
         dslContext = DSL.using(dataSource.getConnection(), SQLDialect.SQLITE);
