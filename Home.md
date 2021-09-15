@@ -5,6 +5,7 @@ TJ-Bot is a **Discord Bot** used on the [Together Java](https://discord.gg/toget
 If you want to join the party, please have a look at:
 * [[Contributing]]
 * [[Code Guidelines]]
+* [[Create Discord server and bot]]
 * [[Setup project locally]]
 
 We also have several guides explaining the infrastructure, architecture and flow of the project:
