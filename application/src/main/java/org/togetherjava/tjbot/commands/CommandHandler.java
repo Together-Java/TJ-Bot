@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.generic.PingCommand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,13 +26,15 @@ import java.util.stream.Collectors;
  * Commands need to be added to the commandList
  */
 public class CommandHandler extends ListenerAdapter {
-    private final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandHandler.class);
 
     private final List<Command> commandList = new ArrayList<>();
     private final Map<String, Command> commandMap;
 
     public CommandHandler() {
-        commandList.addAll(List.of(new ReloadCommand(this)));
+        commandList.addAll(List.of(new ReloadCommand(this), new PingCommand()
+        // add your command here
+        ));
 
         commandMap = commandList.stream()
             .collect(Collectors.toMap(Command::getCommandName, Function.identity()));
@@ -39,19 +42,18 @@ public class CommandHandler extends ListenerAdapter {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        event.getJDA().getGuildCache().forEach(guild -> {
-            guild.retrieveCommands().queue(commands -> {
-                boolean hasReloadCommand =
-                        commands.stream().anyMatch(command -> command.getName().equals("reload"));
+        event.getJDA().getGuildCache().forEach(guild -> guild.retrieveCommands().queue(commands -> {
+            boolean hasReloadCommand =
+                    commands.stream().anyMatch(command -> command.getName().equals("reload"));
 
-                if (!hasReloadCommand) {
-                    Command command = commandMap.get("reload");
-                    guild.upsertCommand(command.addOptions(
+            if (!hasReloadCommand) {
+                Command command = commandMap.get("reload");
+                guild
+                    .upsertCommand(command.addOptions(
                             new CommandData(command.getCommandName(), command.getDescription())))
-                        .queue();
-                }
-            });
-        });
+                    .queue();
+            }
+        }));
     }
 
     @Override

@@ -75,12 +75,11 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
                     restActions.add(getGlobalCommandUpdateRestAction(event, commands));
 
                     // * Triggers all RestActions, when they're all finished the message gets send.
-                    RestAction.allOf(restActions).queue(updatedCommands -> {
-                        event.getHook()
+                    RestAction.allOf(restActions)
+                        .queue(updatedCommands -> event.getHook()
                             .editOriginal(
                                     "Commands successfully reloaded! *Global commands can take upto 1 hour to load*")
-                            .queue();
-                    });
+                            .queue());
                 }
             }
         }
@@ -111,9 +110,10 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
 
         List<CommandListUpdateAction> restActions = new ArrayList<>((int) guildCache.size());
 
-        event.getJDA().getGuildCache().forEach(guild -> {
-            restActions.add(addCommandsToUpdateAction(guild.updateCommands(), commands, true));
-        });
+        event.getJDA()
+            .getGuildCache()
+            .forEach(guild -> restActions
+                .add(addCommandsToUpdateAction(guild.updateCommands(), commands, true)));
 
         return restActions;
     }

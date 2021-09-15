@@ -60,3 +60,14 @@ You can replace `[tag]` by either a commit hash (the first 10 characters) or by 
 ## Jar downloads
 
 Jar downloads are available from the [release section](https://github.com/Together-Java/TJ-Bot/releases).
+
+## Branching
+
+When creating new branches, please stick to the following naming conventions:
+* `experiment/*` for branches that are intended for experiments and are meant to be discarded
+* `feature/*` for branches that will contain new features
+* `bugfix/*` for branches that will fix any existing bugs
+* `test/*` for branches that will affect unit tests only
+* `refactor/*` for branches that will change the code in a non functional way only
+* `docs/*` for branches that will affect documentation only
+* `chore/*` for branches that will not affect neither code nor documentation (e.g. `.gitlab-ci.yml` or lint rules)
