@@ -2,7 +2,7 @@
 
 In order to read the logs of the bots, one has to login to the VPS and command Docker to execute the corresponding task. Only members of the [Moderator](https://github.com/orgs/Together-Java/teams/moderators)-Team can do the following steps.
 
-See [[How to access the VPS]] for details of the login process.
+See [[Access the VPS]] for details of the login process.
 
 # Guide
 
