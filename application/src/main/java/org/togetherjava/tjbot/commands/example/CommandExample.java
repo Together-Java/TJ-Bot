@@ -47,11 +47,8 @@ public class CommandExample extends AbstractCommand {
                 // * adds the second option
                 new OptionData(OptionType.STRING, "times-to-ping",
                         "Amount of times the user will be pinged, default 1")
-                            .addChoices(
-                                    new Command.Choice(
-                                            "Once", "1"),
-                                    new Command.Choice(
-                                            "Twice", "2"))
+                            .addChoices(new Command.Choice("Once", "1"),
+                                    new Command.Choice("Twice", "2"))
                             .setRequired(true));
     }
 
@@ -59,8 +56,8 @@ public class CommandExample extends AbstractCommand {
      * The execute method! <br>
      * Here it loads the options the users made. <br>
      * After that it sends a reply with a {@link Button} asking the user, or they're sure <br>
-     * It generates a component ID using one of the {@link org.togetherjava.tjbot.commands.Command} methods, this makes sure that
-     * the {@link #onButtonClick(ButtonClickEvent, List)} runs.
+     * It generates a component ID using one of the {@link org.togetherjava.tjbot.commands.Command}
+     * methods, this makes sure that the {@link #onButtonClick(ButtonClickEvent, List)} runs.
      *
      * @param event A {@link SlashCommandEvent} to respond to.
      */
