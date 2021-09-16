@@ -5,12 +5,12 @@
 ## Pull-request
 
 - [ ] I have read the [contributing guidelines][contributing].
-- [ ] I have read the [code guidelines][contributing].
+- [ ] I have read the [code guidelines][code_guidelines].
 - [ ] I have created a relating [issue][new_issue].
 
 ### Changes
 
-- [ ] Internal code
+- [ ] Existing code
 - [ ] New feature
 
 <!--
