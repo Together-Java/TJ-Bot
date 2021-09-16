@@ -21,80 +21,83 @@ import java.util.stream.Collectors;
 
 /**
  * The command handler
- *
+ * <p>
  * Commands need to be added to the commandList
  */
 public class CommandHandler extends ListenerAdapter {
-    private final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
+	private final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
 
-    private final List<Command> commandList = new ArrayList<>();
-    private final Map<String, Command> commandMap;
+	private final List<Command> commandList = new ArrayList<>();
+	private final Map<String, Command> commandMap;
 
-    public CommandHandler() {
-        commandList.addAll(List.of(new ReloadCommand(this)));
+	public CommandHandler() {
+		commandList.add(new ReloadCommand(this));
 
-        commandMap = commandList.stream()
-            .collect(Collectors.toMap(Command::getCommandName, Function.identity()));
-    }
+		commandMap = commandList.stream()
+				.collect(Collectors.toMap(Command::getCommandName, Function.identity()));
+	}
 
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
-        event.getJDA().getGuildCache().forEach(guild -> {
-            guild.retrieveCommands().queue(commands -> {
-                boolean hasReloadCommand =
-                        commands.stream().anyMatch(command -> command.getName().equals("reload"));
+	@Override
+	public void onReady(@NotNull ReadyEvent event) {
+		event.getJDA()
+				.getGuildCache()
+				.forEach(guild -> guild.retrieveCommands()
+						.queue(commands -> {
+							final boolean hasReloadCommand = commands.stream()
+									.anyMatch(command -> command.getName()
+											.equals("reload"));
 
-                if (!hasReloadCommand) {
-                    Command command = commandMap.get("reload");
-                    guild.upsertCommand(command.addOptions(
-                            new CommandData(command.getCommandName(), command.getDescription())))
-                        .queue();
-                }
-            });
-        });
-    }
+							if (!hasReloadCommand) {
+								Command command = commandMap.get("reload");
+								guild.upsertCommand(command.addOptions(
+										new CommandData(command.getCommandName(), command.getDescription())))
+										.queue();
+							}
+						}));
+	}
 
-    @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Command command = commandMap.get(event.getName());
+	@Override
+	public void onSlashCommand(@NotNull SlashCommandEvent event) {
+		Command command = commandMap.get(event.getName());
 
-        if (command != null) {
-            command.onSlashCommand(event);
-        } else {
-            logger.error("Command '{}' doesn't exist?", event.getName());
-        }
-    }
+		if (command != null) {
+			command.onSlashCommand(event);
+		} else {
+			logger.error("Command '{}' doesn't exist?", event.getName());
+		}
 
-    @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event) {
-        getArgumentsAndCommandByEvent(event, (command, args) -> command.onButtonClick(event, args));
-    }
+	}
 
-    @Override
-    public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
-        getArgumentsAndCommandByEvent(event,
-                (command, args) -> command.onSelectionMenu(event, args));
-    }
+	@Override
+	public void onButtonClick(@NotNull ButtonClickEvent event) {
+		getArgumentsAndCommandByEvent(event, (command, args) -> command.onButtonClick(event, args));
+	}
 
-    /**
-     * Gets the arguments as a {@link List} and gets the {@link Command} by the event.
-     *
-     * @param event a {@link GenericComponentInteractionCreateEvent}
-     * @param onSucceed a {@link BiConsumer} that takes the command and the arguments
-     */
-    private void getArgumentsAndCommandByEvent(GenericComponentInteractionCreateEvent event,
-            BiConsumer<Command, List<String>> onSucceed) {
-        String[] argsArray = event.getComponentId().split("-");
-        Command command = commandMap.get(argsArray[0]);
+	@Override
+	public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
+		getArgumentsAndCommandByEvent(event, (command, args) -> command.onSelectionMenu(event, args));
+	}
 
-        if (command != null) {
-            List<String> args = new ArrayList<>(Arrays.asList(argsArray));
-            args = args.subList(2, args.size());
-            onSucceed.accept(command, args);
-        }
-    }
+	/**
+	 * Gets the arguments as a {@link List} and gets the {@link Command} by the event.
+	 *
+	 * @param event     a {@link GenericComponentInteractionCreateEvent}
+	 * @param onSucceed a {@link BiConsumer} that takes the command and the arguments
+	 */
+	private void getArgumentsAndCommandByEvent(GenericComponentInteractionCreateEvent event,
+			BiConsumer<Command, List<String>> onSucceed) {
+		String[] argsArray = event.getComponentId()
+				.split("-");
+		Command command = commandMap.get(argsArray[0]);
 
-    public List<Command> getCommandList() {
-        return commandList;
-    }
+		if (command != null) {
+			List<String> args = new ArrayList<>(Arrays.asList(argsArray));
+			args = args.subList(2, args.size());
+			onSucceed.accept(command, args);
+		}
+	}
+
+	public List<Command> getCommandList() {
+		return commandList;
+	}
 }

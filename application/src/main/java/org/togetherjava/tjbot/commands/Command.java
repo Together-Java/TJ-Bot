@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -56,6 +58,7 @@ public interface Command {
      * 
      * @return The command's description as a {@link String}
      */
+
     @NotNull
     String getDescription();
 
