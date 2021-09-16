@@ -1,9 +1,11 @@
-[contributing]: https://github.com/Together-Java/TJ-Bot/blob/develop/CONTRIBUTING.md
+[contributing]: https://github.com/Together-Java/TJ-Bot/wiki/Contributing
+[code_guidelines]: https://github.com/Together-Java/TJ-Bot/wiki/Code-Guidelines
 [new_issue]: https://github.com/Together-Java/TJ-Bot/issues/new/choose
 
 ## Pull-request
 
 - [ ] I have read the [contributing guidelines][contributing].
+- [ ] I have read the [code guidelines][contributing].
 - [ ] I have created a relating [issue][new_issue].
 
 ### Changes
