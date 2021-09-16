@@ -9,7 +9,7 @@
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=Together-Java_TJ-Bot&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=Together-Java_TJ-Bot)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=Together-Java_TJ-Bot&metric=security_rating)](https://sonarcloud.io/dashboard?id=Together-Java_TJ-Bot)
 
-TJ-Bot is a Discord Bot used on the [Together Java](https://discord.gg/togetherjava) server. It is maintained by the community, anyone can contribute.
+TJ-Bot is a Discord Bot used on the [Together Java](https://discord.com/invite/XXFUXzK) server. It is maintained by the community, anyone can contribute.
 
 # Getting started
 
