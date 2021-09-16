@@ -43,6 +43,15 @@ Your `feature`-branch will be based off the `develop` branch. The model we are u
 
 ![Gitflow illustration](https://i.imgur.com/P4mCPza.png)
 
+When creating new branches, please stick to the following naming conventions:
+* `experiment/*` for branches that are intended for experiments and are meant to be discarded
+* `feature/*` for branches that will contain new features
+* `bugfix/*` for branches that will fix any existing bugs
+* `test/*` for branches that will affect unit tests only
+* `refactor/*` for branches that will change the code in a non functional way only
+* `docs/*` for branches that will affect documentation only
+* `chore/*` for branches that will not affect neither code nor documentation (e.g. `.gitlab-ci.yml` or lint rules)
+
 ### Create a pull request
 
 When you are done, you will create a [pull request](https://github.com/Together-Java/TJ-Bot/pulls) to request feedback from the rest of the community. At this point, your code will be automatically tested against our [[code guidelines|Code Guidelines]] (Spotless, SonarCloud, CodeQL, and more).
