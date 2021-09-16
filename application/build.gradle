@@ -1,3 +1,5 @@
+targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_17
 buildscript {
     dependencies {
         classpath 'org.xerial:sqlite-jdbc:3.36.0.3'
