@@ -74,6 +74,6 @@ After a while, the `master` branch will be synced with `develop` again, leading 
 
 # Community
 
-You can chat with the TJ-Bot users and devs in our [discord server](https://discord.gg/togetherjava)!
+You can chat with the TJ-Bot users and devs in our [discord server](https://discord.com/invite/xxfuxzk)!
 
 Enjoy and have fun 👍
