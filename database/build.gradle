@@ -1,5 +1,5 @@
-targetCompatibility = JavaVersion.VERSION_16
-sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_17
 plugins {
     id "org.flywaydb.flyway" version "7.15.0"
     id 'nu.studer.jooq' version '6.0.1'
