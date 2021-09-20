@@ -31,6 +31,7 @@ import java.util.Optional;
  * }
  * </pre>
  */
+// TODO: Remove this class after #127 has been merged
 public final class DatabaseListener extends ListenerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(DatabaseListener.class);
@@ -132,7 +133,9 @@ public final class DatabaseListener extends ListenerAdapter {
         String key = data[1];
 
         try {
-            Optional<StorageRecord> foundValue = database.read(context -> {
+            // The lambda needs to be a block so the return type can distinguish between the two
+            // read/write methods. This feels like a sonar bug.
+            Optional<StorageRecord> foundValue = database.read(context -> { // NOSONAR
                 return Optional.ofNullable(context.selectFrom(Storage.STORAGE)
                     .where(Storage.STORAGE.KEY.eq(key))
                     .fetchOne());

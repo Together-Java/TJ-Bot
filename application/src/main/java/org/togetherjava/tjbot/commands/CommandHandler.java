@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
  * Commands need to be added to the commandList
  */
 public class CommandHandler extends ListenerAdapter {
-    private final static Logger logger = LoggerFactory.getLogger(CommandHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandHandler.class);
 
     private final List<Command> commandList = new ArrayList<>();
     private final Map<String, Command> commandMap;
@@ -39,18 +40,21 @@ public class CommandHandler extends ListenerAdapter {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        event.getJDA().getGuildCache().forEach(guild -> {
-            guild.retrieveCommands().queue(commands -> {
-                boolean hasReloadCommand =
-                        commands.stream().anyMatch(command -> command.getName().equals("reload"));
+        event.getJDA().getGuildCache().forEach(this::registerReloadCommandIfNeeded);
+    }
 
-                if (!hasReloadCommand) {
-                    Command command = commandMap.get("reload");
-                    guild.upsertCommand(command.addOptions(
+    private void registerReloadCommandIfNeeded(Guild guild) {
+        guild.retrieveCommands().queue(commands -> {
+            boolean hasReloadCommand =
+                    commands.stream().anyMatch(command -> command.getName().equals("reload"));
+
+            if (!hasReloadCommand) {
+                Command command = commandMap.get("reload");
+                guild
+                    .upsertCommand(command.addOptions(
                             new CommandData(command.getCommandName(), command.getDescription())))
-                        .queue();
-                }
-            });
+                    .queue();
+            }
         });
     }
 
