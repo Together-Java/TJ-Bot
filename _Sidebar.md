@@ -8,7 +8,7 @@
 * [[Code Guidelines]]
 * [[Create Discord server and bot]]
 * [[Setup project locally]]
-* [[JDA Tips & Tricks]]
+* [[JDA Tips and Tricks]]
 
 #### Project documentation
 
