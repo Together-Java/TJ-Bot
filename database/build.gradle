@@ -71,7 +71,7 @@ var sqliteVersion = "3.36.0.3"
 dependencies {
     implementation "org.xerial:sqlite-jdbc:${sqliteVersion}"
     implementation 'org.flywaydb:flyway-core:7.15.0'
-    implementation 'org.jooq:jooq:3.15.2'
+    implementation 'org.jooq:jooq:3.15.3'
 
     jooqGenerator "org.xerial:sqlite-jdbc:${sqliteVersion}"
 }
