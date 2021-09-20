@@ -7,6 +7,7 @@ If you want to join the party, please have a look at:
 * [[Code Guidelines]]
 * [[Create Discord server and bot]]
 * [[Setup project locally]]
+* [[JDA Tips & Tricks]]
 
 We also have several guides explaining the infrastructure, architecture and flow of the project:
 * [[Tech Stack]]
