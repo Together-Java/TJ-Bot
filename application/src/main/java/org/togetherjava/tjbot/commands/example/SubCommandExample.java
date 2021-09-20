@@ -71,28 +71,23 @@ public class SubCommandExample extends AbstractCommand {
      */
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
-
         // * get the subcommand
-        switch (event.getSubcommandName()) {
-            // * if it's "ping", run the ping command.
-            case "ping" -> {
-                User userToPing = event.getOption("user").getAsUser();
+        String subcommandName = event.getSubcommandName();
 
-                event.reply(userToPing.getAsMention() + " pinging like this is useless ;)")
-                    .setEphemeral(true)
-                    .queue();
-            }
+        if ("ping".equals(subcommandName)) {
+            User userToPing = event.getOption("user").getAsUser();
 
-            // * if it's "Hello", run the hello command.
-            case "hello" -> {
-                OptionMapping userOption = event.getOption("user");
+            event.reply(userToPing.getAsMention() + " pinging like this is useless ;)")
+                .setEphemeral(true)
+                .queue();
+        } else if ("hello".equals(subcommandName)) {
+            OptionMapping userOption = event.getOption("user");
 
-                if (userOption == null) {
-                    event.reply("Hello!").queue();
-                } else {
-                    User userToPing = userOption.getAsUser();
-                    event.reply("Hello " + userToPing.getAsMention() + "!").queue();
-                }
+            if (userOption == null) {
+                event.reply("Hello!").queue();
+            } else {
+                User userToPing = userOption.getAsUser();
+                event.reply("Hello " + userToPing.getAsMention() + "!").queue();
             }
         }
     }

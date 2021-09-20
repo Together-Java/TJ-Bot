@@ -54,6 +54,7 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
         }
     }
 
+    @SuppressWarnings("squid:S1301") // it is easier to read here
     @Override
     public void onButtonClick(ButtonClickEvent event, List<String> idArgs) {
         Member member = event.getMember();
@@ -64,7 +65,6 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
                     event.reply("Next time use the right command!").queue();
                     event.getMessage().editMessageComponents().queue();
                 }
-
                 case SUCCESS -> {
                     event.deferReply().queue();
                     List<Command> commands = commandHandler.getCommandList();
@@ -75,13 +75,15 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
                     restActions.add(getGlobalCommandUpdateRestAction(event, commands));
 
                     // * Triggers all RestActions, when they're all finished the message gets send.
-                    RestAction.allOf(restActions).queue(updatedCommands -> {
-                        event.getHook()
+                    RestAction.allOf(restActions)
+                        .queue(updatedCommands -> event.getHook()
                             .editOriginal(
                                     "Commands successfully reloaded! *Global commands can take upto 1 hour to load*")
-                            .queue();
-                    });
+                            .queue());
                 }
+                default -> event.reply("I am not sure what you clicked?")
+                    .setEphemeral(true)
+                    .queue();
             }
         }
     }
@@ -111,9 +113,10 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
 
         List<CommandListUpdateAction> restActions = new ArrayList<>((int) guildCache.size());
 
-        event.getJDA().getGuildCache().forEach(guild -> {
-            restActions.add(addCommandsToUpdateAction(guild.updateCommands(), commands, true));
-        });
+        event.getJDA()
+            .getGuildCache()
+            .forEach(guild -> restActions
+                .add(addCommandsToUpdateAction(guild.updateCommands(), commands, true)));
 
         return restActions;
     }
@@ -136,10 +139,7 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
             CommandListUpdateAction commandListUpdateAction, List<Command> commands,
             boolean isGuild) {
         commands.forEach(command -> {
-            if (command.isGuildOnly() && isGuild) {
-                commandListUpdateAction.addCommands(command.addOptions(
-                        new CommandData(command.getCommandName(), command.getDescription())));
-            } else if (!command.isGuildOnly() && !isGuild) {
+            if (command.isGuildOnly() == isGuild) {
                 commandListUpdateAction.addCommands(command.addOptions(
                         new CommandData(command.getCommandName(), command.getDescription())));
             }

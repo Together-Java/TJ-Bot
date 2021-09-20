@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.example;
 
+import java.util.List;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -14,12 +15,11 @@ import net.dv8tion.jda.api.interactions.components.Component;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 /**
  * Example command
  *
  */
+// TODO: Remove this class after #127 has been merged
 public class CommandExample extends AbstractCommand {
 
     /**
@@ -62,6 +62,7 @@ public class CommandExample extends AbstractCommand {
      * @param event A {@link SlashCommandEvent} to respond to.
      */
     @Override
+    @SuppressWarnings({"squid:S1854", "squid:S1481"})
     public void onSlashCommand(SlashCommandEvent event) {
         // * gets the option as a user
         User userToMention = event.getOption("user").getAsUser();
