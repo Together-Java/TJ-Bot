@@ -22,7 +22,7 @@ if (userThatClickedId.equals(userId)) {
     ...
 }
 ```
-If you already have a `long` instead though, JDA can still do it, but it requires some extra efforts.
+If you already have a `long`, you'll need to cast this to a String resulting in less readable and more code, when JDA can also do this for you internally.
 
 ### Don't forget `.queue();`
 
