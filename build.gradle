@@ -29,16 +29,23 @@ subprojects {
     apply plugin: "com.diffplug.spotless"
     apply plugin: "org.sonarqube"
 
-    if(!skipSonarlint) {
-        apply plugin: "name.remal.sonarlint"
-    }
-
     // All subprojects inherit root project group and version, to avoid duplication.
     group = rootProject.group
     version = rootProject.version
 
     repositories {
         mavenCentral()
+    }
+
+    if(!skipSonarlint) {
+        apply plugin: "name.remal.sonarlint"
+    }
+
+    sonarlint {
+        excludes {
+            // Disables "Track uses of "TODO" tags" rule.
+            message 'java:S1135'
+        }
     }
 
     // Makes spotlessApply task run on every compile/build.
