@@ -243,14 +243,15 @@ class CodeSectionFormatter {
      * @author illuminator3
      */
     private boolean shouldPutNewLineAfter(TokenType type) {
-        return type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
-                || type == TokenType.COMMENT || type == TokenType.ANNOTATION
-                || (type == TokenType.CLOSE_BRACES && !queue.isEmpty()
-                        && queue.peek().type() != TokenType.SEMICOLON); // don't put new lines after
-                                                                        // braces if they're part
-                                                                        // of a lambda:
-                                                                        // () -> {
-                                                                        // };
+        if (type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
+                || type == TokenType.COMMENT || type == TokenType.ANNOTATION) {
+            return true;
+        }
+
+        // don't put new lines after braces if they're part of a lambda:
+        // () -> {}<no break here>; // NOSONAR
+        return type == TokenType.CLOSE_BRACES && !queue.isEmpty()
+                && queue.peek().type() != TokenType.SEMICOLON;
     }
 
     /**
@@ -263,18 +264,6 @@ class CodeSectionFormatter {
      */
     private boolean isIndexedForLoop(TokenType type) {
         return type == TokenType.FOR && !internalEnhancedFor();
-    }
-
-    /**
-     * Checks if there's an enhanced for loop ahead (uses
-     * {@link SkippableLookaheadQueue#peek(int, Predicate)})
-     *
-     * @param type current token type
-     * @return wether there's an enhanced for loop or not
-     * @author illuminator3
-     */
-    private boolean isEnhancedForLoop(TokenType type) {
-        return type == TokenType.FOR && internalEnhancedFor();
     }
 
     /**

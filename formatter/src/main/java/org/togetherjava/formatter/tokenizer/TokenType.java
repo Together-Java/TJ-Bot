@@ -101,7 +101,8 @@ public enum TokenType {
     UNKNOWN(Pattern.compile("^(.)"));
 
     private final Pattern regex;
-    private final boolean isKeyword, isOperator;
+    private final boolean isKeyword;
+    private final boolean isOperator;
 
     TokenType(String pattern, boolean isKeyword, boolean isOperator) {
         if (!isKeyword) {
