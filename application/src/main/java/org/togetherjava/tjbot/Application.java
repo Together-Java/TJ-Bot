@@ -58,6 +58,8 @@ public enum Application {
                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");
+
+            Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
         } catch (LoginException e) {
             logger.error("Failed to login", e);
         } catch (InterruptedException e) {
@@ -66,5 +68,9 @@ public enum Application {
         } catch (SQLException e) {
             logger.error("Failed to create database", e);
         }
+    }
+
+    private static void onShutdown() {
+        logger.info("Bot has been stopped");
     }
 }
