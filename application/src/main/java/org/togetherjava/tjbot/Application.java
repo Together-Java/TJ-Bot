@@ -45,7 +45,7 @@ public enum Application {
         }
 
         try {
-            var config = Config.getInstance();
+            Config config = Config.getInstance();
             runBot(config.getToken(), Path.of(config.getDatabasePath()));
         } catch (Exception t) {
             logger.error("Unknown error", t);
