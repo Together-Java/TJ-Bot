@@ -21,7 +21,7 @@ repositories {
 var outputImage = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
-    from.image = 'adoptopenjdk/openjdk16:alpine-slim'
+    from.image = 'eclipse-temurin:17'
     to {
         image = outputImage
         auth {
