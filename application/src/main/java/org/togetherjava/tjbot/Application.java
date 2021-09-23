@@ -35,6 +35,8 @@ public enum Application {
                     + DEFAULT_CONFIG_PATH + "' will be assumed.");
         }
 
+        setSystemProperties();
+
         Path configPath = Path.of(args.length == 1 ? args[0] : DEFAULT_CONFIG_PATH);
         try {
             Config.load(configPath);
@@ -77,6 +79,21 @@ public enum Application {
             Thread.currentThread().interrupt();
         } catch (SQLException e) {
             logger.error("Failed to create database", e);
+        }
+    }
+
+    /**
+     * Set's any System-properties before anything else is touched.
+     */
+    private static void setSystemProperties() {
+        final int cores = Runtime.getRuntime().availableProcessors();
+        if (cores <= 1) {
+            // If we are in a docker container, we officially might just have 1 core
+            // and Java would then set the parallelism of the common ForkJoinPool to 0.
+            // And 0 means no workers, so JDA cannot function, no Callback's on REST-Requests
+            // are executed
+            logger.debug("Available Cores \"{}\", setting Parallelism Flag", cores);
+            System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "1");
         }
     }
 }
