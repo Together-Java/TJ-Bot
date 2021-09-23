@@ -86,30 +86,34 @@ See the following guide if you still have to create a server and a bot first:
 
 ![Discord Developer Portal - Bot Token](https://i.imgur.com/IB5W8vZ.png)
 
+To run the bot, you will need a `config.json` file with content like this:
+```json
+{
+    "token": "<your_token_here>",
+    "databasePath": "db/database.db",
+    "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
+    "discordGuildInvite": "https://discord.com/invite/XXFUXzK"
+}
+```
+Replace `<your_token_here>` with your bot token; you can also adjust the other settings if you want.
+
 ### IntelliJ
 
-1. in the Gradle view, right click the `run` task and hit `Modify run configuration...`  
-2. in the `Run` section, enter the command `run --args='<your_token_here> db/database.db'`  
-  2.1. replace `<your_token_here>` with your bot token  
-  2.2. the second argument is the path to where you want to create the database at, `db/database.db` is fine
-3. select the run configuration you just created and click on the run button
+1. put the file configuration file to `TJ-Bot\application\config.json` or run the program with a single argument, the path to your config file
+2. in the Gradle view, click the `run` task and start it
 
-![Gradle UI run](https://i.imgur.com/R0G9CId.png)
-![Gradle UI edit run configuration command](https://i.imgur.com/kooVMkh.png)
-![Gradle run config](https://i.imgur.com/ht51DZw.png)
 ![Bot runs](https://i.imgur.com/KdsSsx0.png)
 
 ### Command line, runnable jar
 
 1. build a runnable jar of the project by executing `gradle shadowJar`  
   1.1. the jar can now be found at `TJ-Bot\application\build\libs`
-2. run `java -jar TJ-Bot.jar "<your_token_here>" "../../../build/database.db"`  
-  2.1. replace `<your_token_here>` with your bot token  
-  2.2. the second argument is the path to where the database was generated at; by default this is at `TJ-Bot\build\database.db`, so you need `../../../build/database.db`
+2. unless you move the jar around, you have to adjust the database path in the config to `../../../build/database.db`
+3. put the configuration file right next to the jar or run the program with a single argument, the path to your config file
+4. run `java -jar TJ-Bot.jar`
 
 ![shadowJar](https://i.imgur.com/jGMVAv4.png)
 ![jar](https://i.imgur.com/Xv6HIFG.png)
-![java jar](https://i.imgur.com/rX7HgGb.png)
 
 ### Have fun
 
