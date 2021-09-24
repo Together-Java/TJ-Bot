@@ -8,11 +8,8 @@ plugins {
 group 'org.togetherjava'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
-
 // Skips sonarlint during the build, useful for testing purposes.
-Boolean skipSonarlint = false;
+Boolean skipSonarlint = false
 
 // Sonarqube task should be ran last, so it can collect all the useful data during the build.
 project.tasks["sonarqube"].dependsOn "build"
@@ -37,7 +34,7 @@ subprojects {
         mavenCentral()
     }
 
-    if(!skipSonarlint) {
+    if (!skipSonarlint) {
         apply plugin: "name.remal.sonarlint"
     }
 
@@ -54,8 +51,16 @@ subprojects {
         }
     }
 
-    // Makes spotlessApply task run on every compile/build.
-    compileJava.dependsOn 'spotlessApply'
+
+    compileJava {
+        // Makes spotlessApply task run on every compile/build.
+        dependsOn 'spotlessApply'
+
+        // Nails the Java-Version of every Subproject
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
     spotless {
         java {
             // Excludes build folder since it contains generated java classes.

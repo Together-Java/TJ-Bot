@@ -5,36 +5,50 @@ import net.dv8tion.jda.api.JDABuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandHandler;
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 
-/***
+/**
  * Main class of the application. Use {@link #main(String[])} to start an instance of it.
  */
 public enum Application {
     ;
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
+    private static final String DEFAULT_CONFIG_PATH = "config.json";
 
     /**
      * Starts the application.
      *
-     * @param args command line arguments - [the token of the bot, the path to the database]
+     * @param args command line arguments - [the path to the configuration file (optional, by
+     *        default "config.json")]
      */
     public static void main(final String[] args) {
-        if (args.length != 2) {
-            throw new IllegalArgumentException("Expected two arguments but " + args.length
-                    + " arguments were provided. The first argument must be the token of the bot"
-                    + " and the second the path to the database.");
+        if (args.length > 1) {
+            throw new IllegalArgumentException("Expected no or one argument but " + args.length
+                    + " arguments were provided. The first argument is the path to the configuration file. If no argument was provided, '"
+                    + DEFAULT_CONFIG_PATH + "' will be assumed.");
         }
-        String token = args[0];
-        String databasePath = args[1];
+
+        setSystemProperties();
+
+        Path configPath = Path.of(args.length == 1 ? args[0] : DEFAULT_CONFIG_PATH);
+        try {
+            Config.load(configPath);
+        } catch (IOException e) {
+            logger.error("Unable to load the configuration file from path '{}'",
+                    configPath.toAbsolutePath(), e);
+            return;
+        }
 
         try {
-            runBot(token, Path.of(databasePath));
+            Config config = Config.getInstance();
+            runBot(config.getToken(), Path.of(config.getDatabasePath()));
         } catch (Exception t) {
             logger.error("Unknown error", t);
         }
@@ -72,5 +86,20 @@ public enum Application {
 
     private static void onShutdown() {
         logger.info("Bot has been stopped");
+    }
+  
+    /**
+     * Set's any System-properties before anything else is touched.
+     */
+    private static void setSystemProperties() {
+        final int cores = Runtime.getRuntime().availableProcessors();
+        if (cores <= 1) {
+            // If we are in a docker container, we officially might just have 1 core
+            // and Java would then set the parallelism of the common ForkJoinPool to 0.
+            // And 0 means no workers, so JDA cannot function, no Callback's on REST-Requests
+            // are executed
+            logger.debug("Available Cores \"{}\", setting Parallelism Flag", cores);
+            System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "1");
+        }
     }
 }
