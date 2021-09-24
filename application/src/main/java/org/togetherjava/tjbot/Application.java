@@ -87,7 +87,7 @@ public enum Application {
     private static void onShutdown() {
         logger.info("Bot has been stopped");
     }
-  
+
     /**
      * Set's any System-properties before anything else is touched.
      */
