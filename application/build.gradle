@@ -29,6 +29,9 @@ jib {
             password = System.getenv('REGISTRY_PASSWORD') ?: ''
         }
     }
+    container{
+        setCreationTime(java.time.Instant.now().toString())
+    }
 }
 
 shadowJar {

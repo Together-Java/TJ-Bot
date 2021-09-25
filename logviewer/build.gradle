@@ -1,0 +1,69 @@
+import java.time.Instant
+
+plugins {
+    id "com.google.cloud.tools.jib" version "3.1.4"
+    id "org.springframework.boot" version "2.5.5"
+    id "io.spring.dependency-management" version "1.0.11.RELEASE"
+    id "com.vaadin" version "21.0.2"
+    id 'java'
+}
+
+defaultTasks("clean", "bootRun")
+
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://maven.vaadin.com/vaadin-addons")
+    }
+}
+
+configurations {
+    developmentOnly
+    runtimeClasspath.extendsFrom(developmentOnly)
+}
+
+dependencies {
+    implementation 'com.vaadin:vaadin-core:21.0.2'
+    implementation 'com.vaadin:vaadin-spring:18.0.0'
+    // https://mvnrepository.com/artifact/org.vaadin.artur/a-vaadin-helper
+    implementation 'org.vaadin.artur:a-vaadin-helper:1.7.1'
+    implementation 'org.vaadin.crudui:crudui:4.6.0'
+    implementation 'com.vaadin.componentfactory:enhanced-dialog:21.0.0'
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.5.5'
+    implementation 'org.springframework.boot:spring-boot-starter-security:2.5.5'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:2.5.5'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:2.5.5'
+
+    // https://mvnrepository.com/artifact/com.h2database/h2
+    runtimeOnly 'com.h2database:h2:1.4.200'
+
+    developmentOnly 'org.springframework.boot:spring-boot-starter-actuator:2.5.5'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools:2.5.5'
+}
+
+tasks.jib.dependsOn(tasks.vaadinBuildFrontend)
+jib {
+    from.image = 'eclipse-temurin:17'
+    to {
+        image = 'togetherjava.duckdns.org:5001/togetherjava/tjlogs:' + System.getenv('BRANCH_NAME') ?: 'latest'
+        auth {
+            username = System.getenv('REGISTRY_USER') ?: ''
+            password = System.getenv('REGISTRY_PASSWORD') ?: ''
+        }
+    }
+    container{
+        setPorts(["5050"].asList())
+        setCreationTime(Instant.now().toString())
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+vaadin {
+    pnpmEnable = true
+    productionMode = true
+}
