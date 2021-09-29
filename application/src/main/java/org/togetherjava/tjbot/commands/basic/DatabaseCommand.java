@@ -120,6 +120,9 @@ public final class DatabaseCommand extends AbstractCommand {
         // To prevent people from saving malicious content, only users with
         // elevated permissions are allowed to use this command
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.MESSAGE_MANAGE)) {
+            event.reply("You need the MESSAGE_MANAGE permission to use this command")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
