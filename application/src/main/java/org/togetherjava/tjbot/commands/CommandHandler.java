@@ -11,6 +11,9 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
+import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.db.Database;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,8 +34,9 @@ public class CommandHandler extends ListenerAdapter {
     private final List<Command> commandList = new ArrayList<>();
     private final Map<String, Command> commandMap;
 
-    public CommandHandler() {
-        commandList.addAll(List.of(new ReloadCommand(this)));
+    public CommandHandler(Database database) {
+        commandList.addAll(
+                List.of(new ReloadCommand(this), new PingCommand(), new DatabaseCommand(database)));
 
         commandMap = commandList.stream()
             .collect(Collectors.toMap(Command::getCommandName, Function.identity()));
