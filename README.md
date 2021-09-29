@@ -43,7 +43,7 @@ First add the jitpack repository:
 <repository>
     <id>jitpack.io</id>
     <url>https://jitpack.io</url>
-<repository>
+</repository>
 ```
 Then add the dependency:
 ```xml

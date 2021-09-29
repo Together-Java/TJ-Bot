@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 /**
  * The command handler
- *
+ * <p>
  * Commands need to be added to the commandList
  */
 public class CommandHandler extends ListenerAdapter {
