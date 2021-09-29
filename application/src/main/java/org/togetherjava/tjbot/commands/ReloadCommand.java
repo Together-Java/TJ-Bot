@@ -78,7 +78,7 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
                     RestAction.allOf(restActions)
                         .queue(updatedCommands -> event.getHook()
                             .editOriginal(
-                                    "Commands successfully reloaded! *Global commands can take upto 1 hour to load*")
+                                    "Commands successfully reloaded! *Global commands can take up to 1 hour to load*")
                             .queue());
                 }
                 default -> event.reply("I am not sure what you clicked?")
