@@ -26,7 +26,7 @@ import java.util.Optional;
  * retrieve key-value pairs from the database.
  * <p>
  * For example:
- * 
+ *
  * <pre>
  * {@code
  * /db put hello Hello World!
@@ -50,7 +50,7 @@ public final class DatabaseCommand extends AbstractCommand {
      *
      * @param database the database to store the key-value pairs in
      */
-    public DatabaseCommand(Database database) {
+    public DatabaseCommand(@NotNull Database database) {
         super("db", "Storage and retrieval of key-value pairs", true);
         this.database = database;
     }
@@ -70,7 +70,7 @@ public final class DatabaseCommand extends AbstractCommand {
     }
 
     @Override
-    public void onSlashCommand(SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
         logger.info("#{}: Received '/db' command", event.getResponseNumber());
 
         switch (Objects.requireNonNull(event.getSubcommandName())) {
@@ -86,7 +86,7 @@ public final class DatabaseCommand extends AbstractCommand {
      *
      * @param event the event of the command
      */
-    private void handleGetCommand(CommandInteraction event) {
+    private void handleGetCommand(@NotNull CommandInteraction event) {
         // /db get hello
         String key = Objects.requireNonNull(event.getOption(KEY_OPTION)).getAsString();
         try {
@@ -116,7 +116,7 @@ public final class DatabaseCommand extends AbstractCommand {
      *
      * @param event the event of the command
      */
-    private void handlePutCommand(CommandInteraction event) {
+    private void handlePutCommand(@NotNull CommandInteraction event) {
         // To prevent people from saving malicious content, only users with
         // elevated permissions are allowed to use this command
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.MESSAGE_MANAGE)) {
