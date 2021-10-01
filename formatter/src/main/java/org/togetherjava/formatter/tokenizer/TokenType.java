@@ -3,7 +3,7 @@ package org.togetherjava.formatter.tokenizer;
 import java.util.regex.Pattern;
 
 /**
- * Represents every possible token that can be lexed by the lexer
+ * Represents every possible token that can be parsed by the lexer
  *
  * @author illuminator3
  */
@@ -121,8 +121,8 @@ public enum TokenType {
         this.isOperator = false;
     }
 
-    TokenType(String spattern) {
-        this(spattern, false, false);
+    TokenType(String pattern) {
+        this(pattern, false, false);
     }
 
     public Pattern getRegex() {

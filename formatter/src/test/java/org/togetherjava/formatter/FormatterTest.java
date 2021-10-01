@@ -89,8 +89,8 @@ class FormatterTest {
     }
 
     @Test
-    @DisplayName("Multiargument method invocation renders correctly")
-    void testMultiargMethodInvoc() {
+    @DisplayName("Multi-argument method invocation renders correctly")
+    void testMultiArgMethodInvocation() {
         assertEquals("""
                 ```java
                 foo(1, 2, 3, b);
