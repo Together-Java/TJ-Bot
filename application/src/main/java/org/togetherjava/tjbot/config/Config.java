@@ -13,9 +13,10 @@ import java.util.Objects;
  * <p>
  * Create instances using {@link #load(Path)} and then access them with {@link #getInstance()}.
  */
+@SuppressWarnings({"Singleton", "ClassCanBeRecord"})
 public final class Config {
 
-    private static Config config;
+    private static Config config = null;
 
     private final String token;
     private final String databasePath;

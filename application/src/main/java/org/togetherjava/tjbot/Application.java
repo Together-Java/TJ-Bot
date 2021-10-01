@@ -26,7 +26,7 @@ public enum Application {
      * Starts the application.
      *
      * @param args command line arguments - [the path to the configuration file (optional, by
-     *        default "config.json")]
+     *             default "config.json")]
      */
     public static void main(final String[] args) {
         if (args.length > 1) {
@@ -57,7 +57,7 @@ public enum Application {
     /**
      * Runs an instance of the bot, connecting to the given token and using the given database.
      *
-     * @param token the Discord Bot token to connect with
+     * @param token        the Discord Bot token to connect with
      * @param databasePath the path to the database to use
      */
     public static void runBot(String token, Path databasePath) {
@@ -96,7 +96,10 @@ public enum Application {
             // and Java would then set the parallelism of the common ForkJoinPool to 0.
             // And 0 means no workers, so JDA cannot function, no Callback's on REST-Requests
             // are executed
+            // NOTE This will likely be fixed with Java 18 or newer, remove afterwards (see
+            //  https://bugs.openjdk.java.net/browse/JDK-8274349 and https://github.com/openjdk/jdk/pull/5784)
             logger.debug("Available Cores \"{}\", setting Parallelism Flag", cores);
+            //noinspection AccessOfSystemProperties
             System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "1");
         }
     }
