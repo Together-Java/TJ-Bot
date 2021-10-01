@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -102,9 +103,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     private void registerReloadCommand(@NotNull Guild guild) {
         guild.retrieveCommands().queue(commands -> {
             // Has it been registered already?
-            if (commands.stream()
-                .map(net.dv8tion.jda.api.interactions.commands.Command::getName)
-                .anyMatch(RELOAD_COMMAND::equals)) {
+            if (commands.stream().map(Command::getName).anyMatch(RELOAD_COMMAND::equals)) {
                 return;
             }
 
