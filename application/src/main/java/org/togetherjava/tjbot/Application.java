@@ -15,6 +15,11 @@ import java.sql.SQLException;
 
 /**
  * Main class of the application. Use {@link #main(String[])} to start an instance of it.
+ * <p>
+ * New commands can be created by implementing
+ * {@link net.dv8tion.jda.api.events.interaction.SlashCommandEvent} or extending
+ * {@link org.togetherjava.tjbot.commands.SlashCommandAdapter}. They can then be registered in
+ * {@link org.togetherjava.tjbot.commands.CommandRegistry}.
  */
 public enum Application {
     ;
@@ -26,7 +31,7 @@ public enum Application {
      * Starts the application.
      *
      * @param args command line arguments - [the path to the configuration file (optional, by
-     *             default "config.json")]
+     *        default "config.json")]
      */
     public static void main(final String[] args) {
         if (args.length > 1) {
@@ -57,7 +62,7 @@ public enum Application {
     /**
      * Runs an instance of the bot, connecting to the given token and using the given database.
      *
-     * @param token        the Discord Bot token to connect with
+     * @param token the Discord Bot token to connect with
      * @param databasePath the path to the database to use
      */
     public static void runBot(String token, Path databasePath) {
@@ -66,8 +71,8 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                    .addEventListeners(new CommandSystem(database))
-                    .build();
+                .addEventListeners(new CommandSystem(database))
+                .build();
             jda.awaitReady();
             logger.info("Bot is ready");
 
@@ -83,11 +88,15 @@ public enum Application {
     }
 
     private static void onShutdown() {
+        // This may be called during JVM shutdown via a hook and hence only has minimal time to
+        // react.
+        // There is no guarantee that this method can be executed fully - it should run as
+        // fast as possible and only do the minimal necessary actions.
         logger.info("Bot has been stopped");
     }
 
     /**
-     * Set's any System-properties before anything else is touched.
+     * Sets any system-properties before anything else is touched.
      */
     private static void setSystemProperties() {
         final int cores = Runtime.getRuntime().availableProcessors();
@@ -97,9 +106,10 @@ public enum Application {
             // And 0 means no workers, so JDA cannot function, no Callback's on REST-Requests
             // are executed
             // NOTE This will likely be fixed with Java 18 or newer, remove afterwards (see
-            //  https://bugs.openjdk.java.net/browse/JDK-8274349 and https://github.com/openjdk/jdk/pull/5784)
+            // https://bugs.openjdk.java.net/browse/JDK-8274349 and
+            // https://github.com/openjdk/jdk/pull/5784)
             logger.debug("Available Cores \"{}\", setting Parallelism Flag", cores);
-            //noinspection AccessOfSystemProperties
+            // noinspection AccessOfSystemProperties
             System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "1");
         }
     }

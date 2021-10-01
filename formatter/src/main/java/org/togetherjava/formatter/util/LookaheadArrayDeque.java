@@ -11,9 +11,7 @@ import java.util.List;
  * @author illuminator3
  */
 public class LookaheadArrayDeque<E> extends ArrayDeque<E> implements LookaheadQueue<E> {
-    public LookaheadArrayDeque() {
-        super();
-    }
+    public LookaheadArrayDeque() {}
 
     public LookaheadArrayDeque(int numElements) {
         super(numElements);
@@ -23,11 +21,6 @@ public class LookaheadArrayDeque<E> extends ArrayDeque<E> implements LookaheadQu
         super(c);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @author illuminator3
-     */
     @Override
     public E peek(int n) {
         List<E> tmp = new ArrayList<>();

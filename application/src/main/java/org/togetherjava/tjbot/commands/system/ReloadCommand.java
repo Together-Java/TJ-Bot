@@ -24,10 +24,27 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+/**
+ * The reload command is a meta command that updates all commands to Discord by using
+ * {@link CommandListUpdateAction} to push any changes through JDA.
+ * <p>
+ * Whenever a command has been added, removed or changed, the reload command has to be called for
+ * the changes to actually take effect in Discord.
+ * <p>
+ * This command is rate limited by Discord and may not be used too often. Be aware that it will
+ * reload all commands registered with this application, on all guilds.
+ */
 public final class ReloadCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ReloadCommand.class);
     private final SlashCommandProvider commandProvider;
 
+    /**
+     * Creates the reload command, using the given provider as source of truth for the commands to
+     * reload
+     *
+     * @param commandProvider the provider of slash commands to reload when this command is
+     *        triggered
+     */
     public ReloadCommand(@NotNull SlashCommandProvider commandProvider) {
         super("reload",
                 "Uploads all existing slash-commands to Discord so they are fully up-to-date.",
@@ -101,6 +118,14 @@ public final class ReloadCommand extends SlashCommandAdapter {
         }
     }
 
+    /**
+     * Updates all commands given by the command provider which pass the given filter by pushing
+     * through the given action upstream.
+     *
+     * @param commandFilter filter that matches commands that should be uploaded
+     * @param updateAction the upstream to update commands
+     * @return the given upstream for chaining
+     */
     private @NotNull CommandListUpdateAction updateCommandsIf(
             @NotNull Predicate<? super SlashCommand> commandFilter,
             @NotNull CommandListUpdateAction updateAction) {
