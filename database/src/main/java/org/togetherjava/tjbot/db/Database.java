@@ -81,7 +81,7 @@ public final class Database {
     public void read(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         read(context -> {
             action.accept(context);
-            //noinspection ReturnOfNull
+            // noinspection ReturnOfNull
             return null;
         });
     }
@@ -115,7 +115,7 @@ public final class Database {
     public void write(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         write(context -> {
             action.accept(context);
-            //noinspection ReturnOfNull
+            // noinspection ReturnOfNull
             return null;
         });
     }
@@ -153,7 +153,7 @@ public final class Database {
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
         readTransaction(dsl -> {
             handler.accept(dsl);
-            //noinspection ReturnOfNull
+            // noinspection ReturnOfNull
             return null;
         });
     }
@@ -194,7 +194,7 @@ public final class Database {
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
         writeTransaction(dsl -> {
             handler.accept(dsl);
-            //noinspection ReturnOfNull
+            // noinspection ReturnOfNull
             return null;
         });
     }

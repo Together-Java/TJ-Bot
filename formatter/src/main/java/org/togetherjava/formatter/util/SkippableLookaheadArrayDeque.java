@@ -7,8 +7,7 @@ import java.util.function.Predicate;
 
 public class SkippableLookaheadArrayDeque<E> extends LookaheadArrayDeque<E>
         implements SkippableLookaheadQueue<E> {
-    public SkippableLookaheadArrayDeque() {
-    }
+    public SkippableLookaheadArrayDeque() {}
 
     public SkippableLookaheadArrayDeque(int numElements) {
         super(numElements);

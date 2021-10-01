@@ -6,17 +6,22 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 /**
- * Ping Pong command.
+ * Implementation of an example command to illustrate how to respond to a user.
+ * <p>
+ * The implemented command is {@code /ping}, upon which the bot will respond with {@code Pong!}.
  */
 public final class PingCommand extends SlashCommandAdapter {
+    /**
+     * Creates an instance of the ping pong command.
+     */
     public PingCommand() {
         super("ping", "Bot responds with 'Pong!'", SlashCommandVisibility.GUILD);
     }
 
     /**
-     * When the slash command is `/ping`, then the bot returns with the value `Pong!`
+     * When triggered with {@code /ping}, the bot will respond with {@code Pong!}.
      *
-     * @param event The relating {@link SlashCommandEvent}
+     * @param event the corresponding event
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
