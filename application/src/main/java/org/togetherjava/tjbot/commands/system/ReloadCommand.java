@@ -57,6 +57,9 @@ public final class ReloadCommand extends SlashCommandAdapter {
         Member member = Objects.requireNonNull(event.getMember());
 
         if (!member.hasPermission(Permission.MANAGE_SERVER)) {
+            logger.debug(
+                    "Attempted reload but is missing permissions, triggered by user '{}' in guild '{}'",
+                    member.getId(), event.getGuild());
             event.reply("You need the 'MANAGE_SERVER' permission to use this command.")
                 .setEphemeral(true)
                 .queue();
@@ -106,6 +109,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
                             command -> command.getVisibility() == SlashCommandVisibility.GUILD,
                             updateAction))
                     .forEach(actions::add);
+                logger.debug("Reloading commands over {} action-upstreams", actions.size());
 
                 // Send message when all are done
                 RestAction.allOf(actions)

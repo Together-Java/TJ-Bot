@@ -76,7 +76,9 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         // Register reload on all guilds
+        logger.debug("JDA is ready, registering reload command");
         event.getJDA().getGuildCache().forEach(this::registerReloadCommand);
+        logger.debug("Command system is now ready");
     }
 
     @Override
@@ -118,7 +120,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
      * <p>
      * <p>
      * An example call might look like:
-     * 
+     *
      * <pre>
      * {@code
      * forwardComponentCommand(event, SlashCommand::onSelectionMenu);
@@ -145,6 +147,9 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
             return;
         }
         SlashCommand command = requireSlashCommand(componentId.getCommandName());
+
+        logger.trace("Routing a component event with id '{}' back to command '{}'",
+                event.getComponentId(), command.getName());
         commandArgumentConsumer.accept(command, event, componentId.getElements());
     }
 
