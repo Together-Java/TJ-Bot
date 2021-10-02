@@ -66,8 +66,8 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                .addEventListeners(new CommandSystem(database))
-                .build();
+                    .addEventListeners(new CommandSystem(database))
+                    .build();
             jda.awaitReady();
             logger.info("Bot is ready");
 

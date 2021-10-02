@@ -4,12 +4,12 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.DatabaseException;
 import org.togetherjava.tjbot.db.generated.tables.Storage;
@@ -51,13 +51,10 @@ public final class DatabaseCommand extends SlashCommandAdapter {
      * @param database the database to store the key-value pairs in
      */
     public DatabaseCommand(@NotNull Database database) {
-        super("db", "Storage and retrieval of key-value pairs", true);
+        super("db", "Storage and retrieval of key-value pairs", SlashCommandVisibility.GUILD);
         this.database = database;
-    }
 
-    @Override
-    public @NotNull CommandData addOptions(@NotNull CommandData commandData) {
-        return commandData.addSubcommands(
+        getData().addSubcommands(
                 new SubcommandData(GET_COMMAND,
                         "Gets a value corresponding to a key from a database").addOption(
                                 OptionType.STRING, KEY_OPTION, "the key of the value to retrieve",
@@ -71,8 +68,6 @@ public final class DatabaseCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        logger.info("#{}: Received '/db' command", event.getResponseNumber());
-
         switch (Objects.requireNonNull(event.getSubcommandName())) {
             case GET_COMMAND -> handleGetCommand(event);
             case PUT_COMMAND -> handlePutCommand(event);
