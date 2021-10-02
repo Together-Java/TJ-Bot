@@ -1,40 +1,67 @@
 package org.togetherjava.tjbot.commands;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.system.ComponentIds;
 
-/**
- * Makes usage of constructor to store the {@link #commandName}, {@link #description} and the
- * {@link #isGuildOnly} <br>
- * This helps against a tiny bit of duplicated code.
- */
-public class SlashCommandAdapter implements SlashCommand {
-    private final String commandName;
+import java.util.Arrays;
+import java.util.List;
+
+public abstract class SlashCommandAdapter implements SlashCommand {
+    private final String name;
     private final String description;
-    private final boolean isGuildOnly;
+    private final SlashCommandVisibility visibility;
+    private final CommandData data;
 
-    public SlashCommandAdapter(String commandName, String description, boolean isGuildOnly) {
-        this.commandName = commandName;
+    protected SlashCommandAdapter(@NotNull String name, @NotNull String description,
+            SlashCommandVisibility visibility) {
+        this.name = name;
         this.description = description;
-        this.isGuildOnly = isGuildOnly;
+        this.visibility = visibility;
+
+        data = new CommandData(name, description);
     }
 
-    public SlashCommandAdapter(String commandName, String description) {
-        this(commandName, description, false);
+    public final @NotNull String generateComponentId(@NotNull String... args) {
+        try {
+            return ComponentIds.generate(getName(), Arrays.asList(args));
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     @Override
-    public @NotNull String getCommandName() {
-        return commandName;
+    public final @NotNull String getName() {
+        return name;
     }
 
     @Override
-    public @NotNull String getDescription() {
+    public final @NotNull String getDescription() {
         return description;
     }
 
     @Override
-    public boolean isGuildOnly() {
-        return isGuildOnly;
+    public final SlashCommandVisibility getVisibility() {
+        return visibility;
+    }
+
+    @Override
+    public final @NotNull CommandData getData() {
+        return data;
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
+        // Adapter does not react by default, subclasses may change this behavior
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args) {
+        // Adapter does not react by default, subclasses may change this behavior
     }
 }
