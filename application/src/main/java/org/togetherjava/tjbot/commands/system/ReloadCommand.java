@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands;
+package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -13,11 +13,12 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.SlashCommand;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public record ReloadCommand(CommandHandler commandHandler) implements Command {
+public record ReloadCommand(CommandSystem commandSystem) implements SlashCommand {
 
     @Override
     public @NotNull String getCommandName() {
@@ -67,7 +68,7 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
                 }
                 case SUCCESS -> {
                     event.deferReply().queue();
-                    List<Command> commands = commandHandler.getCommandList();
+                    List<SlashCommand> commands = commandSystem.getCommandList();
                     List<CommandListUpdateAction> restActions;
 
                     // * loads all RestActions from updating the Guild and Global commands
@@ -90,25 +91,25 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
 
     /**
      * Adds commands to {@link net.dv8tion.jda.api.JDA}
-     * 
+     *
      * @param event A {@link Event}
-     * @param commands A {@link List} of {@link Command Commands}
+     * @param commands A {@link List} of {@link SlashCommand Commands}
      * @return newly created {@link CommandListUpdateAction} with Commands
      */
     private CommandListUpdateAction getGlobalCommandUpdateRestAction(Event event,
-            List<Command> commands) {
+            List<SlashCommand> commands) {
         return addCommandsToUpdateAction(event.getJDA().updateCommands(), commands, false);
     }
 
     /**
      * Adds commands to all {@link Guild Guilds}
-     * 
+     *
      * @param event A {@link Event}
-     * @param commands A {@link List} of {@link Command Commands}
+     * @param commands A {@link List} of {@link SlashCommand Commands}
      * @return newly created {@link CommandListUpdateAction} with Commands
      */
     private List<CommandListUpdateAction> getGuildCommandUpdateRestActions(Event event,
-            List<Command> commands) {
+            List<SlashCommand> commands) {
         SnowflakeCacheView<Guild> guildCache = event.getJDA().getGuildCache();
 
         List<CommandListUpdateAction> restActions = new ArrayList<>((int) guildCache.size());
@@ -123,20 +124,20 @@ public record ReloadCommand(CommandHandler commandHandler) implements Command {
 
     /**
      * Adds all given commands to the {@link CommandListUpdateAction} if <br>
-     * The {@link Command} <b>AND</b> the {@link CommandListUpdateAction} are from a {@link Guild}
+     * The {@link SlashCommand} <b>AND</b> the {@link CommandListUpdateAction} are from a {@link Guild}
      * <br>
      * or <br>
-     * The {@link Command} <b>AND</b> the {@link CommandListUpdateAction} are <b>NOT</b> from a
+     * The {@link SlashCommand} <b>AND</b> the {@link CommandListUpdateAction} are <b>NOT</b> from a
      * {@link Guild} <br>
      *
      * @param commandListUpdateAction A {@link CommandListUpdateAction}
-     * @param commands A {@link List} of {@link Command Commands} that need to be added
+     * @param commands A {@link List} of {@link SlashCommand Commands} that need to be added
      * @param isGuild Whenever the given {@link CommandListUpdateAction} is from a {@link Guild} or
      *        not
      * @return The updated {@link CommandListUpdateAction}
      */
     private CommandListUpdateAction addCommandsToUpdateAction(
-            CommandListUpdateAction commandListUpdateAction, List<Command> commands,
+            CommandListUpdateAction commandListUpdateAction, List<SlashCommand> commands,
             boolean isGuild) {
         commands.forEach(command -> {
             if (command.isGuildOnly() == isGuild) {

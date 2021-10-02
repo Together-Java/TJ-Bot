@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 /**
  * Subcommands example!
@@ -31,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
  * `{@code permban Tijs#0001}`
  *
  */
-public class SubCommandExample extends AbstractCommand {
+public class SubCommandExample extends SlashCommandAdapter {
 
     /**
      * Parses the command name and the description to the super's constructor, both as a

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.components.Component;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.example.CommandExample;
 import org.togetherjava.tjbot.commands.example.SubCommandExample;
+import org.togetherjava.tjbot.commands.system.CommandSystem;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -16,16 +17,16 @@ import java.util.List;
 /**
  * The class all commands have to abstract. <br>
  * Instead of implementing this interface, you can also extend
- * {@link org.togetherjava.tjbot.commands.example.AbstractCommand}.
+ * {@link SlashCommandAdapter}.
  *
  * Look at {@link CommandExample} for an example. <br>
  * Or look at {@link SubCommandExample} for an example with subcommands.
  *
  * <br>
  * <b> All commands that implement this interface need to be added command to the
- * {@link CommandHandler} class!</b>
+ * {@link CommandSystem} class!</b>
  */
-public interface Command {
+public interface SlashCommand {
 
     /**
      * <p>

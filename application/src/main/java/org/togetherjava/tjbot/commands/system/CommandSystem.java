@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands;
+package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.ReadyEvent;
@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.db.Database;
@@ -28,18 +29,18 @@ import java.util.stream.Collectors;
  * <p>
  * Commands need to be added to the commandList
  */
-public class CommandHandler extends ListenerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(CommandHandler.class);
+public class CommandSystem extends ListenerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(CommandSystem.class);
 
-    private final List<Command> commandList = new ArrayList<>();
-    private final Map<String, Command> commandMap;
+    private final List<SlashCommand> commandList = new ArrayList<>();
+    private final Map<String, SlashCommand> commandMap;
 
-    public CommandHandler(Database database) {
+    public CommandSystem(Database database) {
         commandList.addAll(
                 List.of(new ReloadCommand(this), new PingCommand(), new DatabaseCommand(database)));
 
         commandMap = commandList.stream()
-            .collect(Collectors.toMap(Command::getCommandName, Function.identity()));
+            .collect(Collectors.toMap(SlashCommand::getCommandName, Function.identity()));
     }
 
     @Override
@@ -53,7 +54,7 @@ public class CommandHandler extends ListenerAdapter {
                     commands.stream().anyMatch(command -> command.getName().equals("reload"));
 
             if (!hasReloadCommand) {
-                Command command = commandMap.get("reload");
+                SlashCommand command = commandMap.get("reload");
                 guild
                     .upsertCommand(command.addOptions(
                             new CommandData(command.getCommandName(), command.getDescription())))
@@ -64,7 +65,7 @@ public class CommandHandler extends ListenerAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Command command = commandMap.get(event.getName());
+        SlashCommand command = commandMap.get(event.getName());
 
         if (command != null) {
             command.onSlashCommand(event);
@@ -85,15 +86,15 @@ public class CommandHandler extends ListenerAdapter {
     }
 
     /**
-     * Gets the arguments as a {@link List} and gets the {@link Command} by the event.
+     * Gets the arguments as a {@link List} and gets the {@link SlashCommand} by the event.
      *
      * @param event a {@link GenericComponentInteractionCreateEvent}
      * @param onSucceed a {@link BiConsumer} that takes the command and the arguments
      */
     private void getArgumentsAndCommandByEvent(GenericComponentInteractionCreateEvent event,
-            BiConsumer<Command, List<String>> onSucceed) {
+            BiConsumer<SlashCommand, List<String>> onSucceed) {
         String[] argsArray = event.getComponentId().split("-");
-        Command command = commandMap.get(argsArray[0]);
+        SlashCommand command = commandMap.get(argsArray[0]);
 
         if (command != null) {
             List<String> args = new ArrayList<>(Arrays.asList(argsArray));
@@ -102,7 +103,7 @@ public class CommandHandler extends ListenerAdapter {
         }
     }
 
-    public List<Command> getCommandList() {
+    public List<SlashCommand> getCommandList() {
         return commandList;
     }
 }

@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.example.AbstractCommand;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.DatabaseException;
 import org.togetherjava.tjbot.db.generated.tables.Storage;
@@ -37,7 +37,7 @@ import java.util.Optional;
  * }
  * </pre>
  */
-public final class DatabaseCommand extends AbstractCommand {
+public final class DatabaseCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseCommand.class);
     private static final String GET_COMMAND = "get";
     private static final String PUT_COMMAND = "put";

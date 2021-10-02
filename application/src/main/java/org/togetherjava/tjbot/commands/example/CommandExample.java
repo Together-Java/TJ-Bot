@@ -14,13 +14,15 @@ import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.Component;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 /**
  * Example command
  *
  */
 // TODO: Remove this class after #127 has been merged
-public class CommandExample extends AbstractCommand {
+public class CommandExample extends SlashCommandAdapter {
 
     /**
      * Parses the command name and the description to the super's constructor, both as a
@@ -56,7 +58,7 @@ public class CommandExample extends AbstractCommand {
      * The execute method! <br>
      * Here it loads the options the users made. <br>
      * After that it sends a reply with a {@link Button} asking the user, or they're sure <br>
-     * It generates a component ID using one of the {@link org.togetherjava.tjbot.commands.Command}
+     * It generates a component ID using one of the {@link SlashCommand}
      * methods, this makes sure that the {@link #onButtonClick(ButtonClickEvent, List)} runs.
      *
      * @param event A {@link SlashCommandEvent} to respond to.
