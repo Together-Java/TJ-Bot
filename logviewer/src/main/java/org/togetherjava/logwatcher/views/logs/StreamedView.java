@@ -14,15 +14,13 @@ import com.vaadin.flow.server.VaadinService;
 import org.togetherjava.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.logwatcher.accesscontrol.Role;
 import org.togetherjava.logwatcher.constants.LogEventsConstants;
-import org.togetherjava.logwatcher.entities.LogEvent;
-import org.togetherjava.logwatcher.logs.LogRepository;
+import org.togetherjava.logwatcher.logs.ILogRepository;
 import org.togetherjava.logwatcher.views.MainLayout;
 import org.togetherjava.logwatcher.watcher.StreamWatcher;
+import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 import org.vaadin.crudui.crud.impl.GridCrud;
 
 import javax.annotation.security.PermitAll;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,10 +35,10 @@ import java.util.stream.Collectors;
 @PermitAll
 public class StreamedView extends HorizontalLayout {
 
-    private final GridCrud<LogEvent> grid = new GridCrud<>(LogEvent.class);
+    private final GridCrud<Logevents> grid = new GridCrud<>(Logevents.class);
     private final UUID uuid = UUID.randomUUID();
 
-    public StreamedView(LogRepository logs) {
+    public StreamedView(ILogRepository logs) {
         addClassName("hello-world-view");
 
         add(new Button("Change Columns", this::onChangeColumns), this.grid);
@@ -81,14 +79,14 @@ public class StreamedView extends HorizontalLayout {
     }
 
     private void setInstantFormatter() {
-        final Grid<LogEvent> innerGrid = this.grid.getGrid();
-        final Optional<Grid.Column<LogEvent>> column =
+        final Grid<Logevents> innerGrid = this.grid.getGrid();
+        final Optional<Grid.Column<Logevents>> column =
                 Optional.ofNullable(innerGrid.getColumnByKey(LogEventsConstants.FIELD_INSTANT));
         if (column.isEmpty()) {
             return;
         }
 
-        final Grid.Column<LogEvent> instant = column.orElseThrow();
+        final Grid.Column<Logevents> instant = column.orElseThrow();
         innerGrid.removeColumn(instant);
 
         final String[] keys =
@@ -97,11 +95,10 @@ public class StreamedView extends HorizontalLayout {
 
 
         innerGrid
-            .addColumn(new LocalDateTimeRenderer<>(
-                    event -> LocalDateTime.ofInstant(event.getInstant(), ZoneId.systemDefault()),
+            .addColumn(new LocalDateTimeRenderer<>(Logevents::getTime,
                     DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm:ss.SSS")))
             .setHeader("Instant")
-            .setComparator(Comparator.comparing(LogEvent::getInstant))
+            .setComparator(Comparator.comparing(Logevents::getTime))
             .setKey(LogEventsConstants.FIELD_INSTANT);
 
         innerGrid.addColumns(keys);

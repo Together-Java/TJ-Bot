@@ -3,7 +3,6 @@ package org.togetherjava.logwatcher.entities;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.togetherjava.logwatcher.constants.LogEventsConstants;
 
 import java.time.Instant;
 
@@ -30,15 +29,13 @@ public class LogDTO {
     private Integer threadPriority;
 
     @JsonCreator
-    public LogDTO(@JsonProperty(LogEventsConstants.FIELD_INSTANT) InstantWrapper wrapper,
-            @JsonProperty(LogEventsConstants.FIELD_THREAD) String thread,
-            @JsonProperty(LogEventsConstants.FIELD_LOGGER_LEVEL) String level,
-            @JsonProperty(LogEventsConstants.FIELD_LOGGER_NAME) String loggerName,
-            @JsonProperty(LogEventsConstants.FIELD_MESSAGE) String message,
-            @JsonProperty(LogEventsConstants.FIELD_END_OF_BATCH) Boolean endOfBatch,
-            @JsonProperty(LogEventsConstants.FIELD_LOGGER_FQCN) String loggerFqcn,
-            @JsonProperty(LogEventsConstants.FIELD_THREAD_ID) Integer threadId,
-            @JsonProperty(LogEventsConstants.FIELD_THREAD_PRIORITY) Integer threadPriority) {
+    public LogDTO(@JsonProperty("instant") InstantWrapper wrapper,
+            @JsonProperty("thread") String thread, @JsonProperty("level") String level,
+            @JsonProperty("loggerName") String loggerName, @JsonProperty("message") String message,
+            @JsonProperty("endOfBatch") Boolean endOfBatch,
+            @JsonProperty("loggerFqcn") String loggerFqcn,
+            @JsonProperty("threadId") Integer threadId,
+            @JsonProperty("threadPriority") Integer threadPriority) {
         this.instant = wrapper.toInstant();
         this.thread = thread;
         this.level = level;
@@ -48,22 +45,6 @@ public class LogDTO {
         this.loggerFqcn = loggerFqcn;
         this.threadId = threadId;
         this.threadPriority = threadPriority;
-    }
-
-    public LogEvent toLogEvent() {
-        final LogEvent logEvent = new LogEvent();
-
-        logEvent.setInstant(getInstant());
-        logEvent.setThread(getThread());
-        logEvent.setLevel(getLevel());
-        logEvent.setLoggerName(getLoggerName());
-        logEvent.setMessage(getMessage());
-        logEvent.setEndOfBatch(getEndOfBatch());
-        logEvent.setLoggerFqcn(getLoggerFqcn());
-        logEvent.setThreadId(getThreadId());
-        logEvent.setThreadPriority(getThreadPriority());
-
-        return logEvent;
     }
 
 

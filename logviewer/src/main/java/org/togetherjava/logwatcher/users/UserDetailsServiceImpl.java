@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.togetherjava.logwatcher.accesscontrol.Role;
 import org.togetherjava.logwatcher.config.Config;
-import org.togetherjava.logwatcher.entities.User;
+import org.togetherjava.tjbot.db.generated.tables.pojos.Users;
 
 import java.util.List;
 import java.util.Set;
@@ -20,24 +20,22 @@ import java.util.Set;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
 
-    public UserDetailsServiceImpl(UserRepository userRepository, Config config) {
+    public UserDetailsServiceImpl(IUserRepository userRepository, Config config) {
         this.userRepository = userRepository;
 
         if (this.userRepository.count() == 0) {
-            final User defaultUser = new User();
-            defaultUser.setUsername(config.getRootUserName());
-            defaultUser.setName(config.getRootUserName());
-            defaultUser.setDiscordID(Long.parseLong(config.getRootDiscordID()));
-            defaultUser.setRoles(Set.of(Role.ADMIN, Role.USER));
+            final Users defaultUser =
+                    new Users(Long.parseLong(config.getRootDiscordID()), config.getRootUserName());
 
             this.userRepository.save(defaultUser);
+            this.userRepository.saveRolesForUser(defaultUser, Set.of(Role.ADMIN, Role.USER));
         }
     }
 
-    private static List<GrantedAuthority> getAuthorities(User user) {
-        return user.getRoles()
+    private List<GrantedAuthority> getAuthorities(Users user) {
+        return this.userRepository.fetchRolesForUser(user)
             .stream()
             .map(Role::getRoleName)
             .map(name -> "ROLE_" + name)
@@ -56,7 +54,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+        Users user = userRepository.findByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("No user present with username: " + username);
         } else {

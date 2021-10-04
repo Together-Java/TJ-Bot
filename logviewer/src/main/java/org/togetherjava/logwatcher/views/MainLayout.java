@@ -13,14 +13,13 @@ import com.vaadin.flow.router.RouterLink;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.logwatcher.accesscontrol.Role;
-import org.togetherjava.logwatcher.entities.User;
 import org.togetherjava.logwatcher.users.AuthenticatedUser;
 import org.togetherjava.logwatcher.views.logs.LogsView;
 import org.togetherjava.logwatcher.views.logs.StreamedView;
 import org.togetherjava.logwatcher.views.usermanagement.UserManagement;
+import org.togetherjava.tjbot.db.generated.tables.pojos.Users;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -45,8 +44,8 @@ public class MainLayout extends AppLayout {
             authUser.register();
         }
 
-        final Optional<User> user = this.authenticatedUser.get();
-        if (user.map(User::getRoles).map(Set::isEmpty).orElse(true)) {
+
+        if (this.authenticatedUser.getRoles().isEmpty()) {
             authUser.logout();
         }
 
@@ -132,31 +131,26 @@ public class MainLayout extends AppLayout {
 
         final Set<Role> roles = Set.of(annotation.roles());
 
-        return this.authenticatedUser.get()
-            .map(user -> !Sets.intersection(user.getRoles(), roles).isEmpty())
-            .orElse(false);
+        return !Sets.intersection(this.authenticatedUser.getRoles(), roles).isEmpty();
     }
 
     private Footer createFooter() {
         Footer layout = new Footer();
         layout.addClassNames("flex", "items-center", "my-s", "px-m", "py-xs");
 
-        Optional<User> maybeUser = authenticatedUser.get();
-        if (maybeUser.isPresent()) {
-            User user = maybeUser.orElseThrow();
+        Users user = this.authenticatedUser.get();
 
-            Avatar avatar = new Avatar(user.getName());
-            avatar.addClassNames("me-xs");
+        Avatar avatar = new Avatar(user.getUsername());
+        avatar.addClassNames("me-xs");
 
-            ContextMenu userMenu = new ContextMenu(avatar);
-            userMenu.setOpenOnClick(true);
-            userMenu.addItem("Logout", e -> authenticatedUser.logout());
+        ContextMenu userMenu = new ContextMenu(avatar);
+        userMenu.setOpenOnClick(true);
+        userMenu.addItem("Logout", e -> authenticatedUser.logout());
 
-            Span name = new Span(user.getName());
-            name.addClassNames("font-medium", "text-s", "text-secondary");
+        Span name = new Span(user.getUsername());
+        name.addClassNames("font-medium", "text-s", "text-secondary");
 
-            layout.add(avatar, name);
-        }
+        layout.add(avatar, name);
 
         return layout;
     }

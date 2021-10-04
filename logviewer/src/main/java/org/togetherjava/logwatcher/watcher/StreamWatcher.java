@@ -13,7 +13,7 @@ public class StreamWatcher {
 
     /**
      * Signals an intent to be notified on new Entries
-     * 
+     *
      * @param uuid Unique Object to remove the Runnable later
      * @param onNewEvent Run on new Event
      */
@@ -23,7 +23,7 @@ public class StreamWatcher {
 
     /**
      * Removes the Subscription to save resources
-     * 
+     *
      * @param uuid Unique Object used to register the Subscription
      */
     public static void removeSubscription(final UUID uuid) {
@@ -39,7 +39,7 @@ public class StreamWatcher {
 
     /**
      * Runs the runnable and logs any errors that might occur
-     * 
+     *
      * @param run The Runnable of one of the consumers
      */
     private static void notifySubscriber(Runnable run) {

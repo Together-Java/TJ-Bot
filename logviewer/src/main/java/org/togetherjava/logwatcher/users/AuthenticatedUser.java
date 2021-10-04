@@ -7,10 +7,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Component;
-import org.togetherjava.logwatcher.entities.User;
+import org.togetherjava.logwatcher.accesscontrol.Role;
+import org.togetherjava.tjbot.db.generated.tables.pojos.Users;
 
-import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Wrapper for accessing the current User
@@ -18,9 +20,9 @@ import java.util.Optional;
 @Component
 public class AuthenticatedUser {
 
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
 
-    public AuthenticatedUser(UserRepository userRepository) {
+    public AuthenticatedUser(IUserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -64,8 +66,14 @@ public class AuthenticatedUser {
      *
      * @return The Optional User, should in most cases not be empty
      */
-    public Optional<User> get() {
-        return getAuthenticatedUser().map(this::extractID).map(userRepository::findByDiscordID);
+    public Users get() {
+        return getAuthenticatedUser().map(this::extractID)
+            .map(userRepository::findByDiscordID)
+            .orElseThrow(() -> new IllegalArgumentException("No authenticated User present."));
+    }
+
+    public Set<Role> getRoles() {
+        return this.userRepository.fetchRolesForUser(get());
     }
 
     /**
@@ -96,13 +104,8 @@ public class AuthenticatedUser {
      * @param oAuth2User Principal to map
      * @return User-Object derived from the Principal
      */
-    private User toUser(OAuth2User oAuth2User) {
-        final User user = new User();
-        user.setUsername(oAuth2User.getName());
-        user.setName(oAuth2User.getName());
-        user.setRoles(Collections.emptySet());
-
-        return user;
+    private Users toUser(OAuth2User oAuth2User) {
+        return new Users(extractID(oAuth2User), oAuth2User.getName());
     }
 
     /**
@@ -112,7 +115,8 @@ public class AuthenticatedUser {
      * @return Discord-ID from the given Principal
      */
     private long extractID(OAuth2User oAuth2User) {
-        return Long.parseLong(oAuth2User.getAttribute("id"));
+        final String id = oAuth2User.getAttribute("id");
+        return Long.parseLong(Objects.requireNonNull(id, "ID from OAuth-User is null, this should never happen"));
     }
 
 }
