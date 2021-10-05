@@ -66,8 +66,8 @@ public class Config {
      */
     private final String databasePath;
 
-    public Config() {
-        final JsonNode jsonNode = getJsonNode();
+    public Config(final ObjectMapper mapper) {
+        final JsonNode jsonNode = getJsonNode(mapper);
 
         this.clientName = jsonNode.get("clientName").asText();
         this.clientId = jsonNode.get("clientId").asText();
@@ -79,10 +79,10 @@ public class Config {
         this.databasePath = jsonNode.get("databasePath").asText();
     }
 
-    private JsonNode getJsonNode() {
+    private JsonNode getJsonNode(final ObjectMapper mapper) {
         final String pathToConfig = Objects.requireNonNull(CONFIG_PATH.get(), "Path not Set");
         try {
-            return new ObjectMapper().readTree(Path.of(pathToConfig).toFile());
+            return mapper.readTree(Path.of(pathToConfig).toFile());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
