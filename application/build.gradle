@@ -8,6 +8,7 @@ plugins {
     id 'application'
     id 'com.google.cloud.tools.jib' version '3.1.4'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'database-settings'
 }
 
 repositories {

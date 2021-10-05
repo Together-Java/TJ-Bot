@@ -1,0 +1,70 @@
+plugins {
+    id "org.flywaydb.flyway"
+    id 'nu.studer.jooq'
+}
+
+var databaseFile = new File(buildDir, "database.db")
+var databaseUrl = "jdbc:sqlite:${databaseFile}"
+
+tasks.register("createBuildDirectoryIfNeeded") {
+    doLast {
+        if (!databaseFile.parentFile.exists()) {
+            databaseFile.parentFile.mkdirs()
+        }
+    }
+    // https://github.com/gradle/gradle/issues/2488
+    mustRunAfter(project.tasks.findByPath('clean'))
+}
+
+flyway {
+    url = databaseUrl
+    locations = ["filesystem:src/main/resources/db"]
+}
+
+tasks.flywayMigrate {
+    dependsOn("createBuildDirectoryIfNeeded")
+}
+
+jooq {
+    version = "3.15.2"
+
+    configurations {
+        main {
+            generationTool {
+                jdbc {
+                    driver = 'org.sqlite.JDBC'
+                    url = databaseUrl
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.sqlite.SQLiteDatabase'
+                        excludes = 'flyway_schema_history|sqlite_sequence'
+                    }
+                    generate {
+                        records = true
+                        immutablePojos = true
+                        fluentSetters = true
+                    }
+                    target {
+                        packageName = 'org.togetherjava.tjbot.db.generated'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.generateJooq {
+    dependsOn("flywayMigrate")
+}
+
+var sqliteVersion = "3.36.0.3"
+
+dependencies {
+    implementation "org.xerial:sqlite-jdbc:${sqliteVersion}"
+    implementation 'org.flywaydb:flyway-core:7.15.0'
+    implementation 'org.jooq:jooq:3.15.3'
+
+    jooqGenerator "org.xerial:sqlite-jdbc:${sqliteVersion}"
+}
