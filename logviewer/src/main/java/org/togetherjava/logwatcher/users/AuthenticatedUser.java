@@ -116,7 +116,8 @@ public class AuthenticatedUser {
      */
     private long extractID(OAuth2User oAuth2User) {
         final String id = oAuth2User.getAttribute("id");
-        return Long.parseLong(Objects.requireNonNull(id, "ID from OAuth-User is null, this should never happen"));
+        return Long.parseLong(
+                Objects.requireNonNull(id, "ID from OAuth-User is null, this should never happen"));
     }
 
 }
