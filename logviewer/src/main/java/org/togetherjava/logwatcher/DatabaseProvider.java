@@ -6,6 +6,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.togetherjava.logwatcher.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
 import java.io.IOException;
@@ -18,8 +19,10 @@ import java.sql.SQLException;
 public class DatabaseProvider {
 
     private final Database db;
+    private final Config config;
 
-    public DatabaseProvider() {
+    public DatabaseProvider(final Config config) {
+        this.config = config;
         this.db = createDB();
     }
 
@@ -38,7 +41,7 @@ public class DatabaseProvider {
     }
 
     private Path getDBPath() {
-        final Path dbPath = Path.of("./logviewer/db/db.db");
+        final Path dbPath = Path.of(this.config.getDatabasePath());
 
         try {
             Files.createDirectories(dbPath.getParent());

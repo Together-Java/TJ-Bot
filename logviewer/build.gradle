@@ -36,23 +36,37 @@ jooq {
 }
 
 dependencies {
+    compileOnly 'org.apache.logging.log4j:log4j-api:2.14.1'
+    runtimeOnly 'org.apache.logging.log4j:log4j-jul:2.14.1'
+    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
+
+
     implementation(project(":database"))
     implementation 'org.jooq:jooq:3.15.3'
 
     implementation 'com.vaadin:vaadin-core:21.0.2'
-    implementation 'com.vaadin:vaadin-spring:18.0.0'
-    // https://mvnrepository.com/artifact/org.vaadin.artur/a-vaadin-helper
+    implementation ('com.vaadin:vaadin-spring:18.0.0')
     implementation 'org.vaadin.artur:a-vaadin-helper:1.7.1'
     implementation 'org.vaadin.crudui:crudui:4.6.0'
     implementation 'com.vaadin.componentfactory:enhanced-dialog:21.0.0'
 
 
-    implementation 'org.springframework.boot:spring-boot-starter-web:2.5.5'
-    implementation 'org.springframework.boot:spring-boot-starter-security:2.5.5'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:2.5.5'
+    implementation ('org.springframework.boot:spring-boot-starter-web:2.5.5'){
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    implementation ('org.springframework.boot:spring-boot-starter-security:2.5.5'){
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    implementation ('org.springframework.boot:spring-boot-starter-oauth2-client:2.5.5'){
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
 
-    developmentOnly 'org.springframework.boot:spring-boot-starter-actuator:2.5.5'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools:2.5.5'
+    developmentOnly ('org.springframework.boot:spring-boot-starter-actuator:2.5.5'){
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    developmentOnly ('org.springframework.boot:spring-boot-devtools:2.5.5'){
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
 }
 
 tasks.jib.dependsOn(tasks.vaadinBuildFrontend)

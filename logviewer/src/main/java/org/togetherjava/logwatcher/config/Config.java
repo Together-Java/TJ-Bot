@@ -25,6 +25,7 @@ public class Config {
         }
     }
 
+
     /**
      * Client-Name of the OAuth2-Application
      */
@@ -60,6 +61,11 @@ public class Config {
      */
     private final String redirectPath;
 
+    /**
+     * Path for this Database
+     */
+    private final String databasePath;
+
     public Config() {
         final JsonNode jsonNode = getJsonNode();
 
@@ -70,6 +76,7 @@ public class Config {
         this.rootDiscordID = jsonNode.get("rootDiscordID").asText();
         this.logPath = jsonNode.get("logPath").asText();
         this.redirectPath = jsonNode.get("redirectPath").asText();
+        this.databasePath = jsonNode.get("databasePath").asText();
     }
 
     private JsonNode getJsonNode() {
@@ -109,4 +116,7 @@ public class Config {
         return clientSecret;
     }
 
+    public String getDatabasePath() {
+        return this.databasePath;
+    }
 }
