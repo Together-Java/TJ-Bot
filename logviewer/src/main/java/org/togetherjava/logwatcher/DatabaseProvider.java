@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Configuration
 public class DatabaseProvider {
 
-    private static final AtomicReference<Database> AtomDb = new AtomicReference<>();
+    private static final AtomicReference<Database> ATOM_DB = new AtomicReference<>();
 
     public DatabaseProvider() {
         synchronized (AtomDb) {
@@ -58,7 +58,7 @@ public class DatabaseProvider {
 
 
     @Bean
-    public Database getDB() {
+    public Database getDb() {
         return AtomDb.get();
     }
 

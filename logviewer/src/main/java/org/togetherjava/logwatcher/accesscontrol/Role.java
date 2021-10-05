@@ -46,7 +46,7 @@ public enum Role {
     }
 
     public static Set<Role> getDisplayableRoles() {
-        return Set.of(USER, ADMIN);
+        return EnumSet.of(USER, ADMIN);
     }
 
 }
