@@ -7,7 +7,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StreamWatcher {
-    private static final Map<UUID, Runnable> consumerMap = new ConcurrentHashMap<>(3);
+    private static final int EXPECTED_CONCURRENT_LOG_WATCHERS = 3;
+    private static final Map<UUID, Runnable> consumerMap =
+            new ConcurrentHashMap<>(EXPECTED_CONCURRENT_LOG_WATCHERS);
 
     private StreamWatcher() {}
 
