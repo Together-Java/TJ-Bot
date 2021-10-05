@@ -16,7 +16,7 @@ import static org.togetherjava.tjbot.db.generated.tables.Users.USERS;
 
 @Component
 @SuppressWarnings("java:S1602") // Curly Braces are necessary here
-public class UserRepositoryImpl implements IUserRepository {
+public class UserRepositoryImpl implements UserRepository {
 
     private final Database db;
 

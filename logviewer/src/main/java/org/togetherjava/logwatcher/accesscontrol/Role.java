@@ -1,6 +1,7 @@
 package org.togetherjava.logwatcher.accesscontrol;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Set;
 
 /**

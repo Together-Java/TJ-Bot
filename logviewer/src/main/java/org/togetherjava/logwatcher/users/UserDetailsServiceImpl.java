@@ -20,9 +20,9 @@ import java.util.Set;
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
 
-    public UserDetailsServiceImpl(IUserRepository userRepository, Config config) {
+    public UserDetailsServiceImpl(UserRepository userRepository, Config config) {
         this.userRepository = userRepository;
 
         if (this.userRepository.count() == 0) {

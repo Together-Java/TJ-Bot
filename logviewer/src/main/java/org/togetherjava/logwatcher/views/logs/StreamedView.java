@@ -14,7 +14,7 @@ import com.vaadin.flow.server.VaadinService;
 import org.togetherjava.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.logwatcher.accesscontrol.Role;
 import org.togetherjava.logwatcher.constants.LogEventsConstants;
-import org.togetherjava.logwatcher.logs.ILogRepository;
+import org.togetherjava.logwatcher.logs.LogRepository;
 import org.togetherjava.logwatcher.views.MainLayout;
 import org.togetherjava.logwatcher.watcher.StreamWatcher;
 import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
@@ -38,7 +38,7 @@ public class StreamedView extends HorizontalLayout {
     private final GridCrud<Logevents> grid = new GridCrud<>(Logevents.class);
     private final UUID uuid = UUID.randomUUID();
 
-    public StreamedView(ILogRepository logs) {
+    public StreamedView(LogRepository logs) {
         addClassName("hello-world-view");
 
         add(new Button("Change Columns", this::onChangeColumns), this.grid);

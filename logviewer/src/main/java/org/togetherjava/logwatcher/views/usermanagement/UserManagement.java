@@ -18,8 +18,8 @@ import com.vaadin.flow.router.Route;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.logwatcher.accesscontrol.Role;
-import org.togetherjava.logwatcher.entities.UserDTO;
-import org.togetherjava.logwatcher.users.IUserRepository;
+import org.togetherjava.logwatcher.entities.UserWrapper;
+import org.togetherjava.logwatcher.users.UserRepository;
 import org.togetherjava.logwatcher.util.NotificationUtils;
 import org.togetherjava.logwatcher.views.MainLayout;
 import org.togetherjava.tjbot.db.DatabaseException;
@@ -40,42 +40,45 @@ import java.util.stream.Stream;
 @PermitAll
 public class UserManagement extends VerticalLayout {
 
-    private final transient IUserRepository repo;
-    private final Grid<UserDTO> grid = new Grid<>(UserDTO.class, false);
+    private final transient UserRepository repo;
+    private final Grid<UserWrapper> grid = new Grid<>(UserWrapper.class, false);
 
-    public UserManagement(IUserRepository repository) {
+    public UserManagement(UserRepository repository) {
         this.repo = repository;
         add(grid);
 
 
-        GridContextMenu<UserDTO> menu = grid.addContextMenu();
+        GridContextMenu<UserWrapper> menu = grid.addContextMenu();
         menu.addItem("Add", this::onAdd);
         menu.addItem("Edit", this::onEdit);
         menu.addItem("Delete", this::onDelete);
 
         grid.setColumns("discordID", "userName", "roles");
+
+        // The int-cast is necessary here, since DataProvider.fromCallback expects an int on the
+        // Counting Callback, and we are not going to display more than 2 Billion entries at once
         grid.setItems(DataProvider.fromCallbacks(this::onAll, query -> (int) onAll(query).count()));
     }
 
-    private void onDelete(GridContextMenu.GridContextMenuItemClickEvent<UserDTO> event) {
+    private void onDelete(GridContextMenu.GridContextMenuItemClickEvent<UserWrapper> event) {
         event.getItem().map(DeleteDialog::new).ifPresent(EnhancedDialog::open);
     }
 
-    private void onAdd(GridContextMenu.GridContextMenuItemClickEvent<UserDTO> event) {
+    private void onAdd(GridContextMenu.GridContextMenuItemClickEvent<UserWrapper> event) {
         new CreateDialog().open();
     }
 
-    private void onEdit(GridContextMenu.GridContextMenuItemClickEvent<UserDTO> event) {
+    private void onEdit(GridContextMenu.GridContextMenuItemClickEvent<UserWrapper> event) {
         event.getItem().map(EditDialog::new).ifPresent(EditDialog::open);
     }
 
-    private Stream<UserDTO> onAll(Query<UserDTO, Void> query) {
+    private Stream<UserWrapper> onAll(Query<UserWrapper, Void> query) {
         try {
             return this.repo.findAll()
                 .stream()
                 .skip(query.getOffset())
                 .limit(query.getLimit())
-                .map(user -> new UserDTO(user.getDiscordid(), user.getUsername(),
+                .map(user -> new UserWrapper(user.getDiscordid(), user.getUsername(),
                         this.repo.fetchRolesForUser(user)));
         } catch (final DatabaseException e) {
             LoggerFactory.getLogger(UserManagement.class)
@@ -88,9 +91,9 @@ public class UserManagement extends VerticalLayout {
     private class EditDialog extends EnhancedDialog {
         protected final TextField userNameField;
         protected final CheckboxGroup<Role> rolesGroup;
-        protected final UserDTO person;
+        protected final UserWrapper person;
 
-        private EditDialog(UserDTO person) {
+        private EditDialog(UserWrapper person) {
             this.person = person;
             this.userNameField = new TextField("UserName", person.getUserName(), "");
             this.rolesGroup = new CheckboxGroup<>();
@@ -112,7 +115,7 @@ public class UserManagement extends VerticalLayout {
         }
 
         protected void onSave(ClickEvent<Button> event) {
-            this.doUpdate(new UserDTO(this.person.getDiscordID(), this.userNameField.getValue(),
+            this.doUpdate(new UserWrapper(this.person.getDiscordID(), this.userNameField.getValue(),
                     this.rolesGroup.getValue()));
             UserManagement.this.grid.getDataProvider().refreshAll();
             this.close();
@@ -123,7 +126,7 @@ public class UserManagement extends VerticalLayout {
          *
          * @param user User to save
          */
-        private void doUpdate(UserDTO user) {
+        private void doUpdate(UserWrapper user) {
             try {
                 Users toSave = new Users(user.getDiscordID(), user.getUserName());
                 UserManagement.this.repo.save(toSave);
@@ -144,7 +147,7 @@ public class UserManagement extends VerticalLayout {
         private final NumberField id = new NumberField("Discord ID", "0");
 
         private CreateDialog() {
-            super(new UserDTO(0L, "", Collections.emptySet()));
+            super(new UserWrapper(0L, "", Collections.emptySet()));
             this.id.setWidth("150px");
             setHeader(new Text("Create new User"));
             setContent(new HorizontalLayout(this.id, this.userNameField, this.rolesGroup));
@@ -165,9 +168,9 @@ public class UserManagement extends VerticalLayout {
 
 
     private class DeleteDialog extends EnhancedDialog {
-        private final UserDTO person;
+        private final UserWrapper person;
 
-        private DeleteDialog(UserDTO person) {
+        private DeleteDialog(UserWrapper person) {
             this.person = person;
             setContent(new Text("Are you sure you want to delete the Entry of %s?"
                 .formatted(person.getUserName())));
@@ -186,7 +189,7 @@ public class UserManagement extends VerticalLayout {
          *
          * @param user User to remove
          */
-        private void doRemove(UserDTO user) {
+        private void doRemove(UserWrapper user) {
             try {
                 UserManagement.this.repo.delete(new Users(user.getDiscordID(), user.getUserName()));
             } catch (DatabaseException e) {

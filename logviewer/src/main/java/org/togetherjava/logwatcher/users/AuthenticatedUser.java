@@ -20,9 +20,9 @@ import java.util.Set;
 @Component
 public class AuthenticatedUser {
 
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
 
-    public AuthenticatedUser(IUserRepository userRepository) {
+    public AuthenticatedUser(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

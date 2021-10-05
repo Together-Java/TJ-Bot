@@ -8,7 +8,7 @@ import java.time.Instant;
 
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class LogDTO {
+public class LogEvent {
 
     private Instant instant;
 
@@ -29,7 +29,7 @@ public class LogDTO {
     private Integer threadPriority;
 
     @JsonCreator
-    public LogDTO(@JsonProperty("instant") InstantWrapper wrapper,
+    public LogEvent(@JsonProperty("instant") InstantWrapper wrapper,
             @JsonProperty("thread") String thread, @JsonProperty("level") String level,
             @JsonProperty("loggerName") String loggerName, @JsonProperty("message") String message,
             @JsonProperty("endOfBatch") Boolean endOfBatch,

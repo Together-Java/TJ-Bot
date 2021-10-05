@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
-public final class UserDTO implements Serializable {
+public final class UserWrapper implements Serializable {
     @Serial
     private static final long serialVersionUID = -3701246411434315431L;
 
@@ -16,9 +16,9 @@ public final class UserDTO implements Serializable {
     private String userName;
     private Set<Role> roles = Collections.emptySet();
 
-    public UserDTO() {}
+    public UserWrapper() {}
 
-    public UserDTO(long discordID, String userName, Set<Role> roles) {
+    public UserWrapper(long discordID, String userName, Set<Role> roles) {
         this.discordID = discordID;
         this.userName = userName;
         this.roles = roles;
@@ -50,7 +50,7 @@ public final class UserDTO implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof UserDTO other)) {
+        if (!(obj instanceof UserWrapper other)) {
             return true;
         }
         return this.discordID == other.discordID && Objects.equals(this.userName, other.userName)

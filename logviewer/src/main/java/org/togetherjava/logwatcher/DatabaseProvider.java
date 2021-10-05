@@ -11,19 +11,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Configuration
 public class DatabaseProvider {
 
     private static final AtomicReference<Database> ATOM_DB = new AtomicReference<>();
+    private static final Lock latch = new ReentrantLock();
 
     public DatabaseProvider() {
-        synchronized (AtomDb) {
-            if (AtomDb.get() != null) {
+        try {
+            latch.lock();
+            if (ATOM_DB.get() != null) {
                 return;
             }
 
-            AtomDb.set(createDB());
+            ATOM_DB.set(createDB());
+        } finally {
+            latch.unlock();
         }
     }
 
@@ -45,9 +51,7 @@ public class DatabaseProvider {
         final Path dbPath = Path.of("./logviewer/db/db.db");
 
         try {
-            if (Files.notExists(dbPath.getParent())) {
-                Files.createDirectories(dbPath.getParent());
-            }
+            Files.createDirectories(dbPath.getParent());
         } catch (final IOException e) {
             LoggerFactory.getLogger(DatabaseProvider.class)
                 .error("Exception while creating Database-Path.", e);
@@ -59,7 +63,7 @@ public class DatabaseProvider {
 
     @Bean
     public Database getDb() {
-        return AtomDb.get();
+        return ATOM_DB.get();
     }
 
 

@@ -5,10 +5,12 @@ import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.togetherjava.logwatcher.config.Config;
 import org.vaadin.artur.helpers.LaunchUtil;
 
 /**
@@ -31,12 +33,13 @@ import org.vaadin.artur.helpers.LaunchUtil;
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
 
     public static void main(String[] args) {
-        String pathToConfig = "./logviewer/config.json";
-        if (args.length > 0) {
-            pathToConfig = String.join(" ", args).trim();
+        if (args.length > 1) {
+            LoggerFactory.getLogger(Application.class)
+                .error("Usage: Provide a single Argument, containing the Path to the Config-File");
+            System.exit(1);
         }
 
-        System.setProperty("TJ_CONFIG_PATH", pathToConfig);
+        Config.init(args.length == 1 ? args[0] : "./logviewer/config.json");
         LaunchUtil.launchBrowserInDevelopmentMode(SpringApplication.run(Application.class, args));
     }
 

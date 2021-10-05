@@ -8,12 +8,22 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Basic Class for accumulating Information which is required to start this application
  */
 @Configuration
 public class Config {
+
+    private static final AtomicReference<String> CONFIG_PATH = new AtomicReference<>();
+
+    public static void init(final String pathToConfig) {
+        if (!CONFIG_PATH.compareAndSet(null, pathToConfig)) {
+            throw new IllegalStateException(
+                    "Config Path already set to %s".formatted(CONFIG_PATH.get()));
+        }
+    }
 
     /**
      * Client-Name of the OAuth2-Application
@@ -63,10 +73,9 @@ public class Config {
     }
 
     private JsonNode getJsonNode() {
-        final String prop =
-                Objects.requireNonNull(System.getProperty("TJ_CONFIG_PATH"), "Property");
+        final String pathToConfig = Objects.requireNonNull(CONFIG_PATH.get(), "Path not Set");
         try {
-            return new ObjectMapper().readTree(Path.of(prop).toFile());
+            return new ObjectMapper().readTree(Path.of(pathToConfig).toFile());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Basic JPA-Repository for loading Users from the DB
  */
-public interface IUserRepository {
+public interface UserRepository {
 
     /**
      * Load's the User from the DB, that matches the discordID

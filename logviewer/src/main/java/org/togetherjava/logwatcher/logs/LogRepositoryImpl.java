@@ -10,7 +10,7 @@ import java.util.List;
 import static org.togetherjava.tjbot.db.generated.tables.Logevents.LOGEVENTS;
 
 @Repository
-public class LogRepositoryImpl implements ILogRepository {
+public class LogRepositoryImpl implements LogRepository {
 
     private final Database db;
 

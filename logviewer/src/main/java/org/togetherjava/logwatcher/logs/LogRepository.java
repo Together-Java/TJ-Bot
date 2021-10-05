@@ -4,7 +4,7 @@ import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 
 import java.util.List;
 
-public interface ILogRepository {
+public interface LogRepository {
 
     /**
      * Saves the given event to the DB, does not update or merge
