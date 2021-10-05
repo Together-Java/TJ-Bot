@@ -2,35 +2,25 @@ package org.togetherjava.logwatcher;
 
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.FatalBeanException;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.togetherjava.tjbot.db.Database;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 @Configuration
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 public class DatabaseProvider {
 
-    private static final AtomicReference<Database> ATOM_DB = new AtomicReference<>();
-    private static final Lock latch = new ReentrantLock();
+    private final Database db;
 
     public DatabaseProvider() {
-        try {
-            latch.lock();
-            if (ATOM_DB.get() != null) {
-                return;
-            }
-
-            ATOM_DB.set(createDB());
-        } finally {
-            latch.unlock();
-        }
+        this.db = createDB();
     }
 
     @SuppressWarnings({"java:S2139"}) // At this point there is nothing we can do about a
@@ -63,7 +53,7 @@ public class DatabaseProvider {
 
     @Bean
     public Database getDb() {
-        return ATOM_DB.get();
+        return this.db;
     }
 
 
