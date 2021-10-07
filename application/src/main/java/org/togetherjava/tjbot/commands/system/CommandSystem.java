@@ -76,6 +76,8 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
         event.getJDA().getGuildCache().forEach(this::registerReloadCommand);
+        // NOTE We do not have to wait for reload to complete for the command system to be ready
+        // itself
         logger.debug("Command system is now ready");
     }
 
@@ -104,12 +106,16 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         guild.retrieveCommands().queue(commands -> {
             // Has it been registered already?
             if (commands.stream().map(Command::getName).anyMatch(RELOAD_COMMAND::equals)) {
+                logger.debug("Command '{}' has already been registered for guild '{}'",
+                        RELOAD_COMMAND, guild.getName());
                 return;
             }
 
             logger.debug("Register '{}' for guild '{}'", RELOAD_COMMAND, guild.getName());
             SlashCommand reloadCommand = requireSlashCommand(RELOAD_COMMAND);
-            guild.upsertCommand(reloadCommand.getData()).queue();
+            guild.upsertCommand(reloadCommand.getData())
+                .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
+                        guild.getName()));
         });
     }
 
