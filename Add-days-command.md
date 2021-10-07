@@ -139,7 +139,7 @@ import java.util.Objects;
  * 
  * <pre>
  * {@code
- * /days 26.09.2021 03.10.2021
+ * /days from: 26.09.2021 to: 03.10.2021
  * // TJ-Bot: The difference between 26.09.2021 and 03.10.2021 are 7 days
  * }
  * </pre>
