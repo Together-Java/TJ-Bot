@@ -21,9 +21,7 @@ Working on your first Pull Request? You can check these resources:
 * http://makeapullrequest.com/
 * http://www.firsttimersonly.com/
 
-
 At this point, you're ready to make your changes! Feel free to ask for help; everyone is a beginner at first! :tada: 
-
 
 # Getting started
 
@@ -39,18 +37,7 @@ The repository has two main branches:
 * `master`, a stable branch mostly used for releases that receives changes only ocasionally
 * `develop`, the branch where the active development takes place; receives changes frequently
 
-Your `feature`-branch will be based off the `develop` branch. The model we are using is a light version of what is called [Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow):
-
-![Gitflow illustration](https://i.imgur.com/P4mCPza.png)
-
-When creating new branches, please stick to the following naming conventions:
-* `experiment/*` for branches that are intended for experiments and are meant to be discarded
-* `feature/*` for branches that will contain new features
-* `bugfix/*` for branches that will fix any existing bugs
-* `test/*` for branches that will affect unit tests only
-* `refactor/*` for branches that will change the code in a non functional way only
-* `docs/*` for branches that will affect documentation only
-* `chore/*` for branches that will not affect neither code nor documentation (e.g. `.gitlab-ci.yml` or lint rules)
+Your work will be based off the `develop` branch.
 
 ### Create a pull request
 
@@ -71,6 +58,15 @@ We require a *linear history*, that means you have two options to get your code 
 From there on, it will lead to an automatic re-deployment of the bot on a test environment, where you can test out your changes live.
 
 After a while, the `master` branch will be synced with `develop` again, leading to your changes finally being live on the real server!
+
+# Tutorials
+
+Make sure to head over to the [Wiki](https://github.com/Together-Java/TJ-Bot/wiki) as general entry point to the project. It provides lots of tutorials, documentation and other information, for example
+* creating a discord bot and a private server;
+* setting up the project locally;
+* adding your own custom commands;
+* a technology overview;
+* guidance about how to maintain the bot (e.g. VPS, logs, databases, restart).
 
 # Community
 
