@@ -51,7 +51,11 @@ public static @NotNull Collection<SlashCommand> createSlashCommands(@NotNull Dat
 ```
 ## Try it out
 
-The command is now ready and can already be used. After starting up the bot, we have to use `/reload` to tell Discord that we changed the slash-commands. Now, we can use `/days` and it will respond with `"Hello World!"`.
+The command is now ready and can already be used.
+
+After starting up the bot, we have to use `/reload` to tell Discord that we changed the slash-commands. To be precise, you have to use `/reload` each time you change the commands signature. That is mostly whenever you add or remove commands, change their names or descriptions or anything related to their `CommandData`.
+
+Now, we can use `/days` and it will respond with `"Hello World!"`.
 
 ![days command hello world](https://i.imgur.com/BVaIfKw.png)
 
