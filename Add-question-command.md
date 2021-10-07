@@ -86,7 +86,9 @@ At this point, we should try out the code. Do not forget to use `/reload` before
 
 ![question sub commands](https://i.imgur.com/3MI6ITN.png)
 
-## Add buttons
+## `Ask` sub-command
+
+### Add buttons
 
 Instead of just writing down a question, we also want to give the user the opportunity to respond by clicking one of two buttons. This can be done by using `.addActionRow(...)` on our `reply` and then making use of `Button.of(...)`.
 
@@ -113,7 +115,7 @@ When trying it out, we can now see the question and two buttons to respond:
 
 However, clicking the buttons still does not trigger anything yet.
 
-## React to button click
+### React to button click
 
 In order to react to a button click, we have to give an implementation for the `onButtonClick(...)` method, which `SlashCommandAdapter` already implemented, but without any action. The method provides us wit hthe `ButtonClickEvent` and also with a `List<String>` of arguments, which are the optional arguments added to the **component id** earlier. In our case, we added the question id, so we can also retrieve it back now by using `args.get(0)`. Also, we can figure out which button was clicked by using `event.getButton().getStyle()`.
 
@@ -137,7 +139,7 @@ Clicking the buttons now works:
 
 ![question react to buttons](https://i.imgur.com/39SjSI2.png)
 
-## Disable buttons after click
+### Disable buttons after click
 
 Right now, the buttons can be clicked as often as wanted and the bot will always be triggered again. To get rid of this, we simply have to disable the buttons after someone clicked.
 
@@ -154,7 +156,7 @@ and the buttons will be disabled after someone clicks them:
 
 ![question ask disable button](https://i.imgur.com/Wf8NQ7U.png)
 
-## Setup database
+### Setup database
 
 Last but not least for the `ask` command, we have to save the response in the database. Before we can get started with this, we have to create a database table and let Flyways generate the corresponding database code.
 
@@ -191,6 +193,24 @@ Trying it out, and we get the expected response:
 
 TODO
 
-## Add logging
+### Add logging
+
+At this point, we should add logging to the code to simplify debugging. Therefore, just add
+```java
+private static final Logger logger = LoggerFactory.getLogger(QuestionCommand.class);
+```
+to the top, as a new field for our class.
+
+Now, you can use the logger wherever you want, for example to log a possible error message during writing the database:
+```java
+} catch (DatabaseException e) {
+    logger.error("Failed to save response '{}'", id, e);
+    event.reply("Sorry, something went wrong.").queue();
+}
+```
+
+The ask sub-command should now be working correctly.
+
+## `Get` sub-command
 
 TODO
