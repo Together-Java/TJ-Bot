@@ -283,5 +283,163 @@ TODO
 After some cleanup and minor code improvements, the full code for `QuestionCommand` is:
 
 ```java
-TODO
+package org.togetherjava.tjbot.commands.basic;
+
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.DatabaseException;
+import org.togetherjava.tjbot.db.generated.tables.Questions;
+import org.togetherjava.tjbot.db.generated.tables.records.QuestionsRecord;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
+
+/**
+ * This creates a command called {@code /question}, which can ask users questions, save their
+ * responses and retrieve back responses.
+ * <p>
+ * For example:
+ *
+ * <pre>
+ * {@code
+ * /question ask id: noodles question: Do you like noodles?
+ * // User clicks on a 'Yes' button
+ *
+ * /question get id: noodles
+ * // TJ-Bot: The response for 'noodles' is: Yes
+ * }
+ * </pre>
+ */
+public final class QuestionCommand extends SlashCommandAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(QuestionCommand.class);
+    private static final String ASK_SUBCOMMAND = "ask";
+    private static final String GET_SUBCOMMAND = "get";
+    private static final String ID_OPTION = "id";
+    private static final String QUESTION_OPTION = "question";
+    private static final String NAME = "question";
+    private final Database database;
+
+    /**
+     * Creates a new question command, using the given database.
+     *
+     * @param database the database to store the responses in
+     */
+    public QuestionCommand(Database database) {
+        super(NAME, "Asks users questions, responses are saved and can be retrieved back",
+                SlashCommandVisibility.GUILD);
+        this.database = database;
+
+        getData().addSubcommands(
+                new SubcommandData(ASK_SUBCOMMAND,
+                        "Asks the users a question, responses will be saved")
+                            .addOption(OptionType.STRING, ID_OPTION,
+                                    "Unique ID under which the question should be saved", true)
+                            .addOption(OptionType.STRING, QUESTION_OPTION, "Question to ask", true),
+                new SubcommandData(GET_SUBCOMMAND, "Gets the response to the given question")
+                    .addOption(OptionType.STRING, ID_OPTION,
+                            "Unique ID of the question to retrieve", true));
+    }
+
+    private static int clickedYesToInt(boolean clickedYes) {
+        return clickedYes ? 1 : 0;
+    }
+
+    private static boolean isClickedYesFromInt(int clickedYes) {
+        return clickedYes != 0;
+    }
+
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        switch (Objects.requireNonNull(event.getSubcommandName())) {
+            case ASK_SUBCOMMAND -> handleAskCommand(event);
+            case GET_SUBCOMMAND -> handleGetCommand(event);
+            default -> throw new AssertionError();
+        }
+    }
+
+    private void handleAskCommand(@NotNull CommandInteraction event) {
+        String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
+        String question = Objects.requireNonNull(event.getOption(QUESTION_OPTION)).getAsString();
+
+        event.reply(question)
+            .addActionRow(Button.of(ButtonStyle.SUCCESS, generateComponentId(id), "Yes"),
+                    Button.of(ButtonStyle.DANGER, generateComponentId(id), "No"))
+            .queue();
+    }
+
+    @Override
+    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
+        String id = args.get(0);
+        ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
+
+        boolean clickedYes = switch (buttonStyle) {
+            case DANGER -> false;
+            case SUCCESS -> true;
+            default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
+        };
+
+        event.getMessage()
+            .editMessageComponents(ActionRow
+                .of(event.getMessage().getButtons().stream().map(Button::asDisabled).toList()))
+            .queue();
+
+        try {
+            database.write(context -> {
+                QuestionsRecord questionsRecord = context.newRecord(Questions.QUESTIONS)
+                    .setId(id)
+                    .setResponse(clickedYesToInt(clickedYes));
+                if (questionsRecord.update() == 0) {
+                    questionsRecord.insert();
+                }
+            });
+
+            event.reply("Saved response under '" + id + "'.").queue();
+        } catch (DatabaseException e) {
+            logger.error("Failed to save response for '{}'", id, e);
+            event.reply("Sorry, something went wrong.").queue();
+        }
+    }
+
+    private void handleGetCommand(@NotNull CommandInteraction event) {
+        String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
+
+        try {
+            OptionalInt response = database.read(context -> {
+                try (var select = context.selectFrom(Questions.QUESTIONS)) {
+                    return Optional
+                        .ofNullable(select.where(Questions.QUESTIONS.ID.eq(id)).fetchOne())
+                        .map(QuestionsRecord::getResponse)
+                        .map(OptionalInt::of)
+                        .orElseGet(OptionalInt::empty);
+                }
+            });
+            if (response.isEmpty()) {
+                event.reply("There is no response saved for the id '" + id + "'.")
+                    .setEphemeral(true)
+                    .queue();
+                return;
+            }
+
+            boolean clickedYes = isClickedYesFromInt(response.getAsInt());
+            event.reply("The response for '" + id + "' is: " + (clickedYes ? "Yes" : "No")).queue();
+        } catch (DatabaseException e) {
+            logger.error("Failed to get response for '{}'", id, e);
+            event.reply("Sorry, something went wrong.").setEphemeral(true).queue();
+        }
+    }
+}
 ```
