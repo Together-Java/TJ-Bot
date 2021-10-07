@@ -191,7 +191,7 @@ try {
 ```
 Trying it out, and we get the expected response:
 
-TODO
+![question ask write db](https://i.imgur.com/RP4rMGA.png)
 
 ### Add logging
 
@@ -276,7 +276,7 @@ try {
 ```
 and if we try it out, we see that the command works:
 
-TODO
+![question get](https://i.imgur.com/lQK3eGF.png)
 
 ## Full code
 
