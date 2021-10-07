@@ -17,7 +17,7 @@ import java.util.List;
  * <p>
  * All slash commands have to implement this interface. For convenience, there is a
  * {@link SlashCommandAdapter} available that implemented most methods already. A new command can
- * then be registered by adding it to {@link CommandRegistry}.
+ * then be registered by adding it to {@link Commands}.
  * <p>
  * <p>
  * Slash commands can either be visible globally in Discord or just to specific guilds. They can
