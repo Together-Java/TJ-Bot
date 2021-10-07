@@ -46,10 +46,8 @@ public final class Database {
         SQLiteDataSource dataSource = new SQLiteDataSource(sqliteConfig);
         dataSource.setUrl(jdbcUrl);
 
-        Flyway flyway = Flyway.configure()
-            .dataSource(dataSource)
-            .locations("/org/togetherjava/tjbot/db")
-            .load();
+        Flyway flyway =
+                Flyway.configure().dataSource(dataSource).locations("classpath:/db/").load();
         flyway.migrate();
 
         dslContext = DSL.using(dataSource.getConnection(), SQLDialect.SQLITE);
