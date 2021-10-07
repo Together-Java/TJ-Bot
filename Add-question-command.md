@@ -204,7 +204,7 @@ to the top, as a new field for our class.
 Now, you can use the logger wherever you want, for example to log a possible error message during writing the database:
 ```java
 } catch (DatabaseException e) {
-    logger.error("Failed to save response '{}'", id, e);
+    logger.error("Failed to save response for '{}'", id, e);
     event.reply("Sorry, something went wrong.").queue();
 }
 ```
@@ -213,4 +213,75 @@ The ask sub-command should now be working correctly.
 
 ## `Get` sub-command
 
+This command is simpler as we do not have any dialog. We simply have to lookup the database and respond with the result, if found.
+
+### Read database
+
+Reading the database revolves around the `database.read(...)` methods and using the generated classes for the `questions` table:
+```java
+OptionalInt response = database.read(context -> {
+    try (var select = context.selectFrom(Questions.QUESTIONS)) {
+        return Optional.ofNullable(
+                        select.where(Questions.QUESTIONS.ID.eq(id)).fetchOne())
+                .map(QuestionsRecord::getResponse)
+                .map(OptionalInt::of)
+                .orElseGet(OptionalInt::empty);
+    }
+});
+```
+
+### Reply
+
+The last part will be to reply with the saved response:
+
+```java
+if (response.isEmpty()) {
+    event.reply("There is no response saved for the id '" + id + "'.")
+            .setEphemeral(true)
+            .queue();
+    return;
+}
+
+boolean clickedYes = response.getAsInt() != 0;
+event.reply("The response for '" + id + "' is: " + (clickedYes ? "Yes" : "No")).queue();
+```
+
+The full code for the `handleGetCommand` method is now:
+```java
+String id = event.getOption("id").getAsString();
+
+try {
+    OptionalInt response = database.read(context -> {
+        try (var select = context.selectFrom(Questions.QUESTIONS)) {
+            return Optional.ofNullable(
+                            select.where(Questions.QUESTIONS.ID.eq(id)).fetchOne())
+                    .map(QuestionsRecord::getResponse)
+                    .map(OptionalInt::of)
+                    .orElseGet(OptionalInt::empty);
+        }
+    });
+    if (response.isEmpty()) {
+        event.reply("There is no response saved for the id '" + id + "'.")
+                .setEphemeral(true)
+                .queue();
+        return;
+    }
+
+    boolean clickedYes = response.getAsInt() != 0;
+    event.reply("The response for '" + id + "' is: " + (clickedYes ? "Yes" : "No")).queue();
+} catch (DatabaseException e) {
+    logger.error("Failed to get response for '{}'", id, e);
+    event.reply("Sorry, something went wrong.").setEphemeral(true).queue();
+}
+```
+and if we try it out, we see that the command works:
+
 TODO
+
+## Full code
+
+After some cleanup and minor code improvements, the full code for `QuestionCommand` is:
+
+```java
+TODO
+```
