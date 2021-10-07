@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 This tutorial shows how to add a custom command, the `question` command:
 * `/question ask <id> <question>`, `/question get <id>`
@@ -7,6 +7,22 @@ This tutorial shows how to add a custom command, the `question` command:
   * e.g. `/question ask "noodles" "Do you like noodles?"` and `/question get "noodles"`
 
 Please read [[Add a new command]] and [[Add days command]] first.
+
+## What you will learn
+* add a custom command
+* reply to messages
+* add sub-commands to a command
+* add options (arguments) to a sub-command
+* ephemeral messages (only visible to one user)
+* add buttons to a message
+* memorize data inside a button
+* react to button click
+* disable buttons from an old message
+* create a new database table and migrate it
+* read and write from/to a database (using Flyway, jOOQ and SQLite)
+* basic logging (using SLF4J)
+
+# Tutorial
 
 ## Setup
 
