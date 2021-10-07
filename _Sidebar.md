@@ -9,6 +9,8 @@
 * [[Create Discord server and bot]]
 * [[Setup project locally]]
 * [[Add a new command]]
+  * [[Add days command]]
+  * [[Add question command]]
 * [[JDA Tips and Tricks]]
 
 #### Project documentation
