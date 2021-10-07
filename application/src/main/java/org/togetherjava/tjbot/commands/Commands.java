@@ -9,14 +9,14 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Utility class that offers all registered commands. New commands have to be added here, where
- * {@link org.togetherjava.tjbot.commands.system.CommandSystem} will then pick it up from and
- * register it with the system.
+ * Utility class that offers all commands that should be registered by the system. New commands have
+ * to be added here, where {@link org.togetherjava.tjbot.commands.system.CommandSystem} will then
+ * pick it up from and register it with the system.
  * <p>
  * To add a new slash command, extend the commands returned by
  * {@link #createSlashCommands(Database)}.
  */
-public enum CommandRegistry {
+public enum Commands {
     ;
 
     /**
@@ -30,6 +30,9 @@ public enum CommandRegistry {
      */
     public static @NotNull Collection<SlashCommand> createSlashCommands(
             @NotNull Database database) {
+        // NOTE The command system can add special system relevant commands also by itself,
+        // hence this list may not necessarily represent the full list of all commands actually
+        // available.
         return List.of(new PingCommand(), new DatabaseCommand(database));
     }
 }

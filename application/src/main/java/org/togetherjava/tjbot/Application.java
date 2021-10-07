@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.system.CommandSystem;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
@@ -19,7 +20,7 @@ import java.sql.SQLException;
  * New commands can be created by implementing
  * {@link net.dv8tion.jda.api.events.interaction.SlashCommandEvent} or extending
  * {@link org.togetherjava.tjbot.commands.SlashCommandAdapter}. They can then be registered in
- * {@link org.togetherjava.tjbot.commands.CommandRegistry}.
+ * {@link Commands}.
  */
 public enum Application {
     ;

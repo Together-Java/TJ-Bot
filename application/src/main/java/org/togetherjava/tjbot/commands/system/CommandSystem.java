@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.CommandRegistry;
+import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 
@@ -28,9 +28,9 @@ import java.util.stream.Collectors;
  * of event parsing.
  * <p>
  * <p>
- * Commands are made available via {@link CommandRegistry}, then the system has to be added to JDA
- * as an event listener, using {@link net.dv8tion.jda.api.JDA#addEventListener(Object...)}.
- * Afterwards, the system is ready and will correctly forward events to all commands.
+ * Commands are made available via {@link Commands}, then the system has to be added to JDA as an
+ * event listener, using {@link net.dv8tion.jda.api.JDA#addEventListener(Object...)}. Afterwards,
+ * the system is ready and will correctly forward events to all commands.
  */
 public final class CommandSystem extends ListenerAdapter implements SlashCommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(CommandSystem.class);
@@ -40,13 +40,13 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
      * <p>
-     * Commands are fetched from {@link CommandRegistry}.
+     * Commands are fetched from {@link Commands}.
      *
      * @param database the database that commands may use to persist data
      */
     @SuppressWarnings("ThisEscapedInObjectConstruction")
     public CommandSystem(@NotNull Database database) {
-        nameToSlashCommands = CommandRegistry.createSlashCommands(database)
+        nameToSlashCommands = Commands.createSlashCommands(database)
             .stream()
             .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
 

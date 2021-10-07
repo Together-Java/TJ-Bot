@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Adapter implementation of a {@link SlashCommand}. The minimal setup only requires implementation
  * of {@link #onSlashCommand(SlashCommandEvent)}. A new command can then be registered by adding it
- * to {@link CommandRegistry}.
+ * to {@link Commands}.
  * <p>
  * Further, {@link #onButtonClick(ButtonClickEvent, List)} and
  * {@link #onSelectionMenu(SelectionMenuEvent, List)} can be overridden if desired. The default
@@ -51,7 +51,7 @@ import java.util.List;
  * }
  * </pre>
  * 
- * and registration of an instance of that class in {@link CommandRegistry}.
+ * and registration of an instance of that class in {@link Commands}.
  */
 public abstract class SlashCommandAdapter implements SlashCommand {
     private final String name;
