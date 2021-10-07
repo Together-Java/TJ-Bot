@@ -8,6 +8,8 @@ If you want to join the party, please have a look at:
 * [[Create Discord server and bot]]
 * [[Setup project locally]]
 * [[Add a new command]]
+  * [[Add days command]]
+  * [[Add question command]]
 * [[JDA Tips and Tricks]]
 
 We also have several guides explaining the infrastructure, architecture and flow of the project:
