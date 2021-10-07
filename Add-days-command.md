@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 This tutorial shows how to add a custom command, the `days` command:
 * `/days <from> <to>`
@@ -6,6 +6,15 @@ This tutorial shows how to add a custom command, the `days` command:
   * e.g. `/days 26.09.2021 03.10.2021` will respond with `8 days`
 
 Please read [[Add a new command]] first.
+
+## What you will learn
+* add a custom command
+* reply to messages
+* add options (arguments) to a command
+* ephemeral messages (only visible to one user)
+* compute the difference in days between two dates
+
+# Tutorial
 
 ## Create class
 
