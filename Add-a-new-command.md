@@ -20,7 +20,7 @@ This tutorial shows how to add custom commands to the bot.
 
 Before we get started, we have to familiarize with the general code structure.
 
-![High level flow](https://i.imgur.com/MGHp1pI.png)
+![High level flow](https://i.imgur.com/M8381Zm.png)
 
 The entry point of the bot is `Application`, which will first create instances of:
 * `Config`, which provides several properties read from a configuration file
@@ -43,7 +43,7 @@ public static Collection<SlashCommand> createSlashCommands(Database database) {
 ```
 As an example, when someone uses the `/ping` command, the event will be send to `CommandSystem` by JDA, which will then forward it to the `PingCommand` class.
 
-![command system](https://i.imgur.com/a6EuSkr.png)
+![command system](https://i.imgur.com/EJNanvE.png)
 
 Commands have to implement the `SlashCommand` interface. Besides metadata (e.g. a name) and the command setup provided by `getData()`, it mostly demands implementation of the event action handlers:
 * `onSlashCommand`
