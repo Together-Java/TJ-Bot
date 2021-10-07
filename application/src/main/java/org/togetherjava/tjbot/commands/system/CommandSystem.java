@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandRegistry;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.util.TriConsumer;
 
 import java.util.*;
 import java.util.function.Function;
@@ -35,9 +34,8 @@ import java.util.stream.Collectors;
  */
 public final class CommandSystem extends ListenerAdapter implements SlashCommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(CommandSystem.class);
-
-    private final Map<String, SlashCommand> nameToSlashCommands;
     private static final String RELOAD_COMMAND = "reload";
+    private final Map<String, SlashCommand> nameToSlashCommands;
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -162,5 +160,28 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
      */
     private @NotNull SlashCommand requireSlashCommand(@NotNull String name) {
         return Objects.requireNonNull(nameToSlashCommands.get(name));
+    }
+
+    /**
+     * Extension of {@link java.util.function.BiConsumer} but for 3 elements.
+     * <p>
+     * Represents an operation that accepts three input arguments and returns no result. This is the
+     * three-arity specialization of {@link java.util.function.Consumer}. Unlike most other
+     * functional interfaces, TriConsumer is expected to operate via side effects.
+     *
+     * @param <A> the type of the first argument to the operation
+     * @param <B> the type of the second argument to the operation
+     * @param <C> the type of the third argument to the operation
+     */
+    @FunctionalInterface
+    private interface TriConsumer<A, B, C> {
+        /**
+         * Performs this operation on the given arguments.
+         *
+         * @param first the first input argument
+         * @param second the second input argument
+         * @param third the third input argument
+         */
+        void accept(A first, B second, C third);
     }
 }
