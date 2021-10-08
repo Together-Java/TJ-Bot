@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 public final class CommandSystem extends ListenerAdapter implements SlashCommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(CommandSystem.class);
     private static final String RELOAD_COMMAND = "reload";
-    private static final int GUILD_SIZE_PARALLEL_THRESHOLD = 10;
+    private static final int GUILDS_AMOUNT_PARALLEL_THRESHOLD = 10;
     private final Map<String, SlashCommand> nameToSlashCommands;
 
     /**
@@ -86,7 +86,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         logger.debug("JDA is ready, registering reload command");
         SnowflakeCacheView<Guild> guilds = event.getJDA().getGuildCache();
         Stream<Guild> guildStream =
-                guilds.size() > GUILD_SIZE_PARALLEL_THRESHOLD ? guilds.parallelStream()
+                guilds.size() > GUILDS_AMOUNT_PARALLEL_THRESHOLD ? guilds.parallelStream()
                         : guilds.stream();
         guildStream.forEach(this::registerReloadCommand);
         // NOTE We do not have to wait for reload to complete for the command system to be ready
