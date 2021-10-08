@@ -1,19 +1,24 @@
 package org.togetherjava.tjbot.commands.system;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
 import java.util.*;
@@ -116,7 +121,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
             guild.upsertCommand(reloadCommand.getData())
                 .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
                         guild.getName()));
-        });
+        }, ex -> handleRegisterErrors(ex, guild));
     }
 
     /**
@@ -166,6 +171,36 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
      */
     private @NotNull SlashCommand requireSlashCommand(@NotNull String name) {
         return Objects.requireNonNull(nameToSlashCommands.get(name));
+    }
+
+    private static void handleRegisterErrors(Throwable ex, Guild guild) {
+        new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, errorResponse -> {
+            // Find a channel that we have permissions to write to
+            // NOTE Unfortunately, there is no better accurate way to find a proper channel
+            // where we can report the setup problems other than simply iterating all of them.
+            Optional<TextChannel> channelToReportTo = guild.getTextChannelCache()
+                .stream()
+                .filter(channel -> guild.getPublicRole()
+                    .hasPermission(channel, Permission.MESSAGE_WRITE))
+                .findAny();
+
+            // Report the problem to the guild
+            Config config = Config.getInstance();
+            channelToReportTo.ifPresent(textChannel -> textChannel
+                .sendMessage("I need the commands scope, please invite me correctly."
+                        + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
+                            .formatted(config.getDiscordGuildInvite(), config.getProjectWebsite()))
+                .queue());
+
+            guild.leave().queue();
+
+            String unableToReportText = channelToReportTo.isPresent() ? ""
+                    : " Did not find any public text channel to report the issue to, unable to inform the guild.";
+            logger.warn(
+                    "Guild '{}' does not have the required command scope, unable to register, leaving it.{}",
+                    guild.getName(), unableToReportText, ex);
+        }).accept(ex);
+
     }
 
     /**
