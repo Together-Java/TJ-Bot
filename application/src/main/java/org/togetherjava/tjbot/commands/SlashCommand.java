@@ -92,6 +92,10 @@ public interface SlashCommand {
      * Triggered by the command system when a slash command corresponding to this implementation
      * (based on {@link #getData()} has been triggered.
      * <p>
+     * This method may be called multi-threaded. In particular, there are no guarantees that it will
+     * be executed on the same thread repeatedly or on the same thread that other event methods have
+     * been called on.
+     * <p>
      * Details are available in the given event and the event also enables implementations to
      * respond to it.
      * <p>
@@ -134,6 +138,10 @@ public interface SlashCommand {
      * Triggered by the command system when a button corresponding to this implementation (based on
      * {@link #getData()} has been clicked.
      * <p>
+     * This method may be called multi-threaded. In particular, there are no guarantees that it will
+     * be executed on the same thread repeatedly or on the same thread that other event methods have
+     * been called on.
+     * <p>
      * Details are available in the given event and the event also enables implementations to
      * respond to it.
      * <p>
@@ -149,6 +157,10 @@ public interface SlashCommand {
     /**
      * Triggered by the command system when a selection menu corresponding to this implementation
      * (based on {@link #getData()} has been clicked.
+     * <p>
+     * This method may be called multi-threaded. In particular, there are no guarantees that it will
+     * be executed on the same thread repeatedly or on the same thread that other event methods have
+     * been called on.
      * <p>
      * Details are available in the given event and the event also enables implementations to
      * respond to it.
