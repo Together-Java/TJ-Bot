@@ -1,6 +1,6 @@
 # Overview
 
-We want the project to be easy to understand and maintain, for anyone, including newcomers. Because of that, we enforce a strict code style based on popular and commonly configurations. Additionally, we require the code to pass certain checks that analyze it with respect to maintainability, readability, security and more.
+We want the project to be easy to understand and maintain, for anyone, including newcomers. Because of that, we enforce a strict code style based on popular and commonly used configurations. Additionally, we require the code to pass certain checks that analyze it with respect to maintainability, readability, security and more.
 
 All pull requests have to pass those automated checks before they can be merged to the project.
 
