@@ -71,7 +71,7 @@ public final class PingCommand extends SlashCommandAdapter {
 In the following, we will add two custom commands to the application:
 * `/days <from> <to>`
   * computes the difference in days between the given dates
-  * e.g. `/days 26.09.2021 03.10.2021` will respond with `8 days`
+  * e.g. `/days 26.09.2021 03.10.2021` will respond with `7 days`
 * `/question ask <id> <question>`, `/question get <id>`
   * asks a question and users can click a `Yes` or `No` button
   * the choice will be saved in the database from which it can be retrieved using the `get` subcommand
