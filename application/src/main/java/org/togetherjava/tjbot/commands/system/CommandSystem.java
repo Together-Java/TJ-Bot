@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,10 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The command system is the core of command handling in this application.
@@ -40,6 +43,7 @@ import java.util.stream.Collectors;
 public final class CommandSystem extends ListenerAdapter implements SlashCommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(CommandSystem.class);
     private static final String RELOAD_COMMAND = "reload";
+    private static final int GUILD_SIZE_PARALLEL_THRESHOLD = 10;
     private final Map<String, SlashCommand> nameToSlashCommands;
 
     /**
@@ -80,7 +84,11 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     public void onReady(@NotNull ReadyEvent event) {
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
-        event.getJDA().getGuildCache().forEach(this::registerReloadCommand);
+        SnowflakeCacheView<Guild> guilds = event.getJDA().getGuildCache();
+        Stream<Guild> guildStream =
+                guilds.size() > GUILD_SIZE_PARALLEL_THRESHOLD ? guilds.parallelStream()
+                        : guilds.stream();
+        guildStream.forEach(this::registerReloadCommand);
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Command system is now ready");
@@ -90,21 +98,24 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", event.getName(),
                 event.getId(), event.getGuild());
-        requireSlashCommand(event.getName()).onSlashCommand(event);
+        CompletableFuture
+            .runAsync(() -> requireSlashCommand(event.getName()).onSlashCommand(event));
     }
 
     @Override
     public void onButtonClick(@NotNull ButtonClickEvent event) {
         logger.debug("Received button click '{}' (#{}) on guild '{}'", event.getComponentId(),
                 event.getId(), event.getGuild());
-        forwardComponentCommand(event, SlashCommand::onButtonClick);
+        CompletableFuture
+            .runAsync(() -> forwardComponentCommand(event, SlashCommand::onButtonClick));
     }
 
     @Override
     public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
-        forwardComponentCommand(event, SlashCommand::onSelectionMenu);
+        CompletableFuture
+            .runAsync(() -> forwardComponentCommand(event, SlashCommand::onSelectionMenu));
     }
 
     private void registerReloadCommand(@NotNull Guild guild) {
