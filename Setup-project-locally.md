@@ -99,7 +99,7 @@ Replace `<your_token_here>` with your bot token; you can also adjust the other s
 
 ### IntelliJ
 
-1. put the file configuration file to `TJ-Bot\application\config.json` or run the program with a single argument, the path to your config file
+1. put the configuration file to `TJ-Bot\application\config.json` or run the program with a single argument, the path to your config file
 2. in the Gradle view, click the `run` task and start it
 
 ![Bot runs](https://i.imgur.com/KdsSsx0.png)
