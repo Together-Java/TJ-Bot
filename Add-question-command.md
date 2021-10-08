@@ -133,14 +133,14 @@ However, clicking the buttons still does not trigger anything yet.
 
 ### React to button click
 
-In order to react to a button click, we have to give an implementation for the `onButtonClick(...)` method, which `SlashCommandAdapter` already implemented, but without any action. The method provides us wit hthe `ButtonClickEvent` and also with a `List<String>` of arguments, which are the optional arguments added to the **component id** earlier. In our case, we added the question id, so we can also retrieve it back now by using `args.get(0)`. Also, we can figure out which button was clicked by using `event.getButton().getStyle()`.
+In order to react to a button click, we have to give an implementation for the `onButtonClick(...)` method, which `SlashCommandAdapter` already implemented, but without any action. The method provides us with the `ButtonClickEvent` and also with a `List<String>` of arguments, which are the optional arguments added to the **component id** earlier. In our case, we added the question id, so we can also retrieve it back now by using `args.get(0)`. Also, we can figure out which button was clicked by using `event.getButton().getStyle()`.
 
 A minimal setup could now look like:
 ```java
 @Override
 public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
     String id = args.get(0);
-    ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
+    ButtonStyle buttonStyle = event.getButton().getStyle();
 
     boolean clickedYes = switch (buttonStyle) {
         case DANGER -> false;
@@ -174,7 +174,7 @@ and the buttons will be disabled after someone clicks them:
 
 ### Setup database
 
-Last but not least for the `ask` command, we have to save the response in the database. Before we can get started with this, we have to create a database table and let Flyways generate the corresponding database code.
+Last but not least for the `ask` command, we have to save the response in the database. Before we can get started with this, we have to create a database table and let Flyway generate the corresponding database code.
 
 Therefore, we go to the folder `TJ-Bot\database\src\main\resources\db` and add a new database migration script, incrementing the version. For example, if the script with the highest version number is `V1`, we will add `V2` to it. Give the script a nice name, such as `V2__Add_Questions_Table.sql`. The content is simply an SQL statement to create your desired table:
 ```sql
