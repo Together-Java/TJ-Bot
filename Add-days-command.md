@@ -61,7 +61,7 @@ Now, we can use `/days` and it will respond with `"Hello World!"`.
 
 ## Add options
 
-The next step is to add the two options to our command, i.e. being able to write something like `/days 26.09.2021 03.10.2021`. The options are both supposed to be **required**
+The next step is to add the two options to our command, i.e. being able to write something like `/days 26.09.2021 03.10.2021`. The options are both supposed to be **required**.
 
 This has to be configured during the setup of the command, via the `CommandData` returned by `getData()`. We should do this in the constructor of our command. Like so:
 ```java
@@ -100,7 +100,7 @@ All in all, the code for the method now looks like:
 String from = event.getOption("from").getAsString();
 String to = event.getOption("to").getAsString();
 
-var formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 try {
     LocalDate fromDate = LocalDate.parse(from, formatter);
     LocalDate toDate = LocalDate.parse(to, formatter);
@@ -160,7 +160,8 @@ import java.util.Objects;
 public final class DaysCommand extends SlashCommandAdapter {
     private static final String FROM_OPTION = "from";
     private static final String TO_OPTION = "to";
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final String FORMAT = "dd.MM.yyyy";
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(FORMAT);
 
     /**
      * Creates an instance of the command.
@@ -170,10 +171,10 @@ public final class DaysCommand extends SlashCommandAdapter {
                 SlashCommandVisibility.GUILD);
 
         getData()
-            .addOption(OptionType.STRING, FROM_OPTION, "the start date, in the format 'dd.MM.yyyy'",
-                    true)
-            .addOption(OptionType.STRING, TO_OPTION, "the end date, in the format 'dd.MM.yyyy'",
-                    true);
+            .addOption(OptionType.STRING, FROM_OPTION, "the start date, in the format '"
+                + FORMAT + "'", true)
+            .addOption(OptionType.STRING, TO_OPTION, "the end date, in the format '"
+                + FORMAT + "'", true);
     }
 
     @Override
@@ -187,7 +188,7 @@ public final class DaysCommand extends SlashCommandAdapter {
             fromDate = LocalDate.parse(from, FORMATTER);
             toDate = LocalDate.parse(to, FORMATTER);
         } catch (DateTimeParseException e) {
-            event.reply("The dates must be in the format 'dd.MM.yyyy', try again.")
+            event.reply("The dates must be in the format '" + FORMAT + "', try again.")
                 .setEphemeral(true)
                 .queue();
             return;
