@@ -38,13 +38,13 @@ Next up, you want to create your own bot.
 2. click on **New Application**  
   2.1. enter the name for the bot
 3. on the **General Information** tab  
-  3.1. enter a name, description and upload a picture
+  3.1. enter a name, description and upload a picture  
   3.2. hit **Save Changes**
 4. on the **Bot** tab  
   4.1. click on **Add Bot**  
   4.2. hit the **Yes, do it!** button  
   4.3. you can now see your bots **Token**, you will need this when connecting the bot to a program later
-5. on the **OAuth** tab
+5. on the **OAuth** tab  
   5.1. select the `Bot` and `applications.commands` **Scope**s  
   5.2. select the desired **Bot permissions**, e.g. `Send Messages`, `Read Message History`, `Add Reactions`, `Use Slash Commands`  
   5.3. from the **Scope** section, copy the URL it generated, this is the **bots invite link**
@@ -64,10 +64,10 @@ Next up, you want to create your own bot.
 Last but not least, you have to add the bot to the server you just created.
 
 1. open the bots invite link URL in a browser  
-  6.1. select your server to add the bot
-  6.2. click **Continue**
-  6.3. click **Authorize**
-2. thats it, your bot was not added to the server! 🎉 
+  1.1. select your server to add the bot  
+  1.2. click **Continue**  
+  1.3. click **Authorize**
+2. thats it, your bot was now added to the server! 🎉 
 
 ![Add bot](https://i.imgur.com/ceaemII.png)
 ![Authorize](https://i.imgur.com/239LT0n.png)
