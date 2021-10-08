@@ -3,7 +3,7 @@
 This tutorial shows how to add a custom command, the `days` command:
 * `/days <from> <to>`
   * computes the difference in days between the given dates
-  * e.g. `/days 26.09.2021 03.10.2021` will respond with `8 days`
+  * e.g. `/days 26.09.2021 03.10.2021` will respond with `7 days`
 
 Please read [[Add a new command]] first.
 
