@@ -48,7 +48,7 @@ dependencies {
 
     implementation 'org.jooq:jooq:3.15.3'
 
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.12.5'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.13.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
