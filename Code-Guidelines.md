@@ -22,7 +22,7 @@ In order to check your code locally, you can either run **Spotless** or import t
 
 ### Run Spotless
 
-Executing Spotless manually can be done via the Gradle task `spotlessJavaApply`, which will automatically reformat your code according to the style.
+Executing Spotless manually can be done via the Gradle task `spotlessApply`, which will automatically reformat your code according to the style.
 
 Additionally, Spotless is configured to be executed automatically whenever you compile your code with Gradle, i.e. it is tied to the `compileJava` task.
 
