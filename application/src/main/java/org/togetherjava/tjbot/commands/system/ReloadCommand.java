@@ -4,8 +4,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -83,42 +85,51 @@ public final class ReloadCommand extends SlashCommandAdapter {
         }
 
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
-        switch (buttonStyle) {
-            case DANGER -> {
-                event.reply("Okay, will not reload.").queue();
-                event.getMessage().editMessageComponents().queue();
+        Message message = event.getMessage();
+        try {
+
+            switch (buttonStyle) {
+                case DANGER -> {
+                    event.reply("Okay, will not reload.").queue();
+                    message.editMessageComponents().queue();
+                }
+                case SUCCESS -> {
+                    logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
+                            event.getGuild());
+                    event.deferReply().queue();
+                    List<CommandListUpdateAction> actions =
+                            Collections.synchronizedList(new ArrayList<>());
+
+                    // Reload global commands
+                    actions.add(updateCommandsIf(
+                            command -> command.getVisibility() == SlashCommandVisibility.GLOBAL,
+                            getGlobalUpdateAction(event.getJDA())));
+
+                    // Reload guild commands (potentially many guilds)
+                    // NOTE Storing the guild actions in a list is potentially dangerous since the bot
+                    // might theoretically be part of so many guilds that it exceeds the max size of
+                    // list. However, correctly reducing RestActions in a stream is not trivial.
+                    getGuildUpdateActions(event.getJDA())
+                            .map(updateAction -> updateCommandsIf(
+                                    command -> command.getVisibility() == SlashCommandVisibility.GUILD,
+                                    updateAction))
+                            .forEach(actions::add);
+                    logger.debug("Reloading commands over {} action-upstreams", actions.size());
+
+                    // Send message when all are done
+                    RestAction.allOf(actions)
+                            .queue(updatedCommands -> event.getHook()
+                                    .editOriginal(
+                                            "Commands successfully reloaded! (global commands can take up to one hour to load)")
+                                    .queue());
+                }
+                default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
             }
-            case SUCCESS -> {
-                logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
-                        event.getGuild());
-                event.deferReply().queue();
-                List<CommandListUpdateAction> actions =
-                        Collections.synchronizedList(new ArrayList<>());
-
-                // Reload global commands
-                actions.add(updateCommandsIf(
-                        command -> command.getVisibility() == SlashCommandVisibility.GLOBAL,
-                        getGlobalUpdateAction(event.getJDA())));
-
-                // Reload guild commands (potentially many guilds)
-                // NOTE Storing the guild actions in a list is potentially dangerous since the bot
-                // might theoretically be part of so many guilds that it exceeds the max size of
-                // list. However, correctly reducing RestActions in a stream is not trivial.
-                getGuildUpdateActions(event.getJDA())
-                    .map(updateAction -> updateCommandsIf(
-                            command -> command.getVisibility() == SlashCommandVisibility.GUILD,
-                            updateAction))
-                    .forEach(actions::add);
-                logger.debug("Reloading commands over {} action-upstreams", actions.size());
-
-                // Send message when all are done
-                RestAction.allOf(actions)
-                    .queue(updatedCommands -> event.getHook()
-                        .editOriginal(
-                                "Commands successfully reloaded! (global commands can take up to one hour to load)")
-                        .queue());
-            }
-            default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
+        } finally {
+            message
+                    .editMessageComponents(ActionRow
+                            .of(message.getButtons().stream().map(Button::asDisabled).toList()))
+                    .queue();
         }
     }
 
