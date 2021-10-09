@@ -86,51 +86,53 @@ public final class ReloadCommand extends SlashCommandAdapter {
 
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
         Message message = event.getMessage();
-        try {
-            switch (buttonStyle) {
-                case DANGER -> {
-                    event.reply("Okay, will not reload.").queue();
-                }
-                case SUCCESS -> {
-                    logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
-                            event.getGuild());
-                    event.deferReply().queue();
-                    List<CommandListUpdateAction> actions =
-                            Collections.synchronizedList(new ArrayList<>());
-
-                    // Reload global commands
-                    actions.add(updateCommandsIf(
-                            command -> command.getVisibility() == SlashCommandVisibility.GLOBAL,
-                            getGlobalUpdateAction(event.getJDA())));
-
-                    // Reload guild commands (potentially many guilds)
-                    // NOTE Storing the guild actions in a list is potentially dangerous since the
-                    // bot
-                    // might theoretically be part of so many guilds that it exceeds the max size of
-                    // list. However, correctly reducing RestActions in a stream is not trivial.
-                    getGuildUpdateActions(event.getJDA())
-                        .map(updateAction -> updateCommandsIf(
-                                command -> command.getVisibility() == SlashCommandVisibility.GUILD,
-                                updateAction))
-                        .forEach(actions::add);
-                    logger.debug("Reloading commands over {} action-upstreams", actions.size());
-
-                    // Send message when all are done
-                    RestAction.allOf(actions)
-                        .queue(updatedCommands -> event.getHook()
-                            .editOriginal(
-                                    "Commands successfully reloaded! (global commands can take up to one hour to load)")
-                            .queue());
-                }
-                default -> throw new AssertionError(
-                        "Unexpected button action clicked: " + buttonStyle);
+        switch (buttonStyle) {
+            case DANGER -> {
+                event.reply("Okay, will not reload.").queue();
+                disableButtons(message);
             }
-        } finally {
-            message
-                .editMessageComponents(ActionRow
-                    .of(message.getButtons().stream().map(Button::asDisabled).toList()))
-                .queue();
+            case SUCCESS -> {
+                logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
+                        event.getGuild());
+                event.deferReply().queue();
+                List<CommandListUpdateAction> actions =
+                        Collections.synchronizedList(new ArrayList<>());
+
+                // Reload global commands
+                actions.add(updateCommandsIf(
+                        command -> command.getVisibility() == SlashCommandVisibility.GLOBAL,
+                        getGlobalUpdateAction(event.getJDA())));
+
+                // Reload guild commands (potentially many guilds)
+                // NOTE Storing the guild actions in a list is potentially dangerous since the
+                // bot
+                // might theoretically be part of so many guilds that it exceeds the max size of
+                // list. However, correctly reducing RestActions in a stream is not trivial.
+                getGuildUpdateActions(event.getJDA())
+                    .map(updateAction -> updateCommandsIf(
+                            command -> command.getVisibility() == SlashCommandVisibility.GUILD,
+                            updateAction))
+                    .forEach(actions::add);
+                logger.debug("Reloading commands over {} action-upstreams", actions.size());
+
+                // Send message when all are done
+                RestAction.allOf(actions)
+                    .queue(updatedCommands -> event.getHook()
+                        .editOriginal(
+                                "Commands successfully reloaded! (global commands can take up to one hour to load)")
+                        .queue());
+
+                disableButtons(message);
+            }
+            default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
         }
+    }
+
+    private void disableButtons(Message message) {
+        message
+            .editMessageComponents(
+                    ActionRow.of(message.getButtons().stream().map(Button::asDisabled).toList()))
+            .queue();
     }
 
     /**
