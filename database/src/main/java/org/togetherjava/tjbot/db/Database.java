@@ -46,10 +46,8 @@ public final class Database {
         SQLiteDataSource dataSource = new SQLiteDataSource(sqliteConfig);
         dataSource.setUrl(jdbcUrl);
 
-        Flyway flyway = Flyway.configure()
-            .dataSource(dataSource)
-            .locations("/org/togetherjava/tjbot/db")
-            .load();
+        Flyway flyway =
+                Flyway.configure().dataSource(dataSource).locations("classpath:/db/").load();
         flyway.migrate();
 
         dslContext = DSL.using(dataSource.getConnection(), SQLDialect.SQLITE);
@@ -81,6 +79,7 @@ public final class Database {
     public void read(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         read(context -> {
             action.accept(context);
+            // noinspection ReturnOfNull
             return null;
         });
     }
@@ -114,6 +113,7 @@ public final class Database {
     public void write(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         write(context -> {
             action.accept(context);
+            // noinspection ReturnOfNull
             return null;
         });
     }
@@ -151,6 +151,7 @@ public final class Database {
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
         readTransaction(dsl -> {
             handler.accept(dsl);
+            // noinspection ReturnOfNull
             return null;
         });
     }
@@ -191,6 +192,7 @@ public final class Database {
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
         writeTransaction(dsl -> {
             handler.accept(dsl);
+            // noinspection ReturnOfNull
             return null;
         });
     }

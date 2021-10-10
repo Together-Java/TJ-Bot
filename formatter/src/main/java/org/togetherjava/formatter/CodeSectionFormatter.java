@@ -115,7 +115,7 @@ class CodeSectionFormatter {
      * Checks if a space should be put after a given token
      *
      * @param token token to check
-     * @return wether a space should be put after that token
+     * @return whether a space should be put after that token
      * @author illuminator3
      */
     private boolean shouldPutSpaceAfter(Token token) {
@@ -124,7 +124,7 @@ class CodeSectionFormatter {
         return isKeyword(token) || isOperator(token) || isParenthesisRule(token)
                 || type == TokenType.CLOSE_BRACKETS // put a space after e.g. 'try' or 'else' and
                                                     // ] or if it's an operator
-                || type == TokenType.COMMA // for e.g. multiarg method calls or method parameters
+                || type == TokenType.COMMA // for e.g. multi-arg method calls or method parameters
                 || (type == TokenType.IDENTIFIER && !queue.isEmpty()
                         && queue.peek().type() == TokenType.IDENTIFIER); // for double identifier
                                                                          // in e.g. method
@@ -186,7 +186,7 @@ class CodeSectionFormatter {
      * {@link org.togetherjava.formatter.util.LookaheadQueue#peek(int)}
      *
      * @param type current token type
-     * @return wether the token type belongs to a generic type declaration
+     * @return whether the token type belongs to a generic type declaration
      * @author illuminator3
      */
     private boolean checkGeneric(TokenType type) {
@@ -225,7 +225,7 @@ class CodeSectionFormatter {
      * Checks if a given token type would be valid inside a generic type declaration
      *
      * @param type token type to check
-     * @return wether it's valid inside a generic type declaration
+     * @return whether it's valid inside a generic type declaration
      * @author illuminator3
      */
     private boolean isValidGeneric(TokenType type) {
@@ -239,7 +239,7 @@ class CodeSectionFormatter {
      * Checks if a new line should be put after a given token type
      *
      * @param type token type to check
-     * @return wether a new line should be put after that token
+     * @return whether a new line should be put after that token
      * @author illuminator3
      */
     private boolean shouldPutNewLineAfter(TokenType type) {
@@ -259,7 +259,7 @@ class CodeSectionFormatter {
      * {@link SkippableLookaheadQueue#peek(int, Predicate)})
      *
      * @param type current token type
-     * @return wether there's an indexed for loop or not
+     * @return whether there's an indexed for loop or not
      * @author illuminator3
      */
     private boolean isIndexedForLoop(TokenType type) {
@@ -269,14 +269,14 @@ class CodeSectionFormatter {
     /**
      * Checks if there's an enhanced for loop ahead without checking the current token type
      *
-     * @return wether there's an enhanced for loop ahead
+     * @return whether there's an enhanced for loop ahead
      * @author illuminator3
      */
     private boolean internalEnhancedFor() {
         return queue.peek(3, t -> {
-            TokenType ttype = t.type();
+            TokenType tokenType = t.type();
 
-            return ttype == TokenType.ANNOTATION || ttype == TokenType.FINAL;
+            return tokenType == TokenType.ANNOTATION || tokenType == TokenType.FINAL;
         }).type() == TokenType.COLON;
     }
 
@@ -284,7 +284,7 @@ class CodeSectionFormatter {
      * Parenthesis rule: append a space after a closing parenthesis if the next token isn't another
      * closing parenthesis, an operator or a semicolon
      *
-     * @return wether a space should be put after the parenthesis
+     * @return whether a space should be put after the parenthesis
      * @author illuminator3
      */
     private boolean isParenthesisRule(Token token) {
@@ -319,7 +319,7 @@ class CodeSectionFormatter {
      * Checks if a given token is a keyword using {@link TokenType#isKeyword()}
      *
      * @param token token to check
-     * @return wether the given token is a keyword
+     * @return whether the given token is a keyword
      * @author illuminator3
      */
     private boolean isKeyword(Token token) {
@@ -330,7 +330,7 @@ class CodeSectionFormatter {
      * Checks if a given token is an operator using {@link TokenType#isOperator()}
      *
      * @param token token to check
-     * @return wether the given token is an operator
+     * @return whether the given token is an operator
      * @author illuminator3
      */
     private boolean isOperator(Token token) {

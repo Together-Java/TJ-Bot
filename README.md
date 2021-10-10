@@ -13,50 +13,17 @@ TJ-Bot is a Discord Bot used on the [Together Java](https://discord.com/invite/X
 
 # Getting started
 
-* [Documentation](https://github.com/Together-Java/TJ-Bot/wiki): as general entry point to the project
-* [Contributing](https://github.com/Together-Java/TJ-Bot/wiki/Contributing): if you want to improve the bot
+Please read [Contributing](https://github.com/Together-Java/TJ-Bot/wiki/Contributing) if you want to propose ideas and changes or even implement some yourself.
+
+Head over to the [Wiki](https://github.com/Together-Java/TJ-Bot/wiki) as general entry point to the project. It provides lots of tutorials, documentation and other information, for example
+* creating a discord bot and a private server;
+* setting up the project locally;
+* adding your own custom commands;
+* a technology overview;
+* guidance about how to maintain the bot (e.g. VPS, logs, databases, restart).
 
 # Download
 
-## Using a build tool
-
-### Gradle
-
-First add the jitpack repository:
-```gradle
-repositories {
-    maven { url 'https://jitpack.io' }
-} 
-```
-Then add the dependency:
-```gradle
-dependencies {
-    implementation 'com.github.Together-Java:TJ-Bot:<tag>'
-}
-```
-You can replace `<tag>` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version.
-
-### Maven
-
-First add the jitpack repository:
-```xml
-<repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-<repository>
-```
-Then add the dependency:
-```xml
-<dependency>
-    <groupId>com.github.Together-Java</groupId>
-    <artifactId>TJ-Bot</artifactId>
-    <version>[tag]</version>
-</dependency>
-```
-You can replace `[tag]` by either a commit hash (the first 10 characters) or by `-SNAPSHOT` to get the latest version.
-
----
-
-## Jar downloads
-
 Jar downloads are available from the [release section](https://github.com/Together-Java/TJ-Bot/releases).
+
+Alternatively, you can also download the project using your favorite build tool. Artifacts are made available via https://jitpack.io. Our `groupId` is `com.github.Together-Java`, the `artifactId` is `TJ-Bot`.
