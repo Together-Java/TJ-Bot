@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -18,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -89,7 +89,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
         switch (buttonStyle) {
             case DANGER -> {
                 event.reply("Okay, will not reload.").queue();
-                disableButtons(message);
+                MessageUtils.disableButtons(message);
             }
             case SUCCESS -> {
                 logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
@@ -122,17 +122,10 @@ public final class ReloadCommand extends SlashCommandAdapter {
                                 "Commands successfully reloaded! (global commands can take up to one hour to load)")
                         .queue());
 
-                disableButtons(message);
+                MessageUtils.disableButtons(message);
             }
             default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
         }
-    }
-
-    private void disableButtons(Message message) {
-        message
-            .editMessageComponents(
-                    ActionRow.of(message.getButtons().stream().map(Button::asDisabled).toList()))
-            .queue();
     }
 
     /**
