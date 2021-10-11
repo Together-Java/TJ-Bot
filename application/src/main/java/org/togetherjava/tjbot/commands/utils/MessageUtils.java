@@ -22,15 +22,17 @@ public class MessageUtils {
     /**
      * Disables all the buttons that a message has. Disabling buttons deems it as not clickable to
      * the user who sees it.
+     * <p/>
+     * This method already queues the changes for you and does not block in any way.
      *
      * @param message the message that contains at least one button
      * @throws IllegalArgumentException when the given message does not contain any button
-     * @throws NullPointerException when the given message is null
      */
     public static void disableButtons(@NotNull Message message) {
         List<Button> buttons = message.getButtons();
-        if (buttons.isEmpty())
+        if (buttons.isEmpty()) {
             throw new IllegalArgumentException("Message must contain at least one button");
+        }
 
         message
             .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
