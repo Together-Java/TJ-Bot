@@ -30,7 +30,8 @@ jib {
             password = System.getenv('REGISTRY_PASSWORD') ?: ''
         }
     }
-    container{
+    container {
+        mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
         setCreationTime(java.time.Instant.now().toString())
     }
 }
@@ -60,7 +61,7 @@ dependencies {
 }
 
 application {
-    mainClass = 'org.togetherjava.tjbot.Application'
+    mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
 }
 
 test {
