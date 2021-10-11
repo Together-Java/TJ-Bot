@@ -87,11 +87,9 @@ public final class ReloadCommand extends SlashCommandAdapter {
         }
 
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
-        Message message = event.getMessage();
         switch (buttonStyle) {
             case DANGER -> {
                 event.reply("Okay, will not reload.").queue();
-                MessageUtils.disableButtons(message);
             }
             case SUCCESS -> {
                 logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
@@ -123,11 +121,11 @@ public final class ReloadCommand extends SlashCommandAdapter {
                         .editOriginal(
                                 "Commands successfully reloaded! (global commands can take up to one hour to load)")
                         .queue());
-
-                MessageUtils.disableButtons(message);
             }
             default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
         }
+
+        MessageUtils.disableButtons(event.getMessage());
     }
 
     /**
