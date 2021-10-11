@@ -90,7 +90,7 @@ To run the bot, you will need a `config.json` file with content like this:
 ```json
 {
     "token": "<your_token_here>",
-    "databasePath": "../build/database.db",
+    "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK"
 }
