@@ -84,6 +84,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
             event.reply("Sorry, but only the user who triggered the command can use these buttons.")
                 .setEphemeral(true)
                 .queue();
+            return;
         }
 
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
