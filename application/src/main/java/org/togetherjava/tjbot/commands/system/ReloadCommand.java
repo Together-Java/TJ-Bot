@@ -81,7 +81,9 @@ public final class ReloadCommand extends SlashCommandAdapter {
         // Ignore if another user clicked the button
         String userId = args.get(0);
         if (!userId.equals(Objects.requireNonNull(event.getMember()).getId())) {
-            return;
+            event.reply("Sorry, but only the user who triggered the command can use these buttons.")
+                .setEphemeral(true)
+                .queue();
         }
 
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
