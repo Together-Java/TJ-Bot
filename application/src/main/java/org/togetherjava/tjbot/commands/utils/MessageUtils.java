@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.utils;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -24,8 +25,9 @@ public class MessageUtils {
      *
      * @param message the message that contains at least one button
      * @throws IllegalArgumentException when the given message does not contain any button
+     * @throws NullPointerException when the given message is null
      */
-    public static void disableButtons(Message message) {
+    public static void disableButtons(@NotNull Message message) {
         List<Button> buttons = message.getButtons();
         if (buttons.isEmpty())
             throw new IllegalArgumentException("Message must contain at least one button");
