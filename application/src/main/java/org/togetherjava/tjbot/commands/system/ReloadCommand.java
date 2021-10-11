@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,6 +80,9 @@ public final class ReloadCommand extends SlashCommandAdapter {
         // Ignore if another user clicked the button
         String userId = args.get(0);
         if (!userId.equals(Objects.requireNonNull(event.getMember()).getId())) {
+            event.reply("Sorry, but only the user who triggered the command can use these buttons.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
@@ -86,7 +90,6 @@ public final class ReloadCommand extends SlashCommandAdapter {
         switch (buttonStyle) {
             case DANGER -> {
                 event.reply("Okay, will not reload.").queue();
-                event.getMessage().editMessageComponents().queue();
             }
             case SUCCESS -> {
                 logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
@@ -101,7 +104,8 @@ public final class ReloadCommand extends SlashCommandAdapter {
                         getGlobalUpdateAction(event.getJDA())));
 
                 // Reload guild commands (potentially many guilds)
-                // NOTE Storing the guild actions in a list is potentially dangerous since the bot
+                // NOTE Storing the guild actions in a list is potentially dangerous since the
+                // bot
                 // might theoretically be part of so many guilds that it exceeds the max size of
                 // list. However, correctly reducing RestActions in a stream is not trivial.
                 getGuildUpdateActions(event.getJDA())
@@ -120,6 +124,8 @@ public final class ReloadCommand extends SlashCommandAdapter {
             }
             default -> throw new AssertionError("Unexpected button action clicked: " + buttonStyle);
         }
+
+        MessageUtils.disableButtons(event.getMessage());
     }
 
     /**
