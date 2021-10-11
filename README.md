@@ -11,6 +11,8 @@
 
 TJ-Bot is a Discord Bot used on the [Together Java](https://discord.com/invite/XXFUXzK) server. It is maintained by the community, anyone can contribute.
 
+![bot says hello](https://i.imgur.com/FE1MJTV.png)
+
 # Getting started
 
 Please read [Contributing](https://github.com/Together-Java/TJ-Bot/wiki/Contributing) if you want to propose ideas and changes or even implement some yourself.
