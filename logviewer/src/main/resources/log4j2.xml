@@ -4,8 +4,8 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
-        <RollingFile name="File" fileName="logs/app.log"
-                     filePattern="logs/app-%d{dd-MM-yyyy}.log.gz"
+        <RollingFile name="File" fileName="logviewer/logs/viewer.log"
+                     filePattern="logviewer/logs/viewer-%d{dd-MM-yyyy}.log.gz"
                      ignoreExceptions="false">
             <PatternLayout charset="UTF-8"
                            pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
@@ -13,18 +13,11 @@
                 <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
         </RollingFile>
-        <Http name="Http" url="http://${env:TJ_LOG_TARGET:-localhost}:5050/rest/api/logs">
-            <JsonLayout/>
-        </Http>
-        <Async name="AsyncHttp">
-            <AppenderRef ref="Http"/>
-        </Async>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
-            <AppenderRef ref="AsyncHttp"/>
         </Root>
     </Loggers>
 </Configuration>

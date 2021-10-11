@@ -8,6 +8,7 @@ plugins {
     id 'application'
     id 'com.google.cloud.tools.jib' version '3.1.4'
     id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'database-settings'
 }
 
 repositories {
@@ -28,6 +29,9 @@ jib {
             username = System.getenv('REGISTRY_USER') ?: ''
             password = System.getenv('REGISTRY_PASSWORD') ?: ''
         }
+    }
+    container{
+        setCreationTime(java.time.Instant.now().toString())
     }
 }
 

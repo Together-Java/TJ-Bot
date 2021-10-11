@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  bot:
+    image: togetherjava/tjbot:latest
+    volumes:
+      - "./application/config.json:/config.json"
+      - "./application/logs/:/logs"
+    links:
+      - logs
+    environment:
+      - TJ_LOG_TARGET=logs
+  logs:
+    image: togetherjava/tjlogs:latest
+    ports:
+      - "5050:5050"
+    volumes:
+      - "./logviewer/config.json:/logviewer/config.json"
+      - "./application/logs:/application/logs"
+      - "./logviewer/logs:/logviewer/logs"
+      - "./logviewer/db:/logviewer/db"
