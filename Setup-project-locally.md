@@ -6,7 +6,7 @@ This tutorial shows how to download, setup and start the **TJ-Bot** project loca
 * [latest version of Java](https://adoptium.net/) installed
 * your favorite Java IDE or text editor, e.g. [IntelliJ](https://www.jetbrains.com/idea/download/) or [Eclipse](https://www.eclipse.org/downloads/)
 * [`git`](https://git-scm.com/downloads) installed (or any GUI or IDE plugin)
-* [`gradle`](https://gradle.org/releases/) installed (or any GUI or IDE plugin)
+* [`gradle`](https://gradle.org/releases/) available (or any GUI or IDE plugin), you can either install it or use our provided wrapper
 * your own [Discord](https://discord.com/)-Bot, tied to a server (see [[Create Discord server and bot]])
   * a token of that bot
 
