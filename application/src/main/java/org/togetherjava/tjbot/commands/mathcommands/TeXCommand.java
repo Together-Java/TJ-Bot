@@ -20,45 +20,47 @@ import java.util.Objects;
 
 public class TeXCommand extends SlashCommandAdapter {
 
-    public static final String RENDERING_ERROR = "There was an error generating the image";
-    public static final String INVALID_LATEX = "That is an invalid latex";
-    public static final float DEFAULT_IMAGE_SIZE = 40F;
-    public static final int BACKGROUND_HEX_CODE = 0x4396BE;
-    public static final Color BACKGROUND_COLOR = new Color(BACKGROUND_HEX_CODE);
-    public static final int FOREGROUND_HEX_CODE = 0x01EC09;
-    public static final Color FOREGROUND_COLOR = new Color(FOREGROUND_HEX_CODE);
-    public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
+	public static final String LATEX = "LATEX";
+	public static final float DEFAULT_IMAGE_SIZE = 40F;
+	public static final Color BACKGROUND_COLOR = new Color(0x4396BE);
+	public static final Color FOREGROUND_COLOR = new Color(0x01EC09);
+	public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
-    public TeXCommand() {
-        super("tex",
-                "This command accepts a latex expression and generates an image corresponding to it.",
-                SlashCommandVisibility.GUILD);
-        getData().addOption(OptionType.STRING, "latex", "The latex which is rendered as an image",
-                true);
-    }
+	public TeXCommand() {
+		super("tex", "This command accepts a latex expression and generates an image corresponding to it.",
+				SlashCommandVisibility.GUILD);
+		getData().addOption(OptionType.STRING, LATEX, "The latex which is rendered as an image", true);
+	}
 
-    @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
-        TeXFormula formula;
-        try {
-            formula =
-                    new TeXFormula(Objects.requireNonNull(event.getOption("latex")).getAsString());
-        } catch (ParseException e) {
-            event.reply(INVALID_LATEX).setEphemeral(true).queue();
-            return;
-        }
-        event.deferReply().queue();
-        BufferedImage image =
-                (BufferedImage) formula.createBufferedImage(TeXConstants.STYLE_DISPLAY,
-                        DEFAULT_IMAGE_SIZE, FOREGROUND_COLOR, BACKGROUND_COLOR);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	@Override
+	public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+		TeXFormula formula;
+		try {
+			formula = new TeXFormula(Objects.requireNonNull(event.getOption(LATEX))
+					.getAsString());
+		} catch (ParseException e) {
+			event.reply("That is an invalid latex")
+					.setEphemeral(true)
+					.queue();
+			return;
+		}
+		event.deferReply()
+				.queue();
+		BufferedImage image =
+				(BufferedImage) formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
+						FOREGROUND_COLOR, BACKGROUND_COLOR);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        try {
-            ImageIO.write(image, "png", baos);
-        } catch (IOException e) {
-            event.getHook().editOriginal(RENDERING_ERROR).queue();
-            return;
-        }
-        event.getHook().editOriginal(baos.toByteArray(), "tex.png").queue();
-    }
+		try {
+			ImageIO.write(image, "png", baos);
+		} catch (IOException e) {
+			event.getHook()
+					.editOriginal("There was an error generating the image")
+					.queue();
+			return;
+		}
+		event.getHook()
+				.editOriginal(baos.toByteArray(), "tex.png")
+				.queue();
+	}
 }
