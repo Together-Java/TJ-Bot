@@ -18,6 +18,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Implementation of a tex command which takes asks a string and renders an image corresponding to the Mathematical
+ * expression in that string
+ * <p>
+ * The implemented command is {@code /tex}. This has a single option called {@code latex} which is a string. If it is an
+ * invalid latex or there is an error in rendering the image, it displays an error message
+ * </p>
+ */
+
 public class TeXCommand extends SlashCommandAdapter {
 
 	public static final String LATEX = "LATEX";
@@ -26,6 +35,9 @@ public class TeXCommand extends SlashCommandAdapter {
 	public static final Color FOREGROUND_COLOR = new Color(0x01EC09);
 	public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
+	/**
+	 * creates the new TeXCommand
+	 */
 	public TeXCommand() {
 		super("tex", "This command accepts a latex expression and generates an image corresponding to it.",
 				SlashCommandVisibility.GUILD);
