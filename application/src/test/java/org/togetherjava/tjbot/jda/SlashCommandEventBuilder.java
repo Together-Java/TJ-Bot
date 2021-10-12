@@ -1,0 +1,180 @@
+package org.togetherjava.tjbot.jda;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.utils.data.DataObject;
+import net.dv8tion.jda.internal.JDAImpl;
+import net.dv8tion.jda.internal.interactions.CommandInteractionImpl;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.togetherjava.tjbot.commands.SlashCommand;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
+
+public final class SlashCommandEventBuilder {
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private final JDAImpl jda;
+    private final UnaryOperator<SlashCommandEvent> mockOperator;
+    private String token;
+    private String channelId;
+    private String applicationId;
+    private String guildId;
+    private String userId;
+    private SlashCommand command;
+    private final Map<String, Option> nameToOption = new HashMap<>();
+    private String subcommand;
+
+    SlashCommandEventBuilder(@NotNull JDAImpl jda, UnaryOperator<SlashCommandEvent> mockOperator) {
+        this.jda = jda;
+        this.mockOperator = mockOperator;
+    }
+
+    public @NotNull SlashCommandEventBuilder option(@NotNull String name, @NotNull String value) {
+        // TODO Also add overloads for other types
+        requireOption(name, OptionType.STRING);
+        nameToOption.put(name, new Option(name, value, OptionType.STRING));
+        return this;
+    }
+
+    public @NotNull SlashCommandEventBuilder clearOptions() {
+        nameToOption.clear();
+        return this;
+    }
+
+    public @NotNull SlashCommandEventBuilder subcommand(@Nullable String subcommand) {
+        if (subcommand != null) {
+            requireSubcommand(subcommand);
+        }
+
+        this.subcommand = subcommand;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder command(@NotNull SlashCommand command) {
+        this.command = command;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder channelId(@NotNull String channelId) {
+        this.channelId = channelId;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder token(@NotNull String token) {
+        this.token = token;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder applicationId(@NotNull String applicationId) {
+        this.applicationId = applicationId;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder guildId(@NotNull String guildId) {
+        this.guildId = guildId;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder userId(@NotNull String userId) {
+        this.userId = userId;
+        return this;
+    }
+
+    public @NotNull SlashCommandEvent build() {
+        org.togetherjava.tjbot.jda.SlashCommandEvent event = createEvent();
+
+        String json;
+        try {
+            json = JSON.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return mockOperator.apply(new SlashCommandEvent(jda, 0,
+                new CommandInteractionImpl(jda, DataObject.fromJson(json))));
+    }
+
+    private @NotNull org.togetherjava.tjbot.jda.SlashCommandEvent createEvent() {
+        // TODO Validate that required options are set, check that subcommand is given if the
+        // command has one
+        // TODO Make as much of this configurable as needed
+        SlashCommandEventUser user = new SlashCommandEventUser(0, userId,
+                "286b894dc74634202d251d591f63537d", "Test-User", "3452");
+        SlashCommandEventMember member =
+                new SlashCommandEventMember(null, null, "2021-09-07T18:25:16.615000+00:00",
+                        "1099511627775", List.of(), false, false, false, null, false, user);
+
+        List<SlashCommandEventOption> options;
+        if (subcommand == null) {
+            options = extractOptionsOrNull(nameToOption);
+        } else {
+            options = List.of(new SlashCommandEventOption(subcommand, 1, null,
+                    extractOptionsOrNull(nameToOption)));
+        }
+        SlashCommandEventData data = new SlashCommandEventData(command.getName(), "1", 1, options);
+
+        return new org.togetherjava.tjbot.jda.SlashCommandEvent(guildId, "897425767397466123", 2, 1,
+                channelId, applicationId, token, member, data);
+    }
+
+    private static @Nullable List<SlashCommandEventOption> extractOptionsOrNull(
+            @NotNull Map<String, Option> nameToOption) {
+        if (nameToOption.isEmpty()) {
+            return null;
+        }
+        return nameToOption.values()
+            .stream()
+            .map(option -> new SlashCommandEventOption(option.name(), option.type.ordinal(),
+                    option.value(), null))
+            .toList();
+    }
+
+    private @NotNull OptionData requireOption(@NotNull String name, @NotNull OptionType type) {
+        List<OptionData> options = subcommand == null ? command.getData().getOptions()
+                : requireSubcommand(subcommand).getOptions();
+
+        Supplier<String> exceptionMessageSupplier = () -> subcommand == null
+                ? "The command '%s' does not support an option with name '%s' and type '%s'"
+                    .formatted(command.getName(), name, type)
+                : "The subcommand '%s' of command '%s' does not support an option with name '%s' and type '%s'"
+                    .formatted(command.getName(), subcommand, name, type);
+
+        return options.stream()
+            .filter(option -> name.equals(option.getName()))
+            .filter(option -> type == option.getType())
+            .findAny()
+            .orElseThrow(() -> {
+                throw new IllegalArgumentException(exceptionMessageSupplier.get());
+            });
+    }
+
+    private @NotNull SubcommandData requireSubcommand(@NotNull String name) {
+        return command.getData()
+            .getSubcommands()
+            .stream()
+            .filter(subcommandData -> name.equals(subcommandData.getName()))
+            .findAny()
+            .orElseThrow(() -> {
+                throw new IllegalArgumentException(
+                        "The command '%s' does not support a subcommand with name '%s'"
+                            .formatted(command.getName(), name));
+            });
+    }
+
+    private record Option(@NotNull String name, @NotNull String value, @NotNull OptionType type) {
+    }
+}
