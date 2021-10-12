@@ -14,8 +14,6 @@ jobs:
   sonar:
     name: SonarCloud
     runs-on: ubuntu-latest
-    # Skip this on PRs from forks as it will fail anyways as it needs secrets
-    if: ${{ !github.event.pull_request.head.repo.fork }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -43,6 +41,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Sonar login token with 'Execute Analysis' privileges
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # this this on forks or dependabot PRs
+        if: env.SONAR_TOKEN != null
         run: ./gradlew build sonarqube --info
 
   codeql:
