@@ -5,8 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("ClassWithTooManyFields")
 final class SlashCommandEventMember {
     @JsonProperty("premium_since")
     private String premiumSince;
@@ -23,6 +25,7 @@ final class SlashCommandEventMember {
     private boolean isPending;
     private SlashCommandEventUser user;
 
+    @SuppressWarnings("ConstructorWithTooManyParameters")
     SlashCommandEventMember(@Nullable String premiumSince, @Nullable String nick,
             @NotNull String joinedAt, @NotNull String permissions, @NotNull List<String> roles,
             boolean pending, boolean deaf, boolean mute, @Nullable String avatar, boolean isPending,
@@ -86,13 +89,16 @@ final class SlashCommandEventMember {
 
     @NotNull
     public List<String> getRoles() {
-        return roles;
+        return Collections.unmodifiableList(roles);
     }
 
     public void setRoles(@NotNull List<String> roles) {
-        this.roles = roles;
+        this.roles = new ArrayList<>(roles);
     }
 
+    // NOTE This is a problem in Discord, which has "pending" and "isPending" fields both at the
+    // same time.
+    @SuppressWarnings("SuspiciousGetterSetter")
     public boolean isPending() {
         return isPending;
     }
@@ -101,6 +107,9 @@ final class SlashCommandEventMember {
         this.isPending = isPending;
     }
 
+    // NOTE This is a problem in Discord, which has "pending" and "isPending" fields both at the
+    // same time.
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     public boolean getPending() {
         return pending;
     }

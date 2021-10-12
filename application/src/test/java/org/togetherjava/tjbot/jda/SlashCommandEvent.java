@@ -17,6 +17,7 @@ final class SlashCommandEvent {
     private SlashCommandEventMember member;
     private SlashCommandEventData data;
 
+    @SuppressWarnings("ConstructorWithTooManyParameters")
     SlashCommandEvent(@NotNull String guildId, @NotNull String id, int type, int version,
             @NotNull String channelId, @NotNull String applicationId, @NotNull String token,
             @NotNull SlashCommandEventMember member, @NotNull SlashCommandEventData data) {

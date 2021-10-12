@@ -20,11 +20,31 @@ import java.util.EnumSet;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.UnaryOperator;
 
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Utility class for testing {@link SlashCommand}s.
+ * <p>
+ * Mocks JDA and can create events that can be used to test {@link SlashCommand}s, e.g.
+ * {@link #createSlashCommandEvent(SlashCommand)}. The created events are Mockito mocks, which can
+ * be exploited for testing.
+ * <p>
+ * An example test using this class might look like:
+ * 
+ * <pre>
+ * {
+ *     &#64;code
+ *     SlashCommand command = new PingCommand();
+ *     JdaTester jdaTester = new JdaTester();
+ *
+ *     SlashCommandEvent event = jdaTester.createSlashCommandEvent(command).build();
+ *     command.onSlashCommand(event);
+ *
+ *     verify(event, times(1)).reply("Pong!");
+ * }
+ * </pre>
+ */
 public final class JdaTester {
-    private final JDAImpl jda;
     private static final int GATEWAY_POOL_SIZE = 4;
     private static final int RATE_LIMIT_POOL_SIZE = 4;
     private static final String TEST_TOKEN = "TEST_TOKEN";
@@ -33,8 +53,17 @@ public final class JdaTester {
     private static final long PRIVATE_CHANNEL_ID = 1;
     private static final long GUILD_ID = 1;
     private static final long TEXT_CHANNEL_ID = 1;
+
+    private final JDAImpl jda;
     private final MemberImpl member;
 
+    /**
+     * Creates a new instance. The instance uses a fresh and isolated mocked JDA setup.
+     * <p>
+     * Reusing this instance also means to reuse guilds, text channels and such from this JDA setup,
+     * which can have an impact on tests. For example a previous text that already send messages to
+     * a channel, the messages will then still be present in the instance.
+     */
     public JdaTester() {
         // TODO Extend this functionality, make it nicer.
         // Maybe offer a builder for multiple users and channels and what not
@@ -73,6 +102,16 @@ public final class JdaTester {
         doReturn(messageAction).when(privateChannel).sendMessage(anyString());
     }
 
+    /**
+     * Creates a Mockito mocked slash command event, which can be used for
+     * {@link SlashCommand#onSlashCommand(SlashCommandEvent)}.
+     * <p>
+     * The method creates a builder that can be used to further adjust the event before creation,
+     * e.g. provide options.
+     *
+     * @param command the command to create an event for
+     * @return a builder used to create a Mockito mocked slash command event
+     */
     public @NotNull SlashCommandEventBuilder createSlashCommandEvent(
             @NotNull SlashCommand command) {
         UnaryOperator<SlashCommandEvent> mockOperator = event -> {

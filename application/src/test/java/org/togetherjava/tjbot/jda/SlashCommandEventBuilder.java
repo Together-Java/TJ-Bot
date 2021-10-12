@@ -19,6 +19,40 @@ import java.util.Map;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+/**
+ * Builder to create slash command events that can be used for example with
+ * {@link SlashCommand#onSlashCommand(SlashCommandEvent)}.
+ * <p>
+ * Create instances of this class by using {@link JdaTester#createSlashCommandEvent(SlashCommand)}.
+ * <p>
+ * Among other Discord related things, the builder optionally accepts a subcommand
+ * ({@link #subcommand(String)}) and options ({@link #option(String, String)}). An already set
+ * subcommand can be cleared by using {@link #subcommand(String)} with {@code null}, options are
+ * cleared using {@link #clearOptions()}.
+ * <p>
+ * Refer to the following examples: the command {@code ping} is build using
+ * 
+ * <pre>
+ * {@code
+ * // /ping
+ * jdaTester.createSlashCommandEvent(command).build();
+ *
+ * // /days start:10.01.2021 end:13.01.2021
+ * jdaTester.createSlashCommandEvent(command)
+ *   .option("start", "10.01.2021")
+ *   .option("end", "13.01.2021")
+ *   .build();
+ *
+ * // /db put key:foo value:bar
+ * jdaTester.createSlashCommandEvent(command)
+ *   .subcommand("put")
+ *   .option("key", "foo")
+ *   .option("value", "bar")
+ *   .build();
+ * }
+ * </pre>
+ */
+@SuppressWarnings("ClassWithTooManyFields")
 public final class SlashCommandEventBuilder {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final JDAImpl jda;
@@ -37,6 +71,20 @@ public final class SlashCommandEventBuilder {
         this.mockOperator = mockOperator;
     }
 
+    /**
+     * Sets the given option, overriding an existing value under the same name.
+     * <p>
+     * If {@link #subcommand(String)} is set, this option will be interpreted as option to the
+     * subcommand.
+     * <p>
+     * Use {@link #clearOptions()} to clear any set options.
+     *
+     * @param name the name of the option
+     * @param value the value of the option
+     * @return this builder instance for chaining
+     * @throws IllegalArgumentException if the option does not exist in the corresponding command,
+     *         as specified by its {@link SlashCommand#getData()}
+     */
     public @NotNull SlashCommandEventBuilder option(@NotNull String name, @NotNull String value) {
         // TODO Also add overloads for other types
         requireOption(name, OptionType.STRING);
@@ -44,11 +92,27 @@ public final class SlashCommandEventBuilder {
         return this;
     }
 
+    /**
+     * Clears all options previously set with {@link #option(String, String)}.
+     *
+     * @return this builder instance for chaining
+     */
     public @NotNull SlashCommandEventBuilder clearOptions() {
         nameToOption.clear();
         return this;
     }
 
+    /**
+     * Sets the given subcommand. Call with {@code null} to clear any previously set subcommand.
+     * <p>
+     * Once set, all options set by {@link #option(String, String)} will be interpreted as options
+     * to this subcommand.
+     *
+     * @param subcommand the name of the subcommand or {@code null} to clear it
+     * @return this builder instance for chaining
+     * @throws IllegalArgumentException if the subcommand does not exist in the corresponding
+     *         command, as specified by its {@link SlashCommand#getData()}
+     */
     public @NotNull SlashCommandEventBuilder subcommand(@Nullable String subcommand) {
         if (subcommand != null) {
             requireSubcommand(subcommand);
@@ -94,6 +158,12 @@ public final class SlashCommandEventBuilder {
         return this;
     }
 
+    /**
+     * Builds an instance of a slash command event, corresponding to the current configuration of
+     * the builder.
+     *
+     * @return the created slash command instance
+     */
     public @NotNull SlashCommandEvent build() {
         org.togetherjava.tjbot.jda.SlashCommandEvent event = createEvent();
 
@@ -143,6 +213,7 @@ public final class SlashCommandEventBuilder {
             .toList();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private @NotNull OptionData requireOption(@NotNull String name, @NotNull OptionType type) {
         List<OptionData> options = subcommand == null ? command.getData().getOptions()
                 : requireSubcommand(subcommand).getOptions();
