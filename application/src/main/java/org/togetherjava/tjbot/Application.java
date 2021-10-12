@@ -70,7 +70,7 @@ public enum Application {
     public static void runBot(String token, Path databasePath) {
         logger.info("Starting bot...");
         try {
-            Files.createDirectories(databasePath);
+            Files.createDirectories(databasePath.getParent());
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
