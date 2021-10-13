@@ -165,7 +165,7 @@ public final class SlashCommandEventBuilder {
      * @return the created slash command instance
      */
     public @NotNull SlashCommandEvent build() {
-        org.togetherjava.tjbot.jda.SlashCommandEvent event = createEvent();
+        PayloadSlashCommand event = createEvent();
 
         String json;
         try {
@@ -178,37 +178,38 @@ public final class SlashCommandEventBuilder {
                 new CommandInteractionImpl(jda, DataObject.fromJson(json))));
     }
 
-    private @NotNull org.togetherjava.tjbot.jda.SlashCommandEvent createEvent() {
+    private @NotNull PayloadSlashCommand createEvent() {
         // TODO Validate that required options are set, check that subcommand is given if the
         // command has one
         // TODO Make as much of this configurable as needed
-        SlashCommandEventUser user = new SlashCommandEventUser(0, userId,
+        PayloadSlashCommandUser user = new PayloadSlashCommandUser(0, userId,
                 "286b894dc74634202d251d591f63537d", "Test-User", "3452");
-        SlashCommandEventMember member =
-                new SlashCommandEventMember(null, null, "2021-09-07T18:25:16.615000+00:00",
+        PayloadSlashCommandMember member =
+                new PayloadSlashCommandMember(null, null, "2021-09-07T18:25:16.615000+00:00",
                         "1099511627775", List.of(), false, false, false, null, false, user);
 
-        List<SlashCommandEventOption> options;
+        List<PayloadSlashCommandOption> options;
         if (subcommand == null) {
             options = extractOptionsOrNull(nameToOption);
         } else {
-            options = List.of(new SlashCommandEventOption(subcommand, 1, null,
+            options = List.of(new PayloadSlashCommandOption(subcommand, 1, null,
                     extractOptionsOrNull(nameToOption)));
         }
-        SlashCommandEventData data = new SlashCommandEventData(command.getName(), "1", 1, options);
+        PayloadSlashCommandData data =
+                new PayloadSlashCommandData(command.getName(), "1", 1, options);
 
-        return new org.togetherjava.tjbot.jda.SlashCommandEvent(guildId, "897425767397466123", 2, 1,
-                channelId, applicationId, token, member, data);
+        return new PayloadSlashCommand(guildId, "897425767397466123", 2, 1, channelId,
+                applicationId, token, member, data);
     }
 
-    private static @Nullable List<SlashCommandEventOption> extractOptionsOrNull(
+    private static @Nullable List<PayloadSlashCommandOption> extractOptionsOrNull(
             @NotNull Map<String, Option> nameToOption) {
         if (nameToOption.isEmpty()) {
             return null;
         }
         return nameToOption.values()
             .stream()
-            .map(option -> new SlashCommandEventOption(option.name(), option.type.ordinal(),
+            .map(option -> new PayloadSlashCommandOption(option.name(), option.type.ordinal(),
                     option.value(), null))
             .toList();
     }

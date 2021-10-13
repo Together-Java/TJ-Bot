@@ -8,18 +8,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final class SlashCommandEventOption {
+final class PayloadSlashCommandData {
     private String name;
+    private String id;
     private int type;
-    private String value;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<SlashCommandEventOption> options;
+    private List<PayloadSlashCommandOption> options;
 
-    SlashCommandEventOption(@NotNull String name, int type, @Nullable String value,
-            @Nullable List<SlashCommandEventOption> options) {
+    PayloadSlashCommandData(@NotNull String name, @NotNull String id, int type,
+            @Nullable List<PayloadSlashCommandOption> options) {
         this.name = name;
+        this.id = id;
         this.type = type;
-        this.value = value;
         this.options = options == null ? null : new ArrayList<>(options);
     }
 
@@ -32,6 +32,15 @@ final class SlashCommandEventOption {
         this.name = name;
     }
 
+    @NotNull
+    public String getId() {
+        return id;
+    }
+
+    public void setId(@NotNull String id) {
+        this.id = id;
+    }
+
     public int getType() {
         return type;
     }
@@ -41,20 +50,11 @@ final class SlashCommandEventOption {
     }
 
     @Nullable
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(@Nullable String value) {
-        this.value = value;
-    }
-
-    @Nullable
-    public List<SlashCommandEventOption> getOptions() {
+    public List<PayloadSlashCommandOption> getOptions() {
         return options == null ? null : Collections.unmodifiableList(options);
     }
 
-    public void setOptions(@Nullable List<SlashCommandEventOption> options) {
+    public void setOptions(@Nullable List<PayloadSlashCommandOption> options) {
         this.options = options == null ? null : new ArrayList<>(options);
     }
 }

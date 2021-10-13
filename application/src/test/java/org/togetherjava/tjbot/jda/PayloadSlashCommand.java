@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.jda;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 
-final class SlashCommandEvent {
+final class PayloadSlashCommand {
     @JsonProperty("guild_id")
     private String guildId;
     private String id;
@@ -14,13 +14,13 @@ final class SlashCommandEvent {
     @JsonProperty("application_id")
     private String applicationId;
     private String token;
-    private SlashCommandEventMember member;
-    private SlashCommandEventData data;
+    private PayloadSlashCommandMember member;
+    private PayloadSlashCommandData data;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
-    SlashCommandEvent(@NotNull String guildId, @NotNull String id, int type, int version,
+    PayloadSlashCommand(@NotNull String guildId, @NotNull String id, int type, int version,
             @NotNull String channelId, @NotNull String applicationId, @NotNull String token,
-            @NotNull SlashCommandEventMember member, @NotNull SlashCommandEventData data) {
+            @NotNull PayloadSlashCommandMember member, @NotNull PayloadSlashCommandData data) {
         this.guildId = guildId;
         this.id = id;
         this.type = type;
@@ -94,20 +94,20 @@ final class SlashCommandEvent {
     }
 
     @NotNull
-    public SlashCommandEventMember getMember() {
+    public PayloadSlashCommandMember getMember() {
         return member;
     }
 
-    public void setMember(@NotNull SlashCommandEventMember member) {
+    public void setMember(@NotNull PayloadSlashCommandMember member) {
         this.member = member;
     }
 
     @NotNull
-    public SlashCommandEventData getData() {
+    public PayloadSlashCommandData getData() {
         return data;
     }
 
-    public void setData(@NotNull SlashCommandEventData data) {
+    public void setData(@NotNull PayloadSlashCommandData data) {
         this.data = data;
     }
 }

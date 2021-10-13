@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings("ClassWithTooManyFields")
-final class SlashCommandEventMember {
+final class PayloadSlashCommandMember {
     @JsonProperty("premium_since")
     private String premiumSince;
     private String nick;
@@ -23,13 +23,13 @@ final class SlashCommandEventMember {
     private String avatar;
     @JsonProperty("is_pending")
     private boolean isPending;
-    private SlashCommandEventUser user;
+    private PayloadSlashCommandUser user;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
-    SlashCommandEventMember(@Nullable String premiumSince, @Nullable String nick,
+    PayloadSlashCommandMember(@Nullable String premiumSince, @Nullable String nick,
             @NotNull String joinedAt, @NotNull String permissions, @NotNull List<String> roles,
             boolean pending, boolean deaf, boolean mute, @Nullable String avatar, boolean isPending,
-            SlashCommandEventUser user) {
+            PayloadSlashCommandUser user) {
         this.premiumSince = premiumSince;
         this.nick = nick;
         this.joinedAt = joinedAt;
@@ -43,11 +43,11 @@ final class SlashCommandEventMember {
         this.user = user;
     }
 
-    public @NotNull SlashCommandEventUser getUser() {
+    public @NotNull PayloadSlashCommandUser getUser() {
         return user;
     }
 
-    public void setUser(@NotNull SlashCommandEventUser user) {
+    public void setUser(@NotNull PayloadSlashCommandUser user) {
         this.user = user;
     }
 

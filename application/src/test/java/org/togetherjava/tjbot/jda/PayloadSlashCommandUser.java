@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.jda;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
 
-final class SlashCommandEventUser {
+final class PayloadSlashCommandUser {
     @JsonProperty("public_flags")
     private int publicFlags;
     private String id;
@@ -11,7 +11,7 @@ final class SlashCommandEventUser {
     private String username;
     private String discriminator;
 
-    SlashCommandEventUser(int publicFlags, @NotNull String id, @NotNull String avatar,
+    PayloadSlashCommandUser(int publicFlags, @NotNull String id, @NotNull String avatar,
             @NotNull String username, @NotNull String discriminator) {
         this.publicFlags = publicFlags;
         this.id = id;
