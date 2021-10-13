@@ -2,11 +2,11 @@
 
 There are two ways to read the logs of the bots:
 * by using the **logviewer**
-* by manually logging in to the VPS and looking up the log files
+* by manually logging in to the **VPS** and looking up the log files
 
 ## Logviewer
 
-1. Ask a [Moderator](https://github.com/orgs/Together-Java/teams/moderators)-Team to be granted access to the logviewer.
+1. Ask a member of the [Moderator](https://github.com/orgs/Together-Java/teams/moderators)-Team to be granted access to the logviewer.
 2. Visit the website https://togetherjava.duckdns.org
 3. and login with your Discord account,
 4. accept the authorization.
