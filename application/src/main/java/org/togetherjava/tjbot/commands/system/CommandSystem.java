@@ -65,7 +65,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         nameToSlashCommands.put(RELOAD_COMMAND, new ReloadCommand(this));
 
         if (logger.isInfoEnabled()) {
-            logger.info("Available commands: {}", nameToSlashCommands.values());
+            logger.info("Available commands: {}", nameToSlashCommands.keySet());
         }
     }
 
