@@ -21,7 +21,8 @@
 
 * [[Discord Bot Details]]
 * [[Access the VPS]]
-* [[View the logs]]
-* [[(WIP) Setup Log Viewer]]
+* Logging
+  * [[View the logs]]
+  * [[Setup Log Viewer]]
 * [[Shutdown or restart of the bot]]
 * [[Reset or edit the databases]]
