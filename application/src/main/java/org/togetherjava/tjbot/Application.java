@@ -68,7 +68,10 @@ public enum Application {
     public static void runBot(String token, Path databasePath) {
         logger.info("Starting bot...");
         try {
-            Files.createDirectories(databasePath.getParent());
+            Path parentDatabasePath = databasePath.toAbsolutePath().getParent();
+            if (parentDatabasePath != null) {
+                Files.createDirectories(parentDatabasePath);
+            }
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
@@ -86,9 +89,8 @@ public enum Application {
         } catch (SQLException e) {
             logger.error("Failed to create database", e);
         } catch (IOException e) {
-            logger.error(
-                    "Failed to create Path to the Database at: " + databasePath.toAbsolutePath(),
-                    e);
+            logger.error("Failed to create path to the database at: {}",
+                    databasePath.toAbsolutePath(), e);
         }
     }
 
