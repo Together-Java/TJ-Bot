@@ -148,3 +148,13 @@ config.json
 *.db
 *.db-shm
 *.db-wal
+logviewer/frontend/generated
+logviewer/node_modules
+logviewer/.npmrc
+logviewer/package.json
+logviewer/pnpmfile.js
+logviewer/tsconfig.json
+logviewer/types.d.ts
+logviewer/pnpm-lock.yaml
+logviewer/webpack.config.js
+logviewer/webpack.generated.js
