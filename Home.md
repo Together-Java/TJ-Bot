@@ -18,7 +18,8 @@ We also have several guides explaining the infrastructure, architecture and flow
 As well as some tutorials regarding on how to maintain the project:
 * [[Discord Bot Details]]
 * [[Access the VPS]]
-* [[View the logs]]
-* [[(WIP) Setup Log Viewer]]
+* Logging
+  * [[View the logs]]
+  * [[Setup Log Viewer]]
 * [[Shutdown or restart of the bot]]
 * [[Reset or edit the databases]]
