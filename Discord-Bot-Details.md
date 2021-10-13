@@ -16,6 +16,6 @@ It can be managed in the [Developer Portal](https://discord.com/developers/appli
 
 ![TJ-Bot (develop) logo](https://i.imgur.com/uBumtEL.png)
 
-For testing out new commands and features, we have this bot running the `develop` branch. This bot is accessible from a specific [test server](https://discord.gg/cgjFpcea).
+For testing out new commands and features, we have this bot running the `develop` branch. This bot is accessible from a specific [test server](https://discord.gg/7g4KAPmJ).
 
 It can be managed in the [Developer Portal](https://discord.com/developers/applications/886334503524638751/information).
