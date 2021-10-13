@@ -59,12 +59,7 @@ public class TeXCommand extends SlashCommandAdapter {
 				.queue();
 		Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE, FOREGROUND_COLOR,
 				BACKGROUND_COLOR);
-		if (!(image instanceof BufferedImage bi)) {
-			event.getHook()
-					.editOriginal("There was an error generating the image")
-					.queue();
-			return;
-		}
+		BufferedImage bi = new BufferedImage(image.getWidth(null), image.getWidth(null), TeXConstants.STYLE_DISPLAY);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		try {
