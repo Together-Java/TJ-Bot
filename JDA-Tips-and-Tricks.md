@@ -50,6 +50,39 @@ Internally JDA uses `JDAImpl` instead of `JDA`, which has way more _(internal)_ 
 
 Since this is an internal API, breaking changes can happen with any new version of JDA and it also has no documentation.
 
+### [EntityBuilder](https://github.com/DV8FromTheWorld/JDA/blob/development/src/main/java/net/dv8tion/jda/internal/entities/EntityBuilder.java) (internal)
+
+**Note, the entitybuilder isn't meant for serializing and deserializing stored users, it's not backwards compatible.**
+
+EntityBuilder is an internal class of JDA used to create Discord entities (users, guilds, and more) from their JSON value (DataObject's). Within the TJ-Bot we make usage of this to test command's their logic. 
+
+By creating "fake" JSON's we can make create an event, members and such using an EntityBuilder.
+A.e the [EntityBuilder#createUser](https://github.com/DV8FromTheWorld/JDA/blob/development/src/main/java/net/dv8tion/jda/internal/entities/EntityBuilder.java#L331) method.
+
+To be more precise, you can view the createUser method [here](https://github.com/DV8FromTheWorld/JDA/blob/development/src/main/java/net/dv8tion/jda/internal/entities/EntityBuilder.java#L331).
+If we'd give the createUser method a DataObject with the following JSON.
+We'd be able to make JDA think Nelly is a real user.
+For an up-to-date example, check the [Discord docs](https://discord.com/developers/docs/resources/user#user-object)
+```json
+/* 
+  Note: this json is from 13/10/2021 
+  This might be changed at the moment of reading
+*/
+{
+  "id": "80351110224678912",
+  "username": "Nelly",
+  "discriminator": "1337",
+  "avatar": "8342729096ea3675442027381ff50dfe",
+  "verified": true,
+  "email": "nelly@discord.com",
+  "flags": 64,
+  "banner": "06c16474723fe537c283b8efa61a30c8",
+  "accent_color": 16711680,
+  "premium_type": 1,
+  "public_flags": 64
+}
+```
+
 ## Tricks
 
 Due to the complexity of JDA, you might easily run into a situation where you solve a problem in a certain but not optimal way that is either overly complex or just very lengthy. This chapter shows some tricks to help you use JDA correct and better.
