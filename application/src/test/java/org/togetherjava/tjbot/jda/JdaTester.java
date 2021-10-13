@@ -17,6 +17,7 @@ import org.mockito.ArgumentMatchers;
 import org.togetherjava.tjbot.commands.SlashCommand;
 
 import java.util.EnumSet;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.UnaryOperator;
 
@@ -45,8 +46,9 @@ import static org.mockito.Mockito.*;
  * </pre>
  */
 public final class JdaTester {
-    private static final int GATEWAY_POOL_SIZE = 4;
-    private static final int RATE_LIMIT_POOL_SIZE = 4;
+    private static final ScheduledExecutorService GATEWAY_POOL = new ScheduledThreadPoolExecutor(4);
+    private static final ScheduledExecutorService RATE_LIMIT_POOL =
+            new ScheduledThreadPoolExecutor(4);
     private static final String TEST_TOKEN = "TEST_TOKEN";
     private static final long USER_ID = 1;
     private static final long APPLICATION_ID = 1;
@@ -93,9 +95,8 @@ public final class JdaTester {
         when(jda.getGuildById(anyLong())).thenReturn(guild);
         when(jda.getEntityBuilder()).thenReturn(entityBuilder);
 
-        when(jda.getGatewayPool()).thenReturn(new ScheduledThreadPoolExecutor(GATEWAY_POOL_SIZE));
-        when(jda.getRateLimitPool())
-            .thenReturn(new ScheduledThreadPoolExecutor(RATE_LIMIT_POOL_SIZE));
+        when(jda.getGatewayPool()).thenReturn(GATEWAY_POOL);
+        when(jda.getRateLimitPool()).thenReturn(RATE_LIMIT_POOL);
         when(jda.getSessionController()).thenReturn(new ConcurrentSessionController());
         doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN))).when(jda).getRequester();
 
