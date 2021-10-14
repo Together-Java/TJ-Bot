@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.tag;
+package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.interactions.Interaction;

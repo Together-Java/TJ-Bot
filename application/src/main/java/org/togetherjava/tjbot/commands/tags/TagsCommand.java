@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.tag;
+package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;

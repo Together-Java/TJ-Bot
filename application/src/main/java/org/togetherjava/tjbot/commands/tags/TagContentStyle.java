@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.tag;
+package org.togetherjava.tjbot.commands.tags;
 
 /**
  * The style of a tag content.

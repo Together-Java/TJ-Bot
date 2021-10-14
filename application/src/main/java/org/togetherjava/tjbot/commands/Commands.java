@@ -4,10 +4,10 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
-import org.togetherjava.tjbot.commands.tag.TagCommand;
-import org.togetherjava.tjbot.commands.tag.TagManageCommand;
-import org.togetherjava.tjbot.commands.tag.TagSystem;
-import org.togetherjava.tjbot.commands.tag.TagsCommand;
+import org.togetherjava.tjbot.commands.tags.TagCommand;
+import org.togetherjava.tjbot.commands.tags.TagManageCommand;
+import org.togetherjava.tjbot.commands.tags.TagSystem;
+import org.togetherjava.tjbot.commands.tags.TagsCommand;
 import org.togetherjava.tjbot.db.Database;
 
 import java.util.Collection;
