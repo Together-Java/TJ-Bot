@@ -83,6 +83,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     private static void sendSuccessMessage(@NotNull Interaction event, @NotNull String id,
             @NotNull String actionVerb) {
+        logger.info("User '{}' {} the tag with id '{}'.", event.getUser().getId(), actionVerb, id);
         event.replyEmbeds(MessageUtils.generateEmbed("Success",
                 "Successfully %s tag '%s'.".formatted(actionVerb, id), event.getUser(),
                 TagSystem.AMBIENT_COLOR))
