@@ -59,6 +59,7 @@ public final class TagsCommand extends SlashCommandAdapter {
                     "The message can only be deleted by its author or an user with 'MESSAGE_MANAGE' permissions.")
                 .setEphemeral(true)
                 .queue();
+            return;
         }
 
         event.getMessage().delete().queue();
