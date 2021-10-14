@@ -23,8 +23,6 @@ import java.util.List;
  * {@code /tag}<br>
  * {@code /tag ask}<br>
  * {@code /tag ask true}
- *
- * @author illuminator3
  */
 public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;

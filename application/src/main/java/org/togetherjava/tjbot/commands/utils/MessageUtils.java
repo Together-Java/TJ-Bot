@@ -62,7 +62,6 @@ public class MessageUtils {
      *
      * @param message message to escape
      * @return escaped message
-     * @author illuminator3
      */
     public static String escapeDiscordMessage(@NotNull CharSequence message) {
         return ESCAPE_DISCORD_CHARACTERS.matcher(message).replaceAll("\\\\$1");

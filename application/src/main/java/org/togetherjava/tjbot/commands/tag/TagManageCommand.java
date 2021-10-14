@@ -24,8 +24,6 @@ import java.util.List;
 /**
  * TagManage command. Usage:
  * {@code /tagmanage [rawtag|edittag|editidtag|deletedtag|createtag|createidtag] (...)}.
- *
- * @author illuminator3
  */
 public final class TagManageCommand extends SlashCommandAdapter {
     private static final Logger log = LoggerFactory.getLogger(TagManageCommand.class);

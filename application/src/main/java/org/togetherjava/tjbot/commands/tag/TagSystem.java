@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 /**
  * Tag system database utility.<br>
  * Has methods to store & retrieve tags from the database.
- *
- * @author illuminator3
  */
 public final class TagSystem {
     private final Database database;
@@ -25,7 +23,6 @@ public final class TagSystem {
      *
      * @param tag id tag to check
      * @return true if it exists, false if not
-     * @author illuminator3
      */
     public boolean exists(String tag) {
         return database.readTransaction(
@@ -36,7 +33,6 @@ public final class TagSystem {
      * Deletes a tag from the database
      *
      * @param tag tag to delete
-     * @author illuminator3
      */
     public void delete(String tag) {
         database.writeTransaction(ctx -> {
@@ -49,7 +45,6 @@ public final class TagSystem {
      *
      * @param tag tag id
      * @param content content of the tag
-     * @author illuminator3
      */
     public void put(String tag, String content) {
         database.writeTransaction(ctx -> {
@@ -66,7 +61,6 @@ public final class TagSystem {
      *
      * @param tag tag id
      * @return content of the tag, empty optional if the tag doesn't exist
-     * @author illuminator3
      */
     public Optional<String> get(String tag) {
         return database.readTransaction(ctx -> {
@@ -80,7 +74,6 @@ public final class TagSystem {
      * Retrieves all tags from the database
      *
      * @return all tags (id -> content)
-     * @author illuminator3
      */
     public Map<String, String> retrieve() {
         return database.readTransaction(ctx -> {
@@ -102,7 +95,6 @@ public final class TagSystem {
      * </pre>
      *
      * @return ids of all tags; unmodifiable set
-     * @author illuminator3
      */
     public Set<String> retrieveIds() {
         return Collections.unmodifiableSet(retrieve().keySet());

@@ -14,8 +14,6 @@ import java.util.List;
 
 /**
  * Tags command. Usage: {@code /tags}. Displays all available tags.
- *
- * @author illuminator3
  */
 public final class TagsCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
