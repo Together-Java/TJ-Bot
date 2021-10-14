@@ -8,7 +8,7 @@ The team manages two bots.
 
 ![TJ-Bot logo](https://i.imgur.com/o7oLJuA.png)
 
-This bot is the real deal. It runs the stable `master` branch and can be used at any time by all members of the Discord server.
+This bot is the real deal. It runs the stable `master` branch and can be used at any time by all members of the [main Discord server](https://discord.com/invite/XXFUXzK).
 
 It can be managed in the [Developer Portal](https://discord.com/developers/applications/884898473676271646/information).
 
@@ -16,6 +16,6 @@ It can be managed in the [Developer Portal](https://discord.com/developers/appli
 
 ![TJ-Bot (develop) logo](https://i.imgur.com/uBumtEL.png)
 
-For testing out new commands and features, we have this bot running the `develop` branch. This bot is accessible from a specific [test server](https://discord.gg/jYKmNPkcHM).
+For testing out new commands and features, we have this bot running the `develop` branch. This bot is accessible from a specific [test server](https://discord.com/invite/qDNZNfjbvp).
 
 It can be managed in the [Developer Portal](https://discord.com/developers/applications/886334503524638751/information).
