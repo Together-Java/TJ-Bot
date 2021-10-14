@@ -1,10 +1,16 @@
 package org.togetherjava.tjbot.commands.utils;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
+import java.time.Instant;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -47,7 +53,7 @@ public enum MessageUtils {
      * {@code \}.
      * <p>
      * Example:
-     * 
+     *
      * <pre>
      * {@code
      * // Before
@@ -62,6 +68,26 @@ public enum MessageUtils {
      */
     public static String escapeDiscordMessage(@NotNull CharSequence message) {
         return ESCAPE_DISCORD_CHARACTERS.matcher(message).replaceAll("\\\\$1");
+    }
+
+    /**
+     * Generates an embed with the given content.
+     *
+     * @param title title of the embed or {@code null} if not desired
+     * @param content content to display in the embed
+     * @param user name of the user who requested the embed or {@code null} if no user requested
+     *        this
+     * @param ambientColor the ambient color of the embed or {@code null} for a default color
+     * @return the generated embed
+     */
+    public static @NotNull MessageEmbed generateEmbed(@Nullable String title,
+            @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor) {
+        return new EmbedBuilder().setTitle(title)
+            .setDescription(content)
+            .setTimestamp(Instant.now())
+            .setFooter(user == null ? null : user.getName())
+            .setColor(ambientColor)
+            .build();
     }
 
 }
