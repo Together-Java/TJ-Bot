@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Utility methods for {@link Message}.
@@ -14,6 +15,8 @@ import java.util.List;
  * other commands to avoid similar methods appearing everywhere.
  */
 public class MessageUtils {
+
+    private static final Pattern ESCAPE_DISCORD_CHARACTERS = Pattern.compile("([^a-zA-Z0-9 \n\r])");
 
     private MessageUtils() {
         throw new UnsupportedOperationException();
@@ -37,6 +40,32 @@ public class MessageUtils {
         message
             .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
             .queue();
+    }
+
+    /**
+     * Escapes all characters that have a special meaning in Discord.
+     * <p>
+     * Affected characters are everything that is neither {@code a-zA-Z0-9}, a {@code space},
+     * {@code \n} or {@code \r}. Escaping is done by prefixing the character with a single backslash
+     * {@code \}.
+     * <p>
+     * Example:
+     * 
+     * <pre>
+     * {@code
+     * // Before
+     * `System.out.println("Hello World")`
+     * // After
+     * \`System\.out\.println\(\"Hello World\"\)\`
+     * }
+     * </pre>
+     *
+     * @param message message to escape
+     * @return escaped message
+     * @author illuminator3
+     */
+    public static String escapeDiscordMessage(@NotNull CharSequence message) {
+        return ESCAPE_DISCORD_CHARACTERS.matcher(message).replaceAll("\\\\$1");
     }
 
 }
