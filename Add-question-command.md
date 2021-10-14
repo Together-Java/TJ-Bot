@@ -176,7 +176,7 @@ and the buttons will be disabled after someone clicks them:
 
 Last but not least for the `ask` command, we have to save the response in the database. Before we can get started with this, we have to create a database table and let Flyway generate the corresponding database code.
 
-Therefore, we go to the folder `TJ-Bot\database\src\main\resources\db` and add a new database migration script, incrementing the version. For example, if the script with the highest version number is `V1`, we will add `V2` to it. Give the script a nice name, such as `V2__Add_Questions_Table.sql`. The content is simply an SQL statement to create your desired table:
+Therefore, we go to the folder `TJ-Bot\application\src\main\resources\db` and add a new database migration script, incrementing the version. For example, if the script with the highest version number is `V1`, we will add `V2` to it. Give the script a nice name, such as `V2__Add_Questions_Table.sql`. The content is simply an SQL statement to create your desired table:
 ```sql
 CREATE TABLE questions
 (
