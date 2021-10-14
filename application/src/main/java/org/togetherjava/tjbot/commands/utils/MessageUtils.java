@@ -14,18 +14,15 @@ import java.util.regex.Pattern;
  * This class is meant to contain all utility methods for {@link Message} that can be used on all
  * other commands to avoid similar methods appearing everywhere.
  */
-public class MessageUtils {
+public enum MessageUtils {
+    ;
 
     private static final Pattern ESCAPE_DISCORD_CHARACTERS = Pattern.compile("([^a-zA-Z0-9 \n\r])");
-
-    private MessageUtils() {
-        throw new UnsupportedOperationException();
-    }
 
     /**
      * Disables all the buttons that a message has. Disabling buttons deems it as not clickable to
      * the user who sees it.
-     * <p/>
+     * <p>
      * This method already queues the changes for you and does not block in any way.
      *
      * @param message the message that contains at least one button
