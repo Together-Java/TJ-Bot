@@ -23,7 +23,7 @@ import java.util.List;
  * <p>
  * <p>
  * The adapter manages all command related data itself, which can be provided during construction
- * (see {@link #SlashCommandAdapter(String, String, SlashCommandVisibility)}. In order to add
+ * (see {@link #SlashCommandAdapter(String, String, SlashCommandVisibility)}). In order to add
  * options, subcommands or similar command configurations, use {@link #getData()} and mutate the
  * returned data object (see {@link CommandData} for details on how to work with this class).
  * <p>

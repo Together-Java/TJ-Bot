@@ -42,6 +42,7 @@ public final class TagSystem {
      * @param componentId the component id to use for the button
      * @return the created delete button
      */
+    @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
     static Button createDeleteButton(String componentId) {
         return Button.of(ButtonStyle.DANGER, componentId, "Delete",
                 Emoji.fromUnicode("\uD83D\uDDD1")); // trash bin
@@ -60,7 +61,7 @@ public final class TagSystem {
         if (hasTag(id)) {
             return false;
         }
-        // TODO Add fuzzy string matching suggestions (merge with TagCommand who uses this as well)
+        // TODO Add fuzzy string matching suggestions (Levenshtein edit distance)
         event.reply("Could not find any tag with id '%s'.".formatted(id))
             .setEphemeral(true)
             .queue();

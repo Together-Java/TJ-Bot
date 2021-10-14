@@ -297,7 +297,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             this.name = name;
         }
 
-        public static Subcommand fromName(String name) {
+        static Subcommand fromName(String name) {
             for (Subcommand subcommand : Subcommand.values()) {
                 if (subcommand.name.equals(name)) {
                     return subcommand;
