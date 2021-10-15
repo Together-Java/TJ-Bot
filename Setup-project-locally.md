@@ -65,6 +65,15 @@ IntelliJ comes by default with a `gradle` plugin. If not started already automat
 ![Gradle command IntelliJ UI](https://i.imgur.com/7OuyvMN.png)
 ![Gradle output](https://i.imgur.com/Q32x2qP.png)
 
+<details>
+<summary>ℹ️ If you get any gradle errors...</summary>
+Make sure that your project and gradle is setup to use the latest Java version. Sometimes IntelliJ might guess it wrong and mess up, leading to nasty issues.
+
+Therefore, review your **Project Structure** settings and the **Gradle** settings:
+![project settings](https://i.imgur.com/2hPB4ga.png)
+![gradle settings](https://i.imgur.com/O8FGHK0.png)
+</details> 
+
 ### Manual usage of `gradle`
 
 You can also just execute Gradle from the command line.
