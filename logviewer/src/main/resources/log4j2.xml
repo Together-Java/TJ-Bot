@@ -19,5 +19,6 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
         </Root>
+        <Logger name="com.vaadin.flow.data.binder.Binder" level="WARN"/>
     </Loggers>
 </Configuration>

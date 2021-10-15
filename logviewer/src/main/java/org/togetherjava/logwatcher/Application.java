@@ -26,7 +26,7 @@ import org.vaadin.artur.helpers.LaunchUtil;
  * And the initial Config at {@link org.togetherjava.logwatcher.config.Config}
  */
 @SpringBootApplication(exclude = {R2dbcAutoConfiguration.class})
-@Theme(value = "myapp")
+@Theme(value = "logviewer")
 @PWA(name = "LogViewer", shortName = "Logs", offlineResources = {"images/logo.png"})
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 @Push
