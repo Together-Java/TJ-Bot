@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.mathcommands;
 
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -46,6 +47,8 @@ public class TeXCommand extends SlashCommandAdapter {
     public static final List<Button> BUTTON_LIST =
             List.of(EDIT_BUTTON, DELETE_BUTTON, VIEW_SOURCE_BUTTON);
     public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
+    private static String currentLatex;
+    private static Member currentExecutor;
 
     /**
      * Creates a new Instance.
@@ -59,10 +62,11 @@ public class TeXCommand extends SlashCommandAdapter {
     }
 
     @Override public void onSlashCommand(@NotNull final SlashCommandEvent event) {
-        String str = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
+        currentLatex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
+        currentExecutor = event.getMember();
         TeXFormula formula;
         try {
-            formula = new TeXFormula(str);
+            formula = new TeXFormula(currentLatex);
         } catch (ParseException e) {
             event.reply("That is an invalid latex")
                     .addActionRow(BUTTON_LIST)
@@ -77,7 +81,7 @@ public class TeXCommand extends SlashCommandAdapter {
             event.getHook().editOriginal(RENDERING_ERROR).setActionRow(BUTTON_LIST).queue();
             logger.warn(
                     "Unable to render latex, image does not have an accessible width or height. Formula was {}",
-                    str);
+                    currentLatex);
             return;
         }
         BufferedImage bi = new BufferedImage(image.getWidth(null), image.getHeight(null),
@@ -91,7 +95,7 @@ public class TeXCommand extends SlashCommandAdapter {
             event.getHook().editOriginal(RENDERING_ERROR).setActionRow(BUTTON_LIST).queue();
             logger.warn(
                     "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
-                    str, e);
+                    currentLatex, e);
             return;
         }
         event.getHook()
@@ -102,14 +106,17 @@ public class TeXCommand extends SlashCommandAdapter {
 
     @Override public void onButtonClick(@NotNull final ButtonClickEvent event,
             @NotNull final List<String> args) {
+        if (currentExecutor != event.getMember()) {
+            event.reply("You are not the person who executed the command, you cannot do that")
+                    .queue();
+            return;
+        }
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
         switch (buttonStyle) {
-            case DANGER:
-                event.getHook().deleteOriginal().queue();
-                return;
-            case SUCCESS:
-            case PRIMARY:
+            case DANGER -> event.getHook().deleteOriginal().queue();
+            //TODO
+            case SUCCESS -> event.getHook();
+            case PRIMARY -> event.reply(currentLatex).queue();
         }
-        super.onButtonClick(event, args);
     }
 }
