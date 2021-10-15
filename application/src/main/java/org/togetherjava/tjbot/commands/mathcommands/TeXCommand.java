@@ -63,6 +63,9 @@ public class TeXCommand extends SlashCommandAdapter {
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
         if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
             event.getHook().editOriginal(RENDERING_ERROR).queue();
+            logger.warn(
+                    "Unable to render latex, image does not have an accessible width or height. Formula was {}",
+                    formula);
             return;
         }
         BufferedImage bi = new BufferedImage(image.getWidth(null), image.getHeight(null),
@@ -73,6 +76,9 @@ public class TeXCommand extends SlashCommandAdapter {
             ImageIO.write(bi, "png", baos);
         } catch (IOException e) {
             event.getHook().editOriginal(RENDERING_ERROR).queue();
+            logger.warn(
+                    "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
+                    formula, e);
             return;
         }
         event.getHook().editOriginal(baos.toByteArray(), "tex.png").queue();
