@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.system;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -18,6 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.componentids.ComponentId;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdParser;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdStore;
+import org.togetherjava.tjbot.commands.componentids.InvalidComponentIdFormatException;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
@@ -44,6 +47,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
     private final Map<String, SlashCommand> nameToSlashCommands;
+    private final ComponentIdParser componentIdParser;
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -63,6 +67,12 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
                     "The 'reload' command is a special reserved command that must not be used by other commands");
         }
         nameToSlashCommands.put(RELOAD_COMMAND, new ReloadCommand(this));
+
+        ComponentIdStore componentIdStore = new ComponentIdStore(database);
+        componentIdStore.addComponentIdRemovedListener(CommandSystem::onComponentIdRemoved);
+        componentIdParser = componentIdStore;
+        nameToSlashCommands.values()
+            .forEach(slashCommand -> slashCommand.acceptComponentIdGenerator(componentIdStore));
 
         if (logger.isInfoEnabled()) {
             logger.info("Available commands: {}", nameToSlashCommands.keySet());
@@ -154,10 +164,10 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
      */
     private <T extends ComponentInteraction> void forwardComponentCommand(@NotNull T event,
             @NotNull TriConsumer<? super SlashCommand, ? super T, ? super List<String>> commandArgumentConsumer) {
-        ComponentId componentId;
+        Optional<ComponentId> componentIdOpt;
         try {
-            componentId = ComponentIds.parse(event.getComponentId());
-        } catch (JsonProcessingException e) {
+            componentIdOpt = componentIdParser.parse(event.getComponentId());
+        } catch (InvalidComponentIdFormatException e) {
             logger
                 .error("Unable to route event (#{}) back to its corresponding slash command. The component ID was in an unexpected format."
                         + " All button and menu events have to use a component ID created in a specific format"
@@ -166,8 +176,17 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
             // Unable to forward, simply fade out the event
             return;
         }
-        SlashCommand command = requireSlashCommand(componentId.getCommandName());
+        if (componentIdOpt.isEmpty()) {
+            logger.warn("The event (#{}) has an expired component ID, which was: {}.",
+                    event.getId(), event.getComponentId());
+            event.reply("Sorry, but this event has expired. You can not use it anymore.")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+        ComponentId componentId = componentIdOpt.orElseThrow();
 
+        SlashCommand command = requireSlashCommand(componentId.getCommandName());
         logger.trace("Routing a component event with id '{}' back to command '{}'",
                 event.getComponentId(), command.getName());
         commandArgumentConsumer.accept(command, event, componentId.getElements());
@@ -211,7 +230,11 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
                     "Guild '{}' does not have the required command scope, unable to register, leaving it.{}",
                     guild.getName(), unableToReportText, ex);
         }).accept(ex);
+    }
 
+    private static void onComponentIdRemoved(ComponentId componentId) {
+        // NOTE As of now, we do not act on this event, but we could use it
+        // in the future to, for example, disable buttons or delete the associated message
     }
 
     /**

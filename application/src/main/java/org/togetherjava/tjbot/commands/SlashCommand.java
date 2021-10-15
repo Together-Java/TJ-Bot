@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.system.ComponentIds;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import java.util.List;
 
@@ -199,4 +200,6 @@ public interface SlashCommand {
      *        {@link #onSlashCommand(SlashCommandEvent)} for details on how these are created
      */
     void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args);
+
+    void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator);
 }
