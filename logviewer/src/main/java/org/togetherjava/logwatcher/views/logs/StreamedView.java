@@ -89,7 +89,7 @@ public class StreamedView extends VerticalLayout {
         final String logLevel = event.getSource().getLabel();
 
 
-        final boolean isChecked = event.getValue();//don't inline this, else SonarLint is crying
+        final boolean isChecked = event.getValue();// don't inline this, else SonarLint is crying
         if (isChecked) {
             this.enabledLogLevel.add(logLevel);
         } else {
