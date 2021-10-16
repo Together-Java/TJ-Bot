@@ -40,7 +40,7 @@ import java.util.List;
  *     &#64;code
  *     class PingCommand extends SlashCommandAdapter {
  *         PingCommand() {
- *             super("ping", "responds with !pong", SlashCommandVisibility.GUILD);
+ *             super("ping", "Responds with 'Pong!'", SlashCommandVisibility.GUILD);
  *         }
  *
  *         &#64;Override
