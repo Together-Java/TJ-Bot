@@ -61,7 +61,7 @@ public class LogsView extends VerticalLayout {
         for (final String level : levels) {
             final Checkbox ch = new Checkbox(level);
             ch.setValue(true);
-            ch.addValueChangeListener(this::onValueChange);
+            ch.addValueChangeListener(this::onCheckboxChange);
             options.add(ch);
         }
 
@@ -71,7 +71,7 @@ public class LogsView extends VerticalLayout {
         add(logs, options, new Scroller(this.events, Scroller.ScrollDirection.VERTICAL));
     }
 
-    private void onValueChange(AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
+    private void onCheckboxChange(AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
         if (!event.isFromClient()) {
             return;
         }
@@ -99,7 +99,7 @@ public class LogsView extends VerticalLayout {
         logs.setItems(DataProvider.ofCollection(logFiles));
         logFiles.stream().findFirst().ifPresent(logs::setValue);
 
-        logs.addValueChangeListener(this::onValueChange);
+        logs.addValueChangeListener(this::onComboboxChange);
         return logs;
     }
 
@@ -108,7 +108,7 @@ public class LogsView extends VerticalLayout {
      *
      * @param event Generated Event, containing old and new Value
      */
-    private void onValueChange(HasValue.ValueChangeEvent<Path> event) {
+    private void onComboboxChange(HasValue.ValueChangeEvent<Path> event) {
         if (Objects.equals(event.getOldValue(), event.getValue())) {
             return;
         }
