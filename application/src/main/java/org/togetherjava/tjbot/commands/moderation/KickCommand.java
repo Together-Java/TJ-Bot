@@ -37,13 +37,10 @@ public class KickCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        // Used to get the member
         final Member member = event.getOption("user").getAsMember();
 
-        //Used for the reason
         final String reason = event.getOption("reason").getAsString();
 
-        // Checks if the author has perms
         if (!event.getMember().hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
                     "You do not have the required permissions to kick users from this server.")
@@ -51,7 +48,6 @@ public class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        // Checks if the bot has perms
         final Member selfMember = event.getGuild().getSelfMember();
         if (!selfMember.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
@@ -60,7 +56,6 @@ public class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        // Check if the user can be kicked
         if (member != null && !selfMember.canInteract(member)) {
             event.reply("This user is too powerful for me to kick.").queue();
             return;
