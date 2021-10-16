@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.mathcommands;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +40,6 @@ public class TeXCommand extends SlashCommandAdapter {
     public static final Color BACKGROUND_COLOR = Color.decode("0x4396BE");
     public static final Color FOREGROUND_COLOR = Color.decode("0x01EC09");
     public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
-    private static long currentMessageID;
 
     /**
      * Creates a new Instance.
@@ -52,16 +52,17 @@ public class TeXCommand extends SlashCommandAdapter {
                 "The latex which is rendered as an image", true);
     }
 
-    @Override public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    @Override
+    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
-        final Button EDIT_BUTTON =
+        final Button editButton =
                 Button.of(ButtonStyle.SUCCESS, generateComponentId(userID, latex), "Edit");
-        final Button DELETE_BUTTON =
+        final Button deleteButton =
                 Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete");
-        final Button VIEW_SOURCE_BUTTON =
+        final Button viewSourceButton =
                 Button.of(ButtonStyle.PRIMARY, generateComponentId(userID, latex), "View Source");
-        final List<Button> BUTTONS = List.of(EDIT_BUTTON, DELETE_BUTTON, VIEW_SOURCE_BUTTON);
+        final List<Button> buttons = List.of(editButton, deleteButton, viewSourceButton);
 
 
         TeXFormula formula;
@@ -69,18 +70,16 @@ public class TeXCommand extends SlashCommandAdapter {
             formula = new TeXFormula(latex);
         } catch (ParseException e) {
             event.reply("That is an invalid latex")
-                    .addActionRow(BUTTONS)
-                    .setEphemeral(true)
-                    .queue();
-            currentMessageID = event.getChannel().getLatestMessageIdLong();
+                .addActionRow(buttons)
+                .setEphemeral(true)
+                .queue();
             return;
         }
         event.deferReply().queue();
         Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
         if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
-            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(BUTTONS).queue();
-            currentMessageID = event.getChannel().getLatestMessageIdLong();
+            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(buttons).queue();
             logger.warn(
                     "Unable to render latex, image does not have an accessible width or height. Formula was {}",
                     latex);
@@ -94,32 +93,40 @@ public class TeXCommand extends SlashCommandAdapter {
         try {
             ImageIO.write(bi, "png", baos);
         } catch (IOException e) {
-            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(BUTTONS).queue();
-            currentMessageID = event.getChannel().getLatestMessageIdLong();
+            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(buttons).queue();
             logger.warn(
                     "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
                     latex, e);
             return;
         }
-        event.getHook().editOriginal(baos.toByteArray(), "tex.png").setActionRow(BUTTONS).queue();
-        currentMessageID = event.getChannel().getLatestMessageIdLong();
+        event.getHook().editOriginal(baos.toByteArray(), "tex.png").setActionRow(buttons).queue();
     }
 
-    @Override public void onButtonClick(@NotNull final ButtonClickEvent event,
+    @Override
+    public void onButtonClick(@NotNull final ButtonClickEvent event,
             @NotNull final List<String> args) {
         if (!args.get(0).equals(Objects.requireNonNull(event.getMember()).getId())) {
             event.reply("You are not the person who executed the command, you cannot do that")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
         switch (buttonStyle) {
-            case DANGER -> event.getChannel().deleteMessageById(currentMessageID).queue();
+            case DANGER -> event.getMessage().delete().queue();
             // FIXME, write code for editing message
             case SUCCESS -> event.getHook();
-            case PRIMARY -> event.reply(args.get(0)).queue();
-
+            case PRIMARY -> {
+                event.reply(args.get(1)).queue();
+                event.getMessage()
+                    .editMessageComponents(ActionRow.of(event.getMessage()
+                        .getButtons()
+                        .stream()
+                        .map(button -> button.getLabel().equals("View Source") ? button.asDisabled()
+                                : button)
+                        .toList()))
+                    .queue();
+            }
             default -> throw new AssertionError(
                     String.format("Unexpected button style, %S", buttonStyle));
         }
