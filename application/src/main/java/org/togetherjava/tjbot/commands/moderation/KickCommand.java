@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -12,6 +11,10 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 
+/**
+ * <p>
+ * The implemented command is {@code /kick @user reason}, upon which the bot will kick the user.
+ */
 public class KickCommand extends SlashCommandAdapter {
     //the logger
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
