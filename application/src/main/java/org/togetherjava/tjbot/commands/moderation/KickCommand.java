@@ -31,35 +31,23 @@ public class KickCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // Used to get the member
-        Member member = event.getOption("user").getAsMember();
+        final Member member = event.getOption("user").getAsMember();
 
         //Used for the reason
-        String reason = event.getOption("reason").getAsString();
-
-        // Let the user know we received the command before doing anything else
-        event.deferReply(true).queue();
-
-        // This is a special webhook that allows you to send
-        // messages without having permissions in the
-        // channel and also allows ephemeral messages
-        InteractionHook hook = event.getHook();
-
-        // All messages here will now be ephemeral implicitly
-        hook.setEphemeral(true);
-
+        final String reason = event.getOption("reason").getAsString();
 
         // Checks if the author has perms
         if (!event.getMember().hasPermission(Permission.KICK_MEMBERS)) {
-            hook.sendMessage(
+            event.reply(
                     "You do not have the required permissions to kick users from this server.")
                 .queue();
             return;
         }
 
         // Checks if the bot has perms
-        Member selfMember = event.getGuild().getSelfMember();
+        final Member selfMember = event.getGuild().getSelfMember();
         if (!selfMember.hasPermission(Permission.KICK_MEMBERS)) {
-            hook.sendMessage(
+            event.reply(
                     "I don't have the required permissions to kick users from this server.")
                 .queue();
             return;
@@ -67,7 +55,7 @@ public class KickCommand extends SlashCommandAdapter {
 
         // Check if the user can be kicked
         if (member != null && !selfMember.canInteract(member)) {
-            hook.sendMessage("This user is too powerful for me to kick.").queue();
+            event.reply("This user is too powerful for me to kick.").queue();
             return;
         }
 
