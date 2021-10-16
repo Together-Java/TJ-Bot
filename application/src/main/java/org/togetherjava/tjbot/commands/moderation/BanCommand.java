@@ -15,7 +15,7 @@ import java.util.Objects;
 
 /**
  * <p>
- * The implemented command is {@code @user /ban delete-message-history-days reason}, upon which the
+ * The implemented command is {@code /ban @user delete-message-history-days reason}, upon which the
  * bot will ban the user.
  */
 public class BanCommand extends SlashCommandAdapter {
