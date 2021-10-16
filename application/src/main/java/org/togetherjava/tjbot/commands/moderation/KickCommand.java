@@ -6,11 +6,15 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 
 public class KickCommand extends SlashCommandAdapter {
+    //the logger
+    private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
     /**
      * Creates an instance of the kick command.
      */
