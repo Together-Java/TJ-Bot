@@ -15,11 +15,13 @@ import java.util.Objects;
 
 /**
  * <p>
- * The implemented command is {@code @user /ban delete-message-history-days reason}, upon which the bot will ban the user.
+ * The implemented command is {@code @user /ban delete-message-history-days reason}, upon which the
+ * bot will ban the user.
  */
 public class BanCommand extends SlashCommandAdapter {
-    //the logger
+    // the logger
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
+
     /**
      * Creates an instance of the ban command.
      */
@@ -27,16 +29,18 @@ public class BanCommand extends SlashCommandAdapter {
         super("ban", "Use this command to ban a user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, "user", "The user which you want to ban", true)
-            .addOption(OptionType.INTEGER, "delete-message-history-days", "The delete message history", true)
-                .addOption(OptionType.STRING, "reason", "The reason of the ban", true);
+            .addOption(OptionType.INTEGER, "delete-message-history-days",
+                    "The delete message history", true)
+            .addOption(OptionType.STRING, "reason", "The reason of the ban", true);
 
 
     }
 
     /**
-     * When triggered with {@code /ban del_days @user reason}, the bot will respond will check if the user
-     * has perms. Then it will check if itself has perms to ban. If it does it will check if the user is the user
-     * is too powerful or not. If the user is not then bot will ban the user.
+     * When triggered with {@code /ban del_days @user reason}, the bot will respond will check if
+     * the user has perms. Then it will check if itself has perms to ban. If it does it will check
+     * if the user is the user is too powerful or not. If the user is not then bot will ban the
+     * user.
      *
      * @param event the corresponding event
      */
@@ -45,12 +49,11 @@ public class BanCommand extends SlashCommandAdapter {
         // Used to get the member
         final Member user = Objects.requireNonNull(event.getOption("user")).getAsMember();
 
-        //Used for the reason of the ban
+        // Used for the reason of the ban
         final String reason = Objects.requireNonNull(event.getOption("reason")).getAsString();
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "You do not have the required permissions to ban users from this server.")
+            event.reply("You do not have the required permissions to ban users from this server.")
                 .queue();
             return;
         }
@@ -68,12 +71,13 @@ public class BanCommand extends SlashCommandAdapter {
         }
 
         // Used to delete message history
-        long option = Objects.requireNonNull(event.getOption("delete-message-history-days")).getAsLong();
+        long option =
+                Objects.requireNonNull(event.getOption("delete-message-history-days")).getAsLong();
         int delDays = (int) option;
 
-        if(delDays < 1) {
+        if (delDays < 1) {
             event.reply("The deletion days of the messages must be between 1 and 7 days");
-        } else if(delDays > 7) {
+        } else if (delDays > 7) {
             event.reply("The deletion days of the messages must be between 1 and 7 days");
 
         } else {
@@ -85,8 +89,9 @@ public class BanCommand extends SlashCommandAdapter {
         assert user != null;
         logger.error("The user is not provided");
 
-        //Add this to audit log
-        logger.info("User '{}' banned user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+        // Add this to audit log
+        logger.info(
+                "User '{}' banned user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
                 selfMember, user, delDays, reason);
 
         // Ban the user and send a success response
