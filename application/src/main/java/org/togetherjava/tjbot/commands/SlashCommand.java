@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -8,6 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.system.ComponentIds;
 
 import java.util.List;
 
@@ -89,6 +91,27 @@ public interface SlashCommand {
     CommandData getData();
 
     /**
+     * Triggered by the command system after system startup is complete. This can be used for
+     * initialisation actions that cannot occur during construction.
+     * <p>
+     * This method may be called multi-threaded. There is no guarantee as to the order that commands
+     * will get called and there is no guarantee which thread they will be called on or even that
+     * they will be called by the same thread.
+     * <p>
+     * There is also no guarantee that slashCommands will be registered on guilds before this is
+     * called. Do not use this method to interact with slashCommands.
+     * <p>
+     * Details are available in the given event and the event also enables implementations to
+     * respond to it.
+     * <p>
+     * This method will be called in a multi-threaded context and the event may not be hold valid
+     * forever.
+     *
+     * @param event the event that triggered this
+     */
+    void onReady(@NotNull ReadyEvent event);
+
+    /**
      * Triggered by the command system when a slash command corresponding to this implementation
      * (based on {@link #getData()} has been triggered.
      * <p>
@@ -121,10 +144,9 @@ public interface SlashCommand {
      * {@link #onButtonClick(ButtonClickEvent, List)},
      * {@link #onSelectionMenu(SelectionMenuEvent, List)}).
      * <p>
-     * The helper {@link org.togetherjava.tjbot.commands.system.ComponentIds} can be used to
-     * generate valid IDs. Alternatively, if {@link SlashCommandAdapter} has been extended, it also
-     * offers a handy {@link SlashCommandAdapter#generateComponentId(String...)} method to ease the
-     * flow.
+     * The helper {@link ComponentIds} can be used to generate valid IDs. Alternatively, if
+     * {@link SlashCommandAdapter} has been extended, it also offers a handy
+     * {@link SlashCommandAdapter#generateComponentId(String...)} method to ease the flow.
      * <p>
      * <p>
      * This method will be called in a multi-threaded context and the event may not be hold valid
