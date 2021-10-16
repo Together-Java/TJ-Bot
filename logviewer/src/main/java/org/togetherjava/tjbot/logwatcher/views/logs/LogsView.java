@@ -74,7 +74,8 @@ public class LogsView extends VerticalLayout {
         add(logs, options, new Scroller(this.events, Scroller.ScrollDirection.VERTICAL));
     }
 
-    private void onCheckboxChange(AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
+    private void onCheckboxChange(
+            AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
         if (!event.isFromClient()) {
             return;
         }
