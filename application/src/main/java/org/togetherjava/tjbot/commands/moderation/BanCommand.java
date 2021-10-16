@@ -3,8 +3,6 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -45,7 +43,7 @@ public class BanCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // Used to get the member
-        final Member member = Objects.requireNonNull(event.getOption("user")).getAsMember();
+        final Member user = Objects.requireNonNull(event.getOption("user")).getAsMember();
 
         //Used for the reason of the ban
         final String reason = Objects.requireNonNull(event.getOption("reason")).getAsString();
@@ -64,24 +62,37 @@ public class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (member != null && !selfMember.canInteract(member)) {
+        if (user != null && !selfMember.canInteract(user)) {
             event.reply("This user is too powerful for me to ban.").queue();
             return;
         }
 
         // Used to delete message history
-        int delDays = 0;
+        long option = Objects.requireNonNull(event.getOption("delete-message-history-days")).getAsLong();
+        int delDays = (int) option;
 
-        OptionMapping option = event.getOption("delete-message-history-days");
+        if(delDays < 1) {
+            event.reply("The deletion days of the messages must be between 1 and 7 days");
+        } else if(delDays > 7) {
+            event.reply("The deletion days of the messages must be between 1 and 7 days");
 
-        // null = not provided
-        if (option != null)
-            delDays = (int) Math.max(0, Math.min(7, option.getAsLong()));
+        } else {
+            delDays = Math.toIntExact(option);
+        }
+
+
+
+        assert user != null;
+        logger.error("The user is not provided");
+
+        //Add this to audit log
+        logger.info("User '{}' banned user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+                selfMember, user, delDays, reason);
 
         // Ban the user and send a success response
         event.getGuild()
-            .ban(member, delDays, reason)
-            .flatMap(v -> event.reply("Banned the user " + member.getUser().getAsTag()))
+            .ban(user, delDays, reason)
+            .flatMap(v -> event.reply("Banned the user " + user.getUser().getAsTag()))
             .queue();
     }
 }
