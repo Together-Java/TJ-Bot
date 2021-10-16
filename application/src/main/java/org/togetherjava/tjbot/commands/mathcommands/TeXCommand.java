@@ -39,7 +39,6 @@ public class TeXCommand extends SlashCommandAdapter {
     public static final Color BACKGROUND_COLOR = Color.decode("0x4396BE");
     public static final Color FOREGROUND_COLOR = Color.decode("0x01EC09");
     public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
-    private static String currentLatex;
     private static long currentMessageID;
 
     /**
@@ -53,26 +52,27 @@ public class TeXCommand extends SlashCommandAdapter {
                 "The latex which is rendered as an image", true);
     }
 
-    @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    @Override public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+        String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
         final Button EDIT_BUTTON =
-                Button.of(ButtonStyle.SUCCESS, generateComponentId(userID), "Edit");
+                Button.of(ButtonStyle.SUCCESS, generateComponentId(userID, latex), "Edit");
         final Button DELETE_BUTTON =
                 Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete");
         final Button VIEW_SOURCE_BUTTON =
-                Button.of(ButtonStyle.PRIMARY, generateComponentId(userID), "View Source");
+                Button.of(ButtonStyle.PRIMARY, generateComponentId(userID, latex), "View Source");
         final List<Button> BUTTONS = List.of(EDIT_BUTTON, DELETE_BUTTON, VIEW_SOURCE_BUTTON);
 
-        currentLatex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
+
         TeXFormula formula;
         try {
-            formula = new TeXFormula(currentLatex);
+            formula = new TeXFormula(latex);
         } catch (ParseException e) {
             event.reply("That is an invalid latex")
-                .addActionRow(BUTTONS)
-                .setEphemeral(true)
-                .queue();
+                    .addActionRow(BUTTONS)
+                    .setEphemeral(true)
+                    .queue();
+            currentMessageID = event.getChannel().getLatestMessageIdLong();
             return;
         }
         event.deferReply().queue();
@@ -80,9 +80,10 @@ public class TeXCommand extends SlashCommandAdapter {
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
         if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
             event.getHook().editOriginal(RENDERING_ERROR).setActionRow(BUTTONS).queue();
+            currentMessageID = event.getChannel().getLatestMessageIdLong();
             logger.warn(
                     "Unable to render latex, image does not have an accessible width or height. Formula was {}",
-                    currentLatex);
+                    latex);
             return;
         }
         BufferedImage bi = new BufferedImage(image.getWidth(null), image.getHeight(null),
@@ -94,22 +95,22 @@ public class TeXCommand extends SlashCommandAdapter {
             ImageIO.write(bi, "png", baos);
         } catch (IOException e) {
             event.getHook().editOriginal(RENDERING_ERROR).setActionRow(BUTTONS).queue();
+            currentMessageID = event.getChannel().getLatestMessageIdLong();
             logger.warn(
                     "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
-                    currentLatex, e);
+                    latex, e);
             return;
         }
         event.getHook().editOriginal(baos.toByteArray(), "tex.png").setActionRow(BUTTONS).queue();
         currentMessageID = event.getChannel().getLatestMessageIdLong();
     }
 
-    @Override
-    public void onButtonClick(@NotNull final ButtonClickEvent event,
+    @Override public void onButtonClick(@NotNull final ButtonClickEvent event,
             @NotNull final List<String> args) {
         if (!args.get(0).equals(Objects.requireNonNull(event.getMember()).getId())) {
             event.reply("You are not the person who executed the command, you cannot do that")
-                .setEphemeral(true)
-                .queue();
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
@@ -117,7 +118,8 @@ public class TeXCommand extends SlashCommandAdapter {
             case DANGER -> event.getChannel().deleteMessageById(currentMessageID).queue();
             // FIXME, write code for editing message
             case SUCCESS -> event.getHook();
-            case PRIMARY -> event.reply(currentLatex).queue();
+            case PRIMARY -> event.reply(args.get(0)).queue();
+
             default -> throw new AssertionError(
                     String.format("Unexpected button style, %S", buttonStyle));
         }
