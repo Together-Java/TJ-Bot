@@ -11,15 +11,15 @@ final class ComponentIdTest {
     @Test
     void getCommandName() {
         String commandName = "foo";
-        assertEquals(commandName, new ComponentId(commandName, List.of()).getCommandName());
+        assertEquals(commandName, new ComponentId(commandName, List.of()).commandName());
     }
 
     @Test
     void getElements() {
         List<String> elements = List.of();
-        assertEquals(elements, new ComponentId("foo", elements).getElements());
+        assertEquals(elements, new ComponentId("foo", elements).elements());
 
         elements = List.of("foo", "bar", "baz");
-        assertEquals(elements, new ComponentId("foo", elements).getElements());
+        assertEquals(elements, new ComponentId("foo", elements).elements());
     }
 }

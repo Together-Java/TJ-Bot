@@ -186,10 +186,10 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         }
         ComponentId componentId = componentIdOpt.orElseThrow();
 
-        SlashCommand command = requireSlashCommand(componentId.getCommandName());
+        SlashCommand command = requireSlashCommand(componentId.commandName());
         logger.trace("Routing a component event with id '{}' back to command '{}'",
                 event.getComponentId(), command.getName());
-        commandArgumentConsumer.accept(command, event, componentId.getElements());
+        commandArgumentConsumer.accept(command, event, componentId.elements());
     }
 
     /**

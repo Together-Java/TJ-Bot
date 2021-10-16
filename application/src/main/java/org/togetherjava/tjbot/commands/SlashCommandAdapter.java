@@ -139,7 +139,7 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated component ID
      */
     public final @NotNull String generateComponentId(@NotNull String... args) {
-        return generateComponentId(Lifespan.PERMANENT, args);
+        return generateComponentId(Lifespan.TEMPORARY, args);
     }
 
     public final @NotNull String generateComponentId(@NotNull Lifespan lifespan,
