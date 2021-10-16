@@ -122,6 +122,10 @@ public interface SlashCommand {
      * Details are available in the given event and the event also enables implementations to
      * respond to it.
      * <p>
+     * The helper {@link org.togetherjava.tjbot.commands.system.ComponentIds} can be used to
+     * generate valid IDs. Alternatively, if {@link SlashCommandAdapter} has been extended, it also
+     * offers a handy {@link SlashCommandAdapter#generateComponentId(String...)} method to ease the
+     * flow.
      * <p>
      * Buttons or menus have to be created with component ID (see
      * {@link ComponentInteraction#getComponentId()},
