@@ -39,7 +39,7 @@ public class KickCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        final Member member = Objects.requireNonNull(event.getOption("user")).getAsMember();
+        final Member user = Objects.requireNonNull(event.getOption("user")).getAsMember();
 
         final String reason = Objects.requireNonNull(event.getOption("reason")).getAsString();
 
@@ -58,15 +58,19 @@ public class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (member != null && !selfMember.canInteract(member)) {
+        if (user != null && !selfMember.canInteract(user)) {
             event.reply("This user is too powerful for me to kick.").queue();
             return;
         }
 
+
+        assert user != null;
+        logger.error("The user is not provided");
+
         // Kicks the user and send a success response
         event.getGuild()
-            .kick(member, reason)
-            .flatMap(v -> event.reply("Kicked the user" + member.getUser().getAsTag()))
+            .kick(user, reason)
+            .flatMap(v -> event.reply("Kicked the user" + user.getUser().getAsTag()))
             .queue();
     }
 }
