@@ -18,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
  * The interface {@link ComponentIdParser} is the counter-part to this, offering parsing back the
  * payload from the ID.
  */
+@SuppressWarnings("InterfaceMayBeAnnotatedFunctional")
 public interface ComponentIdGenerator {
     /**
      * Generates and persists a valid component ID for the given payload, which can then be used in

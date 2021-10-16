@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
  * <p>
  * The store is fully thread-safe, component IDs can be generated and parsed multi-threaded.
  */
+@SuppressWarnings("ClassWithTooManyFields")
 public final class ComponentIdStore
         implements ComponentIdGenerator, ComponentIdParser, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ComponentIdStore.class);
@@ -103,9 +104,10 @@ public final class ComponentIdStore
      *        deleted during eviction
      * @param evictOlderThanUnit the unit of the 'evictOlderThan' value
      */
+    @SuppressWarnings({"WeakerAccess", "ConstructorWithTooManyParameters"})
     public ComponentIdStore(@NotNull Database database, long evictEveryInitialDelay,
             long evictEveryDelay, ChronoUnit evictEveryUnit, long evictOlderThan,
-            ChronoUnit evictOlderThanUnit) {
+            @SuppressWarnings("TypeMayBeWeakened") ChronoUnit evictOlderThanUnit) {
         this.database = database;
         this.evictOlderThan = evictOlderThan;
         this.evictOlderThanUnit = evictOlderThanUnit;
@@ -155,6 +157,7 @@ public final class ComponentIdStore
      * @throws InvalidComponentIdFormatException if the given component ID was in an unexpected
      *         format and could not be serialized
      */
+    @SuppressWarnings("WeakerAccess")
     public @NotNull Optional<ComponentId> get(@NotNull UUID uuid) {
         Optional<ComponentId> componentId =
                 Optional.ofNullable(uuidToComponentId.get(uuid)).or(() -> getFromDatabase(uuid));
@@ -181,6 +184,7 @@ public final class ComponentIdStore
      * @throws InvalidComponentIdFormatException if the component ID associated to the given UUID
      *         was in an unexpected format and could not be deserialized
      */
+    @SuppressWarnings("WeakerAccess")
     public void putOrThrow(@NotNull UUID uuid, @NotNull ComponentId componentId,
             @NotNull Lifespan lifespan) {
         Supplier<String> alreadyExistsMessageSupplier =

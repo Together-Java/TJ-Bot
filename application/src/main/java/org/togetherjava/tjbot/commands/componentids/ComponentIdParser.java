@@ -20,6 +20,7 @@ import java.util.Optional;
  * The interface {@link ComponentIdGenerator} is the counter-part to this, offering generation of
  * IDs from payload.
  */
+@SuppressWarnings("InterfaceMayBeAnnotatedFunctional")
 public interface ComponentIdParser {
     /**
      * Parses a previously generated and persisted component ID payload, as used during
