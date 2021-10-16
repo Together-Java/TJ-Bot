@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import java.util.Objects;
+
 
 /**
  * <p>
@@ -37,18 +39,18 @@ public class KickCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        final Member member = event.getOption("user").getAsMember();
+        final Member member = Objects.requireNonNull(event.getOption("user")).getAsMember();
 
-        final String reason = event.getOption("reason").getAsString();
+        final String reason = Objects.requireNonNull(event.getOption("reason")).getAsString();
 
-        if (!event.getMember().hasPermission(Permission.KICK_MEMBERS)) {
+        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
                     "You do not have the required permissions to kick users from this server.")
                 .queue();
             return;
         }
 
-        final Member selfMember = event.getGuild().getSelfMember();
+        final Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
                     "I don't have the required permissions to kick users from this server.")
