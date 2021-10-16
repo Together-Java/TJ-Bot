@@ -19,9 +19,10 @@ public class BanCommand extends SlashCommandAdapter {
         super("ban", "Use this command to ban a user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, "ban", "The user which you want to ban", true)
-                .addOption(OptionType.INTEGER, "del_days", "The delete message histroy", false);
+            .addOption(OptionType.INTEGER, "del_days", "The delete message history", false);
 
     }
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // Used to get the member
@@ -35,36 +36,37 @@ public class BanCommand extends SlashCommandAdapter {
         hook.setEphemeral(true); // All messages here will now be ephemeral implicitly
 
         // Checks if the author has perms
-        if (!event.getMember().hasPermission(Permission.BAN_MEMBERS))
-        {
-            hook.sendMessage("You do not have the required permissions to ban users from this server.").queue();
+        if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
+            hook.sendMessage(
+                    "You do not have the required permissions to ban users from this server.")
+                .queue();
             return;
         }
 
         // Checks if the bot has perms
         Member selfMember = event.getGuild().getSelfMember();
-        if (!selfMember.hasPermission(Permission.BAN_MEMBERS))
-        {
-            hook.sendMessage("I don't have the required permissions to ban users from this server.").queue();
+        if (!selfMember.hasPermission(Permission.BAN_MEMBERS)) {
+            hook.sendMessage("I don't have the required permissions to ban users from this server.")
+                .queue();
             return;
         }
 
 
         // Check if the user can be banned
-        if (member != null && !selfMember.canInteract(member))
-        {
+        if (member != null && !selfMember.canInteract(member)) {
             hook.sendMessage("This user is too powerful for me to ban.").queue();
             return;
         }
 
-        //Used to delete message history
+        // Used to delete message history
         int delDays = 0;
         OptionMapping option = event.getOption("del_days");
         if (option != null) // null = not provided
             delDays = (int) Math.max(0, Math.min(7, option.getAsLong()));
         // Ban the user and send a success response
-        event.getGuild().ban(member, delDays)
-                .flatMap(v -> hook.sendMessage("Banned user " + member.getUser()))
-                .queue();
+        event.getGuild()
+            .ban(member, delDays)
+            .flatMap(v -> hook.sendMessage("Banned user " + member.getUser()))
+            .queue();
     }
 }

@@ -25,7 +25,7 @@ public class KickCommand extends SlashCommandAdapter {
         final Member member = event.getOption("user").getAsMember();
 
         event.deferReply(true).queue(); // Let the user know we received the command before doing
-                                                     // anything else
+                                        // anything else
         InteractionHook hook = event.getHook(); // This is a special webhook that allows you to send
                                                 // messages without having permissions in the
                                                 // channel and also allows ephemeral messages
@@ -57,7 +57,7 @@ public class KickCommand extends SlashCommandAdapter {
         // Kicks the user and send a success response
         event.getGuild()
             .kick(member)
-            .flatMap(v -> hook.sendMessage("kicked user " + member.getUser()))
+            .flatMap(v -> hook.sendMessage("Kicked the user" + member.getUser()))
             .queue();
     }
 }
