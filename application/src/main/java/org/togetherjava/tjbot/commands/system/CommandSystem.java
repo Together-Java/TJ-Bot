@@ -232,6 +232,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         }).accept(ex);
     }
 
+    @SuppressWarnings("EmptyMethod")
     private static void onComponentIdRemoved(ComponentId componentId) {
         // NOTE As of now, we do not act on this event, but we could use it
         // in the future to, for example, disable buttons or delete the associated message
