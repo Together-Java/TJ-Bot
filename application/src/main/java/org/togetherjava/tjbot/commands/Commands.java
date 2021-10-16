@@ -34,7 +34,8 @@ public enum Commands {
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
-        return List.of(new PingCommand(), new DatabaseCommand(database), new KickCommand(), new BanCommand());
+        return List.of(new PingCommand(), new DatabaseCommand(database), new KickCommand(),
+                new BanCommand());
 
     }
 }
