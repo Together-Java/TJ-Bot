@@ -42,6 +42,13 @@ jooq {
                     database {
                         name = 'org.jooq.meta.sqlite.SQLiteDatabase'
                         excludes = 'flyway_schema_history|sqlite_sequence'
+
+                        forcedTypes {
+                            forcedType {
+                                name = 'INSTANT'
+                                includeTypes = 'TIMESTAMP'
+                            }
+                        }
                     }
                     generate {
                         records = true
