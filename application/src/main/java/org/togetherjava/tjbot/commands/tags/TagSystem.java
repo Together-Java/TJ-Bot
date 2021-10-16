@@ -89,11 +89,11 @@ public final class TagSystem {
      * @throws IllegalArgumentException if the tag is unknown to the system, see
      *         {@link #hasTag(String)}
      */
+    // Execute closes resources; without curly braces on the lambda, the call would be ambiguous
+    @SuppressWarnings({"resource", "java:S1602"})
     void deleteTag(String id) {
         int deletedRecords = database.write(context -> {
-            try (var deleteFrom = context.deleteFrom(Tags.TAGS)) {
-                return deleteFrom.where(Tags.TAGS.ID.eq(id)).execute();
-            }
+            return context.deleteFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).execute();
         });
         if (deletedRecords == 0) {
             throw new IllegalArgumentException(
@@ -107,14 +107,15 @@ public final class TagSystem {
      * @param id the id of the tag to put
      * @param content the content of the tag to put
      */
+    // Execute closes resources; without curly braces on the lambda, the call would be ambiguous
+    @SuppressWarnings({"resource", "java:S1602"})
     void putTag(String id, String content) {
         database.writeTransaction(context -> {
-            try (var insertInto = context.insertInto(Tags.TAGS, Tags.TAGS.ID, Tags.TAGS.CONTENT);
-                    var query = insertInto.values(id, content)
-                        .onDuplicateKeyUpdate()
-                        .set(Tags.TAGS.CONTENT, content)) {
-                query.execute();
-            }
+            context.insertInto(Tags.TAGS, Tags.TAGS.ID, Tags.TAGS.CONTENT)
+                .values(id, content)
+                .onDuplicateKeyUpdate()
+                .set(Tags.TAGS.CONTENT, content)
+                .execute();
         });
     }
 
