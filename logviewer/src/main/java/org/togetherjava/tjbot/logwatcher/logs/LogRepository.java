@@ -27,4 +27,5 @@ public interface LogRepository {
      * @return List of LogEvents
      */
     List<Logevents> findWithLevelMatching(Collection<String> logLevels);
+
 }

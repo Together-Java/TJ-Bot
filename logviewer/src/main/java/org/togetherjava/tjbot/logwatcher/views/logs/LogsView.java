@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * The Logs View in the Browser
  */
@@ -38,6 +39,7 @@ import java.util.regex.Pattern;
 @PermitAll
 public class LogsView extends VerticalLayout {
 
+
     /**
      * Field where the events are displayed
      */
@@ -45,6 +47,7 @@ public class LogsView extends VerticalLayout {
 
     private static final Pattern LOGLEVEL_MATCHER =
             Pattern.compile("(ERROR|WARN|INFO|DEBUG|TRACE)");
+
 
     private final transient LogReader watcher;
 
@@ -100,6 +103,7 @@ public class LogsView extends VerticalLayout {
         logFiles.stream().findFirst().ifPresent(logs::setValue);
 
         logs.addValueChangeListener(this::onComboboxChange);
+
         return logs;
     }
 

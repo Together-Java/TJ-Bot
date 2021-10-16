@@ -41,6 +41,7 @@ public class StreamedView extends VerticalLayout {
     private final GridCrud<Logevents> grid = new GridCrud<>(Logevents.class);
     private final UUID uuid = UUID.randomUUID();
 
+
     private final Set<String> enabledLogLevel =
             new HashSet<>(Set.of("ERROR", "WARN", "INFO", "DEBUG", "TRACE"));
 
@@ -101,6 +102,7 @@ public class StreamedView extends VerticalLayout {
     private static String setBackgroundColor(final Logevents ev) {
         return ev.getLevel().toLowerCase(Locale.ENGLISH);
     }
+
 
     private void onDestroy(SessionDestroyEvent event) {
         removeHook();

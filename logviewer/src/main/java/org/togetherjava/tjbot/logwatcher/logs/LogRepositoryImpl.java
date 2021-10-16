@@ -51,6 +51,7 @@ public class LogRepositoryImpl implements LogRepository {
         });
     }
 
+
     @Override
     @SuppressWarnings("java:S1602") // Curly Braces are necessary here
     public List<Logevents> findWithLevelMatching(Collection<String> logLevels) {
