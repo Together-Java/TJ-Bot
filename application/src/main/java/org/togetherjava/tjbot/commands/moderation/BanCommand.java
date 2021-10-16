@@ -11,29 +11,46 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-/**
- * @author RealYusufIsmail
- */
+
 public class BanCommand extends SlashCommandAdapter {
+    /**
+     * Creates an instance of the ban command.
+     */
     public BanCommand() {
         super("ban", "Use this command to ban a user", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.USER, "ban", "The user which you want to ban", true)
-            .addOption(OptionType.INTEGER, "del_days", "The delete message history", false);
+        getData().addOption(OptionType.USER, "user", "The user which you want to ban", true)
+            .addOption(OptionType.INTEGER, "del_days", "The delete message history", true)
+                .addOption(OptionType.STRING, "reason", "The reason of the ban", true);
+
 
     }
 
+    /**
+     * When triggered with {@code /ban del_days @user reason}, the bot will respond will check if the user
+     * has perms. Then it will check if itself has perms to ban. If it does it will check if the user is the user
+     * is too powerful or not. If the user is not then bot will ban the user.
+     *
+     * @param event the corresponding event
+     */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // Used to get the member
-        final Member member = event.getOption("user").getAsMember();
+        Member member = event.getOption("user").getAsMember();
 
-        event.deferReply(true).queue(); // Let the user know we received the command before doing
-        // anything else
-        InteractionHook hook = event.getHook(); // This is a special webhook that allows you to send
+        //Used for the reason of the ban
+        String reason = event.getOption("reason").getAsString();
+
+        // Let the user know we received the command before doing anything else
+        event.deferReply(true).queue();
+
+        // This is a special webhook that allows you to send
         // messages without having permissions in the
         // channel and also allows ephemeral messages
-        hook.setEphemeral(true); // All messages here will now be ephemeral implicitly
+        InteractionHook hook = event.getHook();
+
+        // All messages here will now be ephemeral implicitly
+        hook.setEphemeral(true);
 
         // Checks if the author has perms
         if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
@@ -60,13 +77,19 @@ public class BanCommand extends SlashCommandAdapter {
 
         // Used to delete message history
         int delDays = 0;
+
         OptionMapping option = event.getOption("del_days");
-        if (option != null) // null = not provided
+
+        // null = not provided
+        if (option != null) {
+            hook.sendMessage("You have not provided a number");
             delDays = (int) Math.max(0, Math.min(7, option.getAsLong()));
+        }
+
         // Ban the user and send a success response
         event.getGuild()
-            .ban(member, delDays)
-            .flatMap(v -> hook.sendMessage("Banned user " + member.getUser()))
+            .ban(member, delDays, reason)
+            .flatMap(v -> event.reply("Banned the user " + member.getUser().getAsTag()))
             .queue();
     }
 }
