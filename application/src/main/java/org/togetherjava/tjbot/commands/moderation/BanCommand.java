@@ -7,11 +7,21 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import java.util.Objects;
 
+
+/**
+ * <p>
+ * The implemented command is {@code @user /ban delete-message-history-days reason}, upon which the bot will ban the user.
+ */
 public class BanCommand extends SlashCommandAdapter {
+    //the logger
+    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     /**
      * Creates an instance of the ban command.
      */
@@ -19,7 +29,7 @@ public class BanCommand extends SlashCommandAdapter {
         super("ban", "Use this command to ban a user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, "user", "The user which you want to ban", true)
-            .addOption(OptionType.INTEGER, "del_days", "The delete message history", true)
+            .addOption(OptionType.INTEGER, "delete-message-history-days", "The delete message history", true)
                 .addOption(OptionType.STRING, "reason", "The reason of the ban", true);
 
 
@@ -35,55 +45,38 @@ public class BanCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // Used to get the member
-        Member member = event.getOption("user").getAsMember();
+        final Member member = Objects.requireNonNull(event.getOption("user")).getAsMember();
 
         //Used for the reason of the ban
-        String reason = event.getOption("reason").getAsString();
+        final String reason = Objects.requireNonNull(event.getOption("reason")).getAsString();
 
-        // Let the user know we received the command before doing anything else
-        event.deferReply(true).queue();
-
-        // This is a special webhook that allows you to send
-        // messages without having permissions in the
-        // channel and also allows ephemeral messages
-        InteractionHook hook = event.getHook();
-
-        // All messages here will now be ephemeral implicitly
-        hook.setEphemeral(true);
-
-        // Checks if the author has perms
-        if (!event.getMember().hasPermission(Permission.BAN_MEMBERS)) {
-            hook.sendMessage(
+        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
+            event.reply(
                     "You do not have the required permissions to ban users from this server.")
                 .queue();
             return;
         }
 
-        // Checks if the bot has perms
-        Member selfMember = event.getGuild().getSelfMember();
+        Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.BAN_MEMBERS)) {
-            hook.sendMessage("I don't have the required permissions to ban users from this server.")
+            event.reply("I don't have the required permissions to ban users from this server.")
                 .queue();
             return;
         }
 
-
-        // Check if the user can be banned
         if (member != null && !selfMember.canInteract(member)) {
-            hook.sendMessage("This user is too powerful for me to ban.").queue();
+            event.reply("This user is too powerful for me to ban.").queue();
             return;
         }
 
         // Used to delete message history
         int delDays = 0;
 
-        OptionMapping option = event.getOption("del_days");
+        OptionMapping option = event.getOption("delete-message-history-days");
 
         // null = not provided
-        if (option != null) {
-            hook.sendMessage("You have not provided a number");
+        if (option != null)
             delDays = (int) Math.max(0, Math.min(7, option.getAsLong()));
-        }
 
         // Ban the user and send a success response
         event.getGuild()
