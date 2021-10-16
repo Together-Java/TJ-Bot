@@ -40,6 +40,7 @@ public class TeXCommand extends SlashCommandAdapter {
     public static final Color FOREGROUND_COLOR = Color.decode("0x01EC09");
     public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
     private static String currentLatex;
+    private static long currentMessageID;
 
     /**
      * Creates a new Instance.
@@ -54,10 +55,13 @@ public class TeXCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
-        String uid = generateComponentId(Objects.requireNonNull(event.getMember()).getId());
-        final Button EDIT_BUTTON = Button.of(ButtonStyle.SUCCESS, uid, "Edit");
-        final Button DELETE_BUTTON = Button.of(ButtonStyle.DANGER, uid, "Delete");
-        final Button VIEW_SOURCE_BUTTON = Button.of(ButtonStyle.PRIMARY, uid, "View Source");
+        String userID = (Objects.requireNonNull(event.getMember()).getId());
+        final Button EDIT_BUTTON =
+                Button.of(ButtonStyle.SUCCESS, generateComponentId(userID), "Edit");
+        final Button DELETE_BUTTON =
+                Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete");
+        final Button VIEW_SOURCE_BUTTON =
+                Button.of(ButtonStyle.PRIMARY, generateComponentId(userID), "View Source");
         final List<Button> BUTTONS = List.of(EDIT_BUTTON, DELETE_BUTTON, VIEW_SOURCE_BUTTON);
 
         currentLatex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
@@ -96,6 +100,7 @@ public class TeXCommand extends SlashCommandAdapter {
             return;
         }
         event.getHook().editOriginal(baos.toByteArray(), "tex.png").setActionRow(BUTTONS).queue();
+        currentMessageID = event.getChannel().getLatestMessageIdLong();
     }
 
     @Override
@@ -109,7 +114,7 @@ public class TeXCommand extends SlashCommandAdapter {
         }
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
         switch (buttonStyle) {
-            case DANGER -> event.getHook().deleteOriginal().queue();
+            case DANGER -> event.getChannel().deleteMessageById(currentMessageID).queue();
             // FIXME, write code for editing message
             case SUCCESS -> event.getHook();
             case PRIMARY -> event.reply(currentLatex).queue();
