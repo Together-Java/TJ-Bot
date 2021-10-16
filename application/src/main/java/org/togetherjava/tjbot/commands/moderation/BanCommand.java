@@ -58,14 +58,14 @@ public class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!selfMember.hasPermission(Permission.BAN_MEMBERS)) {
+        Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("I don't have the required permissions to ban users from this server.")
                 .queue();
             return;
         }
 
-        if (user != null && !selfMember.canInteract(user)) {
+        if (user != null && !author.canInteract(user)) {
             event.reply("This user is too powerful for me to ban.").queue();
             return;
         }
@@ -92,7 +92,7 @@ public class BanCommand extends SlashCommandAdapter {
         // Add this to audit log
         logger.info(
                 "User '{}' banned user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                selfMember, user, delDays, reason);
+                author, user, delDays, reason);
 
         // Ban the user and send a success response
         event.getGuild()

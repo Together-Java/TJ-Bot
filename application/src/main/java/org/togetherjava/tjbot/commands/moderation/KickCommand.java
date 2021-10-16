@@ -51,14 +51,14 @@ public class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        final Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!selfMember.hasPermission(Permission.KICK_MEMBERS)) {
+        final Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("I don't have the required permissions to kick users from this server.")
                 .queue();
             return;
         }
 
-        if (user != null && !selfMember.canInteract(user)) {
+        if (user != null && !author.canInteract(user)) {
             event.reply("This user is too powerful for me to kick.").queue();
             return;
         }
@@ -68,7 +68,7 @@ public class KickCommand extends SlashCommandAdapter {
         logger.error("The user is not provided");
 
         // Add this to audit log
-        logger.info("User '{}' Kicked user '{}' Reason was '{}'", selfMember, user, reason);
+        logger.info("User '{}' Kicked user '{}' Reason was '{}'", author, user, reason);
 
         // Kicks the user and send a success response
         event.getGuild()
