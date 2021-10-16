@@ -67,6 +67,10 @@ public class KickCommand extends SlashCommandAdapter {
         assert user != null;
         logger.error("The user is not provided");
 
+        //Add this to audit log
+        logger.info("User '{}' Kicked user '{}' Reason was '{}'",
+                selfMember, user, reason);
+
         // Kicks the user and send a success response
         event.getGuild()
             .kick(user, reason)
