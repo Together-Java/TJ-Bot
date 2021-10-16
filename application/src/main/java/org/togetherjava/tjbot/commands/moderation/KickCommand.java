@@ -24,7 +24,7 @@ public class KickCommand extends SlashCommandAdapter {
      * Creates an instance of the kick command.
      */
     public KickCommand() {
-        super("Kick", "Use this command to kick a user", SlashCommandVisibility.GUILD);
+        super("kick", "Use this command to kick a user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, "user", "The user which you want to kick", true)
                 .addOption(OptionType.STRING, "reason", "The reason of the kick", true);
