@@ -8,9 +8,6 @@ import org.togetherjava.tjbot.logwatcher.entities.LogEvent;
 import org.togetherjava.tjbot.logwatcher.watcher.StreamWatcher;
 import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
 @RestController
 public class LogREST {
 
@@ -28,10 +25,8 @@ public class LogREST {
     }
 
     private Logevents mapToLogevents(final LogEvent body) {
-        return new Logevents(Integer.MIN_VALUE,
-                LocalDateTime.ofInstant(body.getInstant(), ZoneId.systemDefault()),
-                body.getThread(), body.getLevel(), body.getLoggerName(), body.getMessage(),
-                body.getEndOfBatch(), body.getLoggerFqcn(), body.getThreadId(),
-                body.getThreadPriority());
+        return new Logevents(Integer.MIN_VALUE, body.getInstant(), body.getThread(),
+                body.getLevel(), body.getLoggerName(), body.getMessage(), body.getEndOfBatch(),
+                body.getLoggerFqcn(), body.getThreadId(), body.getThreadPriority());
     }
 }
