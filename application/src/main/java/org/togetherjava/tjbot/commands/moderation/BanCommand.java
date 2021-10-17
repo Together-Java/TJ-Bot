@@ -49,26 +49,28 @@ public final class BanCommand extends SlashCommandAdapter {
 
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
 
+        Member author = Objects.requireNonNull(event.getMember());
+
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
 
         long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
-        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
+        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the required permissions to ban users from this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
+        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("I don't have the required permissions to ban users from this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        if (!author.canInteract(Objects.requireNonNull(user))) {
+        if (!bot.canInteract(Objects.requireNonNull(user))) {
             event.reply("This user is too powerful for me to ban.").setEphemeral(true).queue();
             return;
         }
@@ -99,7 +101,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         // Add this to audit log
         logger.info(
-                "User '{}' banned user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                author, user, deleteMessageHistoryDays, reason);
+                "Bot '{}' was made to banned the user '{}' by '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+                bot, user, author, deleteMessageHistoryDays, reason);
     }
 }

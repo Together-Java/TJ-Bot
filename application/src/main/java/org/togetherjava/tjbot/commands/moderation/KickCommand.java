@@ -50,26 +50,28 @@ public final class KickCommand extends SlashCommandAdapter {
 
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
 
+        Member author = Objects.requireNonNull(event.getMember());
+
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
 
         long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
-        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.KICK_MEMBERS)) {
+        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("You do not have the required permissions to kick users from this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
+        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("I don't have the required permissions to kick users from this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        if (!author.canInteract(Objects.requireNonNull(user))) {
+        if (!bot.canInteract(Objects.requireNonNull(user))) {
             event.reply("This user is too powerful for me to kick.").setEphemeral(true).queue();
             return;
         }
@@ -87,6 +89,6 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
 
         // Add this to audit log
-        logger.info("User '{}' Kicked user '{}' Reason was '{}'", author, user, reason);
+        logger.info("User '{}' was made to kick the user '{}' by '{}' due to reason being '{}'", bot, user, author, reason);
     }
 }
