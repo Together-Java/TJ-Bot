@@ -14,10 +14,10 @@ import java.util.Objects;
 
 
 /**
- * When triggered with {@code /ban del_days @user rea   son}, the bot will respond then will check if
- * the user has perms. Then it will check if itself has perms to ban. If it does it will check
- * if the user is too powerful or not. If the user is not then bot will ban the
- * user abd reply with {@code Banned User!}.
+ * When triggered with {@code /ban del_days @user rea   son}, the bot will respond then will check
+ * if the user has perms. Then it will check if itself has perms to ban. If it does it will check if
+ * the user is too powerful or not. If the user is not then bot will ban the user abd reply with
+ * {@code Banned User!}.
  *
  */
 public final class BanCommand extends SlashCommandAdapter {
@@ -50,30 +50,33 @@ public final class BanCommand extends SlashCommandAdapter {
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the required permissions to ban users from this server.")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("I don't have the required permissions to ban users from this server.")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
-        
+
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for me to ban.")
-                    .setEphemeral(true).queue();
+            event.reply("This user is too powerful for me to ban.").setEphemeral(true).queue();
             return;
         }
 
 
-        int deleteMessageHistoryDays = (int)Objects.requireNonNull(
-                event.getOption("delete-message-history-days")).getAsLong();
+        int deleteMessageHistoryDays =
+                (int) Objects.requireNonNull(event.getOption("delete-message-history-days"))
+                    .getAsLong();
 
         if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
             event.reply("The deletion days of the messages must be between 1 and 7 days")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 

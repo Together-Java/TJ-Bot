@@ -45,14 +45,16 @@ public final class UnBanCommand extends SlashCommandAdapter {
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the required permissions to ban users from this server.")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("I don't have the required permissions to unban the user from this server.")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 

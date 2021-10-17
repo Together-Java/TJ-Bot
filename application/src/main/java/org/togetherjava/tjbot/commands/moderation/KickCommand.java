@@ -35,10 +35,10 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     /**
-     * When triggered with {@code /kick @user reason}, the bot will respond then it will check if the user
-     * has perms. Then it will check if itself has perms to kick. If it does it will check if the
-     * user is too powerful or not. If the user is not then bot will kick the user and
-     * reply with {@code Kicked User!}.
+     * When triggered with {@code /kick @user reason}, the bot will respond then it will check if
+     * the user has perms. Then it will check if itself has perms to kick. If it does it will check
+     * if the user is too powerful or not. If the user is not then bot will kick the user and reply
+     * with {@code Kicked User!}.
      *
      * @param event the corresponding event
      */
@@ -50,20 +50,21 @@ public final class KickCommand extends SlashCommandAdapter {
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("You do not have the required permissions to kick users from this server.")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("I don't have the required permissions to kick users from this server.")
-                    .setEphemeral(true).queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for me to kick.")
-                    .setEphemeral(true).queue();
+            event.reply("This user is too powerful for me to kick.").setEphemeral(true).queue();
             return;
         }
 
