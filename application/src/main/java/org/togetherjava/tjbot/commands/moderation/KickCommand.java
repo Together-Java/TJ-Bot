@@ -1,7 +1,9 @@
 package org.togetherjava.tjbot.commands.moderation;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -44,9 +46,13 @@ public final class KickCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        JDA jda = event.getJDA();
+
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
+
+        String userId = Objects.requireNonNull(user).getUser().getId();
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("You do not have the required permissions to kick users from this server.")
@@ -68,6 +74,10 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
+        //tells ths user he has been kicked
+        jda.openPrivateChannelById(userId)
+                .flatMap(channel -> channel.sendMessage("You have been kicked for this reason " + reason))
+                .queue();
 
         // Kicks the user and send a success response
         event.getGuild()
