@@ -36,7 +36,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user which you want to ban", true)
             .addOption(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
-                    "The messages in these day will be deleted. 1 to as many days as you want",
+                    "The messages in these days will be deleted. 0 to 7 days. 0 means no messages deleted",
                     true)
             .addOption(OptionType.STRING, REASON_OPTION, "The reason of the ban", true);
     }
@@ -77,10 +77,10 @@ public final class BanCommand extends SlashCommandAdapter {
 
         int deleteMessageHistoryDays =
                 (int) Objects.requireNonNull(event.getOption("delete-message-history-days"))
-                    .getAsLong();
+                   .getAsLong();
 
-        if (deleteMessageHistoryDays < 1) {
-            event.reply("The deletion days of the messages must be between 1 and 7 days")
+        if (deleteMessageHistoryDays < 0 || deleteMessageHistoryDays > 7) {
+            event.reply("The deletion days of the messages must be between 0 and 7 days.")
                 .setEphemeral(true)
                 .queue();
             return;
