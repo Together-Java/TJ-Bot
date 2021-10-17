@@ -13,13 +13,14 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.SessionDestroyEvent;
 import com.vaadin.flow.server.VaadinService;
+import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.Role;
 import org.togetherjava.tjbot.logwatcher.constants.LogEventsConstants;
 import org.togetherjava.tjbot.logwatcher.logs.LogRepository;
+import org.togetherjava.tjbot.logwatcher.util.LogUtils;
 import org.togetherjava.tjbot.logwatcher.views.MainLayout;
 import org.togetherjava.tjbot.logwatcher.watcher.StreamWatcher;
-import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 import org.vaadin.crudui.crud.impl.GridCrud;
 
 import javax.annotation.security.PermitAll;
@@ -40,25 +41,22 @@ public class StreamedView extends VerticalLayout {
 
     private final GridCrud<Logevents> grid = new GridCrud<>(Logevents.class);
     private final UUID uuid = UUID.randomUUID();
-
-
-    private final Set<String> enabledLogLevel =
-            new HashSet<>(Set.of("ERROR", "WARN", "INFO", "DEBUG", "TRACE"));
+    private final Set<String> enabledLogLevel = new HashSet<>(LogUtils.LogLevel.getAllNames());
 
     public StreamedView(LogRepository logs) {
         addClassName("logs-view");
 
-        final HorizontalLayout buttonpanel =
+        final HorizontalLayout buttonPanel =
                 new HorizontalLayout(new Button("Change Columns", this::onChangeColumns));
 
         for (final String level : this.enabledLogLevel) {
             final Checkbox ch = new Checkbox(level);
             ch.setValue(true);
-            ch.addValueChangeListener(this::onValueChange);
-            buttonpanel.add(ch);
+            ch.addValueChangeListener(this::onLogLevelCheckbox);
+            buttonPanel.add(ch);
         }
 
-        add(buttonpanel, this.grid);
+        add(buttonPanel, this.grid);
 
         this.grid.setOperations(() -> logs.findWithLevelMatching(this.enabledLogLevel), null, null,
                 null);
@@ -73,7 +71,7 @@ public class StreamedView extends VerticalLayout {
         setInstantFormatter();
         baseGrid.getColumns().forEach(c -> c.setAutoWidth(true));
         baseGrid.getColumns().forEach(c -> c.setResizable(true));
-        baseGrid.setClassNameGenerator(StreamedView::setBackgroundColor);
+        baseGrid.setClassNameGenerator(LogUtils::logLevelToCssClass);
         baseGrid.recalculateColumnWidths();
         baseGrid.setColumnReorderingAllowed(true);
 
@@ -82,13 +80,13 @@ public class StreamedView extends VerticalLayout {
         StreamWatcher.addSubscription(this.uuid, () -> ui.access(this.grid::refreshGrid));
     }
 
-    private void onValueChange(AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
+    private void onLogLevelCheckbox(
+            AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
         if (!event.isFromClient()) {
             return;
         }
 
         final String logLevel = event.getSource().getLabel();
-
 
         final boolean isChecked = event.getValue();// don't inline this, else SonarLint is crying
         if (isChecked) {
@@ -98,11 +96,6 @@ public class StreamedView extends VerticalLayout {
         }
         this.grid.refreshGrid();
     }
-
-    private static String setBackgroundColor(final Logevents ev) {
-        return ev.getLevel().toLowerCase(Locale.ENGLISH);
-    }
-
 
     private void onDestroy(SessionDestroyEvent event) {
         removeHook();

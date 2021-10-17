@@ -17,13 +17,17 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.Role;
 import org.togetherjava.tjbot.logwatcher.util.LogReader;
+import org.togetherjava.tjbot.logwatcher.util.LogUtils;
 import org.togetherjava.tjbot.logwatcher.util.NotificationUtils;
 import org.togetherjava.tjbot.logwatcher.views.MainLayout;
 
 import javax.annotation.security.PermitAll;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,15 +43,13 @@ import java.util.regex.Pattern;
 @PermitAll
 public class LogsView extends VerticalLayout {
 
+    private static final Pattern LOGLEVEL_MATCHER =
+            Pattern.compile("(%s)".formatted(String.join("|", LogUtils.LogLevel.getAllNames())));
 
     /**
      * Field where the events are displayed
      */
     private final VerticalLayout events = new VerticalLayout();
-
-    private static final Pattern LOGLEVEL_MATCHER =
-            Pattern.compile("(ERROR|WARN|INFO|DEBUG|TRACE)");
-
 
     private final transient LogReader watcher;
 
@@ -60,11 +62,10 @@ public class LogsView extends VerticalLayout {
         HorizontalLayout options = new HorizontalLayout();
         options.setAlignItems(Alignment.START);
 
-        final Set<String> levels = Set.of("ERROR", "WARN", "INFO", "DEBUG", "TRACE");
-        for (final String level : levels) {
+        for (final String level : LogUtils.LogLevel.getAllNames()) {
             final Checkbox ch = new Checkbox(level);
             ch.setValue(true);
-            ch.addValueChangeListener(this::onCheckboxChange);
+            ch.addValueChangeListener(this::onLogLevelCheckbox);
             options.add(ch);
         }
 
@@ -74,7 +75,7 @@ public class LogsView extends VerticalLayout {
         add(logs, options, new Scroller(this.events, Scroller.ScrollDirection.VERTICAL));
     }
 
-    private void onCheckboxChange(
+    private void onLogLevelCheckbox(
             AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
         if (!event.isFromClient()) {
             return;
@@ -103,7 +104,7 @@ public class LogsView extends VerticalLayout {
         logs.setItems(DataProvider.ofCollection(logFiles));
         logFiles.stream().findFirst().ifPresent(logs::setValue);
 
-        logs.addValueChangeListener(this::onComboboxChange);
+        logs.addValueChangeListener(this::onLogFileCombobox);
 
         return logs;
     }
@@ -113,7 +114,7 @@ public class LogsView extends VerticalLayout {
      *
      * @param event Generated Event, containing old and new Value
      */
-    private void onComboboxChange(HasValue.ValueChangeEvent<Path> event) {
+    private void onLogFileCombobox(HasValue.ValueChangeEvent<Path> event) {
         if (Objects.equals(event.getOldValue(), event.getValue())) {
             return;
         }
