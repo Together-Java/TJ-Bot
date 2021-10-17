@@ -16,9 +16,10 @@ import java.util.Objects;
  * <p>
  * The implemented command is {@code /unban user_id}, upon which the bot will unban the user.
  */
-public class UnBanCommand extends SlashCommandAdapter {
+public final class UnBanCommand extends SlashCommandAdapter {
     // the logger
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
+    private static final String USER_ID = "user_id";
 
     /**
      * Creates an instance of the ban command.
@@ -26,7 +27,7 @@ public class UnBanCommand extends SlashCommandAdapter {
     public UnBanCommand() {
         super("unban", "Use this command to unban a user", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.STRING, "user_id",
+        getData().addOption(OptionType.STRING, USER_ID,
                 "The user id of the user which you want to unban", true);
 
     }
@@ -40,25 +41,25 @@ public class UnBanCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        final String userId = Objects.requireNonNull(event.getOption("user_id")).getAsString();
+        final String userId = Objects.requireNonNull(event.getOption(USER_ID)).getAsString();
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the required permissions to ban users from this server.")
-                .queue();
+                    .setEphemeral(true).queue();
             return;
         }
 
         Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("I don't have the required permissions to unban the user from this server.")
-                .queue();
+                    .setEphemeral(true).queue();
             return;
         }
 
-        // Add this to audit log
-        logger.info("User '{}' unbanned user id '{}'", author, userId);
-
         // Unbans the user
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
+
+        // Add this to audit log
+        logger.info("User '{}' unbanned user id '{}'", author, userId);
     }
 }

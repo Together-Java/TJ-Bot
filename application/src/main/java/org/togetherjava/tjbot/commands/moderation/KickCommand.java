@@ -17,9 +17,12 @@ import java.util.Objects;
  * <p>
  * The implemented command is {@code /kick @user reason}, upon which the bot will kick the user.
  */
-public class KickCommand extends SlashCommandAdapter {
+public final class KickCommand extends SlashCommandAdapter {
     // the logger
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
+    private static final String USER_OPTION = "user";
+    private static final String REASON_OPTION = "reason";
+
 
     /**
      * Creates an instance of the kick command.
@@ -27,53 +30,51 @@ public class KickCommand extends SlashCommandAdapter {
     public KickCommand() {
         super("kick", "Use this command to kick a user", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.USER, "user", "The user which you want to kick", true)
-            .addOption(OptionType.STRING, "reason", "The reason of the kick", true);
+        getData().addOption(OptionType.USER, USER_OPTION, "The user which you want to kick", true)
+            .addOption(OptionType.STRING, REASON_OPTION, "The reason of the kick", true);
     }
 
     /**
-     * When triggered with {@code /kick @user reason}, the bot will respond will check if the user
+     * When triggered with {@code /kick @user reason}, the bot will respond then it will check if the user
      * has perms. Then it will check if itself has perms to kick. If it does it will check if the
-     * user is the user is too powerful or not. If the user is not then bot will kick the user and
+     * user is too powerful or not. If the user is not then bot will kick the user and
      * reply with {@code Kicked User!}.
      *
      * @param event the corresponding event
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        final Member user = Objects.requireNonNull(event.getOption("user")).getAsMember();
+        Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
 
-        final String reason = Objects.requireNonNull(event.getOption("reason")).getAsString();
+        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("You do not have the required permissions to kick users from this server.")
-                .queue();
+                    .setEphemeral(true).queue();
             return;
         }
 
-        final Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("I don't have the required permissions to kick users from this server.")
-                .queue();
+                    .setEphemeral(true).queue();
             return;
         }
 
-        if (user != null && !author.canInteract(user)) {
-            event.reply("This user is too powerful for me to kick.").queue();
+        if (!author.canInteract(Objects.requireNonNull(user))) {
+            event.reply("This user is too powerful for me to kick.")
+                    .setEphemeral(true).queue();
             return;
         }
 
-
-        assert user != null;
-        logger.error("The user is not provided");
-
-        // Add this to audit log
-        logger.info("User '{}' Kicked user '{}' Reason was '{}'", author, user, reason);
 
         // Kicks the user and send a success response
         event.getGuild()
             .kick(user, reason)
             .flatMap(v -> event.reply("Kicked the user" + user.getUser().getAsTag()))
             .queue();
+
+        // Add this to audit log
+        logger.info("User '{}' Kicked user '{}' Reason was '{}'", author, user, reason);
     }
 }
