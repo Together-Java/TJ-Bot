@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
@@ -20,9 +22,9 @@ import java.util.Objects;
  *
  */
 public final class DeleteMessageCommand extends SlashCommandAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String NUMBER_OF_MESSAGES = "number_of_messages";
-
-
+    
     public DeleteMessageCommand() {
         super("prune", "Use this command to delete a batch of messages", SlashCommandVisibility.GUILD);
 
@@ -63,5 +65,9 @@ public final class DeleteMessageCommand extends SlashCommandAdapter {
         } else {
             channel.purgeMessages(messageHistory);
         }
+        // Add this to audit log
+        logger.info(
+                "Bot '{}' was made to delete this amount of messages '{}' by '{}'",
+                bot, amount, author);
     }
 }
