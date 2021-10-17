@@ -94,7 +94,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         // NOTE 'registerReloadCommands' will not be finished running, this does not wait for it
         nameToSlashCommands.values()
             .stream()
-            .filter(command -> command.getName().equals(RELOAD_COMMAND))
+            .filter(command -> !command.getName().equals(RELOAD_COMMAND))
             .forEach(command -> COMMAND_SERVICE.execute(() -> command.onReady(event)));
     }
 
