@@ -15,9 +15,9 @@ import java.util.Objects;
 
 
 /**
- * When triggered with {@code /ban del_days @user rea   son}, the bot will respond then will check
+ * When triggered with {@code /ban del_days @user reason}, the bot  will check
  * if the user has perms. Then it will check if itself has perms to ban. If it does it will check if
- * the user is too powerful or not. If the user is not then bot will ban the user abd reply with
+ * the user is too powerful or not. If the user is not then bot will ban the user and reply with
  * {@code Banned User!}.
  *
  */
