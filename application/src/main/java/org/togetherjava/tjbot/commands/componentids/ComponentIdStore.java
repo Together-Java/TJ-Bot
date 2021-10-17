@@ -212,15 +212,15 @@ public final class ComponentIdStore
         }
     }
 
+    @SuppressWarnings({"resource", "java:S1602"})
     private @NotNull Optional<ComponentId> getFromDatabase(@NotNull UUID uuid) {
         return database.read(context -> {
-            try (var select = context.selectFrom(ComponentIds.COMPONENT_IDS)) {
-                return Optional
-                    .ofNullable(select.where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
-                        .fetchOne())
-                    .map(ComponentIdsRecord::getComponentId)
-                    .map(ComponentIdStore::deserializeComponentId);
-            }
+            return Optional
+                .ofNullable(context.selectFrom(ComponentIds.COMPONENT_IDS)
+                    .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
+                    .fetchOne())
+                .map(ComponentIdsRecord::getComponentId)
+                .map(ComponentIdStore::deserializeComponentId);
         });
     }
 
@@ -233,11 +233,12 @@ public final class ComponentIdStore
      * @throws IllegalArgumentException if there is no, or multiple, records associated to that UUID
      */
     private void heatRecord(@NotNull UUID uuid) {
+        @SuppressWarnings({"resource", "java:S1602"})
         int updatedRecords = database.write(context -> {
-            try (var set = context.update(ComponentIds.COMPONENT_IDS)
-                .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())) {
-                return set.where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString())).execute();
-            }
+            return context.update(ComponentIds.COMPONENT_IDS)
+                .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())
+                .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
+                .execute();
         });
 
         if (updatedRecords == 0) {
@@ -249,39 +250,38 @@ public final class ComponentIdStore
             throw new AssertionError(
                     "Multiple records had the UUID '%s' even though it is unique.".formatted(uuid));
         }
+
     }
 
     private void evictDatabase() {
         logger.debug("Evicting old non-permanent component ids from the database...");
         AtomicInteger evictedCounter = new AtomicInteger(0);
         database.write(context -> {
-            try (var selectFrom = context.selectFrom(ComponentIds.COMPONENT_IDS)) {
-                Result<ComponentIdsRecord> oldRecords = selectFrom
-                    .where(ComponentIds.COMPONENT_IDS.LIFESPAN.notEqual(Lifespan.PERMANENT.name())
-                        .and(ComponentIds.COMPONENT_IDS.LAST_USED
-                            .lessOrEqual(Instant.now().minus(evictOlderThan, evictOlderThanUnit))))
-                    .fetch();
-                oldRecords.forEach(recordToDelete -> {
-                    UUID uuid = UUID
-                        .fromString(recordToDelete.getValue(ComponentIds.COMPONENT_IDS.UUID));
-                    ComponentId componentId = deserializeComponentId(
-                            recordToDelete.getValue(ComponentIds.COMPONENT_IDS.COMPONENT_ID));
-                    Instant lastUsed = recordToDelete.getLastUsed();
+            @SuppressWarnings("resource")
+            Result<ComponentIdsRecord> oldRecords = context.selectFrom(ComponentIds.COMPONENT_IDS)
+                .where(ComponentIds.COMPONENT_IDS.LIFESPAN.notEqual(Lifespan.PERMANENT.name())
+                    .and(ComponentIds.COMPONENT_IDS.LAST_USED
+                        .lessOrEqual(Instant.now().minus(evictOlderThan, evictOlderThanUnit))))
+                .fetch();
+            oldRecords.forEach(recordToDelete -> {
+                UUID uuid =
+                        UUID.fromString(recordToDelete.getValue(ComponentIds.COMPONENT_IDS.UUID));
+                ComponentId componentId = deserializeComponentId(
+                        recordToDelete.getValue(ComponentIds.COMPONENT_IDS.COMPONENT_ID));
+                Instant lastUsed = recordToDelete.getLastUsed();
 
-                    recordToDelete.delete();
-                    evictedCounter.getAndIncrement();
-                    logger.debug(
-                            "Evicted component id with uuid '{}' from command '{}', last used '{}'",
-                            uuid, componentId.commandName(), lastUsed);
+                recordToDelete.delete();
+                evictedCounter.getAndIncrement();
+                logger.debug(
+                        "Evicted component id with uuid '{}' from command '{}', last used '{}'",
+                        uuid, componentId.commandName(), lastUsed);
 
-                    // Remove them from the in-memory map if still in there
-                    uuidToComponentId.remove(uuid);
-                    // Notify all listeners, but non-blocking to not delay eviction
-                    componentIdRemovedListeners
-                        .forEach(listener -> componentIdRemovedListenerService
-                            .execute(() -> listener.accept(componentId)));
-                });
-            }
+                // Remove them from the in-memory map if still in there
+                uuidToComponentId.remove(uuid);
+                // Notify all listeners, but non-blocking to not delay eviction
+                componentIdRemovedListeners.forEach(listener -> componentIdRemovedListenerService
+                    .execute(() -> listener.accept(componentId)));
+            });
         });
 
         if (evictedCounter.get() != 0) {
