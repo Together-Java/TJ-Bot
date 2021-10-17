@@ -43,6 +43,8 @@ public final class UnBanCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         final String userId = Objects.requireNonNull(event.getOption(USER_ID)).getAsString();
 
+        Member author = Objects.requireNonNull(event.getMember());
+
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the required permissions to ban users from this server.")
                 .setEphemeral(true)
@@ -50,8 +52,8 @@ public final class UnBanCommand extends SlashCommandAdapter {
             return;
         }
 
-        Member author = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
+        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("I don't have the required permissions to unban the user from this server.")
                 .setEphemeral(true)
                 .queue();
@@ -62,6 +64,6 @@ public final class UnBanCommand extends SlashCommandAdapter {
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
 
         // Add this to audit log
-        logger.info("User '{}' unbanned user id '{}'", author, userId);
+        logger.info("Bot was forced to '{}' unban user id '{}' by '{}'", bot, userId, author);
     }
 }
