@@ -80,7 +80,7 @@ public final class BanCommand extends SlashCommandAdapter {
                 (int) Objects.requireNonNull(event.getOption("delete-message-history-days"))
                     .getAsLong();
 
-        if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
+        if (deleteMessageHistoryDays < 1) {
             event.reply("The deletion days of the messages must be between 1 and 7 days")
                 .setEphemeral(true)
                 .queue();
