@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -63,8 +64,6 @@ public class TeXCommand extends SlashCommandAdapter {
         final Button viewSourceButton =
                 Button.of(ButtonStyle.PRIMARY, generateComponentId(userID, latex), "View Source");
         final List<Button> buttons = List.of(editButton, deleteButton, viewSourceButton);
-
-
         TeXFormula formula;
         try {
             formula = new TeXFormula(latex);
@@ -117,7 +116,7 @@ public class TeXCommand extends SlashCommandAdapter {
             // FIXME, write code for editing message
             case SUCCESS -> event.getHook();
             case PRIMARY -> {
-                event.reply(args.get(1)).queue();
+                event.reply(String.format("`%s`", args.get(1))).queue();
                 event.getMessage()
                     .editMessageComponents(ActionRow.of(event.getMessage()
                         .getButtons()
