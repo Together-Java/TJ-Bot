@@ -38,8 +38,6 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOption(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
                     "The delete message history. Between 1 to as many days as you want", true)
             .addOption(OptionType.STRING, REASON_OPTION, "The reason of the ban", true);
-
-
     }
 
 
