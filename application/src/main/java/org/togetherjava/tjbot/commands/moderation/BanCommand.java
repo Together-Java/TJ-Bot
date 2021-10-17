@@ -85,10 +85,11 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        //tells ths user he has been banned
+        // tells ths user he has been banned
         jda.openPrivateChannelById(userId)
-                .flatMap(channel -> channel.sendMessage("You have been banned for this reason " + reason))
-                .queue();
+            .flatMap(channel -> channel
+                .sendMessage("You have been banned for this reason " + reason))
+            .queue();
 
         // Ban the user and send a success response
         event.getGuild()

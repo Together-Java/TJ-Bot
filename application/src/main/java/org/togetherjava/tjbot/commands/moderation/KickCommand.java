@@ -74,10 +74,11 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        //tells ths user he has been kicked
+        // tells ths user he has been kicked
         jda.openPrivateChannelById(userId)
-                .flatMap(channel -> channel.sendMessage("You have been kicked for this reason " + reason))
-                .queue();
+            .flatMap(channel -> channel
+                .sendMessage("You have been kicked for this reason " + reason))
+            .queue();
 
         // Kicks the user and send a success response
         event.getGuild()
