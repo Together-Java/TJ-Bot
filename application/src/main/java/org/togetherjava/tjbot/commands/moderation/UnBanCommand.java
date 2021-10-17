@@ -27,7 +27,7 @@ public class UnBanCommand extends SlashCommandAdapter {
         super("unban", "Use this command to unban a user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.STRING, "user_id",
-                "The user if of the user which you want to unban", true);
+                "The id of the user which you want to unban", true);
 
     }
 
