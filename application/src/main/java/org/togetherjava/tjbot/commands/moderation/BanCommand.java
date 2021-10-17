@@ -51,7 +51,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
 
-        String userId = Objects.requireNonNull(user).getUser().getId();
+        long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the required permissions to ban users from this server.")
