@@ -24,6 +24,8 @@ import org.togetherjava.tjbot.logwatcher.watcher.StreamWatcher;
 import org.vaadin.crudui.crud.impl.GridCrud;
 
 import javax.annotation.security.PermitAll;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -128,7 +130,8 @@ public class StreamedView extends VerticalLayout {
 
 
         innerGrid
-            .addColumn(new LocalDateTimeRenderer<>(Logevents::getTime,
+            .addColumn(new LocalDateTimeRenderer<>(
+                    logEvents -> LocalDateTime.ofInstant(logEvents.getTime(), ZoneOffset.UTC),
                     DateTimeFormatter.ofPattern("yyy-MM-dd HH:mm:ss.SSS")))
             .setHeader("Instant")
             .setComparator(Comparator.comparing(Logevents::getTime))
