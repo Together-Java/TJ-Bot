@@ -19,11 +19,11 @@ import java.util.Objects;
  * {@code Banned User!}.
  *
  */
-public class DeleteMessageCommand extends SlashCommandAdapter {
+public final class DeleteMessageCommand extends SlashCommandAdapter {
     private static final String NUMBER_OF_MESSAGES = "number_of_messages";
 
 
-    protected DeleteMessageCommand(@NotNull String name, @NotNull String description, SlashCommandVisibility visibility) {
+    public DeleteMessageCommand() {
         super("prune", "Use this command to delete a batch of messages", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES, "The number of messages you want to delete. 1 to 100",
@@ -43,7 +43,7 @@ public class DeleteMessageCommand extends SlashCommandAdapter {
             return;
         }
 
-        final Member bot = event.getGuild().getSelfMember();
+        final Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
 
         if (!bot.hasPermission(Permission.MESSAGE_MANAGE)) {
             event.reply("I am missing permissions to manage these messages")
