@@ -37,10 +37,10 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     /**
-     * When triggered with {@code /kick @user reason}, the bot will check if
-     * the user has perms. Then it will check if itself has perms to kick. If it does it will check
-     * if the user is too powerful or not. If the user is not then bot will kick the user and reply
-     * with {@code Kicked User!}.
+     * When triggered with {@code /kick @user reason}, the bot will check if the user has perms.
+     * Then it will check if itself has perms to kick. If it does it will check if the user is too
+     * powerful or not. If the user is not then bot will kick the user and reply with
+     * {@code Kicked User!}.
      *
      * @param event the corresponding event
      */
@@ -89,6 +89,7 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
 
         // Add this to audit log
-        logger.info("User '{}' was made to kick the user '{}' by '{}' due to reason being '{}'", bot, user, author, reason);
+        logger.info("User '{}' was made to kick the user '{}' by '{}' due to reason being '{}'",
+                bot, user, author, reason);
     }
 }

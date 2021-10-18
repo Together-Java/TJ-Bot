@@ -35,7 +35,8 @@ public enum Commands {
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
         return List.of(new PingCommand(), new DatabaseCommand(database), new KickCommand(),
-                new BanCommand(), new UnbanCommand(), new DeleteMessageCommand(), new WarnCommand(database));
+                new BanCommand(), new UnbanCommand(), new DeleteMessageCommand(),
+                new WarnCommand(database));
 
     }
 }

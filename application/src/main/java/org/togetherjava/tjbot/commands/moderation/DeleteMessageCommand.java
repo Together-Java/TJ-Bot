@@ -15,10 +15,9 @@ import java.util.Objects;
 
 
 /**
- * When triggered with {@code /prune "number_of_messages"}, the bot will check
- * if the user has perms. Then it will check if itself has perms to delete messages.
- * If it does the bot will delete that amount of messages.
- * {@code Banned User!}.
+ * When triggered with {@code /prune "number_of_messages"}, the bot will check if the user has
+ * perms. Then it will check if itself has perms to delete messages. If it does the bot will delete
+ * that amount of messages. {@code Banned User!}.
  *
  */
 public final class DeleteMessageCommand extends SlashCommandAdapter {
@@ -26,10 +25,11 @@ public final class DeleteMessageCommand extends SlashCommandAdapter {
     private static final String NUMBER_OF_MESSAGES = "number_of_messages";
 
     public DeleteMessageCommand() {
-        super("prune", "Use this command to delete a batch of messages", SlashCommandVisibility.GUILD);
+        super("prune", "Use this command to delete a batch of messages",
+                SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES, "The number of messages you want to delete. 1 to 100",
-                true);
+        getData().addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES,
+                "The number of messages you want to delete. 1 to 100", true);
     }
 
     @Override
@@ -40,8 +40,8 @@ public final class DeleteMessageCommand extends SlashCommandAdapter {
 
         if (!Objects.requireNonNull(author).hasPermission(Permission.MESSAGE_MANAGE)) {
             event.reply("You are missing permission to manage the message")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
@@ -49,8 +49,8 @@ public final class DeleteMessageCommand extends SlashCommandAdapter {
 
         if (!bot.hasPermission(Permission.MESSAGE_MANAGE)) {
             event.reply("I am missing permissions to manage these messages")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
@@ -58,16 +58,13 @@ public final class DeleteMessageCommand extends SlashCommandAdapter {
 
         var messageHistory = channel.getHistory().retrievePast(amount).complete();
 
-        if(amount < 100) {
-            event.reply("You can only delete 1 to 100 messages")
-                    .setEphemeral(true)
-                    .queue();
+        if (amount < 100) {
+            event.reply("You can only delete 1 to 100 messages").setEphemeral(true).queue();
         } else {
             channel.purgeMessages(messageHistory);
         }
         // Add this to audit log
-        logger.info(
-                "Bot '{}' was made to delete this amount of messages '{}' by '{}'",
-                bot, amount, author);
+        logger.info("Bot '{}' was made to delete this amount of messages '{}' by '{}'", bot, amount,
+                author);
     }
 }

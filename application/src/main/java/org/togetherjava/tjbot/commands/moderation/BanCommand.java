@@ -15,9 +15,9 @@ import java.util.Objects;
 
 
 /**
- * When triggered with {@code /ban del_days @user reason}, the bot  will check
- * if the user has perms. Then it will check if itself has perms to ban. If it does it will check if
- * the user is too powerful or not. If the user is not then bot will ban the user and reply with
+ * When triggered with {@code /ban del_days @user reason}, the bot will check if the user has perms.
+ * Then it will check if itself has perms to ban. If it does it will check if the user is too
+ * powerful or not. If the user is not then bot will ban the user and reply with
  * {@code Banned User!}.
  *
  */
@@ -77,7 +77,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         int deleteMessageHistoryDays =
                 (int) Objects.requireNonNull(event.getOption("delete-message-history-days"))
-                   .getAsLong();
+                    .getAsLong();
 
         if (deleteMessageHistoryDays < 0 || deleteMessageHistoryDays > 7) {
             event.reply("The deletion days of the messages must be between 0 and 7 days.")
