@@ -17,7 +17,6 @@ import java.util.Objects;
  * The implemented command is {@code /unban user_id}, upon which the bot will unban the user.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
-    // the logger
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String USER_ID = "user_id";
 
@@ -60,10 +59,9 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return;
         }
 
-        // Unbans the user
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
 
-        // Add this to audit log
-        logger.info("Bot was forced to '{}' unban user id '{}' by '{}'", bot, userId, author);
+        String authorName = author.getId();
+        logger.info(" '{}' unbanned user id '{}' ", authorName, userId);
     }
 }

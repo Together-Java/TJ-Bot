@@ -1,9 +1,7 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +18,6 @@ import java.util.Objects;
  * The implemented command is {@code /kick @user reason}, upon which the bot will kick the user.
  */
 public final class KickCommand extends SlashCommandAdapter {
-    // the logger
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
@@ -37,17 +34,15 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     /**
-     * When triggered with {@code /kick @user reason}, the bot will check if
-     * the user has perms. Then it will check if itself has perms to kick. If it does it will check
-     * if the user is too powerful or not. If the user is not then bot will kick the user and reply
-     * with {@code Kicked User!}.
+     * When triggered with {@code /kick @user reason}, the bot will check if the user has perms.
+     * Then it will check if itself has perms to kick. If it does it will check if the user is too
+     * powerful or not. If the user is not then bot will kick the user and reply with
+     * {@code Kicked User!}.
      *
      * @param event the corresponding event
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        JDA jda = event.getJDA();
-
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
 
         Member author = Objects.requireNonNull(event.getMember());
@@ -60,6 +55,11 @@ public final class KickCommand extends SlashCommandAdapter {
             event.reply("You do not have the required permissions to kick users from this server.")
                 .setEphemeral(true)
                 .queue();
+            return;
+        }
+
+        if (!author.canInteract(Objects.requireNonNull(user))) {
+            event.reply("This user is too powerful for you to ban.").setEphemeral(true).queue();
             return;
         }
 
@@ -76,19 +76,19 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        // tells ths user he has been kicked
-        jda.openPrivateChannelById(userId)
+        event.getJDA()
+            .openPrivateChannelById(userId)
             .flatMap(channel -> channel
                 .sendMessage("You have been kicked for this reason " + reason))
             .queue();
 
-        // Kicks the user and send a success response
         event.getGuild()
             .kick(user, reason)
             .flatMap(v -> event.reply("Kicked the user" + user.getUser().getAsTag()))
             .queue();
 
-        // Add this to audit log
-        logger.info("User '{}' was made to kick the user '{}' by '{}' due to reason being '{}'", bot, user, author, reason);
+        String userName = user.getId();
+        String authorName = author.getId();
+        logger.info(" '{}' kicked the user '{}' due to reason being '{}'", authorName, userName, reason);
     }
 }
