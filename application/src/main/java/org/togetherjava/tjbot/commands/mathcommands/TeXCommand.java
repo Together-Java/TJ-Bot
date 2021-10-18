@@ -36,7 +36,7 @@ public class TeXCommand extends SlashCommandAdapter {
     public static final String LATEX_OPTION = "latex";
     public static final String RENDERING_ERROR = "There was an error generating the image";
     public static final float DEFAULT_IMAGE_SIZE = 40F;
-    public static final Color BACKGROUND_COLOR = Color.decode("0x383C3C");
+    public static final Color BACKGROUND_COLOR = Color.decode("0x383C3C ");
     public static final Color FOREGROUND_COLOR = Color.decode("0xCCCCCC");
     public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
@@ -72,13 +72,13 @@ public class TeXCommand extends SlashCommandAdapter {
                     latex);
             return;
         }
-        BufferedImage bi = new BufferedImage(image.getWidth(null), image.getHeight(null),
-                BufferedImage.TYPE_4BYTE_ABGR);
-        bi.getGraphics().drawImage(image, 0, 0, null);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BufferedImage renderedTextImage = new BufferedImage(image.getWidth(null),
+                image.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
+        renderedTextImage.getGraphics().drawImage(image, 0, 0, null);
+        ByteArrayOutputStream renderedTextImageStream = new ByteArrayOutputStream();
 
         try {
-            ImageIO.write(bi, "png", baos);
+            ImageIO.write(renderedTextImage, "png", renderedTextImageStream);
         } catch (IOException e) {
             event.getHook().setEphemeral(true).editOriginal(RENDERING_ERROR).queue();
             logger.warn(
@@ -87,7 +87,7 @@ public class TeXCommand extends SlashCommandAdapter {
             return;
         }
         event.getHook()
-            .editOriginal(baos.toByteArray(), "tex.png")
+            .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
             .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
             .queue();
     }
