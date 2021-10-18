@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -56,15 +57,13 @@ public class TeXCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
-        final List<Button> buttons = List.of(
-                Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"),
-                Button.of(ButtonStyle.PRIMARY, generateComponentId(userID, latex), "View Source"));
+        Button deleteButton = Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete");
         TeXFormula formula;
         try {
             formula = new TeXFormula(latex);
         } catch (ParseException e) {
             event.reply("That is an invalid latex")
-                .addActionRow(buttons)
+                .addActionRow(deleteButton)
                 .setEphemeral(true)
                 .queue();
             return;
@@ -73,7 +72,7 @@ public class TeXCommand extends SlashCommandAdapter {
         Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
         if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
-            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(buttons).queue();
+            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(deleteButton).queue();
             logger.warn(
                     "Unable to render latex, image does not have an accessible width or height. Formula was {}",
                     latex);
@@ -87,13 +86,16 @@ public class TeXCommand extends SlashCommandAdapter {
         try {
             ImageIO.write(bi, "png", baos);
         } catch (IOException e) {
-            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(buttons).queue();
+            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(deleteButton).queue();
             logger.warn(
                     "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
                     latex, e);
             return;
         }
-        event.getHook().editOriginal(baos.toByteArray(), "tex.png").setActionRow(buttons).queue();
+        event.getHook()
+            .editOriginal(baos.toByteArray(), "tex.png")
+            .setActionRow(deleteButton)
+            .queue();
     }
 
     @Override
@@ -105,22 +107,6 @@ public class TeXCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
-        ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
-        switch (buttonStyle) {
-            case DANGER -> event.getMessage().delete().queue();
-            case PRIMARY -> {
-                event.reply(String.format("`%s`", args.get(1))).queue();
-                event.getMessage()
-                    .editMessageComponents(ActionRow.of(event.getMessage()
-                        .getButtons()
-                        .stream()
-                        .map(button -> button.getLabel().equals("View Source") ? button.asDisabled()
-                                : button)
-                        .toList()))
-                    .queue();
-            }
-            default -> throw new AssertionError(
-                    String.format("Unexpected button style, %S", buttonStyle));
-        }
+        event.getMessage().delete().queue();
     }
 }
