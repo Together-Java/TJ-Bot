@@ -36,8 +36,8 @@ public class TeXCommand extends SlashCommandAdapter {
     public static final String LATEX_OPTION = "latex";
     public static final String RENDERING_ERROR = "There was an error generating the image";
     public static final float DEFAULT_IMAGE_SIZE = 40F;
-    public static final Color BACKGROUND_COLOR = Color.decode("0x4396BE");
-    public static final Color FOREGROUND_COLOR = Color.decode("0x01EC09");
+    public static final Color BACKGROUND_COLOR = Color.decode("0x383C3C");
+    public static final Color FOREGROUND_COLOR = Color.decode("0xCCCCCC");
     public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
     /**
