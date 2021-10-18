@@ -3,10 +3,8 @@ package org.togetherjava.tjbot.commands.mathcommands;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -57,22 +55,18 @@ public class TeXCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
-        Button deleteButton = Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete");
         TeXFormula formula;
         try {
             formula = new TeXFormula(latex);
         } catch (ParseException e) {
-            event.reply("That is an invalid latex")
-                .addActionRow(deleteButton)
-                .setEphemeral(true)
-                .queue();
+            event.reply("That is an invalid latex").setEphemeral(true).queue();
             return;
         }
         event.deferReply().queue();
         Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
         if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
-            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(deleteButton).queue();
+            event.getHook().setEphemeral(true).editOriginal(RENDERING_ERROR).queue();
             logger.warn(
                     "Unable to render latex, image does not have an accessible width or height. Formula was {}",
                     latex);
@@ -86,7 +80,7 @@ public class TeXCommand extends SlashCommandAdapter {
         try {
             ImageIO.write(bi, "png", baos);
         } catch (IOException e) {
-            event.getHook().editOriginal(RENDERING_ERROR).setActionRow(deleteButton).queue();
+            event.getHook().setEphemeral(true).editOriginal(RENDERING_ERROR).queue();
             logger.warn(
                     "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
                     latex, e);
@@ -94,7 +88,7 @@ public class TeXCommand extends SlashCommandAdapter {
         }
         event.getHook()
             .editOriginal(baos.toByteArray(), "tex.png")
-            .setActionRow(deleteButton)
+            .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
             .queue();
     }
 
