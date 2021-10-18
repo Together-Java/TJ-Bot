@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -57,13 +56,9 @@ public class TeXCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
-        final Button editButton =
-                Button.of(ButtonStyle.SUCCESS, generateComponentId(userID, latex), "Edit");
-        final Button deleteButton =
-                Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete");
-        final Button viewSourceButton =
-                Button.of(ButtonStyle.PRIMARY, generateComponentId(userID, latex), "View Source");
-        final List<Button> buttons = List.of(editButton, deleteButton, viewSourceButton);
+        final List<Button> buttons = List.of(
+                Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"),
+                Button.of(ButtonStyle.PRIMARY, generateComponentId(userID, latex), "View Source"));
         TeXFormula formula;
         try {
             formula = new TeXFormula(latex);
@@ -113,8 +108,6 @@ public class TeXCommand extends SlashCommandAdapter {
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
         switch (buttonStyle) {
             case DANGER -> event.getMessage().delete().queue();
-            // FIXME, write code for editing message
-            case SUCCESS -> event.getHook();
             case PRIMARY -> {
                 event.reply(String.format("`%s`", args.get(1))).queue();
                 event.getMessage()
