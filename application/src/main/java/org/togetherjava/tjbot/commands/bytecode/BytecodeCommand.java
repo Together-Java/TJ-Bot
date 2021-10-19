@@ -139,7 +139,7 @@ public final class BytecodeCommand implements EventListener {
         } catch (RuntimeException e) {
             myMessage
                 .editMessage("A fatal error has occurred during compilation. %s"
-                    .formatted(e.toString()))
+                    .formatted(e.getMessage()))
                 .mentionRepliedUser(false)
                 .queue();
 
@@ -171,7 +171,7 @@ public final class BytecodeCommand implements EventListener {
                 } catch (RuntimeException e) {
                     myMessage
                         .editMessage("A fatal error has occurred during disassembly. %s"
-                            .formatted(e.toString()))
+                            .formatted(e.getMessage()))
                         .mentionRepliedUser(false)
                         .queue();
 
