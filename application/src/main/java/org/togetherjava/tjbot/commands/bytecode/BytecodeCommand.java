@@ -119,6 +119,10 @@ public final class BytecodeCommand implements EventListener {
     }
 
     private void deleteMyMessages(@NotNull Long msgId, @NotNull TextChannel channel) {
+        if (!userMessageToMyMessages.containsKey(msgId)) {
+            return;
+        }
+
         userMessageToMyMessages.get(msgId)
             .forEach(id -> channel.retrieveMessageById(id).queue(msg -> msg.delete().queue()));
 
