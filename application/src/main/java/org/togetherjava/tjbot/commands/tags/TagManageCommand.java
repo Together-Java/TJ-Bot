@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,7 +145,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.replyEmbeds(MessageUtils.generateEmbed(null,
-                MarkdownSanitizer.escape(tagSystem.getTag(id).orElseThrow()), event.getUser(),
+                MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()), event.getUser(),
                 TagSystem.AMBIENT_COLOR))
             .queue();
     }

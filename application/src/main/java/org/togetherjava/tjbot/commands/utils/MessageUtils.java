@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,6 +61,20 @@ public enum MessageUtils {
             .setFooter(user == null ? null : user.getName())
             .setColor(ambientColor)
             .build();
+    }
+
+    /**
+     * Escapes every markdown content in the given string.
+     *
+     * If the escaped message is sent to Discord, it will display the original message.
+     * 
+     * @param text the text to escape
+     * @return the escaped text
+     */
+    public static @NotNull String escapeMarkdown(@NotNull String text) {
+        // NOTE Unfortunately the utility does not escape backslashes '\', so we have to do it
+        // ourselves
+        return MarkdownSanitizer.escape(text.replace("\\", "\\\\"));
     }
 
 }
