@@ -150,7 +150,7 @@ public final class BytecodeCommand implements EventListener {
         if (!result.success()) {
             myMessage
                 .editMessage("Compilation failed." + codeBlockLeft
-                        + makeCollection(result.compileInfos()).stream()
+                        + iterToCollection(result.compileInfos()).stream()
                             .map(CompileInfo::diagnostic)
                             .map(Diagnostic::toString)
                             .collect(Collectors.joining("\n"))
@@ -241,7 +241,7 @@ public final class BytecodeCommand implements EventListener {
         return result;
     }
 
-    private <E> Collection<E> makeCollection(Iterable<E> iter) {
+    private <E> Collection<E> iterToCollection(Iterable<E> iter) {
         Collection<E> list = new ArrayList<>();
 
         iter.forEach(list::add);
