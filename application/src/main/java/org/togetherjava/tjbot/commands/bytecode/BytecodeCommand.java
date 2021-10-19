@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public final class BytecodeCommand implements EventListener {
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
-    private final Map<Long, List<Long>> replyMap = new HashMap<>();
+    private final Map<Long, List<Long>> userMessageToMyMessages = new HashMap<>();
     private final String commandPrefix = "!bytecode ";
     private final String codeBlockRight = "\n```";
     private final String codeBlockLeft = "```\n";
@@ -61,14 +61,14 @@ public final class BytecodeCommand implements EventListener {
                 .mentionRepliedUser(false)
                 .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
         } else if (gevent instanceof GuildMessageDeleteEvent event
-                && replyMap.containsKey(event.getMessageIdLong())) {
+                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) {
             deleteMyMessages(event.getMessageIdLong(), event.getChannel());
         } else if (gevent instanceof GuildMessageUpdateEvent event
-                && replyMap.containsKey(event.getMessageIdLong())) {
+                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) {
             Message message = event.getMessage();
             long messageIdLong = event.getMessageIdLong();
             TextChannel textChannel = message.getTextChannel();
-            List<Long> myMessages = replyMap.get(messageIdLong);
+            List<Long> myMessages = userMessageToMyMessages.get(messageIdLong);
 
             textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
                 String content = message.getContentRaw();
@@ -93,14 +93,14 @@ public final class BytecodeCommand implements EventListener {
     }
 
     private void deleteMyMessages(Long msgId, TextChannel channel) {
-        replyMap.get(msgId)
+        userMessageToMyMessages.get(msgId)
             .forEach(id -> channel.retrieveMessageById(id).queue(msg -> msg.delete().queue()));
 
-        replyMap.remove(msgId);
+        userMessageToMyMessages.remove(msgId);
     }
 
     private void compile(Message userMessage, Message myMessage, String content) {
-        replyMap.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
+        userMessageToMyMessages.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
 
         CompilationResult result;
 
@@ -155,7 +155,7 @@ public final class BytecodeCommand implements EventListener {
                 if (msgResult.length() <= 2000) {
                     userMessage.reply(msgResult)
                         .mentionRepliedUser(false)
-                        .queue(msg -> replyMap.put(userMessage.getIdLong(),
+                        .queue(msg -> userMessageToMyMessages.put(userMessage.getIdLong(),
                                 List.of(msg.getIdLong())));
 
                     return;
@@ -178,7 +178,7 @@ public final class BytecodeCommand implements EventListener {
                         .queue(msg -> messageIds.add(msg.getIdLong()));
                 }
 
-                replyMap.put(userMessage.getIdLong(), messageIds);
+                userMessageToMyMessages.put(userMessage.getIdLong(), messageIds);
             });
     }
 
