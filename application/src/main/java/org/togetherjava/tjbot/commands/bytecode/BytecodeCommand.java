@@ -92,7 +92,9 @@ public final class BytecodeCommand implements EventListener {
             List<Long> myMessages = userMessageToMyMessages.get(messageIdLong);
 
             if (myMessages.size() == 0) {
-                message.reply("An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)").queue();
+                message.reply(
+                        "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)")
+                    .queue();
 
                 return;
             }
@@ -130,7 +132,8 @@ public final class BytecodeCommand implements EventListener {
         userMessageToMyMessages.remove(msgId);
     }
 
-    private void compile(@NotNull Message userMessage, @NotNull Message myMessage, @NotNull String content) {
+    private void compile(@NotNull Message userMessage, @NotNull Message myMessage,
+            @NotNull String content) {
         userMessageToMyMessages.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
 
         CompilationResult result;
@@ -192,8 +195,8 @@ public final class BytecodeCommand implements EventListener {
                     return;
                 }
 
-                List<String> msgResults =
-                        takeApart(disassembled, discordMessageLength - surroundInCodeBlock("").length());
+                List<String> msgResults = takeApart(disassembled,
+                        discordMessageLength - surroundInCodeBlock("").length());
                 Iterator<String> iterator = msgResults.iterator();
                 List<Long> messageIds = new ArrayList<>();
 

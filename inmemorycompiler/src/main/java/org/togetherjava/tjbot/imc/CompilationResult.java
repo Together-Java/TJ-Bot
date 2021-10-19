@@ -7,7 +7,8 @@ import java.util.Collections;
 /**
  * Class representing a compilation result of {@link IMCompiler}
  */
-public record CompilationResult(boolean success, byte[] bytes, @NotNull Iterable<CompileInfo> compileInfos) {
+public record CompilationResult(boolean success, byte[] bytes,
+        @NotNull Iterable<CompileInfo> compileInfos) {
 
     private static final CompilationResult EMPTY_RESULT =
             new CompilationResult(false, new byte[0], Collections.emptyList());
@@ -21,6 +22,7 @@ public record CompilationResult(boolean success, byte[] bytes, @NotNull Iterable
 
     /**
      * Creates an unsuccessful compilation result
+     * 
      * @param compileInfos compilation infos
      * @return the generated compilation result
      */
@@ -30,6 +32,7 @@ public record CompilationResult(boolean success, byte[] bytes, @NotNull Iterable
 
     /**
      * Creates a successful compilation result
+     * 
      * @param bytes classfile bytecode
      * @param compileInfos compilation infos
      * @return the generated compilation result
