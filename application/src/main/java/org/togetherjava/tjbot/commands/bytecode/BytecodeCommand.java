@@ -90,6 +90,12 @@ public final class BytecodeCommand implements EventListener {
             TextChannel textChannel = message.getTextChannel();
             List<Long> myMessages = userMessageToMyMessages.get(messageIdLong);
 
+            if (myMessages.size() == 0) {
+                message.reply("An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)").queue();
+
+                return;
+            }
+
             textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
                 String content = message.getContentRaw();
 
