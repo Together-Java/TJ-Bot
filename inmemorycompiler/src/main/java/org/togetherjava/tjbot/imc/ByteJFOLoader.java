@@ -4,14 +4,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 class ByteJFOLoader extends ClassLoader {
-    private final Map<String, IMByteJFO> classJFO = new LinkedHashMap<>();
+    private final Map<String, IMByteJFO> nameToClassJFO = new LinkedHashMap<>();
 
     public ByteJFOLoader(ClassLoader parent) {
         super(parent);
     }
 
     public IMByteJFO registerJFO(IMByteJFO jfo) {
-        classJFO.put(jfo.getName(), jfo);
+        nameToClassJFO.put(jfo.getName(), jfo);
 
         return jfo;
     }
@@ -22,7 +22,7 @@ class ByteJFOLoader extends ClassLoader {
     }
 
     public byte[] getLastBytes() {
-        return ((IMByteJFO) last(classJFO.values().toArray())).getBytes();
+        return ((IMByteJFO) last(nameToClassJFO.values().toArray())).getBytes();
     }
 
     private <E> E last(E[] col) {
