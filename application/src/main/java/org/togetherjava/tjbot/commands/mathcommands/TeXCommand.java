@@ -36,7 +36,7 @@ public class TeXCommand extends SlashCommandAdapter {
     private static final String LATEX_OPTION = "latex";
     private static final String RENDERING_ERROR = "There was an error generating the image";
     private static final float DEFAULT_IMAGE_SIZE = 40F;
-    private static final Color BACKGROUND_COLOR = Color.decode("#383C3C");
+    private static final Color BACKGROUND_COLOR = Color.decode("#36393F");
     private static final Color FOREGROUND_COLOR = Color.decode("#FFFFFF");
     private static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
@@ -59,7 +59,7 @@ public class TeXCommand extends SlashCommandAdapter {
         try {
             formula = new TeXFormula(latex);
         } catch (ParseException e) {
-            event.reply("That is an invalid latex").setEphemeral(true).queue();
+            event.reply("That is an invalid latex: " + e.getMessage()).setEphemeral(true).queue();
             return;
         }
         event.deferReply().queue();
