@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -29,6 +32,8 @@ public final class Config {
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
 
+    private final List<FreeCommandConfig> freeCommand;
+    
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
@@ -39,7 +44,8 @@ public final class Config {
             @JsonProperty("mutedRolePattern") String mutedRolePattern,
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
-            @JsonProperty("tagManageRolePattern") String tagManageRolePattern) {
+            @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
+            @JsonProperty("freeCommand") FreeCommandConfig[] freeCommand) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -49,6 +55,7 @@ public final class Config {
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
+        this.freeCommand = Arrays.stream(freeCommand).toList();
     }
 
     /**
@@ -158,5 +165,13 @@ public final class Config {
      */
     public String getTagManageRolePattern() {
         return tagManageRolePattern;
+    }
+
+    /**
+     *
+     * @return an
+     */
+    public Collection<FreeCommandConfig> getFreeCommandConfig() {
+        return freeCommand;
     }
 }
