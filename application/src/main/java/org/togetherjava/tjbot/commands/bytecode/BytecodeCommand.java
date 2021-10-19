@@ -214,7 +214,7 @@ public final class BytecodeCommand implements EventListener {
 
     private List<String> takeApart(String s, int n) {
         List<String> result = new ArrayList<>();
-        List<String> lines = Arrays.asList(s.split("\n"));
+        String[] lines = s.split("\n");
         int currentLength = 0;
         StringBuilder buffer = new StringBuilder();
 
