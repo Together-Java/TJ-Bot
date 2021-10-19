@@ -49,8 +49,8 @@ public final class BytecodeCommand implements EventListener {
     private final Map<Long, List<Long>> userMessageToMyMessages = new HashMap<>();
 
     @Override
-    public void onEvent(@NotNull GenericEvent gevent) {
-        if (gevent instanceof GuildMessageReceivedEvent event && !event.getAuthor().isBot()) { // Fresh
+    public void onEvent(@NotNull GenericEvent genericEvent) {
+        if (genericEvent instanceof GuildMessageReceivedEvent event && !event.getAuthor().isBot()) { // Fresh
                                                                                                // compile
                                                                                                // when
                                                                                                // a
@@ -71,7 +71,7 @@ public final class BytecodeCommand implements EventListener {
             message.reply("Compiling...")
                 .mentionRepliedUser(false)
                 .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
-        } else if (gevent instanceof GuildMessageDeleteEvent event
+        } else if (genericEvent instanceof GuildMessageDeleteEvent event
                 && userMessageToMyMessages.containsKey(event.getMessageIdLong())) { // Delete our
                                                                                     // messages if
                                                                                     // the user
@@ -79,7 +79,7 @@ public final class BytecodeCommand implements EventListener {
                                                                                     // request
                                                                                     // message
             deleteMyMessages(event.getMessageIdLong(), event.getChannel());
-        } else if (gevent instanceof GuildMessageUpdateEvent event
+        } else if (genericEvent instanceof GuildMessageUpdateEvent event
                 && userMessageToMyMessages.containsKey(event.getMessageIdLong())) { // Recompile
                                                                                     // when the user
                                                                                     // sends edits
