@@ -27,7 +27,7 @@ class ByteJFOLoader extends ClassLoader {
         return last(nameToClassJFO.values().toArray(new IMByteJFO[0])).getBytes();
     }
 
-    private <E> E last(E[] col) {
+    private <E> E last(@NotNull E[] col) {
         return col[col.length - 1];
     }
 }
