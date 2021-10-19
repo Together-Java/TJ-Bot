@@ -4,4 +4,4 @@ include 'application'
 include 'database'
 include 'formatter'
 include 'logviewer'
-
+include 'imc'
