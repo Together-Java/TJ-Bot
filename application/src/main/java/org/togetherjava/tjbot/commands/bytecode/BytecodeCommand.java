@@ -50,7 +50,17 @@ public final class BytecodeCommand implements EventListener {
 
     @Override
     public void onEvent(@NotNull GenericEvent gevent) {
-        if (gevent instanceof GuildMessageReceivedEvent event && !event.getAuthor().isBot()) {
+        if (gevent instanceof GuildMessageReceivedEvent event && !event.getAuthor().isBot()) { // Fresh
+                                                                                               // compile
+                                                                                               // when
+                                                                                               // a
+                                                                                               // user
+                                                                                               // sends
+                                                                                               // a
+                                                                                               // message
+                                                                                               // with
+                                                                                               // !bytecode
+                                                                                               // ...
             Message message = event.getMessage();
             String content = message.getContentRaw();
 
@@ -62,10 +72,19 @@ public final class BytecodeCommand implements EventListener {
                 .mentionRepliedUser(false)
                 .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
         } else if (gevent instanceof GuildMessageDeleteEvent event
-                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) {
+                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) { // Delete our
+                                                                                    // messages if
+                                                                                    // the user
+                                                                                    // deletes their
+                                                                                    // request
+                                                                                    // message
             deleteMyMessages(event.getMessageIdLong(), event.getChannel());
         } else if (gevent instanceof GuildMessageUpdateEvent event
-                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) {
+                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) { // Recompile
+                                                                                    // when the user
+                                                                                    // sends edits
+                                                                                    // their request
+                                                                                    // message
             Message message = event.getMessage();
             long messageIdLong = event.getMessageIdLong();
             TextChannel textChannel = message.getTextChannel();
