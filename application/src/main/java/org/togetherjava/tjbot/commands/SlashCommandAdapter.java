@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -95,6 +96,12 @@ public abstract class SlashCommandAdapter implements SlashCommand {
     @Override
     public final @NotNull CommandData getData() {
         return data;
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        // Adapter does not react by default, subclasses may change this behavior
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")

@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
+import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.db.Database;
 
 import java.util.Collection;
@@ -27,6 +28,7 @@ public enum Commands {
      * generally should be avoided.
      *
      * @param database the database of the application, which commands can use to persist data
+     *
      * @return a collection of all slash commands
      */
     public static @NotNull Collection<SlashCommand> createSlashCommands(
@@ -35,7 +37,6 @@ public enum Commands {
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
         return List.of(new PingCommand(), new DatabaseCommand(database), new KickCommand(),
-                new BanCommand(), new UnbanCommand());
-
+               new BanCommand(), new UnbanCommand(), new TeXCommand());
     }
 }

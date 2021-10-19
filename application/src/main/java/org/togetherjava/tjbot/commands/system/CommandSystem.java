@@ -89,6 +89,11 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Command system is now ready");
+
+        // Propagate the onReady event to all commands
+        // NOTE 'registerReloadCommands' will not be finished running, this does not wait for it
+        nameToSlashCommands.values()
+            .forEach(command -> COMMAND_SERVICE.execute(() -> command.onReady(event)));
     }
 
     @Override
