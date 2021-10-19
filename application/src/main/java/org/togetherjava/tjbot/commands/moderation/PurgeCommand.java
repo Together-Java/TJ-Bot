@@ -39,7 +39,7 @@ public final class PurgeCommand extends SlashCommandAdapter {
         final TextChannel channel = event.getTextChannel();
 
         if (!Objects.requireNonNull(author).hasPermission(Permission.MESSAGE_MANAGE)) {
-            event.reply("You are missing permission to manage the message")
+            event.reply("You are missing MESSAGE_MANAGE permission to delete these the message")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -48,14 +48,14 @@ public final class PurgeCommand extends SlashCommandAdapter {
         final Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
 
         if (!bot.hasPermission(Permission.MESSAGE_MANAGE)) {
-            event.reply("I am missing permissions to manage these messages")
+            event.reply("I am missing MESSAGE_MANAGE permission to delete these messages")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        int amount = (int) Objects.requireNonNull(event.getOption(NUMBER_OF_MESSAGES)).getAsLong();
-
+        int amount = Math.toIntExact(Objects.requireNonNull(event.getOption(NUMBER_OF_MESSAGES))
+                .getAsLong());
         var messageHistory = channel.getHistory().retrievePast(amount).complete();
 
         if (amount < 100) {
