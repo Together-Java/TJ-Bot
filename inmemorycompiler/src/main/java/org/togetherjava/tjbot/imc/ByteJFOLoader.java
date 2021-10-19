@@ -12,7 +12,7 @@ class ByteJFOLoader extends ClassLoader {
         super(parent);
     }
 
-    public IMByteJFO registerJFO(IMByteJFO jfo) {
+    public IMByteJFO registerJFO(@NotNull IMByteJFO jfo) {
         nameToClassJFO.put(jfo.getName(), jfo);
 
         return jfo;
