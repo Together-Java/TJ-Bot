@@ -27,10 +27,10 @@ public final class KickCommand extends SlashCommandAdapter {
      * Creates an instance of the kick command.
      */
     public KickCommand() {
-        super("kick", "Use this command to kick a user", SlashCommandVisibility.GUILD);
+        super("kick", "Use this command to kick a given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user which you want to kick", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "The reason of the kick", true);
+            .addOption(OptionType.STRING, REASON_OPTION, "why the user should be kicked", true);
     }
 
     /**
@@ -59,7 +59,10 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for you to ban.").setEphemeral(true).queue();
+            event.reply(
+                    "This user is too powerful for you to kick because he has more permissions than uou.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
@@ -72,7 +75,10 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         if (!bot.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for me to kick.").setEphemeral(true).queue();
+            event.reply(
+                    "This user is too powerful for me to kick because he has more permissions than me.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
@@ -89,6 +95,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         String userName = user.getId();
         String authorName = author.getId();
-        logger.info(" '{}' kicked the user '{}' due to reason being '{}'", authorName, userName, reason);
+        logger.info(" '{}' kicked the user '{}' due to reason being '{}'", authorName, userName,
+                reason);
     }
 }
