@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * for slashcommands is soon<sup>tm</sup>.<br>
  * Example usage:
  * <p>
- * 
+ *
  * <pre>
  * {@code
  *     !bytecode ```java
@@ -40,9 +40,12 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public final class BytecodeCommand implements EventListener {
-    private final Pattern CODE_BLOCK_EXTRACTOR_PATTERN =
+    private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
     private final Map<Long, List<Long>> replyMap = new HashMap<>();
+    private final String commandPrefix = "!bytecode ";
+    private final String codeBlockRight = "\n```";
+    private final String codeBlockLeft = "```\n";
 
     @Override
     public void onEvent(@NotNull GenericEvent gevent) {
@@ -50,7 +53,7 @@ public final class BytecodeCommand implements EventListener {
             Message message = event.getMessage();
             String content = message.getContentRaw();
 
-            if (!content.startsWith("!bytecode ")) {
+            if (!content.startsWith(commandPrefix)) {
                 return;
             }
 
@@ -70,7 +73,7 @@ public final class BytecodeCommand implements EventListener {
             textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
                 String content = message.getContentRaw();
 
-                if (!content.startsWith("!bytecode ")) {
+                if (!content.startsWith(commandPrefix)) {
                     deleteMyMessages(message.getIdLong(), textChannel);
 
                     return;
@@ -115,11 +118,12 @@ public final class BytecodeCommand implements EventListener {
 
         if (!result.success()) {
             myMessage
-                .editMessage(
-                        "Compilation failed.```\n" + makeCollection(result.compileInfos()).stream()
+                .editMessage("Compilation failed." + codeBlockLeft
+                        + makeCollection(result.compileInfos()).stream()
                             .map(CompileInfo::diagnostic)
                             .map(Diagnostic::toString)
-                            .collect(Collectors.joining("\n")) + "\n```")
+                            .collect(Collectors.joining("\n"))
+                        + codeBlockRight)
                 .mentionRepliedUser(false)
                 .queue();
 
@@ -144,7 +148,7 @@ public final class BytecodeCommand implements EventListener {
                     return;
                 }
 
-                String msgResult = "```\n" + disassembled + "\n```";
+                String msgResult = surroundInCodeBlock(disassembled);
 
                 disReply.delete().queue();
 
@@ -157,24 +161,29 @@ public final class BytecodeCommand implements EventListener {
                     return;
                 }
 
-                List<String> msgResults = takeApart(disassembled, 2000 - "```\n\n```".length());
+                List<String> msgResults =
+                        takeApart(disassembled, 2000 - surroundInCodeBlock("").length());
                 Iterator<String> iterator = msgResults.iterator();
                 List<Long> messageIds = new ArrayList<>();
 
                 if (iterator.hasNext()) {
-                    userMessage.reply("```\n" + iterator.next() + "\n```")
+                    userMessage.reply(surroundInCodeBlock(iterator.next()))
                         .mentionRepliedUser(false)
                         .queue(msg -> messageIds.add(msg.getIdLong()));
                 }
 
                 while (iterator.hasNext()) {
                     disReply.getTextChannel()
-                        .sendMessage("```\n" + iterator.next() + "\n```")
+                        .sendMessage(surroundInCodeBlock(iterator.next()))
                         .queue(msg -> messageIds.add(msg.getIdLong()));
                 }
 
                 replyMap.put(userMessage.getIdLong(), messageIds);
             });
+    }
+
+    private String surroundInCodeBlock(String s) {
+        return codeBlockLeft + s + codeBlockRight;
     }
 
     private List<String> takeApart(String s, int n) {
@@ -210,8 +219,8 @@ public final class BytecodeCommand implements EventListener {
     }
 
     private String parseCommandFromMessage(String messageContent) {
-        String withoutPrefix = messageContent.substring("!bytecode ".length());
-        Matcher codeBlockMatcher = CODE_BLOCK_EXTRACTOR_PATTERN.matcher(withoutPrefix);
+        String withoutPrefix = messageContent.substring(commandPrefix.length());
+        Matcher codeBlockMatcher = codeBlockExtractorPattern.matcher(withoutPrefix);
 
         if (codeBlockMatcher.find()) {
             return codeBlockMatcher.group(1);
