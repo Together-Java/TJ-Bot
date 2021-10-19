@@ -98,7 +98,7 @@ public final class BanCommand extends SlashCommandAdapter {
         event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
-                    "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Togherer Java'. If you think this was a mistake, please contact a moderator or adming of the guild. The ban reason is: "
+                    "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. If you think this was a mistake, please contact a moderator or admin of the guild. The ban reason is: "
                             + reason))
             .queue();
 
