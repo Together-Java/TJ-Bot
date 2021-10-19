@@ -10,10 +10,10 @@ import net.dv8tion.jda.api.hooks.EventListener;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.imc.CompilationResult;
 import org.togetherjava.tjbot.imc.CompileInfo;
-import org.togetherjava.tjbot.imc.JavacOption;
 import org.togetherjava.tjbot.imc.IMCompiler;
-import org.togetherjava.tjbot.javap.JavapOption;
+import org.togetherjava.tjbot.imc.JavacOption;
 import org.togetherjava.tjbot.javap.Javap;
+import org.togetherjava.tjbot.javap.JavapOption;
 
 import javax.tools.Diagnostic;
 import java.util.*;
@@ -107,6 +107,11 @@ public final class BytecodeCommand implements EventListener {
 
                     return;
                 }
+
+                textChannel.purgeMessagesById(myMessages.stream()
+                        .skip(1)
+                        .mapToLong(l -> l)
+                        .toArray());
 
                 myMessages.stream()
                     .skip(1) // skip our first message to edit it
