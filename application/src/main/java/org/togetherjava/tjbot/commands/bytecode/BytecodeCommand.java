@@ -217,7 +217,7 @@ public final class BytecodeCommand implements EventListener {
         return codeBlockLeft + s + codeBlockRight;
     }
 
-    private List<String> takeApart(String s, int n) {
+    private List<String> takeApart(@NotNull String s, int n) {
         List<String> result = new ArrayList<>();
         String[] lines = s.split("\n");
         int currentLength = 0;
