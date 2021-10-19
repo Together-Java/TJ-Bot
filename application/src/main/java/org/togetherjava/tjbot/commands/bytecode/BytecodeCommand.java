@@ -43,6 +43,7 @@ public final class BytecodeCommand implements EventListener {
     private static final String commandPrefix = "!bytecode ";
     private static final String codeBlockRight = "\n```";
     private static final String codeBlockLeft = "```\n";
+    private static final int discordMessageLength = 2000;
 
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
@@ -182,7 +183,7 @@ public final class BytecodeCommand implements EventListener {
 
                 disReply.delete().queue();
 
-                if (msgResult.length() <= 2000) {
+                if (msgResult.length() <= discordMessageLength) {
                     userMessage.reply(msgResult)
                         .mentionRepliedUser(false)
                         .queue(msg -> userMessageToMyMessages.put(userMessage.getIdLong(),
@@ -192,7 +193,7 @@ public final class BytecodeCommand implements EventListener {
                 }
 
                 List<String> msgResults =
-                        takeApart(disassembled, 2000 - surroundInCodeBlock("").length());
+                        takeApart(disassembled, discordMessageLength - surroundInCodeBlock("").length());
                 Iterator<String> iterator = msgResults.iterator();
                 List<Long> messageIds = new ArrayList<>();
 
