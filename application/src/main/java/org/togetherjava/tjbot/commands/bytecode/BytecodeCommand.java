@@ -106,7 +106,7 @@ public final class BytecodeCommand implements EventListener {
                 }
 
                 myMessages.stream()
-                    .skip(1)
+                    .skip(1) // skip our first message to edit it
                     .forEach(id -> event.getChannel()
                         .retrieveMessageById(id)
                         .queue(msg -> msg.delete().queue()));
