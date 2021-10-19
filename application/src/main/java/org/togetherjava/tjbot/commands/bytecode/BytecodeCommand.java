@@ -51,16 +51,16 @@ public final class BytecodeCommand implements EventListener {
     @Override
     public void onEvent(@NotNull GenericEvent genericEvent) {
         if (genericEvent instanceof GuildMessageReceivedEvent event && !event.getAuthor().isBot()) { // Fresh
-                                                                                               // compile
-                                                                                               // when
-                                                                                               // a
-                                                                                               // user
-                                                                                               // sends
-                                                                                               // a
-                                                                                               // message
-                                                                                               // with
-                                                                                               // !bytecode
-                                                                                               // ...
+            // compile
+            // when
+            // a
+            // user
+            // sends
+            // a
+            // message
+            // with
+            // !bytecode
+            // ...
             Message message = event.getMessage();
             String content = message.getContentRaw();
 
