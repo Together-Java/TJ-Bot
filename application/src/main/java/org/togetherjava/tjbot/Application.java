@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Commands;
+import org.togetherjava.tjbot.commands.bytecode.BytecodeCommand;
 import org.togetherjava.tjbot.commands.system.CommandSystem;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
@@ -75,7 +76,7 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                .addEventListeners(new CommandSystem(database))
+                .addEventListeners(new CommandSystem(database), new BytecodeCommand())
                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");
