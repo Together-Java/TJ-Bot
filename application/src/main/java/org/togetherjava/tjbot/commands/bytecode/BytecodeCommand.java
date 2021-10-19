@@ -129,7 +129,7 @@ public final class BytecodeCommand implements EventListener {
         userMessageToMyMessages.remove(msgId);
     }
 
-    private void compile(Message userMessage, Message myMessage, String content) {
+    private void compile(@NotNull Message userMessage, @NotNull Message myMessage, @NotNull String content) {
         userMessageToMyMessages.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
 
         CompilationResult result;
