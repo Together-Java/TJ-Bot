@@ -20,11 +20,11 @@ import java.util.Objects;
  * that amount of messages. {@code Banned User!}.
  *
  */
-public final class DeleteMessageCommand extends SlashCommandAdapter {
+public final class PurgeCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String NUMBER_OF_MESSAGES = "number_of_messages";
 
-    public DeleteMessageCommand() {
+    public PurgeCommand() {
         super("prune", "Use this command to delete a batch of messages",
                 SlashCommandVisibility.GUILD);
 
