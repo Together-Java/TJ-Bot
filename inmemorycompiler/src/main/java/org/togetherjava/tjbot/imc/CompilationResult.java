@@ -1,8 +1,10 @@
 package org.togetherjava.tjbot.imc;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collections;
 
-public record CompilationResult(boolean success, byte[] bytes, Iterable<CompileInfo> compileInfos) {
+public record CompilationResult(boolean success, byte[] bytes, @NotNull Iterable<CompileInfo> compileInfos) {
 
     private static final CompilationResult EMPTY_RESULT =
             new CompilationResult(false, new byte[0], Collections.emptyList());
