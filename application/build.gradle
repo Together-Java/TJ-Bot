@@ -44,7 +44,7 @@ shadowJar {
 
 dependencies {
     implementation project(':database')
-    implementation project(':imc')
+    implementation project(':inmemorycompiler')
 
     implementation 'net.dv8tion:JDA:4.3.0_334'
 
