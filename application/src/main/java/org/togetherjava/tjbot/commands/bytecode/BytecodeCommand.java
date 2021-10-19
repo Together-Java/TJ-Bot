@@ -200,7 +200,7 @@ public final class BytecodeCommand implements EventListener {
                 List<String> msgResults = takeApart(disassembled,
                         discordMessageLength - surroundInCodeBlock("").length());
                 Iterator<String> iterator = msgResults.iterator();
-                List<Long> messageIds = new ArrayList<>();
+                List<Long> messageIds = new ArrayList<>(msgResults.size());
 
                 if (iterator.hasNext()) {
                     userMessage.reply(surroundInCodeBlock(iterator.next()))
