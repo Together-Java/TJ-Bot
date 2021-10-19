@@ -1,12 +1,14 @@
 package org.togetherjava.tjbot.imc;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 class ByteJFOLoader extends ClassLoader {
     private final Map<String, IMByteJFO> nameToClassJFO = new LinkedHashMap<>();
 
-    public ByteJFOLoader(ClassLoader parent) {
+    public ByteJFOLoader(@NotNull ClassLoader parent) {
         super(parent);
     }
 
