@@ -136,10 +136,10 @@ public final class BytecodeCommand implements EventListener {
 
         try {
             result = IMCompiler.getInstance().compile(content, JavacOption.DEBUG_ALL);
-        } catch (RuntimeException rex) {
+        } catch (RuntimeException e) {
             myMessage
                 .editMessage("A fatal error has occurred during compilation. %s"
-                    .formatted(rex.toString()))
+                    .formatted(e.toString()))
                 .mentionRepliedUser(false)
                 .queue();
 
@@ -168,10 +168,10 @@ public final class BytecodeCommand implements EventListener {
                 try {
                     disassembled =
                             Javap.getInstance().disassemble(result.bytes(), JavapOption.VERBOSE);
-                } catch (RuntimeException rex) {
+                } catch (RuntimeException e) {
                     myMessage
                         .editMessage("A fatal error has occurred during disassembly. %s"
-                            .formatted(rex.toString()))
+                            .formatted(e.toString()))
                         .mentionRepliedUser(false)
                         .queue();
 
