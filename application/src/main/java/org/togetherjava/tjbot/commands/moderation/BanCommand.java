@@ -83,7 +83,7 @@ public final class BanCommand extends SlashCommandAdapter {
         }
 
         int deleteMessageHistoryDays =
-                Math.toIntExact(Objects.requireNonNull(event.getOption("delete-message-history-days"))
+                Math.toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                     .getAsLong());
         
         if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
