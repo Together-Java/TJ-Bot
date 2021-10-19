@@ -217,14 +217,14 @@ public final class BytecodeCommand implements EventListener {
         return codeBlockLeft + s + codeBlockRight;
     }
 
-    private List<String> takeApart(@NotNull String s, int n) {
+    private List<String> takeApart(@NotNull String message, int maxLength) {
         List<String> result = new ArrayList<>();
-        String[] lines = s.split("\n");
+        String[] lines = message.split("\n");
         int currentLength = 0;
         StringBuilder buffer = new StringBuilder();
 
         for (String line : lines) {
-            if (currentLength + line.length() > n) {
+            if (currentLength + line.length() > maxLength) {
                 result.add(buffer.toString());
                 buffer = new StringBuilder();
                 currentLength = 0;
