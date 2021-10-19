@@ -40,12 +40,13 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public final class BytecodeCommand implements EventListener {
+    private static final String commandPrefix = "!bytecode ";
+    private static final String codeBlockRight = "\n```";
+    private static final String codeBlockLeft = "```\n";
+
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
     private final Map<Long, List<Long>> userMessageToMyMessages = new HashMap<>();
-    private final String commandPrefix = "!bytecode ";
-    private final String codeBlockRight = "\n```";
-    private final String codeBlockLeft = "```\n";
 
     @Override
     public void onEvent(@NotNull GenericEvent gevent) {
