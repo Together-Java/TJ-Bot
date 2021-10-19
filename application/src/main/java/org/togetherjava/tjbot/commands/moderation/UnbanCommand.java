@@ -17,7 +17,6 @@ import java.util.Objects;
  * The implemented command is {@code /unban user_id}, upon which the bot will unban the user.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
-    // the logger
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String USER_ID = "user_id";
 
@@ -46,7 +45,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
         Member author = Objects.requireNonNull(event.getMember());
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("You do not have the required permissions to ban users from this server.")
+            event.reply(
+                    "You do not have the BAN_MEMBERS permission to urban users from this server.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -54,16 +54,16 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("I don't have the required permissions to unban the user from this server.")
+            event.reply(
+                    "I don't have the BAN_MEMBERS permission to unban the user from this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        // Unbans the user
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
 
-        // Add this to audit log
-        logger.info("Bot was forced to '{}' unban user id '{}' by '{}'", bot, userId, author);
+        String authorName = author.getId();
+        logger.info(" '{}' unbanned user id '{}' ", authorName, userId);
     }
 }
