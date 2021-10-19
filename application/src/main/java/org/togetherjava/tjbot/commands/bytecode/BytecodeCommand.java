@@ -126,8 +126,10 @@ public final class BytecodeCommand implements EventListener {
             return;
         }
 
-        userMessageToMyMessages.get(msgId)
-            .forEach(id -> channel.retrieveMessageById(id).queue(msg -> msg.delete().queue()));
+        channel.purgeMessagesById(userMessageToMyMessages.get(msgId)
+            .stream()
+            .map(String::valueOf)
+            .collect(Collectors.toList()));
 
         userMessageToMyMessages.remove(msgId);
     }
