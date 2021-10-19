@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.time.Instant;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Utility methods for {@link Message}.
@@ -22,8 +21,6 @@ import java.util.regex.Pattern;
  */
 public enum MessageUtils {
     ;
-
-    private static final Pattern ESCAPE_DISCORD_CHARACTERS = Pattern.compile("([^a-zA-Z0-9 \n\r])");
 
     /**
      * Disables all the buttons that a message has. Disabling buttons deems it as not clickable to
@@ -43,31 +40,6 @@ public enum MessageUtils {
         message
             .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
             .queue();
-    }
-
-    /**
-     * Escapes all characters that have a special meaning in Discord.
-     * <p>
-     * Affected characters are everything that is neither {@code a-zA-Z0-9}, a {@code space},
-     * {@code \n} or {@code \r}. Escaping is done by prefixing the character with a single backslash
-     * {@code \}.
-     * <p>
-     * Example:
-     *
-     * <pre>
-     * {@code
-     * // Before
-     * `System.out.println("Hello World")`
-     * // After
-     * \`System\.out\.println\(\"Hello World\"\)\`
-     * }
-     * </pre>
-     *
-     * @param message message to escape
-     * @return escaped message
-     */
-    public static String escapeDiscordMessage(@NotNull CharSequence message) {
-        return ESCAPE_DISCORD_CHARACTERS.matcher(message).replaceAll("\\\\$1");
     }
 
     /**

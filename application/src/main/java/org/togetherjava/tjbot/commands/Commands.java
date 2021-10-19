@@ -39,7 +39,8 @@ public enum Commands {
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
-        return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(), new TagCommand(tagSystem),
-                new TagManageCommand(tagSystem), new TagsCommand(tagSystem));
+        return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
+                new TagCommand(tagSystem), new TagManageCommand(tagSystem),
+                new TagsCommand(tagSystem));
     }
 }
