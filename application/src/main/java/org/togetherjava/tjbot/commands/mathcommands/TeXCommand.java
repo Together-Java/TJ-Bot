@@ -33,12 +33,12 @@ import java.util.Objects;
 
 public class TeXCommand extends SlashCommandAdapter {
 
-    public static final String LATEX_OPTION = "latex";
-    public static final String RENDERING_ERROR = "There was an error generating the image";
-    public static final float DEFAULT_IMAGE_SIZE = 40F;
-    public static final Color BACKGROUND_COLOR = Color.decode("0x383C3C ");
-    public static final Color FOREGROUND_COLOR = Color.decode("0xCCCCCC");
-    public static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
+    private static final String LATEX_OPTION = "latex";
+    private static final String RENDERING_ERROR = "There was an error generating the image";
+    private static final float DEFAULT_IMAGE_SIZE = 40F;
+    private static final Color BACKGROUND_COLOR = Color.decode("0x383C3C ");
+    private static final Color FOREGROUND_COLOR = Color.decode("0xCCCCCC");
+    private static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
     /**
      * Creates a new Instance.
