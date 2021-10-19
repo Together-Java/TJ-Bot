@@ -213,7 +213,7 @@ public final class BytecodeCommand implements EventListener {
             });
     }
 
-    private String surroundInCodeBlock(String s) {
+    private String surroundInCodeBlock(@NotNull String s) {
         return codeBlockLeft + s + codeBlockRight;
     }
 
