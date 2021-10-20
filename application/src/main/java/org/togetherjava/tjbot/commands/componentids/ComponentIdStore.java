@@ -179,21 +179,20 @@ public final class ComponentIdStore implements AutoCloseable {
             throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
         });
 
-        boolean alreadyExists = database.write(context -> {
+        database.writeTransaction(context -> {
+            String uuidText = uuid.toString();
+            if (context.fetchExists(ComponentIds.COMPONENT_IDS,
+                    ComponentIds.COMPONENT_IDS.UUID.eq(uuidText))) {
+                throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
+            }
+
             ComponentIdsRecord componentIdsRecord = context.newRecord(ComponentIds.COMPONENT_IDS)
                 .setUuid(uuid.toString())
                 .setComponentId(serializeComponentId(componentId))
                 .setLastUsed(Instant.now())
                 .setLifespan(lifespan.name());
-            if (componentIdsRecord.update() == 1) {
-                return true;
-            }
             componentIdsRecord.insert();
-            return false;
         });
-        if (alreadyExists) {
-            throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
-        }
     }
 
     @SuppressWarnings({"resource", "java:S1602"})
