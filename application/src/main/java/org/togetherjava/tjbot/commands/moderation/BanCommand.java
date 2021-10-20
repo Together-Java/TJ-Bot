@@ -84,31 +84,29 @@ public final class BanCommand extends SlashCommandAdapter {
 
 
         /*
-        OptionMapping deleteMessageHistoryDaysOption =
-                event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
+        int deleteMessageHistoryDays = Math
+            .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
+                .getAsLong());
 
-        int deleteMessageHistoryDays =
-                (int) event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION).getAsLong();
-
-        if (deleteMessageHistoryDaysOption != null) {
-            deleteMessageHistoryDays = 0;
-        } else if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
-            event.reply("The deletion days of the messages must be between 1 and 7 days.")
+        if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
+            event.reply(
+                    "The amount of days of the message history to delete must be between 1 and 7, but was "
+                            + deleteMessageHistoryDays + ".")
                 .setEphemeral(true)
                 .queue();
             return;
         }
-        
          */
 
         Choice days = new Choice();
-        days.add("0");
         days.add("1");
         days.add("2");
         days.add("3");
         days.add("5");
         days.add("6");
         days.add("7");
+
+
 
 
 
