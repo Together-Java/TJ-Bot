@@ -33,7 +33,7 @@ public final class Config {
     private final String tagManageRolePattern;
 
     private final List<FreeCommandConfig> freeCommand;
-    
+
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
@@ -140,7 +140,7 @@ public final class Config {
     /**
      * Gets the REGEX pattern used to identify roles that are allowed to use heavy moderation
      * commands, such as banning, based on role names.
-     * 
+     *
      * @return the REGEX pattern
      */
     public String getHeavyModerationRolePattern() {
@@ -150,7 +150,7 @@ public final class Config {
     /**
      * Gets the REGEX pattern used to identify roles that are allowed to use soft moderation
      * commands, such as kicking, muting or message deletion, based on role names.
-     * 
+     *
      * @return the REGEX pattern
      */
     public String getSoftModerationRolePattern() {
@@ -168,8 +168,11 @@ public final class Config {
     }
 
     /**
+     * Gets a List of channel id's required to configure the free command system see
+     * {@link FreeCommandConfig}
      *
-     * @return an
+     * @return a List of instances of FreeCommandConfig, each of the instances are separated by
+     *         guild.
      */
     public Collection<FreeCommandConfig> getFreeCommandConfig() {
         return freeCommand;

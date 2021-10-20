@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.BanCommand;
 import org.togetherjava.tjbot.commands.moderation.KickCommand;
@@ -55,6 +56,7 @@ public enum Commands {
         commands.add(new KickCommand());
         commands.add(new BanCommand());
         commands.add(new UnbanCommand());
+        commands.add(new FreeCommand());
 
         return commands;
     }
