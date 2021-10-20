@@ -14,6 +14,7 @@ final class ComponentIdsTest {
 
     @Test
     void generateConsistentWithParse() {
+        // FIXME Do not forget to reimplement me
         assertTrue(true);
         /*
          * List<TestScenario> tests = List.of(new TestScenario("base", "foo", List.of("foo", "bar",
