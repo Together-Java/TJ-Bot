@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  * <p>
  * <p>
  * Component IDs which have not been used for a long time, depending on their {@link Lifespan}
- * setting, might get evicted from the store after some time. The store implements a **LRU-cache**
+ * setting, might get evicted from the store after some time. The store implements a <strong>LRU-cache</strong>
  * and each call of {@link #parse(String)} or {@link #get(UUID)} will update the usage-timestamp for
  * the component ID.
  * <p>
