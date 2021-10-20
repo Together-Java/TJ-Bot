@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.db.Database;
 
@@ -35,6 +36,7 @@ public enum Commands {
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
-        return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand());
+        return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
+                new FreeCommand());
     }
 }

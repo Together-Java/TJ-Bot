@@ -102,8 +102,11 @@ public final class Config {
     }
 
     /**
+     * Gets a List of channel id's required to configure the free command system see
+     * {@link FreeCommandConfig}
      *
-     * @return an
+     * @return a List of instances of FreeCommandConfig, each of the instances are separated by
+     *         guild.
      */
     public Collection<FreeCommandConfig> getFreeCommandConfig() {
         return freeCommand;
