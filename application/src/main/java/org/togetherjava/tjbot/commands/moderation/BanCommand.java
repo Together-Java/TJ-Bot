@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import java.awt.*;
 import java.util.Objects;
 
 
@@ -81,6 +82,8 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
+
+        /*
         OptionMapping deleteMessageHistoryDaysOption =
                 event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
@@ -95,6 +98,19 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
+        
+         */
+
+        Choice days = new Choice();
+        days.add("0");
+        days.add("1");
+        days.add("2");
+        days.add("3");
+        days.add("5");
+        days.add("6");
+        days.add("7");
+
+
 
         event.getJDA()
             .openPrivateChannelById(userId)
