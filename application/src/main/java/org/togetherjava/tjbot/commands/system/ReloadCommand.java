@@ -88,9 +88,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
 
         ButtonStyle buttonStyle = Objects.requireNonNull(event.getButton()).getStyle();
         switch (buttonStyle) {
-            case DANGER -> {
-                event.reply("Okay, will not reload.").queue();
-            }
+            case DANGER -> event.reply("Okay, will not reload.").queue();
             case SUCCESS -> {
                 logger.info("Reloading commands, triggered by user '{}' in guild '{}'", userId,
                         event.getGuild());

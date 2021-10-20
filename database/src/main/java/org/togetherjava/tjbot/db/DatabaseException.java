@@ -5,7 +5,7 @@ import java.io.Serial;
 /**
  * Thrown when an error occurs while interacting with the database.
  */
-public class DatabaseException extends RuntimeException {
+public final class DatabaseException extends RuntimeException {
     /**
      * Serial version UID.
      */

@@ -11,8 +11,6 @@ import java.util.function.Predicate;
 
 /**
  * Formatter which specifically formats code tokens (that are part of a section)
- *
- * @author illuminator3
  */
 class CodeSectionFormatter {
     private final StringBuilder result = new StringBuilder();
@@ -37,7 +35,6 @@ class CodeSectionFormatter {
      * Removes all whitespaces from the given queue
      *
      * @param queue the queue to remove whitespaces from
-     * @author illuminator3
      */
     private static void purgeWhitespaces(Queue<Token> queue) {
         queue.removeIf(t -> t.type() == TokenType.WHITESPACE);
@@ -45,8 +42,6 @@ class CodeSectionFormatter {
 
     /**
      * Starts the formatting process
-     *
-     * @author illuminator3
      */
     void format() {
         Token next;
@@ -62,7 +57,6 @@ class CodeSectionFormatter {
      * Consumes the next token
      *
      * @param token token to consume
-     * @author illuminator3
      */
     private void consume(Token token) {
         TokenType type = token.type();
@@ -87,7 +81,6 @@ class CodeSectionFormatter {
      * Puts the next token into the result
      *
      * @param token token to put
-     * @author illuminator3
      */
     private void put(Token token) {
         TokenType type = token.type();
@@ -117,7 +110,6 @@ class CodeSectionFormatter {
      *
      * @param token token to check
      * @return whether a space should be put after that token
-     * @author illuminator3
      */
     private boolean shouldPutSpaceAfter(Token token) {
         TokenType type = token.type();
@@ -138,7 +130,6 @@ class CodeSectionFormatter {
      * {@link SkippableLookaheadQueue#peek(int, Predicate)}
      *
      * @param type current token type
-     * @author illuminator3
      */
     private void checkFor(TokenType type) {
         if (isIndexedForLoop(type)) { // if it's a for int loop then set the forLevel to 2
@@ -150,7 +141,6 @@ class CodeSectionFormatter {
      * Handles the case of being inside a generic type declaration
      *
      * @param token current token
-     * @author illuminator3
      */
     private void handleGeneric(Token token) {
         TokenType type = token.type();
@@ -188,7 +178,6 @@ class CodeSectionFormatter {
      *
      * @param type current token type
      * @return whether the token type belongs to a generic type declaration
-     * @author illuminator3
      */
     private boolean checkGeneric(TokenType type) {
         if (type == TokenType.LESS_THAN) {
@@ -227,7 +216,6 @@ class CodeSectionFormatter {
      *
      * @param type token type to check
      * @return whether it's valid inside a generic type declaration
-     * @author illuminator3
      */
     private boolean isValidGeneric(TokenType type) {
         return type == TokenType.WILDCARD || type == TokenType.LESS_THAN
@@ -241,7 +229,6 @@ class CodeSectionFormatter {
      *
      * @param type token type to check
      * @return whether a new line should be put after that token
-     * @author illuminator3
      */
     private boolean shouldPutNewLineAfter(TokenType type) {
         if (type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
@@ -261,7 +248,6 @@ class CodeSectionFormatter {
      *
      * @param type current token type
      * @return whether there's an indexed for loop or not
-     * @author illuminator3
      */
     private boolean isIndexedForLoop(TokenType type) {
         return type == TokenType.FOR && !internalEnhancedFor();
@@ -271,7 +257,6 @@ class CodeSectionFormatter {
      * Checks if there's an enhanced for loop ahead without checking the current token type
      *
      * @return whether there's an enhanced for loop ahead
-     * @author illuminator3
      */
     private boolean internalEnhancedFor() {
         return queue.peek(3, t -> {
@@ -286,7 +271,6 @@ class CodeSectionFormatter {
      * closing parenthesis, an operator or a semicolon
      *
      * @return whether a space should be put after the parenthesis
-     * @author illuminator3
      */
     private boolean isParenthesisRule(Token token) {
         if (queue.isEmpty()) {
@@ -303,8 +287,6 @@ class CodeSectionFormatter {
 
     /**
      * Appends a new line if there's more in the token queue
-     *
-     * @author illuminator3
      */
     private void appendNewLine() {
         if (!queue.isEmpty()) {
@@ -321,7 +303,6 @@ class CodeSectionFormatter {
      *
      * @param token token to check
      * @return whether the given token is a keyword
-     * @author illuminator3
      */
     private boolean isKeyword(Token token) {
         return token.type().isKeyword();
@@ -332,7 +313,6 @@ class CodeSectionFormatter {
      *
      * @param token token to check
      * @return whether the given token is an operator
-     * @author illuminator3
      */
     private boolean isOperator(Token token) {
         return token.type().isOperator();
@@ -342,7 +322,6 @@ class CodeSectionFormatter {
      * Updates the indentation based on the current token type
      *
      * @param type current token type
-     * @author illuminator3
      */
     private void updateIndentation(TokenType type) {
         if (type == TokenType.OPEN_BRACES) {
@@ -354,8 +333,6 @@ class CodeSectionFormatter {
 
     /**
      * Applies the current indentation
-     *
-     * @author illuminator3
      */
     private void applyIndentation() {
         if (applyIndentation) {

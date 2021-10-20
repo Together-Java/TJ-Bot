@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 
 /**
  * Formatter which can format a given string into a string which contains code blocks etc
- *
- * @author illuminator3
  */
 public class Formatter {
     /**
@@ -19,7 +17,6 @@ public class Formatter {
      *
      * @param tokens tokens to format
      * @return resulting code
-     * @author illuminator3
      */
     public String format(List<Token> tokens) {
         List<Section> sections = sectionize(indexTokens(tokens));
@@ -44,7 +41,6 @@ public class Formatter {
      * @param input input to format
      * @param lexer lexer to use
      * @return resulting code
-     * @author illuminator3
      */
     public String format(String input, Lexer lexer) {
         return format(lexer.tokenize(input));
@@ -55,7 +51,6 @@ public class Formatter {
      *
      * @param tokens tokens to join
      * @return joined form of the tokens
-     * @author illuminator3
      */
     private String joinTokens(List<Token> tokens) {
         return tokens.stream().map(Token::content).collect(Collectors.joining());
@@ -67,7 +62,6 @@ public class Formatter {
      *
      * @param tokens tokens to write
      * @return written code sections
-     * @author illuminator3
      */
     private StringBuilder writeCodeSection(List<Token> tokens) {
         CodeSectionFormatter formatter = new CodeSectionFormatter(tokens);
@@ -82,7 +76,6 @@ public class Formatter {
      *
      * @param tokens not-indexed tokens
      * @return indexed tokens
-     * @author illuminator3
      */
     private List<CheckedToken> indexTokens(List<Token> tokens) {
         return tokens.stream()
@@ -95,7 +88,6 @@ public class Formatter {
      *
      * @param token token to check
      * @return true if it's a code token, false if not
-     * @author illuminator3
      */
     private boolean isTokenPartOfCode(Token token) {
         return token.type() != TokenType.UNKNOWN;
@@ -107,7 +99,6 @@ public class Formatter {
      *
      * @param checkedTokens checked tokens
      * @return list of sections
-     * @author illuminator3
      */
     private List<Section> sectionize(List<CheckedToken> checkedTokens) {
         CheckedToken first = checkedTokens.get(0);
@@ -135,16 +126,12 @@ public class Formatter {
 
     /**
      * Section POJR
-     *
-     * @author illuminator3
      */
     private static record Section(List<Token> tokens, boolean isCodeSection) {
     }
 
     /**
      * CheckedToken POJR
-     *
-     * @author illuminator3
      */
     private static record CheckedToken(Token token, boolean isCode) {
     }

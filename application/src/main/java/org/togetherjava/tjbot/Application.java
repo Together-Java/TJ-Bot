@@ -65,6 +65,7 @@ public enum Application {
      * @param token the Discord Bot token to connect with
      * @param databasePath the path to the database to use
      */
+    @SuppressWarnings("WeakerAccess")
     public static void runBot(String token, Path databasePath) {
         logger.info("Starting bot...");
         try {

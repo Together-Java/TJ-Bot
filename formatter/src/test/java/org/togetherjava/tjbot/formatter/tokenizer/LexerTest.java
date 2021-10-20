@@ -10,9 +10,6 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author illuminator3
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class LexerTest {
     Lexer lexer;
