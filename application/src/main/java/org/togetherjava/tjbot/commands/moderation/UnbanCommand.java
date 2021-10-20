@@ -24,7 +24,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
      * Creates an instance of the ban command.
      */
     public UnbanCommand() {
-        super("unban", "Use this command to unban a user", SlashCommandVisibility.GUILD);
+        super("unban", "Unbans a given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.STRING, USER_ID,
                 "The user id of the user which you want to unban", true);
