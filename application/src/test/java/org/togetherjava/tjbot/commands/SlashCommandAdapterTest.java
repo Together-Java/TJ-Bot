@@ -61,6 +61,7 @@ final class SlashCommandAdapterTest {
 
     @Test
     void generateComponentId() {
+        // FIXME Do not forget to reimplement me
         assertTrue(true);
         /*
          * String[] elements = {"foo", "bar", "baz"}; SlashCommandAdapter adapter = createAdapter();
