@@ -57,8 +57,9 @@ public final class ComponentIdStore implements AutoCloseable {
 
     private final Database database;
     /**
-     * In-memory cache which is used as first stage before the database, to speedup look-ups.
-     * Usually covers about 95% of all queries.
+     * In-memory cache which is used as first stage before the database, to speedup look-ups. Should
+     * cover the majority of all queries, as most queries (e.g. button clicks) come from messages
+     * that have been created in the past hours and not days.
      */
     private final Map<UUID, ComponentId> uuidToComponentId =
             Collections.synchronizedMap(new LRUMap<>(IN_MEMORY_CACHE_SIZE));
