@@ -48,6 +48,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
     private final Map<String, SlashCommand> nameToSlashCommands;
     private final ComponentIdParser componentIdParser;
+    private final ComponentIdStore componentIdStore;
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -68,11 +69,16 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         }
         nameToSlashCommands.put(RELOAD_COMMAND, new ReloadCommand(this));
 
-        ComponentIdStore componentIdStore = new ComponentIdStore(database);
+        componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(CommandSystem::onComponentIdRemoved);
-        componentIdParser = componentIdStore;
+        componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
         nameToSlashCommands.values()
-            .forEach(slashCommand -> slashCommand.acceptComponentIdGenerator(componentIdStore));
+            .forEach(slashCommand -> slashCommand
+                .acceptComponentIdGenerator(((componentId, lifespan) -> {
+                    UUID uuid = UUID.randomUUID();
+                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                    return uuid.toString();
+                })));
 
         if (logger.isInfoEnabled()) {
             logger.info("Available commands: {}", nameToSlashCommands.keySet());
