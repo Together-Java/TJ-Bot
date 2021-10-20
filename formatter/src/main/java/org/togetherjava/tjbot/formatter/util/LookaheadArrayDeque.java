@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * A {@link LookaheadQueue} implementation that is based on an {@link ArrayDeque}
- *
- * @author illuminator3
  */
 public class LookaheadArrayDeque<E> extends ArrayDeque<E> implements LookaheadQueue<E> {
     public LookaheadArrayDeque() {}

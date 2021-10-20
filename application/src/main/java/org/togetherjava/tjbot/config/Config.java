@@ -16,6 +16,7 @@ import java.util.Objects;
 @SuppressWarnings({"Singleton", "ClassCanBeRecord"})
 public final class Config {
 
+    @SuppressWarnings("RedundantFieldInitialization")
     private static Config config = null;
 
     private final String token;
