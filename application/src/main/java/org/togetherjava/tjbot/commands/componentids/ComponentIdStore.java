@@ -24,23 +24,20 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * Thread-safe storage for component IDs. Can generate, persist and parse component IDs based on
+ * Thread-safe storage for component IDs. Can put, persist and get back component IDs based on
  * UUIDs. Component IDs are used for button and selection menu commands, see
  * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandEvent)} for
  * details.
  * <p>
- * Use {@link #generate(ComponentId, Lifespan)} to generate and persist a component ID; and
- * {@link #parse(String)} to get it back. Component IDs are persisted during application runs and
- * can hence be retrieved back even after long times.
- * <p>
- * The store also provides a more direct interface to its functionality, using {@link #get(UUID)}
- * and {@link #putOrThrow(UUID, ComponentId, Lifespan)}.
+ * Use {@link #putOrThrow(UUID, ComponentId, Lifespan)} to put and persist a component ID; and
+ * {@link #get(UUID)} to get it back. Component IDs are persisted during application runs and can
+ * hence be retrieved back even after long times.
  * <p>
  * <p>
  * Component IDs which have not been used for a long time, depending on their {@link Lifespan}
- * setting, might get evicted from the store after some time. The store implements a <strong>LRU-cache</strong>
- * and each call of {@link #parse(String)} or {@link #get(UUID)} will update the usage-timestamp for
- * the component ID.
+ * setting, might get evicted from the store after some time. The store implements a
+ * <strong>LRU-cache</strong> and each call of {@link #get(UUID)} will update the usage-timestamp
+ * for the component ID.
  * <p>
  * Users can react to eviction by adding a listener to
  * {@link #addComponentIdRemovedListener(Consumer)}.
@@ -48,8 +45,7 @@ import java.util.stream.Collectors;
  * The store is fully thread-safe, component IDs can be generated and parsed multi-threaded.
  */
 @SuppressWarnings("ClassWithTooManyFields")
-public final class ComponentIdStore
-        implements ComponentIdGenerator, ComponentIdParser, AutoCloseable {
+public final class ComponentIdStore implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ComponentIdStore.class);
     private static final CsvMapper CSV = new CsvMapper();
     private static final long EVICT_EVERY_INITIAL_DELAY = 1;
@@ -117,18 +113,6 @@ public final class ComponentIdStore
         logDebugSizeStatistics();
     }
 
-    @Override
-    public @NotNull String generate(@NotNull ComponentId componentId, @NotNull Lifespan lifespan) {
-        UUID uuid = UUID.randomUUID();
-        putOrThrow(uuid, componentId, lifespan);
-        return uuid.toString();
-    }
-
-    @Override
-    public @NotNull Optional<ComponentId> parse(@NotNull String uuid) {
-        return get(UUID.fromString(uuid));
-    }
-
     /**
      * Adds a listener for component ID removal. The listener is triggered during eviction, once for
      * each component ID that has been removed from the store.
@@ -149,8 +133,7 @@ public final class ComponentIdStore
      * been evicted already. Use {@link #addComponentIdRemovedListener(Consumer)} to react to this
      * event.
      * <p>
-     * Use {@link #generate(ComponentId, Lifespan)} or
-     * {@link #putOrThrow(UUID, ComponentId, Lifespan)} to add component IDs.
+     * Use {@link #putOrThrow(UUID, ComponentId, Lifespan)} to add component IDs.
      *
      * @param uuid the UUID to lookup
      * @return the associated component ID, if present
