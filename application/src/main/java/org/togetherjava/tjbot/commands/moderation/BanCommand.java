@@ -28,8 +28,6 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
     private static final String REASON_OPTION = "reason";
-    // private static final Integer DELETE_HISTORY_MIN_DAYS = 1;
-    // private static final Integer DELETE_HISTORY_MAX_DAYS = 7;
 
     /**
      * Creates an instance of the ban command.
@@ -97,7 +95,6 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
-
 
         event.getJDA()
             .openPrivateChannelById(userId)
