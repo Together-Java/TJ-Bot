@@ -63,7 +63,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
 
-        String authorName = author.getId();
-        logger.info(" '{}' unbanned user id '{}' ", authorName, userId);
+        String authorId = author.getId();
+        logger.info(" '{}' unbanned user id '{}' ", authorId, userId);
     }
 }
