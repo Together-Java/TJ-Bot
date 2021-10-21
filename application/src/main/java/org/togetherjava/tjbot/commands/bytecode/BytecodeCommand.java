@@ -2,11 +2,10 @@ package org.togetherjava.tjbot.commands.bytecode;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
-import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.imc.CompilationResult;
 import org.togetherjava.tjbot.imc.CompileInfo;
@@ -39,12 +38,14 @@ import java.util.stream.Collectors;
  * }
  * </pre>
  */
-public final class BytecodeCommand implements EventListener {
+public final class BytecodeCommand extends ListenerAdapter {
     private static final String COMMAND_PREFIX = "!bytecode ";
     private static final String CODE_BLOCK_OPENING = "```\n";
     private static final String CODE_BLOCK_CLOSING = "\n```";
     /**
-     * Discord's message size limit (in characters)
+     * Discord's message size limit (in characters).
+     *
+     * @see <a href="https://discord.com/developers/docs/resources/channel#create-message">discord.com/developers</a>
      */
     private static final int DISCORD_MESSAGE_LENGTH = 2000;
 
@@ -52,75 +53,74 @@ public final class BytecodeCommand implements EventListener {
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
     private final Map<Long, List<Long>> userMessageToMyMessages = new HashMap<>();
 
+    // Fresh compile when a user sends a message with !bytecode ...
     @Override
-    public void onEvent(@NotNull GenericEvent genericEvent) {
-        if (genericEvent instanceof GuildMessageReceivedEvent event && !event.getAuthor().isBot()) { // Fresh
-            // compile
-            // when
-            // a
-            // user
-            // sends
-            // a
-            // message
-            // with
-            // !bytecode
-            // ...
-            Message message = event.getMessage();
+    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+        if (event.getAuthor().isBot()) {
+            return;
+        }
+
+        Message message = event.getMessage();
+        String content = message.getContentRaw();
+
+        if (!content.startsWith(COMMAND_PREFIX)) {
+            return;
+        }
+
+        message.reply("Compiling...")
+                .mentionRepliedUser(false)
+                .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
+    }
+
+    // Delete our messages if the user deletes their request message
+    @Override
+    public void onGuildMessageDelete(@NotNull GuildMessageDeleteEvent event) {
+        long mesageIdLong = event.getMessageIdLong();
+
+        if (userMessageToMyMessages.containsKey(mesageIdLong)) {
+            deleteMyMessages(mesageIdLong, event.getChannel());
+        }
+    }
+
+    // Recompile when the user sends edits their request message
+    @Override
+    public void onGuildMessageUpdate(@NotNull GuildMessageUpdateEvent event) {
+        Message message = event.getMessage();
+        long messageIdLong = event.getMessageIdLong();
+
+        if (!userMessageToMyMessages.containsKey(messageIdLong)) {
+            return;
+        }
+
+        TextChannel textChannel = message.getTextChannel();
+        List<Long> myMessages = userMessageToMyMessages.get(messageIdLong);
+
+        if (myMessages.size() == 0) {
+            message.reply(
+                            "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)")
+                    .queue();
+
+            return;
+        }
+
+        textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
             String content = message.getContentRaw();
 
             if (!content.startsWith(COMMAND_PREFIX)) {
-                return;
-            }
-
-            message.reply("Compiling...")
-                .mentionRepliedUser(false)
-                .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
-        } else if (genericEvent instanceof GuildMessageDeleteEvent event
-                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) { // Delete our
-                                                                                    // messages if
-                                                                                    // the user
-                                                                                    // deletes their
-                                                                                    // request
-                                                                                    // message
-            deleteMyMessages(event.getMessageIdLong(), event.getChannel());
-        } else if (genericEvent instanceof GuildMessageUpdateEvent event
-                && userMessageToMyMessages.containsKey(event.getMessageIdLong())) { // Recompile
-                                                                                    // when the user
-                                                                                    // sends edits
-                                                                                    // their request
-                                                                                    // message
-            Message message = event.getMessage();
-            long messageIdLong = event.getMessageIdLong();
-            TextChannel textChannel = message.getTextChannel();
-            List<Long> myMessages = userMessageToMyMessages.get(messageIdLong);
-
-            if (myMessages.size() == 0) {
-                message.reply(
-                        "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)")
-                    .queue();
+                deleteMyMessages(message.getIdLong(), textChannel);
 
                 return;
             }
 
-            textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
-                String content = message.getContentRaw();
+            textChannel.purgeMessagesById(myMessages.stream()
+                    .skip(1) // skip our first message to edit it
+                    .mapToLong(l -> l)
+                    .toArray());
 
-                if (!content.startsWith(COMMAND_PREFIX)) {
-                    deleteMyMessages(message.getIdLong(), textChannel);
+            myMessage.editMessage("Recompiling...").queue();
 
-                    return;
-                }
-
-                textChannel.purgeMessagesById(myMessages.stream()
-                        .skip(1) // skip our first message to edit it
-                        .mapToLong(l -> l)
-                        .toArray());
-
-                myMessage.editMessage("Recompiling...").queue();
-
-                compile(message, myMessage, parseCommandFromMessage(content));
-            });
-        }
+            compile(message, myMessage, parseCommandFromMessage(content));
+        });
     }
 
     private void deleteMyMessages(@NotNull Long msgId, @NotNull TextChannel channel) {
