@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,16 +37,19 @@ public final class BanCommand extends SlashCommandAdapter {
     public BanCommand() {
         super("ban", "Bans a given user", SlashCommandVisibility.GUILD);
 
-        //TODO add choices
-        Choice days = new Choice();
-        days.add("1");
-
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
-            .addOption(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
-                    "the amount(1-7) of days of the message history to delete, otherwise no messages are deleted.",
-                    false);
-
+            .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
+                    "the amount of days of the message history to delete, otherwise no messages are deleted.",
+                    true)
+                    .addChoice("1",1)
+                    .addChoice("2",2)
+                    .addChoice("3",3)
+                    .addChoice("4",4)
+                    .addChoice("5",5)
+                    .addChoice("6",6)
+                    .addChoice("7",7)
+            );
     }
 
     @Override
