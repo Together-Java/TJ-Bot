@@ -90,6 +90,7 @@ public final class BanCommand extends SlashCommandAdapter {
         String userName = user.getId();
         String authorName = author.getId();
         if (option != null) {
+            //TODO Implement the same delete message structure for the purge message.
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                         .getAsLong());
