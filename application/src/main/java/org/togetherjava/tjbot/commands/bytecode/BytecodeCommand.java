@@ -40,10 +40,13 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public final class BytecodeCommand implements EventListener {
-    private static final String commandPrefix = "!bytecode ";
-    private static final String codeBlockRight = "\n```";
-    private static final String codeBlockLeft = "```\n";
-    private static final int discordMessageLength = 2000;
+    private static final String COMMAND_PREFIX = "!bytecode ";
+    private static final String CODE_BLOCK_OPENING = "```\n";
+    private static final String CODE_BLOCK_CLOSING = "\n```";
+    /**
+     * Discord's message size limit (in characters)
+     */
+    private static final int DISCORD_MESSAGE_LENGTH = 2000;
 
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
@@ -65,7 +68,7 @@ public final class BytecodeCommand implements EventListener {
             Message message = event.getMessage();
             String content = message.getContentRaw();
 
-            if (!content.startsWith(commandPrefix)) {
+            if (!content.startsWith(COMMAND_PREFIX)) {
                 return;
             }
 
@@ -102,7 +105,7 @@ public final class BytecodeCommand implements EventListener {
             textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
                 String content = message.getContentRaw();
 
-                if (!content.startsWith(commandPrefix)) {
+                if (!content.startsWith(COMMAND_PREFIX)) {
                     deleteMyMessages(message.getIdLong(), textChannel);
 
                     return;
@@ -153,12 +156,12 @@ public final class BytecodeCommand implements EventListener {
 
         if (!result.success()) {
             myMessage
-                .editMessage("Compilation failed." + codeBlockLeft
+                .editMessage("Compilation failed." + CODE_BLOCK_OPENING
                         + iterToCollection(result.compileInfos()).stream()
                             .map(CompileInfo::diagnostic)
                             .map(Diagnostic::toString)
                             .collect(Collectors.joining("\n"))
-                        + codeBlockRight)
+                        + CODE_BLOCK_CLOSING)
                 .mentionRepliedUser(false)
                 .queue();
 
@@ -187,7 +190,7 @@ public final class BytecodeCommand implements EventListener {
 
                 disReply.delete().queue();
 
-                if (msgResult.length() <= discordMessageLength) {
+                if (msgResult.length() <= DISCORD_MESSAGE_LENGTH) {
                     userMessage.reply(msgResult)
                         .mentionRepliedUser(false)
                         .queue(msg -> userMessageToMyMessages.put(userMessage.getIdLong(),
@@ -197,7 +200,7 @@ public final class BytecodeCommand implements EventListener {
                 }
 
                 List<String> msgResults = takeApart(disassembled,
-                        discordMessageLength - surroundInCodeBlock("").length());
+                        DISCORD_MESSAGE_LENGTH - surroundInCodeBlock("").length());
                 Iterator<String> iterator = msgResults.iterator();
                 List<Long> messageIds = new ArrayList<>(msgResults.size());
 
@@ -218,7 +221,7 @@ public final class BytecodeCommand implements EventListener {
     }
 
     private String surroundInCodeBlock(@NotNull String s) {
-        return codeBlockLeft + s + codeBlockRight;
+        return CODE_BLOCK_OPENING + s + CODE_BLOCK_CLOSING;
     }
 
     private List<String> takeApart(@NotNull String message, int maxPartLength) {
@@ -254,7 +257,7 @@ public final class BytecodeCommand implements EventListener {
     }
 
     private String parseCommandFromMessage(String messageContent) {
-        String withoutPrefix = messageContent.substring(commandPrefix.length());
+        String withoutPrefix = messageContent.substring(COMMAND_PREFIX.length());
         Matcher codeBlockMatcher = codeBlockExtractorPattern.matcher(withoutPrefix);
 
         if (codeBlockMatcher.find()) {
