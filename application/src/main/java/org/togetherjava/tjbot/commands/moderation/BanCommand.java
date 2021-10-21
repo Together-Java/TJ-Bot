@@ -90,8 +90,8 @@ public final class BanCommand extends SlashCommandAdapter {
 
         OptionMapping option = event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
-        String userName = user.getId();
-        String authorName = author.getId();
+        long userName = user.getIdLong();
+        long authorName = author.getIdLong();
         if (option != null) {
             //TODO Implement the same delete message structure for the purge message.
             int days = Math.toIntExact(
