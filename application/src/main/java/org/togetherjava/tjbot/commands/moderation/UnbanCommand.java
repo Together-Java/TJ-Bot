@@ -17,7 +17,7 @@ import java.util.Objects;
  * The implemented command is {@code /unban user_id}, upon which the bot will unban the user.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
+    private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
     private static final String USER_ID = "user_id";
 
     /**
