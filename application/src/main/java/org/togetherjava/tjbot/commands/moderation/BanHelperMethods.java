@@ -40,7 +40,7 @@ public class BanHelperMethods {
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                    Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. 
+                    Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'.\040
                     If you think this was a mistake, please contact a moderator or admin of the guild.
                     The ban reason is:  %s
                     """.formatted(reason)))
