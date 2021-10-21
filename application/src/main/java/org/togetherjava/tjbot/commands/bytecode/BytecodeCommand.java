@@ -45,7 +45,8 @@ public final class BytecodeCommand extends ListenerAdapter {
     /**
      * Discord's message size limit (in characters).
      *
-     * @see <a href="https://discord.com/developers/docs/resources/channel#create-message">discord.com/developers</a>
+     * @see <a href=
+     *      "https://discord.com/developers/docs/resources/channel#create-message">discord.com/developers</a>
      */
     private static final int DISCORD_MESSAGE_LENGTH = 2000;
 
@@ -68,8 +69,8 @@ public final class BytecodeCommand extends ListenerAdapter {
         }
 
         message.reply("Compiling...")
-                .mentionRepliedUser(false)
-                .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
+            .mentionRepliedUser(false)
+            .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
     }
 
     // Delete our messages if the user deletes their request message
@@ -97,8 +98,8 @@ public final class BytecodeCommand extends ListenerAdapter {
 
         if (myMessages.size() == 0) {
             message.reply(
-                            "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)")
-                    .queue();
+                    "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)")
+                .queue();
 
             return;
         }
@@ -113,9 +114,9 @@ public final class BytecodeCommand extends ListenerAdapter {
             }
 
             textChannel.purgeMessagesById(myMessages.stream()
-                    .skip(1) // skip our first message to edit it
-                    .mapToLong(l -> l)
-                    .toArray());
+                .skip(1) // skip our first message to edit it
+                .map(String::valueOf)
+                .toList());
 
             myMessage.editMessage("Recompiling...").queue();
 
