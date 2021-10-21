@@ -60,10 +60,7 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply(
-                    "\"This user is too powerful for you to kick.")
-                .setEphemeral(true)
-                .queue();
+            event.reply("\"This user is too powerful for you to kick.").setEphemeral(true).queue();
             return;
         }
 

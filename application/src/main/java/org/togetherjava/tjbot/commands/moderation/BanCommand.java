@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import java.awt.*;
 import java.util.Objects;
 
 
@@ -41,15 +40,13 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
                     "the amount of days of the message history to delete, otherwise no messages are deleted.",
-                    true)
-                    .addChoice("1",1)
-                    .addChoice("2",2)
-                    .addChoice("3",3)
-                    .addChoice("4",4)
-                    .addChoice("5",5)
-                    .addChoice("6",6)
-                    .addChoice("7",7)
-            );
+                    true).addChoice("1", 1)
+                        .addChoice("2", 2)
+                        .addChoice("3", 3)
+                        .addChoice("4", 4)
+                        .addChoice("5", 5)
+                        .addChoice("6", 6)
+                        .addChoice("7", 7));
     }
 
     @Override
@@ -68,10 +65,7 @@ public final class BanCommand extends SlashCommandAdapter {
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply(
-                    "This user is too powerful for you to ban.")
-                .setEphemeral(true)
-                .queue();
+            event.reply("This user is too powerful for you to ban.").setEphemeral(true).queue();
             return;
         }
 
@@ -98,7 +92,7 @@ public final class BanCommand extends SlashCommandAdapter {
         if (option != null) {
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
-                            .getAsLong());
+                        .getAsLong());
             BanHelperMethods.deleteMessageHistory(days, event);
             BanHelperMethods.banGuild(user, reason, days, event);
 
