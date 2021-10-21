@@ -81,7 +81,6 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-
         OptionMapping option = event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
         if (option != null) {
