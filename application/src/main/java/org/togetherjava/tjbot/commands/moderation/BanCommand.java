@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import java.awt.*;
 import java.util.Objects;
 
 
@@ -83,51 +82,63 @@ public final class BanCommand extends SlashCommandAdapter {
         }
 
 
-        /*
-        int deleteMessageHistoryDays = Math
-            .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
-                .getAsLong());
+        OptionMapping option = event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
-        if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
-            event.reply(
-                    "The amount of days of the message history to delete must be between 1 and 7, but was "
-                            + deleteMessageHistoryDays + ".")
-                .setEphemeral(true)
+        if (option != null) {
+            int deleteMessageHistoryDays = Math.toIntExact(
+                    Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
+                        .getAsLong());
+
+            if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
+                event.reply(
+                        "The amount of days of the message history to delete must be between 1 and 7, but was "
+                                + deleteMessageHistoryDays + ".")
+                    .setEphemeral(true)
+                    .queue();
+                return;
+            }
+
+            event.getJDA()
+                .openPrivateChannelById(userId)
+                .flatMap(channel -> channel.sendMessage(
+                        "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. "
+                                + "If you think this was a mistake, please contact a moderator or admin of the guild. "
+                                + "The ban reason is: " + reason))
                 .queue();
-            return;
+
+            event.getGuild()
+                .ban(user, deleteMessageHistoryDays, reason)
+                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
+                        + author.getUser().getAsTag() + " for: " + reason))
+                .queue();
+
+            String userName = user.getId();
+            String authorName = author.getId();
+            logger.info(
+                    " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+                    authorName, userName, deleteMessageHistoryDays, reason);
+
+        } else {
+            event.getJDA()
+                .openPrivateChannelById(userId)
+                .flatMap(channel -> channel.sendMessage(
+                        "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. "
+                                + "If you think this was a mistake, please contact a moderator or admin of the guild. "
+                                + "The ban reason is: " + reason))
+                .queue();
+
+            event.getGuild()
+                .ban(user, 0, reason)
+                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
+                        + author.getUser().getAsTag() + " for: " + reason))
+                .queue();
+
+            String userName = user.getId();
+            String authorName = author.getId();
+            logger.info(
+                    " '{}' banned the user '{}' and deleted the message history of the last 0 days. Reason was '{}'",
+                    authorName, userName, reason);
+
         }
-         */
-
-        Choice days = new Choice();
-        days.add("1");
-        days.add("2");
-        days.add("3");
-        days.add("5");
-        days.add("6");
-        days.add("7");
-
-
-
-
-
-        event.getJDA()
-            .openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(
-                    "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. "
-                            + "If you think this was a mistake, please contact a moderator or admin of the guild. "
-                            + "The ban reason is: " + reason))
-            .queue();
-
-        event.getGuild()
-            .ban(user, deleteMessageHistoryDays, reason)
-            .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
-                    + author.getUser().getAsTag() + " for: " + reason))
-            .queue();
-
-        String userName = user.getId();
-        String authorName = author.getId();
-        logger.info(
-                " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                authorName, userName, deleteMessageHistoryDays, reason);
     }
 }
