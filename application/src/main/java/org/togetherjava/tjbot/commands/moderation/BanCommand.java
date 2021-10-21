@@ -41,7 +41,7 @@ public final class BanCommand extends SlashCommandAdapter {
         //TODO add choices
         Choice days = new Choice();
         days.add("1");
-        
+
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
             .addOption(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
@@ -91,25 +91,22 @@ public final class BanCommand extends SlashCommandAdapter {
 
         OptionMapping option = event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
+        String userName = user.getId();
+        String authorName = author.getId();
         if (option != null) {
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                             .getAsLong());
             deleteMessageHistory(days, event);
             banGuild(user, reason, days, event);
-            String userName = user.getId();
-            String authorName = author.getId();
+
             logger.info(
                     " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
                     authorName, userName, days, reason);
         } else {
             openPrivateChannel(userId, reason, event);
             banGuild(user, reason, 0, event);
-            String userName = user.getId();
-            String authorName = author.getId();
-            logger.info(
-                    " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                    authorName, userName, 0, reason);
+            logger(authorName, userName, 0, reason);
         }
     }
     public static void deleteMessageHistory(int days , @NotNull SlashCommandEvent event) {
@@ -140,5 +137,10 @@ public final class BanCommand extends SlashCommandAdapter {
                                 + "If you think this was a mistake, please contact a moderator or admin of the guild. "
                                 + "The ban reason is: " + reason))
                 .queue();
+    }
+    public static void logger(String authorNameId, String userNameId, int days, String reason) {
+        logger.info(
+                " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+                authorNameId, userNameId, days, reason);
     }
 }
