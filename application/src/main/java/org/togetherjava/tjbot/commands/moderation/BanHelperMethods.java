@@ -45,7 +45,7 @@ public class BanHelperMethods {
             .queue();
     }
 
-    public static void logger(String authorNameId, String userNameId, int days, String reason) {
+    public static void logger(long authorNameId, long userNameId, int days, String reason) {
         logger.info(
                 " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
                 authorNameId, userNameId, days, reason);
