@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import java.awt.*;
 import java.util.Objects;
 
 
@@ -28,6 +29,8 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
     private static final String REASON_OPTION = "reason";
+    private static final Integer DELETE_HISTORY_MIN_DAYS = 1;
+    private static final Integer DELETE_HISTORY_MAX_DAYS = 7;
 
     /**
      * Creates an instance of the ban command.
@@ -35,11 +38,16 @@ public final class BanCommand extends SlashCommandAdapter {
     public BanCommand() {
         super("ban", "Bans a given user", SlashCommandVisibility.GUILD);
 
+        //TODO add choices
+        Choice days = new Choice();
+        days.add("1");
+        
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
             .addOption(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
                     "the amount(1-7) of days of the message history to delete, otherwise no messages are deleted.",
                     false);
+
     }
 
     @Override
@@ -59,7 +67,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
             event.reply(
-                    "This user is too powerful for you to ban because he has more permissions than you.")
+                    "This user is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -84,60 +92,53 @@ public final class BanCommand extends SlashCommandAdapter {
         OptionMapping option = event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
         if (option != null) {
-            int deleteMessageHistoryDays = Math.toIntExact(
+            int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
-                        .getAsLong());
-
-            if (deleteMessageHistoryDays < 1 || deleteMessageHistoryDays > 7) {
-                event.reply(
-                        "The amount of days of the message history to delete must be between 1 and 7, but was "
-                                + deleteMessageHistoryDays + ".")
-                    .setEphemeral(true)
-                    .queue();
-                return;
-            }
-
-            event.getJDA()
-                .openPrivateChannelById(userId)
-                .flatMap(channel -> channel.sendMessage(
-                        "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. "
-                                + "If you think this was a mistake, please contact a moderator or admin of the guild. "
-                                + "The ban reason is: " + reason))
-                .queue();
-
-            event.getGuild()
-                .ban(user, deleteMessageHistoryDays, reason)
-                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
-                        + author.getUser().getAsTag() + " for: " + reason))
-                .queue();
-
+                            .getAsLong());
+            deleteMessageHistory(days, event);
+            banGuild(user, reason, days, event);
             String userName = user.getId();
             String authorName = author.getId();
             logger.info(
                     " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                    authorName, userName, deleteMessageHistoryDays, reason);
-
+                    authorName, userName, days, reason);
         } else {
-            event.getJDA()
+            openPrivateChannel(userId, reason, event);
+            banGuild(user, reason, 0, event);
+            String userName = user.getId();
+            String authorName = author.getId();
+            logger.info(
+                    " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+                    authorName, userName, 0, reason);
+        }
+    }
+    public static void deleteMessageHistory(int days , @NotNull SlashCommandEvent event) {
+        if (days < DELETE_HISTORY_MIN_DAYS || days > DELETE_HISTORY_MAX_DAYS) {
+            event.reply(
+                            "The amount of days of the message history to delete must be between " +
+                                    DELETE_HISTORY_MIN_DAYS + " and " + DELETE_HISTORY_MAX_DAYS + " , but was "
+                                    + days + ".")
+                    .setEphemeral(true)
+                    .queue();
+        }
+    }
+
+    public static void banGuild(Member user, String reason, int days, @NotNull SlashCommandEvent event) {
+        Member author = Objects.requireNonNull(event.getMember());
+        event.getGuild()
+                .ban(user, days, reason)
+                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
+                        + author.getUser().getAsTag() + " for: " + reason))
+                .queue();
+    }
+
+    public static void openPrivateChannel(long userId, String reason, @NotNull SlashCommandEvent event) {
+        event.getJDA()
                 .openPrivateChannelById(userId)
                 .flatMap(channel -> channel.sendMessage(
                         "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. "
                                 + "If you think this was a mistake, please contact a moderator or admin of the guild. "
                                 + "The ban reason is: " + reason))
                 .queue();
-
-            event.getGuild()
-                .ban(user, 0, reason)
-                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
-                        + author.getUser().getAsTag() + " for: " + reason))
-                .queue();
-
-            String userName = user.getId();
-            String authorName = author.getId();
-            logger.info(
-                    " '{}' banned the user '{}' and deleted the message history of the last 0 days. Reason was '{}'",
-                    authorName, userName, reason);
-
-        }
     }
 }

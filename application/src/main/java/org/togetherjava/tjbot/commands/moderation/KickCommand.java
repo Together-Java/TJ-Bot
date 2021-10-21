@@ -61,7 +61,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
             event.reply(
-                    "This user is too powerful for you to kick because he has more permissions than you.")
+                    "\"This user is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
