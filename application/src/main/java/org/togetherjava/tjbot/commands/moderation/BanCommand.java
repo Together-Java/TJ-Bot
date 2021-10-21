@@ -40,16 +40,14 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
                     "the amount of days of the message history to delete, otherwise no messages are deleted.",
-                    false)
-                        .addChoice("0", 0)
+                    false).addChoice("0", 0)
                         .addChoice("1", 1)
                         .addChoice("2", 2)
                         .addChoice("3", 3)
                         .addChoice("4", 4)
                         .addChoice("5", 5)
                         .addChoice("6", 6)
-                        .addChoice("7", 7)
-            );
+                        .addChoice("7", 7));
     }
 
     @Override
@@ -93,7 +91,7 @@ public final class BanCommand extends SlashCommandAdapter {
         long userName = user.getIdLong();
         long authorName = author.getIdLong();
         if (option != null) {
-            //TODO Implement the same delete message structure for the purge message.
+            // TODO Implement the same delete message structure for the purge message.
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                         .getAsLong());
