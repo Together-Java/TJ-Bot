@@ -29,8 +29,6 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
     private static final String REASON_OPTION = "reason";
-    private static final Integer DELETE_HISTORY_MIN_DAYS = 1;
-    private static final Integer DELETE_HISTORY_MAX_DAYS = 7;
 
     /**
      * Creates an instance of the ban command.
@@ -97,50 +95,16 @@ public final class BanCommand extends SlashCommandAdapter {
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                             .getAsLong());
-            deleteMessageHistory(days, event);
-            banGuild(user, reason, days, event);
+            BanHelperMethods.deleteMessageHistory(days, event);
+            BanHelperMethods.banGuild(user, reason, days, event);
 
             logger.info(
                     " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
                     authorName, userName, days, reason);
         } else {
-            openPrivateChannel(userId, reason, event);
-            banGuild(user, reason, 0, event);
-            logger(authorName, userName, 0, reason);
+            BanHelperMethods.openPrivateChannel(userId, reason, event);
+            BanHelperMethods.banGuild(user, reason, 0, event);
+            BanHelperMethods.logger(authorName, userName, 0, reason);
         }
-    }
-    public static void deleteMessageHistory(int days , @NotNull SlashCommandEvent event) {
-        if (days < DELETE_HISTORY_MIN_DAYS || days > DELETE_HISTORY_MAX_DAYS) {
-            event.reply(
-                            "The amount of days of the message history to delete must be between " +
-                                    DELETE_HISTORY_MIN_DAYS + " and " + DELETE_HISTORY_MAX_DAYS + " , but was "
-                                    + days + ".")
-                    .setEphemeral(true)
-                    .queue();
-        }
-    }
-
-    public static void banGuild(Member user, String reason, int days, @NotNull SlashCommandEvent event) {
-        Member author = Objects.requireNonNull(event.getMember());
-        event.getGuild()
-                .ban(user, days, reason)
-                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
-                        + author.getUser().getAsTag() + " for: " + reason))
-                .queue();
-    }
-
-    public static void openPrivateChannel(long userId, String reason, @NotNull SlashCommandEvent event) {
-        event.getJDA()
-                .openPrivateChannelById(userId)
-                .flatMap(channel -> channel.sendMessage(
-                        "Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'. "
-                                + "If you think this was a mistake, please contact a moderator or admin of the guild. "
-                                + "The ban reason is: " + reason))
-                .queue();
-    }
-    public static void logger(String authorNameId, String userNameId, int days, String reason) {
-        logger.info(
-                " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                authorNameId, userNameId, days, reason);
     }
 }
