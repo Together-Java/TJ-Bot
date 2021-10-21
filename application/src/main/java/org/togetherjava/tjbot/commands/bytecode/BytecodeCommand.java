@@ -221,11 +221,11 @@ public final class BytecodeCommand extends ListenerAdapter {
             });
     }
 
-    private String surroundInCodeBlock(@NotNull String s) {
+    private @NotNull String surroundInCodeBlock(@NotNull String s) {
         return CODE_BLOCK_OPENING + s + CODE_BLOCK_CLOSING;
     }
 
-    private List<String> takeApart(@NotNull String message, int maxPartLength) {
+    private @NotNull List<String> takeApart(@NotNull String message, int maxPartLength) {
         List<String> result = new ArrayList<>();
         String[] lines = message.split("\n");
         int currentLength = 0;
@@ -249,7 +249,7 @@ public final class BytecodeCommand extends ListenerAdapter {
         return result;
     }
 
-    private <E> Collection<E> iterToCollection(Iterable<E> iter) {
+    private <E> @NotNull Collection<E> iterToCollection(@NotNull Iterable<E> iter) {
         Collection<E> list = new ArrayList<>();
 
         iter.forEach(list::add);
@@ -257,7 +257,7 @@ public final class BytecodeCommand extends ListenerAdapter {
         return list;
     }
 
-    private String parseCommandFromMessage(String messageContent) {
+    private @NotNull String parseCommandFromMessage(@NotNull String messageContent) {
         String withoutPrefix = messageContent.substring(COMMAND_PREFIX.length());
         Matcher codeBlockMatcher = codeBlockExtractorPattern.matcher(withoutPrefix);
 

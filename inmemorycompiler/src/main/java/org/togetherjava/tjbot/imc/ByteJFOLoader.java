@@ -12,14 +12,14 @@ class ByteJFOLoader extends ClassLoader {
         super(parent);
     }
 
-    public IMByteJFO registerJFO(@NotNull IMByteJFO jfo) {
+    public @NotNull IMByteJFO registerJFO(@NotNull IMByteJFO jfo) {
         nameToClassJFO.put(jfo.getName(), jfo);
 
         return jfo;
     }
 
     @Override
-    protected Class<?> findClass(String name) throws UnsupportedOperationException {
+    protected @NotNull Class<?> findClass(String name) throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 
@@ -27,7 +27,7 @@ class ByteJFOLoader extends ClassLoader {
         return last(nameToClassJFO.values().toArray(new IMByteJFO[0])).getBytes();
     }
 
-    private <E> E last(@NotNull E[] col) {
+    private <E> @NotNull E last(@NotNull E[] col) {
         return col[col.length - 1];
     }
 }
