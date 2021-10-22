@@ -84,11 +84,11 @@ public final class BanCommand extends SlashCommandAdapter {
                 .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                         .getAsLong());
         long authorId = author.getIdLong();
-        banUser(userId, authorId, user, reason, days, event);
+        banUser(user, reason, days, userId, authorId, event);
     }
 
-    private static void banUser(long userId, long authorNameId, Member user, String reason,
-            int days, @NotNull SlashCommandEvent event) {
+    private static void banUser(Member user, String reason,
+                                int days, long userId, long authorNameId, @NotNull SlashCommandEvent event) {
         event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
