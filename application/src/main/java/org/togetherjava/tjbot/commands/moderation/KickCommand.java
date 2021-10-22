@@ -93,8 +93,8 @@ public final class KickCommand extends SlashCommandAdapter {
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
-        String authorId = author.getId();
-        logger.info(" '{}' kicked the user '{}' due to reason being '{}'", authorId, userId,
-                reason);
+        logger.info(" '{} ({})' kicked the user '{} ({})' due to reason being '{}'",
+                author.getUser().getAsTag(), author.getIdLong(), author.getUser().getAsTag(),
+                userId, reason);
     }
 }
