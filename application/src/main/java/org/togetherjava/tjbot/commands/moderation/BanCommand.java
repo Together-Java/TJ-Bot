@@ -26,6 +26,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
     private static final String REASON_OPTION = "reason";
+    private static final Integer REASON_MAX_LENGTH = 512;
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     /**
      * Creates an instance of the ban command.
@@ -89,6 +90,13 @@ public final class BanCommand extends SlashCommandAdapter {
 
     private static void banUser(Member user, String reason,
                                 int days, long userId, long authorNameId, @NotNull SlashCommandEvent event) {
+
+        if(reason.length() > BanCommand.REASON_MAX_LENGTH) {
+            event.reply("The reason can not be over 512 characters")
+                    .setEphemeral(true)
+                    .queue();
+        }
+
         event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
