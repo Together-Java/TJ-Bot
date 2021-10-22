@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import java.util.Objects;
 
-
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
  * also be paired with a ban reason. The command will also try to DM the user to inform him about
@@ -28,7 +27,6 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
     private static final String REASON_OPTION = "reason";
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
-
     /**
      * Creates an instance of the ban command.
      */
@@ -37,16 +35,13 @@ public final class BanCommand extends SlashCommandAdapter {
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
-            .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
-                    "the amount of days of the message history to delete, none means no messages are deleted.",
-                    true).addChoice("none", 0)
-                        .addChoice("1", 1)
-                        .addChoice("2", 2)
-                        .addChoice("3", 3)
-                        .addChoice("4", 4)
-                        .addChoice("5", 5)
-                        .addChoice("6", 6)
-                        .addChoice("7", 7));
+             .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
+                "the amount of days of the message history to delete, none means no messages are deleted.",
+                true)
+                     .addChoice("none", 0)
+                     .addChoice("recent", 1)
+                     .addChoice("all", 7)
+             );
     }
 
     @Override
@@ -82,12 +77,13 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        long authorId = author.getIdLong();
+
+
         // TODO Implement the same delete message structure for the purge message.
         int days = Math
-            .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
-                .getAsLong());
-
+                .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
+                        .getAsLong());
+        long authorId = author.getIdLong();
         banUser(userId, authorId, user, reason, days, event);
     }
 
