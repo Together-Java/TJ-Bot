@@ -38,7 +38,7 @@ public final class BanCommand extends SlashCommandAdapter {
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
-                    "the amount of days of the message history to delete, otherwise no messages are deleted.",
+                    "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0)
                         .addChoice("1", 1)
                         .addChoice("2", 2)
