@@ -85,7 +85,7 @@ public final class BanCommand extends SlashCommandAdapter {
         banUser(user, reason, days, userId, authorId, event);
     }
 
-    private static void banUser(Member user, String reason, int days, long userId,
+    private static void banUser(@NotNull Member user, @NotNull String reason, int days, long userId,
             long authorNameId, @NotNull SlashCommandEvent event) {
 
         if (reason.length() > BanCommand.REASON_MAX_LENGTH) {
