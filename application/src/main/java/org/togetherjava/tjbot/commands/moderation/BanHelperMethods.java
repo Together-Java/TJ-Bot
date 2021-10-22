@@ -11,12 +11,12 @@ import java.util.Objects;
 public class BanHelperMethods {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
 
-    public static void getDeleteMessageHistory(int days, int minDays, int maxDays, @NotNull SlashCommandEvent event) {
+    public static void getDeleteMessageHistory(int days, int minDays, int maxDays,
+            @NotNull SlashCommandEvent event) {
         if (days < minDays || days > maxDays) {
             event
                 .reply("The amount of days of the message history to delete must be between "
-                        + minDays + " and " + maxDays
-                        + " , but was " + days + ".")
+                        + minDays + " and " + maxDays + " , but was " + days + ".")
                 .setEphemeral(true)
                 .queue();
         }

@@ -95,7 +95,8 @@ public final class BanCommand extends SlashCommandAdapter {
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                         .getAsLong());
-            BanHelperMethods.getDeleteMessageHistory(days, DELETE_HISTORY_MIN_DAYS, DELETE_HISTORY_MAX_DAYS, event);
+            BanHelperMethods.getDeleteMessageHistory(days, DELETE_HISTORY_MIN_DAYS,
+                    DELETE_HISTORY_MAX_DAYS, event);
             BanHelperMethods.getBanGuild(user, reason, days, event);
             BanHelperMethods.getLogger(authorId, userId, days, reason);
         } else {
