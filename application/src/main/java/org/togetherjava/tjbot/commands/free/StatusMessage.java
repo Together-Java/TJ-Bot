@@ -7,6 +7,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * A start at building a class for status messages. Most functionality that should be here is
+ * currently in {@link FreeCommand}
+ */
+@SuppressWarnings("c")
 public class StatusMessage {
     private final Guild guild;
     private final TextChannel postingChannel;

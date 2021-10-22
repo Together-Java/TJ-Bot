@@ -1,9 +1,6 @@
 package org.togetherjava.tjbot.commands.free;
 
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.GuildChannel;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -14,15 +11,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FreeCommandConfig;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// todo (can SlashCommandVisibility be
-// narrower than GUILD?)
+// todo (can SlashCommandVisibility be narrower than GUILD?)
 // todo monitor all channels when list is empty? monitor none?
 // todo (use other emojis? use images?)
 // todo add command to add/remove/status channels to monitor
@@ -54,7 +53,9 @@ import java.util.stream.Collectors;
  */
 public class FreeCommand extends SlashCommandAdapter implements EventListener {
     private static final Logger logger = LoggerFactory.getLogger(FreeCommand.class);
+    private static final String STATUS_TITLE = "**__CHANNEL STATUS__**\n\n";
     private static final String FREE_COMMAND = "free";
+    private static final Color FREE_COLOR = Color.decode("#CCCC00");
 
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private final Map<Long, ChannelStatus> channelsById;
@@ -86,6 +87,19 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         isReady = false;
     }
 
+    /**
+     * Reaction to the 'onReady' event. This method binds the configurables to the
+     * {@link net.dv8tion.jda.api.JDA} instance. Including fetching the names of the channels this
+     * command monitors (as per the JDA)
+     * <p>
+     * It also updates the Status messages in their relevant channels, so that the message is up to
+     * date.
+     * <p>
+     * This also registers a new listener on the {@link net.dv8tion.jda.api.JDA}, this should be
+     * removed when the code base supports additional functionality
+     *
+     * @param event the event this method reacts to
+     */
     @Override
     public void onReady(@NotNull final ReadyEvent event) {
         // todo remove this when onGuildMessageRecieved has another access point
@@ -115,7 +129,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         guildToStatusChannel.values()
             .stream()
             .map(event.getJDA()::getTextChannelById)
-            .forEach(this::drawStatus);
+            .forEach(this::displayStatus);
 
         isReady = true;
     }
@@ -141,13 +155,21 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         ChannelStatus status = channelsById.get(id);
         if (status.isBusy()) {
             status.busy(ChannelStatus.FREE);
-            drawStatus(getStatusChannelFor(event.getGuild()));
+            displayStatus(getStatusChannelFor(event.getGuild()));
             event.reply("This channel is now free.").queue();
         } else {
             Util.sendErrorMessage(event, "This channel is already free, no changes made");
         }
     }
 
+    /**
+     * Private method to test event to see if it should be processed.
+     *
+     * Will respond to users describing the problem if the event should not be processed.
+     *
+     * @param event the event to test for validity.
+     * @return true if the event should be processed false otherwise.
+     */
     private boolean shouldHandle(@NotNull final SlashCommandEvent event) {
         if (!isReady) {
             logger.debug(
@@ -158,7 +180,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         }
         if (!guildToStatusChannel.containsKey(event.getGuild().getIdLong())) {
             logger.error(
-                    "Slash command used by {} in {}(channel: {}) when guild is not registed in Free Command",
+                    "Slash command used by {} in {}(channel: {}) when guild is not registered in Free Command",
                     event.getUser().getIdLong(), event.getGuild(), event.getChannel().getName());
             Util.sendErrorMessage(event,
                     "This guild (%s) is not configured to use the '/free' command, please add entries in the config, restart the bot and try again."
@@ -176,8 +198,43 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         return true;
     }
 
-    public String drawStatus(TextChannel channel) {
+    /**
+     * Builds the message that will be displayed for users.
+     * <p>
+     * This method dynamically builds the status message as per the current values on the guild,
+     * including the channel categories. This method will detect any changes made on the guild and
+     * represent those changes in the status message.
+     *
+     * @param channel the text channel the status message will be posted in.
+     */
+    public void displayStatus(@NotNull TextChannel channel) {
         final Guild guild = channel.getGuild();
+
+        String messageTxt = buildStatusMessage(guild);
+        MessageEmbed embed = MessageUtils.generateEmbed(STATUS_TITLE, messageTxt,
+                channel.getJDA().getSelfUser(), FREE_COLOR);
+
+        long latestMessageId = channel.getLatestMessageIdLong();
+        Optional<Message> statusMessage = getStatusMessageIn(channel);
+        channel.sendMessage("Message selected is: " + statusMessage).queue();
+        if (statusMessage.isPresent()) {
+            Message message = statusMessage.get();
+            if (message.getIdLong() != latestMessageId) {
+                message.delete();
+            } else {
+                message.editMessageEmbeds(embed);
+            }
+        }
+
+        channel.sendMessageEmbeds(embed).queue();
+    }
+
+    public String buildStatusMessage(@NotNull Guild guild) {
+        if (!guildToStatusChannel.containsKey(guild.getIdLong())) {
+            throw new IllegalArgumentException(
+                    "The guild '%s(%s)' is not registered in the free command system"
+                        .formatted(guild.getName(), guild.getIdLong()));
+        }
 
         List<ChannelStatus> statusFor = guild.getChannels()
             .stream()
@@ -188,31 +245,46 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
 
         // update name so that current channel name is used
         statusFor.forEach(channelStatus -> channelStatus
-            .setName(guild.getGuildChannelById(channelStatus.getChannelID()).getName()));
-        String message =
-                statusFor.stream().map(ChannelStatus::toDiscord).collect(Collectors.joining("\n"));
+            .setName(guild.getGuildChannelById(channelStatus.getChannelID()).getAsMention()));
 
-        channel.getLatestMessageIdLong();
-        channel.sendMessage(message).queue();
+        // dynamically separate channels by channel categories
+        StringBuilder sb = new StringBuilder();
+        String categoryName = "";
+        for (ChannelStatus status : statusFor) {
+            Category category = guild.getGuildChannelById(status.getChannelID()).getParent();
+            if (category != null && !category.getName().equals(categoryName)) {
+                categoryName = category.getName();
+                sb.append("\n__").append(categoryName).append("__\n");
+            }
+            sb.append(status.toDiscord()).append("\n");
+        }
 
-        return message;
+        return sb.toString();
     }
 
+    /**
+     * Method for responding to 'onGuildMessageRecieved' this will need to be replaced by a more
+     * appropriate method when the bot has more functionality.
+     * <p>
+     * Marks channels as busy when a user posts a message in a monitored channel that is currently free.
+     *
+     * @param event the generic event that includes the 'onGuildMessageReceived'.
+     */
     @Override
     public void onEvent(@NotNull GenericEvent event) {
-        if (event instanceof GuildMessageReceivedEvent castEvent) {
-            if (castEvent.isWebhookMessage() || castEvent.getAuthor().isBot()) {
+        if (event instanceof GuildMessageReceivedEvent guildEvent) {
+            if (guildEvent.isWebhookMessage() || guildEvent.getAuthor().isBot()) {
                 return;
             }
-            ChannelStatus status = channelsById.get(castEvent.getChannel().getIdLong());
+            ChannelStatus status = channelsById.get(guildEvent.getChannel().getIdLong());
             if (status == null || status.isBusy()) {
                 logger.debug("Channel status is currently busy, ignoring message received. {} ",
                         status);
                 return;
             }
             status.busy(ChannelStatus.BUSY);
-            drawStatus(getStatusChannelFor(castEvent.getGuild()));
-            castEvent.getMessage().reply("The channel was free, please ask your question").queue();
+            displayStatus(getStatusChannelFor(guildEvent.getGuild()));
+            guildEvent.getMessage().reply("The channel was free, please ask your question").queue();
         }
     }
 
@@ -221,9 +293,35 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         return guild.getTextChannelById(guildToStatusChannel.get(guild.getIdLong()));
     }
 
-    private Optional<Message> getStatusMessageIn(TextChannel channel) {
-        channel.getHistory().retrievePast(100).queue();
+    private Optional<Message> getStatusMessageIn(@NotNull TextChannel channel) {
+        if (channelToStatusMessage.containsKey(channel.getIdLong())) {
+            Long id = channelToStatusMessage.get(channel.getIdLong());
+            if (id == null) {
+                return Optional.empty();
+            }
+            Message message = channel.getHistory().getMessageById(id);
+            if (message == null) {
+                return Optional.empty();
+            }
+            return Optional.of(message);
+        }
+        return findExistingStatusMessage(channel);
+    }
 
-        return Optional.empty();
+    private Optional<Message> findExistingStatusMessage(@NotNull TextChannel channel) {
+        // will only run when bots starts, afterwards its stored in a map
+        Optional<Message> result = channel.getHistory()
+            .retrievePast(100)
+            .map(history -> history.stream()
+                .filter(message -> !message.getEmbeds().isEmpty())
+                .filter(message -> message.getAuthor().equals(channel.getJDA().getSelfUser()))
+                .filter(message -> message.getEmbeds().get(0).getTitle().equals(STATUS_TITLE))
+                .findFirst())
+            .complete();
+
+        Message mapping = result.orElse(null);
+        channelToStatusMessage.put(channel.getIdLong(),
+                mapping == null ? null : mapping.getIdLong());
+        return result;
     }
 }
