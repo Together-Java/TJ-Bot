@@ -81,16 +81,17 @@ public final class BanCommand extends SlashCommandAdapter {
         int days = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                 .getAsLong());
+
+        if (reason.length() > BanCommand.REASON_MAX_LENGTH) {
+            event.reply("The reason can not be over 512 characters").setEphemeral(true).queue();
+        }
+
         long authorId = author.getIdLong();
         banUser(user, reason, days, userId, authorId, event);
     }
 
     private static void banUser(@NotNull Member user, @NotNull String reason, int days, long userId,
             long authorNameId, @NotNull SlashCommandEvent event) {
-
-        if (reason.length() > BanCommand.REASON_MAX_LENGTH) {
-            event.reply("The reason can not be over 512 characters").setEphemeral(true).queue();
-        }
 
         event.getJDA()
             .openPrivateChannelById(userId)
