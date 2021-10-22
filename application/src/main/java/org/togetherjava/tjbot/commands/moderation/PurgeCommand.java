@@ -26,9 +26,9 @@ public final class PurgeCommand extends SlashCommandAdapter {
     private static final String USER_MESSAGES = "user";
 
     public PurgeCommand() {
-        super("prune", "Use this command to delete a batch of messages",
+        super("purge", "Use this command to delete a batch of messages",
                 SlashCommandVisibility.GUILD);
-
+        
         getData()
             .addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES_TO_DELETE,
                     "The number of messages you want to delete. 1 to 100", true)
@@ -65,6 +65,7 @@ public final class PurgeCommand extends SlashCommandAdapter {
             event.reply("You can only delete 1 to 100 messages").setEphemeral(true).queue();
         } else {
             channel.purgeMessages(messageHistory);
+            event.reply("I have deleted this amount of messages " + messageHistory);
             logger.info(" '{}' deleted this amount of messages '{}'", author, amount);
         }
     }
