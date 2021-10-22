@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.system.CommandSystem;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.listener.MessageMetadataListener;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -76,7 +77,8 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                .addEventListeners(new CommandSystem(database))
+                .addEventListeners(new CommandSystem(database),
+                        new MessageMetadataListener(database))
                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");

@@ -41,6 +41,6 @@ public enum Commands {
         // available.
         return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
                 new TagCommand(tagSystem), new TagManageCommand(tagSystem),
-                new TagsCommand(tagSystem));
+                new TagsCommand(tagSystem), new TopHelpers(database));
     }
 }
