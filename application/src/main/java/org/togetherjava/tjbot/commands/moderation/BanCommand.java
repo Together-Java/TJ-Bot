@@ -25,10 +25,11 @@ import java.util.Objects;
  *
  */
 public final class BanCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String USER_OPTION = "user";
     private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
     private static final String REASON_OPTION = "reason";
+    private static final Integer DELETE_HISTORY_MIN_DAYS = 0;
+    private static final Integer DELETE_HISTORY_MAX_DAYS = 7;
 
     /**
      * Creates an instance of the ban command.
@@ -88,23 +89,19 @@ public final class BanCommand extends SlashCommandAdapter {
 
         OptionMapping option = event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION);
 
-        long userName = user.getIdLong();
-        long authorName = author.getIdLong();
+        long authorId = author.getIdLong();
         if (option != null) {
             // TODO Implement the same delete message structure for the purge message.
             int days = Math.toIntExact(
                     Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
                         .getAsLong());
-            BanHelperMethods.deleteMessageHistory(days, event);
-            BanHelperMethods.banGuild(user, reason, days, event);
-
-            logger.info(
-                    " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                    authorName, userName, days, reason);
+            BanHelperMethods.getDeleteMessageHistory(days, DELETE_HISTORY_MIN_DAYS, DELETE_HISTORY_MAX_DAYS, event);
+            BanHelperMethods.getBanGuild(user, reason, days, event);
+            BanHelperMethods.getLogger(authorId, userId, days, reason);
         } else {
-            BanHelperMethods.openPrivateChannel(userId, reason, event);
-            BanHelperMethods.banGuild(user, reason, 0, event);
-            BanHelperMethods.logger(authorName, userName, 0, reason);
+            BanHelperMethods.getOpenPrivateChannel(userId, reason, event);
+            BanHelperMethods.getBanGuild(user, reason, 0, event);
+            BanHelperMethods.getLogger(authorId, userId, 0, reason);
         }
     }
 }

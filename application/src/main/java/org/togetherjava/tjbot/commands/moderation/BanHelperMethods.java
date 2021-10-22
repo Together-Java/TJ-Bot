@@ -10,21 +10,19 @@ import java.util.Objects;
 
 public class BanHelperMethods {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
-    private static final Integer DELETE_HISTORY_MIN_DAYS = 1;
-    private static final Integer DELETE_HISTORY_MAX_DAYS = 7;
 
-    public static void deleteMessageHistory(int days, @NotNull SlashCommandEvent event) {
-        if (days < DELETE_HISTORY_MIN_DAYS || days > DELETE_HISTORY_MAX_DAYS) {
+    public static void getDeleteMessageHistory(int days, int minDays, int maxDays, @NotNull SlashCommandEvent event) {
+        if (days < minDays || days > maxDays) {
             event
                 .reply("The amount of days of the message history to delete must be between "
-                        + DELETE_HISTORY_MIN_DAYS + " and " + DELETE_HISTORY_MAX_DAYS
+                        + minDays + " and " + maxDays
                         + " , but was " + days + ".")
                 .setEphemeral(true)
                 .queue();
         }
     }
 
-    public static void banGuild(Member user, String reason, int days,
+    public static void getBanGuild(Member user, String reason, int days,
             @NotNull SlashCommandEvent event) {
         Member author = Objects.requireNonNull(event.getMember());
         event.getGuild()
@@ -34,7 +32,7 @@ public class BanHelperMethods {
             .queue();
     }
 
-    public static void openPrivateChannel(long userId, String reason,
+    public static void getOpenPrivateChannel(long userId, String reason,
             @NotNull SlashCommandEvent event) {
         event.getJDA()
             .openPrivateChannelById(userId)
@@ -48,7 +46,7 @@ public class BanHelperMethods {
             .queue();
     }
 
-    public static void logger(long authorNameId, long userNameId, int days, String reason) {
+    public static void getLogger(long authorNameId, long userNameId, int days, String reason) {
         logger.info(
                 " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
                 authorNameId, userNameId, days, reason);
