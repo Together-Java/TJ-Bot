@@ -71,16 +71,16 @@ public final class BanCommand extends SlashCommandAdapter {
             event.reply("I don't have the BAN_MEMBERS permission to ban users from this server.")
                 .setEphemeral(true)
                 .queue();
+
+            logger.error("The Bot does not have BAN_MEMBERS permissions so it cant ban users");
+
             return;
         }
-
-        logger.error("The Bot does not have BAN_MEMBERS permissions so it cant ban users");
 
         if (!bot.canInteract(Objects.requireNonNull(user))) {
             event.reply("This user is too powerful for me to ban.").setEphemeral(true).queue();
             return;
         }
-
 
         int days = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
@@ -105,9 +105,8 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(reason)))
             .queue(null, throwable -> {
+                logger.error("I could not send a personal message to '{}' ", userId);
             });
-
-        logger.error("I could not send a personal message to '{}' ", userId);
 
         event.getGuild()
             .ban(user, days, reason)
