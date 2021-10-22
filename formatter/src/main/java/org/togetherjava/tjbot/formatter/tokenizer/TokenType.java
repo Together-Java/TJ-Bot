@@ -4,8 +4,6 @@ import java.util.regex.Pattern;
 
 /**
  * Represents every possible token that can be parsed by the lexer
- *
- * @author illuminator3
  */
 public enum TokenType {
     // keywords

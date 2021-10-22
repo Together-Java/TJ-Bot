@@ -4,8 +4,6 @@ import java.util.Set;
 
 /**
  * Class representing a Token with a given content and a type
- *
- * @author illuminator3
  */
 public record Token(String content, TokenType type) {
     private static final Set<TokenType> displayTypes =
@@ -20,7 +18,6 @@ public record Token(String content, TokenType type) {
      * Returns a non-empty string if this token has something to display
      *
      * @return the displayed value
-     * @author illuminator3
      */
     private String formatForDisplay() {
         if (displayTypes.contains(type())) {

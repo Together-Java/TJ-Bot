@@ -17,14 +17,14 @@ import java.util.Objects;
  * The implemented command is {@code /unban user_id}, upon which the bot will unban the user.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
+    private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
     private static final String USER_ID = "user_id";
 
     /**
      * Creates an instance of the ban command.
      */
     public UnbanCommand() {
-        super("unban", "Use this command to unban a user", SlashCommandVisibility.GUILD);
+        super("unban", "Unbans a given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.STRING, USER_ID,
                 "The user id of the user which you want to unban", true);
@@ -63,7 +63,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
 
-        String authorName = author.getId();
-        logger.info(" '{}' unbanned user id '{}' ", authorName, userId);
+        String authorId = author.getId();
+        logger.info(" '{}' unbanned user id '{}' ", authorId, userId);
     }
 }

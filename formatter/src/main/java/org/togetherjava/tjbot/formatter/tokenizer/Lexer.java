@@ -8,8 +8,6 @@ import java.util.regex.Pattern;
 
 /**
  * Tokenizer that can turn a list of strings (or a string) into a list of tokens
- *
- * @author illuminator3
  */
 public class Lexer {
     /**
@@ -23,7 +21,6 @@ public class Lexer {
      *
      * @param input input to tokenize
      * @return resulting tokens
-     * @author illuminator3
      */
     public List<Token> tokenize(String input) {
         return tokenize(Arrays.asList(patchComments(input).split("\n")));
@@ -34,7 +31,6 @@ public class Lexer {
      *
      * @param lines input to tokenize
      * @return resulting tokens
-     * @author illuminator3
      */
     public List<Token> tokenize(List<String> lines) {
         return lines.stream().map(this::tokenizeLine).flatMap(List::stream).toList();
@@ -45,7 +41,6 @@ public class Lexer {
      *
      * @param line input to tokenize
      * @return resulting tokens
-     * @author illuminator3
      */
     private List<Token> tokenizeLine(String line) {
         List<Token> tokens = new ArrayList<>();
@@ -80,7 +75,6 @@ public class Lexer {
      *
      * @param input input to patch
      * @return resulting string
-     * @author illuminator3
      */
     private String patchComments(String input) { // fix this, you shouldn't need this!
         Matcher matcher = commentPatcherRegex.matcher(input);

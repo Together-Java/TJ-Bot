@@ -8,9 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.togetherjava.tjbot.formatter.tokenizer.Lexer;
 
-/**
- * @author illuminator3
- */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FormatterTest {
     Lexer lexer;

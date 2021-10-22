@@ -5,9 +5,13 @@ package org.togetherjava.tjbot;
  * main logic to take over.
  */
 public enum BootstrapLauncher {
-
     ;
 
+    /**
+     * Starts the main application.
+     * 
+     * @param args arguments are forwarded, see {@link Application#main(String[])}
+     */
     public static void main(String[] args) {
         setSystemProperties();
 
@@ -29,6 +33,7 @@ public enum BootstrapLauncher {
             // NOTE This will likely be fixed with Java 18 or newer, remove afterwards (see
             // https://bugs.openjdk.java.net/browse/JDK-8274349 and
             // https://github.com/openjdk/jdk/pull/5784)
+            // noinspection UseOfSystemOutOrSystemErr
             System.out.println("Available Cores \"" + cores + "\", setting Parallelism Flag");
             // noinspection AccessOfSystemProperties
             System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "1");
