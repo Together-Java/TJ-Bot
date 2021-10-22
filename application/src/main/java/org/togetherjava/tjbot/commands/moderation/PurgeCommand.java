@@ -22,20 +22,23 @@ import java.util.Objects;
  */
 public final class PurgeCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
-    private static final String NUMBER_OF_MESSAGES = "number_of_messages";
+    private static final String NUMBER_OF_MESSAGES_TO_DELETE = "number_of_messages";
+    private static final String USER_MESSAGES = "user";
 
     public PurgeCommand() {
         super("prune", "Use this command to delete a batch of messages",
                 SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES,
-                "The number of messages you want to delete. 1 to 100", true);
+        getData()
+            .addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES_TO_DELETE,
+                    "The number of messages you want to delete. 1 to 100", true)
+            .addOption(OptionType.USER, USER_MESSAGES,
+                    "If you want to delete messages for a specific user.", false);
     }
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         final Member author = event.getMember();
-
         final TextChannel channel = event.getTextChannel();
 
         if (!Objects.requireNonNull(author).hasPermission(Permission.MESSAGE_MANAGE)) {
@@ -54,18 +57,15 @@ public final class PurgeCommand extends SlashCommandAdapter {
             return;
         }
 
-        int amount = Math
-            .toIntExact(Objects.requireNonNull(event.getOption(NUMBER_OF_MESSAGES)).getAsLong());
-
+        int amount = Math.toIntExact(
+                Objects.requireNonNull(event.getOption(NUMBER_OF_MESSAGES_TO_DELETE)).getAsLong());
         var messageHistory = channel.getHistory().retrievePast(amount).complete();
 
-        if (amount < 100 || amount > 1) {
+        if (amount > 100 || amount < 1) {
             event.reply("You can only delete 1 to 100 messages").setEphemeral(true).queue();
         } else {
             channel.purgeMessages(messageHistory);
+            logger.info(" '{}' deleted this amount of messages '{}'", author, amount);
         }
-        // Add this to audit log
-        logger.info("Bot '{}' was made to delete this amount of messages '{}' by '{}'", bot, amount,
-                author);
     }
 }
