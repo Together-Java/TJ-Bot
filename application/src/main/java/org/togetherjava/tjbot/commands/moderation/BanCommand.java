@@ -1,9 +1,12 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -24,8 +27,11 @@ import java.util.Objects;
  */
 public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
-    private static final String DELETE_MESSAGE_HISTORY_DAYS_OPTION = "delete-message-history-days";
+    private static final String DELETE_HISTORY_OPTION = "delete-history";
     private static final String REASON_OPTION = "reason";
+    /**
+     * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
+     */
     private static final Integer REASON_MAX_LENGTH = 512;
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
 
@@ -37,7 +43,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
-            .addOptions(new OptionData(OptionType.INTEGER, DELETE_MESSAGE_HISTORY_DAYS_OPTION,
+            .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
                     "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
     }
@@ -47,8 +53,6 @@ public final class BanCommand extends SlashCommandAdapter {
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
         Member author = Objects.requireNonNull(event.getMember());
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-
-        long userId = user.getUser().getIdLong();
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You do not have the BAN_MEMBERS permission to ban users from this server.")
@@ -70,24 +74,22 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
+        logger.error("The Bot does not have BAN_MEMBERS permissions so it cant ban users");
+
         if (!bot.canInteract(Objects.requireNonNull(user))) {
             event.reply("This user is too powerful for me to ban.").setEphemeral(true).queue();
             return;
         }
 
 
-
-        // TODO Implement the same delete message structure for the purge message.
         int days = Math
-            .toIntExact(Objects.requireNonNull(event.getOption(DELETE_MESSAGE_HISTORY_DAYS_OPTION))
-                .getAsLong());
+            .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
         if (reason.length() > BanCommand.REASON_MAX_LENGTH) {
             event.reply("The reason can not be over 512 characters").setEphemeral(true).queue();
         }
 
-        long authorId = author.getIdLong();
-        banUser(user, reason, days, userId, authorId, event);
+        banUser(user, reason, days, user.getUser().getIdLong(), author.getIdLong(), event);
     }
 
     private static void banUser(@NotNull Member user, @NotNull String reason, int days, long userId,
@@ -102,14 +104,15 @@ public final class BanCommand extends SlashCommandAdapter {
                             The ban reason is:  %s
                             """
                         .formatted(reason)))
-            .queue();
+            .queue(null, throwable -> {
+            });
 
-        Member author = Objects.requireNonNull(event.getMember());
+        logger.error("I could not send a personal message to '{}' ", userId);
 
         event.getGuild()
             .ban(user, days, reason)
             .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
-                    + author.getUser().getAsTag() + " for: " + reason))
+                    + user.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(

@@ -158,4 +158,3 @@ logviewer/types.d.ts
 logviewer/pnpm-lock.yaml
 logviewer/webpack.config.js
 logviewer/webpack.generated.js
-.DS_Store
