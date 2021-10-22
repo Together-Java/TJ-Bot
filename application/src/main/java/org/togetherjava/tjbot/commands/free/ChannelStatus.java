@@ -1,10 +1,15 @@
 package org.togetherjava.tjbot.commands.free;
 
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.TextChannel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class ChannelStatus {
+/**
+ * Class that tracks the current free/busy status of a channel that requires monitoring.
+ */
+public final class ChannelStatus {
     public static final boolean FREE = false;
     public static final boolean BUSY = true;
 
@@ -12,38 +17,90 @@ public class ChannelStatus {
     private static final String BUSY_STATUS = ":red_circle:";
 
     private final long channelID;
-    private boolean isBusy;
+    private volatile boolean isBusy;
     private String name;
 
+    /**
+     * Creates an instance of a Channel Status.
+     * <p>
+     * This does not validate the id as that requires the JDA. Any ChannelStatus that gets created
+     * with an invalid id *should* be ignored and won't be invoked. (Since the Channel statuses are
+     * selected by retrieval of channels id's via the guild id, before retrieving the relevant
+     * ChannelStatuses).
+     * 
+     * @param id the long id of the {@link net.dv8tion.jda.api.entities.TextChannel} to monitor.
+     */
     protected ChannelStatus(long id) {
         channelID = id;
         isBusy = true;
         name = Long.toString(id);
     }
 
+    /**
+     * Retrieves whether the channel is currently busy/free.
+     * <p>
+     * This value is volatile but is not thread safe in any other way. While statuses change
+     * frequently, each individual status instance *should* only be modified from a single source,
+     * since it represents only a single channel and modification will only be triggered by activity
+     * in that one channel.
+     * 
+     * @return the current stored status related to the channel id.
+     */
     public boolean isBusy() {
         return isBusy;
     }
 
+    /**
+     * Retrieves the id for the {@link net.dv8tion.jda.api.entities.TextChannel} that this instance
+     * represents. There is no guarantee that the id is valid according to the {@link JDA}.
+     * 
+     * @return the {@link net.dv8tion.jda.api.entities.TextChannel} id.
+     */
     public long getChannelID() {
         return channelID;
     }
 
+    /**
+     * Retrieves the locally stored name of the {@link net.dv8tion.jda.api.entities.TextChannel}
+     * this represents. This value is initialised to the channel id and as such is never null. The
+     * name should first be set by retrieving the name the {@link JDA} currently uses, before
+     * calling this.
+     * <p>
+     * The recommended value to use is {@link TextChannel#getAsMention()}.
+     *
+     * @return The currently stored name of the channel, originally the long id as string.
+     */
     public @NotNull String getName() {
         return name;
     }
 
+    /**
+     * Method used to keep the channel name up to date with the {@link JDA}. This method is not
+     * called automatically. Manually update before using the value.
+     * <p>
+     * The recommended value to use is {@link TextChannel#getAsMention()}
+     * <p>
+     * This method is called in multithreaded context, however the value is not expected to change
+     * regularly and will not break anything if its invalid so no has not been made thread safe.
+     * 
+     * @param name the value to set the channel name to.
+     */
     public void setName(String name) {
         this.name = Objects.requireNonNull(name);
     }
 
-    // todo make threadsafe?
     protected void busy(boolean isBusy) {
         this.isBusy = isBusy;
     }
 
-
-
+    // todo should I overload equals with equals(long) so that a Set may be used instead of a Map
+    /**
+     * The identity of this object of solely based on the id value. Compares the long id's and
+     * determines if they are equal.
+     * 
+     * @param o the other object to test against
+     * @return whether the objects have the same id or not.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -54,15 +111,31 @@ public class ChannelStatus {
         return channelID == that.channelID;
     }
 
+    /**
+     * A String representation of the instance, gives the name and the current status.
+     *
+     * @return a String representation of the instance.
+     */
     @Override
     public String toString() {
         return "ChannelStatus{ %s is %s }".formatted(name, isBusy ? "busy" : "not busy");
     }
 
+    /**
+     * A {@link #toString()} method spetially formatted for Discord ({@link JDA}. Uses emojis by
+     * string representation.
+     *
+     * @return a String representation of ChannelStatus, formatted for Discord
+     */
     public String toDiscord() {
-        return "%s\t%s".formatted(isBusy ? BUSY_STATUS : FREE_STATUS, name);
+        return "%s %s".formatted(isBusy ? BUSY_STATUS : FREE_STATUS, name);
     }
 
+    /**
+     * The hash that represents the instance. It is based only on the id value.
+     *
+     * @return the instance's hash.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(channelID);
