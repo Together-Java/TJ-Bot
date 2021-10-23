@@ -52,7 +52,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (!(event.getGuild()).getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
+        if (!(Objects.requireNonNull(event.getGuild())).getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                             "I don't have the BAN_MEMBERS permission to unban the user from this server.")
                     .setEphemeral(true)
