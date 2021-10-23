@@ -62,10 +62,9 @@ public final class PurgeCommand extends SlashCommandAdapter {
         if (amount > 200 || amount < 1) {
             event.reply("You can only delete 1 to 200 messages").setEphemeral(true).queue();
         } else {
-            channel.getHistory().retrievePast(amount).queue(messageHistory -> {
-                channel.purgeMessages(messageHistory);
-            });
-            event.reply("I have deleted this amount of messages " + messageHistory);
+            channel.getHistory().retrievePast(amount).queue(channel::purgeMessages);
+            event.reply("I have deleted this amount of messages ")
+                            .queue();
             logger.info(" '{}' deleted this amount of messages '{}'", author, amount);
         }
     }
