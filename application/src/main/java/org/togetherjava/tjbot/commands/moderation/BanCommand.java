@@ -38,10 +38,10 @@ public final class BanCommand extends SlashCommandAdapter {
      * Creates an instance of the ban command.
      */
     public BanCommand() {
-        super("ban", "Bans a given user", SlashCommandVisibility.GUILD);
+        super("ban", "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to ban", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "why the user should be banned", true)
+            .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
                     "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
@@ -56,7 +56,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
-                    "You do not have the BAN_MEMBERS permission which means you can't unable to ban users in this server.")
+                    "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -71,7 +71,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
-                    "I don't have the BAN_MEMBERS permission which means I am unable to ban users in this server.")
+                    "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
                 .setEphemeral(true)
                 .queue();
 
@@ -83,9 +83,6 @@ public final class BanCommand extends SlashCommandAdapter {
             event.reply("The user" + user.getUser().getIdLong() + "is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
-
-            logger.error("The bot does not have enough permissions to ban '{}'",
-                    user.getUser().getIdLong());
             return;
         }
 
@@ -107,11 +104,13 @@ public final class BanCommand extends SlashCommandAdapter {
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been banned from the guild 'Together Java'.\040
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
-                            The ban reason is:  %s
-                            """
-                        .formatted(reason)))
+                            Hey there, sorry to tell you but unfortunately you have been banned from the guild"""
+                            + event.getGuild().getName()
+                            + """
+                                    If you think this was a mistake, please contact a moderator or admin of the guild.
+                                    The ban reason is:  %s
+                                    """
+                                .formatted(reason)))
             .queue(null, throwable -> {
                 logger.error("I could not dm the user '{}' to inform them they were banned.",
                         userId);

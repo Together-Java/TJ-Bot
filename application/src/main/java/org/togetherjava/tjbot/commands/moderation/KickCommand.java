@@ -13,44 +13,35 @@ import java.util.Objects;
 
 
 /**
- * <p>
- * The implemented command is {@code /kick @user reason}, upon which the bot will kick the user.
+ * When triggered with {@code /kick @user reason}, the bot will check if the user has perms. Then it
+ * will check if itself has perms to kick. If it does it will check if the user is too powerful or
+ * not. If the user is not then bot will kick the user and reply with {@code Kicked User!}.
  */
 public final class KickCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
 
-
     /**
      * Creates an instance of the kick command.
      */
     public KickCommand() {
-        super("kick", "Kicks a given user", SlashCommandVisibility.GUILD);
+        super("kick", "Kicks the given user from the user", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.USER, USER_OPTION, "The user which you want to kick", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "why the user should be kicked", true);
+        getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to kick", true)
+            .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
     }
 
-    /**
-     * When triggered with {@code /kick @user reason}, the bot will check if the user has perms.
-     * Then it will check if itself has perms to kick. If it does it will check if the user is too
-     * powerful or not. If the user is not then bot will kick the user and reply with
-     * {@code Kicked User!}.
-     *
-     * @param event the corresponding event
-     */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
         Member author = Objects.requireNonNull(event.getMember());
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
         Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
-                    "You do not have the KICK_MEMBERS permission which means you can't unable to kick users in this server.")
+                    "You can not kick users in this guild since you do not have the KICK_MEMBERS permission.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -65,44 +56,48 @@ public final class KickCommand extends SlashCommandAdapter {
 
         if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
-                    "I don't have the KICK_MEMBERS permission which means I am unable to kick users in this server.")
+                    "I can not kick users in this guild since I do not have the KICK_MEMBERS permission.")
                 .setEphemeral(true)
                 .queue();
 
             logger.error("The bot does not have KICK_MEMBERS permission on the server '{}' ",
-                    event.getGuild().getId());
+                    Objects.requireNonNull(event.getGuild().getId()));
             return;
         }
 
-        if (!bot.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user.getUser().getIdLong() + "is too powerful for me to kick.")
+        if (!bot.canInteract(user)) {
+            event.reply("The user" + user + "is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
-
-            logger.error("The bot does not have enough permissions to kick '{}'",
-                    user.getUser().getIdLong());
             return;
         }
 
+        kickUser(user, reason, user.getUser().getIdLong(), event);
+    }
+
+    public static void kickUser(@NotNull Member user, @NotNull String reason, long userId,
+            @NotNull SlashCommandEvent event) {
         event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'.
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
-                            The kick reason is:
-                            """
+                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild"""
+                            + event.getGuild().getName()
+                            + """
+                                    If you think this was a mistake, please contact a moderator or admin of the guild.
+                                    The kick reason is:
+                                    """
                             + reason))
             .queue();
 
         event.getGuild()
             .kick(user, reason)
             .flatMap(v -> event.reply(user.getUser().getAsTag() + " was kicked by "
-                    + author.getUser().getAsTag() + " for: " + reason))
+                    + user.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(" '{} ({})' kicked the user '{} ({})' due to reason being '{}'",
-                author.getUser().getAsTag(), author.getIdLong(), author.getUser().getAsTag(),
-                userId, reason);
+                user.getUser().getAsTag(), user.getIdLong(), user.getUser().getAsTag(), userId,
+                reason);
     }
 }

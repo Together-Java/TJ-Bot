@@ -45,7 +45,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
-                    "You do not have the BAN_MEMBERS permission to urban users from this server.")
+                    "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -54,7 +54,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
         if (!(Objects.requireNonNull(event.getGuild())).getSelfMember()
             .hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
-                    "I don't have the BAN_MEMBERS permission which means I am unable to unban users in this server.")
+                    "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
                 .setEphemeral(true)
                 .queue();
 
