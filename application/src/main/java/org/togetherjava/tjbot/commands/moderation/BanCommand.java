@@ -62,7 +62,7 @@ public final class BanCommand extends SlashCommandAdapter {
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for you to ban.").setEphemeral(true).queue();
+            event.reply("The user" + user + " is too powerful for you to ban.").setEphemeral(true).queue();
             return;
         }
 

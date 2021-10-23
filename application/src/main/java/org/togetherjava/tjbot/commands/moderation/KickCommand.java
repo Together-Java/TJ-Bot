@@ -57,7 +57,7 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("\"This user is too powerful for you to kick.").setEphemeral(true).queue();
+            event.reply("The user" + user + "is too powerful for you to kick.").setEphemeral(true).queue();
             return;
         }
 
@@ -65,6 +65,9 @@ public final class KickCommand extends SlashCommandAdapter {
             event.reply("I don't have the KICK_MEMBERS permission to kick users from this server.")
                     .setEphemeral(true)
                     .queue();
+
+            logger.error("The bot does not have KICK_MEMBERS permissions on the server '{}' ",
+                    event.getGuild().getId());
             return;
         }
 
