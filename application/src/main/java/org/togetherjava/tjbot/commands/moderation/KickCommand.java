@@ -79,7 +79,11 @@ public final class KickCommand extends SlashCommandAdapter {
         event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
-                    "Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'. If you think this was a mistake, please contact a moderator or admin of the guild. The kick reason is: "
+                    """
+                    Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'. 
+                    If you think this was a mistake, please contact a moderator or admin of the guild. 
+                    The kick reason is: 
+                    """
                             + reason))
             .queue();
 
