@@ -43,11 +43,8 @@ public final class KickCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
-
         Member author = Objects.requireNonNull(event.getMember());
-
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-
         long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
