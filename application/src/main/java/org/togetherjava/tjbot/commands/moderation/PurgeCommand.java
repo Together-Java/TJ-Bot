@@ -21,7 +21,7 @@ import java.util.Objects;
  *
  */
 public final class PurgeCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
+    private static final Logger logger = LoggerFactory.getLogger(PurgeCommand.class);
     private static final String NUMBER_OF_MESSAGES_TO_DELETE = "number_of_messages";
     private static final String USER_MESSAGES = "user";
 
