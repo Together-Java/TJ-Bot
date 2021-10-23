@@ -64,6 +64,7 @@ public final class PurgeCommand extends SlashCommandAdapter {
         } else {
             channel.getHistory().retrievePast(amount).queue(channel::purgeMessages);
             event.reply("I have deleted this amount of messages ")
+                            .setEphemeral(true)
                             .queue();
             logger.info(" '{}' deleted this amount of messages '{}'", author, amount);
         }
