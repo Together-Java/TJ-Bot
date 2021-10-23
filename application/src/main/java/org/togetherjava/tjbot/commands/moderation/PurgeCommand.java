@@ -17,7 +17,7 @@ import java.util.Objects;
 /**
  * When triggered with {@code /prune "number_of_messages"}, the bot will check if the user has
  * perms. Then it will check if itself has perms to delete messages. If it does the bot will delete
- * that amount of messages. {@code Banned User!}.
+ * that amount of messages. {@code I have deleted this amount of message + amount}.
  *
  */
 public final class PurgeCommand extends SlashCommandAdapter {
@@ -63,7 +63,7 @@ public final class PurgeCommand extends SlashCommandAdapter {
             event.reply("You can only delete 1 to 200 messages").setEphemeral(true).queue();
         } else {
             channel.getHistory().retrievePast(amount).queue(channel::purgeMessages);
-            event.reply("I have deleted this amount of messages ")
+            event.reply("I have deleted this amount of messages " + amount)
                             .setEphemeral(true)
                             .queue();
             logger.info(" '{}' deleted this amount of messages '{}'", author, amount);
