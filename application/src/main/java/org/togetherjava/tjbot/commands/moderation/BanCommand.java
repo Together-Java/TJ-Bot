@@ -55,19 +55,23 @@ public final class BanCommand extends SlashCommandAdapter {
         Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("You do not have the BAN_MEMBERS permission which means you can't unable to ban users in this server.")
+            event.reply(
+                    "You do not have the BAN_MEMBERS permission which means you can't unable to ban users in this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user + " is too powerful for you to ban.").setEphemeral(true).queue();
+            event.reply("The user" + user + " is too powerful for you to ban.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("I don't have the BAN_MEMBERS permission which means I am unable to ban users in this server.")
+            event.reply(
+                    "I don't have the BAN_MEMBERS permission which means I am unable to ban users in this server.")
                 .setEphemeral(true)
                 .queue();
 
@@ -76,7 +80,9 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
         if (!bot.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user + "is too powerful for me to ban.").setEphemeral(true).queue();
+            event.reply("The user" + user.getUser().getIdLong() + "is too powerful for me to ban.")
+                .setEphemeral(true)
+                .queue();
 
             logger.error("The bot does not have enough permissions to ban '{}'",
                     user.getUser().getIdLong());
@@ -107,7 +113,8 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(reason)))
             .queue(null, throwable -> {
-                logger.error("I could not dm the user '{}' to inform them they were banned.", userId);
+                logger.error("I could not dm the user '{}' to inform them they were banned.",
+                        userId);
             });
 
         event.getGuild()
