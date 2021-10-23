@@ -71,7 +71,8 @@ public final class BanCommand extends SlashCommandAdapter {
                 .setEphemeral(true)
                 .queue();
 
-            logger.error("The bot does not have BAN_MEMBERS permissions");
+            logger.error("The bot does not have BAN_MEMBERS permissions on the server '{}' ",
+                    event.getGuild().getId());
             return;
         }
         if (!bot.canInteract(Objects.requireNonNull(user))) {
@@ -84,13 +85,14 @@ public final class BanCommand extends SlashCommandAdapter {
 
         if (reason.length() > BanCommand.REASON_MAX_LENGTH) {
             event.reply("The reason can not be over 512 characters").setEphemeral(true).queue();
+            return;
         }
 
         banUser(user, reason, days, user.getUser().getIdLong(), author.getIdLong(), event);
     }
 
     private static void banUser(@NotNull Member user, @NotNull String reason, int days, long userId,
-            long authorNameId, @NotNull SlashCommandEvent event) {
+            long authorId, @NotNull SlashCommandEvent event) {
 
         event.getJDA()
             .openPrivateChannelById(userId)
@@ -102,7 +104,7 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(reason)))
             .queue(null, throwable -> {
-                logger.error("I could not send a personal message to '{}' ", userId);
+                logger.error("I could not dm the user '{}' to inform them they were banned.", userId);
             });
 
         event.getGuild()
@@ -113,6 +115,6 @@ public final class BanCommand extends SlashCommandAdapter {
 
         logger.info(
                 " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                authorNameId, userId, days, reason);
+                authorId, userId, days, reason);
     }
 }
