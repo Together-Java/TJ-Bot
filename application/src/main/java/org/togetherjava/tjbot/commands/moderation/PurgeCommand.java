@@ -31,9 +31,7 @@ public final class PurgeCommand extends SlashCommandAdapter {
 
         getData()
             .addOption(OptionType.INTEGER, NUMBER_OF_MESSAGES_TO_DELETE,
-                    "The number of messages you want to delete. 1 to 100", true)
-            .addOption(OptionType.USER, USER_MESSAGES,
-                    "If you want to delete messages for a specific user.", false);
+                    "The number of messages you want to delete. 1 to 100", true);
     }
 
     @Override
@@ -51,9 +49,12 @@ public final class PurgeCommand extends SlashCommandAdapter {
         final Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
 
         if (!bot.hasPermission(Permission.MESSAGE_MANAGE)) {
-            event.reply("I am missing MESSAGE_MANAGE permission to delete these messages")
+            event.reply("I am missing MESSAGE_MANAGE permission which means I am unable to delete messages in this server.")
                 .setEphemeral(true)
                 .queue();
+
+            logger.error("The bot does not have MESSAGE_MANAGE permission on the server '{}' ",
+                    event.getGuild().getId());
             return;
         }
 
