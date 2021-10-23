@@ -75,7 +75,7 @@ public final class BanCommand extends SlashCommandAdapter {
                 .setEphemeral(true)
                 .queue();
 
-            logger.error("The bot does not have BAN_MEMBERS permissions on the server '{}' ",
+            logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
                     event.getGuild().getId());
             return;
         }
