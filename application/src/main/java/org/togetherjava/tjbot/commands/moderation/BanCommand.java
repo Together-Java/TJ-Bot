@@ -73,7 +73,6 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The Bot does not have BAN_MEMBERS permissions so it cant ban users");
-
             return;
         }
 
