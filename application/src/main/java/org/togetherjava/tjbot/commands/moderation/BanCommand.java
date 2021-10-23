@@ -5,9 +5,11 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,10 +74,9 @@ public final class BanCommand extends SlashCommandAdapter {
                 .setEphemeral(true)
                 .queue();
 
-            logger.error("The Bot does not have BAN_MEMBERS permissions so it cant ban users");
+            logger.error("The bot does not have BAN_MEMBERS permissions");
             return;
         }
-
         if (!bot.canInteract(Objects.requireNonNull(user))) {
             event.reply("This user is too powerful for me to ban.").setEphemeral(true).queue();
             return;
