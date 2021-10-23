@@ -55,7 +55,7 @@ public final class BanCommand extends SlashCommandAdapter {
         Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("You do not have the BAN_MEMBERS permission to ban users from this server.")
+            event.reply("You do not have the BAN_MEMBERS permission which means you can't unable to ban users in this server.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -67,7 +67,7 @@ public final class BanCommand extends SlashCommandAdapter {
         }
 
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("I don't have the BAN_MEMBERS permission to ban users from this server.")
+            event.reply("I don't have the BAN_MEMBERS permission which means I am unable to ban users in this server.")
                 .setEphemeral(true)
                 .queue();
 

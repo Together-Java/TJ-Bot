@@ -50,7 +50,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
-                            "You do not have the KICK_MEMBERS permission to kick users from this server.")
+                            "You do not have the KICK_MEMBERS permission which means you can't unable to kick users in this server.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -62,7 +62,7 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
-            event.reply("I don't have the KICK_MEMBERS permission to kick users from this server.")
+            event.reply("I don't have the KICK_MEMBERS permission which means I am unable to kick users in this server.")
                     .setEphemeral(true)
                     .queue();
 
@@ -83,9 +83,9 @@ public final class KickCommand extends SlashCommandAdapter {
                 .openPrivateChannelById(userId)
                 .flatMap(channel -> channel.sendMessage(
                         """
-                        Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'. 
-                        If you think this was a mistake, please contact a moderator or admin of the guild. 
-                        The kick reason is: 
+                        Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'.
+                        If you think this was a mistake, please contact a moderator or admin of the guild.
+                        The kick reason is:
                         """
                                 + reason))
                 .queue();
