@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -53,32 +52,40 @@ public final class BanCommand extends SlashCommandAdapter {
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
         Member author = Objects.requireNonNull(event.getMember());
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
+        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("You do not have the BAN_MEMBERS permission to ban users from this server.")
+            event.reply(
+                    "You do not have the BAN_MEMBERS permission which means you can't unable to ban users in this server.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
         if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for you to ban.").setEphemeral(true).queue();
+            event.reply("The user" + user + " is too powerful for you to ban.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
-        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("I don't have the BAN_MEMBERS permission to ban users from this server.")
+            event.reply(
+                    "I don't have the BAN_MEMBERS permission which means I am unable to ban users in this server.")
                 .setEphemeral(true)
                 .queue();
 
-            logger.error("The Bot does not have BAN_MEMBERS permissions so it cant ban users");
-
+            logger.error("The bot does not have BAN_MEMBERS permissions on the server '{}' ",
+                    event.getGuild().getId());
             return;
         }
-
         if (!bot.canInteract(Objects.requireNonNull(user))) {
-            event.reply("This user is too powerful for me to ban.").setEphemeral(true).queue();
+            event.reply("The user" + user.getUser().getIdLong() + "is too powerful for me to ban.")
+                .setEphemeral(true)
+                .queue();
+
+            logger.error("The bot does not have enough permissions to ban '{}'",
+                    user.getUser().getIdLong());
             return;
         }
 
@@ -87,13 +94,14 @@ public final class BanCommand extends SlashCommandAdapter {
 
         if (reason.length() > BanCommand.REASON_MAX_LENGTH) {
             event.reply("The reason can not be over 512 characters").setEphemeral(true).queue();
+            return;
         }
 
         banUser(user, reason, days, user.getUser().getIdLong(), author.getIdLong(), event);
     }
 
     private static void banUser(@NotNull Member user, @NotNull String reason, int days, long userId,
-            long authorNameId, @NotNull SlashCommandEvent event) {
+            long authorId, @NotNull SlashCommandEvent event) {
 
         event.getJDA()
             .openPrivateChannelById(userId)
@@ -105,7 +113,8 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(reason)))
             .queue(null, throwable -> {
-                logger.error("I could not send a personal message to '{}' ", userId);
+                logger.error("I could not dm the user '{}' to inform them they were banned.",
+                        userId);
             });
 
         event.getGuild()
@@ -116,6 +125,6 @@ public final class BanCommand extends SlashCommandAdapter {
 
         logger.info(
                 " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
-                authorNameId, userId, days, reason);
+                authorId, userId, days, reason);
     }
 }

@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -43,7 +42,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         final String userId = Objects.requireNonNull(event.getOption(USER_ID)).getAsString();
-        Member author = Objects.requireNonNull(event.getMember());
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
@@ -53,27 +51,29 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return;
         }
 
-        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
+        if (!(Objects.requireNonNull(event.getGuild())).getSelfMember()
+            .hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
-                    "I don't have the BAN_MEMBERS permission to unban the user from this server.")
+                    "I don't have the BAN_MEMBERS permission which means I am unable to unban users in this server.")
                 .setEphemeral(true)
                 .queue();
+
+            logger.error("The bot does not have enough permissions to unban '{}'", userId);
             return;
         }
 
-
         event.getGuild().unban(userId).queue(v -> {
-            event.reply("Unbanned the user");
-            logger.info(" '{}' unbanned user id '{}' ", author.getIdLong(), userId);
+            event.reply("Unbanned the user").queue();
+            logger.info(" '{}' unbanned user id '{}' ", event.getMember().getIdLong(), userId);
         }, throwable -> {
-            if (throwable instanceof ErrorResponseException errorResponseException &&
-                    errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                    
-                        event.reply("the specified user doesn't exist").queue();
-                        logger.debug("The user '{}' does not exist", userId);
+            if (throwable instanceof ErrorResponseException errorResponseException
+                    && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
+
+                event.reply("the specified user doesn't exist").queue();
+                logger.debug("The user '{}' does not exist", userId);
             } else {
-                event.reply("Something went wrong, check the logs or contact a helper/moderator").queue();
+                event.reply("Something went wrong, check the logs or contact a helper/moderator")
+                    .queue();
                 logger.error("Something went wrong in the unban command: " + throwable);
             }
         });
