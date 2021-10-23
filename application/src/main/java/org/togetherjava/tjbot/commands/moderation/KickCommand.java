@@ -45,6 +45,7 @@ public final class KickCommand extends SlashCommandAdapter {
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
         Member author = Objects.requireNonNull(event.getMember());
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
+        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
         long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
@@ -60,7 +61,6 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("I don't have the KICK_MEMBERS permission to kick users from this server.")
                     .setEphemeral(true)
