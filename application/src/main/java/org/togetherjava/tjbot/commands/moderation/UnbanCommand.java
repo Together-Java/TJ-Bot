@@ -58,7 +58,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 .setEphemeral(true)
                 .queue();
 
-            logger.error("The bot does not have enough permissions to unban '{}'", userId);
+            logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
+                    event.getGuild().getId());
             return;
         }
 
