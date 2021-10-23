@@ -4,20 +4,23 @@ import com.vaadin.componentfactory.EnhancedDialog;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.renderer.LocalDateTimeRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.SessionDestroyEvent;
 import com.vaadin.flow.server.VaadinService;
+import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.Role;
 import org.togetherjava.tjbot.logwatcher.constants.LogEventsConstants;
 import org.togetherjava.tjbot.logwatcher.logs.LogRepository;
+import org.togetherjava.tjbot.logwatcher.util.LogUtils;
 import org.togetherjava.tjbot.logwatcher.views.MainLayout;
 import org.togetherjava.tjbot.logwatcher.watcher.StreamWatcher;
-import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 import org.vaadin.crudui.crud.impl.GridCrud;
 
 import javax.annotation.security.PermitAll;
@@ -33,36 +36,66 @@ import java.util.stream.Collectors;
 @Route(value = "streamed", layout = MainLayout.class)
 @AllowedRoles(roles = {Role.USER})
 @PermitAll
-public class StreamedView extends HorizontalLayout {
+@CssImport(themeFor = "vaadin-grid", value = "./themes/logviewer/views/logs-view.css")
+public class StreamedView extends VerticalLayout {
 
     private final GridCrud<Logevents> grid = new GridCrud<>(Logevents.class);
     private final UUID uuid = UUID.randomUUID();
+    private final Set<String> enabledLogLevel = new HashSet<>(LogUtils.LogLevel.getAllNames());
 
     public StreamedView(LogRepository logs) {
-        addClassName("hello-world-view");
+        addClassName("logs-view");
 
-        add(new Button("Change Columns", this::onChangeColumns), this.grid);
+        final HorizontalLayout buttonPanel =
+                new HorizontalLayout(new Button("Change Columns", this::onChangeColumns));
 
-        this.grid.setOperations(logs::findAll, null, null, null);
+        for (final String level : this.enabledLogLevel) {
+            final Checkbox ch = new Checkbox(level);
+            ch.setValue(true);
+            ch.addValueChangeListener(this::onLogLevelCheckbox);
+            buttonPanel.add(ch);
+        }
+
+        add(buttonPanel, this.grid);
+
+        this.grid.setOperations(() -> logs.findWithLevelMatching(this.enabledLogLevel), null, null,
+                null);
         this.grid.setAddOperationVisible(false);
         this.grid.setDeleteOperationVisible(false);
         this.grid.setUpdateOperationVisible(false);
 
 
-        this.grid.getGrid()
-            .setColumns(LogEventsConstants.FIELD_INSTANT, LogEventsConstants.FIELD_LOGGER_NAME,
-                    LogEventsConstants.FIELD_MESSAGE);
+        final Grid<Logevents> baseGrid = this.grid.getGrid();
+        baseGrid.setColumns(LogEventsConstants.FIELD_INSTANT, LogEventsConstants.FIELD_LOGGER_NAME,
+                LogEventsConstants.FIELD_MESSAGE);
         setInstantFormatter();
-        this.grid.getGrid().getColumns().forEach(c -> c.setAutoWidth(true));
-        this.grid.getGrid().getColumns().forEach(c -> c.setResizable(true));
-        this.grid.getGrid().recalculateColumnWidths();
-        this.grid.getGrid().setColumnReorderingAllowed(true);
+        baseGrid.getColumns().forEach(c -> c.setAutoWidth(true));
+        baseGrid.getColumns().forEach(c -> c.setResizable(true));
+        baseGrid.setClassNameGenerator(LogUtils::logLevelToCssClass);
+        baseGrid.recalculateColumnWidths();
+        baseGrid.setColumnReorderingAllowed(true);
 
         VaadinService.getCurrent().addSessionDestroyListener(this::onDestroy);
         final UI ui = UI.getCurrent();
         StreamWatcher.addSubscription(this.uuid, () -> ui.access(this.grid::refreshGrid));
     }
 
+    private void onLogLevelCheckbox(
+            AbstractField.ComponentValueChangeEvent<Checkbox, Boolean> event) {
+        if (!event.isFromClient()) {
+            return;
+        }
+
+        final String logLevel = event.getSource().getLabel();
+
+        final boolean isChecked = event.getValue();// don't inline this, else SonarLint is crying
+        if (isChecked) {
+            this.enabledLogLevel.add(logLevel);
+        } else {
+            this.enabledLogLevel.remove(logLevel);
+        }
+        this.grid.refreshGrid();
+    }
 
     private void onDestroy(SessionDestroyEvent event) {
         removeHook();
