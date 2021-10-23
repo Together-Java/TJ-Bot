@@ -41,7 +41,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         final String userId = Objects.requireNonNull(event.getOption(USER_ID)).getAsString();
-
         Member author = Objects.requireNonNull(event.getMember());
 
         if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.BAN_MEMBERS)) {
@@ -63,7 +62,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         logger.error("The user '{}' does not exist", userId);
         event.getGuild().unban(userId).flatMap(v -> event.reply("Unbanned the user")).queue();
-
         logger.info(" '{}' unbanned user id '{}' ", author.getIdLong(), userId);
     }
 }
