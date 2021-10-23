@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-
 import java.util.Objects;
 
 
@@ -30,7 +29,7 @@ public final class KickCommand extends SlashCommandAdapter {
         super("kick", "Kicks a given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user which you want to kick", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "why the user should be kicked", true);
+                .addOption(OptionType.STRING, REASON_OPTION, "why the user should be kicked", true);
     }
 
     /**
@@ -44,18 +43,15 @@ public final class KickCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
-
         Member author = Objects.requireNonNull(event.getMember());
-
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-
         long userId = Objects.requireNonNull(user).getUser().getIdLong();
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
-                    "You do not have the KICK_MEMBERS permission to kick users from this server.")
-                .setEphemeral(true)
-                .queue();
+                            "You do not have the KICK_MEMBERS permission to kick users from this server.")
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
 
@@ -67,31 +63,35 @@ public final class KickCommand extends SlashCommandAdapter {
         Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply("I don't have the KICK_MEMBERS permission to kick users from this server.")
-                .setEphemeral(true)
-                .queue();
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
 
         if (!bot.canInteract(Objects.requireNonNull(user))) {
             event.reply(
-                    "This user is too powerful for me to kick because he has more permissions than me.")
-                .setEphemeral(true)
-                .queue();
+                            "This user is too powerful for me to kick because he has more permissions than me.")
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
 
         event.getJDA()
-            .openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(
-                    "Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'. If you think this was a mistake, please contact a moderator or admin of the guild. The kick reason is: "
-                            + reason))
-            .queue();
+                .openPrivateChannelById(userId)
+                .flatMap(channel -> channel.sendMessage(
+                        """
+                        Hey there, sorry to tell you but unfortunately you have been kicked from the guild 'Together Java'. 
+                        If you think this was a mistake, please contact a moderator or admin of the guild. 
+                        The kick reason is: 
+                        """
+                                + reason))
+                .queue();
 
         event.getGuild()
-            .kick(user, reason)
-            .flatMap(v -> event.reply(user.getUser().getAsTag() + " was kicked by "
-                    + author.getUser().getAsTag() + " for: " + reason))
-            .queue();
+                .kick(user, reason)
+                .flatMap(v -> event.reply(user.getUser().getAsTag() + " was kicked by "
+                        + author.getUser().getAsTag() + " for: " + reason))
+                .queue();
 
         logger.info(" '{} ({})' kicked the user '{} ({})' due to reason being '{}'",
                 author.getUser().getAsTag(), author.getIdLong(), author.getUser().getAsTag(),
