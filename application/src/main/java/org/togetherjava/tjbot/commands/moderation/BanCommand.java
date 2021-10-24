@@ -80,9 +80,12 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
         if (!bot.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user.getUser().getIdLong() + "is too powerful for me to ban.")
+            event.reply("The user" + user.getUser().getAsTag() + "is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
+
+            logger.info("The bot does not have enough permissions to ban '{}'",
+                    user.getUser().getAsTag());
             return;
         }
 

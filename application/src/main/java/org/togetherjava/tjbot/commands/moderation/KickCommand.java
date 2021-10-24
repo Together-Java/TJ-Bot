@@ -69,6 +69,9 @@ public final class KickCommand extends SlashCommandAdapter {
             event.reply("The user" + user + "is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
+
+            logger.info("The bot does not have enough permissions to kick '{}'",
+                    user.getUser().getAsTag());
             return;
         }
 
