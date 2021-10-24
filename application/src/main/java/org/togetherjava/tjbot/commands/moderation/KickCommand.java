@@ -47,8 +47,9 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user + "is too powerful for you to kick.")
+        long userid = user.getIdLong();
+        if (!author.canInteract(user)) {
+            event.reply("The user" + userid + "is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -66,31 +67,27 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         if (!bot.canInteract(user)) {
-            event.reply("The user" + user + "is too powerful for me to kick.")
+            event.reply("The user " + user + " is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
-
-            logger.info("The bot does not have enough permissions to kick '{}'",
-                    user.getUser().getAsTag());
             return;
         }
 
-        kickUser(user, reason, user.getUser().getIdLong(), event);
+        kickUser(user, reason, userid, event);
     }
 
     public static void kickUser(@NotNull Member user, @NotNull String reason, long userId,
             @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
-
         event.getJDA()
-            .openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
-                            The kick reason is: %s
-                                    """.formatted(guildName , reason))
-            .queue();
+                .openPrivateChannelById(userId)
+                .flatMap(channel -> channel.sendMessage(
+                                """
+                                        Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
+                                        If you think this was a mistake, please contact a moderator or admin of the guild.
+                                        The reason for the kick is: %s
+                                        """.formatted(guildName , reason)))
+                        .queue();
 
         event.getGuild()
             .kick(user, reason)

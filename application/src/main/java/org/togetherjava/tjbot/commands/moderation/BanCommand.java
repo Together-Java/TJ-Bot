@@ -62,8 +62,9 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (!author.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user + " is too powerful for you to ban.")
+        long userid = user.getIdLong();
+        if (!author.canInteract(user)) {
+            event.reply("The user" + userid + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -83,9 +84,6 @@ public final class BanCommand extends SlashCommandAdapter {
             event.reply("The user" + user.getUser().getAsTag() + "is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
-
-            logger.info("The bot does not have enough permissions to ban '{}'",
-                    user.getUser().getAsTag());
             return;
         }
 
@@ -97,36 +95,34 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(user, reason, days, user.getUser().getIdLong(), author.getIdLong(), event);
+        banUser(user, author, reason, days, userid, author.getIdLong(), event);
     }
 
-    private static void banUser(@NotNull Member user, @NotNull String reason, int days, long userId,
+    private static void banUser(@NotNull Member member, @NotNull Member author, @NotNull String reason, int days, long userId,
             long authorId, @NotNull SlashCommandEvent event) {
 
+        String guildName = event.getGuild().getName();
         event.getJDA()
             .openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been banned from the guild"""
-                            + event.getGuild().getName()
-                            + """
-                                    If you think this was a mistake, please contact a moderator or admin of the guild.
-                                    The ban reason is:  %s
-                                    """
-                                .formatted(reason)))
+                .flatMap(channel -> channel.sendMessage(
+                                """
+                                        Hey there, sorry to tell you but unfortunately you have been banned from the guild %s.
+                                        If you think this was a mistake, please contact a moderator or admin of the guild.
+                                        The reason for the ban is: %s
+                                                """.formatted(guildName, reason)))
             .queue(null, throwable -> {
-                logger.error("I could not dm the user '{}' to inform them they were banned.",
+                logger.error("I could not dm the user '{}' to inform them that they were banned.",
                         userId);
             });
 
         event.getGuild()
-            .ban(user, days, reason)
-            .flatMap(v -> event.reply(user.getUser().getAsTag() + " was banned by "
-                    + user.getUser().getAsTag() + " for: " + reason))
+            .ban(member, days, reason)
+            .flatMap(v -> event.reply(member.getUser().getAsTag() + " was banned by "
+                    + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(
-                " '{}' banned the user '{}' and deleted the message history of the last '{}' days. Reason was '{}'",
+                " '{}' banned the user '{}' and deleted their message history of the last '{}' days. Reason was '{}'",
                 authorId, userId, days, reason);
     }
 }
