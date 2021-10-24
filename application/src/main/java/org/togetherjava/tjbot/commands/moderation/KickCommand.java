@@ -78,7 +78,7 @@ public final class KickCommand extends SlashCommandAdapter {
         kickUser(user, reason, user.getUser().getIdLong(), event);
     }
 
-    public static void kickUser(@NotNull Member user, @NotNull String reason, long userId,
+    public static void kickUser(@NotNull Member member, @NotNull String reason, long userId,
             @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
 
