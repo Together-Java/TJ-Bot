@@ -61,7 +61,6 @@ public final class TagSystem {
         if (hasTag(id)) {
             return false;
         }
-        // TODO Add fuzzy string matching suggestions (Levenshtein edit distance)
         event.reply("Could not find any tag with id '%s'.".formatted(id))
             .setEphemeral(true)
             .queue();

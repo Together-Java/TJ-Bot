@@ -56,7 +56,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         this.tagSystem = tagSystem;
 
-        // TODO Think about adding a "Are you sure"-dialog to 'edit', 'edit-with-message' and
         // 'delete'
         getData().addSubcommands(new SubcommandData(Subcommand.RAW.name,
                 "View the raw content of a tag, without Discord interpreting any of its content")
