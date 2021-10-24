@@ -15,8 +15,9 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.Objects;
 
 /**
+ * This command can unban users.
  * <p>
- * The implemented command is {@code /unban user_id}, upon which the bot will unban the user.
+ * The command fails if the user triggering it is lacking permissions to either unban other users.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
@@ -35,8 +36,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
     /**
      * When triggered with {@code /unban user_id}}, the bot will respond will check if the user has
-     * perms. Then it will check if itself has perms to unban. If it does it will check if the user
-     * is the user is too powerful or not. If the user is not then unban will ban the user.
+     * perms. Then it will check if itself has perms to unban. If it does then it will check if the
+     * user is on the ban list. If the user is on the ban list it will unban the user.
      *
      * @param event the corresponding event
      */
@@ -79,7 +80,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 event.reply("Something went wrong, check the logs or contact a staff/moderator")
                     .queue();
 
-                logger.error("Something went wrong in the unban command: %d", throwable);
+                logger.error("Something went wrong during the process of unbanning the user ",
+                        throwable);
             }
         });
     }
