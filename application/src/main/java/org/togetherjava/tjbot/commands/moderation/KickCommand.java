@@ -73,10 +73,10 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        kickUser(user, reason, userid, event);
+        kickUser(user, author, reason, userid, event);
     }
 
-    public static void kickUser(@NotNull Member member, @NotNull String reason, long userId,
+    public static void kickUser(@NotNull Member member, @NotNull Member author, @NotNull String reason, long userId,
             @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
         event.getJDA()
@@ -87,16 +87,19 @@ public final class KickCommand extends SlashCommandAdapter {
                                         If you think this was a mistake, please contact a moderator or admin of the guild.
                                         The reason for the kick is: %s
                                         """.formatted(guildName , reason)))
-                        .queue();
+                        .queue(null, throwable -> {
+                            logger.error("I could not dm the user '{}' to inform them that they were kicked.",
+                                    userId);
+                        });
 
         event.getGuild()
-            .kick(user, reason)
-            .flatMap(v -> event.reply(user.getUser().getAsTag() + " was kicked by "
-                    + user.getUser().getAsTag() + " for: " + reason))
+            .kick(member, reason)
+            .flatMap(v -> event.reply(member.getUser().getAsTag() + " was kicked by "
+                    + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(" '{} ({})' kicked the user '{} ({})' due to reason being '{}'",
-                user.getUser().getAsTag(), user.getIdLong(), user.getUser().getAsTag(), userId,
+                author.getUser().getAsTag(), author.getIdLong(), member.getUser().getAsTag(), userId,
                 reason);
     }
 }
