@@ -65,7 +65,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         event.getGuild().unban(userId).queue(v -> {
             event.reply("Unbanned the user").queue();
-            logger.info(" '{}' unbanned user id '{}' ", event.getMember().getIdLong(), userId);
+            User user = event.getUser();
+            logger.info(" {} ({}) unbanned user id '{}' ", user.getAsTag, user.getIdLong(), userId);
         }, throwable -> {
             if (throwable instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
