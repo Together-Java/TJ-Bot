@@ -80,17 +80,16 @@ public final class KickCommand extends SlashCommandAdapter {
 
     public static void kickUser(@NotNull Member user, @NotNull String reason, long userId,
             @NotNull SlashCommandEvent event) {
+        String guildName = event.getGuild().getName();
+
         event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild"""
-                            + event.getGuild().getName()
-                            + """
-                                    If you think this was a mistake, please contact a moderator or admin of the guild.
-                                    The kick reason is:
-                                    """
-                            + reason))
+                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
+                            If you think this was a mistake, please contact a moderator or admin of the guild.
+                            The kick reason is: %s
+                                    """.formatted(guildName , reason))
             .queue();
 
         event.getGuild()
