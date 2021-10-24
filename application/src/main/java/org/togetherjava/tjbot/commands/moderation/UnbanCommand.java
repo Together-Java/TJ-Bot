@@ -67,7 +67,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
         event.getGuild().unban(userId).queue(v -> {
             event.reply("Unbanned the user").queue();
             User user = event.getUser();
-            logger.info(" {} ({}) unbanned user id '{}' ", user.getAsTag(), user.getIdLong(), userId);
+            logger.info(" {} ({}) unbanned user id '{}' ", user.getAsTag(), user.getIdLong(),
+                    userId);
         }, throwable -> {
             if (throwable instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
@@ -78,7 +79,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 event.reply("Something went wrong, check the logs or contact a staff/moderator")
                     .queue();
 
-                logger.error("Something went wrong in the unban command: '{}'", throwable);
+                logger.error("Something went wrong in the unban command: %d", throwable);
             }
         });
     }

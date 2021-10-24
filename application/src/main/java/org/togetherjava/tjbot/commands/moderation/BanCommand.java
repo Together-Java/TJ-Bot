@@ -98,22 +98,24 @@ public final class BanCommand extends SlashCommandAdapter {
         banUser(user, author, reason, days, userid, author.getIdLong(), event);
     }
 
-    private static void banUser(@NotNull Member member, @NotNull Member author, @NotNull String reason, int days, long userId,
-            long authorId, @NotNull SlashCommandEvent event) {
+    private static void banUser(@NotNull Member member, @NotNull Member author,
+            @NotNull String reason, int days, long userId, long authorId,
+            @NotNull SlashCommandEvent event) {
 
         String guildName = event.getGuild().getName();
         event.getJDA()
             .openPrivateChannelById(userId)
-                .flatMap(channel -> channel.sendMessage(
-                                """
-                                        Hey there, sorry to tell you but unfortunately you have been banned from the guild %s.
-                                        If you think this was a mistake, please contact a moderator or admin of the guild.
-                                        The reason for the ban is: %s
-                                                """.formatted(guildName, reason)))
-            .queue(null, throwable -> {
-                logger.error("I could not dm the user '{}' to inform them that they were banned.",
-                        userId);
-            });
+            .flatMap(channel -> channel.sendMessage(
+                    """
+                            Hey there, sorry to tell you but unfortunately you have been banned from the guild %s.
+                            If you think this was a mistake, please contact a moderator or admin of the guild.
+                            The reason for the ban is: %s
+                                    """
+                        .formatted(guildName, reason)))
+            .queue(null,
+                    throwable -> logger.error(
+                            "I could not dm the user '{}' to inform them that they were banned.",
+                            userId));
 
         event.getGuild()
             .ban(member, days, reason)

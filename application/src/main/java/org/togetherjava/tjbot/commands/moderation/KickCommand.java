@@ -13,9 +13,12 @@ import java.util.Objects;
 
 
 /**
- * When triggered with {@code /kick @user reason}, the bot will check if the user has perms. Then it
- * will check if itself has perms to kick. If it does it will check if the user is too powerful or
- * not. If the user is not then bot will kick the user and reply with {@code Kicked User!}.
+ * This command can kicks users. Kicking can also be paired with a kick reason. The command will
+ * also try to DM the user to inform him about the action and the reason.
+ * <p>
+ * The command fails if the user triggering it is lacking permissions to either kick other users or
+ * to kick the specific given user (for example a moderator attempting to kick an admin).
+ *
  */
 public final class KickCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
@@ -62,7 +65,7 @@ public final class KickCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have KICK_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(event.getGuild().getId()));
+                    event.getGuild().getId());
             return;
         }
 
@@ -76,21 +79,22 @@ public final class KickCommand extends SlashCommandAdapter {
         kickUser(user, author, reason, userid, event);
     }
 
-    public static void kickUser(@NotNull Member member, @NotNull Member author, @NotNull String reason, long userId,
-            @NotNull SlashCommandEvent event) {
+    public static void kickUser(@NotNull Member member, @NotNull Member author,
+            @NotNull String reason, long userId, @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
         event.getJDA()
-                .openPrivateChannelById(userId)
-                .flatMap(channel -> channel.sendMessage(
-                                """
-                                        Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
-                                        If you think this was a mistake, please contact a moderator or admin of the guild.
-                                        The reason for the kick is: %s
-                                        """.formatted(guildName , reason)))
-                        .queue(null, throwable -> {
-                            logger.error("I could not dm the user '{}' to inform them that they were kicked.",
-                                    userId);
-                        });
+            .openPrivateChannelById(userId)
+            .flatMap(channel -> channel.sendMessage(
+                    """
+                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
+                            If you think this was a mistake, please contact a moderator or admin of the guild.
+                            The reason for the kick is: %s
+                            """
+                        .formatted(guildName, reason)))
+            .queue(null,
+                    throwable -> logger.error(
+                            "I could not dm the user '{}' to inform them that they were kicked.",
+                            userId));
 
         event.getGuild()
             .kick(member, reason)
@@ -99,7 +103,7 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
 
         logger.info(" '{} ({})' kicked the user '{} ({})' due to reason being '{}'",
-                author.getUser().getAsTag(), author.getIdLong(), member.getUser().getAsTag(), userId,
-                reason);
+                author.getUser().getAsTag(), author.getIdLong(), member.getUser().getAsTag(),
+                userId, reason);
     }
 }
