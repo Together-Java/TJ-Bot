@@ -13,14 +13,27 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import java.util.Objects;
 
+/**
+ * This command can set the slow mode for the channel the command is run in. If the slow mode is set to 0 it is rest.
+ * <p>
+ * The command fails if the user triggering it is lacking permissions to either manage channels.
+ *
+ */
 public class SlowModeCommand extends SlashCommandAdapter {
     private static final String NUMBER_OF_SECONDS = "number_of_seconds";
+    //The slow mode can not be in the negatives.
+    private static final Integer MIN_SLOWMODE_SECONDS = 0;
+    /**
+     * The slow mode can not be above 21600 as stated in {@link TextChannel#MAX_SLOWMODE}
+     */
+    private static final Integer MAX_SLOWMODE_SECONDS = 21600;
     private static final Logger logger = LoggerFactory.getLogger(SlowModeCommand.class);
 
     public SlowModeCommand() {
         super("slow_mode", "Use this command to set a slow mode", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.INTEGER, NUMBER_OF_SECONDS, "Number of seconds you want to set the slow mode to", true);
+        getData().addOption(OptionType.INTEGER, NUMBER_OF_SECONDS,
+                "Number of seconds you want to set the slow mode to", true);
     }
 
     @Override
@@ -28,27 +41,32 @@ public class SlowModeCommand extends SlashCommandAdapter {
         final Member author = event.getMember();
         final TextChannel channel = event.getTextChannel();
 
-        if (!Objects.requireNonNull(author).hasPermission(Permission.MANAGE_CHANNEL)) {
+        if (author.hasPermission(Permission.MANAGE_CHANNEL)) {
             event.reply("You are missing MANAGE_CHANNEL permission to delete these the message")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         final Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
-
         if (!bot.hasPermission(Permission.MANAGE_CHANNEL)) {
             event.reply("I am missing MANAGE_CHANNEL permission to delete these messages")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
 
             logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
                     Objects.requireNonNull(event.getGuild()));
             return;
         }
 
-        int slowModeTime = Math.toIntExact(
-                Objects.requireNonNull(event.getOption(NUMBER_OF_SECONDS)).getAsLong());
+        int slowModeTime = Math
+                .toIntExact(Objects.requireNonNull(event.getOption(NUMBER_OF_SECONDS)).getAsLong());
+
+        if(slowModeTime < MIN_SLOWMODE_SECONDS || slowModeTime > MAX_SLOWMODE_SECONDS) {
+            event.reply("The slow mode time can only be between 0 and 21600 seconds")
+                    .setEphemeral(true)
+                    .queue();
+        }
 
         channel.getManager().setSlowmode(slowModeTime).queue();
     }
