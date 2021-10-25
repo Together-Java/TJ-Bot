@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * This command can kicks users. Kicking can also be paired with a kick reason. The command will
- * also try to DM the user to inform him about the action and the reason.
+ * also try to DM the user to inform them about the action and the reason.
  * <p>
  * The command fails if the user triggering it is lacking permissions to either kick other users or
  * to kick the specific given user (for example a moderator attempting to kick an admin).
@@ -29,7 +29,7 @@ public final class KickCommand extends SlashCommandAdapter {
      * Creates an instance of the kick command.
      */
     public KickCommand() {
-        super("kick", "Kicks the given user from the user", SlashCommandVisibility.GUILD);
+        super("kick", "Kicks the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
@@ -86,13 +86,13 @@ public final class KickCommand extends SlashCommandAdapter {
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
-                            The reason for the kick is: %s
-                            """
+                    Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
+                    If you think this was a mistake, please contact a moderator or admin of the guild.
+                    he reason for the kick is: %s
+                    """
                         .formatted(guildName, reason)))
             .queue(null,
-                    throwable -> logger.error(
+                    throwable -> logger.info(
                             "I could not dm the user '{}' to inform them that they were kicked.",
                             userId));
 

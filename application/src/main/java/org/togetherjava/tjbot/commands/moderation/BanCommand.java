@@ -17,7 +17,7 @@ import java.util.Objects;
 
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
- * also be paired with a ban reason. The command will also try to DM the user to inform him about
+ * also be paired with a ban reason. The command will also try to DM the user to inform them about
  * the action and the reason.
  * <p>
  * The command fails if the user triggering it is lacking permissions to either ban other users or
@@ -107,13 +107,13 @@ public final class BanCommand extends SlashCommandAdapter {
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been banned from the guild %s.
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
-                            The reason for the ban is: %s
-                                    """
+                    Hey there, sorry to tell you but unfortunately you have been banned from the guild %s.
+                    If you think this was a mistake, please contact a moderator or admin of the guild.
+                    The reason for the ban is: %s
+                    """
                         .formatted(guildName, reason)))
             .queue(null,
-                    throwable -> logger.error(
+                    throwable -> logger.info(
                             "I could not dm the user '{}' to inform them that they were banned.",
                             userId));
 
