@@ -77,7 +77,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 event.reply("the specified user doesn't exist").queue();
                 logger.debug("The user '{}' does not exist", userId);
             } else {
-                event.reply("Something went wrong, check the logs or contact a staff/moderator")
+                event.reply("Something went wrong, check the logs or contact a staff member")
                     .queue();
 
                 logger.error("Something went wrong during the process of unbanning the user ",
