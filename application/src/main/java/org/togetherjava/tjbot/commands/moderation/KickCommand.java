@@ -86,10 +86,10 @@ public final class KickCommand extends SlashCommandAdapter {
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
-                            he reason for the kick is: %s
-                            """
+                    Hey there, sorry to tell you but unfortunately you have been kicked from the guild %s.
+                    If you think this was a mistake, please contact a moderator or admin of the guild.
+                    he reason for the kick is: %s
+                    """
                         .formatted(guildName, reason)))
             .queue(null,
                     throwable -> logger.info(
