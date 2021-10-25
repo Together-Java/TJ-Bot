@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.managers.ChannelManager;
 import net.dv8tion.jda.api.managers.Manager;
 import org.jetbrains.annotations.NotNull;
@@ -12,10 +13,12 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.Objects;
 
 public class SlowModeCommand extends SlashCommandAdapter {
-    private static final String NUMBER_OF_MINUTES = "number_of_minutes";
+    private static final String NUMBER_OF_SECONDS = "number_of_seconds";
 
-    protected SlowModeCommand() {
+    public SlowModeCommand() {
         super("slow_mode", "Use this command to set a slow mode", SlashCommandVisibility.GUILD);
+
+        getData().addOption(OptionType.INTEGER, NUMBER_OF_SECONDS, "Number of seconds you want to set the slow mode to", true);
     }
 
     @Override
@@ -39,7 +42,8 @@ public class SlowModeCommand extends SlashCommandAdapter {
         }
 
         int slowModeTime = Math.toIntExact(
-                Objects.requireNonNull(event.getOption(NUMBER_OF_MINUTES)).getAsLong());
+                Objects.requireNonNull(event.getOption(NUMBER_OF_SECONDS)).getAsLong());
+
         Objects.requireNonNull(event.getGuild().getDefaultChannel()).getManager().setSlowmode(slowModeTime);
     }
 }
