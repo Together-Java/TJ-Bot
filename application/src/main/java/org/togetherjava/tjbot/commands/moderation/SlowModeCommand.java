@@ -14,14 +14,15 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.Objects;
 
 /**
- * This command can set the slow mode for the channel the command is run in. If the slow mode is set to 0 it is rest.
+ * This command can set the slow mode for the channel the command is run in. If the slow mode is set
+ * to 0 it is rest.
  * <p>
  * The command fails if the user triggering it is lacking permissions to either manage channels.
  *
  */
 public class SlowModeCommand extends SlashCommandAdapter {
     private static final String NUMBER_OF_SECONDS = "number_of_seconds";
-    //The slow mode can not be in the negatives.
+    // The slow mode can not be in the negatives.
     private static final Integer MIN_SLOWMODE_SECONDS = 0;
     /**
      * The slow mode can not be above 21600 as stated in {@link TextChannel#MAX_SLOWMODE}
@@ -60,12 +61,12 @@ public class SlowModeCommand extends SlashCommandAdapter {
         }
 
         int slowModeTime = Math
-                .toIntExact(Objects.requireNonNull(event.getOption(NUMBER_OF_SECONDS)).getAsLong());
+            .toIntExact(Objects.requireNonNull(event.getOption(NUMBER_OF_SECONDS)).getAsLong());
 
-        if(slowModeTime < MIN_SLOWMODE_SECONDS || slowModeTime > MAX_SLOWMODE_SECONDS) {
+        if (slowModeTime < MIN_SLOWMODE_SECONDS || slowModeTime > MAX_SLOWMODE_SECONDS) {
             event.reply("The slow mode time can only be between 0 and 21600 seconds")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
         }
 
         channel.getManager().setSlowmode(slowModeTime).queue();
