@@ -64,7 +64,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         long userid = user.getIdLong();
         if (!author.canInteract(user)) {
-            event.reply("The user" + userid + " is too powerful for you to ban.")
+            event.reply("The user " + userid + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
