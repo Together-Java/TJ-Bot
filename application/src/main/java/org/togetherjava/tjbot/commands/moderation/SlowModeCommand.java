@@ -24,10 +24,6 @@ public class SlowModeCommand extends SlashCommandAdapter {
     private static final String NUMBER_OF_SECONDS = "number_of_seconds";
     // The slow mode can not be in the negatives.
     private static final Integer MIN_SLOWMODE_SECONDS = 0;
-    /**
-     * The slow mode can not be above 21600 as stated in {@link TextChannel#MAX_SLOWMODE}
-     */
-    private static final Integer MAX_SLOWMODE_SECONDS = 21600;
     private static final Logger logger = LoggerFactory.getLogger(SlowModeCommand.class);
 
     public SlowModeCommand() {
@@ -70,5 +66,8 @@ public class SlowModeCommand extends SlashCommandAdapter {
         }
 
         channel.getManager().setSlowmode(slowModeTime).queue();
+        logger.info(
+                " '{}' set the slow mode to '{}'",
+                Objects.requireNonNull(event.getMember()), slowModeTime);
     }
 }
