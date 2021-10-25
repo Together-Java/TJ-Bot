@@ -95,7 +95,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(user, author, reason, days, userid, author.getIdLong(), event);
+        banUser(user, author, reason, days, userId, author.getIdLong(), event);
     }
 
     private static void banUser(@NotNull Member member, @NotNull Member author,
