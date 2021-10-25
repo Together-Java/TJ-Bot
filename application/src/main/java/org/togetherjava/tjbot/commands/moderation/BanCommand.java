@@ -77,7 +77,7 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    event.getGuild().getId());
+                    Objects.requireNonNull(event.getGuild()));
             return;
         }
         if (!bot.canInteract(Objects.requireNonNull(user))) {
