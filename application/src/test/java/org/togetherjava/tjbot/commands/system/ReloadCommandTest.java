@@ -13,8 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 final class ReloadCommandTest {
     @Test
     void ReloadCommand() {
-        // noinspection
-        // AnonymousInnerClassWithTooManyMethods,AnonymousInnerClass,AnonymousInnerClassMayBeStatic
+        @SuppressWarnings({"AnonymousInnerClassWithTooManyMethods", "AnonymousInnerClass",
+                "AnonymousInnerClassMayBeStatic"})
         SlashCommandProvider slashCommandProvider = new SlashCommandProvider() {
             @Override
             public @NotNull Collection<SlashCommand> getSlashCommands() {
