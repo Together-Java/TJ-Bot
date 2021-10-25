@@ -56,7 +56,7 @@ public class SlowModeCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(event.getGuild()));
+                    event.getGuild());
             return;
         }
 
