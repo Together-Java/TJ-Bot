@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
@@ -41,6 +42,6 @@ public enum Commands {
         // available.
         return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
                 new TagCommand(tagSystem), new TagManageCommand(tagSystem),
-                new TagsCommand(tagSystem));
+                new TagsCommand(tagSystem), new FreeCommand());
     }
 }

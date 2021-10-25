@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -24,15 +27,19 @@ public final class Config {
     private final String projectWebsite;
     private final String discordGuildInvite;
 
+    private final List<FreeCommandConfig> freeCommand;
+
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite) {
+            @JsonProperty("discordGuildInvite") String discordGuildInvite,
+            @JsonProperty("freeCommand") FreeCommandConfig[] freeCommand) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
+        this.freeCommand = Arrays.stream(freeCommand).toList();
     }
 
     /**
@@ -93,5 +100,16 @@ public final class Config {
      */
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
+    }
+
+    /**
+     * Gets a List of channel id's required to configure the free command system see
+     * {@link FreeCommandConfig}
+     *
+     * @return a List of instances of FreeCommandConfig, each of the instances are separated by
+     *         guild.
+     */
+    public Collection<FreeCommandConfig> getFreeCommandConfig() {
+        return freeCommand;
     }
 }
