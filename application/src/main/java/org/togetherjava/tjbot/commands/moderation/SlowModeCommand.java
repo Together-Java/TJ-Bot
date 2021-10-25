@@ -63,7 +63,7 @@ public class SlowModeCommand extends SlashCommandAdapter {
         int slowModeTime = Math
             .toIntExact(Objects.requireNonNull(event.getOption(NUMBER_OF_SECONDS)).getAsLong());
 
-        if (slowModeTime < MIN_SLOWMODE_SECONDS || slowModeTime > MAX_SLOWMODE_SECONDS) {
+        if (slowModeTime < MIN_SLOWMODE_SECONDS || slowModeTime > TextChannel.MAX_SLOWMODE) {
             event.reply("The slow mode time can only be between 0 and 21600 seconds")
                 .setEphemeral(true)
                 .queue();
