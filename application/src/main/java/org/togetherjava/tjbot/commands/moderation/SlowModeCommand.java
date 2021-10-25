@@ -66,8 +66,7 @@ public class SlowModeCommand extends SlashCommandAdapter {
         }
 
         channel.getManager().setSlowmode(slowModeTime).queue();
-        logger.info(
-                " '{}' set the slow mode to '{}'",
-                Objects.requireNonNull(event.getMember()), slowModeTime);
+        logger.info(" '{}' set the slow mode to '{}'", Objects.requireNonNull(event.getMember()),
+                slowModeTime);
     }
 }
