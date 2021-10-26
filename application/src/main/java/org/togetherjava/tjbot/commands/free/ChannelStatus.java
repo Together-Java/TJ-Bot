@@ -16,7 +16,8 @@ public final class ChannelStatus {
     private static final String FREE_STATUS = ":green_circle:";
     private static final String BUSY_STATUS = ":red_circle:";
 
-    private final long channelID;
+    private final long channelId;
+    private long userId;
     private volatile boolean isBusy;
     private String name;
 
@@ -30,9 +31,9 @@ public final class ChannelStatus {
      * 
      * @param id the long id of the {@link net.dv8tion.jda.api.entities.TextChannel} to monitor.
      */
-    protected ChannelStatus(long id) {
-        channelID = id;
-        isBusy = true;
+    ChannelStatus(long id) {
+        channelId = id;
+        isBusy = false;
         name = Long.toString(id);
     }
 
@@ -56,8 +57,8 @@ public final class ChannelStatus {
      * 
      * @return the {@link net.dv8tion.jda.api.entities.TextChannel} id.
      */
-    public long getChannelID() {
-        return channelID;
+    public long getChannelId() {
+        return channelId;
     }
 
     /**
@@ -89,8 +90,20 @@ public final class ChannelStatus {
         this.name = Objects.requireNonNull(name);
     }
 
-    protected void busy(boolean isBusy) {
-        this.isBusy = isBusy;
+    public void setBusy(long userId) {
+        if (isBusy == FREE) {
+            this.isBusy = BUSY;
+            this.userId = userId;
+        }
+    }
+    public boolean isAsker(long userId) {
+        return this.userId == userId;
+    }
+
+    public void setFree() {
+        if (isBusy == BUSY) {
+            isBusy = FREE;
+        }
     }
 
     // todo should I overload equals with equals(long) so that a Set may be used instead of a Map
@@ -108,7 +121,7 @@ public final class ChannelStatus {
         if (o == null || getClass() != o.getClass())
             return false;
         ChannelStatus that = (ChannelStatus) o;
-        return channelID == that.channelID;
+        return channelId == that.channelId;
     }
 
     /**
@@ -138,6 +151,6 @@ public final class ChannelStatus {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(channelID);
+        return Objects.hash(channelId);
     }
 }
