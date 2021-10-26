@@ -26,8 +26,11 @@ import java.util.Objects;
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
  *
- * <p> An VC activity is a so called "Embedded application". To explain it extremely simple, interactive screensharing. <br />
- * To give you a better idea of what it actually is, think about games like Poker, Chess, or watching YouTube Together using one of these. <br />
+ * <p>
+ * An VC activity is a so called "Embedded application". To explain it extremely simple, interactive
+ * screensharing. <br />
+ * To give you a better idea of what it actually is, think about games like Poker, Chess, or
+ * watching YouTube Together using one of these. <br />
  */
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
@@ -69,20 +72,22 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * @see VcActivityCommand
      */
     public VcActivityCommand() {
-        super("vc-activity", "Starts a VC activity (you need to be in an voice channel to run this command)", SlashCommandVisibility.GUILD);
+        super("vc-activity",
+                "Starts a VC activity (you need to be in an voice channel to run this command)",
+                SlashCommandVisibility.GUILD);
 
 
         SubcommandData applicationSubCommand =
                 new SubcommandData("application", "Choose an application from our list")
-                        .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
-                                "the application", true).addChoices(VC_APPLICATIONS))
-                        .addOptions(inviteOptions);
+                    .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
+                            "the application", true).addChoices(VC_APPLICATIONS))
+                    .addOptions(inviteOptions);
 
 
         SubcommandData idSubCommand =
                 new SubcommandData("id", "specify the ID for the application manually")
-                        .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
-                        .addOptions(inviteOptions);
+                    .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
+                    .addOptions(inviteOptions);
 
 
         getData().addSubcommands(applicationSubCommand, idSubCommand);
@@ -98,8 +103,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         if (!voiceState.inVoiceChannel()) {
             event.reply("You need to be in a voicechannel to run this command!")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
 
             return;
         }
@@ -110,8 +115,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.CREATE_INSTANT_INVITE)) {
             event.reply("The bot needs the create instant invite permission!")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             logger.warn("Bot doesn't have the create instant permission");
             return;
         }
@@ -148,27 +153,27 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
-                                         @NotNull VoiceChannel voiceChannel, @NotNull OptionMapping option,
-                                         @Nullable Integer maxUses, @Nullable Integer maxAge) {
+            @NotNull VoiceChannel voiceChannel, @NotNull OptionMapping option,
+            @Nullable Integer maxUses, @Nullable Integer maxAge) {
 
         voiceChannel.createInvite()
-                .setTargetApplication(option.getAsString())
-                .setMaxUses(maxUses)
-                .setMaxAge(maxAge)
-                .flatMap(invite -> replyInvite(event, invite))
-                .queue(null,
-                        throwable -> handleErrors(event, throwable));
+            .setTargetApplication(option.getAsString())
+            .setMaxUses(maxUses)
+            .setMaxAge(maxAge)
+            .flatMap(invite -> replyInvite(event, invite))
+            .queue(null, throwable -> handleErrors(event, throwable));
     }
 
     private static @NotNull ReplyAction replyInvite(@NotNull SlashCommandEvent event,
-                                                    @NotNull Invite invite) {
+            @NotNull Invite invite) {
         return event.reply("""
                 I wish you a lot of fun, here's the invite: %s
                 If it says the activity ended, click on the URL instead.
                  """.formatted(invite.getUrl()));
     }
 
-    private static void handleErrors(@NotNull SlashCommandEvent event, @Nullable Throwable throwable) {
+    private static void handleErrors(@NotNull SlashCommandEvent event,
+            @Nullable Throwable throwable) {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
     }
@@ -181,9 +186,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      *
      * <p/>
      *
-     * <p> This method throws an {@link IllegalArgumentException} if the option's value is
-     * - outside of {@link Integer#MAX_VALUE}
-     * - negative
+     * <p>
+     * This method throws an {@link IllegalArgumentException} if the option's value is - outside of
+     * {@link Integer#MAX_VALUE} - negative
      *
      * @param event the {@link SlashCommandEvent}
      * @param optionMapping the {@link OptionMapping}
@@ -191,7 +196,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      */
     @Contract("_, null -> null")
     private static @Nullable Integer handleIntegerTypeOption(@NotNull SlashCommandEvent event,
-                                                             @Nullable OptionMapping optionMapping) {
+            @Nullable OptionMapping optionMapping) {
 
         int optionValue;
 
@@ -203,19 +208,18 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             optionValue = Math.toIntExact(optionMapping.getAsLong());
         } catch (ArithmeticException e) {
             event
-                    .reply("The " + optionMapping.getName() + " is above `" + Integer.MAX_VALUE
-                            + "`, which is too high")
-                    .setEphemeral(true)
-                    .queue();
+                .reply("The " + optionMapping.getName() + " is above `" + Integer.MAX_VALUE
+                        + "`, which is too high")
+                .setEphemeral(true)
+                .queue();
             throw new IllegalArgumentException(
                     optionMapping.getName() + " can't be above " + Integer.MAX_VALUE);
         }
 
         if (optionValue < 0) {
-            event
-                    .reply("The " + optionMapping.getName() + " is negative, which isn't supported")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("The " + optionMapping.getName() + " is negative, which isn't supported")
+                .setEphemeral(true)
+                .queue();
             throw new IllegalArgumentException(optionMapping.getName() + " can't be negative");
         }
 
