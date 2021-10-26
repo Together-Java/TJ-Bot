@@ -50,9 +50,9 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        long userid = user.getIdLong();
+        String userTag = user.getUser().getAsTag();
         if (!author.canInteract(user)) {
-            event.reply("The user" + userid + "is too powerful for you to kick.")
+            event.reply("The user" + userTag + "is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -65,18 +65,18 @@ public final class KickCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have KICK_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(event.getGuild()));
+                    Objects.requireNonNull(event.getGuild().getId()));
             return;
         }
 
         if (!bot.canInteract(user)) {
-            event.reply("The user " + user + " is too powerful for me to kick.")
+            event.reply("The user " + userTag + " is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        kickUser(user, author, reason, userid, event);
+        kickUser(user, author, reason, user.getIdLong(), event);
     }
 
     public static void kickUser(@NotNull Member member, @NotNull Member author,

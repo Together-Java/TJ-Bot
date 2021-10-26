@@ -62,9 +62,9 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        long userId = user.getIdLong();
+        String userTag = user.getUser().getAsTag();
         if (!author.canInteract(user)) {
-            event.reply("The user " + userId + " is too powerful for you to ban.")
+            event.reply("The user " + userTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -81,7 +81,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
         if (!bot.canInteract(Objects.requireNonNull(user))) {
-            event.reply("The user" + user.getUser().getAsTag() + "is too powerful for me to ban.")
+            event.reply("The user" + userTag + "is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
@@ -95,7 +95,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(user, author, reason, days, userId, author.getIdLong(), event);
+        banUser(user, author, reason, days, user.getIdLong(), author.getIdLong(), event);
     }
 
     private static void banUser(@NotNull Member member, @NotNull Member author,
