@@ -40,7 +40,7 @@ public final class TopHelpersMetadataListener extends ListenerAdapter {
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         var channel = event.getChannel();
         if (!event.getAuthor().isBot() && !event.isWebhookMessage()
-                && JdaUtils.isAHelpChannel(channel)) {
+                && JdaUtils.isHelpChannel(channel)) {
             var messageId = event.getMessage().getIdLong();
             var guildId = event.getGuild().getIdLong();
             var channelId = channel.getIdLong();

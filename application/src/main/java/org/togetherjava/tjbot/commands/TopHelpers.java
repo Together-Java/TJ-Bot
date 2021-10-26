@@ -6,22 +6,26 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Records;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.util.PresentationUtils;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.jooq.impl.DSL.*;
 import static org.togetherjava.tjbot.db.generated.tables.MessageMetadata.MESSAGE_METADATA;
-import static org.togetherjava.tjbot.util.MessageTemplate.PLAINTEXT_MESSAGE_TEMPLATE;
 
+/**
+ * Command to retrieve top helpers for last 30 days.
+ */
+@ParametersAreNonnullByDefault
 public final class TopHelpers extends SlashCommandAdapter {
 
+    public static final String PLAINTEXT_MESSAGE_TEMPLATE = "```\n%s\n```";
     private static final String COUNT_OPTION = "count";
     private static final String NO_ENTRIES = "No entries";
 
@@ -48,8 +52,8 @@ public final class TopHelpers extends SlashCommandAdapter {
     @SuppressWarnings("squid:S1192")
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
-        Long guildId = event.getGuild().getIdLong();
-        Long count = getBoundedCountAsLong(event.getOption(COUNT_OPTION));
+        long guildId = event.getGuild().getIdLong();
+        long count = getBoundedCountAsLong(event.getOption(COUNT_OPTION));
         database.read(dsl -> {
             List<TopHelperRow> records = dsl.with("TOPHELPERS")
                 .as(select(MESSAGE_METADATA.USER_ID, count().as("COUNT")).from(MESSAGE_METADATA)
@@ -69,7 +73,7 @@ public final class TopHelpers extends SlashCommandAdapter {
         return count == null ? MIN_COUNT : Math.min(count.getAsLong(), MAX_COUNT);
     }
 
-    private static String prettyFormatOutput(@NotNull List<List<String>> dataFrame) {
+    private static String prettyFormatOutput(List<List<String>> dataFrame) {
         return String.format(PLAINTEXT_MESSAGE_TEMPLATE,
                 dataFrame.isEmpty() ? NO_ENTRIES
                         : PresentationUtils.dataFrameToAsciiTable(dataFrame,
@@ -78,8 +82,8 @@ public final class TopHelpers extends SlashCommandAdapter {
                                         HorizontalAlign.RIGHT}));
     }
 
-    private static void generateResponse(@NotNull SlashCommandEvent event,
-            @NotNull List<TopHelperRow> records) {
+    private static void generateResponse(SlashCommandEvent event,
+            List<TopHelperRow> records) {
         List<Long> userIds = records.stream().map(TopHelperRow::userId).toList();
         event.getGuild().retrieveMembersByIds(userIds).onSuccess(members -> {
             Map<Long, String> activeUserIdToEffectiveNames = members.stream()

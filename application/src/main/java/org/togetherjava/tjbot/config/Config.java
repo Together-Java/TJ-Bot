@@ -23,16 +23,19 @@ public final class Config {
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
+    private final String helpChannelRegex;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
-            @JsonProperty("databasePath") String databasePath,
-            @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite) {
+                   @JsonProperty("databasePath") String databasePath,
+                   @JsonProperty("projectWebsite") String projectWebsite,
+                   @JsonProperty("discordGuildInvite") String discordGuildInvite,
+                   @JsonProperty("helpChannelRegex") String helpChannelRegex) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
+        this.helpChannelRegex = helpChannelRegex;
     }
 
     /**
@@ -94,4 +97,11 @@ public final class Config {
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
     }
+
+    /**
+     * Gets regex pattern to identify help channels.
+     *
+     * @return string representation of regex pattern to identify help channels
+     */
+    public String getHelpChannelRegex() { return helpChannelRegex; }
 }

@@ -18,7 +18,7 @@ public final class JdaUtils {
      * @param textChannel provided channel.
      * @return true if the provided channel is a help channel, false otherwise.
      */
-    public static boolean isAHelpChannel(TextChannel textChannel) {
+    public static boolean isHelpChannel(TextChannel textChannel) {
         return HELP_CHANNEL_PATTERN.matcher(textChannel.getName()).matches();
     }
 }

@@ -18,6 +18,25 @@ public final class PresentationUtils {
 
     /**
      * Flattens a dataFrame to String representation of a table.
+     *
+     * eg.
+     * <pre>
+     * {@code
+     *     var dataframe = List.of(List.of("Apple", "Fruit"), List.of("Potato", "Vegetable"));
+     *     var columnHeaders = new String[] {"Item", "Category"};
+     *     var horizontalAlignment = new HorizontalAlign[] {HorizontalAlign.LEFT, HorizontalAlign.LEFT};
+     *     dataFrameToAsciiTable(dataframe, columnHeaders, horizontalAlignment);
+     * }
+     * </pre>
+     * will return:
+     * <pre>
+     * {@code
+     *  Item   | Category
+     * --------+-----------
+     *  Apple  | Fruit
+     *  Potato | Vegetable
+     * }
+     * </pre>
      * 
      * @param dataFrame dataframe represented as List<List<String>> where List<String> represents a
      *        single row
