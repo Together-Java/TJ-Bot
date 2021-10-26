@@ -35,6 +35,8 @@ import java.util.Objects;
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
 
+    private static final String APPLICATION_SUBCOMMAND = "application";
+
     private static final String APPLICATION_OPTION = "application";
     private static final String ID_OPTION = "id";
 
@@ -78,7 +80,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
         SubcommandData applicationSubCommand =
-                new SubcommandData("application", "Choose an application from our list")
+                new SubcommandData(APPLICATION_SUBCOMMAND, "Choose an application from our list")
                     .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
                             "the application", true).addChoices(VC_APPLICATIONS))
                     .addOptions(inviteOptions);
