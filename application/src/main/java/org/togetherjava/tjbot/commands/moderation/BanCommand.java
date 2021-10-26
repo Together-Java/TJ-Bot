@@ -107,18 +107,13 @@ public final class BanCommand extends SlashCommandAdapter {
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, sorry to tell you but unfortunately you have been banned from the guild %s.
-                            If you think this was a mistake, please contact a moderator or admin of the guild.
+                            Hey there, sorry to tell you but unfortunately you have been banned from the server %s.
+                            If you think this was a mistake, please contact a moderator or admin of the server.
                             The reason for the ban is: %s
                             """
                         .formatted(guildName, reason)))
-            .queue(null,
-                    throwable -> logger.info(
-                            "I could not dm the user '{}' to inform them that they were banned.",
-                            userId));
-
-        event.getGuild()
-            .ban(member, days, reason)
+            .mapToResult()
+            .flatMap(result -> event.getGuild().ban(member, days, reason))
             .flatMap(v -> event.reply(member.getUser().getAsTag() + " was banned by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
