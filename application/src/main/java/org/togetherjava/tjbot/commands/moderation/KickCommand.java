@@ -65,7 +65,7 @@ public final class KickCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have KICK_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(event.getGuild().getId()));
+                    Objects.requireNonNull(event.getGuild()).getName());
             return;
         }
 
