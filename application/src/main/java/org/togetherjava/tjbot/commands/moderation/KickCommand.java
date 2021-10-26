@@ -52,7 +52,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         String userTag = user.getUser().getAsTag();
         if (!author.canInteract(user)) {
-            event.reply("The user " + userTag + "is too powerful for you to kick.")
+            event.reply("The user " + userTag + " is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
