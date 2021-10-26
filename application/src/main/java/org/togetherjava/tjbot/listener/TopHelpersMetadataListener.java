@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.util.JDAUtils;
+import org.togetherjava.tjbot.util.JdaUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -13,10 +13,10 @@ import java.time.temporal.ChronoUnit;
 import static org.togetherjava.tjbot.db.generated.tables.MessageMetadata.MESSAGE_METADATA;
 
 /**
- * Listener responsible for persistence of text message metadata
+ * Listener responsible for persistence of text message metadata.
  */
-public final class MessageMetadataListener extends ListenerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(MessageMetadataListener.class);
+public final class TopHelpersMetadataListener extends ListenerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(TopHelpersMetadataListener.class);
 
     private static final int MESSAGE_METADATA_ARCHIVAL_DAYS = 30;
 
@@ -25,9 +25,9 @@ public final class MessageMetadataListener extends ListenerAdapter {
     /**
      * Creates a new message metadata listener, using the given database.
      *
-     * @param database the database to store message metadata
+     * @param database the database to store message metadata.
      */
-    public MessageMetadataListener(Database database) {
+    public TopHelpersMetadataListener(Database database) {
         this.database = database;
     }
 
@@ -40,7 +40,7 @@ public final class MessageMetadataListener extends ListenerAdapter {
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         var channel = event.getChannel();
         if (!event.getAuthor().isBot() && !event.isWebhookMessage()
-                && JDAUtils.isAHelpChannel(channel)) {
+                && JdaUtils.isAHelpChannel(channel)) {
             var messageId = event.getMessage().getIdLong();
             var guildId = event.getGuild().getIdLong();
             var channelId = channel.getIdLong();

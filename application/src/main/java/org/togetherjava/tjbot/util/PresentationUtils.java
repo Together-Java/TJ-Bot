@@ -4,6 +4,7 @@ import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.ColumnData;
 import com.github.freva.asciitable.HorizontalAlign;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,8 +25,8 @@ public final class PresentationUtils {
      * @param horizontalAligns column alignment for the table
      * @return String representation of the dataFrame in tabular form
      */
-    public static String dataFrameToAsciiTable(List<List<String>> dataFrame, String[] headers,
-            HorizontalAlign[] horizontalAligns) {
+    public static String dataFrameToAsciiTable(@NotNull List<List<String>> dataFrame,
+            @NotNull String[] headers, @NotNull HorizontalAlign[] horizontalAligns) {
         Objects.requireNonNull(dataFrame, "DataFrame cannot be null");
         Objects.requireNonNull(headers, "Headers cannot be null");
         Objects.requireNonNull(horizontalAligns, "HorizontalAligns cannot be null");

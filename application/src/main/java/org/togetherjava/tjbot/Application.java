@@ -8,7 +8,7 @@ import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.system.CommandSystem;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.listener.MessageMetadataListener;
+import org.togetherjava.tjbot.listener.TopHelpersMetadataListener;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -78,7 +78,7 @@ public enum Application {
 
             JDA jda = JDABuilder.createDefault(token)
                 .addEventListeners(new CommandSystem(database),
-                        new MessageMetadataListener(database))
+                        new TopHelpersMetadataListener(database))
                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");

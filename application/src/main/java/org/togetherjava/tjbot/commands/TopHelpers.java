@@ -6,6 +6,8 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.Records;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.util.PresentationUtils;
@@ -63,11 +65,11 @@ public final class TopHelpers extends SlashCommandAdapter {
         });
     }
 
-    private static long getBoundedCountAsLong(OptionMapping count) {
+    private static long getBoundedCountAsLong(@Nullable OptionMapping count) {
         return count == null ? MIN_COUNT : Math.min(count.getAsLong(), MAX_COUNT);
     }
 
-    private static String prettyPrintOutput(List<List<String>> dataFrame) {
+    private static String prettyFormatOutput(@NotNull List<List<String>> dataFrame) {
         return String.format(PLAINTEXT_MESSAGE_TEMPLATE,
                 dataFrame.isEmpty() ? NO_ENTRIES
                         : PresentationUtils.dataFrameToAsciiTable(dataFrame,
@@ -76,19 +78,21 @@ public final class TopHelpers extends SlashCommandAdapter {
                                         HorizontalAlign.RIGHT}));
     }
 
-    private static void generateResponse(SlashCommandEvent event, List<TopHelperRow> records) {
+    private static void generateResponse(@NotNull SlashCommandEvent event,
+            @NotNull List<TopHelperRow> records) {
         List<Long> userIds = records.stream().map(TopHelperRow::userId).toList();
         event.getGuild().retrieveMembersByIds(userIds).onSuccess(members -> {
             Map<Long, String> activeUserIdToEffectiveNames = members.stream()
                 .collect(Collectors.toMap(Member::getIdLong, Member::getEffectiveName));
-            List<List<String>> topHelpersDataframe =
-                    records.stream()
-                        .map(topHelperRow -> List.of(topHelperRow.serialId.toString(),
-                                activeUserIdToEffectiveNames.getOrDefault(topHelperRow.userId,
-                                        "[UNKNOWN]"),
-                                topHelperRow.messageCount.toString()))
-                        .toList();
-            event.reply(prettyPrintOutput(topHelpersDataframe)).queue();
+            List<List<String>> topHelpersDataframe = records.stream()
+                .map(topHelperRow -> List.of(topHelperRow.serialId.toString(),
+                        activeUserIdToEffectiveNames.getOrDefault(topHelperRow.userId,
+                                // Any user who is no more a part of the guild is marked as
+                                // [UNKNOWN]
+                                "[UNKNOWN]"),
+                        topHelperRow.messageCount.toString()))
+                .toList();
+            event.reply(prettyFormatOutput(topHelpersDataframe)).queue();
         });
     }
 }

@@ -1,4 +1,4 @@
 /**
- * This package contains non-user interactive event listeners
+ * This package contains non-user interactive event listeners.
  */
 package org.togetherjava.tjbot.listener;
