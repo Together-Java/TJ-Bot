@@ -79,7 +79,7 @@ public final class KickCommand extends SlashCommandAdapter {
         kickUser(user, author, reason, user.getIdLong(), event);
     }
 
-    public static void kickUser(@NotNull Member member, @NotNull Member author,
+    private static void kickUser(@NotNull Member member, @NotNull Member author,
             @NotNull String reason, long userId, @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
         event.getJDA()
@@ -88,7 +88,7 @@ public final class KickCommand extends SlashCommandAdapter {
                     """
                             Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
                             If you think this was a mistake, please contact a moderator or admin of the server.
-                            he reason for the kick is: %s
+                            The reason for the kick is: %s
                             """
                         .formatted(guildName, reason)))
             .mapToResult()
