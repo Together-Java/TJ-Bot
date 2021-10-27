@@ -96,7 +96,7 @@ public final class KickCommand extends SlashCommandAdapter {
                             """
                         .formatted(guildName, reason)))
             .mapToResult()
-            .flatMap(result -> event.getGuild().kick(member, reason))
+            .flatMap(result -> event.getGuild().kick(member, reason).reason(reason))
             .flatMap(v -> event.reply(member.getUser().getAsTag() + " was kicked by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
