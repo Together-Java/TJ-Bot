@@ -38,7 +38,7 @@ public final class KickCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member user = event.getOption(USER_OPTION).getAsMember();
-        Member author = event.getMember();
+        Member author = Objects.requireNonNull(event.getMember(), "Member is null);
         String reason = event.getOption(REASON_OPTION).getAsString();
         Member bot = event.getGuild().getSelfMember();
 
