@@ -50,7 +50,7 @@ public final class BanCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member member = event.getOption(USER_OPTION).getAsMember();
-        Member author = event.getMember();
+        Member author = Objects.requireNonNull(event.getMember(), "Member is null);
         String reason = event.getOption(REASON_OPTION).getAsString();
         Member bot = event.getGuild().getSelfMember();
         User user = event.getOption(USER_OPTION).getAsUser();
