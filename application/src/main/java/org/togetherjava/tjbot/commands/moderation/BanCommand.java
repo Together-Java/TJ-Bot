@@ -101,11 +101,11 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(user, author, reason, days, user.getIdLong(), author.getIdLong(), event);
+        banUser(user, author, reason, days, user.getIdLong(), event);
     }
 
     private static void banUser(@NotNull User user, @NotNull Member author, @NotNull String reason,
-            int delDays, long authorId, @NotNull SlashCommandEvent event) {
+            int delDays, long userId, @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
         event.getJDA()
             .openPrivateChannelById(userId)
