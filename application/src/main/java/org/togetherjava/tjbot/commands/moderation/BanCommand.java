@@ -124,7 +124,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         logger.info(
                 " '{} ({})' banned the user '{} ({})' and deleted their message history of the last '{}' days. Reason being'{}'",
-                author.getUser().getAsTag(), author.getIdLong(), user.getAsTag(), delDays, userId,
+                author.getUser().getAsTag(), author.getIdLong(), user.getAsTag(), userId, delDays,
                 reason);
     }
 }
