@@ -105,7 +105,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static void banUser(@NotNull User user, @NotNull Member author, @NotNull String reason,
-            int days, long userId, long authorId, @NotNull SlashCommandEvent event) {
+            int delDays, long userId, long authorId, @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
         event.getJDA()
             .openPrivateChannelById(userId)
@@ -117,13 +117,14 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(guildName, reason)))
             .mapToResult()
-            .flatMap(result -> event.getGuild().ban(user, days, reason))
+            .flatMap(result -> event.getGuild().ban(user, delDays, reason))
             .flatMap(v -> event.reply(user.getAsTag() + " was banned by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(
-                " '{}' banned the user '{}' and deleted their message history of the last '{}' days. Reason was '{}'",
-                authorId, userId, days, reason);
+                " '{} ({})' banned the user '{} ({})' and deleted their message history of the last '{}' days. Reason being'{}'",
+                author.getUser().getAsTag(), author.getIdLong(), user.getAsTag(), delDays, userId,
+                reason);
     }
 }

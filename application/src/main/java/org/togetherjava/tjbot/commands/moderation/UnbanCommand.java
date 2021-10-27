@@ -17,8 +17,8 @@ import java.util.Objects;
 
 /**
  * This command allows you to unban a user. The unban command requires the user to input the
- * user/user id/user tag. Unbanning can also be paired with a reason for unbanning the user.
- * The command will fail if the user is not on the ban list.
+ * user/user id/user tag. Unbanning can also be paired with a reason for unbanning the user. The
+ * command will fail if the user is not on the ban list.
  * <p>
  */
 public final class UnbanCommand extends SlashCommandAdapter {
