@@ -129,6 +129,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         Integer maxUses;
 
+        // the user already received the error in the handleIntegerTypeOption method
+        // it still throws to tell us to return this method and stop the proceeding code
         try {
             maxUses = handleIntegerTypeOption(event, maxUsesOption);
         } catch (IllegalArgumentException ignore) {
@@ -137,6 +139,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         Integer maxAge;
 
+        // the user already received the error in the handleIntegerTypeOption method
+        // it still throws to tell us to return this method and stop the proceeding code
         try {
             maxAge = handleIntegerTypeOption(event, maxAgeOption);
         } catch (IllegalArgumentException ignore) {
