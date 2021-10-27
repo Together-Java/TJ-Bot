@@ -102,7 +102,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "Voicestates aren't being cached, check the JDABuilder");
 
-
         if (!voiceState.inVoiceChannel()) {
             event.reply("You need to be in a voicechannel to run this command!")
                 .setEphemeral(true)
@@ -113,7 +112,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         VoiceChannel voiceChannel = Objects.requireNonNull(voiceState.getChannel());
 
-
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.CREATE_INSTANT_INVITE)) {
             event.reply("The bot needs the create instant invite permission!")
@@ -123,13 +121,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             return;
         }
 
-
         OptionMapping applicationOption = event.getOption(APPLICATION_OPTION);
         OptionMapping idOption = event.getOption(ID_OPTION);
 
         OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
         OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
-
 
         Integer maxUses;
 
@@ -146,8 +142,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         } catch (IllegalArgumentException ignore) {
             return;
         }
-
-
 
         OptionMapping usedOption = (applicationOption != null) ? applicationOption : idOption;
 
@@ -186,15 +180,14 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * - validates whenever it's within an {@link Integer Integer's} range <br />
      * - validates whenever it's positive <br />
      *
-     * <p/>
-     *
      * <p>
-     * This method throws an {@link IllegalArgumentException} if the option's value is - outside of
-     * {@link Integer#MAX_VALUE} - negative
+     * <p/>
      *
      * @param event the {@link SlashCommandEvent}
      * @param optionMapping the {@link OptionMapping}
      * @return nullable {@link Integer}
+     * @throws java.lang.IllegalArgumentException if the option's value is - outside of
+     *         {@link Integer#MAX_VALUE} - negative
      */
     @Contract("_, null -> null")
     private static @Nullable Integer handleIntegerTypeOption(@NotNull SlashCommandEvent event,
