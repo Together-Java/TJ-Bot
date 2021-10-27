@@ -2,8 +2,9 @@ package org.togetherjava.tjbot.commands.componentids;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import org.apache.commons.collections4.map.LRUMap;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Result;
 import org.slf4j.Logger;
@@ -48,12 +49,16 @@ import java.util.stream.Collectors;
 public final class ComponentIdStore implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(ComponentIdStore.class);
     private static final CsvMapper CSV = new CsvMapper();
-    private static final long EVICT_EVERY_INITIAL_DELAY = 1;
-    private static final long EVICT_EVERY_DELAY = 15;
-    private static final ChronoUnit EVICT_EVERY_UNIT = ChronoUnit.MINUTES;
-    private static final long EVICT_OLDER_THAN = 20;
-    private static final ChronoUnit EVICT_OLDER_THAN_UNIT = ChronoUnit.DAYS;
-    private static final int IN_MEMORY_CACHE_SIZE = 1_000;
+
+    private static final long EVICT_DATABASE_EVERY_INITIAL_DELAY = 1;
+    private static final long EVICT_DATABASE_EVERY_DELAY = 15;
+    private static final ChronoUnit EVICT_DATABASE_EVERY_UNIT = ChronoUnit.MINUTES;
+    private static final long EVICT_DATABASE_OLDER_THAN = 20;
+    private static final ChronoUnit EVICT_DATABASE_OLDER_THAN_UNIT = ChronoUnit.DAYS;
+
+    private static final int CACHE_SIZE = 1_000;
+    private static final int EVICT_CACHE_OLDER_THAN = 2;
+    private static final ChronoUnit EVICT_CACHE_OLDER_THAN_UNIT = ChronoUnit.HOURS;
 
     private final Object storeLock = new Object();
     private final Database database;
@@ -62,8 +67,7 @@ public final class ComponentIdStore implements AutoCloseable {
      * cover the majority of all queries, as most queries (e.g. button clicks) come from messages
      * that have been created in the past hours and not days.
      */
-    private final Map<UUID, ComponentId> uuidToComponentId =
-            Collections.synchronizedMap(new LRUMap<>(IN_MEMORY_CACHE_SIZE));
+    private final Cache<UUID, ComponentId> storeCache;
     private final Collection<Consumer<ComponentId>> componentIdRemovedListeners =
             Collections.synchronizedCollection(new ArrayList<>());
     private final ExecutorService heatService = Executors.newCachedThreadPool();
@@ -72,8 +76,8 @@ public final class ComponentIdStore implements AutoCloseable {
     private final ScheduledExecutorService evictionService =
             Executors.newSingleThreadScheduledExecutor();
     private final ScheduledFuture<?> evictionTask;
-    private final long evictOlderThan;
-    private final TemporalUnit evictOlderThanUnit;
+    private final long evictDatabaseOlderThan;
+    private final TemporalUnit evictDatabaseOlderThanUnit;
 
     // NOTE The class needs no further extra synchronization to be thread-safe.
     // It only uses thread-safe collections and the database is also thread-safe.
@@ -86,8 +90,9 @@ public final class ComponentIdStore implements AutoCloseable {
      * @param database the database to use to persist component IDs in
      */
     public ComponentIdStore(@NotNull Database database) {
-        this(database, EVICT_EVERY_INITIAL_DELAY, EVICT_EVERY_DELAY, EVICT_EVERY_UNIT,
-                EVICT_OLDER_THAN, EVICT_OLDER_THAN_UNIT);
+        this(database, EVICT_DATABASE_EVERY_INITIAL_DELAY, EVICT_DATABASE_EVERY_DELAY,
+                EVICT_DATABASE_EVERY_UNIT, EVICT_DATABASE_OLDER_THAN,
+                EVICT_DATABASE_OLDER_THAN_UNIT);
     }
 
     /**
@@ -107,8 +112,13 @@ public final class ComponentIdStore implements AutoCloseable {
             long evictEveryDelay, ChronoUnit evictEveryUnit, long evictOlderThan,
             @SuppressWarnings("TypeMayBeWeakened") ChronoUnit evictOlderThanUnit) {
         this.database = database;
-        this.evictOlderThan = evictOlderThan;
-        this.evictOlderThanUnit = evictOlderThanUnit;
+        evictDatabaseOlderThan = evictOlderThan;
+        evictDatabaseOlderThanUnit = evictOlderThanUnit;
+
+        storeCache = Caffeine.newBuilder()
+            .maximumSize(CACHE_SIZE)
+            .expireAfterAccess(EVICT_CACHE_OLDER_THAN, TimeUnit.of(EVICT_CACHE_OLDER_THAN_UNIT))
+            .build();
         evictionTask = evictionService.scheduleWithFixedDelay(this::evictDatabase,
                 evictEveryInitialDelay, evictEveryDelay, TimeUnit.of(evictEveryUnit));
 
@@ -146,11 +156,11 @@ public final class ComponentIdStore implements AutoCloseable {
     public @NotNull Optional<ComponentId> get(@NotNull UUID uuid) {
         synchronized (storeLock) {
             // Get it from the cache or, if not found, the database
-            return Optional.ofNullable(uuidToComponentId.get(uuid)).or(() -> {
+            return Optional.ofNullable(storeCache.getIfPresent(uuid)).or(() -> {
                 Optional<ComponentId> databaseComponentId = getFromDatabase(uuid);
                 databaseComponentId.ifPresent(id -> {
-                    // Put it back into the memory cache
-                    uuidToComponentId.put(uuid, id);
+                    // Put it back into the cache
+                    storeCache.put(uuid, id);
 
                     heatService.execute(() -> heatRecord(uuid));
                 });
@@ -182,9 +192,10 @@ public final class ComponentIdStore implements AutoCloseable {
                     .formatted(uuid);
 
         synchronized (storeLock) {
-            uuidToComponentId.merge(uuid, componentId, (oldValue, nextValue) -> {
+            if (storeCache.getIfPresent(uuid) != null) {
                 throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
-            });
+            }
+            storeCache.put(uuid, componentId);
 
             database.writeTransaction(context -> {
                 String uuidText = uuid.toString();
@@ -253,8 +264,8 @@ public final class ComponentIdStore implements AutoCloseable {
                 Result<ComponentIdsRecord> oldRecords = context
                     .selectFrom(ComponentIds.COMPONENT_IDS)
                     .where(ComponentIds.COMPONENT_IDS.LIFESPAN.notEqual(Lifespan.PERMANENT.name())
-                        .and(ComponentIds.COMPONENT_IDS.LAST_USED
-                            .lessOrEqual(Instant.now().minus(evictOlderThan, evictOlderThanUnit))))
+                        .and(ComponentIds.COMPONENT_IDS.LAST_USED.lessOrEqual(Instant.now()
+                            .minus(evictDatabaseOlderThan, evictDatabaseOlderThanUnit))))
                     .fetch();
                 oldRecords.forEach(recordToDelete -> {
                     UUID uuid = UUID
@@ -269,8 +280,8 @@ public final class ComponentIdStore implements AutoCloseable {
                             "Evicted component id with uuid '{}' from command '{}', last used '{}'",
                             uuid, componentId.commandName(), lastUsed);
 
-                    // Remove them from the in-memory map if still in there
-                    uuidToComponentId.remove(uuid);
+                    // Remove them from the cache if still in there
+                    storeCache.invalidate(uuid);
                     // Notify all listeners, but non-blocking to not delay eviction
                     componentIdRemovedListeners
                         .forEach(listener -> componentIdRemovedListenerService
