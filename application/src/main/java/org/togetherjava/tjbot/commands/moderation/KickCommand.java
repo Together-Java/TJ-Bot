@@ -37,12 +37,12 @@ public final class KickCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
-        Member author = Objects.requireNonNull(event.getMember());
-        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        Member user = event.getOption(USER_OPTION).getAsMember();
+        Member author = event.getMember();
+        String reason = event.getOption(REASON_OPTION).getAsString();
+        Member bot = event.getGuild().getSelfMember();
 
-        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
+        if (author != null && !author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
                     "You can not kick users in this guild since you do not have the KICK_MEMBERS permission.")
                 .setEphemeral(true)
@@ -50,8 +50,11 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        String userTag = user.getUser().getAsTag();
-        if (!author.canInteract(user)) {
+        String userTag = null;
+        if (user != null) {
+            userTag = user.getUser().getAsTag();
+        }
+        if (user != null && author != null && !author.canInteract(user)) {
             event.reply("The user " + userTag + " is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
@@ -69,14 +72,16 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (!bot.canInteract(user)) {
+        if (user != null && !bot.canInteract(user)) {
             event.reply("The user " + userTag + " is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        kickUser(user, author, reason, user.getIdLong(), event);
+        if (author != null && user != null) {
+            kickUser(user, author, reason, user.getIdLong(), event);
+        }
     }
 
     private static void kickUser(@NotNull Member member, @NotNull Member author,

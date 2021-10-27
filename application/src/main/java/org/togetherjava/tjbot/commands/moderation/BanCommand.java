@@ -49,12 +49,13 @@ public final class BanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member user = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsMember();
-        Member author = Objects.requireNonNull(event.getMember());
-        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-        Member bot = Objects.requireNonNull(event.getGuild()).getSelfMember();
+        Member member = event.getOption(USER_OPTION).getAsMember();
+        Member author = event.getMember();
+        String reason = event.getOption(REASON_OPTION).getAsString();
+        Member bot = event.getGuild().getSelfMember();
+        User user = event.getOption(USER_OPTION).getAsUser();
 
-        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
+        if (author != null && !author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
                 .setEphemeral(true)
@@ -62,8 +63,8 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        String userTag = user.getUser().getAsTag();
-        if (!author.canInteract(user)) {
+        String userTag = user.getAsTag();
+        if (member != null && author != null && !author.canInteract(member)) {
             event.reply("The user " + userTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
@@ -80,7 +81,7 @@ public final class BanCommand extends SlashCommandAdapter {
                     Objects.requireNonNull(event.getGuild()).getName());
             return;
         }
-        if (!bot.canInteract(Objects.requireNonNull(user))) {
+        if (member != null && !bot.canInteract(member)) {
             event.reply("The user " + userTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
@@ -97,12 +98,13 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(user, author, reason, days, user.getIdLong(), author.getIdLong(), event);
+        if (author != null) {
+            banUser(user, author, reason, days, user.getIdLong(), author.getIdLong(), event);
+        }
     }
 
-    private static void banUser(@NotNull Member member, @NotNull Member author,
-            @NotNull String reason, int days, long userId, long authorId,
-            @NotNull SlashCommandEvent event) {
+    private static void banUser(User user, Member author, @NotNull String reason, int days,
+            long userId, long authorId, @NotNull SlashCommandEvent event) {
         String guildName = event.getGuild().getName();
         event.getJDA()
             .openPrivateChannelById(userId)
@@ -114,8 +116,8 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(guildName, reason)))
             .mapToResult()
-            .flatMap(result -> event.getGuild().ban(member, days, reason))
-            .flatMap(v -> event.reply(member.getUser().getAsTag() + " was banned by "
+            .flatMap(result -> event.getGuild().ban(user, days, reason))
+            .flatMap(v -> event.reply(user.getAsTag() + " was banned by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
