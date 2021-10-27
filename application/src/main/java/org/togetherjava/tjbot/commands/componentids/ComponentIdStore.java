@@ -148,12 +148,12 @@ public final class ComponentIdStore implements AutoCloseable {
             // Get it from the cache or, if not found, the database
             return Optional.ofNullable(uuidToComponentId.get(uuid)).or(() -> {
                 Optional<ComponentId> databaseComponentId = getFromDatabase(uuid);
-                if (databaseComponentId.isPresent()) {
+                databaseComponentId.ifPresent(id -> {
                     // Put it back into the memory cache
-                    uuidToComponentId.put(uuid, databaseComponentId.orElseThrow());
+                    uuidToComponentId.put(uuid, id);
 
                     heatService.execute(() -> heatRecord(uuid));
-                }
+                });
                 return databaseComponentId;
             });
         }
