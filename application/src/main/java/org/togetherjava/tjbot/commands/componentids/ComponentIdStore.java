@@ -55,6 +55,7 @@ public final class ComponentIdStore implements AutoCloseable {
     private static final ChronoUnit EVICT_OLDER_THAN_UNIT = ChronoUnit.DAYS;
     private static final int IN_MEMORY_CACHE_SIZE = 1_000;
 
+    private final Object storeLock = new Object();
     private final Database database;
     /**
      * In-memory cache which is used as first stage before the database, to speedup look-ups. Should
@@ -143,14 +144,19 @@ public final class ComponentIdStore implements AutoCloseable {
      */
     @SuppressWarnings("WeakerAccess")
     public @NotNull Optional<ComponentId> get(@NotNull UUID uuid) {
-        Optional<ComponentId> componentId =
-                Optional.ofNullable(uuidToComponentId.get(uuid)).or(() -> getFromDatabase(uuid));
+        synchronized (storeLock) {
+            // Get it from the cache or, if not found, the database
+            return Optional.ofNullable(uuidToComponentId.get(uuid)).or(() -> {
+                Optional<ComponentId> databaseComponentId = getFromDatabase(uuid);
+                if (databaseComponentId.isPresent()) {
+                    // Put it back into the memory cache
+                    uuidToComponentId.put(uuid, databaseComponentId.orElseThrow());
 
-        if (componentId.isPresent()) {
-            heatService.execute(() -> heatRecord(uuid));
+                    heatService.execute(() -> heatRecord(uuid));
+                }
+                return databaseComponentId;
+            });
         }
-
-        return componentId;
     }
 
     /**
@@ -175,24 +181,27 @@ public final class ComponentIdStore implements AutoCloseable {
                 () -> "The UUID '%s' already exists and is associated to a component id."
                     .formatted(uuid);
 
-        uuidToComponentId.merge(uuid, componentId, (oldValue, nextValue) -> {
-            throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
-        });
-
-        database.writeTransaction(context -> {
-            String uuidText = uuid.toString();
-            if (context.fetchExists(ComponentIds.COMPONENT_IDS,
-                    ComponentIds.COMPONENT_IDS.UUID.eq(uuidText))) {
+        synchronized (storeLock) {
+            uuidToComponentId.merge(uuid, componentId, (oldValue, nextValue) -> {
                 throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
-            }
+            });
 
-            ComponentIdsRecord componentIdsRecord = context.newRecord(ComponentIds.COMPONENT_IDS)
-                .setUuid(uuid.toString())
-                .setComponentId(serializeComponentId(componentId))
-                .setLastUsed(Instant.now())
-                .setLifespan(lifespan.name());
-            componentIdsRecord.insert();
-        });
+            database.writeTransaction(context -> {
+                String uuidText = uuid.toString();
+                if (context.fetchExists(ComponentIds.COMPONENT_IDS,
+                        ComponentIds.COMPONENT_IDS.UUID.eq(uuidText))) {
+                    throw new IllegalArgumentException(alreadyExistsMessageSupplier.get());
+                }
+
+                ComponentIdsRecord componentIdsRecord =
+                        context.newRecord(ComponentIds.COMPONENT_IDS)
+                            .setUuid(uuid.toString())
+                            .setComponentId(serializeComponentId(componentId))
+                            .setLastUsed(Instant.now())
+                            .setLifespan(lifespan.name());
+                componentIdsRecord.insert();
+            });
+        }
     }
 
     @SuppressWarnings({"resource", "java:S1602"})
@@ -215,57 +224,60 @@ public final class ComponentIdStore implements AutoCloseable {
      * @param uuid the uuid to heat
      * @throws IllegalArgumentException if there is no, or multiple, records associated to that UUID
      */
+    @SuppressWarnings({"resource", "java:S1602"})
     private void heatRecord(@NotNull UUID uuid) {
-        @SuppressWarnings({"resource", "java:S1602"})
-        int updatedRecords = database.write(context -> {
-            return context.update(ComponentIds.COMPONENT_IDS)
-                .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())
-                .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
-                .execute();
-        });
-
-        if (updatedRecords == 0) {
-            throw new IllegalArgumentException(
-                    "Can not heat a record that does not exist, the UUID '%s' was not found"
-                        .formatted(uuid));
+        int updatedRecords;
+        synchronized (storeLock) {
+            updatedRecords = database.write(context -> {
+                return context.update(ComponentIds.COMPONENT_IDS)
+                    .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())
+                    .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
+                    .execute();
+            });
         }
+
+        // NOTE Case 0, where no records are updated, is ignored on purpose.
+        // This happens when the entry has been evicted before the heating was executed.
         if (updatedRecords > 1) {
             throw new AssertionError(
                     "Multiple records had the UUID '%s' even though it is unique.".formatted(uuid));
         }
-
     }
 
     private void evictDatabase() {
         logger.debug("Evicting old non-permanent component ids from the database...");
         AtomicInteger evictedCounter = new AtomicInteger(0);
-        database.write(context -> {
-            @SuppressWarnings("resource")
-            Result<ComponentIdsRecord> oldRecords = context.selectFrom(ComponentIds.COMPONENT_IDS)
-                .where(ComponentIds.COMPONENT_IDS.LIFESPAN.notEqual(Lifespan.PERMANENT.name())
-                    .and(ComponentIds.COMPONENT_IDS.LAST_USED
-                        .lessOrEqual(Instant.now().minus(evictOlderThan, evictOlderThanUnit))))
-                .fetch();
-            oldRecords.forEach(recordToDelete -> {
-                UUID uuid =
-                        UUID.fromString(recordToDelete.getValue(ComponentIds.COMPONENT_IDS.UUID));
-                ComponentId componentId = deserializeComponentId(
-                        recordToDelete.getValue(ComponentIds.COMPONENT_IDS.COMPONENT_ID));
-                Instant lastUsed = recordToDelete.getLastUsed();
+        synchronized (storeLock) {
+            database.write(context -> {
+                @SuppressWarnings("resource")
+                Result<ComponentIdsRecord> oldRecords = context
+                    .selectFrom(ComponentIds.COMPONENT_IDS)
+                    .where(ComponentIds.COMPONENT_IDS.LIFESPAN.notEqual(Lifespan.PERMANENT.name())
+                        .and(ComponentIds.COMPONENT_IDS.LAST_USED
+                            .lessOrEqual(Instant.now().minus(evictOlderThan, evictOlderThanUnit))))
+                    .fetch();
+                oldRecords.forEach(recordToDelete -> {
+                    UUID uuid = UUID
+                        .fromString(recordToDelete.getValue(ComponentIds.COMPONENT_IDS.UUID));
+                    ComponentId componentId = deserializeComponentId(
+                            recordToDelete.getValue(ComponentIds.COMPONENT_IDS.COMPONENT_ID));
+                    Instant lastUsed = recordToDelete.getLastUsed();
 
-                recordToDelete.delete();
-                evictedCounter.getAndIncrement();
-                logger.debug(
-                        "Evicted component id with uuid '{}' from command '{}', last used '{}'",
-                        uuid, componentId.commandName(), lastUsed);
+                    recordToDelete.delete();
+                    evictedCounter.getAndIncrement();
+                    logger.debug(
+                            "Evicted component id with uuid '{}' from command '{}', last used '{}'",
+                            uuid, componentId.commandName(), lastUsed);
 
-                // Remove them from the in-memory map if still in there
-                uuidToComponentId.remove(uuid);
-                // Notify all listeners, but non-blocking to not delay eviction
-                componentIdRemovedListeners.forEach(listener -> componentIdRemovedListenerService
-                    .execute(() -> listener.accept(componentId)));
+                    // Remove them from the in-memory map if still in there
+                    uuidToComponentId.remove(uuid);
+                    // Notify all listeners, but non-blocking to not delay eviction
+                    componentIdRemovedListeners
+                        .forEach(listener -> componentIdRemovedListenerService
+                            .execute(() -> listener.accept(componentId)));
+                });
             });
-        });
+        }
 
         if (evictedCounter.get() != 0) {
             logger.info("Evicted {} old non-permanent component ids from the database",
