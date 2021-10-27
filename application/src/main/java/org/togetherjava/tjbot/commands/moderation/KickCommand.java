@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -37,12 +38,15 @@ public final class KickCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member user = event.getOption(USER_OPTION).getAsMember();
-        Member author = Objects.requireNonNull(event.getMember(), "Member is null);
-        String reason = event.getOption(REASON_OPTION).getAsString();
-        Member bot = event.getGuild().getSelfMember();
+        Member member = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
+            .getAsMember();
+        Member author = Objects.requireNonNull(event.getMember(), "Author is null");
+        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
+            .getAsString();
+        Member bot = Objects.requireNonNull(event.getGuild(), "The bot is null").getSelfMember();
+        User user = event.getUser();
 
-        if (author != null && !author.hasPermission(Permission.KICK_MEMBERS)) {
+        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
                     "You can not kick users in this guild since you do not have the KICK_MEMBERS permission.")
                 .setEphemeral(true)
@@ -50,11 +54,8 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        String userTag = null;
-        if (user != null) {
-            userTag = user.getUser().getAsTag();
-        }
-        if (user != null && author != null && !author.canInteract(user)) {
+        String userTag = user.getAsTag();
+        if (!author.canInteract(member)) {
             event.reply("The user " + userTag + " is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
@@ -72,16 +73,14 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (user != null && !bot.canInteract(user)) {
+        if (!bot.canInteract(member)) {
             event.reply("The user " + userTag + " is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        if (author != null && user != null) {
-            kickUser(user, author, reason, user.getIdLong(), event);
-        }
+        kickUser(member, author, reason, user.getIdLong(), event);
     }
 
     private static void kickUser(@NotNull Member member, @NotNull Member author,

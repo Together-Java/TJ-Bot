@@ -19,12 +19,12 @@ import java.util.Objects;
  * This command can unban users. This command requires the user to input the id of the user they
  * want to unban.
  * <p>
- * The command fails if the user is not banned or the incorrect id was input.
+ * The command fails if the user is not banned or the given user/user id/user tag was invalid.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
-    private static final String USER = "user";
-    private static final String REASON = "reason";
+    private static final String USER_OPTION = "user";
+    private static final String REASON_OPTION = "reason";
 
     /**
      * Creates an instance of the unban command.
@@ -32,24 +32,25 @@ public final class UnbanCommand extends SlashCommandAdapter {
     public UnbanCommand() {
         super("unban", "Unbans a given user", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.USER, USER, "The user who you want to unban", true)
-            .addOption(OptionType.STRING, REASON, "Why the user should be unbanned", true);
+        getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to unban", true)
+            .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unbanned", true);
     }
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        User user = event.getOption(USER).getAsUser();
-        Member author = Objects.requireNonNull(event.getMember(), "Member is null);
+        User user = Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null")
+            .getAsUser();
+        Member author = Objects.requireNonNull(event.getMember(), "The member is null");
 
-        if (author != null && !author.hasPermission(Permission.BAN_MEMBERS)) {
+        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
-                            "You can not unban users in this guild since you do not have the BAN_MEMBERS permission.")
-                    .setEphemeral(true)
-                    .queue();
+                    "You can not unban users in this guild since you do not have the BAN_MEMBERS permission.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
-        Member bot = event.getGuild().getSelfMember();
+        Member bot = Objects.requireNonNull(event.getGuild(), "The Bot is null").getSelfMember();
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
@@ -61,8 +62,9 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return;
         }
 
-        String reason = event.getOption(REASON).getAsString();
-        event.getGuild().unban(user).queue(v -> {
+        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
+            .getAsString();
+        event.getGuild().unban(user).reason(reason).queue(v -> {
             event
                 .reply("The user " + author.getUser().getAsTag() + " unbanned the user "
                         + user.getAsTag() + " for: " + reason)
