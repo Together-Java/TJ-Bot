@@ -16,10 +16,8 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.Objects;
 
 /**
- * This command can unban users. This command requires the user to input the id of the user they
- * want to unban.
- * <p>
- * The command fails if the user is not banned or the given user/user id/user tag was invalid.
+ * This command unban users. Unbanning can also be paired with a reason for the unban.
+ * <p>  
  */
 public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
