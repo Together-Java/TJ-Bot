@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -16,15 +17,18 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.Objects;
 
 /**
- * This command allows you to unban a user. The unban command requires the user to input the
- * user/user id/user tag. Unbanning can also be paired with a reason for unbanning the user. The
- * command will fail if the user is not on the ban list.
- * <p>
+ * This command allows you to unban a user. The unban command requires the user to input the user
+ * who is subject to get unbanned. Unbanning can also be paired with a reason for unbanning the
+ * user. The command fails if the user is currently not banned already
  */
 public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
+    /**
+     * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
+     */
+    private static final Integer REASON_MAX_LENGTH = 512;
 
     /**
      * Creates an instance of the unban command.
@@ -38,7 +42,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        User user = Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null")
+        User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
             .getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "The member is null");
 
@@ -64,11 +68,25 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
+
+        if (reason.length() > REASON_MAX_LENGTH) {
+            event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        unban(targetUser, reason, author, event);
+    }
+
+    private static void unban(@NotNull User user, @NotNull String reason, @NotNull Member author,
+            @NotNull SlashCommandEvent event) {
         event.getGuild().unban(user).reason(reason).queue(v -> {
             event
                 .reply("The user " + author.getUser().getAsTag() + " unbanned the user "
                         + user.getAsTag() + " for: " + reason)
                 .queue();
+
             logger.info(" {} ({}) unbanned the user '{}' for: '{}'", author.getUser().getAsTag(),
                     author.getIdLong(), user.getAsTag(), reason);
         }, throwable -> {

@@ -49,14 +49,12 @@ public final class BanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member member = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
-            .getAsMember();
+        User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
+            .getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "Author is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
         Member bot = Objects.requireNonNull(event.getGuild(), "The bot is null").getSelfMember();
-        User user = Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null")
-            .getAsUser();
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
@@ -66,14 +64,15 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        String userTag = user.getAsTag();
-        if (!author.canInteract(member)) {
+        String userTag = targetUser.getAsTag();
+        if (!author.canInteract(event.getMember())) {
             event.reply("The user " + userTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
+        Guild guild = event.getGuild();
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
@@ -81,10 +80,11 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(event.getGuild()).getName());
+                    Objects.requireNonNull(guild).getName());
             return;
         }
-        if (!bot.canInteract(member)) {
+
+        if (!bot.canInteract(event.getMember())) {
             event.reply("The user " + userTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
@@ -101,14 +101,14 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(user, author, reason, days, user.getIdLong(), event);
+        banUser(targetUser, author, reason, days, guild, event);
     }
 
     private static void banUser(@NotNull User user, @NotNull Member author, @NotNull String reason,
-            int delDays, long userId, @NotNull SlashCommandEvent event) {
-        String guildName = event.getGuild().getName();
+            int delDays, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+        String guildName = guild.getName();
         event.getJDA()
-            .openPrivateChannelById(userId)
+            .openPrivateChannelById(user.getIdLong())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been banned from the server %s.
@@ -117,14 +117,14 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(guildName, reason)))
             .mapToResult()
-            .flatMap(result -> event.getGuild().ban(user, delDays, reason))
+            .flatMap(result -> guild.ban(user, delDays, reason))
             .flatMap(v -> event.reply(user.getAsTag() + " was banned by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(
                 " '{} ({})' banned the user '{} ({})' and deleted their message history of the last '{}' days. Reason being'{}'",
-                author.getUser().getAsTag(), author.getIdLong(), user.getAsTag(), userId, delDays,
-                reason);
+                author.getUser().getAsTag(), author.getIdLong(), user.getAsTag(), user.getIdLong(),
+                delDays, reason);
     }
 }
