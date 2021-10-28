@@ -9,19 +9,18 @@ public final class ModerationUtils {
     /**
      * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
      */
-    private final int reasonMaxLength;
+    private static final int REASON_MAX_LENGTH = 512;
 
-    public ModerationUtils() {
-        reasonMaxLength = 512;
+    ModerationUtils() {
+        throw new IllegalStateException("Utility class");
     }
 
     /**
      * Checks if the given reason is above the reason limit.
      */
     public static void reasonLimit(@NotNull String reason, @NotNull SlashCommandEvent event) {
-        ModerationUtils reasonLimit = new ModerationUtils();
-        if (reason.length() > reasonLimit.reasonMaxLength) {
-            event.reply("The reason can not be over " + reasonLimit.reasonMaxLength + " characters")
+        if (reason.length() > REASON_MAX_LENGTH) {
+            event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
                 .setEphemeral(true)
                 .queue();
         }
