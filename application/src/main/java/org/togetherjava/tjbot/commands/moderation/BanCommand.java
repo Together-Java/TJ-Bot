@@ -28,10 +28,6 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String DELETE_HISTORY_OPTION = "delete-history";
     private static final String REASON_OPTION = "reason";
-    /**
-     * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
-     */
-    private static final Integer REASON_MAX_LENGTH = 512;
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
 
     /**
@@ -56,6 +52,7 @@ public final class BanCommand extends SlashCommandAdapter {
             .getAsString();
         Member bot = Objects.requireNonNull(event.getGuild(), "The bot is null").getSelfMember();
 
+
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
@@ -65,7 +62,11 @@ public final class BanCommand extends SlashCommandAdapter {
         }
 
         String userTag = targetUser.getAsTag();
-        if (!author.canInteract(event.getMember())) {
+        // Needed for the permissions check to work as targetUser.getMember just result in an error.
+        Member targetMember =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
+                    .getAsMember();
+        if (!author.canInteract(targetMember)) {
             event.reply("The user " + userTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
@@ -84,7 +85,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (!bot.canInteract(event.getMember())) {
+        if (!bot.canInteract(targetMember)) {
             event.reply("The user " + userTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
@@ -94,13 +95,7 @@ public final class BanCommand extends SlashCommandAdapter {
         int days = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
-        if (reason.length() > REASON_MAX_LENGTH) {
-            event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
+        ModerationUtils.reasonLimit(reason, event);
         banUser(targetUser, author, reason, days, guild, event);
     }
 

@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -25,10 +24,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
-    /**
-     * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
-     */
-    private static final Integer REASON_MAX_LENGTH = 512;
 
     /**
      * Creates an instance of the unban command.
@@ -55,6 +50,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
         }
 
         Member bot = Objects.requireNonNull(event.getGuild(), "The Bot is null").getSelfMember();
+
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
@@ -69,13 +65,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        if (reason.length() > REASON_MAX_LENGTH) {
-            event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
+        ModerationUtils.reasonLimit(reason, event);
         unban(targetUser, reason, author, event);
     }
 

@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -26,10 +25,6 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
-    /**
-     * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
-     */
-    private static final Integer REASON_MAX_LENGTH = 512;
 
     /**
      * Creates an instance of the kick command.
@@ -86,13 +81,7 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (reason.length() > REASON_MAX_LENGTH) {
-            event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
+        ModerationUtils.reasonLimit(reason, event);
         kickUser(targetMember, author, reason, guild, event);
     }
 
