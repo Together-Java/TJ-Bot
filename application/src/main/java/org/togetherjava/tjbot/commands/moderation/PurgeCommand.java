@@ -14,7 +14,11 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.Objects;
 
 /**
- * This command requires the user to
+ * This command can remove specific messages using their ids. The command requires the user to input
+ * the id of message they want to delete from and the id of the messages they want to delete to.
+ * <p>
+ * The command fails if one of the message id that was given is invalid or the user lacks the
+ * permission to delete messages.
  */
 public class PurgeCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(PurgeCommand.class);
