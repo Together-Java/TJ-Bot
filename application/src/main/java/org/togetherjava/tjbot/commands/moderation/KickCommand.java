@@ -62,7 +62,6 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        Guild guild = event.getGuild();
         if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
                     "I can not kick users in this guild since I do not have the KICK_MEMBERS permission.")
@@ -70,7 +69,7 @@ public final class KickCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have KICK_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(guild).getName());
+                    event.getGuild().getName());
             return;
         }
 
@@ -81,13 +80,14 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        ModerationUtils.reasonLimit(reason, event);
-        kickUser(targetMember, author, reason, guild, event);
+        boolean reasonIsUnderLimit = ModerationUtils.handleReason(reason, event);
+        if (reasonIsUnderLimit) {
+            kickUser(targetMember, author, reason, event.getGuild(), event);
+        }
     }
 
     private static void kickUser(@NotNull Member member, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
-        String guildName = guild.getName();
         event.getJDA()
             .openPrivateChannelById(member.getUser().getId())
             .flatMap(channel -> channel.sendMessage(
@@ -96,7 +96,7 @@ public final class KickCommand extends SlashCommandAdapter {
                             If you think this was a mistake, please contact a moderator or admin of the server.
                             The reason for the kick is: %s
                             """
-                        .formatted(guildName, reason)))
+                        .formatted(guild.getName(), reason)))
             .mapToResult()
             .flatMap(result -> guild.kick(member, reason).reason(reason))
             .flatMap(v -> event.reply(member.getUser().getAsTag() + " was kicked by "

@@ -18,7 +18,7 @@ import java.util.Objects;
 /**
  * This command allows you to unban a user. The unban command requires the user to input the user
  * who is subject to get unbanned. Unbanning can also be paired with a reason for unbanning the
- * user. The command fails if the user is currently not banned already
+ * user. The command fails if the user is currently not banned already.
  */
 public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
@@ -50,7 +50,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
         }
 
         Member bot = Objects.requireNonNull(event.getGuild(), "The Bot is null").getSelfMember();
-
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
@@ -65,20 +64,20 @@ public final class UnbanCommand extends SlashCommandAdapter {
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        ModerationUtils.reasonLimit(reason, event);
+        ModerationUtils.handleReason(reason, event);
         unban(targetUser, reason, author, event);
     }
 
-    private static void unban(@NotNull User user, @NotNull String reason, @NotNull Member author,
-            @NotNull SlashCommandEvent event) {
-        event.getGuild().unban(user).reason(reason).queue(v -> {
+    private static void unban(@NotNull User targetUser, @NotNull String reason,
+            @NotNull Member author, @NotNull SlashCommandEvent event) {
+        event.getGuild().unban(targetUser).reason(reason).queue(v -> {
             event
                 .reply("The user " + author.getUser().getAsTag() + " unbanned the user "
-                        + user.getAsTag() + " for: " + reason)
+                        + targetUser.getAsTag() + " for: " + reason)
                 .queue();
 
             logger.info(" {} ({}) unbanned the user '{}' for: '{}'", author.getUser().getAsTag(),
-                    author.getIdLong(), user.getAsTag(), reason);
+                    author.getIdLong(), targetUser.getAsTag(), reason);
         }, throwable -> {
             if (throwable instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
@@ -86,7 +85,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 event.reply("The specified user doesn't exist").setEphemeral(true).queue();
 
                 logger.debug("I could not unban the user '{}' because they do not exist",
-                        user.getAsTag());
+                        targetUser.getAsTag());
             } else {
                 event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
 

@@ -43,7 +43,7 @@ public enum Commands {
         // available.
         return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
                 new TagCommand(tagSystem), new TagManageCommand(tagSystem),
-                new TagsCommand(tagSystem), new BanCommand(), new UnbanCommand(),
-                new KickCommand(), new VcActivityCommand());
+                new TagsCommand(tagSystem), new BanCommand(), new UnbanCommand(), new KickCommand(),
+                new VcActivityCommand());
     }
 }

@@ -22,7 +22,6 @@ import java.util.Objects;
  * <p>
  * The command fails if the user triggering it is lacking permissions to either ban other users or
  * to ban the specific given user (for example a moderator attempting to ban an admin).
- *
  */
 public final class BanCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
@@ -45,13 +44,13 @@ public final class BanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
-            .getAsUser();
+        Member targetMember =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
+                    .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "Author is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
         Member bot = Objects.requireNonNull(event.getGuild(), "The bot is null").getSelfMember();
-
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
@@ -61,19 +60,15 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        String userTag = targetUser.getAsTag();
+        String targetUserTag = targetMember.getUser().getAsTag();
         // Needed for the permissions check to work as targetUser.getMember just result in an error.
-        Member targetMember =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
-                    .getAsMember();
         if (!author.canInteract(targetMember)) {
-            event.reply("The user " + userTag + " is too powerful for you to ban.")
+            event.reply("The user " + targetUserTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        Guild guild = event.getGuild();
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
@@ -81,45 +76,45 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    Objects.requireNonNull(guild).getName());
+                    event.getGuild().getName());
             return;
         }
 
         if (!bot.canInteract(targetMember)) {
-            event.reply("The user " + userTag + " is too powerful for me to ban.")
+            event.reply("The user " + targetUserTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
             return;
         }
 
-        int days = Math
+        int deleteHistoryDays = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
-        ModerationUtils.reasonLimit(reason, event);
-        banUser(targetUser, author, reason, days, guild, event);
+        ModerationUtils.handleReason(reason, event);
+        banUser(targetMember.getUser(), author, reason, deleteHistoryDays, event.getGuild(), event);
     }
 
-    private static void banUser(@NotNull User user, @NotNull Member author, @NotNull String reason,
-            int delDays, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
-        String guildName = guild.getName();
+    private static void banUser(@NotNull User targetUser, @NotNull Member author,
+            @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild,
+            @NotNull SlashCommandEvent event) {
         event.getJDA()
-            .openPrivateChannelById(user.getIdLong())
+            .openPrivateChannelById(targetUser.getIdLong())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been banned from the server %s.
                             If you think this was a mistake, please contact a moderator or admin of the server.
                             The reason for the ban is: %s
                             """
-                        .formatted(guildName, reason)))
+                        .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(result -> guild.ban(user, delDays, reason))
-            .flatMap(v -> event.reply(user.getAsTag() + " was banned by "
+            .flatMap(result -> guild.ban(targetUser, deleteHistoryDays, reason))
+            .flatMap(v -> event.reply(targetUser.getAsTag() + " was banned by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(
                 " '{} ({})' banned the user '{} ({})' and deleted their message history of the last '{}' days. Reason being'{}'",
-                author.getUser().getAsTag(), author.getIdLong(), user.getAsTag(), user.getIdLong(),
-                delDays, reason);
+                author.getUser().getAsTag(), author.getIdLong(), targetUser.getAsTag(),
+                targetUser.getIdLong(), deleteHistoryDays, reason);
     }
 }
