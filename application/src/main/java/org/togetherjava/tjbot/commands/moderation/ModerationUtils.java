@@ -17,7 +17,6 @@ public enum ModerationUtils {
     /**
      * @param reason The Boolean reasonLimit will check if the reason is above the provided limit.
      *        <br>
-     *        <br>
      *        If it is it will throw an error and will tell the user that the reason can not be over
      *        the {@link ModerationUtils#REASON_MAX_LENGTH} <br>
      *        If the reason is under the limit it will pass and will allow the command to continue.
