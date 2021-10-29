@@ -17,7 +17,7 @@ public enum ModerationUtils {
     @Contract(value = " -> fail", pure = true)
     ModerationUtils() {
         throw new UnsupportedOperationException(
-                "The Moderation Utility class has tin into an error");
+                "The Moderation Utility class has run into an error");
     }
 
     /**
