@@ -32,6 +32,8 @@ public final class BanCommand extends SlashCommandAdapter {
 
     /**
      * Creates an instance of the ban command.
+     *
+     * @see BanCommand
      */
     public BanCommand() {
         super("ban", "Bans the given user from the server", SlashCommandVisibility.GUILD);

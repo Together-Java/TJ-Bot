@@ -26,7 +26,9 @@ public final class UnbanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
 
     /**
-     * Creates an instance of the unban command.
+     * Constructs an instance
+     *
+     * @see UnbanCommand
      */
     public UnbanCommand() {
         super("unban", "Unbans a given user", SlashCommandVisibility.GUILD);
@@ -39,6 +41,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
             .getAsUser();
+
         Member author = Objects.requireNonNull(event.getMember(), "The member is null");
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
