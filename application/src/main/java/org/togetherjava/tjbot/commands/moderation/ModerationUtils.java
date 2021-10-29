@@ -34,6 +34,6 @@ public enum ModerationUtils {
         event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
             .setEphemeral(true)
             .queue();
-        return true;
+        return false;
     }
 }
