@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 public enum ModerationUtils {
@@ -14,11 +13,6 @@ public enum ModerationUtils {
      * The reason can be only 512 characters.
      */
     private static final int REASON_MAX_LENGTH = 512;
-
-    @Contract(value = " -> fail", pure = true)
-    ModerationUtils() {
-        throw new UnsupportedOperationException();
-    }
 
     /**
      * @param reason The Boolean reasonLimit will check if the reason is above the provided limit.
