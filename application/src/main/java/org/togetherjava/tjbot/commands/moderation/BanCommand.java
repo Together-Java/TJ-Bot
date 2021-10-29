@@ -47,18 +47,21 @@ public final class BanCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null");
+
         Member targetMember = userOption.getAsMember();
         User targetUser = userOption.getAsUser();
+
         Member author = Objects.requireNonNull(event.getMember(), "Author is null");
+
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        if (targetMember != null
-                && handleCanInteractWithTarget(targetMember, event.getGuild(), author, event)) {
-                return;
+        Member bot = Objects.requireNonNull(event.getGuild(), "The Bot is null").getSelfMember();
+        if (targetMember != null && handleCanInteractWithTarget(targetMember, bot, author, event)) {
+            return;
         }
 
-        if (handleHasPermissions(author, event.getGuild(), event)) {
+        if (handleHasPermissions(author, bot, event)) {
             return;
         }
 
@@ -96,7 +99,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static boolean handleCanInteractWithTarget(@NotNull Member targetMember,
-            @NotNull Guild guild, @NotNull Member author, @NotNull SlashCommandEvent event) {
+            @NotNull Member bot, @NotNull Member author, @NotNull SlashCommandEvent event) {
         String targetUserTag = targetMember.getUser().getAsTag();
         if (!author.canInteract(targetMember)) {
             event.reply("The user " + targetUserTag + " is too powerful for you to ban.")
@@ -105,7 +108,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return false;
         }
 
-        if (!guild.getSelfMember().canInteract(targetMember)) {
+        if (!bot.canInteract(targetMember)) {
             event.reply("The user " + targetUserTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
@@ -114,7 +117,7 @@ public final class BanCommand extends SlashCommandAdapter {
         return true;
     }
 
-    private static boolean handleHasPermissions(@NotNull Member author, @NotNull Guild guild,
+    private static boolean handleHasPermissions(@NotNull Member author, @NotNull Member bot,
             @NotNull SlashCommandEvent event) {
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
@@ -124,7 +127,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return false;
         }
 
-        if (!guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
+        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
                 .setEphemeral(true)
@@ -136,5 +139,4 @@ public final class BanCommand extends SlashCommandAdapter {
         }
         return true;
     }
-
 }
