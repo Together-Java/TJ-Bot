@@ -10,7 +10,9 @@ public enum ModerationUtils {
     ;
 
     /**
-     * As stated in {@link Guild#ban(User, int, String)} The reason can be only 512 characters.
+     * As stated in {@link Guild#ban(User, int, String)}
+     * <br>
+     * The reason can be only 512 characters.
      */
     private static final int REASON_MAX_LENGTH = 512;
 
