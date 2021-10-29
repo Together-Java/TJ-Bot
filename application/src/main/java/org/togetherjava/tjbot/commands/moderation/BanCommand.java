@@ -44,9 +44,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member targetMember =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
-                    .getAsMember();
+        Member targetMember = event.getOption(USER_OPTION).getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "Author is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
