@@ -85,10 +85,11 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        boolean reasonIsUnderLimit = ModerationUtils.handleReason(reason, event);
-        if (reasonIsUnderLimit) {
-            kickUser(targetMember, author, reason, event.getGuild(), event);
+        if (!ModerationUtils.handleReason(reason, event)) {
+            return;
         }
+
+        kickUser(targetMember, author, reason, event.getGuild(), event);
     }
 
     private static void kickUser(@NotNull Member member, @NotNull Member author,

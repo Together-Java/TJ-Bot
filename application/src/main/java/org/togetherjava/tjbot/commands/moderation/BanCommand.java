@@ -48,39 +48,42 @@ public final class BanCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null");
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The target user is null");
 
         Member targetMember = userOption.getAsMember();
-        User targetUser = userOption.getAsUser();
 
         Member author = Objects.requireNonNull(event.getMember(), "Author is null");
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        Member bot = Objects.requireNonNull(event.getGuild(), "The Bot is null").getSelfMember();
-        if (targetMember != null && handleCanInteractWithTarget(targetMember, bot, author, event)) {
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        Member bot = guild.getSelfMember();
+        // Member doesn't exist if attempting to ban a user who is not part of
+        if (targetMember != null
+                && !handleCanInteractWithTarget(targetMember, bot, author, event)) {
             return;
         }
 
-        if (handleHasPermissions(author, bot, event)) {
+        if (!handleHasPermissions(author, bot, event, guild)) {
             return;
         }
 
         int deleteHistoryDays = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
-        boolean reasonIsUnderLimit = ModerationUtils.handleReason(reason, event);
-        if (reasonIsUnderLimit) {
-            banUser(targetUser, author, reason, deleteHistoryDays, event.getGuild(), event);
+        if (!ModerationUtils.handleReason(reason, event)) {
+            return;
         }
+
+        banUser(userOption.getAsUser(), author, reason, deleteHistoryDays, event.getGuild(), event);
     }
 
-    private static void banUser(@NotNull User targetUser, @NotNull Member author,
+    private static void banUser(@NotNull User target, @NotNull Member author,
             @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild,
             @NotNull SlashCommandEvent event) {
         event.getJDA()
-            .openPrivateChannelById(targetUser.getIdLong())
+            .openPrivateChannelById(target.getIdLong())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been banned from the server %s.
@@ -89,29 +92,29 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(result -> guild.ban(targetUser, deleteHistoryDays, reason))
-            .flatMap(v -> event.reply(targetUser.getAsTag() + " was banned by "
+            .flatMap(result -> guild.ban(target, deleteHistoryDays, reason))
+            .flatMap(v -> event.reply(target.getAsTag() + " was banned by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(
                 " '{} ({})' banned the user '{} ({})' and deleted their message history of the last '{}' days. Reason being'{}'",
-                author.getUser().getAsTag(), author.getIdLong(), targetUser.getAsTag(),
-                targetUser.getIdLong(), deleteHistoryDays, reason);
+                author.getUser().getAsTag(), author.getIdLong(), target.getAsTag(),
+                target.getIdLong(), deleteHistoryDays, reason);
     }
 
     private static boolean handleCanInteractWithTarget(@NotNull Member targetMember,
             @NotNull Member bot, @NotNull Member author, @NotNull SlashCommandEvent event) {
-        String targetUserTag = targetMember.getUser().getAsTag();
+        String targetTag = targetMember.getUser().getAsTag();
         if (!author.canInteract(targetMember)) {
-            event.reply("The user " + targetUserTag + " is too powerful for you to ban.")
+            event.reply("The user " + targetTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return false;
         }
 
         if (!bot.canInteract(targetMember)) {
-            event.reply("The user " + targetUserTag + " is too powerful for me to ban.")
+            event.reply("The user " + targetTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
             return false;
@@ -120,7 +123,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static boolean handleHasPermissions(@NotNull Member author, @NotNull Member bot,
-            @NotNull SlashCommandEvent event) {
+            @NotNull SlashCommandEvent event, @NotNull Guild guild) {
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
@@ -136,7 +139,7 @@ public final class BanCommand extends SlashCommandAdapter {
                 .queue();
 
             logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    event.getGuild().getName());
+                    guild.getName());
             return false;
         }
         return true;

@@ -67,10 +67,11 @@ public final class UnbanCommand extends SlashCommandAdapter {
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        boolean reasonIsUnderLimit = ModerationUtils.handleReason(reason, event);
-        if (reasonIsUnderLimit) {
-            unban(targetUser, reason, author, event);
+        if (!ModerationUtils.handleReason(reason, event)) {
+            return;
         }
+
+        unban(targetUser, reason, author, event);
     }
 
     private static void unban(@NotNull User targetUser, @NotNull String reason,
