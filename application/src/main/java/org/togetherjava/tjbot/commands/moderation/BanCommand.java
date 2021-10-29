@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
@@ -44,52 +45,30 @@ public final class BanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member targetMember = event.getOption(USER_OPTION).getAsMember();
+        OptionMapping userOption =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null");
+        Member targetMember = userOption.getAsMember();
+        User targetUser = userOption.getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "Author is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
-        Member bot = Objects.requireNonNull(event.getGuild(), "The bot is null").getSelfMember();
 
-        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-            return;
+        if (targetMember != null
+                && handleCanInteractWithTarget(targetMember, event.getGuild(), author, event)) {
+                return;
         }
 
-        String targetUserTag = targetMember.getUser().getAsTag();
-        // Needed for the permissions check to work as targetUser.getMember just result in an error.
-        if (!author.canInteract(targetMember)) {
-            event.reply("The user " + targetUserTag + " is too powerful for you to ban.")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
-        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-
-            logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    event.getGuild().getName());
-            return;
-        }
-
-        if (!bot.canInteract(targetMember)) {
-            event.reply("The user " + targetUserTag + " is too powerful for me to ban.")
-                .setEphemeral(true)
-                .queue();
+        if (handleHasPermissions(author, event.getGuild(), event)) {
             return;
         }
 
         int deleteHistoryDays = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
-        ModerationUtils.handleReason(reason, event);
-        banUser(targetMember.getUser(), author, reason, deleteHistoryDays, event.getGuild(), event);
+        boolean reasonIsUnderLimit = ModerationUtils.handleReason(reason, event);
+        if (reasonIsUnderLimit) {
+            banUser(targetUser, author, reason, deleteHistoryDays, event.getGuild(), event);
+        }
     }
 
     private static void banUser(@NotNull User targetUser, @NotNull Member author,
@@ -115,4 +94,47 @@ public final class BanCommand extends SlashCommandAdapter {
                 author.getUser().getAsTag(), author.getIdLong(), targetUser.getAsTag(),
                 targetUser.getIdLong(), deleteHistoryDays, reason);
     }
+
+    private static boolean handleCanInteractWithTarget(@NotNull Member targetMember,
+            @NotNull Guild guild, @NotNull Member author, @NotNull SlashCommandEvent event) {
+        String targetUserTag = targetMember.getUser().getAsTag();
+        if (!author.canInteract(targetMember)) {
+            event.reply("The user " + targetUserTag + " is too powerful for you to ban.")
+                .setEphemeral(true)
+                .queue();
+            return false;
+        }
+
+        if (!guild.getSelfMember().canInteract(targetMember)) {
+            event.reply("The user " + targetUserTag + " is too powerful for me to ban.")
+                .setEphemeral(true)
+                .queue();
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean handleHasPermissions(@NotNull Member author, @NotNull Guild guild,
+            @NotNull SlashCommandEvent event) {
+        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
+            event.reply(
+                    "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
+                .setEphemeral(true)
+                .queue();
+            return false;
+        }
+
+        if (!guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
+            event.reply(
+                    "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
+                .setEphemeral(true)
+                .queue();
+
+            logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
+                    event.getGuild().getName());
+            return false;
+        }
+        return true;
+    }
+
 }
