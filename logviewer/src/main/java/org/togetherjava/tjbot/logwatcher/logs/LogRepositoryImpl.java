@@ -5,6 +5,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.pojos.Logevents;
 import org.togetherjava.tjbot.db.generated.tables.records.LogeventsRecord;
 
+import java.util.Collection;
 import java.util.List;
 
 import static org.togetherjava.tjbot.db.generated.tables.Logevents.LOGEVENTS;
@@ -47,6 +48,17 @@ public class LogRepositoryImpl implements LogRepository {
     public List<Logevents> findAll() {
         return this.db.read(ctx -> {
             return ctx.selectFrom(LOGEVENTS).fetch(this::recordToPojo);
+        });
+    }
+
+
+    @Override
+    @SuppressWarnings("java:S1602") // Curly Braces are necessary here
+    public List<Logevents> findWithLevelMatching(Collection<String> logLevels) {
+        return this.db.read(ctx -> {
+            return ctx.selectFrom(LOGEVENTS)
+                .where(LOGEVENTS.LEVEL.in(logLevels))
+                .fetch(this::recordToPojo);
         });
     }
 

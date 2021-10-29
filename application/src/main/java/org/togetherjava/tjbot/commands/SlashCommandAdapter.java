@@ -35,13 +35,13 @@ import java.util.List;
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}. A minimal
  * setup would consist of a class like
- * 
+ *
  * <pre>
  * {
  *     &#64;code
- *     class PingCommand extends SlashCommandAdapter {
- *         PingCommand() {
- *             super("ping", "responds with !pong", SlashCommandVisibility.GUILD);
+ *     public class PingCommand extends SlashCommandAdapter {
+ *         public PingCommand() {
+ *             super("ping", "Responds with 'Pong!'", SlashCommandVisibility.GUILD);
  *         }
  *
  *         &#64;Override
@@ -51,7 +51,7 @@ import java.util.List;
  *     }
  * }
  * </pre>
- * 
+ *
  * and registration of an instance of that class in {@link Commands}.
  */
 public abstract class SlashCommandAdapter implements SlashCommand {
