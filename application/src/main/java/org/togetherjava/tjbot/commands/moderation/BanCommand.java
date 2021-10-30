@@ -52,7 +52,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         Member targetMember = userOption.getAsMember();
 
-        Member author = Objects.requireNonNull(event.getMember(), "Author is null");
+        Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
