@@ -44,7 +44,7 @@ public final class KickCommand extends SlashCommandAdapter {
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
                     .getAsMember();
 
-        Member author = Objects.requireNonNull(event.getMember(), "Author is null");
+        Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
