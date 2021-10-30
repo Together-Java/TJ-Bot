@@ -2,13 +2,13 @@
 
 First off, thank you for considering contributing to TJ-Bot. :tada:
 
-TJ-Bot is an open source project, and we love to receive contributions from our community — **you**! There are many ways to contribute, from writing tutorials, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into TJ-Bot itself.
+TJ-Bot is an open-source project, and we love to receive contributions from our community — **you**! There are many ways to contribute, from writing tutorials, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into TJ-Bot itself.
 
-Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
+Following these guidelines helps to communicate that you respect the time of the developers managing and developing this open-source project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests.
 
 ## Ground Rules
 
-* Create [issues](https://github.com/Together-Java/TJ-Bot/issues) for any major changes and enhancements that you wish to make, as well as for reporting any sort of bugs. For more lighthearted talks, you can use [discussions](https://github.com/Together-Java/TJ-Bot/discussions). Discuss things transparently and get community feedback.
+* Create [issues](https://github.com/Together-Java/TJ-Bot/issues) for any major changes and enhancements that you wish to make, as well as for reporting any sort of bugs. For more light-hearted talks, you can use [discussions](https://github.com/Together-Java/TJ-Bot/discussions). Discuss things transparently and get community feedback.
 * Be welcoming to newcomers and encourage diverse new contributors from all backgrounds.
 
 ## Your First Contribution
@@ -34,7 +34,7 @@ Most code changes originate in creation of an [issue](https://github.com/Togethe
 Then, you either create a `feature/name_of_your_feature` branch for your changes or a fork of the repository.
 
 The repository has two main branches:
-* `master`, a stable branch mostly used for releases that receives changes only ocasionally
+* `master`, a stable branch mostly used for releases that receives changes only occasionally
 * `develop`, the branch where the active development takes place; receives changes frequently
 
 Your work will be based off the `develop` branch.
@@ -52,8 +52,8 @@ A pull request should only implement one feature or bugfix. If you want to add o
 Once your code passed those checks and has been reviewed and **accepted by at least two members** of the community, you can merge it to the `develop` branch.
 
 We require a *linear history*, that means you have two options to get your code merged:
-* `squash`, merges all your commits together into a single commit, which will then be merged into the projects history
-* `rebase`, puts your changes aside, updates the original code base you worked with and then puts your changes back on top of it, all your commits will be preserved and land in the projects history
+* `squash`, merges all your commits together into a single commit, which will then be merged into the project's history
+* `rebase`, puts your changes aside, updates the original code base you worked with and then puts your changes back on top of it, all your commits will be preserved and land in the project's history
 
 From there on, it will lead to an automatic re-deployment of the bot on a test environment, where you can test out your changes live.
 
@@ -61,7 +61,7 @@ After a while, the `master` branch will be synced with `develop` again, leading 
 
 # Tutorials
 
-Make sure to head over to the [Wiki](https://github.com/Together-Java/TJ-Bot/wiki) as general entry point to the project. It provides lots of tutorials, documentation and other information, for example
+Make sure to head over to the [Wiki](https://github.com/Together-Java/TJ-Bot/wiki) as a general entry point to the project. It provides lots of tutorials, documentation and other information, for example
 * creating a discord bot and a private server;
 * setting up the project locally;
 * adding your own custom commands;
