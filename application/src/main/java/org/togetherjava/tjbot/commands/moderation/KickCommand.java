@@ -49,7 +49,7 @@ public final class KickCommand extends SlashCommandAdapter {
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        Member bot = Objects.requireNonNull(event.getGuild(), "The bot is null").getSelfMember();
+        Member bot = Objects.requireNonNull(event.getGuild(), "The guild is null").getSelfMember();
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
