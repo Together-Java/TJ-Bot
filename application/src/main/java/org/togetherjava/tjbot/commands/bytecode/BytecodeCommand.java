@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.imc.CompilationResult;
 import org.togetherjava.tjbot.imc.CompileInfo;
-import org.togetherjava.tjbot.imc.IMCompiler;
+import org.togetherjava.tjbot.imc.InMemoryCompiler;
 import org.togetherjava.tjbot.imc.JavacOption;
 import org.togetherjava.tjbot.javap.Javap;
 import org.togetherjava.tjbot.javap.JavapOption;
@@ -144,7 +144,7 @@ public final class BytecodeCommand extends ListenerAdapter {
         CompilationResult result;
 
         try {
-            result = IMCompiler.getInstance().compile(content, JavacOption.DEBUG_ALL);
+            result = InMemoryCompiler.compile(content, JavacOption.DEBUG_ALL);
         } catch (RuntimeException e) {
             myMessage
                 .editMessage("A fatal error has occurred during compilation. %s"
@@ -176,7 +176,7 @@ public final class BytecodeCommand extends ListenerAdapter {
 
                 try {
                     disassembled =
-                            Javap.getInstance().disassemble(result.bytes(), JavapOption.VERBOSE);
+                            Javap.disassemble(result.bytes(), JavapOption.VERBOSE);
                 } catch (RuntimeException e) {
                     myMessage
                         .editMessage("A fatal error has occurred during disassembly. %s"
@@ -225,6 +225,14 @@ public final class BytecodeCommand extends ListenerAdapter {
         return CODE_BLOCK_OPENING + s + CODE_BLOCK_CLOSING;
     }
 
+    /**
+     * Example:
+     * <pre>
+     * {@code
+     * takeApart("Hello\nWorld!", 3) returns List("Hel", "lo", "Wor", "ld!")
+     * }
+     * </pre>
+     */
     private @NotNull List<String> takeApart(@NotNull String message, int maxPartLength) {
         List<String> result = new ArrayList<>();
         String[] lines = message.split("\n");

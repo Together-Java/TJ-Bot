@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 
 /**
- * Class representing a compilation result of {@link IMCompiler}
+ * Class representing a compilation result of {@link InMemoryCompiler}
  */
 public record CompilationResult(boolean success, byte[] bytes,
         @NotNull Iterable<CompileInfo> compileInfos) {
@@ -22,7 +22,7 @@ public record CompilationResult(boolean success, byte[] bytes,
 
     /**
      * Creates an unsuccessful compilation result
-     * 
+     *
      * @param compileInfos compilation infos
      * @return the generated compilation result
      */
@@ -32,7 +32,7 @@ public record CompilationResult(boolean success, byte[] bytes,
 
     /**
      * Creates a successful compilation result
-     * 
+     *
      * @param bytes classfile bytecode
      * @param compileInfos compilation infos
      * @return the generated compilation result

@@ -1,5 +1,8 @@
 package org.togetherjava.tjbot.imc;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import javax.tools.*;
 import java.io.Writer;
 import java.net.URI;
@@ -8,20 +11,17 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * In-Memory-Compiler
+ * Javac interface that keeps everything in memory.
+ *
+ * @see javax.tools.JavaCompiler
  */
-public final class IMCompiler {
-    private static final IMCompiler instance = new IMCompiler();
-
-    public static IMCompiler getInstance() {
-        return instance;
-    }
-
-    private final String TEMP_CLASS_NAME = "tmp";
-    private final JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
-    private final JavaFileManager standardFileManager =
+public final class InMemoryCompiler
+{
+    private static final String TEMP_CLASS_NAME = "tmp";
+    private static final JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
+    private static final JavaFileManager standardFileManager =
             javac.getStandardFileManager(null, null, null);
-    private final ByteJFOLoader bcl = new ByteJFOLoader(ClassLoader.getSystemClassLoader());
+    private static final ByteJavaFileObjectLoader bcl = new ByteJavaFileObjectLoader(ClassLoader.getSystemClassLoader());
 
     /**
      * Compiles a given code snippet with certain javac executable arguments
@@ -30,14 +30,14 @@ public final class IMCompiler {
      * @param javacOptions javac options to use
      * @return the compiled code in form of a {@link CompilationResult}
      */
-    public CompilationResult compile(String code, JavacOption... javacOptions) {
+    public static @NotNull CompilationResult compile(@Nullable String code, @NotNull JavacOption @NotNull ... javacOptions) {
         if (code == null || code.isEmpty()) {
             return CompilationResult.empty();
         }
 
         DiagnosticCollector<JavaFileObject> collector = new DiagnosticCollector<>();
-        boolean result = javac
-            .getTask(null, new IMJavacFileManager(standardFileManager, bcl), collector,
+        boolean hasSucceeded = javac
+            .getTask(null, new InMemoryJavacFileManager(standardFileManager, bcl), collector,
                     Arrays.stream(javacOptions).map(JavacOption::getOption).toList(), null,
                     List.of(genCompilationUnitJFO(code)))
             .call();
@@ -50,7 +50,7 @@ public final class IMCompiler {
             }
         }
 
-        if (!result) {
+        if (!hasSucceeded) {
             return CompilationResult.fail(compileInfos);
         }
 
@@ -60,15 +60,21 @@ public final class IMCompiler {
     /**
      * Generates a single compilation unit in form of a {@link SimpleJavaFileObject} for
      * {@link JavaCompiler#getTask(Writer, JavaFileManager, DiagnosticListener, Iterable, Iterable, Iterable)}
-     * 
+     *
      * @param content content of the imfjo
      * @return the generated compilation unit
      */
-    private SimpleJavaFileObject genCompilationUnitJFO(String content) {
+    private static @NotNull SimpleJavaFileObject genCompilationUnitJFO(@NotNull String content) {
         return new SimpleJavaFileObject(URI.create("string:///" + TEMP_CLASS_NAME.replace('.', '/')
                 + JavaFileObject.Kind.SOURCE.extension), JavaFileObject.Kind.SOURCE) {
+            /**
+             * Returns the content given in the generation of this {@code SimpleJavaFileObject}
+             *
+             * @param ignoreEncodingErrors does nothing
+             * @return content
+             */
             @Override
-            public String getCharContent(boolean ignoreEncodingErrors) {
+            public @NotNull String getCharContent(boolean ignoreEncodingErrors) {
                 return content;
             }
         };
