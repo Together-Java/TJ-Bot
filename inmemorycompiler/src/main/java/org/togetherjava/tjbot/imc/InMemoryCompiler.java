@@ -15,13 +15,13 @@ import java.util.List;
  *
  * @see javax.tools.JavaCompiler
  */
-public final class InMemoryCompiler
-{
+public final class InMemoryCompiler {
     private static final String TEMP_CLASS_NAME = "tmp";
     private static final JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
     private static final JavaFileManager standardFileManager =
             javac.getStandardFileManager(null, null, null);
-    private static final ByteJavaFileObjectLoader bcl = new ByteJavaFileObjectLoader(ClassLoader.getSystemClassLoader());
+    private static final ByteJavaFileObjectLoader bcl =
+            new ByteJavaFileObjectLoader(ClassLoader.getSystemClassLoader());
 
     /**
      * Compiles a given code snippet with certain javac executable arguments
@@ -30,7 +30,8 @@ public final class InMemoryCompiler
      * @param javacOptions javac options to use
      * @return the compiled code in form of a {@link CompilationResult}
      */
-    public static @NotNull CompilationResult compile(@Nullable String code, @NotNull JavacOption @NotNull ... javacOptions) {
+    public static @NotNull CompilationResult compile(@Nullable String code,
+            @NotNull JavacOption @NotNull... javacOptions) {
         if (code == null || code.isEmpty()) {
             return CompilationResult.empty();
         }

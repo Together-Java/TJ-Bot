@@ -12,15 +12,16 @@ class ByteJavaFileObjectLoader extends ClassLoader {
         super(parent);
     }
 
-    public @NotNull InMemoryByteJavaFileObject registerJFO(@NotNull InMemoryByteJavaFileObject jfo) {
+    public @NotNull InMemoryByteJavaFileObject registerJFO(
+            @NotNull InMemoryByteJavaFileObject jfo) {
         nameToClassJFO.put(jfo.getName(), jfo);
 
         return jfo;
     }
 
     /**
-     * Only meant to be used for registering and getting, not finding.
-     * There are no plans to implement this, and it is also not needed.
+     * Only meant to be used for registering and getting, not finding. There are no plans to
+     * implement this, and it is also not needed.
      *
      * @throws UnsupportedOperationException always
      */

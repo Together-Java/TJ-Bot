@@ -20,7 +20,8 @@ class IMJavapFileManager extends ForwardingJavaFileManager<JavaFileManager> {
     private final byte @NotNull [] bytes;
     private final @NotNull String fileName;
 
-    protected IMJavapFileManager(@NotNull JavaFileManager fileManager, byte @NotNull [] bytes, @NotNull String fileName) {
+    protected IMJavapFileManager(@NotNull JavaFileManager fileManager, byte @NotNull [] bytes,
+            @NotNull String fileName) {
         super(fileManager);
 
         this.bytes = bytes;
@@ -28,8 +29,8 @@ class IMJavapFileManager extends ForwardingJavaFileManager<JavaFileManager> {
     }
 
     @Override
-    public @NotNull JavaFileObject getJavaFileForInput(@Nullable Location location, @Nullable String className,
-                                                       @NotNull JavaFileObject.Kind kind) {
+    public @NotNull JavaFileObject getJavaFileForInput(@Nullable Location location,
+            @Nullable String className, @NotNull JavaFileObject.Kind kind) {
         return new SimpleJavaFileObject(URI.create("file:///%s".formatted(fileName)), kind) {
             @Override
             public @NotNull InputStream openInputStream() {

@@ -175,8 +175,7 @@ public final class BytecodeCommand extends ListenerAdapter {
                 String disassembled;
 
                 try {
-                    disassembled =
-                            Javap.disassemble(result.bytes(), JavapOption.VERBOSE);
+                    disassembled = Javap.disassemble(result.bytes(), JavapOption.VERBOSE);
                 } catch (RuntimeException e) {
                     myMessage
                         .editMessage("A fatal error has occurred during disassembly. %s"
@@ -227,6 +226,7 @@ public final class BytecodeCommand extends ListenerAdapter {
 
     /**
      * Example:
+     * 
      * <pre>
      * {@code
      * takeApart("Hello\nWorld!", 3) returns List("Hel", "lo", "Wor", "ld!")

@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
  */
 public final class Javap {
     private static final String TEMP_FILE_NAME = "tmp";
-    private static final String ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
+    private static final String ANNOYING_WARNING_MESSAGE =
+            "Warning: File /%s does not contain class %<s";
 
     // ======== reflection
 
@@ -76,7 +77,8 @@ public final class Javap {
      * @return disassembled view
      * @throws ReflectionException if an exception occurs while doing reflection black magic
      */
-    public static @NotNull String disassemble(byte @NotNull [] bytes, @NotNull JavapOption @NotNull ... options) throws ReflectionException {
+    public static @NotNull String disassemble(byte @NotNull [] bytes,
+            @NotNull JavapOption @NotNull... options) throws ReflectionException {
         PrintWriter log = new StringPrintWriter();
 
         try {
@@ -109,8 +111,8 @@ public final class Javap {
      * {@link PrintWriter} using
      * {@link com.sun.tools.javap.JavapFileManager#create(DiagnosticListener, PrintWriter)}
      */
-    private static @NotNull JavaFileManager getDefaultFileManager(@NotNull Object JavapTask, @NotNull PrintWriter log)
-            throws InvocationTargetException, IllegalAccessException {
+    private static @NotNull JavaFileManager getDefaultFileManager(@NotNull Object JavapTask,
+            @NotNull PrintWriter log) throws InvocationTargetException, IllegalAccessException {
         return (JavaFileManager) R_C_JavapFileManager_M_create.invoke(null,
                 getDiagnosticListenerForWriter(JavapTask, log), log);
     }
@@ -118,8 +120,8 @@ public final class Javap {
     /**
      * Creates a new {@link com.sun.tools.javap.JavapTask} instance
      */
-    private static @NotNull Object R_I_JavapTask() throws NoSuchMethodException, InvocationTargetException,
-            InstantiationException, IllegalAccessException {
+    private static @NotNull Object R_I_JavapTask() throws NoSuchMethodException,
+            InvocationTargetException, InstantiationException, IllegalAccessException {
         return R_C_JavapTask.getConstructor().newInstance();
     }
 
@@ -133,6 +135,8 @@ public final class Javap {
             @NotNull Object JavapTask, @NotNull PrintWriter log)
             throws InvocationTargetException, IllegalAccessException {
         return (DiagnosticListener<JavaFileObject>) R_C_JavapTask_M_getDiagnosticListenerForWriter
-            .invoke(JavapTask, log); // getDiagnosticListenerForWriter's signature: DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(Writer)
+            .invoke(JavapTask, log); // getDiagnosticListenerForWriter's signature:
+                                     // DiagnosticListener<JavaFileObject>
+                                     // getDiagnosticListenerForWriter(Writer)
     }
 }

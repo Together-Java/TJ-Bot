@@ -37,7 +37,8 @@ public record CompilationResult(boolean success, byte @NotNull [] bytes,
      * @param compileInfos compilation infos
      * @return the generated compilation result
      */
-    public static @NotNull CompilationResult success(byte @NotNull [] bytes, @NotNull Iterable<CompileInfo> compileInfos) {
+    public static @NotNull CompilationResult success(byte @NotNull [] bytes,
+            @NotNull Iterable<CompileInfo> compileInfos) {
         return new CompilationResult(true, bytes, compileInfos);
     }
 }

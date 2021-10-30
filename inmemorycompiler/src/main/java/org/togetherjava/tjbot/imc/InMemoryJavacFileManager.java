@@ -17,15 +17,17 @@ import javax.tools.JavaFileObject;
 class InMemoryJavacFileManager extends ForwardingJavaFileManager<JavaFileManager> {
     private final @NotNull ByteJavaFileObjectLoader classLoader;
 
-    protected InMemoryJavacFileManager(@NotNull JavaFileManager fileManager, @NotNull ByteJavaFileObjectLoader classLoader) {
+    protected InMemoryJavacFileManager(@NotNull JavaFileManager fileManager,
+            @NotNull ByteJavaFileObjectLoader classLoader) {
         super(fileManager);
 
         this.classLoader = classLoader;
     }
 
     @Override
-    public @NotNull JavaFileObject getJavaFileForOutput(@Nullable Location location, @NotNull String className,
-                                               @Nullable JavaFileObject.Kind kind, @Nullable FileObject sibling) {
+    public @NotNull JavaFileObject getJavaFileForOutput(@Nullable Location location,
+            @NotNull String className, @Nullable JavaFileObject.Kind kind,
+            @Nullable FileObject sibling) {
         return classLoader.registerJFO(new InMemoryByteJavaFileObject(className));
     }
 
