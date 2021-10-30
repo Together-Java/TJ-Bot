@@ -41,7 +41,7 @@ public final class KickCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member targetMember =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null")
                     .getAsMember();
 
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
