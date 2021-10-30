@@ -59,7 +59,8 @@ public final class BanCommand extends SlashCommandAdapter {
 
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
-        // Member doesn't exist if attempting to ban a user who is not part of
+
+        // Member doesn't exist if attempting to ban a user who is not part of the guild.
         if (targetMember != null
                 && !handleCanInteractWithTarget(targetMember, bot, author, event)) {
             return;

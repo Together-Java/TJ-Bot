@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -40,9 +41,10 @@ public final class KickCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member targetMember =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null")
-                    .getAsMember();
+        OptionMapping userOption =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
+
+        Member targetMember = userOption.getAsMember();
 
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
@@ -59,7 +61,7 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        String userTag = targetMember.getUser().getAsTag();
+        String userTag = userOption.getAsUser().getAsTag();
         if (!author.canInteract(targetMember)) {
             event.reply("The user " + userTag + " is too powerful for you to kick.")
                 .setEphemeral(true)
