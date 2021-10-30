@@ -44,7 +44,7 @@ public final class KickCommand extends SlashCommandAdapter {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
 
-        Member targetMember = userOption.getAsMember();
+        Member target = userOption.getAsMember();
 
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
@@ -62,7 +62,7 @@ public final class KickCommand extends SlashCommandAdapter {
         }
 
         String userTag = userOption.getAsUser().getAsTag();
-        if (!author.canInteract(targetMember)) {
+        if (!author.canInteract(target)) {
             event.reply("The user " + userTag + " is too powerful for you to kick.")
                 .setEphemeral(true)
                 .queue();
@@ -80,7 +80,7 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (!bot.canInteract(targetMember)) {
+        if (!bot.canInteract(target)) {
             event.reply("The user " + userTag + " is too powerful for me to kick.")
                 .setEphemeral(true)
                 .queue();
@@ -91,13 +91,13 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        kickUser(targetMember, author, reason, event.getGuild(), event);
+        kickUser(target, author, reason, event.getGuild(), event);
     }
 
-    private static void kickUser(@NotNull Member member, @NotNull Member author,
+    private static void kickUser(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         event.getJDA()
-            .openPrivateChannelById(member.getUser().getId())
+            .openPrivateChannelById(target.getUser().getId())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
@@ -106,13 +106,13 @@ public final class KickCommand extends SlashCommandAdapter {
                             """
                         .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(result -> guild.kick(member, reason).reason(reason))
-            .flatMap(v -> event.reply(member.getUser().getAsTag() + " was kicked by "
+            .flatMap(result -> guild.kick(target, reason).reason(reason))
+            .flatMap(v -> event.reply(target.getUser().getAsTag() + " was kicked by "
                     + author.getUser().getAsTag() + " for: " + reason))
             .queue();
 
         logger.info(" '{} ({})' kicked the user '{} ({})' due to reason being '{}'",
-                author.getUser().getAsTag(), author.getIdLong(), member.getUser().getAsTag(),
-                member.getUser().getId(), reason);
+                author.getUser().getAsTag(), author.getIdLong(), target.getUser().getAsTag(),
+                target.getUser().getId(), reason);
     }
 }

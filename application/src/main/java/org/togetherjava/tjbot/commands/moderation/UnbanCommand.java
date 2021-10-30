@@ -39,7 +39,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null")
+        User target = Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null")
             .getAsUser();
 
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
@@ -71,19 +71,19 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return;
         }
 
-        unban(targetUser, reason, author, event);
+        unban(target, reason, author, event);
     }
 
-    private static void unban(@NotNull User targetUser, @NotNull String reason,
+    private static void unban(@NotNull User target, @NotNull String reason,
             @NotNull Member author, @NotNull SlashCommandEvent event) {
-        event.getGuild().unban(targetUser).reason(reason).queue(v -> {
+        event.getGuild().unban(target).reason(reason).queue(v -> {
             event
                 .reply("The user " + author.getUser().getAsTag() + " unbanned the user "
-                        + targetUser.getAsTag() + " for: " + reason)
+                        + target.getAsTag() + " for: " + reason)
                 .queue();
 
             logger.info(" {} ({}) unbanned the user '{}' for: '{}'", author.getUser().getAsTag(),
-                    author.getIdLong(), targetUser.getAsTag(), reason);
+                    author.getIdLong(), target.getAsTag(), reason);
         }, throwable -> {
             if (throwable instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
@@ -91,7 +91,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 event.reply("The specified user doesn't exist").setEphemeral(true).queue();
 
                 logger.debug("I could not unban the user '{}' because they do not exist",
-                        targetUser.getAsTag());
+                        target.getAsTag());
             } else {
                 event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
 

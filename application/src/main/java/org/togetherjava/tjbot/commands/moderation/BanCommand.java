@@ -50,7 +50,7 @@ public final class BanCommand extends SlashCommandAdapter {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
 
-        Member targetMember = userOption.getAsMember();
+        Member target = userOption.getAsMember();
 
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
@@ -61,8 +61,8 @@ public final class BanCommand extends SlashCommandAdapter {
         Member bot = guild.getSelfMember();
 
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
-        if (targetMember != null
-                && !handleCanInteractWithTarget(targetMember, bot, author, event)) {
+        if (target != null
+                && !handleCanInteractWithTarget(target, bot, author, event)) {
             return;
         }
 
