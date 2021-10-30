@@ -42,7 +42,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
         User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION), "The member is null")
             .getAsUser();
 
-        Member author = Objects.requireNonNull(event.getMember(), "The member is null");
+        Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
