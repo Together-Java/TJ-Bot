@@ -39,6 +39,16 @@ The repository has two main branches:
 
 Your work will be based off the `develop` branch.
 
+To incorporate new commits from `develop` into your feature branch, use `git pull --rebase` or equivalent GUI action. We strongly prefer having linear history, and PRs with merge commits will have to be squashed before the merge, which results in losing all valuable commit history.
+
+### Commit your changes
+
+After a portion of feature you are working on is done, it's time to commit your changes!
+
+Each commit should be small, self-contained, and should solve only one problem.
+
+Each commit name and message should be clear, concise and informative: Please consider checking these resources: [writing a commit message](https://chris.beams.io/posts/git-commit/) and [writing a good commit message](https://dev.to/chrissiemhrk/git-commit-message-5e21)
+
 ### Create a pull request
 
 When you are done, you will create a [pull request](https://github.com/Together-Java/TJ-Bot/pulls) to request feedback from the rest of the community. At this point, your code will be automatically tested against our [[code guidelines|Code Guidelines]] (Spotless, SonarCloud, CodeQL, and more).
