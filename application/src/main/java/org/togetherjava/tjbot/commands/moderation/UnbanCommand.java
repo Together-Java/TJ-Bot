@@ -52,7 +52,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return;
         }
 
-        Member bot = Objects.requireNonNull(event.getGuild(), "The Bot is null").getSelfMember();
+        Member bot = Objects.requireNonNull(event.getGuild(), "The guild is null").getSelfMember();
         if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply(
                     "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
