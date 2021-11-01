@@ -74,8 +74,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
         unban(target, reason, author, event);
     }
 
-    private static void unban(@NotNull User target, @NotNull String reason,
-            @NotNull Member author, @NotNull SlashCommandEvent event) {
+    private static void unban(@NotNull User target, @NotNull String reason, @NotNull Member author,
+            @NotNull SlashCommandEvent event) {
         event.getGuild().unban(target).reason(reason).queue(v -> {
             event
                 .reply("The user " + author.getUser().getAsTag() + " unbanned the user "
