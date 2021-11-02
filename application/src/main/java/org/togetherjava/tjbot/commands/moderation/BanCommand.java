@@ -31,7 +31,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
 
     /**
-     * Constructs an instance
+     * Constructs an instance.
      */
     public BanCommand() {
         super("ban", "Bans the given user from the server", SlashCommandVisibility.GUILD);

@@ -28,7 +28,7 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
 
     /**
-     * Constructs an instance
+     * Constructs an instance.
      */
     public KickCommand() {
         super("kick", "Kicks the given user from the server", SlashCommandVisibility.GUILD);

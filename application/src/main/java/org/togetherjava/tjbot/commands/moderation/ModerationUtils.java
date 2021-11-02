@@ -6,8 +6,7 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This contains if statements that are common in all the moderation commands suck se the if
- * statement for the reason length
+ * Utility class offering helpers revolving around user moderation, such as banning or kicking.
  */
 public enum ModerationUtils {
     ;
@@ -21,7 +20,7 @@ public enum ModerationUtils {
     /**
      * This boolean checks if the reason that the user has entered violates the max character length
      * or not. <br>
-     * If it does the bot will tell the user has violated the mex character length and will
+     * If it does the bot will tell the user they have violated the mex character length and will
      * terminate the command <br>
      * If it does bot the bot will be allowed to continue running the command.
      * 

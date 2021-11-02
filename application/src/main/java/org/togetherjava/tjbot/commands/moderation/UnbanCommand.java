@@ -26,7 +26,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
 
     /**
-     * Constructs an instance
+     * Constructs an instance.
      */
     public UnbanCommand() {
         super("unban", "Unbans a given user", SlashCommandVisibility.GUILD);
