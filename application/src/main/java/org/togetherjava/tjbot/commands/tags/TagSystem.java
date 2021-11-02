@@ -11,8 +11,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
 import java.awt.*;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * The core of the tag system. Provides methods to read and create tags, directly tied to the
@@ -140,14 +139,16 @@ public final class TagSystem {
      *
      * @return a set of all ids known to the system, not backed
      */
-    Set<String> getAllIds() {
+    List<String> getAllIds() {
         return database.readTransaction(context -> {
             try (var select = context.select(Tags.TAGS.ID)) {
                 return select.from(Tags.TAGS)
                     .fetch()
                     .stream()
                     .map(dbRecord -> dbRecord.getValue(Tags.TAGS.ID))
-                    .collect(Collectors.toSet());
+                    .distinct()
+                    .sorted()
+                    .toList();
             }
         });
     }
