@@ -29,8 +29,6 @@ public final class KickCommand extends SlashCommandAdapter {
 
     /**
      * Constructs an instance
-     *
-     * @see KickCommand
      */
     public KickCommand() {
         super("kick", "Kicks the given user from the server", SlashCommandVisibility.GUILD);
@@ -43,15 +41,15 @@ public final class KickCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
-
         Member target = userOption.getAsMember();
-
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        Member bot = Objects.requireNonNull(event.getGuild(), "The guild is null").getSelfMember();
+
+        Guild guild = event.getGuild();
+        Member bot = guild.getSelfMember();
 
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
             event.reply(
@@ -91,7 +89,7 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
 
-        kickUser(target, author, reason, event.getGuild(), event);
+        kickUser(target, author, reason, guild, event);
     }
 
     private static void kickUser(@NotNull Member target, @NotNull Member author,

@@ -31,9 +31,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
 
     /**
-     * Creates an instance of the ban command.
-     *
-     * @see BanCommand
+     * Constructs an instance
      */
     public BanCommand() {
         super("ban", "Bans the given user from the server", SlashCommandVisibility.GUILD);
@@ -49,9 +47,7 @@ public final class BanCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
-
         Member target = userOption.getAsMember();
-
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
 
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
@@ -76,7 +72,7 @@ public final class BanCommand extends SlashCommandAdapter {
             return;
         }
 
-        banUser(userOption.getAsUser(), author, reason, deleteHistoryDays, event.getGuild(), event);
+        banUser(userOption.getAsUser(), author, reason, deleteHistoryDays, guild, event);
     }
 
     private static void banUser(@NotNull User target, @NotNull Member author,
@@ -103,17 +99,17 @@ public final class BanCommand extends SlashCommandAdapter {
                 target.getIdLong(), deleteHistoryDays, reason);
     }
 
-    private static boolean handleCanInteractWithTarget(@NotNull Member targetMember,
-            @NotNull Member bot, @NotNull Member author, @NotNull SlashCommandEvent event) {
-        String targetTag = targetMember.getUser().getAsTag();
-        if (!author.canInteract(targetMember)) {
+    private static boolean handleCanInteractWithTarget(@NotNull Member target, @NotNull Member bot,
+            @NotNull Member author, @NotNull SlashCommandEvent event) {
+        String targetTag = target.getUser().getAsTag();
+        if (!author.canInteract(target)) {
             event.reply("The user " + targetTag + " is too powerful for you to ban.")
                 .setEphemeral(true)
                 .queue();
             return false;
         }
 
-        if (!bot.canInteract(targetMember)) {
+        if (!bot.canInteract(target)) {
             event.reply("The user " + targetTag + " is too powerful for me to ban.")
                 .setEphemeral(true)
                 .queue();
