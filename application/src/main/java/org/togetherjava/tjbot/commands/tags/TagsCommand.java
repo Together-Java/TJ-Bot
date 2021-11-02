@@ -8,8 +8,11 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Implements the {@code /tags} command which lets the bot respond with all available tags.
@@ -42,8 +45,17 @@ public final class TagsCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // TODO A list might be better than comma separated, which is hard to read
-        event.replyEmbeds(MessageUtils.generateEmbed("All available tags",
-                String.join(", ", tagSystem.getAllIds()), event.getUser(), TagSystem.AMBIENT_COLOR))
+        ArrayList<String> list = new ArrayList<>(tagSystem.getAllIds());
+
+        event
+            .replyEmbeds(MessageUtils.generateEmbed("All available tags",
+                    IntStream.range(1, list.size())
+                        .filter(x -> x % 10 == 0 || x == list.size() - 1)
+                        .mapToObj(i -> String.join(", ",
+                                i % 10 != 0 && i != list.size() - 1 ? list.subList(i - 10, i)
+                                        : list.subList((i / 10) * 10, i + 1)))
+                        .collect(Collectors.joining("\n")),
+                    event.getUser(), TagSystem.AMBIENT_COLOR))
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
             .queue();
