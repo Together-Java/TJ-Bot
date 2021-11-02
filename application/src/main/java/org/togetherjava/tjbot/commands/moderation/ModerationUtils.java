@@ -25,6 +25,7 @@ public enum ModerationUtils {
      * If it does bot the bot will be allowed to continue running the command.
      * 
      * @param reason the reason of the action such as banning.
+     * @param event This is used to be able to use slash command actions such as event.reply();
      * @throws IllegalArgumentException if the reason is over 512 characters.
      *
      */
