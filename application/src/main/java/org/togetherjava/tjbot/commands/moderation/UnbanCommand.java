@@ -39,6 +39,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unbanned", true);
     }
 
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private static boolean handleHasPermissions(@NotNull IPermissionHolder bot,
             @NotNull IPermissionHolder author, @NotNull Guild guild, @NotNull Interaction event) {
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
