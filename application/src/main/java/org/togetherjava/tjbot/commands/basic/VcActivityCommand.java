@@ -56,11 +56,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     public static final String WORDSNACK_NAME = "Wordsnack";
     public static final String LETTERTILE_NAME = "Lettertile";
 
-    /**
-     * List comes from <a href="https://github.com/DV8FromTheWorld/JDA/pull/1628">the "Implement
-     * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
-     * our best bet.
-     */
+
     private static final List<Command.Choice> VC_APPLICATIONS =
             List.of(new Command.Choice(YOUTUBE_TOGETHER_NAME, YOUTUBE_TOGETHER_NAME),
                     new Command.Choice(POKER_NAME, POKER_NAME),
@@ -74,6 +70,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     new Command.Choice(LETTERTILE_NAME, LETTERTILE_NAME));
 
 
+    /**
+     * List comes from <a href="https://github.com/DV8FromTheWorld/JDA/pull/1628">the "Implement
+     * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
+     * our best bet.
+     */
     private static final Map<String, String> VC_APPLICATION_TO_ID =
             Map.of(
                     YOUTUBE_TOGETHER_NAME, "755600276941176913",
