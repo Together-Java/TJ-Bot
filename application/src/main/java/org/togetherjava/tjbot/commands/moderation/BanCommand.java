@@ -139,6 +139,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         int deleteHistoryDays = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
+
         banUser(targetOption.getAsUser(), author, reason, deleteHistoryDays, guild, event);
     }
 }
