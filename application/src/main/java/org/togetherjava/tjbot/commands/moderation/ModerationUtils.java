@@ -26,6 +26,7 @@ public enum ModerationUtils {
      * 
      * @return whether the reason is valid
      */
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     public static boolean handleReason(@NotNull CharSequence reason, @NotNull Interaction event) {
         if (reason.length() <= REASON_MAX_LENGTH) {
             return true;

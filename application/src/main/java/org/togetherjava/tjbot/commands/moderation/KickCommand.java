@@ -44,6 +44,7 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private static boolean handleCanInteractWithTarget(@NotNull Member bot, @NotNull Member author,
             @NotNull Member target, @NotNull Interaction event) {
         String targetTag = target.getUser().getAsTag();
@@ -63,6 +64,7 @@ public final class KickCommand extends SlashCommandAdapter {
         return true;
     }
 
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private static boolean handleHasPermissions(@NotNull IPermissionHolder bot,
             @NotNull IPermissionHolder author, @NotNull Guild guild, @NotNull Interaction event) {
         if (!author.hasPermission(Permission.KICK_MEMBERS)) {
