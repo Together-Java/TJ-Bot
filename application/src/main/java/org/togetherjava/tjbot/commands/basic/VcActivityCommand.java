@@ -44,7 +44,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-
     private static final String YOUTUBE_TOGETHER_NAME = " YouTube Together";
     public static final String POKER_NAME = "Poker";
     public static final String BETRAYAL_IO_NAME = "Betrayal.io";
@@ -176,23 +175,23 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         }
 
 
-        String ID;
+        String applicationId;
+
         if (applicationOption != null) {
-            ID = VC_APPLICATION_TO_ID.get(applicationOption.getAsString());
+            applicationId = VC_APPLICATION_TO_ID.get(applicationOption.getAsString());
         } else {
-            ID = idOption.getAsString();
+            applicationId = idOption.getAsString();
         }
 
-
-        handleSubcommand(event, voiceChannel, ID, maxUses, maxAge);
+        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge);
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
-            @NotNull VoiceChannel voiceChannel, @NotNull String id,
+            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
             @Nullable Integer maxUses, @Nullable Integer maxAge) {
 
         voiceChannel.createInvite()
-            .setTargetApplication(id)
+            .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
             .setMaxAge(maxAge)
             .flatMap(invite -> replyInvite(event, invite))
