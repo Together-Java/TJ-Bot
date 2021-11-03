@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.Interaction;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -12,29 +12,28 @@ public enum ModerationUtils {
     ;
 
     /**
-     * As stated in {@link Guild#ban(User, int, String)} <br>
-     * The reason can be only 512 characters.
+     * The maximal character limit for the reason of an auditable action, see for example
+     * {@link Guild#ban(User, int, String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
 
     /**
-     * This boolean checks if the reason that the user has entered violates the max character length
-     * or not. <br>
-     * If it does the bot will tell the user they have violated the mex character length and will
-     * terminate the command <br>
-     * If it does bot the bot will be allowed to continue running the command.
-     * 
-     * @param reason the reason of the action such as banning.
-     * @param event This is used to be able to use slash command actions such as event.reply();
-     * @throws IllegalArgumentException if the reason is over 512 characters.
+     * Checks whether the given reason is valid. If not, it will handle the situation and respond to
+     * the user.
      *
+     * @param reason the reason to check
+     * @param event the event used to respond to the user
+     * 
+     * @return whether the reason is valid
      */
-    public static boolean handleReason(@NotNull String reason, @NotNull SlashCommandEvent event) {
+    public static boolean handleReason(@NotNull CharSequence reason, @NotNull Interaction event) {
         if (reason.length() <= REASON_MAX_LENGTH) {
             return true;
         }
 
-        event.reply("The reason can not be over " + REASON_MAX_LENGTH + " characters")
+        event
+            .reply("The reason can not be longer than %d characters (current length is %d)"
+                .formatted(REASON_MAX_LENGTH, reason.length()))
             .setEphemeral(true)
             .queue();
         return false;
