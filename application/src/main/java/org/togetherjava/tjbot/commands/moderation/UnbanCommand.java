@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.IPermissionHolder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -37,30 +36,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
             .addOption(OptionType.USER, TARGET_OPTION, "The banned user who you want to unban",
                     true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unbanned", true);
-    }
-
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private static boolean handleHasPermissions(@NotNull IPermissionHolder bot,
-            @NotNull IPermissionHolder author, @NotNull Guild guild, @NotNull Interaction event) {
-        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "You can not unban users in this guild since you do not have the BAN_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-
-        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "I can not unban users in this guild since I do not have the BAN_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-
-            logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    guild.getName());
-            return false;
-        }
-        return true;
     }
 
     private static void unban(@NotNull User target, @NotNull Member author, @NotNull String reason,
@@ -101,7 +76,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        if (!handleHasPermissions(bot, author, guild, event)) {
+        if (!ModerationUtils.handleHasPermissions("unban", Permission.BAN_MEMBERS, bot, author,
+                guild, event)) {
             return;
         }
         if (!ModerationUtils.handleReason(reason, event)) {
