@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.IPermissionHolder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -44,50 +43,6 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private static boolean handleCanInteractWithTarget(@NotNull Member bot, @NotNull Member author,
-            @NotNull Member target, @NotNull Interaction event) {
-        String targetTag = target.getUser().getAsTag();
-        if (!author.canInteract(target)) {
-            event.reply("The user " + targetTag + " is too powerful for you to kick.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-
-        if (!bot.canInteract(target)) {
-            event.reply("The user " + targetTag + " is too powerful for me to kick.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-        return true;
-    }
-
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private static boolean handleHasPermissions(@NotNull IPermissionHolder bot,
-            @NotNull IPermissionHolder author, @NotNull Guild guild, @NotNull Interaction event) {
-        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
-            event.reply(
-                    "You can not kick users in this guild since you do not have the KICK_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-
-        if (!bot.hasPermission(Permission.KICK_MEMBERS)) {
-            event.reply(
-                    "I can not kick users in this guild since I do not have the KICK_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-
-            logger.error("The bot does not have KICK_MEMBERS permission on the server '{}' ",
-                    guild.getName());
-            return false;
-        }
-        return true;
-    }
-
     private static void kickUser(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         event.getJDA()
@@ -126,10 +81,11 @@ public final class KickCommand extends SlashCommandAdapter {
             handleAbsentTarget(event);
             return;
         }
-        if (!handleCanInteractWithTarget(bot, author, target, event)) {
+        if (!ModerationUtils.handleCanInteractWithTarget("kick", bot, author, target, event)) {
             return;
         }
-        if (!handleHasPermissions(bot, author, guild, event)) {
+        if (!ModerationUtils.handleHasPermissions("kick", Permission.KICK_MEMBERS, bot, author,
+                guild, event)) {
             return;
         }
         if (!ModerationUtils.handleReason(reason, event)) {

@@ -2,11 +2,9 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.IPermissionHolder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -27,10 +25,10 @@ import java.util.Objects;
  * to ban the specific given user (for example a moderator attempting to ban an admin).
  */
 public final class BanCommand extends SlashCommandAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String TARGET_OPTION = "user";
     private static final String DELETE_HISTORY_OPTION = "delete-history";
     private static final String REASON_OPTION = "reason";
-    private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
 
     /**
      * Constructs an instance.
@@ -43,50 +41,6 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
                     "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
-    }
-
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private static boolean handleCanInteractWithTarget(@NotNull Member bot, @NotNull Member author,
-            @NotNull Member target, @NotNull Interaction event) {
-        String targetTag = target.getUser().getAsTag();
-        if (!author.canInteract(target)) {
-            event.reply("The user " + targetTag + " is too powerful for you to ban.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-
-        if (!bot.canInteract(target)) {
-            event.reply("The user " + targetTag + " is too powerful for me to ban.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-        return true;
-    }
-
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private static boolean handleHasPermissions(@NotNull IPermissionHolder bot,
-            @NotNull IPermissionHolder author, @NotNull Guild guild, @NotNull Interaction event) {
-        if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "You can not ban users in this guild since you do not have the BAN_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-
-        if (!bot.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply(
-                    "I can not ban users in this guild since I do not have the BAN_MEMBERS permission.")
-                .setEphemeral(true)
-                .queue();
-
-            logger.error("The bot does not have BAN_MEMBERS permission on the server '{}' ",
-                    guild.getName());
-            return false;
-        }
-        return true;
     }
 
     @SuppressWarnings("MethodWithTooManyParameters")
@@ -127,10 +81,12 @@ public final class BanCommand extends SlashCommandAdapter {
         Member bot = guild.getSelfMember();
 
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
-        if (target != null && !handleCanInteractWithTarget(bot, author, target, event)) {
+        if (target != null && !ModerationUtils.handleCanInteractWithTarget("ban", bot, author,
+                target, event)) {
             return;
         }
-        if (!handleHasPermissions(bot, author, guild, event)) {
+        if (!ModerationUtils.handleHasPermissions("ban", Permission.BAN_MEMBERS, bot, author, guild,
+                event)) {
             return;
         }
         if (!ModerationUtils.handleReason(reason, event)) {
