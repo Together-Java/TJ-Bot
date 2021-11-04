@@ -17,8 +17,8 @@ import java.util.Optional;
  * See {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandEvent)} for
  * more context on how to use this.
  * <p>
- * The interface {@link ComponentIdGenerator} is the counter-part to this, offering generation of
- * IDs from payload.
+ * The interface {@link ComponentIdGenerator} is the counterpart to this, offering generation of IDs
+ * from payload.
  */
 @FunctionalInterface
 public interface ComponentIdParser {

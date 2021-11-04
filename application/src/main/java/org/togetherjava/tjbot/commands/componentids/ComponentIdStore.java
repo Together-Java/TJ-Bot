@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * Users can react to eviction by adding a listener to
  * {@link #addComponentIdRemovedListener(Consumer)}.
  * <p>
- * The store is fully thread-safe, component IDs can be generated and parsed multi-threaded.
+ * The store is fully thread-safe, component IDs can be generated and parsed multithreaded.
  */
 @SuppressWarnings("ClassWithTooManyFields")
 public final class ComponentIdStore implements AutoCloseable {
@@ -129,7 +129,7 @@ public final class ComponentIdStore implements AutoCloseable {
      * Adds a listener for component ID removal. The listener is triggered during eviction, once for
      * each component ID that has been removed from the store.
      * <p>
-     * The listener might be triggered multi-threaded, there are no guarantees made regarding the
+     * The listener might be triggered multithreaded, there are no guarantees made regarding the
      * executing thread. In particular, it might be a different thread each time it is triggered.
      *
      * @param listener the listener to add

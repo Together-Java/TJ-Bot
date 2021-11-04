@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * See {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandEvent)} for
  * more context on how to use this.
  * <p>
- * The interface {@link ComponentIdParser} is the counter-part to this, offering parsing back the
+ * The interface {@link ComponentIdParser} is the counterpart to this, offering parsing back the
  * payload from the ID.
  */
 @FunctionalInterface
