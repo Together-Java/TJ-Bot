@@ -15,6 +15,7 @@ If you want to join the party, please have a look at:
 
 We also have several guides explaining the infrastructure, architecture and flow of the project:
 * [[Tech Stack]]
+* [[Component ID Store]]
 
 As well as some tutorials regarding on how to maintain the project:
 * [[Discord Bot Details]]
