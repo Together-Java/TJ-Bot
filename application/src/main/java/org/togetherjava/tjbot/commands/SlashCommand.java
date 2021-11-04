@@ -25,8 +25,8 @@ import java.util.List;
  * <p>
  * <p>
  * Slash commands can either be visible globally in Discord or just to specific guilds. They can
- * have subcommands and, options, menus and more. This can be configured via {@link CommandData},
- * which is then to be returned by {@link #getData()} where the system will then pick it up from.
+ * have subcommands, options, menus and more. This can be configured via {@link CommandData}, which
+ * is then to be returned by {@link #getData()} where the system will then pick it up from.
  * <p>
  * After registration, the system will notify a command whenever one of its corresponding slash
  * commands ({@link #onSlashCommand(SlashCommandEvent)}), buttons
