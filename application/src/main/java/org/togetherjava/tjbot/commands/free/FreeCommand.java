@@ -25,7 +25,7 @@ import java.util.*;
 // todo (can SlashCommandVisibility be narrower than GUILD?)
 // todo monitor all channels when list is empty? monitor none?
 // todo (use other emojis? use images?)
-// todo add command to add/remove/status channels to monitor
+// todo add command to add/remove/status channels to monitor?
 // todo test if message is a reply and don't mark as busy if it is
 // todo add button query to confirm that message is new question not additional info for existing
 // discussion before marking as busy
@@ -110,7 +110,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
 
         channelMonitor.statusIds()
             .map(event.getJDA()::getTextChannelById)
-                .filter(Objects::nonNull)
+            .filter(Objects::nonNull)
             .forEach(this::displayStatus);
 
         isReady = true;

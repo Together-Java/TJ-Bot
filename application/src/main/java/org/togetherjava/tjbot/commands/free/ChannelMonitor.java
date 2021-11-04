@@ -50,24 +50,53 @@ public class ChannelMonitor {
         updateStatusFor(channel.getGuild());
     }
 
+    /**
+     * This method tests whether a guild id is configured for monitoring in the free command system.
+     * 
+     * @param guildId the id of the guild to test.
+     * @return {@code true} if the guild is configured in the system, {@code false} otherwise.
+     */
     public boolean isMonitoringGuild(final long guildId) {
         return postStatusInChannel.containsKey(guildId);
     }
 
+    /**
+     * This method tests whether a channel id is configured for monitoring in the free command
+     * system.
+     * 
+     * @param channelId the id of the channel to test.
+     * @return {@code true} if the channel is configured in the system, {@code false} otherwise.
+     */
     public boolean isMonitoringChannel(final long channelId) {
         return channelsToMonitor.containsKey(channelId);
     }
 
+    /**
+     * This is a delegation method to pass operations to {@link ChannelStatus}. see
+     * {@link ChannelStatus#isBusy()} for details.
+     *
+     * @param channelId the id for the channel to test.
+     * @return {@code true} if the channel is 'busy', false if the channel is 'free'.
+     */
     public boolean isChannelBusy(final long channelId) {
         return channelsToMonitor.get(channelId).isBusy();
     }
 
+    /**
+     * This method tests if a channel is currently active by fetching the latest message and testing
+     * if it was posted more than an hour ago.
+     *
+     * @param channel the channel to test.
+     * @return {@code true} if the channel is inactive, false if it has received messages more
+     *         recently than an hour ago.
+     */
     public boolean isChannelInactive(@NotNull final TextChannel channel) {
         if (!channelsToMonitor.containsKey(channel.getIdLong())) {
             throw new IllegalArgumentException(
                     "Channel requested %s is not monitored by free channel"
                         .formatted(channel.getName()));
         }
+        // todo change the entire inactive test to work via restactions
         return channel.getHistory()
             .retrievePast(1)
             .map(messages -> messages.get(0))
@@ -76,18 +105,43 @@ public class ChannelMonitor {
             .complete();
     }
 
+    /**
+     * This is a delegation method to pass operations to {@link ChannelStatus}. see
+     * {@link ChannelStatus#setBusy(long)} for details.
+     * 
+     * @param channelId the id for the channel status to modify.
+     * @param userId the id of the user changing the status to busy.
+     */
     public void setChannelBusy(final long channelId, final long userId) {
         channelsToMonitor.get(channelId).setBusy(userId);
     }
 
+    /**
+     * This is a delegation method to pass operations to {@link ChannelStatus}. see
+     * {@link ChannelStatus#setFree()} for details.
+     * 
+     * @param channelId the id for the channel status to modify.
+     */
     public void setChannelFree(final long channelId) {
         channelsToMonitor.get(channelId).setFree();
     }
 
+    /**
+     * This method provides a stream of the id's for guilds that are currently being monitored. This
+     * is streamed purely as a simple method of encapsulation.
+     *
+     * @return a stream of guild id's
+     */
     public Stream<Long> guildIds() {
         return postStatusInChannel.keySet().stream();
     }
 
+    /**
+     * This method provides a stream of the id's for channels that status's are displayed in. This
+     * is streamed purely as a simple method of encapsulation.
+     * 
+     * @return a stream of channel id's
+     */
     public Stream<Long> statusIds() {
         return postStatusInChannel.values().stream();
     }
@@ -101,6 +155,22 @@ public class ChannelMonitor {
             .toList();
     }
 
+    /**
+     * Creates the status message (specific to the guild specified) that shows which channels are
+     * busy/free.
+     * <p>
+     * It gets the list of all channels in the guild and filters out all channels not being
+     * monitored (to get the correct channel order) it then updates the names of the channels in
+     * case they were changed on the guild.
+     * <p>
+     * If then iterates through all channels and checks which category they are in so that it can
+     * add the categories to the output too.
+     * 
+     * @param guild the guild the message is intended for.
+     * @return a string representing the busy/free status of channels in this guild. The String
+     *         includes emojis and other discord specific markup. Attempting to display this
+     *         somewhere other than discord will lead to unexpected results.
+     */
     public String statusMessage(@NotNull final Guild guild) {
         List<ChannelStatus> statusFor = guildMonitoredChannelsList(guild);
 
@@ -115,6 +185,9 @@ public class ChannelMonitor {
             if (category != null && !category.getName().equals(categoryName)) {
                 categoryName = category.getName();
                 // append the category name on a new line with markup for underlining
+                // fixme possible bug when not all channels are part of categories, may mistakenly
+                // include uncategoried channels inside previous category. will an uncategoried
+                // channel return an empty string or null? javadocs dont say.
                 sb.append("\n__").append(categoryName).append("__\n");
             }
             sb.append(status.toDiscord()).append("\n");
@@ -123,6 +196,16 @@ public class ChannelMonitor {
         return sb.toString();
     }
 
+    /**
+     * This method checks all channels in a guild that is currently being monitored and are
+     * currently busy and determines if the last time it was updated is more than an hour ago. If so
+     * it changes the channel's status to free.
+     * <p>
+     * This method is run automatically during startup and should be run on a 15minute schedule. The
+     * scheduled execution is not currently implemented
+     * 
+     * @param guild the guild for which to test the channel statuses of.
+     */
     public void updateStatusFor(@NotNull Guild guild) {
         List<ChannelStatus> statusFor = guildMonitoredChannelsList(guild);
 
@@ -134,15 +217,26 @@ public class ChannelMonitor {
             .filter(this::isChannelInactive)
             .map(TextChannel::getIdLong)
             .forEach(this::setChannelFree);
-
     }
 
-
+    /**
+     * This method returns the {@link TextChannel} that has been configured as the output of the
+     * status messages about busy/free for the specified guild.
+     *
+     * @param guild the {@link Guild} for which to retrieve the TextChannel for.
+     * @return the TextChannel where status messages are output in the specified guild.
+     */
     public TextChannel getStatusChannelFor(@NotNull final Guild guild) {
         // todo add error checking for invalid keys ??
         return guild.getTextChannelById(postStatusInChannel.get(guild.getIdLong()));
     }
 
+    /**
+     * The toString method for this class, it prints out a list of the currently monitored channels
+     * and the channels the status are printed in. This is called on boot by as a debug level logger
+     * 
+     * @return the string to print.
+     */
     @Override
     public String toString() {
         return "Monitoring Channels: %s%nDisplaying on Channels: %s".formatted(channelsToMonitor,
