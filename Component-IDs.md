@@ -110,3 +110,5 @@ Technically, for JDA, component IDs could be any text, as long as it is:
 To overcome those limitations and ease the workflow for users, our API generates component IDs as **UUIDs** (which are unique by default).
 
 In order to attach arbitrary information (that also might be longer than just 100 characters) to the component ID, we store the actual information (the payload) externally in a database instead of stuffing it into the component ID itself. So while the actual component ID is just a UUID, we associate it to the corresponding information in a database.
+
+See [[Component ID Store]] for more details on the underlying system and the implementation.
