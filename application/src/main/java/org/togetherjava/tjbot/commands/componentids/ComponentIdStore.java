@@ -267,6 +267,7 @@ public final class ComponentIdStore implements AutoCloseable {
                         .and(ComponentIds.COMPONENT_IDS.LAST_USED.lessOrEqual(Instant.now()
                             .minus(evictDatabaseOlderThan, evictDatabaseOlderThanUnit))))
                     .fetch();
+
                 oldRecords.forEach(recordToDelete -> {
                     UUID uuid = UUID
                         .fromString(recordToDelete.getValue(ComponentIds.COMPONENT_IDS.UUID));
