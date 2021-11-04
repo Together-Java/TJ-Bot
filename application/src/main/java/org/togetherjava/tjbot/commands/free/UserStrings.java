@@ -1,7 +1,13 @@
 package org.togetherjava.tjbot.commands.free;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.Nullable;
 
+/**
+ * Class containing all the strings sent to users during their interaction with the free command
+ * system. This does not include the logged strings or the exception strings.
+ */
 public enum UserStrings {
     NEW_QUESTION("""
             Thank you for asking a question in an available channel.
@@ -21,15 +27,29 @@ public enum UserStrings {
 
     private final String message;
 
-    UserStrings(String message) {
+    UserStrings(@NotNull String message) {
         this.message = message;
     }
 
-    public String message() {
+    /**
+     * Method to fetch the string that will be sent to a user in reaction to any event triggered by
+     * the free command system for that user.
+     * 
+     * @return the string to send to a user to give them the specified response.
+     */
+    public @NotNull String message() {
         return message;
     }
 
-    public String formatted(@Nullable Object... args) {
+    /**
+     * Method to fetch the string that will be sent to a user in reaction to any event triggered by
+     * the free command system for that user. This can be used to add tagged values in the same way
+     * as {@link String#format(String, Object...)}
+     *
+     * @param args the replacement values for the specified tags.
+     * @return the string to send to a user to give them the specified response.
+     */
+    public @NotNull String formatted(@Nullable Object... args) {
         return message.formatted(args);
     }
 }

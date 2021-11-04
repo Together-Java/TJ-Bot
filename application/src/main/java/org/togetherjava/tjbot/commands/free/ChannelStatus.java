@@ -33,7 +33,7 @@ public final class ChannelStatus {
      * 
      * @param id the long id of the {@link net.dv8tion.jda.api.entities.TextChannel} to monitor.
      */
-    ChannelStatus(long id) {
+    ChannelStatus(final long id) {
         channelId = id;
         isBusy = BUSY;
         name = Long.toString(id);
@@ -51,6 +51,18 @@ public final class ChannelStatus {
      */
     public boolean isBusy() {
         return isBusy;
+    }
+
+    /**
+     * Method to test if an id is the same as the id of the help requester who most recently posted
+     * a question.
+     *
+     * @param userId the id to test
+     * @return {@code true} if the id value passed in is the same as the value of the user who most
+     *         recently changed the status to 'busy'. {@code false} otherwise.
+     */
+    public boolean isAsker(final long userId) {
+        return this.userId == userId;
     }
 
     /**
@@ -77,8 +89,7 @@ public final class ChannelStatus {
         return name;
     }
 
-
-    private void setName(@NotNull String name) {
+    private void setName(@NotNull final String name) {
         this.name = Objects.requireNonNull(name);
     }
 
@@ -89,11 +100,12 @@ public final class ChannelStatus {
      * The recommended value to use is {@link TextChannel#getAsMention()}
      * <p>
      * This method is called in multithreaded context, however the value is not expected to change
-     * regularly and will not break anything if its invalid so no has not been made thread safe.
+     * regularly and will not break anything if it is incorrect for a read or two, so it has not
+     * been made thread safe.
      *
      * @param guild the {@link Guild} that the channel belongs to, to retrieve its name from.
      */
-    public void updateChannelName(@NotNull Guild guild) {
+    public void updateChannelName(@NotNull final Guild guild) {
         GuildChannel channel = guild.getGuildChannelById(channelId);
         if (channel == null) {
             throw new IllegalArgumentException(
@@ -108,17 +120,33 @@ public final class ChannelStatus {
                         .formatted(channelId));
     }
 
-    public void setBusy(long userId) {
+    /**
+     * Method to set the channel status to busy, a user id is passed in to keep track of the current
+     * user requesting help. This id will be used to confirm that the author is satisfied with the
+     * channel being marked as free.
+     * <p>
+     * This functionality is not yet implemented so the id can be anything atm. Also note that on
+     * reboot the bot does not currently search for the author so the first time its marked as free
+     * there will be no confirmation.
+     * 
+     * @param userId the id of the user who changed the status to 'busy'
+     */
+    public void setBusy(final long userId) {
         if (isBusy == FREE) {
             this.isBusy = BUSY;
             this.userId = userId;
         }
     }
 
-    public boolean isAsker(long userId) {
-        return this.userId == userId;
-    }
-
+    /**
+     * Method to set the channel status to free, the user id of the previous help requester is not
+     * overwritten by this method. So until another user changes the status to busy the old value
+     * will remain.
+     * <p>
+     * The value will be 0 until the first time that the status is changed from free to busy.
+     * <p>
+     * This functionality is not yet implemented so the id can be anything atm.
+     */
     public void setFree() {
         if (isBusy == BUSY) {
             isBusy = FREE;
@@ -134,7 +162,7 @@ public final class ChannelStatus {
      * @return whether the objects have the same id or not.
      */
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
@@ -150,7 +178,7 @@ public final class ChannelStatus {
      * @return a String representation of the instance.
      */
     @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "ChannelStatus{ %s is %s }".formatted(name, isBusy ? "busy" : "not busy");
     }
 
@@ -161,7 +189,7 @@ public final class ChannelStatus {
      *
      * @return a String representation of ChannelStatus, formatted for Discord
      */
-    public String toDiscord() {
+    public @NotNull String toDiscord() {
         return "%s %s".formatted(isBusy ? BUSY_STATUS : FREE_STATUS, name);
     }
 
