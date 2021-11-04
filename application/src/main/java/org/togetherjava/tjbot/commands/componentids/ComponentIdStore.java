@@ -79,11 +79,6 @@ public final class ComponentIdStore implements AutoCloseable {
     private final long evictDatabaseOlderThan;
     private final TemporalUnit evictDatabaseOlderThanUnit;
 
-    // NOTE The class needs no further extra synchronization to be thread-safe.
-    // It only uses thread-safe collections and the database is also thread-safe.
-    // It does not hurt if the in-memory cache and the database differ slightly momentarily
-    // due to multi-threaded manipulation.
-
     /**
      * Creates a new instance with default eviction settings.
      *
