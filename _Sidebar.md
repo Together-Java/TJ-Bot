@@ -17,6 +17,7 @@
 #### Project documentation
 
 * [[Tech Stack]]
+* [[Component ID Store]]
 
 #### Maintenance
 
