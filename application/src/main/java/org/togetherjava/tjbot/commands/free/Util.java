@@ -3,6 +3,9 @@ package org.togetherjava.tjbot.commands.free;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+
 public class Util {
     // private constructor to prevent this class getting instantiated
     private Util() {}
@@ -15,6 +18,10 @@ public class Util {
      */
     public static void sendErrorMessage(@NotNull Interaction interaction, @NotNull String message) {
         interaction.reply(message).setEphemeral(true).queue();
+    }
+
+    public static OffsetDateTime anHourAgo() {
+        return OffsetDateTime.now().minus(1, ChronoUnit.HOURS);
     }
 
 }
