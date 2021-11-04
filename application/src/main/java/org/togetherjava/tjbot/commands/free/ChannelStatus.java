@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.commands.free;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +35,7 @@ public final class ChannelStatus {
      */
     ChannelStatus(long id) {
         channelId = id;
-        isBusy = false;
+        isBusy = BUSY;
         name = Long.toString(id);
     }
 
@@ -75,6 +77,11 @@ public final class ChannelStatus {
         return name;
     }
 
+
+    private void setName(@NotNull String name) {
+        this.name = Objects.requireNonNull(name);
+    }
+
     /**
      * Method used to keep the channel name up to date with the {@link JDA}. This method is not
      * called automatically. Manually update before using the value.
@@ -83,11 +90,22 @@ public final class ChannelStatus {
      * <p>
      * This method is called in multithreaded context, however the value is not expected to change
      * regularly and will not break anything if its invalid so no has not been made thread safe.
-     * 
-     * @param name the value to set the channel name to.
+     *
+     * @param guild the {@link Guild} that the channel belongs to, to retrieve its name from.
      */
-    public void setName(String name) {
-        this.name = Objects.requireNonNull(name);
+    public void updateChannelName(@NotNull Guild guild) {
+        GuildChannel channel = guild.getGuildChannelById(channelId);
+        if (channel == null) {
+            throw new IllegalArgumentException(
+                    "The guild passed in '%s' is not related to the channel this status is for: %s"
+                        .formatted(guild.getName(), this));
+        }
+        if (channel instanceof TextChannel textChannel) {
+            setName(textChannel.getAsMention());
+        } else
+            throw new IllegalStateException(
+                    "This channel status was created with the id for a non-text-channel and status cannot be monitored: '%s'"
+                        .formatted(channelId));
     }
 
     public void setBusy(long userId) {
@@ -96,6 +114,7 @@ public final class ChannelStatus {
             this.userId = userId;
         }
     }
+
     public boolean isAsker(long userId) {
         return this.userId == userId;
     }
@@ -120,8 +139,9 @@ public final class ChannelStatus {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        ChannelStatus that = (ChannelStatus) o;
-        return channelId == that.channelId;
+
+        ChannelStatus status = (ChannelStatus) o;
+        return channelId == status.channelId;
     }
 
     /**
@@ -135,8 +155,9 @@ public final class ChannelStatus {
     }
 
     /**
-     * A {@link #toString()} method spetially formatted for Discord ({@link JDA}. Uses emojis by
-     * string representation.
+     * A {@link #toString()} method specially formatted for Discord ({@link JDA}. Uses emojis by
+     * string representation, that discord will automatically convert into images. Using this string
+     * outside of discord will display unexpected results.
      *
      * @return a String representation of ChannelStatus, formatted for Discord
      */
