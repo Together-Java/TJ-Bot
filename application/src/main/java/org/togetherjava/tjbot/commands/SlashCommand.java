@@ -143,6 +143,8 @@ public interface SlashCommand {
      * Alternatively, if {@link SlashCommandAdapter} has been extended, it also offers a handy
      * {@link SlashCommandAdapter#generateComponentId(String...)} method to ease the flow.
      * <p>
+     * See <a href="https://github.com/Together-Java/TJ-Bot/wiki/Component-IDs">Component-IDs</a> on
+     * our Wiki for more details and examples of how to use component IDs.
      * <p>
      * This method will be called in a multi-threaded context and the event may not be hold valid
      * forever.
