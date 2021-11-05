@@ -83,13 +83,13 @@ public final class BanCommand extends SlashCommandAdapter {
                 return guild.ban(target, deleteHistoryDays, reason)
                     .map(banResult -> sendDmResult.isSuccess());
             })
-            .flatMap(hasSentDm -> {
+            .map(hasSentDm -> {
                 String dmNotice =
-                        Boolean.TRUE.equals(hasSentDm) ? "" : " (unable to send them a DM)";
-                String message = "'%s' was banned by '%s'%s for: %s".formatted(target.getAsTag(),
-                        author.getUser().getAsTag(), dmNotice, reason);
-                return event.reply(message);
-            });
+                        Boolean.TRUE.equals(hasSentDm) ? "" : "(Unable to send them a DM.)";
+                return ModerationUtils.createActionResponse(author.getUser(),
+                        ModerationUtils.Action.BAN, target, dmNotice, reason);
+            })
+            .flatMap(event::replyEmbeds);
     }
 
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(

@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -45,10 +46,9 @@ public final class KickCommand extends SlashCommandAdapter {
 
     private static void kickUser(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
-        String targetTag = target.getUser().getAsTag();
-        String targetId = target.getUser().getId();
+        User targetUser = target.getUser();
         event.getJDA()
-            .openPrivateChannelById(targetId)
+            .openPrivateChannelById(targetUser.getId())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
@@ -59,20 +59,20 @@ public final class KickCommand extends SlashCommandAdapter {
             .mapToResult()
             .flatMap(sendDmResult -> {
                 logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
-                        author.getUser().getAsTag(), author.getId(), targetTag, targetId,
-                        guild.getName(), reason);
+                        author.getUser().getAsTag(), author.getId(), targetUser.getAsTag(),
+                        targetUser.getId(), guild.getName(), reason);
 
                 return guild.kick(target, reason)
                     .reason(reason)
                     .map(kickResult -> sendDmResult.isSuccess());
             })
-            .flatMap(hasSentDm -> {
+            .map(hasSentDm -> {
                 String dmNotice =
-                        Boolean.TRUE.equals(hasSentDm) ? "" : " (unable to send them a DM)";
-                String message = "'%s' was kicked by '%s'%s for: %s".formatted(targetTag,
-                        author.getUser().getAsTag(), dmNotice, reason);
-                return event.reply(message);
+                        Boolean.TRUE.equals(hasSentDm) ? "" : "(Unable to send them a DM.)";
+                return ModerationUtils.createActionResponse(author.getUser(),
+                        ModerationUtils.Action.KICK, targetUser, dmNotice, reason);
             })
+            .flatMap(event::replyEmbeds)
             .queue();
     }
 
