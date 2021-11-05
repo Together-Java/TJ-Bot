@@ -23,16 +23,22 @@ public final class Config {
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
+    private final String modAuditLogChannelPattern;
+    private final String mutedRolePattern;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite) {
+            @JsonProperty("discordGuildInvite") String discordGuildInvite,
+            @JsonProperty("modAuditLogChannelPattern") String modAuditLogChannelPattern,
+            @JsonProperty("mutedRolePattern") String mutedRolePattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
+        this.modAuditLogChannelPattern = modAuditLogChannelPattern;
+        this.mutedRolePattern = mutedRolePattern;
     }
 
     /**
@@ -57,6 +63,25 @@ public final class Config {
     public static Config getInstance() {
         return Objects.requireNonNull(config,
                 "can not get the configuration before it has been loaded");
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the role assigned to muted users.
+     *
+     * @return the role name pattern
+     */
+    public String getMutedRolePattern() {
+        return mutedRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain all mod audit
+     * logs.
+     *
+     * @return the channel name pattern
+     */
+    public String getModAuditLogChannelPattern() {
+        return modAuditLogChannelPattern;
     }
 
     /**
