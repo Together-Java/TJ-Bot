@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.system.CommandSystem;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -80,6 +81,10 @@ public enum Application {
                 .build();
             jda.awaitReady();
             logger.info("Bot is ready");
+
+            // TODO This should be moved into some proper command system instead (see GH issue #235
+            // which adds support for routines)
+            new ModAuditLogRoutine(jda, database).start();
 
             Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
         } catch (LoginException e) {
