@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.moderation;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
@@ -9,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.Storage;
+import org.togetherjava.tjbot.db.generated.tables.records.StorageRecord;
 
 import java.util.Objects;
 
@@ -51,7 +54,19 @@ public class WarnCommand extends SlashCommandAdapter {
     }
 
     private void handleWarnCommand(@NotNull CommandInteraction event) {
-        User user = Objects.requireNonNull(event.getOption(WARN_USER_OPTION)).getAsUser();
+        // To prevent people from using warn content, only users with
+        // elevated permissions are allowed to use this command
+        if (!Objects.requireNonNull(event.getMember()).hasPermission(Permission.KICK_MEMBERS)) {
+            event.reply("You need the MESSAGE_MANAGE permission to use this command")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // /warn warn_user @Zabuzard who knows
+        User target = Objects.requireNonNull(event.getOption(WARN_USER_OPTION)).getAsUser();
+        String reason = Objects.requireNonNull(event.getOption(WARN_REASON_OPTION)).getAsString();
+
     }
 
     private void handleRetrieveWarnCommand(@NotNull CommandInteraction event) {
