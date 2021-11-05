@@ -74,16 +74,22 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(result -> {
+            .flatMap(sendDmResult -> {
                 logger.info(
                         "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'",
                         author.getUser().getAsTag(), author.getId(), target.getAsTag(),
                         target.getId(), guild.getName(), deleteHistoryDays, reason);
 
-                return guild.ban(target, deleteHistoryDays, reason);
+                return guild.ban(target, deleteHistoryDays, reason)
+                    .map(banResult -> sendDmResult.isSuccess());
             })
-            .flatMap(result -> event.reply("'%s' was banned by '%s' for: %s"
-                .formatted(target.getAsTag(), author.getUser().getAsTag(), reason)));
+            .flatMap(hasSentDm -> {
+                String dmNotice =
+                        Boolean.TRUE.equals(hasSentDm) ? "" : " (unable to send them a DM)";
+                String message = "'%s' was banned by '%s'%s for: %s".formatted(target.getAsTag(),
+                        author.getUser().getAsTag(), dmNotice, reason);
+                return event.reply(message);
+            });
     }
 
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(

@@ -45,8 +45,10 @@ public final class KickCommand extends SlashCommandAdapter {
 
     private static void kickUser(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+        String targetTag = target.getUser().getAsTag();
+        String targetId = target.getUser().getId();
         event.getJDA()
-            .openPrivateChannelById(target.getUser().getId())
+            .openPrivateChannelById(targetId)
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
@@ -55,14 +57,23 @@ public final class KickCommand extends SlashCommandAdapter {
                             """
                         .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(result -> guild.kick(target, reason).reason(reason))
-            .flatMap(result -> event.reply("'%s' was kicked by '%s' for: %s"
-                .formatted(target.getUser().getAsTag(), author.getUser().getAsTag(), reason)))
-            .queue();
+            .flatMap(sendDmResult -> {
+                logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'",
+                        author.getUser().getAsTag(), author.getId(), targetTag, targetId,
+                        guild.getName(), reason);
 
-        logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'",
-                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
-                target.getUser().getId(), guild.getName(), reason);
+                return guild.kick(target, reason)
+                    .reason(reason)
+                    .map(kickResult -> sendDmResult.isSuccess());
+            })
+            .flatMap(hasSentDm -> {
+                String dmNotice =
+                        Boolean.TRUE.equals(hasSentDm) ? "" : " (unable to send them a DM)";
+                String message = "'%s' was kicked by '%s'%s for: %s".formatted(targetTag,
+                        author.getUser().getAsTag(), dmNotice, reason);
+                return event.reply(message);
+            })
+            .queue();
     }
 
     @Override
