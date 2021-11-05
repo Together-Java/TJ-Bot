@@ -76,7 +76,7 @@ public final class BanCommand extends SlashCommandAdapter {
             .mapToResult()
             .flatMap(sendDmResult -> {
                 logger.info(
-                        "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'",
+                        "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
                         author.getUser().getAsTag(), author.getId(), target.getAsTag(),
                         target.getId(), guild.getName(), deleteHistoryDays, reason);
 
@@ -109,7 +109,7 @@ public final class BanCommand extends SlashCommandAdapter {
                     .setEphemeral(true));
             }
         }
-        logger.warn("Something unexpected went wrong while trying to ban the user '{}'",
+        logger.warn("Something unexpected went wrong while trying to ban the user '{}'.",
                 target.getAsTag(), alreadyBannedFailure);
         return Optional.of(event.reply("Failed to ban the user due to an unexpected problem.")
             .setEphemeral(true));

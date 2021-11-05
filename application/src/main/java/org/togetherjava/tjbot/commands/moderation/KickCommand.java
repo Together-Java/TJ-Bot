@@ -58,7 +58,7 @@ public final class KickCommand extends SlashCommandAdapter {
                         .formatted(guild.getName(), reason)))
             .mapToResult()
             .flatMap(sendDmResult -> {
-                logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'",
+                logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
                         author.getUser().getAsTag(), author.getId(), targetTag, targetId,
                         guild.getName(), reason);
 
