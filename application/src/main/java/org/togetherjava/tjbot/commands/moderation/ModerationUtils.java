@@ -1,14 +1,16 @@
 package org.togetherjava.tjbot.commands.moderation;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.IPermissionHolder;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.time.Instant;
 
 /**
  * Utility class offering helpers revolving around user moderation, such as banning or kicking.
@@ -22,6 +24,7 @@ enum ModerationUtils {
      * {@link Guild#ban(User, int, String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
+    private static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -119,5 +122,77 @@ enum ModerationUtils {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Creates a message to be displayed as response to a moderation action.
+     *
+     * Essentially, it informs others about the action, such as "John banned Bob for playing with
+     * the fire.".
+     *
+     * @param author the author executing the action
+     * @param action the action that is executed
+     * @param target the target of the action
+     * @param extraMessage an optional extra message to be displayed in the response, {@code null}
+     *        if not desired
+     * @param reason an optional reason for why the action is executed, {@code null} if not desired
+     * @return the created response
+     */
+    static @NotNull MessageEmbed createActionResponse(@NotNull User author, @NotNull Action action,
+            @NotNull User target, @Nullable String extraMessage, @Nullable String reason) {
+        String description = "%s **%s** (id: %s).".formatted(action.getVerb(), target.getAsTag(),
+                target.getId());
+        if (extraMessage != null && !extraMessage.isBlank()) {
+            description += "\n" + extraMessage;
+        }
+        if (reason != null && !reason.isBlank()) {
+            description += "\n\nReason: " + reason;
+        }
+        return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
+            .setDescription(description)
+            .setTimestamp(Instant.now())
+            .setColor(AMBIENT_COLOR)
+            .build();
+    }
+
+    /**
+     * All available moderation actions.
+     */
+    enum Action {
+        /**
+         * When a user bans another user.
+         */
+        BAN("banned"),
+        /**
+         * When a user unbans another user.
+         */
+        UNBAN("unbanned"),
+        /**
+         * When a user kicks another user.
+         */
+        KICK("kicked");
+
+        private final String verb;
+
+        /**
+         * Creates an instance with the given verb
+         *
+         * @param verb the verb of the action, as it would be used in a sentence, such as "banned"
+         *        or "kicked"
+         */
+        Action(@NotNull String verb) {
+            this.verb = verb;
+        }
+
+        /**
+         * Gets the verb of the action, as it would be used in a sentence.
+         * <p>
+         * Such as "banned" or "kicked"
+         *
+         * @return the verb of this action
+         */
+        String getVerb() {
+            return verb;
+        }
     }
 }

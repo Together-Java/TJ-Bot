@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
@@ -43,10 +44,10 @@ public final class UnbanCommand extends SlashCommandAdapter {
         String targetTag = target.getAsTag();
 
         guild.unban(target).reason(reason).queue(result -> {
-            event
-                .reply("'%s' was unbanned by '%s' for: %s".formatted(author.getUser().getAsTag(),
-                        targetTag, reason))
-                .queue();
+            MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
+                    ModerationUtils.Action.UNBAN, target, null, reason);
+            event.replyEmbeds(message).queue();
+
             logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
                     author.getUser().getAsTag(), author.getId(), targetTag, target.getId(),
                     guild.getName(), reason);
