@@ -1,12 +1,16 @@
 package org.togetherjava.tjbot.moderation;
 
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
+
+import java.util.Objects;
 
 public class WarnCommand extends SlashCommandAdapter {
     private static final String WARN_USER = "warn_user";
@@ -39,5 +43,18 @@ public class WarnCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        switch (Objects.requireNonNull(event.getSubcommandName())) {
+            case WARN_USER -> handleWarnCommand(event);
+            case RETRIEVE_WARNS_OPTION -> handleRetrieveWarnCommand(event);
+            default -> throw new AssertionError();
+        }
+    }
+
+    private void handleWarnCommand(@NotNull CommandInteraction event) {
+        User user = Objects.requireNonNull(event.getOption(WARN_USER_OPTION)).getAsUser();
+    }
+
+    private void handleRetrieveWarnCommand(@NotNull CommandInteraction event) {
+
     }
 }
