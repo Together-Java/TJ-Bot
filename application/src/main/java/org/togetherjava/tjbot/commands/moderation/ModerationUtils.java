@@ -38,7 +38,7 @@ enum ModerationUtils {
         }
 
         event
-            .reply("The reason can not be longer than %d characters (current length is %d)"
+            .reply("The reason can not be longer than %d characters (current length is %d)."
                 .formatted(REASON_MAX_LENGTH, reason.length()))
             .setEphemeral(true)
             .queue();
@@ -114,7 +114,7 @@ enum ModerationUtils {
                 .setEphemeral(true)
                 .queue();
 
-            logger.error("The bot does not have the '{}' permission on the guild '{}' ", permission,
+            logger.error("The bot does not have the '{}' permission on the guild '{}'.", permission,
                     guild.getName());
             return false;
         }
