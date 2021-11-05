@@ -47,7 +47,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 .reply("'%s' was unbanned by '%s' for: %s".formatted(author.getUser().getAsTag(),
                         targetTag, reason))
                 .queue();
-            logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'",
+            logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
                     author.getUser().getAsTag(), author.getId(), targetTag, target.getId(),
                     guild.getName(), reason);
         }, unbanFailure -> {
