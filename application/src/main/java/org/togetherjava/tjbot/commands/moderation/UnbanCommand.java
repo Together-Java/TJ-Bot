@@ -50,18 +50,24 @@ public final class UnbanCommand extends SlashCommandAdapter {
             logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'",
                     author.getUser().getAsTag(), author.getId(), targetTag, target.getId(),
                     guild.getName(), reason);
-        }, throwable -> {
-            if (throwable instanceof ErrorResponseException errorResponseException
-                    && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                event.reply("The specified user does not exist").setEphemeral(true).queue();
-
-                logger.debug("Unable to unban the user '{}' because they do not exist", targetTag);
-            } else {
-                event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
-
-                logger.warn("Something unexpected went wrong while trying to unban the user '{}'",
-                        targetTag, throwable);
+        }, unbanFailure -> {
+            if (unbanFailure instanceof ErrorResponseException errorResponseException) {
+                if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
+                    event.reply("The specified user does not exist.").setEphemeral(true).queue();
+                    logger.debug("Unable to unban the user '{}' because they do not exist.",
+                            targetTag);
+                    return;
+                }
+                if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
+                    event.reply("The specified user is not banned.").setEphemeral(true).queue();
+                    logger.debug("Unable to unban the user '{}' because they are not banned.",
+                            targetTag);
+                    return;
+                }
             }
+            event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
+            logger.warn("Something unexpected went wrong while trying to unban the user '{}'.",
+                    targetTag, unbanFailure);
         });
     }
 
