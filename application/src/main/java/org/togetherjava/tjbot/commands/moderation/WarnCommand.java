@@ -26,11 +26,8 @@ import java.util.Optional;
 
 public class WarnCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(WarnCommand.class);
-    private static final String WARN_USER = "warn_user";
     private static final String WARN_USER_OPTION = "user";
     private static final String WARN_REASON_OPTION = "reason";
-    private static final String RETRIEVE_WARNS_OPTION = "retrieve_warns";
-    private static final String RETRIEVE_USER_OPTION = "user";
     private final Database database;
 
     /**
@@ -42,9 +39,8 @@ public class WarnCommand extends SlashCommandAdapter {
         super("warn", "warns the user", SlashCommandVisibility.GUILD);
         this.database = database;
 
-        getData()
-                .addOption(OptionType.USER, WARN_USER_OPTION, "The user to warn", true)
-                .addOption(OptionType.STRING, WARN_REASON_OPTION, "The reason for the warning", true);
+        getData().addOption(OptionType.USER, WARN_USER_OPTION, "The user to warn", true)
+            .addOption(OptionType.STRING, WARN_REASON_OPTION, "The reason for the warning", true);
     }
 
     /**
@@ -87,21 +83,13 @@ public class WarnCommand extends SlashCommandAdapter {
         dmUser(event.getJDA(), userId, reason, guild);
 
         /**
-        try {
-            database.write(context -> {
-                WarnsRecord warnRecord =
-                        context.newRecord(Warns.WARNS).setUserid(userId).setGuildid(guild.getId());
-                // .setTimeswarned(warningAmount);
-                logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
-                        author.getUser().getAsTag(), author.getId(), target.getAsTag(),
-                        target.getId(), reason);
-                if (warnRecord.update() == 0) {
-                    warnRecord.insert();
-                }
-            });
-        } finally {
-            event.reply("Warned " + target.getAsMention() + " for " + reason).queue();
-        }
+         * try { database.write(context -> { WarnsRecord warnRecord =
+         * context.newRecord(Warns.WARNS).setUserid(userId).setGuildid(guild.getId()); //
+         * .setTimeswarned(warningAmount); logger.info("The member '{}' ({}) warned the user '{}'
+         * ({}) for the reason '{}'", author.getUser().getAsTag(), author.getId(),
+         * target.getAsTag(), target.getId(), reason); if (warnRecord.update() == 0) {
+         * warnRecord.insert(); } }); } finally { event.reply("Warned " + target.getAsMention() + "
+         * for " + reason).queue(); }
          */
     }
 
