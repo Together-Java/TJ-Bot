@@ -23,21 +23,19 @@ import java.util.Objects;
 
 public class WarnCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(WarnCommand.class);
-    private static final String WARN_USER_OPTION = "user";
-    private static final String WARN_REASON_OPTION = "reason";
+    private static final String USER_OPTION = "user";
+    private static final String REASON_OPTION = "reason";
     private final Database database;
 
     /**
-     * Creates a new adapter with the given data.
-     *
-     * @param database the database to store the key-value pairs in
+     * Creates a new Instance.
      */
     public WarnCommand(@NotNull Database database) {
         super("warn", "warns the user", SlashCommandVisibility.GUILD);
         this.database = database;
 
-        getData().addOption(OptionType.USER, WARN_USER_OPTION, "The user to warn", true)
-            .addOption(OptionType.STRING, WARN_REASON_OPTION, "The reason for the warning", true);
+        getData().addOption(OptionType.USER, USER_OPTION, "The user to warn", true)
+            .addOption(OptionType.STRING, REASON_OPTION, "The reason for the warning", true);
     }
 
     /**
@@ -60,20 +58,19 @@ public class WarnCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(WARN_USER_OPTION), "The target is null");
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
         Member author = userOption.getAsMember();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         // To prevent people from using warn content, only users with
         // elevated permissions are allowed to use this command
-        if (handleHasPermissions(author, event, guild).equals(false)) {
+        if (!handleHasPermissions(author, event, guild)) {
             return;
         }
 
         // /warn warn_user @Zabuzard who knows
         User target = userOption.getAsUser();
-        String reason = Objects.requireNonNull(event.getOption(WARN_REASON_OPTION)).getAsString();
-        // TODO double check this part
+        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
         int warningAmount = 1;
 
         Long userId = target.getIdLong();
