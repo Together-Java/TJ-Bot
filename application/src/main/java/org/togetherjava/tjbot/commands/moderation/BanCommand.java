@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -117,12 +118,27 @@ public final class BanCommand extends SlashCommandAdapter {
             .setEphemeral(true));
     }
 
+    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
+    private static boolean handleChecks(@NotNull Member bot, @NotNull Member author,
+            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
+            @NotNull Interaction event) {
+        // Member doesn't exist if attempting to ban a user who is not part of the guild.
+        if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
+                target, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
+                guild, event)) {
+            return false;
+        }
+        return ModerationUtils.handleReason(reason, event);
+    }
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null");
-        Member targetMember = targetOption.getAsMember();
-        User targetUser = targetOption.getAsUser();
+        User target = targetOption.getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
@@ -130,16 +146,7 @@ public final class BanCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        // Member doesn't exist if attempting to ban a user who is not part of the guild.
-        if (targetMember != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot,
-                author, targetMember, event)) {
-            return;
-        }
-        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
-                guild, event)) {
-            return;
-        }
-        if (!ModerationUtils.handleReason(reason, event)) {
+        if (!handleChecks(bot, author, targetOption.getAsMember(), reason, guild, event)) {
             return;
         }
 
@@ -147,14 +154,14 @@ public final class BanCommand extends SlashCommandAdapter {
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
         // Ban the user, but only if not already banned
-        guild.retrieveBan(targetUser).mapToResult().flatMap(alreadyBanned -> {
+        guild.retrieveBan(target).mapToResult().flatMap(alreadyBanned -> {
             if (alreadyBanned.isSuccess()) {
                 return handleAlreadyBanned(alreadyBanned.get(), event);
             }
 
             return handleNotAlreadyBannedResponse(Objects
-                .requireNonNull(alreadyBanned.getFailure()), event, guild, targetUser).orElseGet(
-                        () -> banUser(targetUser, author, reason, deleteHistoryDays, guild, event));
+                .requireNonNull(alreadyBanned.getFailure()), event, guild, target).orElseGet(
+                        () -> banUser(target, author, reason, deleteHistoryDays, guild, event));
         }).queue();
     }
 }

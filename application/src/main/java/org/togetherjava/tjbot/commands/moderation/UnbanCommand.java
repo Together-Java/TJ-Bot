@@ -1,10 +1,7 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -74,6 +71,17 @@ public final class UnbanCommand extends SlashCommandAdapter {
         });
     }
 
+    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion"})
+    private static boolean handleChecks(@NotNull IPermissionHolder bot,
+            @NotNull IPermissionHolder author, @NotNull CharSequence reason, @NotNull Guild guild,
+            @NotNull Interaction event) {
+        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
+                guild, event)) {
+            return false;
+        }
+        return ModerationUtils.handleReason(reason, event);
+    }
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         User target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
@@ -85,14 +93,9 @@ public final class UnbanCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
-                guild, event)) {
+        if (!handleChecks(bot, author, reason, guild, event)) {
             return;
         }
-        if (!ModerationUtils.handleReason(reason, event)) {
-            return;
-        }
-
         unban(target, author, reason, guild, event);
     }
 }
