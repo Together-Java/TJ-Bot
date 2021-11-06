@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -10,18 +9,16 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.DatabaseException;
+import org.togetherjava.tjbot.db.generated.tables.Warns;
+import org.togetherjava.tjbot.db.generated.tables.records.WarnsRecord;
 
-import java.awt.*;
 import java.util.Objects;
-import java.util.Optional;
 
 
 public class WarnCommand extends SlashCommandAdapter {
@@ -79,18 +76,27 @@ public class WarnCommand extends SlashCommandAdapter {
         // TODO double check this part
         int warningAmount = 1;
 
-        String userId = target.getId();
-        dmUser(event.getJDA(), userId, reason, guild);
+        Long userId = target.getIdLong();
+        dmUser(event.getJDA(), target.getId(), reason, guild);
 
-        /**
-         * try { database.write(context -> { WarnsRecord warnRecord =
-         * context.newRecord(Warns.WARNS).setUserid(userId).setGuildid(guild.getId()); //
-         * .setTimeswarned(warningAmount); logger.info("The member '{}' ({}) warned the user '{}'
-         * ({}) for the reason '{}'", author.getUser().getAsTag(), author.getId(),
-         * target.getAsTag(), target.getId(), reason); if (warnRecord.update() == 0) {
-         * warnRecord.insert(); } }); } finally { event.reply("Warned " + target.getAsMention() + "
-         * for " + reason).queue(); }
-         */
+
+        try {
+            database.write(context -> {
+                WarnsRecord warnRecord = context.newRecord(Warns.WARNS)
+                    .setUserid(userId)
+                    .setGuildId(guild.getIdLong())
+                    .setWarningAmount(warningAmount);
+                logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
+                        author.getUser().getAsTag(), author.getId(), target.getAsTag(),
+                        target.getId(), reason);
+                if (warnRecord.update() == 0) {
+                    warnRecord.insert();
+                }
+            });
+        } finally {
+            event.reply("Warned " + target.getAsMention() + " for " + reason).queue();
+        }
+
     }
 
     private static void dmUser(@NotNull JDA jda, @NotNull String userId, @NotNull String reason,
