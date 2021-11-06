@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -18,7 +19,9 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Warns;
 import org.togetherjava.tjbot.db.generated.tables.records.WarnsRecord;
 
+import java.awt.*;
 import java.util.Objects;
+import java.util.Optional;
 
 
 public class WarnCommand extends SlashCommandAdapter {
@@ -61,28 +64,41 @@ public class WarnCommand extends SlashCommandAdapter {
 
         // /warn warn_user @Zabuzard who knows
         User target = userOption.getAsUser();
-        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-        int warningAmount = 1;
-
         Long userId = target.getIdLong();
-        dmUser(event.getJDA(), target.getId(), reason, guild);
+        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
+        Optional<Integer> currentWarningAmount = database.read(context -> {
+            try (var select = context.selectFrom(Warns.WARNS)) {
+                return Optional.ofNullable(select.where(Warns.WARNS.USERID.eq(userId)).fetchOne())
+                    .map(WarnsRecord::getWarningAmount);
+            }
+        });
 
+        Optional<Integer> newWarningAmount = currentWarningAmount.map(amount -> amount + 1);
+
+        dmUser(event.getJDA(), target.getId(), reason, guild);
 
         try {
             database.write(context -> {
                 WarnsRecord warnRecord = context.newRecord(Warns.WARNS)
                     .setUserid(userId)
                     .setGuildId(guild.getIdLong())
-                    .setWarningAmount(warningAmount i++);
+                    .setWarnReason(reason)
+                    .setWarningAmount(newWarningAmount.get());
                 logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
                         author.getUser().getAsTag(), author.getId(), target.getAsTag(),
                         target.getId(), reason);
+
                 if (warnRecord.update() == 0) {
                     warnRecord.insert();
                 }
             });
         } finally {
-            event.reply("Warned " + target.getAsMention() + " for " + reason).queue();
+            event
+                .replyEmbeds(new EmbedBuilder().setTitle("Success")
+                    .setDescription("Warned " + target.getAsMention() + " for " + reason)
+                    .setColor(Color.MAGENTA)
+                    .build())
+                .queue();
         }
 
     }
@@ -90,16 +106,14 @@ public class WarnCommand extends SlashCommandAdapter {
     private static void dmUser(@NotNull JDA jda, @NotNull String userId, @NotNull String reason,
             @NotNull Guild guild) {
         jda.openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been warned by the server %s.
-                            The reason for the warn is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+            .flatMap(channel -> channel.sendMessageEmbeds(new EmbedBuilder().setTitle("Warn")
+                .setDescription("You have been warned in " + guild.getName() + " for " + reason)
+                .setColor(Color.MAGENTA)
+                .build()))
             .queue();
     }
 
-    private static Boolean handleHasPermissions(@NotNull Member author,
+    private static boolean handleHasPermissions(@NotNull Member author,
             @NotNull CommandInteraction event, @NotNull Guild guild) {
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
             event.reply("You need the BAN_MEMBERS permission to use this command")
