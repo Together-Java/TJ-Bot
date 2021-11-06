@@ -26,12 +26,14 @@ public final class UnbanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(UnbanCommand.class);
     private static final String TARGET_OPTION = "user";
     private static final String REASON_OPTION = "reason";
+    private static final String COMMAND_NAME = "unban";
+    private static final String ACTION_VERB = "unban";
 
     /**
      * Constructs an instance.
      */
     public UnbanCommand() {
-        super("unban", "Unbans the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Unbans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData()
             .addOption(OptionType.USER, TARGET_OPTION, "The banned user who you want to unban",
@@ -83,7 +85,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        if (!ModerationUtils.handleHasPermissions("unban", Permission.BAN_MEMBERS, bot, author,
+        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
                 guild, event)) {
             return;
         }

@@ -35,12 +35,14 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "user";
     private static final String DELETE_HISTORY_OPTION = "delete-history";
     private static final String REASON_OPTION = "reason";
+    private static final String COMMAND_NAME = "ban";
+    private static final String ACTION_VERB = "ban";
 
     /**
      * Constructs an instance.
      */
     public BanCommand() {
-        super("ban", "Bans the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be banned", true)
@@ -129,12 +131,12 @@ public final class BanCommand extends SlashCommandAdapter {
         Member bot = guild.getSelfMember();
 
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
-        if (targetMember != null && !ModerationUtils.handleCanInteractWithTarget("ban", bot, author,
-                targetMember, event)) {
+        if (targetMember != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot,
+                author, targetMember, event)) {
             return;
         }
-        if (!ModerationUtils.handleHasPermissions("ban", Permission.BAN_MEMBERS, bot, author, guild,
-                event)) {
+        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
+                guild, event)) {
             return;
         }
         if (!ModerationUtils.handleReason(reason, event)) {
