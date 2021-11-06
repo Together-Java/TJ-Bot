@@ -91,7 +91,7 @@ public class WarnCommand extends SlashCommandAdapter {
 
             if (value.isEmpty()) {
                 event
-                    .replyEmbeds(new EmbedBuilder().setTitle("A Good User")
+                    .replyEmbeds(new EmbedBuilder().setTitle("A behaved user")
                         .setDescription(
                                 "No warns can be found for the user " + target.getAsTag() + ".")
                         .setColor(Color.magenta)
