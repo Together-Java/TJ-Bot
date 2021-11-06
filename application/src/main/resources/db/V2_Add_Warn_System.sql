@@ -1,6 +1,6 @@
 CREATE TABLE warns
 (
-    userId   TEXT NOT NULL PRIMARY KEY,
-    guildId  TEXT NOT NULL,
-    timesWarned    TEXT NOT NULL
+    userid      TEXT NOT NULL PRIMARY KEY,
+    guildid     TEXT NOT NULL,
+    timeswarned TEXT NOT NULL
 )

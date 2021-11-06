@@ -62,14 +62,15 @@ public class WarnCommand extends SlashCommandAdapter {
 
     /**
      * Handles {@code /warn retrieve_warns user} commands. Retrieves the timesWarned value and then
-     * sends that value to the user as an embed
+     * sends that value to the user as an embed.
+     * <p>
+     * This command can only be used by users with the {@code BAN_MEMBERS} permission.
      *
      * @param event the event of the command
      */
     private void handleRetrieveWarnCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(RETRIEVE_USER_OPTION), "The target is null");
-
         Member author = userOption.getAsMember();
 
         // To prevent people from get users warn, only users with
@@ -79,19 +80,18 @@ public class WarnCommand extends SlashCommandAdapter {
         }
 
         User target = userOption.getAsUser();
-
         try {
             Optional<String> value = database.read(context -> {
                 try (var select = context.selectFrom(Warns.WARNS)) {
                     return Optional
                         .ofNullable(select.where(Warns.WARNS.USERID.eq(target.getId())).fetchOne())
-                        .map(WarnsRecord::getTimes);
+                        .map(WarnsRecord::getTimeswarned);
                 }
             });
 
             if (value.isEmpty()) {
                 event
-                    .replyEmbeds(new EmbedBuilder().setTitle("404 Error")
+                    .replyEmbeds(new EmbedBuilder().setTitle("A Good User")
                         .setDescription(
                                 "No warns can be found for the user " + target.getAsTag() + ".")
                         .setColor(Color.magenta)
@@ -126,7 +126,6 @@ public class WarnCommand extends SlashCommandAdapter {
     private void handleWarnCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(WARN_USER_OPTION), "The target is null");
-
         Member author = userOption.getAsMember();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
@@ -150,8 +149,8 @@ public class WarnCommand extends SlashCommandAdapter {
                 WarnsRecord warnRecord = context.newRecord(Warns.WARNS)
                     .setUserid(userId)
                     .setGuildid(guild.getId())
-                    .setTimes(Integer.toString(times));
-                logger.info("The user '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
+                    .setTimeswarned(Integer.toString(times));
+                logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
                         author.getUser().getAsTag(), author.getId(), target.getAsTag(),
                         target.getId(), reason);
                 if (warnRecord.update() == 0) {
