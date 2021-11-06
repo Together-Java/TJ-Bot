@@ -39,15 +39,6 @@ public class WarnCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Handles {@code /warn retrieve_warns user} commands. Retrieves the timesWarned value and then
-     * sends that value to the user as an embed.
-     * <p>
-     * This command can only be used by users with the {@code BAN_MEMBERS} permission.
-     *
-     * @param event the event of the command
-     */
-
-    /**
      * Handles {@code /warn warn_user user reason} command. Saves the value under the given user,
      * given guild and add +1 to the number of warns the user has.
      * <p>
@@ -82,7 +73,7 @@ public class WarnCommand extends SlashCommandAdapter {
                 WarnsRecord warnRecord = context.newRecord(Warns.WARNS)
                     .setUserid(userId)
                     .setGuildId(guild.getIdLong())
-                    .setWarningAmount(warningAmount);
+                    .setWarningAmount(warningAmount i++);
                 logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
                         author.getUser().getAsTag(), author.getId(), target.getAsTag(),
                         target.getId(), reason);
