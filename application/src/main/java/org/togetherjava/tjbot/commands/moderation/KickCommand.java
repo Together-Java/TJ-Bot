@@ -27,12 +27,14 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
     private static final String TARGET_OPTION = "user";
     private static final String REASON_OPTION = "reason";
+    private static final String COMMAND_NAME = "kick";
+    private static final String ACTION_VERB = "kick";
 
     /**
      * Constructs an instance.
      */
     public KickCommand() {
-        super("kick", "Kicks the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
@@ -92,10 +94,10 @@ public final class KickCommand extends SlashCommandAdapter {
             handleAbsentTarget(event);
             return;
         }
-        if (!ModerationUtils.handleCanInteractWithTarget("kick", bot, author, target, event)) {
+        if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
             return;
         }
-        if (!ModerationUtils.handleHasPermissions("kick", Permission.KICK_MEMBERS, bot, author,
+        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot, author,
                 guild, event)) {
             return;
         }
