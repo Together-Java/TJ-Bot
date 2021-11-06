@@ -21,6 +21,7 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -43,23 +44,42 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
+    private static final String YOUTUBE_TOGETHER_NAME = " YouTube Together";
+    public static final String POKER_NAME = "Poker";
+    public static final String BETRAYAL_IO_NAME = "Betrayal.io";
+    public static final String FISHINGTON_IO_NAME = "Fishington.io";
+    public static final String CHESS_CG_2_DEV = "Chess / CG 2 Dev";
+    public static final String AWKWORD_NAME = "Awkword";
+    public static final String SPELLCAST_NAME = "Spellcast";
+    public static final String DOODLECREW_NAME = "Doodlecrew";
+    public static final String WORDSNACK_NAME = "Wordsnack";
+    public static final String LETTERTILE_NAME = "Lettertile";
+
+
+    private static final List<Command.Choice> VC_APPLICATIONS =
+            List.of(new Command.Choice(YOUTUBE_TOGETHER_NAME, YOUTUBE_TOGETHER_NAME),
+                    new Command.Choice(POKER_NAME, POKER_NAME),
+                    new Command.Choice(BETRAYAL_IO_NAME, BETRAYAL_IO_NAME),
+                    new Command.Choice(FISHINGTON_IO_NAME, FISHINGTON_IO_NAME),
+                    new Command.Choice(CHESS_CG_2_DEV, CHESS_CG_2_DEV),
+                    new Command.Choice(AWKWORD_NAME, AWKWORD_NAME),
+                    new Command.Choice(SPELLCAST_NAME, SPELLCAST_NAME),
+                    new Command.Choice(DOODLECREW_NAME, DOODLECREW_NAME),
+                    new Command.Choice(WORDSNACK_NAME, WORDSNACK_NAME),
+                    new Command.Choice(LETTERTILE_NAME, LETTERTILE_NAME));
+
+
     /**
      * List comes from <a href="https://github.com/DV8FromTheWorld/JDA/pull/1628">the "Implement
      * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
      * our best bet.
      */
-    private static final List<Command.Choice> VC_APPLICATIONS =
-            List.of(new Command.Choice("YouTube Together", "755600276941176913"),
-                    new Command.Choice("Poker", "755827207812677713"),
-                    new Command.Choice("Betrayal.io", "773336526917861400"),
-                    new Command.Choice("Fishington.io", "814288819477020702"),
-                    new Command.Choice("Chess / CG 2 Dev", "832012586023256104"),
-                    new Command.Choice("Awkword", "879863881349087252"),
-                    new Command.Choice("Spellcast", "852509694341283871"),
-                    new Command.Choice("Doodlecrew", "878067389634314250"),
-                    new Command.Choice("Wordsnack", "879863976006127627"),
-                    new Command.Choice("Lettertile", "879863686565621790"));
-
+    private static final Map<String, String> VC_APPLICATION_TO_ID = Map.of(YOUTUBE_TOGETHER_NAME,
+            "755600276941176913", POKER_NAME, "755827207812677713", BETRAYAL_IO_NAME,
+            "773336526917861400", FISHINGTON_IO_NAME, "814288819477020702", CHESS_CG_2_DEV,
+            "832012586023256104", AWKWORD_NAME, "879863881349087252", SPELLCAST_NAME,
+            "852509694341283871", DOODLECREW_NAME, "878067389634314250", WORDSNACK_NAME,
+            "879863976006127627", LETTERTILE_NAME, "879863686565621790");
 
     private static final List<OptionData> inviteOptions = List.of(
             new OptionData(OptionType.STRING, MAX_USES_OPTION,
@@ -147,17 +167,24 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             return;
         }
 
-        OptionMapping usedOption = (applicationOption != null) ? applicationOption : idOption;
 
-        handleSubcommand(event, voiceChannel, usedOption, maxUses, maxAge);
+        String applicationId;
+
+        if (applicationOption != null) {
+            applicationId = VC_APPLICATION_TO_ID.get(applicationOption.getAsString());
+        } else {
+            applicationId = idOption.getAsString();
+        }
+
+        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge);
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
-            @NotNull VoiceChannel voiceChannel, @NotNull OptionMapping option,
+            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
             @Nullable Integer maxUses, @Nullable Integer maxAge) {
 
         voiceChannel.createInvite()
-            .setTargetApplication(option.getAsString())
+            .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
             .setMaxAge(maxAge)
             .flatMap(invite -> replyInvite(event, invite))
