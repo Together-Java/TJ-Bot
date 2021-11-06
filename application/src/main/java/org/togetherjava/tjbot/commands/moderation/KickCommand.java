@@ -8,10 +8,12 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+
 import java.util.Objects;
 
 
@@ -21,7 +23,6 @@ import java.util.Objects;
  * <p>
  * The command fails if the user triggering it is lacking permissions to either kick other users or
  * to kick the specific given user (for example a moderator attempting to kick an admin).
- *
  */
 public final class KickCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(KickCommand.class);
@@ -78,6 +79,25 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
+    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
+    private static boolean handleChecks(@NotNull Member bot, @NotNull Member author,
+            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
+            @NotNull Interaction event) {
+        // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.
+        if (target == null) {
+            handleAbsentTarget(event);
+            return false;
+        }
+        if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot, author,
+                guild, event)) {
+            return false;
+        }
+        return ModerationUtils.handleReason(reason, event);
+    }
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
@@ -89,22 +109,9 @@ public final class KickCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.
-        if (target == null) {
-            handleAbsentTarget(event);
+        if (!handleChecks(bot, author, target, reason, guild, event)) {
             return;
         }
-        if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
-            return;
-        }
-        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot, author,
-                guild, event)) {
-            return;
-        }
-        if (!ModerationUtils.handleReason(reason, event)) {
-            return;
-        }
-
-        kickUser(target, author, reason, guild, event);
+        kickUser(Objects.requireNonNull(target), author, reason, guild, event);
     }
 }
