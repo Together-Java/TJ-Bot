@@ -18,12 +18,11 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.DatabaseException;
-import org.togetherjava.tjbot.db.generated.tables.Warns;
-import org.togetherjava.tjbot.db.generated.tables.records.WarnsRecord;
 
 import java.awt.*;
 import java.util.Objects;
 import java.util.Optional;
+
 
 public class WarnCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(WarnCommand.class);
@@ -43,21 +42,9 @@ public class WarnCommand extends SlashCommandAdapter {
         super("warn", "warns the user", SlashCommandVisibility.GUILD);
         this.database = database;
 
-        getData().addSubcommands(new SubcommandData(WARN_USER, "Used to warn the user")
-            .addOption(OptionType.USER, WARN_USER_OPTION, "The user to warn", true)
-            .addOption(OptionType.STRING, WARN_REASON_OPTION, "The reason for the warning", true),
-                new SubcommandData(RETRIEVE_WARNS_OPTION, "Uses to retrieve a warn for a member")
-                    .addOption(OptionType.USER, RETRIEVE_USER_OPTION,
-                            "The warns for the user you want", true));
-    }
-
-    @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        switch (Objects.requireNonNull(event.getSubcommandName())) {
-            case WARN_USER -> handleWarnCommand(event);
-            case RETRIEVE_WARNS_OPTION -> handleRetrieveWarnCommand(event);
-            default -> throw new AssertionError();
-        }
+        getData()
+                .addOption(OptionType.USER, WARN_USER_OPTION, "The user to warn", true)
+                .addOption(OptionType.STRING, WARN_REASON_OPTION, "The reason for the warning", true);
     }
 
     /**
@@ -68,52 +55,6 @@ public class WarnCommand extends SlashCommandAdapter {
      *
      * @param event the event of the command
      */
-    private void handleRetrieveWarnCommand(@NotNull CommandInteraction event) {
-        OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(RETRIEVE_USER_OPTION), "The target is null");
-        Member author = userOption.getAsMember();
-
-        // To prevent people from get users warn, only users with
-        // elevated permissions are allowed to use this command
-        if (handleHasPermissions(author, event, event.getGuild()).equals(false)) {
-            return;
-        }
-
-        User target = userOption.getAsUser();
-        try {
-            Optional<String> value = database.read(context -> {
-                try (var select = context.selectFrom(Warns.WARNS)) {
-                    return Optional
-                        .ofNullable(select.where(Warns.WARNS.USERID.eq(target.getId())).fetchOne())
-                        .map(WarnsRecord::getTimeswarned);
-                }
-            });
-
-            if (value.isEmpty()) {
-                event
-                    .replyEmbeds(new EmbedBuilder().setTitle("A behaved user")
-                        .setDescription(
-                                "No warns can be found for the user " + target.getAsTag() + ".")
-                        .setColor(Color.magenta)
-                        .build())
-                    .queue();
-                return;
-            }
-
-            event
-                .replyEmbeds(new EmbedBuilder()
-                    .setAuthor("This command was created by " + author.getEffectiveName(), null,
-                            author.getEffectiveAvatarUrl())
-                    .setTitle("The User " + target.getAsTag() + " warns")
-                    .setDescription("They have " + value.orElseThrow() + " number of warns")
-                    .setColor(Color.magenta)
-                    .build())
-                .queue();
-        } catch (DatabaseException e) {
-            logger.error("Failed to get the number of warns ", e);
-            event.reply("Sorry, something went wrong.").setEphemeral(true).queue();
-        }
-    }
 
     /**
      * Handles {@code /warn warn_user user reason} command. Saves the value under the given user,
@@ -123,7 +64,8 @@ public class WarnCommand extends SlashCommandAdapter {
      *
      * @param event the event of the command
      */
-    private void handleWarnCommand(@NotNull CommandInteraction event) {
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(WARN_USER_OPTION), "The target is null");
         Member author = userOption.getAsMember();
@@ -139,17 +81,17 @@ public class WarnCommand extends SlashCommandAdapter {
         User target = userOption.getAsUser();
         String reason = Objects.requireNonNull(event.getOption(WARN_REASON_OPTION)).getAsString();
         // TODO double check this part
-        int times = +1;
+        int warningAmount = 1;
 
         String userId = target.getId();
         dmUser(event.getJDA(), userId, reason, guild);
 
+        /**
         try {
             database.write(context -> {
-                WarnsRecord warnRecord = context.newRecord(Warns.WARNS)
-                    .setUserid(userId)
-                    .setGuildid(guild.getId())
-                    .setTimeswarned(Integer.toString(times));
+                WarnsRecord warnRecord =
+                        context.newRecord(Warns.WARNS).setUserid(userId).setGuildid(guild.getId());
+                // .setTimeswarned(warningAmount);
                 logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
                         author.getUser().getAsTag(), author.getId(), target.getAsTag(),
                         target.getId(), reason);
@@ -157,13 +99,14 @@ public class WarnCommand extends SlashCommandAdapter {
                     warnRecord.insert();
                 }
             });
-        } catch (DatabaseException e) {
-            logger.error("Failed to put message", e);
-            event.reply("Sorry, something went wrong.").setEphemeral(true).queue();
+        } finally {
+            event.reply("Warned " + target.getAsMention() + " for " + reason).queue();
         }
+         */
     }
 
-    private static void dmUser(JDA jda, String userId, String reason, Guild guild) {
+    private static void dmUser(@NotNull JDA jda, @NotNull String userId, @NotNull String reason,
+            @NotNull Guild guild) {
         jda.openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
                     """
@@ -174,16 +117,16 @@ public class WarnCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static Boolean handleHasPermissions(Member author, CommandInteraction event,
-            Guild guild) {
+    private static Boolean handleHasPermissions(@NotNull Member author,
+            @NotNull CommandInteraction event, @NotNull Guild guild) {
         if (!author.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("You need the MESSAGE_MANAGE permission to use this command")
+            event.reply("You need the BAN_MEMBERS permission to use this command")
                 .setEphemeral(true)
                 .queue();
             return false;
         }
         if (!guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("You need the MESSAGE_MANAGE permission to use this command")
+            event.reply("You need the BAN_MEMBERS permission to use this command")
                 .setEphemeral(true)
                 .queue();
             return false;
