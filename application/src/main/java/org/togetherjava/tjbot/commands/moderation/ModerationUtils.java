@@ -191,6 +191,7 @@ enum ModerationUtils {
          *
          * @return the verb of this action
          */
+        @NotNull
         String getVerb() {
             return verb;
         }
