@@ -127,7 +127,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
      */
     @Override
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
-        logger.debug("/free used by {} on channel {}", event.getUser().getName(),
+        logger.debug("/free used by {} on channel {}", event.getUser().getAsTag(),
                 event.getChannel().getName());
         if (!shouldHandle(event)) {
             return;
