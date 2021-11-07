@@ -181,6 +181,40 @@ public final class ModAuditLogRoutine {
             .orElseThrow();
     }
 
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleBanEntry(
+            @NotNull AuditLogEntry entry) {
+        // NOTE Temporary bans are realized as permanent bans with automated unban,
+        // hence we can not differentiate a permanent or a temporary ban here
+        return Optional.of(handleAction(Action.BAN, entry));
+    }
+
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleUnbanEntry(
+            @NotNull AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.UNBAN, entry));
+    }
+
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleKickEntry(
+            @NotNull AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.KICK, entry));
+    }
+
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleMuteEntry(
+            @NotNull AuditLogEntry entry) {
+        // NOTE Temporary mutes are realized as permanent mutes with automated unmute,
+        // hence we can not differentiate a permanent or a temporary mute here
+        return Optional.of(handleAction(Action.MUTE, entry));
+    }
+
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleUnmuteEntry(
+            @NotNull AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.UNMUTE, entry));
+    }
+
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
+            @NotNull AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.MESSAGE_DELETION, entry));
+    }
+
     /**
      * Starts the routine, automatically checking the audit logs on a schedule.
      */
@@ -272,26 +306,6 @@ public final class ModAuditLogRoutine {
         return maybeMessage.map(message -> message.flatMap(auditLogChannel::sendMessageEmbeds));
     }
 
-    @SuppressWarnings("MethodMayBeStatic")
-    private @NotNull Optional<RestAction<MessageEmbed>> handleBanEntry(
-            @NotNull AuditLogEntry entry) {
-        // NOTE Temporary bans are realized as permanent bans with automated unban,
-        // hence we can not differentiate a permanent or a temporary ban here
-        return Optional.of(handleAction(Action.BAN, entry));
-    }
-
-    @SuppressWarnings("MethodMayBeStatic")
-    private @NotNull Optional<RestAction<MessageEmbed>> handleUnbanEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.UNBAN, entry));
-    }
-
-    @SuppressWarnings("MethodMayBeStatic")
-    private @NotNull Optional<RestAction<MessageEmbed>> handleKickEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.KICK, entry));
-    }
-
     private @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
             @NotNull AuditLogEntry entry) {
         if (containsMutedRole(entry, AuditLogKey.MEMBER_ROLES_ADD)) {
@@ -301,26 +315,6 @@ public final class ModAuditLogRoutine {
             return handleUnmuteEntry(entry);
         }
         return Optional.empty();
-    }
-
-    @SuppressWarnings("MethodMayBeStatic")
-    private @NotNull Optional<RestAction<MessageEmbed>> handleMuteEntry(
-            @NotNull AuditLogEntry entry) {
-        // NOTE Temporary mutes are realized as permanent mutes with automated unmute,
-        // hence we can not differentiate a permanent or a temporary mute here
-        return Optional.of(handleAction(Action.MUTE, entry));
-    }
-
-    @SuppressWarnings("MethodMayBeStatic")
-    private @NotNull Optional<RestAction<MessageEmbed>> handleUnmuteEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.UNMUTE, entry));
-    }
-
-    @SuppressWarnings("MethodMayBeStatic")
-    private @NotNull Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.MESSAGE_DELETION, entry));
     }
 
     private boolean containsMutedRole(@NotNull AuditLogEntry entry, @NotNull AuditLogKey key) {
