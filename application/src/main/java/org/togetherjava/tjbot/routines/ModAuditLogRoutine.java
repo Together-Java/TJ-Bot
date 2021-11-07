@@ -354,10 +354,12 @@ public final class ModAuditLogRoutine {
             this.verb = verb;
         }
 
+        @NotNull
         String getTitle() {
             return title;
         }
 
+        @NotNull
         String getVerb() {
             return verb;
         }
