@@ -13,8 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 
 /**
@@ -30,6 +33,7 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "kick";
     private static final String ACTION_VERB = "kick";
+    private final Predicate<String> hasRequiredRole;
 
     /**
      * Constructs an instance.
@@ -39,6 +43,9 @@ public final class KickCommand extends SlashCommandAdapter {
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
+
+        hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
+            .asMatchPredicate();
     }
 
     private static void handleAbsentTarget(@NotNull Interaction event) {
@@ -80,7 +87,7 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private static boolean handleChecks(@NotNull Member bot, @NotNull Member author,
+    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
         // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.
@@ -91,7 +98,10 @@ public final class KickCommand extends SlashCommandAdapter {
         if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
             return false;
         }
-        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot, author,
+        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot,
                 guild, event)) {
             return false;
         }
