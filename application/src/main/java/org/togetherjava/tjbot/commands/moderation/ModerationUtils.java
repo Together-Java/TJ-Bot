@@ -150,6 +150,81 @@ enum ModerationUtils {
         return true;
     }
 
+    private static void handleAbsentTarget(@NotNull String actionVerb, @NotNull Interaction event) {
+        event
+            .reply("I can not %s the given user since they are not part of the guild anymore."
+                .formatted(actionVerb))
+            .setEphemeral(true)
+            .queue();
+    }
+
+    /**
+     * Checks whether the given bot and author have enough permission to change the roles of a given
+     * target. For example whether they have enough permissions to add a role to a user.
+     * <p>
+     * If not, it will handle the situation and respond to the user.
+     * <p>
+     * The checks include:
+     * <ul>
+     * <li>the role does not exist on the guild</li>
+     * <li>the target is not member of the guild</li>
+     * <li>the bot or author do not have enough permissions to interact with the target</li>
+     * <li>the bot or author do not have enough permissions to interact with the role</li>
+     * <li>the author does not have the required role for this interaction</li>
+     * <li>the bot does not have the MANAGE_ROLES permission</li>
+     * <li>the given reason is too long</li>
+     * </ul>
+     *
+     * @param role the role to change, or {@code null} if it does not exist on the guild
+     * @param actionVerb the interaction as verb, for example {@code "mute"} or {@code "unmute"}
+     * @param target the target user to change roles from, or {@code null} if the user is not member
+     *        of the guild
+     * @param bot the bot executing this interaction
+     * @param author the author attempting to interact with the target
+     * @param guild the guild this interaction is executed on
+     * @param hasRequiredRole a predicate used to identify required roles by their name
+     * @param reason the reason for this interaction
+     * @param event the event used to respond to the user
+     * @return Whether the bot and the author have enough permission
+     */
+    @SuppressWarnings({"MethodWithTooManyParameters", "BooleanMethodNameMustStartWithQuestion",
+            "squid:S107"})
+    static boolean handleRoleChangeChecks(@Nullable Role role, @NotNull String actionVerb,
+            @Nullable Member target, @NotNull Member bot, @NotNull Member author,
+            @NotNull Guild guild, @NotNull Predicate<? super String> hasRequiredRole,
+            @NotNull CharSequence reason, @NotNull Interaction event) {
+        if (role == null) {
+            event
+                .reply("Can not %s the user, unable to find the corresponding role on this server"
+                    .formatted(actionVerb))
+                .setEphemeral(true)
+                .queue();
+            logger.warn("The guild '{}' does not have a role to {} users.", guild.getName(),
+                    actionVerb);
+            return false;
+        }
+
+        // Member doesn't exist if attempting to change roles of a user who is not part of the guild
+        // anymore.
+        if (target == null) {
+            handleAbsentTarget(actionVerb, event);
+            return false;
+        }
+        if (!handleCanInteractWithTarget(actionVerb, bot, author, target, event)) {
+            return false;
+        }
+        if (!handleCanInteractWithRole(bot, author, role, event)) {
+            return false;
+        }
+        if (!handleHasAuthorRole(actionVerb, hasRequiredRole, author, event)) {
+            return false;
+        }
+        if (!handleHasBotPermissions(actionVerb, Permission.MANAGE_ROLES, bot, guild, event)) {
+            return false;
+        }
+        return ModerationUtils.handleReason(reason, event);
+    }
+
     /**
      * Checks whether the given author has enough permission to execute the given action. For
      * example whether they have enough permissions to ban users.
@@ -206,7 +281,7 @@ enum ModerationUtils {
 
     /**
      * Creates a message to be displayed as response to a moderation action.
-     *
+     * <p>
      * Essentially, it informs others about the action, such as "John banned Bob for playing with
      * the fire.".
      *
