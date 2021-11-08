@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
@@ -57,12 +58,16 @@ public final class TagSystem {
      * @param event the event to send messages with
      * @return whether the given tag is unknown to the system
      */
-    boolean isUnknownTagAndHandle(@NotNull String id, @NotNull Interaction event) {
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
+    boolean handleIsUnknownTag(@NotNull String id, @NotNull Interaction event) {
         if (hasTag(id)) {
             return false;
         }
-        // TODO Add fuzzy string matching suggestions (Levenshtein edit distance)
-        event.reply("Could not find any tag with id '%s'.".formatted(id))
+        String suggestionText = StringDistances.closestMatch(id, getAllIds())
+            .map(", did you perhaps mean '%s'?"::formatted)
+            .orElse(".");
+
+        event.reply("Could not find any tag with id '%s'%s".formatted(id, suggestionText))
             .setEphemeral(true)
             .queue();
         return true;
