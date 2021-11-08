@@ -86,6 +86,41 @@ enum ModerationUtils {
     }
 
     /**
+     * Checks whether the given author and bot can interact with the given role. For example whether
+     * they have enough permissions to add or remove this role to users.
+     * <p>
+     * If not, it will handle the situation and respond to the user.
+     *
+     * @param bot the bot attempting to interact with the user
+     * @param author the author triggering the command
+     * @param role the role to interact with
+     * @param event the event used to respond to the user
+     * @return Whether the author and bot can interact with the role
+     */
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
+    static boolean handleCanInteractWithRole(@NotNull Member bot, @NotNull Member author,
+            @NotNull Role role, @NotNull Interaction event) {
+        if (!author.canInteract(role)) {
+            event
+                .reply("The role %s is too powerful for you to interact with."
+                    .formatted(role.getAsMention()))
+                .setEphemeral(true)
+                .queue();
+            return false;
+        }
+
+        if (!bot.canInteract(role)) {
+            event
+                .reply("The role %s is too powerful for me to interact with."
+                    .formatted(role.getAsMention()))
+                .setEphemeral(true)
+                .queue();
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Checks whether the given bot has enough permission to execute the given action. For example
      * whether it has enough permissions to ban users.
      * <p>

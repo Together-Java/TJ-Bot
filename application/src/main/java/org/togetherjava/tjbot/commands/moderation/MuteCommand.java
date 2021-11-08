@@ -74,15 +74,6 @@ public final class MuteCommand extends SlashCommandAdapter {
                         """
                     .formatted(guild.getName(), reason);
 
-        Optional<Role> maybeMutedRole = getMutedRole(guild);
-        if (maybeMutedRole.isEmpty()) {
-            event.reply("Can not mute the user, unable to find a mute role on this server")
-                .setEphemeral(true)
-                .queue();
-            logger.warn("The guild '{}' does not have a mute role.", guild.getName());
-            return;
-        }
-
         event.getJDA()
             .openPrivateChannelById(targetUser.getId())
             .flatMap(channel -> channel.sendMessage(dmMessage))
@@ -91,7 +82,7 @@ public final class MuteCommand extends SlashCommandAdapter {
                 logger.info("'{}' ({}) muted the user '{}' ({}) in guild '{}' for reason '{}'.",
                         author.getUser().getAsTag(), author.getId(), targetUser.getAsTag(),
                         targetUser.getId(), guild.getName(), reason);
-                return guild.addRoleToMember(target, maybeMutedRole.orElseThrow())
+                return guild.addRoleToMember(target, getMutedRole(guild).orElseThrow())
                     .reason(reason)
                     .map(muteResult -> sendDmResult.isSuccess());
             })
@@ -109,12 +100,25 @@ public final class MuteCommand extends SlashCommandAdapter {
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
+        Optional<Role> maybeMutedRole = getMutedRole(guild);
+        if (maybeMutedRole.isEmpty()) {
+            event.reply("Can not mute the user, unable to find a mute role on this server")
+                .setEphemeral(true)
+                .queue();
+            logger.warn("The guild '{}' does not have a mute role.", guild.getName());
+            return false;
+        }
+
         // Member doesn't exist if attempting to mute a user who is not part of the guild anymore.
         if (target == null) {
             handleAbsentTarget(event);
             return false;
         }
         if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleCanInteractWithRole(bot, author, maybeMutedRole.orElseThrow(),
+                event)) {
             return false;
         }
         if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
