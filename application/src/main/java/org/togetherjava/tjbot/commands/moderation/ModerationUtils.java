@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.function.Predicate;
 
 /**
  * Utility class offering helpers revolving around user moderation, such as banning or kicking.
@@ -85,31 +86,21 @@ enum ModerationUtils {
     }
 
     /**
-     * Checks whether the given author and bot have enough permission to execute the given action.
-     * For example whether they have enough permissions to ban users.
+     * Checks whether the given bot has enough permission to execute the given action. For example
+     * whether it has enough permissions to ban users.
      * <p>
      * If not, it will handle the situation and respond to the user.
      *
      * @param actionVerb the interaction as verb, for example {@code "ban"} or {@code "kick"}
      * @param permission the required permission to check
      * @param bot the bot attempting to interact with the user
-     * @param author the author triggering the command
      * @param event the event used to respond to the user
-     * @return Whether the author and bot have the required permission
+     * @return Whether the bot has the required permission
      */
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    static boolean handleHasPermissions(@NotNull String actionVerb, @NotNull Permission permission,
-            @NotNull IPermissionHolder bot, @NotNull IPermissionHolder author, @NotNull Guild guild,
+    static boolean handleHasBotPermissions(@NotNull String actionVerb,
+            @NotNull Permission permission, @NotNull IPermissionHolder bot, @NotNull Guild guild,
             @NotNull Interaction event) {
-        if (!author.hasPermission(permission)) {
-            event
-                .reply("You can not %s users in this guild since you do not have the %s permission."
-                    .formatted(actionVerb, permission))
-                .setEphemeral(true)
-                .queue();
-            return false;
-        }
-
         if (!bot.hasPermission(permission)) {
             event
                 .reply("I can not %s users in this guild since I do not have the %s permission."
@@ -122,6 +113,33 @@ enum ModerationUtils {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Checks whether the given bot has enough permission to execute the given action. For example
+     * whether it has enough permissions to ban users.
+     * <p>
+     * If not, it will handle the situation and respond to the user.
+     *
+     * @param actionVerb the interaction as verb, for example {@code "ban"} or {@code "kick"}
+     * @param hasRequiredRole a predicate used to identify required roles by their name
+     * @param author the author attempting to interact with the target
+     * @param event the event used to respond to the user
+     * @return Whether the bot has the required permission
+     */
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
+    static boolean handleHasAuthorRole(@NotNull String actionVerb,
+            @NotNull Predicate<? super String> hasRequiredRole, @NotNull Member author,
+            @NotNull Interaction event) {
+        if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
+            return true;
+        }
+        event
+            .reply("You can not %s users in this guild since you do not have the required role."
+                .formatted(actionVerb))
+            .setEphemeral(true)
+            .queue();
+        return false;
     }
 
     /**

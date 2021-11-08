@@ -19,9 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
@@ -38,6 +41,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
+    private final Predicate<String> hasRequiredRole;
 
     /**
      * Constructs an instance.
@@ -50,6 +54,9 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
                     "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
+
+        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
+            .asMatchPredicate();
     }
 
     private static RestAction<InteractionHook> handleAlreadyBanned(@NotNull Guild.Ban ban,
@@ -119,7 +126,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private static boolean handleChecks(@NotNull Member bot, @NotNull Member author,
+    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
@@ -127,7 +134,10 @@ public final class BanCommand extends SlashCommandAdapter {
                 target, event)) {
             return false;
         }
-        if (!ModerationUtils.handleHasPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot, author,
+        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
                 guild, event)) {
             return false;
         }
