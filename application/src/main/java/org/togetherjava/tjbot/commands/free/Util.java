@@ -20,7 +20,7 @@ public class Util {
         interaction.reply(message).setEphemeral(true).queue();
     }
 
-    public static OffsetDateTime anHourAgo() {
+    public static @NotNull OffsetDateTime anHourAgo() {
         return OffsetDateTime.now().minus(1, ChronoUnit.HOURS);
     }
 
