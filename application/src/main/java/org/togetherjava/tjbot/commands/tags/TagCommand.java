@@ -39,7 +39,7 @@ public final class TagCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
-        if (tagSystem.isUnknownTagAndHandle(id, event)) {
+        if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
 
