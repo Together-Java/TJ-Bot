@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -52,12 +51,6 @@ public final class MuteCommand extends SlashCommandAdapter {
         isMuteRole = Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
     }
 
-    private static void handleAbsentTarget(@NotNull Interaction event) {
-        event.reply("I can not mute the given user since they are not part of the guild anymore.")
-            .setEphemeral(true)
-            .queue();
-    }
-
     private static void handleAlreadyMutedTarget(@NotNull Interaction event) {
         event.reply("The user is already muted.").setEphemeral(true).queue();
     }
@@ -100,39 +93,19 @@ public final class MuteCommand extends SlashCommandAdapter {
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
-        Optional<Role> maybeMutedRole = getMutedRole(guild);
-        if (maybeMutedRole.isEmpty()) {
-            event.reply("Can not mute the user, unable to find a mute role on this server")
-                .setEphemeral(true)
-                .queue();
-            logger.warn("The guild '{}' does not have a mute role.", guild.getName());
+        if (!ModerationUtils.handleRoleChangeChecks(getMutedRole(guild).orElse(null), ACTION_VERB,
+                target, bot, author, guild, hasRequiredRole, reason, event)) {
             return false;
         }
-
-        // Member doesn't exist if attempting to mute a user who is not part of the guild anymore.
-        if (target == null) {
-            handleAbsentTarget(event);
-            return false;
-        }
-        if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleCanInteractWithRole(bot, author, maybeMutedRole.orElseThrow(),
-                event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.MANAGE_ROLES, bot,
-                guild, event)) {
-            return false;
-        }
-        if (target.getRoles().stream().map(Role::getName).anyMatch(isMuteRole)) {
+        if (Objects.requireNonNull(target)
+            .getRoles()
+            .stream()
+            .map(Role::getName)
+            .anyMatch(isMuteRole)) {
             handleAlreadyMutedTarget(event);
             return false;
         }
-        return ModerationUtils.handleReason(reason, event);
+        return true;
     }
 
     @Override
