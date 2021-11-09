@@ -142,7 +142,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
             displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
             event.reply(UserStrings.MARK_AS_FREE.message()).queue();
         } else {
-            Util.sendErrorMessage(event, UserStrings.ALREADY_FREE_ERROR.message());
+            FreeUtil.sendErrorMessage(event, UserStrings.ALREADY_FREE_ERROR.message());
         }
     }
 
@@ -159,21 +159,21 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
             logger.debug(
                     "Slash command requested by {} in {}(channel: {}) before command is ready.",
                     event.getUser().getIdLong(), event.getGuild(), event.getChannel().getName());
-            Util.sendErrorMessage(event, UserStrings.NOT_READY_ERROR.message());
+            FreeUtil.sendErrorMessage(event, UserStrings.NOT_READY_ERROR.message());
             return false;
         }
         if (!channelMonitor.isMonitoringGuild(event.getGuild().getIdLong())) {
             logger.error(
                     "Slash command used by {} in {}(channel: {}) when guild is not configured for Free Command",
                     event.getUser().getIdLong(), event.getGuild(), event.getChannel().getName());
-            Util.sendErrorMessage(event,
+            FreeUtil.sendErrorMessage(event,
                     UserStrings.NOT_CONFIGURED_ERROR.formatted(event.getGuild().getName()));
             return false;
         }
         if (!channelMonitor.isMonitoringChannel(event.getChannel().getIdLong())) {
             logger.debug("'/free called in un-configured channel {}({})",
                     event.getGuild().getName(), event.getChannel().getName());
-            Util.sendErrorMessage(event, UserStrings.NOT_MONITORED_ERROR.message());
+            FreeUtil.sendErrorMessage(event, UserStrings.NOT_MONITORED_ERROR.message());
             return false;
         }
 
