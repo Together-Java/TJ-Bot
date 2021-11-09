@@ -153,7 +153,7 @@ public final class ChannelStatus {
         }
     }
 
-    // todo should I overload equals with equals(long) so that a Set may be used instead of a Map
+    // TODO should I overload equals with equals(long) so that a Set may be used instead of a Map
     /**
      * The identity of this object of solely based on the id value. Compares the long id's and
      * determines if they are equal.

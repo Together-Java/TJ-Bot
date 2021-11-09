@@ -20,8 +20,9 @@ public class FreeUtil {
         interaction.reply(message).setEphemeral(true).queue();
     }
 
-    public static @NotNull OffsetDateTime anHourAgo() {
-        return OffsetDateTime.now().minus(FreeCommandConfig.INACTIVE_DURATION, FreeCommandConfig.INACTIVE_UNIT);
+    public static @NotNull OffsetDateTime inactiveTimeLimit() {
+        return OffsetDateTime.now()
+            .minus(FreeCommandConfig.INACTIVE_DURATION, FreeCommandConfig.INACTIVE_UNIT);
     }
 
 }
