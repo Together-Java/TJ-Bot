@@ -3,9 +3,11 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,7 +56,7 @@ public final class FreeCommandConfig {
      *
      * @return an Unmodifiable List of Channel ID's
      */
-    public Collection<Long> getMonitoredChannels() {
-        return monitoredChannels;
+    public @NotNull Collection<Long> getMonitoredChannels() {
+        return Collections.unmodifiableCollection(monitoredChannels);
     }
 }
