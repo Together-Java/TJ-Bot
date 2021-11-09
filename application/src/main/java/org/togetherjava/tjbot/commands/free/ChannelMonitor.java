@@ -73,7 +73,8 @@ public final class ChannelMonitor {
 
     /**
      * This method tests whether a channel id is configured for monitoring in the free command
-     * system. To add a channel for monitoring see {@link org.togetherjava.tjbot.config.FreeCommandConfig} or
+     * system. To add a channel for monitoring see
+     * {@link org.togetherjava.tjbot.config.FreeCommandConfig} or
      * {@link #addChannelToMonitor(long)}.
      * 
      * @param channelId the id of the channel to test.
@@ -96,7 +97,10 @@ public final class ChannelMonitor {
 
     /**
      * This method tests if a channel is currently active by fetching the latest message and testing
-     * if it was posted more than an hour ago.
+     * if it was posted more recently than the configured time limit, see
+     * {@link FreeUtil#inactiveTimeLimit()} and
+     * {@link org.togetherjava.tjbot.config.FreeCommandConfig#INACTIVE_DURATION},
+     * {@link org.togetherjava.tjbot.config.FreeCommandConfig#INACTIVE_UNIT}.
      *
      * @param channel the channel to test.
      * @return {@code true} if the channel is inactive, false if it has received messages more
@@ -216,10 +220,7 @@ public final class ChannelMonitor {
      * @param guild the guild for which to test the channel statuses of.
      */
     public void updateStatusFor(@NotNull Guild guild) {
-        List<ChannelStatus> statusFor = guildMonitoredChannelsList(guild);
-
-        statusFor.stream()
-            .parallel()
+        guildMonitoredChannelsList(guild).parallelStream()
             .filter(ChannelStatus::isBusy)
             .map(ChannelStatus::getChannelId)
             .map(guild::getTextChannelById)
@@ -235,19 +236,20 @@ public final class ChannelMonitor {
      * @param guild the {@link Guild} for which to retrieve the TextChannel for.
      * @return the TextChannel where status messages are output in the specified guild.
      */
-    public TextChannel getStatusChannelFor(@NotNull final Guild guild) {
+    public @NotNull TextChannel getStatusChannelFor(@NotNull final Guild guild) {
         // TODO add error checking for invalid keys ??
         return guild.getTextChannelById(postStatusInChannel.get(guild.getIdLong()));
     }
 
     /**
-     * The toString method for this class, it prints out a list of the currently monitored channels
-     * and the channels the status are printed in. This is called on boot by as a debug level logger
+     * The toString method for this class, it generates a human-readable text string of the
+     * currently monitored channels and the channels the status are printed in.
      * 
-     * @return the string to print.
+     * @return the human-readable text string that describes this class.
      */
     @Override
     public String toString() {
+        // This is called on boot by as a debug level logger
         return "Monitoring Channels: %s%nDisplaying on Channels: %s".formatted(channelsToMonitor,
                 postStatusInChannel);
     }
