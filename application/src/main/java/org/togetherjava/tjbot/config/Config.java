@@ -27,6 +27,7 @@ public final class Config {
     private final String mutedRolePattern;
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
+    private final String tagManageRolePattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -37,7 +38,8 @@ public final class Config {
             @JsonProperty("modAuditLogChannelPattern") String modAuditLogChannelPattern,
             @JsonProperty("mutedRolePattern") String mutedRolePattern,
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
-            @JsonProperty("softModerationRolePattern") String softModerationRolePattern) {
+            @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
+            @JsonProperty("tagManageRolePattern") String tagManageRolePattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -46,6 +48,7 @@ public final class Config {
         this.mutedRolePattern = mutedRolePattern;
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
+        this.tagManageRolePattern = tagManageRolePattern;
     }
 
     /**
@@ -145,5 +148,15 @@ public final class Config {
      */
     public String getSoftModerationRolePattern() {
         return softModerationRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use the tag-manage command,
+     * such as creating or editing tags.
+     *
+     * @return the REGEX pattern
+     */
+    public String getTagManageRolePattern() {
+        return tagManageRolePattern;
     }
 }

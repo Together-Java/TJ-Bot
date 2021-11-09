@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.commands.tags;
 
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -15,11 +15,14 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
+import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Implements the {@code /tag-manage} command which allows management of tags, such as creating,
@@ -45,6 +48,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
     private final TagSystem tagSystem;
+    private final Predicate<String> hasRequiredRole;
 
     /**
      * Creates a new instance, using the given tag system as base.
@@ -55,6 +59,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
         super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
+        hasRequiredRole =
+                Pattern.compile(Config.getInstance().getTagManageRolePattern()).asMatchPredicate();
 
         // TODO Think about adding a "Are you sure"-dialog to 'edit', 'edit-with-message' and
         // 'delete'
@@ -118,9 +124,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member member = Objects.requireNonNull(event.getMember());
 
-        if (!member.hasPermission(Permission.MESSAGE_MANAGE)) {
-            event.reply(
-                    "Tags can only be managed by users who have the 'MESSAGE_MANAGE' permission.")
+        if (member.getRoles().stream().map(Role::getName).noneMatch(hasRequiredRole)) {
+            event.reply("Tags can only be managed by users with a corresponding role.")
                 .setEphemeral(true)
                 .queue();
             return;
