@@ -11,9 +11,9 @@ import java.util.stream.Stream;
 
 /**
  * A class responsible for monitoring the status of channels and reporting on their busy/free status
- * for use by {@link FreeCommand}
+ * for use by {@link FreeCommand}.
  */
-public class ChannelMonitor {
+public final class ChannelMonitor {
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private final Map<Long, ChannelStatus> channelsToMonitor;
     private final Map<Long, Long> postStatusInChannel;
@@ -39,9 +39,9 @@ public class ChannelMonitor {
      * stores the long id it requires, the method requires the actual {@link TextChannel} to be
      * passed because it needs to verify it as well as store the guild id.
      *
-     * This method also calls a method which updates the status of the channels in the {@link Guild}
-     * . So always add the status channel AFTER you have added all monitored channels for the guild,
-     * see {@link #addChannelToMonitor(long)}.
+     * This method also calls a method which updates the status of the channels in the
+     * {@link Guild}. So always add the status channel <strong>after</strong> you have added all
+     * monitored channels for the guild, see {@link #addChannelToMonitor(long)}.
      *
      * @param channel the channel the status message must be displayed in
      */
