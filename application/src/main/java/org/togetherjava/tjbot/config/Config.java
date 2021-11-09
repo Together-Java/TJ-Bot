@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,7 +45,7 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("freeCommand") FreeCommandConfig[] freeCommand) {
+            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -55,7 +55,7 @@ public final class Config {
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
-        this.freeCommand = Arrays.stream(freeCommand).toList();
+        this.freeCommand = Collections.unmodifiableList(freeCommand);
     }
 
     /**
@@ -175,6 +175,6 @@ public final class Config {
      *         guild.
      */
     public Collection<FreeCommandConfig> getFreeCommandConfig() {
-        return freeCommand;
+        return freeCommand; // already unmodifiable
     }
 }

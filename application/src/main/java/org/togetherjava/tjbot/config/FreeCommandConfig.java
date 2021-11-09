@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -34,11 +33,11 @@ public final class FreeCommandConfig {
     private final long statusChannel;
     private final List<Long> monitoredChannels;
 
-    @JsonCreator
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private FreeCommandConfig(@JsonProperty("statusChannel") long statusChannel,
-            @JsonProperty("monitoredChannels") long[] monitoredChannels) {
+            @JsonProperty("monitoredChannels") List<Long> monitoredChannels) {
         this.statusChannel = statusChannel;
-        this.monitoredChannels = Arrays.stream(monitoredChannels).boxed().toList();
+        this.monitoredChannels = Collections.unmodifiableList(monitoredChannels);
     }
 
     /**
@@ -57,6 +56,6 @@ public final class FreeCommandConfig {
      * @return an Unmodifiable List of Channel ID's
      */
     public @NotNull Collection<Long> getMonitoredChannels() {
-        return Collections.unmodifiableCollection(monitoredChannels);
+        return monitoredChannels; // already unmodifiable
     }
 }

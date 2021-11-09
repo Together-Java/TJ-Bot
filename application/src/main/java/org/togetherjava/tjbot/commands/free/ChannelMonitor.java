@@ -18,8 +18,6 @@ public final class ChannelMonitor {
     private final Map<Long, ChannelStatus> channelsToMonitor;
     private final Map<Long, Long> postStatusInChannel;
 
-
-
     ChannelMonitor() {
         postStatusInChannel = new HashMap<>(); // JDA required to fetch guildID
         channelsToMonitor = new HashMap<>();
@@ -132,7 +130,7 @@ public final class ChannelMonitor {
      *
      * @return a stream of guild id's
      */
-    public Stream<Long> guildIds() {
+    public @NotNull Stream<Long> guildIds() {
         return postStatusInChannel.keySet().stream();
     }
 
@@ -142,7 +140,7 @@ public final class ChannelMonitor {
      * 
      * @return a stream of channel id's
      */
-    public Stream<Long> statusIds() {
+    public @NotNull Stream<Long> statusIds() {
         return postStatusInChannel.values().stream();
     }
 
@@ -159,12 +157,9 @@ public final class ChannelMonitor {
      * Creates the status message (specific to the guild specified) that shows which channels are
      * busy/free.
      * <p>
-     * It gets the list of all channels in the guild and filters out all channels not being
-     * monitored (to get the correct channel order) it then updates the names of the channels in
-     * case they were changed on the guild.
-     * <p>
-     * If then iterates through all channels and checks which category they are in so that it can
-     * add the categories to the output too.
+     * It first updates the channel names, order and grouping(categories) according to
+     * {@link net.dv8tion.jda.api.JDA} for the monitored channels. So that the output is always
+     * consistent with remote changes.
      * 
      * @param guild the guild the message is intended for.
      * @return a string representing the busy/free status of channels in this guild. The String
