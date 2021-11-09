@@ -12,6 +12,17 @@ import java.util.stream.Stream;
 /**
  * A class responsible for monitoring the status of channels and reporting on their busy/free status
  * for use by {@link FreeCommand}.
+ *
+ * Channels for monitoring are added via {@link #addChannelToMonitor(long)} however the monitoring
+ * will not be accessible/visible until a channel in the same {@link Guild} is registered for the
+ * output via {@link #addChannelForStatus(TextChannel)}. This will all happen automatically for any
+ * channels listed in {@link org.togetherjava.tjbot.config.FreeCommandConfig}.
+ *
+ * When a status channel is added for a guild, all monitored channels for that guild are tested and
+ * an {@link IllegalStateException} is thrown if any of them are not {@link TextChannel}s.
+ *
+ * After successful configuration, any changes in busy/free status will automatically be displayed
+ * in the configured {@code Status Channel} for that guild.
  */
 public final class ChannelMonitor {
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
@@ -19,7 +30,7 @@ public final class ChannelMonitor {
     private final Map<Long, Long> postStatusInChannel;
 
     ChannelMonitor() {
-        postStatusInChannel = new HashMap<>(); // JDA required to fetch guildID
+        postStatusInChannel = new HashMap<>(); // JDA required to populate map
         channelsToMonitor = new HashMap<>();
     }
 
@@ -50,9 +61,11 @@ public final class ChannelMonitor {
 
     /**
      * This method tests whether a guild id is configured for monitoring in the free command system.
+     * To add a guild for monitoring see {@link org.togetherjava.tjbot.config.FreeCommandConfig} or
+     * {@link #addChannelForStatus(TextChannel)}.
      * 
      * @param guildId the id of the guild to test.
-     * @return {@code true} if the guild is configured in the system, {@code false} otherwise.
+     * @return whether the guild is configured in the free command system or not.
      */
     public boolean isMonitoringGuild(final long guildId) {
         return postStatusInChannel.containsKey(guildId);
@@ -60,7 +73,8 @@ public final class ChannelMonitor {
 
     /**
      * This method tests whether a channel id is configured for monitoring in the free command
-     * system.
+     * system. To add a channel for monitoring see {@link org.togetherjava.tjbot.config.FreeCommandConfig} or
+     * {@link #addChannelToMonitor(long)}.
      * 
      * @param channelId the id of the channel to test.
      * @return {@code true} if the channel is configured in the system, {@code false} otherwise.
@@ -94,12 +108,12 @@ public final class ChannelMonitor {
                     "Channel requested %s is not monitored by free channel"
                         .formatted(channel.getName()));
         }
-        // todo change the entire inactive test to work via restactions
+        // TODO change the entire inactive test to work via restactions
         return channel.getHistory()
             .retrievePast(1)
             .map(messages -> messages.get(0))
             .map(Message::getTimeCreated)
-            .map(createdTime -> createdTime.isBefore(FreeUtil.anHourAgo()))
+            .map(createdTime -> createdTime.isBefore(FreeUtil.inactiveTimeLimit()))
             .complete();
     }
 
@@ -180,7 +194,7 @@ public final class ChannelMonitor {
             if (category != null && !category.getName().equals(categoryName)) {
                 categoryName = category.getName();
                 // append the category name on a new line with markup for underlining
-                // fixme possible bug when not all channels are part of categories, may mistakenly
+                // FIXME possible bug when not all channels are part of categories, may mistakenly
                 // include uncategoried channels inside previous category. will an uncategoried
                 // channel return an empty string or null? javadocs dont say.
                 sb.append("\n__").append(categoryName).append("__\n");
@@ -222,7 +236,7 @@ public final class ChannelMonitor {
      * @return the TextChannel where status messages are output in the specified guild.
      */
     public TextChannel getStatusChannelFor(@NotNull final Guild guild) {
-        // todo add error checking for invalid keys ??
+        // TODO add error checking for invalid keys ??
         return guild.getTextChannelById(postStatusInChannel.get(guild.getIdLong()));
     }
 

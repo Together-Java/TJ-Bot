@@ -22,14 +22,14 @@ import org.togetherjava.tjbot.config.FreeCommandConfig;
 import java.awt.*;
 import java.util.*;
 
-// todo (can SlashCommandVisibility be narrower than GUILD?)
-// todo monitor all channels when list is empty? monitor none?
-// todo (use other emojis? use images?)
-// todo add command to add/remove/status channels to monitor?
-// todo test if message is a reply and don't mark as busy if it is
-// todo add button query to confirm that message is new question not additional info for existing
+// TODO (can SlashCommandVisibility be narrower than GUILD?)
+// TODO monitor all channels when list is empty? monitor none?
+// TODO (use other emojis? use images?)
+// TODO add command to add/remove/status channels to monitor?
+// TODO test if message is a reply and don't mark as busy if it is
+// TODO add button query to confirm that message is new question not additional info for existing
 // discussion before marking as busy
-// todo add scheduled tasks to check last message every 15mins and mark as free if 1hr (2hrs?) has
+// TODO add scheduled tasks to check last message every 15mins and mark as free if 1hr (2hrs?) has
 // passed
 
 /**
@@ -98,7 +98,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
     @Override
     public void onReady(@NotNull final ReadyEvent event) {
         final JDA jda = event.getJDA();
-        // todo remove this when onGuildMessageRecieved has another access point
+        // TODO remove this when onGuildMessageRecieved has another access point
         jda.addEventListener(this);
 
         initChannelsToMonitor();
@@ -136,7 +136,7 @@ public class FreeCommand extends SlashCommandAdapter implements EventListener {
         long id = event.getChannel().getIdLong();
         // do not need to test if key is present, shouldHandle(event) already does.
         if (channelMonitor.isChannelBusy(id)) {
-            // todo check if /free called by original author, if not put message asking if he
+            // TODO check if /free called by original author, if not put message asking if he
             // approves
             channelMonitor.setChannelFree(id);
             displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
