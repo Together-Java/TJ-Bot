@@ -83,7 +83,7 @@ public final class ChannelStatus {
      * <p>
      * The recommended value to use is {@link TextChannel#getAsMention()}.
      *
-     * @return The currently stored name of the channel, originally the long id as string.
+     * @return The currently stored name of the channel.
      */
     public @NotNull String getName() {
         return name;
@@ -155,7 +155,7 @@ public final class ChannelStatus {
 
     // TODO should I overload equals with equals(long) so that a Set may be used instead of a Map
     /**
-     * The identity of this object of solely based on the id value. Compares the long id's and
+     * The identity of this object is solely based on the id value. Compares the long id's and
      * determines if they are equal.
      * 
      * @param o the other object to test against
