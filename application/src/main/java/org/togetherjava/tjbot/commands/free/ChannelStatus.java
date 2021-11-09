@@ -90,7 +90,7 @@ public final class ChannelStatus {
     }
 
     private void setName(@NotNull final String name) {
-        this.name = Objects.requireNonNull(name);
+        this.name = name;
     }
 
     /**
