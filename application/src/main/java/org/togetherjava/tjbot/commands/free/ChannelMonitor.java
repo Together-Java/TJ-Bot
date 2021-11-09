@@ -99,7 +99,7 @@ public final class ChannelMonitor {
             .retrievePast(1)
             .map(messages -> messages.get(0))
             .map(Message::getTimeCreated)
-            .map(createdTime -> createdTime.isBefore(Util.anHourAgo()))
+            .map(createdTime -> createdTime.isBefore(FreeUtil.anHourAgo()))
             .complete();
     }
 

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,8 @@ import java.util.List;
 @SuppressWarnings("ClassCanBeRecord")
 @JsonRootName(value = "freeCommand")
 public final class FreeCommandConfig {
+    public static final long INACTIVE_DURATION = 1;
+    public static final ChronoUnit INACTIVE_UNIT = ChronoUnit.HOURS;
     private final long statusChannel;
     private final List<Long> monitoredChannels;
 

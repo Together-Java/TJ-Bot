@@ -2,13 +2,13 @@ package org.togetherjava.tjbot.commands.free;
 
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.config.FreeCommandConfig;
 
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 
-public class Util {
+public class FreeUtil {
     // private constructor to prevent this class getting instantiated
-    private Util() {}
+    private FreeUtil() {}
 
     /**
      * Helper method to easily send ephemeral messages to users.
@@ -21,7 +21,7 @@ public class Util {
     }
 
     public static @NotNull OffsetDateTime anHourAgo() {
-        return OffsetDateTime.now().minus(1, ChronoUnit.HOURS);
+        return OffsetDateTime.now().minus(FreeCommandConfig.INACTIVE_DURATION, FreeCommandConfig.INACTIVE_UNIT);
     }
 
 }

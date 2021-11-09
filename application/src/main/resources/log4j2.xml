@@ -21,9 +21,10 @@
         </Async>
     </Appenders>
     <Loggers>
-        <Root level="debug">
+        <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
+            <AppenderRef ref="AsyncHttp"/>
         </Root>
     </Loggers>
 </Configuration>
