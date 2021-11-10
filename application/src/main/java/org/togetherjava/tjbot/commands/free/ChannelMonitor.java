@@ -26,12 +26,12 @@ import java.util.stream.Stream;
  */
 public final class ChannelMonitor {
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
-    private final Map<Long, ChannelStatus> channelsToMonitor;
+    private final Map<Long, ChannelStatus> channelsToMonitorById;
     private final Map<Long, Long> postStatusInChannel;
 
     ChannelMonitor() {
         postStatusInChannel = new HashMap<>(); // JDA required to populate map
-        channelsToMonitor = new HashMap<>();
+        channelsToMonitorById = new HashMap<>();
     }
 
     /**
@@ -40,7 +40,7 @@ public final class ChannelMonitor {
      * @param channelId the id of the channel to monitor
      */
     public void addChannelToMonitor(final long channelId) {
-        channelsToMonitor.put(channelId, new ChannelStatus(channelId));
+        channelsToMonitorById.put(channelId, new ChannelStatus(channelId));
     }
 
     /**
@@ -81,7 +81,7 @@ public final class ChannelMonitor {
      * @return {@code true} if the channel is configured in the system, {@code false} otherwise.
      */
     public boolean isMonitoringChannel(final long channelId) {
-        return channelsToMonitor.containsKey(channelId);
+        return channelsToMonitorById.containsKey(channelId);
     }
 
     /**
@@ -92,7 +92,7 @@ public final class ChannelMonitor {
      * @return {@code true} if the channel is 'busy', false if the channel is 'free'.
      */
     public boolean isChannelBusy(final long channelId) {
-        return channelsToMonitor.get(channelId).isBusy();
+        return channelsToMonitorById.get(channelId).isBusy();
     }
 
     /**
@@ -107,7 +107,7 @@ public final class ChannelMonitor {
      *         recently than an hour ago.
      */
     public boolean isChannelInactive(@NotNull final TextChannel channel) {
-        if (!channelsToMonitor.containsKey(channel.getIdLong())) {
+        if (!channelsToMonitorById.containsKey(channel.getIdLong())) {
             throw new IllegalArgumentException(
                     "Channel requested %s is not monitored by free channel"
                         .formatted(channel.getName()));
@@ -129,7 +129,7 @@ public final class ChannelMonitor {
      * @param userId the id of the user changing the status to busy.
      */
     public void setChannelBusy(final long channelId, final long userId) {
-        channelsToMonitor.get(channelId).setBusy(userId);
+        channelsToMonitorById.get(channelId).setBusy(userId);
     }
 
     /**
@@ -139,7 +139,7 @@ public final class ChannelMonitor {
      * @param channelId the id for the channel status to modify.
      */
     public void setChannelFree(final long channelId) {
-        channelsToMonitor.get(channelId).setFree();
+        channelsToMonitorById.get(channelId).setFree();
     }
 
     /**
@@ -166,8 +166,8 @@ public final class ChannelMonitor {
         return guild.getChannels()
             .stream()
             .map(GuildChannel::getIdLong)
-            .filter(channelsToMonitor::containsKey)
-            .map(channelsToMonitor::get)
+            .filter(channelsToMonitorById::containsKey)
+            .map(channelsToMonitorById::get)
             .toList();
     }
 
@@ -250,7 +250,7 @@ public final class ChannelMonitor {
     @Override
     public String toString() {
         // This is called on boot by as a debug level logger
-        return "Monitoring Channels: %s%nDisplaying on Channels: %s".formatted(channelsToMonitor,
+        return "Monitoring Channels: %s%nDisplaying on Channels: %s".formatted(channelsToMonitorById,
                 postStatusInChannel);
     }
 }
