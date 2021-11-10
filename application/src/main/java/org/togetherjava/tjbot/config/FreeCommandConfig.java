@@ -33,6 +33,9 @@ import java.util.List;
 public final class FreeCommandConfig {
     public static final long INACTIVE_DURATION = 1;
     public static final ChronoUnit INACTIVE_UNIT = ChronoUnit.HOURS;
+    public static final long INACTIVE_TEST_INTERVAL = 15;
+    public static final ChronoUnit INACTIVE_TEST_UNIT = ChronoUnit.MINUTES;
+
     private final long statusChannel;
     private final List<Long> monitoredChannels;
 

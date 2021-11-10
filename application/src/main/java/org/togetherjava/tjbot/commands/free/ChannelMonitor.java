@@ -214,8 +214,9 @@ public final class ChannelMonitor {
      * currently busy and determines if the last time it was updated is more than an hour ago. If so
      * it changes the channel's status to free.
      * <p>
-     * This method is run automatically during startup and should be run on a 15minute schedule. The
-     * scheduled execution is not currently implemented
+     * This method is run automatically during startup and should be run on a set schedule, as
+     * defined in {@link org.togetherjava.tjbot.config.FreeCommandConfig}. The scheduled execution
+     * is not currently implemented
      * 
      * @param guild the guild for which to test the channel statuses of.
      */
@@ -250,7 +251,7 @@ public final class ChannelMonitor {
     @Override
     public String toString() {
         // This is called on boot by as a debug level logger
-        return "Monitoring Channels: %s%nDisplaying on Channels: %s".formatted(channelsToMonitorById,
-                postStatusInChannel);
+        return "Monitoring Channels: %s%nDisplaying on Channels: %s"
+            .formatted(channelsToMonitorById, postStatusInChannel);
     }
 }
