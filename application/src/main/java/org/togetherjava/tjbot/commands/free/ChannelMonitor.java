@@ -95,6 +95,14 @@ public final class ChannelMonitor {
         return channelsToMonitorById.get(channelId).isBusy();
     }
 
+    private ChannelStatus requiresIsMonitored(final long channelId) {
+        if (!channelsToMonitorById.containsKey(channelId)) {
+            throw new IllegalArgumentException(
+                    "Channel with id: %s is not monitored by free channel".formatted(channelId));
+        }
+        return channelsToMonitorById.get(channelId);
+    }
+
     /**
      * This method tests if a channel is currently active by fetching the latest message and testing
      * if it was posted more recently than the configured time limit, see
@@ -105,13 +113,12 @@ public final class ChannelMonitor {
      * @param channel the channel to test.
      * @return {@code true} if the channel is inactive, false if it has received messages more
      *         recently than an hour ago.
+     * @throws IllegalArgumentException if the channel passed is not monitored. See
+     *         {@link #addChannelToMonitor(long)}
      */
     public boolean isChannelInactive(@NotNull final TextChannel channel) {
-        if (!channelsToMonitorById.containsKey(channel.getIdLong())) {
-            throw new IllegalArgumentException(
-                    "Channel requested %s is not monitored by free channel"
-                        .formatted(channel.getName()));
-        }
+        requiresIsMonitored(channel.getIdLong());
+
         // TODO change the entire inactive test to work via restactions
         return channel.getHistory()
             .retrievePast(1)
@@ -127,9 +134,11 @@ public final class ChannelMonitor {
      * 
      * @param channelId the id for the channel status to modify.
      * @param userId the id of the user changing the status to busy.
+     * @throws IllegalArgumentException if the channel passed is not monitored. See
+     *         {@link #addChannelToMonitor(long)}
      */
     public void setChannelBusy(final long channelId, final long userId) {
-        channelsToMonitorById.get(channelId).setBusy(userId);
+        requiresIsMonitored(channelId).setBusy(userId);
     }
 
     /**
@@ -137,9 +146,11 @@ public final class ChannelMonitor {
      * {@link ChannelStatus#setFree()} for details.
      * 
      * @param channelId the id for the channel status to modify.
+     * @throws IllegalArgumentException if the channel passed is not monitored. See
+     *         {@link #addChannelToMonitor(long)}
      */
     public void setChannelFree(final long channelId) {
-        channelsToMonitorById.get(channelId).setFree();
+        requiresIsMonitored(channelId).setFree();
     }
 
     /**
