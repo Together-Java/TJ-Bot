@@ -42,13 +42,6 @@ public final class BytecodeCommand extends ListenerAdapter {
     private static final String COMMAND_PREFIX = "!bytecode ";
     private static final String CODE_BLOCK_OPENING = "```\n";
     private static final String CODE_BLOCK_CLOSING = "\n```";
-    /**
-     * Discord's message size limit (in characters).
-     *
-     * @see <a href=
-     *      "https://discord.com/developers/docs/resources/channel#create-message">discord.com/developers</a>
-     */
-    private static final int DISCORD_MESSAGE_LENGTH = 2000;
 
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
@@ -190,7 +183,7 @@ public final class BytecodeCommand extends ListenerAdapter {
 
                 disReply.delete().queue();
 
-                if (msgResult.length() <= DISCORD_MESSAGE_LENGTH) {
+                if (msgResult.length() <= Message.MAX_CONTENT_LENGTH) {
                     userMessage.reply(msgResult)
                         .mentionRepliedUser(false)
                         .queue(msg -> userToBotMessages.put(userMessage.getIdLong(),
@@ -200,7 +193,7 @@ public final class BytecodeCommand extends ListenerAdapter {
                 }
 
                 List<String> msgResults = takeApart(disassembled,
-                        DISCORD_MESSAGE_LENGTH - surroundInCodeBlock("").length());
+                        Message.MAX_CONTENT_LENGTH - surroundInCodeBlock("").length());
                 Iterator<String> iterator = msgResults.iterator();
                 List<Long> messageIds = new ArrayList<>(msgResults.size());
 
