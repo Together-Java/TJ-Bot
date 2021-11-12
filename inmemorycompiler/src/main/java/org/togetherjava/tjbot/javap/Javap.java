@@ -105,7 +105,8 @@ public final class Javap {
                     ex);
         }
 
-        return stringWriter.toString().replace(ANNOYING_WARNING_MESSAGE.formatted(TEMP_FILE_NAME), "");
+        return stringWriter.toString()
+            .replace(ANNOYING_WARNING_MESSAGE.formatted(TEMP_FILE_NAME), "");
     }
 
     /**

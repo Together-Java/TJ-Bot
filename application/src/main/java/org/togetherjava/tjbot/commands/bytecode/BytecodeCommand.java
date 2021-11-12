@@ -226,7 +226,8 @@ public final class BytecodeCommand extends ListenerAdapter {
      * }
      * </pre>
      */
-    private @NotNull List<@NotNull String> explodeEvery(@NotNull String message, int maxPartLength) {
+    private @NotNull List<@NotNull String> explodeEvery(@NotNull String message,
+            int maxPartLength) {
         List<String> result = new ArrayList<>();
         String[] lines = message.split("\n");
         int currentLength = 0;
