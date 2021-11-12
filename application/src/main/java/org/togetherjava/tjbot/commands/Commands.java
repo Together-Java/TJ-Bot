@@ -11,8 +11,8 @@ import org.togetherjava.tjbot.commands.tags.TagSystem;
 import org.togetherjava.tjbot.commands.tags.TagsCommand;
 import org.togetherjava.tjbot.db.Database;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Utility class that offers all commands that should be registered by the system. New commands have
@@ -40,8 +40,16 @@ public enum Commands {
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
-        return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
-                new TagCommand(tagSystem), new TagManageCommand(tagSystem),
-                new TagsCommand(tagSystem), new VcActivityCommand());
+        Collection<SlashCommand> commands = new ArrayList<>();
+
+        commands.add(new PingCommand());
+        commands.add(new DatabaseCommand(database));
+        commands.add(new TeXCommand());
+        commands.add(new TagCommand(tagSystem));
+        commands.add(new TagManageCommand(tagSystem));
+        commands.add(new TagsCommand(tagSystem));
+        commands.add(new VcActivityCommand());
+
+        return commands;
     }
 }
