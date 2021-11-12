@@ -89,9 +89,9 @@ public final class BytecodeCommand extends ListenerAdapter {
         TextChannel textChannel = message.getTextChannel();
         List<Long> myMessages = userToBotMessages.get(messageIdLong);
 
-        if (myMessages.size() == 0) {
+        if (myMessages.isEmpty()) {
             message.reply(
-                    "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).size() == 0`)")
+                    "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).isEmpty() == true`)")
                 .queue();
 
             return;
