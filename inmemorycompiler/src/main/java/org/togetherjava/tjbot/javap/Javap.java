@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
  * keep everything in-memory
  */
 public final class Javap {
+    // Hide constructor
+    public Javap() {}
+
     private static final String TEMP_FILE_NAME = "tmp";
     private static final String ANNOYING_WARNING_MESSAGE =
             "Warning: File /%s does not contain class %<s";

@@ -16,6 +16,9 @@ import java.util.List;
  * @see javax.tools.JavaCompiler
  */
 public final class InMemoryCompiler {
+    // Hide constructor
+    private InMemoryCompiler() {}
+
     private static final String TEMP_CLASS_NAME = "tmp";
     private static final JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
     private static final JavaFileManager standardFileManager =
@@ -45,7 +48,7 @@ public final class InMemoryCompiler {
 
         List<CompileInfo> compileInfos = new ArrayList<>();
 
-        if (collector.getDiagnostics().size() > 0) {
+        if (!collector.getDiagnostics().isEmpty()) {
             for (Diagnostic<? extends JavaFileObject> diagnostic : collector.getDiagnostics()) {
                 compileInfos.add(new CompileInfo(diagnostic));
             }
