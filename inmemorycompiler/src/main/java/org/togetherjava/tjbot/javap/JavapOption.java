@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.javap;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Enum that represents every possible javap executable option that does not include an argument.
  */
@@ -15,16 +17,16 @@ public enum JavapOption {
     SYSTEM_INFO("-sysinfo"),
     CONSTANTS("-constants");
 
-    private final String option;
+    private final @NotNull String option;
 
-    JavapOption(String option) {
+    JavapOption(@NotNull String option) {
         this.option = option;
     }
 
     /**
      * @return textual representation of the option
      */
-    public String getOption() {
+    public @NotNull String getOption() {
         return option;
     }
 }
