@@ -52,7 +52,7 @@ public final class BytecodeCommand extends ListenerAdapter {
 
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
-    private final Map<Long, List<Long>> userMessageToMyMessages = new HashMap<>();
+    private final Map<Long, List<Long>> userToBotMessages = new HashMap<>();
 
     // Fresh compile when a user sends a message with !bytecode ...
     @Override
@@ -78,7 +78,7 @@ public final class BytecodeCommand extends ListenerAdapter {
     public void onGuildMessageDelete(@NotNull GuildMessageDeleteEvent event) {
         long mesageIdLong = event.getMessageIdLong();
 
-        if (userMessageToMyMessages.containsKey(mesageIdLong)) {
+        if (userToBotMessages.containsKey(mesageIdLong)) {
             deleteMyMessages(mesageIdLong, event.getChannel());
         }
     }
@@ -89,12 +89,12 @@ public final class BytecodeCommand extends ListenerAdapter {
         Message message = event.getMessage();
         long messageIdLong = event.getMessageIdLong();
 
-        if (!userMessageToMyMessages.containsKey(messageIdLong)) {
+        if (!userToBotMessages.containsKey(messageIdLong)) {
             return;
         }
 
         TextChannel textChannel = message.getTextChannel();
-        List<Long> myMessages = userMessageToMyMessages.get(messageIdLong);
+        List<Long> myMessages = userToBotMessages.get(messageIdLong);
 
         if (myMessages.size() == 0) {
             message.reply(
@@ -125,21 +125,21 @@ public final class BytecodeCommand extends ListenerAdapter {
     }
 
     private void deleteMyMessages(@NotNull Long msgId, @NotNull TextChannel channel) {
-        if (!userMessageToMyMessages.containsKey(msgId)) {
+        if (!userToBotMessages.containsKey(msgId)) {
             return;
         }
 
-        channel.purgeMessagesById(userMessageToMyMessages.get(msgId)
+        channel.purgeMessagesById(userToBotMessages.get(msgId)
             .stream()
             .map(String::valueOf)
             .collect(Collectors.toList()));
 
-        userMessageToMyMessages.remove(msgId);
+        userToBotMessages.remove(msgId);
     }
 
     private void compile(@NotNull Message userMessage, @NotNull Message myMessage,
             @NotNull String content) {
-        userMessageToMyMessages.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
+        userToBotMessages.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
 
         CompilationResult result;
 
@@ -193,7 +193,7 @@ public final class BytecodeCommand extends ListenerAdapter {
                 if (msgResult.length() <= DISCORD_MESSAGE_LENGTH) {
                     userMessage.reply(msgResult)
                         .mentionRepliedUser(false)
-                        .queue(msg -> userMessageToMyMessages.put(userMessage.getIdLong(),
+                        .queue(msg -> userToBotMessages.put(userMessage.getIdLong(),
                                 List.of(msg.getIdLong())));
 
                     return;
@@ -216,7 +216,7 @@ public final class BytecodeCommand extends ListenerAdapter {
                         .queue(msg -> messageIds.add(msg.getIdLong()));
                 }
 
-                userMessageToMyMessages.put(userMessage.getIdLong(), messageIds);
+                userToBotMessages.put(userMessage.getIdLong(), messageIds);
             });
     }
 
@@ -226,7 +226,7 @@ public final class BytecodeCommand extends ListenerAdapter {
 
     /**
      * Example:
-     * 
+     *
      * <pre>
      * {@code
      * takeApart("Hello\nWorld!", 3) returns List("Hel", "lo", "Wor", "ld!")
