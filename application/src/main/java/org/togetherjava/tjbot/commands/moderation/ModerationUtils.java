@@ -97,7 +97,7 @@ enum ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the bot has the required permission
      */
-    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     static boolean handleHasBotPermissions(@NotNull String actionVerb,
             @NotNull Permission permission, @NotNull IPermissionHolder bot, @NotNull Guild guild,
             @NotNull Interaction event) {
@@ -110,6 +110,33 @@ enum ModerationUtils {
 
             logger.error("The bot does not have the '{}' permission on the guild '{}'.", permission,
                     guild.getName());
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether the given author has enough permission to execute the given action. For
+     * example whether they have enough permissions to ban users.
+     * <p>
+     * If not, it will handle the situation and respond to the user.
+     *
+     * @param actionVerb the interaction as verb, for example {@code "ban"} or {@code "kick"}
+     * @param permission the required permission to check
+     * @param author the author attempting to interact with the target user
+     * @param event the event used to respond to the user
+     * @return Whether the author has the required permission
+     */
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
+    static boolean handleHasAuthorPermissions(@NotNull String actionVerb,
+            @NotNull Permission permission, @NotNull IPermissionHolder author, @NotNull Guild guild,
+            @NotNull Interaction event) {
+        if (!author.hasPermission(permission)) {
+            event
+                .reply("You can not %s users in this guild since you do not have the %s permission."
+                    .formatted(actionVerb, permission))
+                .setEphemeral(true)
+                .queue();
             return false;
         }
         return true;

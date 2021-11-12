@@ -105,6 +105,10 @@ public final class KickCommand extends SlashCommandAdapter {
                 guild, event)) {
             return false;
         }
+        if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.KICK_MEMBERS,
+                author, guild, event)) {
+            return false;
+        }
         return ModerationUtils.handleReason(reason, event);
     }
 

@@ -141,6 +141,10 @@ public final class BanCommand extends SlashCommandAdapter {
                 guild, event)) {
             return false;
         }
+        if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.BAN_MEMBERS, author,
+                guild, event)) {
+            return false;
+        }
         return ModerationUtils.handleReason(reason, event);
     }
 
