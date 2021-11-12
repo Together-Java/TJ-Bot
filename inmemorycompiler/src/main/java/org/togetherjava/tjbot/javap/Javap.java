@@ -6,6 +6,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -79,7 +80,8 @@ public final class Javap {
      */
     public static @NotNull String disassemble(byte @NotNull [] bytes,
             @NotNull JavapOption @NotNull... options) throws ReflectionException {
-        PrintWriter log = new StringPrintWriter();
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter log = new PrintWriter(stringWriter);
 
         try {
             Object JavapTask = R_I_JavapTask();
@@ -103,7 +105,7 @@ public final class Javap {
                     ex);
         }
 
-        return log.toString().replace(ANNOYING_WARNING_MESSAGE.formatted(TEMP_FILE_NAME), "");
+        return stringWriter.toString().replace(ANNOYING_WARNING_MESSAGE.formatted(TEMP_FILE_NAME), "");
     }
 
     /**
