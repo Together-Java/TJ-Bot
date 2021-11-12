@@ -19,5 +19,7 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
         </Root>
+        <!--Binder is logging because of missing Setters on the Read-Only Classes, which is fine for us-->
+        <Logger name="com.vaadin.flow.data.binder.Binder" level="WARN"/>
     </Loggers>
 </Configuration>

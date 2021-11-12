@@ -46,7 +46,7 @@ dependencies {
     implementation project(':database')
     implementation project(':inmemorycompiler')
 
-    implementation 'net.dv8tion:JDA:4.3.0_334'
+    implementation 'net.dv8tion:JDA:4.3.0_339'
 
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
@@ -54,9 +54,17 @@ dependencies {
 
     implementation 'org.jooq:jooq:3.15.3'
 
+    implementation 'org.scilab.forge:jlatexmath:1.0.7'
+    implementation 'org.scilab.forge:jlatexmath-font-greek:1.0.7'
+    implementation 'org.scilab.forge:jlatexmath-font-cyrillic:1.0.7'
+
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.13.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
 
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.0.4'
+
+    testImplementation 'org.mockito:mockito-core:4.0.0'
+    testRuntimeOnly 'org.mockito:mockito-core:4.0.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
