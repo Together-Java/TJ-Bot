@@ -250,9 +250,15 @@ public final class ChannelMonitor {
      *
      * @param guild the {@link Guild} for which to retrieve the TextChannel for.
      * @return the TextChannel where status messages are output in the specified guild.
+     * @throws IllegalArgumentException if the guild passed has not configured in the free command
+     *         system, see {@link #addChannelForStatus(TextChannel)}
      */
     public @NotNull TextChannel getStatusChannelFor(@NotNull final Guild guild) {
-        // TODO add error checking for invalid keys ??
+        if (!guildIdToStatusChannel.containsKey(guild.getIdLong())) {
+            throw new IllegalArgumentException(
+                    "Guild %s is not configured in the free command system."
+                        .formatted(guild.getName()));
+        }
         return guild.getTextChannelById(guildIdToStatusChannel.get(guild.getIdLong()));
     }
 
