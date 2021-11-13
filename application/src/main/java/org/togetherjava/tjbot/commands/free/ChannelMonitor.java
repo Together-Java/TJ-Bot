@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Stream;
 
 
@@ -203,7 +204,7 @@ public final class ChannelMonitor {
         statusFor.forEach(channelStatus -> channelStatus.updateChannelName(guild));
 
         // dynamically separate channels by channel categories
-        StringBuilder sb = new StringBuilder();
+        StringJoiner content = new StringJoiner("\n");
         String categoryName = "";
         for (ChannelStatus status : statusFor) {
             Category category = guild.getGuildChannelById(status.getChannelId()).getParent();
@@ -213,12 +214,12 @@ public final class ChannelMonitor {
                 // FIXME possible bug when not all channels are part of categories, may mistakenly
                 // include uncategoried channels inside previous category. will an uncategoried
                 // channel return an empty string or null? javadocs dont say.
-                sb.append("\n__").append(categoryName).append("__\n");
+                content.add("\n__" + categoryName + "__");
             }
-            sb.append(status.toDiscord()).append("\n");
+            content.add(status.toDiscordContentRaw());
         }
 
-        return sb.toString();
+        return content.toString();
     }
 
     /**
