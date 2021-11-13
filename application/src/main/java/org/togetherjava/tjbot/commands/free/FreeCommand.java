@@ -219,7 +219,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         channelMonitor.guildIds().map(jda::getGuildById).forEach(channelMonitor::updateStatusFor);
     }
 
-    public String buildStatusMessage(@NotNull Guild guild) {
+    public @NotNull String buildStatusMessage(@NotNull Guild guild) {
         if (!channelMonitor.isMonitoringGuild(guild.getIdLong())) {
             throw new IllegalArgumentException(
                     "The guild '%s(%s)' is not configured in the free command system"
