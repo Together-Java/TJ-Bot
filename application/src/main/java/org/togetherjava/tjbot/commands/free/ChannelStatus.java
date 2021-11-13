@@ -95,8 +95,9 @@ public final class ChannelStatus {
      * The recommended value to use is {@link TextChannel#getAsMention()}
      * <p>
      * This method is called in multithreaded context, however the value is not expected to change
-     * regularly and will not break anything if it is incorrect for a read or two, so it has not
-     * been made thread safe.
+     * regularly and will not break anything if it is incorrect for a read or two, and it should be
+     * updated before use, which will happen in the using thread. So it has not been made thread
+     * safe.
      *
      * @param guild the {@link Guild} that the channel belongs to, to retrieve its name from.
      */
