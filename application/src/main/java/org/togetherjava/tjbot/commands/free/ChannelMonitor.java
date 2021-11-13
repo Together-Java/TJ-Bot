@@ -84,23 +84,24 @@ public final class ChannelMonitor {
         return channelsToMonitorById.containsKey(channelId);
     }
 
-    /**
-     * This is a delegation method to pass operations to {@link ChannelStatus}. see
-     * {@link ChannelStatus#isBusy()} for details.
-     *
-     * @param channelId the id for the channel to test.
-     * @return {@code true} if the channel is 'busy', false if the channel is 'free'.
-     */
-    public boolean isChannelBusy(final long channelId) {
-        return channelsToMonitorById.get(channelId).isBusy();
-    }
-
     private ChannelStatus requiresIsMonitored(final long channelId) {
         if (!channelsToMonitorById.containsKey(channelId)) {
             throw new IllegalArgumentException(
                     "Channel with id: %s is not monitored by free channel".formatted(channelId));
         }
         return channelsToMonitorById.get(channelId);
+    }
+
+    /**
+     * This method tests if channel status to busy, see {@link ChannelStatus#isBusy()} for details.
+     *
+     * @param channelId the id for the channel to test.
+     * @return {@code true} if the channel is 'busy', false if the channel is 'free'.
+     * @throws IllegalArgumentException if the channel passed is not monitored. See
+     *         {@link #addChannelToMonitor(long)}
+     */
+    public boolean isChannelBusy(final long channelId) {
+        return requiresIsMonitored(channelId).isBusy();
     }
 
     /**
@@ -112,7 +113,7 @@ public final class ChannelMonitor {
      *
      * @param channel the channel to test.
      * @return {@code true} if the channel is inactive, false if it has received messages more
-     *         recently than an hour ago.
+     *         recently than the configured duration.
      * @throws IllegalArgumentException if the channel passed is not monitored. See
      *         {@link #addChannelToMonitor(long)}
      */
@@ -129,8 +130,8 @@ public final class ChannelMonitor {
     }
 
     /**
-     * This is a delegation method to pass operations to {@link ChannelStatus}. see
-     * {@link ChannelStatus#setBusy(long)} for details.
+     * This method sets the channel's status to 'busy' see {@link ChannelStatus#setBusy(long)} for
+     * details.
      * 
      * @param channelId the id for the channel status to modify.
      * @param userId the id of the user changing the status to busy.
@@ -142,8 +143,8 @@ public final class ChannelMonitor {
     }
 
     /**
-     * This is a delegation method to pass operations to {@link ChannelStatus}. see
-     * {@link ChannelStatus#setFree()} for details.
+     * This method sets the channel's status to 'free', see {@link ChannelStatus#setFree()} for
+     * details.
      * 
      * @param channelId the id for the channel status to modify.
      * @throws IllegalArgumentException if the channel passed is not monitored. See
@@ -221,9 +222,10 @@ public final class ChannelMonitor {
     }
 
     /**
-     * This method checks all channels in a guild that is currently being monitored and are
-     * currently busy and determines if the last time it was updated is more than an hour ago. If so
-     * it changes the channel's status to free.
+     * This method checks all channels in a guild that are currently being monitored and are busy
+     * and determines if the last time it was updated is more recent than the configured time see
+     * {@link org.togetherjava.tjbot.config.FreeCommandConfig#INACTIVE_UNIT}. If so it changes the
+     * channel's status to free, see {@link ChannelMonitor#isChannelInactive(TextChannel)}.
      * <p>
      * This method is run automatically during startup and should be run on a set schedule, as
      * defined in {@link org.togetherjava.tjbot.config.FreeCommandConfig}. The scheduled execution
