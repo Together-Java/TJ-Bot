@@ -100,6 +100,12 @@ public final class ChannelStatus {
      * safe.
      *
      * @param guild the {@link Guild} that the channel belongs to, to retrieve its name from.
+     * @throws IllegalArgumentException if the guild has not been added, see
+     *         {@link ChannelMonitor#addChannelForStatus(TextChannel)}
+     * @throws IllegalStateException if a channel was added, see
+     *         {@link ChannelMonitor#addChannelToMonitor(long)}, that is not a {@link TextChannel}.
+     *         Since addChannelToMonitor does not access the {@link JDA} the entry can only be
+     *         validated before use instead of on addition.
      */
     public void updateChannelName(@NotNull final Guild guild) {
         GuildChannel channel = guild.getGuildChannelById(channelId);
