@@ -12,15 +12,10 @@ import java.util.Objects;
  * Class that tracks the current free/busy status of a channel that requires monitoring.
  */
 public final class ChannelStatus {
-    public static final boolean FREE = false;
-    public static final boolean BUSY = true;
-
-    private static final String FREE_STATUS = ":green_circle:";
-    private static final String BUSY_STATUS = ":red_circle:";
 
     private final long channelId;
-    private long userId;
-    private volatile boolean isBusy;
+    private volatile long userId;
+    private volatile ChannelStatusType status;
     private String name;
 
     /**
@@ -35,7 +30,7 @@ public final class ChannelStatus {
      */
     ChannelStatus(final long id) {
         channelId = id;
-        isBusy = BUSY;
+        status = ChannelStatusType.BUSY;
         name = Long.toString(id);
     }
 
@@ -50,7 +45,7 @@ public final class ChannelStatus {
      * @return the current stored status related to the channel id.
      */
     public boolean isBusy() {
-        return isBusy;
+        return status.isBusy();
     }
 
     /**
@@ -132,8 +127,8 @@ public final class ChannelStatus {
      * @param userId the id of the user who changed the status to 'busy'
      */
     public void setBusy(final long userId) {
-        if (isBusy == FREE) {
-            this.isBusy = BUSY;
+        if (status.isFree()) {
+            status = ChannelStatusType.BUSY;
             this.userId = userId;
         }
     }
@@ -148,8 +143,8 @@ public final class ChannelStatus {
      * This functionality is not yet implemented so the id can be anything atm.
      */
     public void setFree() {
-        if (isBusy == BUSY) {
-            isBusy = FREE;
+        if (status.isBusy()) {
+            status = ChannelStatusType.FREE;
         }
     }
 
@@ -179,7 +174,7 @@ public final class ChannelStatus {
      */
     @Override
     public @NotNull String toString() {
-        return "ChannelStatus{ %s is %s }".formatted(name, isBusy ? "busy" : "not busy");
+        return "ChannelStatus{ %s is %s }".formatted(name, status.description());
     }
 
     /**
@@ -190,7 +185,7 @@ public final class ChannelStatus {
      * @return a String representation of ChannelStatus, formatted for Discord
      */
     public @NotNull String toDiscordContentRaw() {
-        return "%s %s".formatted(isBusy ? BUSY_STATUS : FREE_STATUS, name);
+        return "%s %s".formatted(status.toDiscordContentRaw(), name);
     }
 
     /**
