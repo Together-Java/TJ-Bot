@@ -24,7 +24,7 @@ import java.util.List;
  *   }]
  * </pre>
  * 
- * Additional Guilds may add their settings by adding additional {@code {"statusChannel":... } }
+ * Additional Guilds may add their settings by adding additional {@code {"statusChannel": ... } }
  *
  * The long channel ID can be found by right-clicking on the channel and selecting 'Copy ID'
  */
