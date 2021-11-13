@@ -189,7 +189,7 @@ public final class ChannelStatus {
      *
      * @return a String representation of ChannelStatus, formatted for Discord
      */
-    public @NotNull String toDiscord() {
+    public @NotNull String toDiscordContentRaw() {
         return "%s %s".formatted(isBusy ? BUSY_STATUS : FREE_STATUS, name);
     }
 
