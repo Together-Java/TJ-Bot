@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,6 +199,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         MessageEmbed embed = MessageUtils.generateEmbed(STATUS_TITLE, messageTxt,
                 channel.getJDA().getSelfUser(), FREE_COLOR);
 
+        // FIXME need an if call before getLatestMessageId
         long latestMessageId = channel.getLatestMessageIdLong();
         Optional<Message> statusMessage = getStatusMessageIn(channel);
         if (statusMessage.isPresent()) {
@@ -266,18 +268,12 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     private @NotNull Optional<Message> getStatusMessageIn(@NotNull TextChannel channel) {
-        if (channelToStatusMessage.containsKey(channel.getIdLong())) {
-            Long id = channelToStatusMessage.get(channel.getIdLong());
-            if (id == null) {
-                return Optional.empty();
-            }
-            Message message = channel.getHistoryAround(id, 1).complete().getMessageById(id);
-            if (message == null) {
-                return Optional.empty();
-            }
-            return Optional.of(message);
+        if (!channelToStatusMessage.containsKey(channel.getIdLong())) {
+            return findExistingStatusMessage(channel);
         }
-        return findExistingStatusMessage(channel);
+        return Optional.ofNullable(channelToStatusMessage.get(channel.getIdLong()))
+            .map(channel::retrieveMessageById)
+            .map(RestAction::complete);
     }
 
     private @NotNull Optional<Message> findExistingStatusMessage(@NotNull TextChannel channel) {
