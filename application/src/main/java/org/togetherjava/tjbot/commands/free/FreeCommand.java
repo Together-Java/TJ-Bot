@@ -287,6 +287,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             .map(history -> history.stream()
                 .filter(message -> !message.getEmbeds().isEmpty())
                 .filter(message -> message.getAuthor().equals(channel.getJDA().getSelfUser()))
+                // FIXME the equals is not working, i believe its because there is no getTitleRaw()
                 // .filter(message -> STATUS_TITLE.equals(message.getEmbeds().get(0).getTitle()))
                 .findFirst())
             .complete();
@@ -317,7 +318,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     private void initStatusMessages(@NotNull final JDA jda) {
-        // not currently working, attempts to find the existing status message. (for all guilds)
+        // Attempts to find the existing status message, for all guilds. On launch.
         channelMonitor.statusIds()
             .map(jda::getTextChannelById)
             .filter(Objects::nonNull) // not necessary? this will hide errors in the config file
