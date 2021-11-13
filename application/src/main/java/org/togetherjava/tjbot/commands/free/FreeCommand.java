@@ -148,8 +148,11 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
     /**
      * Method to test event to see if it should be processed.
-     *
+     * <p>
      * Will respond to users describing the problem if the event should not be processed.
+     * <p>
+     * This checks if the command system is ready to process events, if the event was triggered in a
+     * monitored guild and in a monitored channel.
      *
      * @param event the event to test for validity.
      * @return true if the event should be processed false otherwise.
