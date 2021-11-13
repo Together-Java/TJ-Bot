@@ -27,10 +27,10 @@ import java.util.stream.Stream;
 public final class ChannelMonitor {
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private final Map<Long, ChannelStatus> channelsToMonitorById;
-    private final Map<Long, Long> postStatusInChannel;
+    private final Map<Long, Long> guildIdToStatusChannel;
 
     ChannelMonitor() {
-        postStatusInChannel = new HashMap<>(); // JDA required to populate map
+        guildIdToStatusChannel = new HashMap<>(); // JDA required to populate map
         channelsToMonitorById = new HashMap<>();
     }
 
@@ -55,7 +55,7 @@ public final class ChannelMonitor {
      * @param channel the channel the status message must be displayed in
      */
     public void addChannelForStatus(@NotNull final TextChannel channel) {
-        postStatusInChannel.put(channel.getGuild().getIdLong(), channel.getIdLong());
+        guildIdToStatusChannel.put(channel.getGuild().getIdLong(), channel.getIdLong());
         updateStatusFor(channel.getGuild());
     }
 
@@ -68,7 +68,7 @@ public final class ChannelMonitor {
      * @return whether the guild is configured in the free command system or not.
      */
     public boolean isMonitoringGuild(final long guildId) {
-        return postStatusInChannel.containsKey(guildId);
+        return guildIdToStatusChannel.containsKey(guildId);
     }
 
     /**
@@ -160,7 +160,7 @@ public final class ChannelMonitor {
      * @return a stream of guild id's
      */
     public @NotNull Stream<Long> guildIds() {
-        return postStatusInChannel.keySet().stream();
+        return guildIdToStatusChannel.keySet().stream();
     }
 
     /**
@@ -170,7 +170,7 @@ public final class ChannelMonitor {
      * @return a stream of channel id's
      */
     public @NotNull Stream<Long> statusIds() {
-        return postStatusInChannel.values().stream();
+        return guildIdToStatusChannel.values().stream();
     }
 
     private @NotNull List<ChannelStatus> guildMonitoredChannelsList(@NotNull final Guild guild) {
@@ -250,7 +250,7 @@ public final class ChannelMonitor {
      */
     public @NotNull TextChannel getStatusChannelFor(@NotNull final Guild guild) {
         // TODO add error checking for invalid keys ??
-        return guild.getTextChannelById(postStatusInChannel.get(guild.getIdLong()));
+        return guild.getTextChannelById(guildIdToStatusChannel.get(guild.getIdLong()));
     }
 
     /**
@@ -263,6 +263,6 @@ public final class ChannelMonitor {
     public String toString() {
         // This is called on boot by as a debug level logger
         return "Monitoring Channels: %s%nDisplaying on Channels: %s"
-            .formatted(channelsToMonitorById, postStatusInChannel);
+            .formatted(channelsToMonitorById, guildIdToStatusChannel);
     }
 }
