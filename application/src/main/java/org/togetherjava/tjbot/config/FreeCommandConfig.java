@@ -31,6 +31,7 @@ import java.util.List;
 @SuppressWarnings("ClassCanBeRecord")
 @JsonRootName(value = "freeCommand")
 public final class FreeCommandConfig {
+    // TODO make constants configurable via config file once config templating (#234) is pushed
     public static final long INACTIVE_DURATION = 1;
     public static final ChronoUnit INACTIVE_UNIT = ChronoUnit.HOURS;
     public static final long INACTIVE_TEST_INTERVAL = 15;
