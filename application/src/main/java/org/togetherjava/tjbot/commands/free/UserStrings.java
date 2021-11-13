@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
  * Class containing all the strings sent to users during their interaction with the free command
  * system. This does not include the logged strings or the exception strings.
  */
-public enum UserStrings {
+enum UserStrings {
     NEW_QUESTION("""
             Thank you for asking a question in an available channel.
             When a helper who can answer this question reads it they will help you.
