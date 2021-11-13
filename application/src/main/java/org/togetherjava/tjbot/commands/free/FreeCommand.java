@@ -289,11 +289,8 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
                 .findFirst())
             .complete();
 
-        if (result.isPresent()) {
-            channelToStatusMessage.put(channel.getIdLong(), result.get().getIdLong());
-        } else {
-            channelToStatusMessage.put(channel.getIdLong(), null);
-        }
+        channelToStatusMessage.put(channel.getIdLong(),
+                result.map(Message::getIdLong).orElse(null));
         return result;
     }
 
