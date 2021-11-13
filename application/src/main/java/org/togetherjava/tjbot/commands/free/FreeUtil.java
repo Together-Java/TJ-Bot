@@ -6,7 +6,8 @@ import org.togetherjava.tjbot.config.FreeCommandConfig;
 
 import java.time.OffsetDateTime;
 
-public class FreeUtil {
+public enum FreeUtil {
+    ;
     // private constructor to prevent this class getting instantiated
     private FreeUtil() {}
 
