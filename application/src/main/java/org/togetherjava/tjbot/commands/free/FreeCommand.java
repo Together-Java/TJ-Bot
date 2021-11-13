@@ -56,7 +56,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     private static final Logger logger = LoggerFactory.getLogger(FreeCommand.class);
 
     private static final String STATUS_TITLE = "**__CHANNEL STATUS__**\n\n";
-    private static final String FREE_COMMAND = "free";
+    private static final String COMMAND_NAME = "free";
     private static final Color FREE_COLOR = Color.decode("#CCCC00");
 
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
@@ -73,7 +73,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      * {@link FreeCommandConfig}) for further details.
      */
     public FreeCommand() {
-        super(FREE_COMMAND, "marks this channel as free for another user to ask a question",
+        super(COMMAND_NAME, "marks this channel as free for another user to ask a question",
                 SlashCommandVisibility.GUILD);
 
         channelToStatusMessage = new HashMap<>();
