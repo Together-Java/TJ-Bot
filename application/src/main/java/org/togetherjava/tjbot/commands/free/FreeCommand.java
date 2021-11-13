@@ -147,7 +147,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     /**
-     * Private method to test event to see if it should be processed.
+     * Method to test event to see if it should be processed.
      *
      * Will respond to users describing the problem if the event should not be processed.
      *
