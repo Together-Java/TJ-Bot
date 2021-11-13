@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -174,7 +175,7 @@ public final class Config {
      * @return a List of instances of FreeCommandConfig, each of the instances are separated by
      *         guild.
      */
-    public Collection<FreeCommandConfig> getFreeCommandConfig() {
+    public @NotNull Collection<FreeCommandConfig> getFreeCommandConfig() {
         return freeCommand; // already unmodifiable
     }
 }
