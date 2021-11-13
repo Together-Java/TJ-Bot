@@ -6,10 +6,11 @@ import org.togetherjava.tjbot.config.FreeCommandConfig;
 
 import java.time.OffsetDateTime;
 
+/**
+ * A class containing helper methods required by the commands.free package
+ */
 enum FreeUtil {
     ;
-    // private constructor to prevent this class getting instantiated
-    private FreeUtil() {}
 
     /**
      * Helper method to easily send ephemeral messages to users.
@@ -25,5 +26,4 @@ enum FreeUtil {
         return OffsetDateTime.now()
             .minus(FreeCommandConfig.INACTIVE_DURATION, FreeCommandConfig.INACTIVE_UNIT);
     }
-
 }
