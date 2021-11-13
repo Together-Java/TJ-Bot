@@ -235,6 +235,7 @@ public final class ChannelMonitor {
      * @param guild the guild for which to test the channel statuses of.
      */
     public void updateStatusFor(@NotNull Guild guild) {
+        // TODO add automation after Routine support (#235) is pushed
         guildMonitoredChannelsList(guild).parallelStream()
             .filter(ChannelStatus::isBusy)
             .map(ChannelStatus::getChannelId)
