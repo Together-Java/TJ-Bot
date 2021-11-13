@@ -215,7 +215,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         }
     }
 
-    private void checkBusyStatusAllChannels(JDA jda) {
+    private void checkBusyStatusAllChannels(@NotNull JDA jda) {
         channelMonitor.guildIds().map(jda::getGuildById).forEach(channelMonitor::updateStatusFor);
     }
 
