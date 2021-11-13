@@ -263,7 +263,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         }
     }
 
-    private Optional<Message> getStatusMessageIn(@NotNull TextChannel channel) {
+    private @NotNull Optional<Message> getStatusMessageIn(@NotNull TextChannel channel) {
         if (channelToStatusMessage.containsKey(channel.getIdLong())) {
             Long id = channelToStatusMessage.get(channel.getIdLong());
             if (id == null) {
