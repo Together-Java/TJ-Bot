@@ -129,7 +129,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
         logger.debug("/free used by {} on channel {}", event.getUser().getAsTag(),
                 event.getChannel().getName());
-        if (!shouldHandle(event)) {
+        if (!handleShouldBeProcessed(event)) {
             return;
         }
 
@@ -154,7 +154,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      * @param event the event to test for validity.
      * @return true if the event should be processed false otherwise.
      */
-    private boolean shouldHandle(@NotNull final SlashCommandEvent event) {
+    private boolean handleShouldBeProcessed(@NotNull final SlashCommandEvent event) {
         if (!isReady) {
             logger.debug(
                     "Slash command requested by {} in {}(channel: {}) before command is ready.",
