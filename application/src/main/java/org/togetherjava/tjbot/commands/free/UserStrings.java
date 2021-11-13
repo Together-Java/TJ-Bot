@@ -1,8 +1,7 @@
 package org.togetherjava.tjbot.commands.free;
 
 import org.jetbrains.annotations.NotNull;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Class containing all the strings sent to users during their interaction with the free command
