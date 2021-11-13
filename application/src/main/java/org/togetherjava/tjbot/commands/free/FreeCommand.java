@@ -52,7 +52,7 @@ import java.util.*;
  * channel may be one of the monitored channels however it is recommended that a different channel
  * is used.
  */
-public class FreeCommand extends SlashCommandAdapter implements EventListener {
+public final class FreeCommand extends SlashCommandAdapter implements EventListener {
     private static final Logger logger = LoggerFactory.getLogger(FreeCommand.class);
 
     private static final String STATUS_TITLE = "**__CHANNEL STATUS__**\n\n";
