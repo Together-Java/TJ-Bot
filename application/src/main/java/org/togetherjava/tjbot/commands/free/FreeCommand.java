@@ -135,15 +135,14 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
         long id = event.getChannel().getIdLong();
         // do not need to test if key is present, shouldHandle(event) already does.
-        if (channelMonitor.isChannelBusy(id)) {
-            // TODO check if /free called by original author, if not put message asking if he
-            // approves
-            channelMonitor.setChannelFree(id);
-            displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
-            event.reply(UserStrings.MARK_AS_FREE.message()).queue();
-        } else {
+        if (!channelMonitor.isChannelBusy(id)) {
             FreeUtil.sendErrorMessage(event, UserStrings.ALREADY_FREE_ERROR.message());
+            return;
         }
+        // TODO check if /free called by original author, if not put message asking if he approves
+        channelMonitor.setChannelFree(id);
+        displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
+        event.reply(UserStrings.MARK_AS_FREE.message()).queue();
     }
 
     /**
