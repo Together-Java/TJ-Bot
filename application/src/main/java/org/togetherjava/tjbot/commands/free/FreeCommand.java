@@ -278,7 +278,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         return findExistingStatusMessage(channel);
     }
 
-    private Optional<Message> findExistingStatusMessage(@NotNull TextChannel channel) {
+    private @NotNull Optional<Message> findExistingStatusMessage(@NotNull TextChannel channel) {
         // will only run when bots starts, afterwards its stored in a map
         Optional<Message> result = channel.getHistory()
             .retrievePast(100)
