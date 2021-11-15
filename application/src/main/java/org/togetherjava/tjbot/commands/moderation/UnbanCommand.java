@@ -92,6 +92,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 guild, event)) {
             return false;
         }
+
         return ModerationUtils.handleReason(reason, event);
     }
 
