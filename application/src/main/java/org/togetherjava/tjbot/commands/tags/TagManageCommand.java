@@ -122,9 +122,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        Member member = Objects.requireNonNull(event.getMember());
-
-        if (member.getRoles().stream().map(Role::getName).noneMatch(hasRequiredRole)) {
+        if (!hasTagManageRole(Objects.requireNonNull(event.getMember()))) {
             event.reply("Tags can only be managed by users with a corresponding role.")
                 .setEphemeral(true)
                 .queue();
@@ -280,6 +278,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
             throw new AssertionError("Unknown tag status '%s'".formatted(requiredTagStatus));
         }
         return false;
+    }
+
+    private boolean hasTagManageRole(@NotNull Member member) {
+        return member.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole);
     }
 
     private enum TagStatus {
