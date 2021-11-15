@@ -47,35 +47,38 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
     private static void unban(@NotNull User target, @NotNull Member author, @NotNull String reason,
             @NotNull Guild guild, @NotNull Interaction event) {
-        String targetTag = target.getAsTag();
-
         guild.unban(target).reason(reason).queue(result -> {
             MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
                     ModerationUtils.Action.UNBAN, target, null, reason);
             event.replyEmbeds(message).queue();
 
             logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
-                    author.getUser().getAsTag(), author.getId(), targetTag, target.getId(),
+                    author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                     guild.getName(), reason);
-        }, unbanFailure -> {
-            if (unbanFailure instanceof ErrorResponseException errorResponseException) {
-                if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                    event.reply("The specified user does not exist.").setEphemeral(true).queue();
-                    logger.debug("Unable to unban the user '{}' because they do not exist.",
-                            targetTag);
-                    return;
-                }
-                if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
-                    event.reply("The specified user is not banned.").setEphemeral(true).queue();
-                    logger.debug("Unable to unban the user '{}' because they are not banned.",
-                            targetTag);
-                    return;
-                }
+        }, unbanFailure -> handleFailure(unbanFailure, target, event));
+    }
+
+    private static void handleFailure(@NotNull Throwable unbanFailure, @NotNull User target,
+            @NotNull Interaction event) {
+        String targetTag = target.getAsTag();
+        if (unbanFailure instanceof ErrorResponseException errorResponseException) {
+            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
+                event.reply("The specified user does not exist.").setEphemeral(true).queue();
+                logger.debug("Unable to unban the user '{}' because they do not exist.", targetTag);
+                return;
             }
-            event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
-            logger.warn("Something unexpected went wrong while trying to unban the user '{}'.",
-                    targetTag, unbanFailure);
-        });
+
+            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
+                event.reply("The specified user is not banned.").setEphemeral(true).queue();
+                logger.debug("Unable to unban the user '{}' because they are not banned.",
+                        targetTag);
+                return;
+            }
+        }
+
+        event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
+        logger.warn("Something unexpected went wrong while trying to unban the user '{}'.",
+                targetTag, unbanFailure);
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion"})
