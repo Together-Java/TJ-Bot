@@ -1,9 +1,8 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -13,6 +12,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.utils.Result;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -71,11 +72,20 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     @SuppressWarnings("MethodWithTooManyParameters")
-    private static RestAction<InteractionHook> banUser(@NotNull User target, @NotNull Member author,
-            @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild,
-            @NotNull SlashCommandEvent event) {
+    private static RestAction<InteractionHook> banUserFlow(@NotNull User target,
+            @NotNull Member author, @NotNull String reason, int deleteHistoryDays,
+            @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+        return sendDm(target, reason, guild, event)
+            .flatMap(hasSentDm -> banUser(target, author, reason, deleteHistoryDays, guild)
+                .map(banResult -> hasSentDm))
+            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
+            .flatMap(event::replyEmbeds);
+    }
+
+    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
+            @NotNull Guild guild, @NotNull GenericEvent event) {
         return event.getJDA()
-            .openPrivateChannelById(target.getIdLong())
+            .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been banned from the server %s.
@@ -84,22 +94,27 @@ public final class BanCommand extends SlashCommandAdapter {
                             """
                         .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(sendDmResult -> {
-                logger.info(
-                        "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
-                        author.getUser().getAsTag(), author.getId(), target.getAsTag(),
-                        target.getId(), guild.getName(), deleteHistoryDays, reason);
+            .map(Result::isSuccess);
+    }
 
-                return guild.ban(target, deleteHistoryDays, reason)
-                    .map(banResult -> sendDmResult.isSuccess());
-            })
-            .map(hasSentDm -> {
-                String dmNotice =
-                        Boolean.TRUE.equals(hasSentDm) ? "" : "(Unable to send them a DM.)";
-                return ModerationUtils.createActionResponse(author.getUser(),
-                        ModerationUtils.Action.BAN, target, dmNotice, reason);
-            })
-            .flatMap(event::replyEmbeds);
+    private static AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
+            @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild) {
+        logger.info(
+                "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
+                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                guild.getName(), deleteHistoryDays, reason);
+
+        return guild.ban(target, deleteHistoryDays, reason);
+    }
+
+    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull User target,
+            @NotNull Member author, @NotNull String reason) {
+        String dmNoticeText = "";
+        if (!hasSentDm) {
+            dmNoticeText = "(Unable to send them a DM.)";
+        }
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.BAN,
+                target, dmNoticeText, reason);
     }
 
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
@@ -175,7 +190,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
             return handleNotAlreadyBannedResponse(Objects
                 .requireNonNull(alreadyBanned.getFailure()), event, guild, target).orElseGet(
-                        () -> banUser(target, author, reason, deleteHistoryDays, guild, event));
+                        () -> banUserFlow(target, author, reason, deleteHistoryDays, guild, event));
         }).queue();
     }
 }

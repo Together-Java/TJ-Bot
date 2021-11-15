@@ -1,12 +1,14 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.utils.Result;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -54,11 +56,20 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static void kickUser(@NotNull Member target, @NotNull Member author,
+    private static void kickUserFlow(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
-        User targetUser = target.getUser();
-        event.getJDA()
-            .openPrivateChannelById(targetUser.getId())
+        sendDm(target, reason, guild, event)
+            .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
+                .map(kickResult -> hasSentDm))
+            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
+            .flatMap(event::replyEmbeds)
+            .queue();
+    }
+
+    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
+            @NotNull Guild guild, @NotNull GenericEvent event) {
+        return event.getJDA()
+            .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
@@ -67,23 +78,26 @@ public final class KickCommand extends SlashCommandAdapter {
                             """
                         .formatted(guild.getName(), reason)))
             .mapToResult()
-            .flatMap(sendDmResult -> {
-                logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
-                        author.getUser().getAsTag(), author.getId(), targetUser.getAsTag(),
-                        targetUser.getId(), guild.getName(), reason);
+            .map(Result::isSuccess);
+    }
 
-                return guild.kick(target, reason)
-                    .reason(reason)
-                    .map(kickResult -> sendDmResult.isSuccess());
-            })
-            .map(hasSentDm -> {
-                String dmNotice =
-                        Boolean.TRUE.equals(hasSentDm) ? "" : "(Unable to send them a DM.)";
-                return ModerationUtils.createActionResponse(author.getUser(),
-                        ModerationUtils.Action.KICK, targetUser, dmNotice, reason);
-            })
-            .flatMap(event::replyEmbeds)
-            .queue();
+    private static AuditableRestAction<Void> kickUser(@NotNull Member target,
+            @NotNull Member author, @NotNull String reason, @NotNull Guild guild) {
+        logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
+                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
+                target.getId(), guild.getName(), reason);
+
+        return guild.kick(target, reason).reason(reason);
+    }
+
+    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
+            @NotNull Member author, @NotNull String reason) {
+        String dmNoticeText = "";
+        if (!hasSentDm) {
+            dmNoticeText = "(Unable to send them a DM.)";
+        }
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.KICK,
+                target.getUser(), dmNoticeText, reason);
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
@@ -126,6 +140,6 @@ public final class KickCommand extends SlashCommandAdapter {
         if (!handleChecks(bot, author, target, reason, guild, event)) {
             return;
         }
-        kickUser(Objects.requireNonNull(target), author, reason, guild, event);
+        kickUserFlow(Objects.requireNonNull(target), author, reason, guild, event);
     }
 }
