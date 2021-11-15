@@ -26,5 +26,6 @@
 * Logging
   * [[View the logs]]
   * [[Setup Log Viewer]]
+* [[Edit the Config]]
 * [[Shutdown or restart of the bot]]
 * [[Reset or edit the databases]]
