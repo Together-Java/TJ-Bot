@@ -169,34 +169,45 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
         String applicationId;
+        String applicationName;
 
         if (applicationOption != null) {
-            applicationId = VC_APPLICATION_TO_ID.get(applicationOption.getAsString());
+            applicationName = applicationOption.getAsString();
+            applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
             applicationId = idOption.getAsString();
+            applicationName = applicationId;
+
+            // Get the application name from the ID
+            for (var entry : VC_APPLICATION_TO_ID.entrySet()) {
+                if (applicationId.equals(entry.getValue())) {
+                    applicationName = entry.getKey();
+                    break;
+                }
+            }
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge);
+        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Integer maxUses, @Nullable Integer maxAge) {
+            @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
             .setMaxAge(maxAge)
-            .flatMap(invite -> replyInvite(event, invite))
+            .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
     }
 
     private static @NotNull ReplyAction replyInvite(@NotNull SlashCommandEvent event,
-            @NotNull Invite invite) {
+            @NotNull Invite invite, @NotNull String applicationName) {
         return event.reply("""
-                I wish you a lot of fun, here's the invite: %s
-                If it says the activity ended, click on the URL instead.
-                 """.formatted(invite.getUrl()));
+                %s wants to start %s.
+                Feel free to join by clicking %s, enjoy!
+                 """.formatted(event.getMember(), applicationName, invite.getUrl()));
     }
 
     private static void handleErrors(@NotNull SlashCommandEvent event,
