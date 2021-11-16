@@ -1,12 +1,13 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.utils.Result;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -56,34 +57,45 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         event.reply("The user is not muted.").setEphemeral(true).queue();
     }
 
-    private void unmuteUser(@NotNull Member target, @NotNull Member author, @NotNull String reason,
-            @NotNull Guild guild, @NotNull SlashCommandEvent event) {
-        User targetUser = target.getUser();
+    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
+            @NotNull Guild guild, @NotNull GenericEvent event) {
         String dmMessage = """
                 Hey there, you have been unmuted in the server %s.
                 This means you can now send messages in the server again.
                 The reason for the unmute is: %s
                 """.formatted(guild.getName(), reason);
-
-        event.getJDA()
-            .openPrivateChannelById(targetUser.getId())
+        return event.getJDA()
+            .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(dmMessage))
             .mapToResult()
-            .flatMap(sendDmResult -> {
-                logger.info("'{}' ({}) unmuted the user '{}' ({}) in guild '{}' for reason '{}'.",
-                        author.getUser().getAsTag(), author.getId(), targetUser.getAsTag(),
-                        targetUser.getId(), guild.getName(), reason);
+            .map(Result::isSuccess);
+    }
 
-                return guild.removeRoleFromMember(target, getMutedRole(guild).orElseThrow())
-                    .reason(reason)
-                    .map(unmuteResult -> sendDmResult.isSuccess());
-            })
-            .map(hasSentDm -> {
-                String dmNotice =
-                        Boolean.TRUE.equals(hasSentDm) ? "" : "(Unable to send them a DM.)";
-                return ModerationUtils.createActionResponse(author.getUser(),
-                        ModerationUtils.Action.UNMUTE, targetUser, dmNotice, reason);
-            })
+    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
+            @NotNull Member author, @NotNull String reason) {
+        String dmNoticeText = "";
+        if (!hasSentDm) {
+            dmNoticeText = "(Unable to send them a DM.)";
+        }
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.UNMUTE,
+                target.getUser(), dmNoticeText, reason);
+    }
+
+    private AuditableRestAction<Void> unmuteUser(@NotNull Member target, @NotNull Member author,
+            @NotNull String reason, @NotNull Guild guild) {
+        logger.info("'{}' ({}) unmuted the user '{}' ({}) in guild '{}' for reason '{}'.",
+                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
+                target.getId(), guild.getName(), reason);
+
+        return guild.removeRoleFromMember(target, getMutedRole(guild).orElseThrow()).reason(reason);
+    }
+
+    private void unmuteUserFlow(@NotNull Member target, @NotNull Member author,
+            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+        sendDm(target, reason, guild, event)
+            .flatMap(hasSentDm -> unmuteUser(target, author, reason, guild)
+                .map(banResult -> hasSentDm))
+            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
             .flatMap(event::replyEmbeds)
             .queue();
     }
@@ -121,7 +133,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         if (!handleChecks(bot, author, target, reason, guild, event)) {
             return;
         }
-        unmuteUser(Objects.requireNonNull(target), author, reason, guild, event);
+        unmuteUserFlow(Objects.requireNonNull(target), author, reason, guild, event);
     }
 
     private @NotNull Optional<Role> getMutedRole(@NotNull Guild guild) {
