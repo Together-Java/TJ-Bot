@@ -140,7 +140,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     private void rawTag(@NotNull SlashCommandEvent event) {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
-        if (tagSystem.isUnknownTagAndHandle(id, event)) {
+        if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
 
@@ -263,7 +263,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private boolean isWrongTagStatusAndHandle(@NotNull TagStatus requiredTagStatus,
             @NotNull String id, @NotNull Interaction event) {
         if (requiredTagStatus == TagStatus.EXISTS) {
-            return tagSystem.isUnknownTagAndHandle(id, event);
+            return tagSystem.handleIsUnknownTag(id, event);
         } else if (requiredTagStatus == TagStatus.NOT_EXISTS) {
             if (tagSystem.hasTag(id)) {
                 event.reply("The tag with id '%s' already exists.".formatted(id))

@@ -6,14 +6,17 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.WarnCommand;
+import org.togetherjava.tjbot.commands.moderation.BanCommand;
+import org.togetherjava.tjbot.commands.moderation.KickCommand;
+import org.togetherjava.tjbot.commands.moderation.UnbanCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
 import org.togetherjava.tjbot.commands.tags.TagSystem;
 import org.togetherjava.tjbot.commands.tags.TagsCommand;
 import org.togetherjava.tjbot.db.Database;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Utility class that offers all commands that should be registered by the system. New commands have
@@ -41,8 +44,20 @@ public enum Commands {
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
-        return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
-                new TagCommand(tagSystem), new TagManageCommand(tagSystem),
-                new TagsCommand(tagSystem), new VcActivityCommand(), new WarnCommand(database));
+        Collection<SlashCommand> commands = new ArrayList<>();
+
+        commands.add(new PingCommand());
+        commands.add(new DatabaseCommand(database));
+        commands.add(new TeXCommand());
+        commands.add(new TagCommand(tagSystem));
+        commands.add(new TagManageCommand(tagSystem));
+        commands.add(new TagsCommand(tagSystem));
+        commands.add(new VcActivityCommand());
+        commands.add(new KickCommand());
+        commands.add(new BanCommand());
+        commands.add(new UnbanCommand());
+        commands.add(database));
+
+        return commands;
     }
 }

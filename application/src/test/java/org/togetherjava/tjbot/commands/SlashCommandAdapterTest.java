@@ -4,14 +4,10 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import org.togetherjava.tjbot.commands.system.ComponentId;
-import org.togetherjava.tjbot.commands.system.ComponentIds;
+import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 final class SlashCommandAdapterTest {
     private static final String NAME = "foo";
@@ -67,30 +63,26 @@ final class SlashCommandAdapterTest {
 
     @Test
     void generateComponentId() {
-        String[] elements = {"foo", "bar", "baz"};
+        // Test that the adapter uses the given generator
         SlashCommandAdapter adapter = createAdapter();
+        adapter.acceptComponentIdGenerator((componentId, lifespan) -> "%s;%s;%s"
+            .formatted(componentId.commandName(), componentId.elements().size(), lifespan));
 
-        String componentIdText = adapter.generateComponentId(elements);
-        ComponentId componentId = assertDoesNotThrow(() -> ComponentIds.parse(componentIdText),
-                "generated component id seems to be invalid with the parser");
+        // No lifespan given
+        String[] elements = {"foo", "bar", "baz"};
+        String[] componentIdText = adapter.generateComponentId(elements).split(";");
+        assertEquals(3, componentIdText.length);
+        assertEquals(NAME, componentIdText[0]);
+        assertEquals(Integer.toString(elements.length), componentIdText[1]);
+        assertEquals(Lifespan.REGULAR.toString(), componentIdText[2]);
 
-        assertEquals(NAME, componentId.getCommandName(),
-                "expected command name to be part of the component id for routing");
-        assertEquals(Arrays.asList(elements), componentId.getElements(),
-                "expected all arguments to carry over the id");
-
-        // Empty elements
-        assertTrue(assertDoesNotThrow(() -> ComponentIds.parse(adapter.generateComponentId()),
-                "component id generation seems to have issues with empty elements").getElements()
-                    .isEmpty());
-
-        // Check that IDs are unique
-        Collection<Integer> ids = new HashSet<>();
-        for (int i = 0; i < UNIQUE_ID_ITERATIONS; i++) {
-            int id = assertDoesNotThrow(() -> ComponentIds.parse(adapter.generateComponentId()),
-                    "generated component id seems to be invalid with the parser").getId();
-            assertFalse(ids.contains(id), "id generator is supposed to create unique IDs");
-            ids.add(id);
+        // Explicit lifespan
+        for (Lifespan lifespan : Lifespan.values()) {
+            componentIdText = adapter.generateComponentId(lifespan, elements).split(";");
+            assertEquals(3, componentIdText.length);
+            assertEquals(NAME, componentIdText[0]);
+            assertEquals(Integer.toString(elements.length), componentIdText[1]);
+            assertEquals(lifespan.toString(), componentIdText[2]);
         }
     }
 }
