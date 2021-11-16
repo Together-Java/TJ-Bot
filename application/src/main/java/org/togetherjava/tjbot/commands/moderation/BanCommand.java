@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.BanSystem;
+import org.togetherjava.tjbot.db.generated.tables.records.BanSystemRecord;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -42,13 +45,17 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
+    private final Database database;
     private final Predicate<String> hasRequiredRole;
 
     /**
      * Constructs an instance.
+     * 
+     * @param database used to store the bans in the database
      */
-    public BanCommand() {
+    public BanCommand(Database database) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
+        this.database = database;
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to ban", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be banned", true)
@@ -163,6 +170,7 @@ public final class BanCommand extends SlashCommandAdapter {
         return ModerationUtils.handleReason(reason, event);
     }
 
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping targetOption =
@@ -192,5 +200,21 @@ public final class BanCommand extends SlashCommandAdapter {
                 .requireNonNull(alreadyBanned.getFailure()), event, guild, target).orElseGet(
                         () -> banUserFlow(target, author, reason, deleteHistoryDays, guild, event));
         }).queue();
+
+        try {
+            database.write(context -> {
+                BanSystemRecord banSystemRecord = context.newRecord(BanSystem.BAN_SYSTEM)
+                    .setUserid(target.getIdLong())
+                    .setAuthorId(author.getIdLong())
+                    .setGuildId(guild.getIdLong())
+                    .setBanReason(reason);
+                if (banSystemRecord.update() == 0) {
+                    banSystemRecord.insert();
+                }
+            });
+            logger.info("Saved the user '{}' to the ban system.", target.getAsTag());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 }

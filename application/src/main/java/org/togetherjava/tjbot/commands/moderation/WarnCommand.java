@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -16,12 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.Warns;
-import org.togetherjava.tjbot.db.generated.tables.records.WarnsRecord;
 
 import java.awt.*;
 import java.util.Objects;
-import java.util.Optional;
 
 
 public class WarnCommand extends SlashCommandAdapter {
@@ -55,52 +51,6 @@ public class WarnCommand extends SlashCommandAdapter {
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
         Member author = userOption.getAsMember();
         Guild guild = Objects.requireNonNull(event.getGuild());
-
-        // To prevent people from using warn content, only users with
-        // elevated permissions are allowed to use this command
-        if (!handleHasPermissions(author, event, guild)) {
-            return;
-        }
-
-        // /warn warn_user @Zabuzard who knows
-        User target = userOption.getAsUser();
-        Long userId = target.getIdLong();
-        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION)).getAsString();
-        Optional<Integer> currentWarningAmount = database.read(context -> {
-            try (var select = context.selectFrom(Warns.WARNS)) {
-                return Optional.ofNullable(select.where(Warns.WARNS.USERID.eq(userId)).fetchOne())
-                    .map(WarnsRecord::getWarningAmount);
-            }
-        });
-
-        Optional<Integer> newWarningAmount = currentWarningAmount.map(amount -> amount + 1);
-
-        dmUser(event.getJDA(), target.getId(), reason, guild);
-
-        try {
-            database.write(context -> {
-                WarnsRecord warnRecord = context.newRecord(Warns.WARNS)
-                    .setUserid(userId)
-                    .setGuildId(guild.getIdLong())
-                    .setWarnReason(reason)
-                    .setWarningAmount(newWarningAmount.get());
-                logger.info("The member '{}' ({}) warned the user '{}' ({}) for the reason '{}'",
-                        author.getUser().getAsTag(), author.getId(), target.getAsTag(),
-                        target.getId(), reason);
-
-                if (warnRecord.update() == 0) {
-                    warnRecord.insert();
-                }
-            });
-        } finally {
-            event
-                .replyEmbeds(new EmbedBuilder().setTitle("Success")
-                    .setDescription("Warned " + target.getAsMention() + " for " + reason)
-                    .setColor(Color.MAGENTA)
-                    .build())
-                .queue();
-        }
-
     }
 
     private static void dmUser(@NotNull JDA jda, @NotNull String userId, @NotNull String reason,
