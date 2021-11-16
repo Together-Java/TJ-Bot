@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.WarnSystem;
+import org.togetherjava.tjbot.db.generated.tables.records.WarnSystemRecord;
 
 import java.awt.*;
 import java.util.Objects;
@@ -49,8 +52,34 @@ public class WarnCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
+        User target = userOption.getAsUser();
         Member author = userOption.getAsMember();
         Guild guild = Objects.requireNonNull(event.getGuild());
+        String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
+            .getAsString();
+
+        if (!handleHasPermissions(author, event, guild)) {
+            return;
+        }
+
+        dmUser(event.getJDA(), target.getId(), reason, guild);
+
+        try {
+            database.write(context -> {
+                WarnSystemRecord warnSystemRecord = context.newRecord(WarnSystem.WARN_SYSTEM)
+                    .setUserid(target.getIdLong())
+                    .setGuildId(guild.getIdLong())
+                    .setWarnReason(reason)
+                    // TODO change this
+                    .setWarningAmount(1);
+                if (warnSystemRecord.update() == 0) {
+                    warnSystemRecord.insert();
+                }
+            });
+            logger.info("Saved the user '{}' to the ban system.", target.getAsTag());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
     private static void dmUser(@NotNull JDA jda, @NotNull String userId, @NotNull String reason,
