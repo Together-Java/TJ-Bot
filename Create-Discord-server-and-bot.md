@@ -56,7 +56,7 @@ Next up, you want to create your own bot.
 ![Confim add bot](https://i.imgur.com/vps9yLt.png)
 ![Token](https://i.imgur.com/l0UZPD3.png)
 ![scopes](https://i.imgur.com/8x6WjDT.png)
-![Bot permissions](https://i.imgur.com/32Rl6k4.png)
+![Bot permissions](https://i.imgur.com/pkTFsJq.png)
 ![url](https://i.imgur.com/j7yVKeM.png)
 
 ## Add bot to server
