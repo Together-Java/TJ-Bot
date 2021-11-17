@@ -58,7 +58,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
     private static final String STATUS_TITLE = "**__CHANNEL STATUS__**\n\n";
     private static final String COMMAND_NAME = "free";
-    private static final Color FREE_COLOR = Color.decode("#CCCC00");
+    private static final Color MESSAGE_HIGHLIGHT_COLOR = Color.decode("#CCCC00");
 
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private ChannelMonitor channelMonitor;
@@ -197,7 +197,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
         String messageTxt = buildStatusMessage(guild);
         MessageEmbed embed = MessageUtils.generateEmbed(STATUS_TITLE, messageTxt,
-                channel.getJDA().getSelfUser(), FREE_COLOR);
+                channel.getJDA().getSelfUser(), MESSAGE_HIGHLIGHT_COLOR);
 
         // FIXME need an if call before getLatestMessageId
         long latestMessageId = channel.getLatestMessageIdLong();
