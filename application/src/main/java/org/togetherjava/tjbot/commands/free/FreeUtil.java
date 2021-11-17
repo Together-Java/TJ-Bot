@@ -7,7 +7,7 @@ import org.togetherjava.tjbot.config.FreeCommandConfig;
 import java.time.OffsetDateTime;
 
 /**
- * A class containing helper methods required by the commands.free package
+ * A class containing helper methods required by the free package command.
  */
 enum FreeUtil {
     ;
