@@ -184,11 +184,15 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     /**
-     * Builds the message that will be displayed for users.
+     * Displays the message that will be displayed for users.
      * <p>
-     * This method dynamically builds the status message as per the current values on the guild,
-     * including the channel categories. This method will detect any changes made on the guild and
-     * represent those changes in the status message.
+     * This method detects if any messages have been posted in the channel below the status message.
+     * If that is the case this will delete the existing status message and post another one so that
+     * it's the last message in the channel.
+     * <p>
+     * If it cannot find an existing status message it will create a new one.
+     * <p>
+     * Otherwise it will edit the existing message.
      *
      * @param channel the text channel the status message will be posted in.
      */
@@ -199,24 +203,22 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         MessageEmbed embed = MessageUtils.generateEmbed(STATUS_TITLE, messageTxt,
                 channel.getJDA().getSelfUser(), MESSAGE_HIGHLIGHT_COLOR);
 
-        // FIXME need an if call before getLatestMessageId
-        long latestMessageId = channel.getLatestMessageIdLong();
-        Optional<Message> statusMessage = getStatusMessageIn(channel);
-        if (statusMessage.isPresent()) {
-            Message message = statusMessage.orElseThrow();
-            if (message.getIdLong() != latestMessageId) {
-                message.delete().queue();
-                channel.sendMessageEmbeds(embed)
-                    .queue(message1 -> channelIdToMessageIdForStatus.put(channel.getIdLong(),
-                            message1.getIdLong()));
-            } else {
-                message.editMessageEmbeds(embed).queue();
-            }
-        } else {
-            channel.sendMessageEmbeds(embed)
-                .queue(message1 -> channelIdToMessageIdForStatus.put(channel.getIdLong(),
-                        message1.getIdLong()));
+        getStatusMessageIn(channel).flatMap(this::deleteIfNotLatest)
+            .ifPresentOrElse(message -> message.editMessageEmbeds(embed).queue(),
+                    () -> channel.sendMessageEmbeds(embed)
+                        .queue(message -> channelIdToMessageIdForStatus.put(channel.getIdLong(),
+                                message.getIdLong())));
+    }
+
+    private @NotNull Optional<Message> deleteIfNotLatest(@NotNull Message message) {
+        if (FreeUtil.getLastMessageId(message.getTextChannel())
+            .filter(lastId -> message.getIdLong() != lastId)
+            .isPresent()) {
+
+            message.delete().queue();
+            return Optional.empty();
         }
+        return Optional.of(message);
     }
 
     private void checkBusyStatusAllChannels(@NotNull JDA jda) {
@@ -225,6 +227,10 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
     /**
      * Method for creating the message that shows the channel statuses for the specified guild.
+     * <p>
+     * This method dynamically builds the status message as per the current values on the guild,
+     * including the channel categories. This method will detect any changes made on the guild and
+     * represent those changes in the status message.
      *
      * @param guild the guild that the message is required for.
      * @return the message to display showing the channel statuses. Includes Discord specific
@@ -288,19 +294,18 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     private @NotNull Optional<Message> findExistingStatusMessage(@NotNull TextChannel channel) {
         // will only run when bots starts, afterwards its stored in a map
 
-        Optional<Message> result = channel.getHistory()
-            .retrievePast(FreeCommandConfig.MESSAGE_RETRIEVE_LIMIT)
-            .map(history -> history.stream()
+        Optional<Message> statusMessage = FreeUtil
+            .getChannelHistory(channel, FreeCommandConfig.MESSAGE_RETRIEVE_LIMIT)
+            .flatMap(history -> history.stream()
                 .filter(message -> !message.getEmbeds().isEmpty())
                 .filter(message -> message.getAuthor().equals(channel.getJDA().getSelfUser()))
                 // FIXME the equals is not working, i believe its because there is no getTitleRaw()
                 // .filter(message -> STATUS_TITLE.equals(message.getEmbeds().get(0).getTitle()))
-                .findFirst())
-            .complete();
+                .findFirst());
 
         channelIdToMessageIdForStatus.put(channel.getIdLong(),
-                result.map(Message::getIdLong).orElse(null));
-        return result;
+                statusMessage.map(Message::getIdLong).orElse(null));
+        return statusMessage;
     }
 
     private void initChannelsToMonitor() {
