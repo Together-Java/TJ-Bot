@@ -97,7 +97,7 @@ public final class TagSystem {
     // Execute closes resources; without curly braces on the lambda, the call would be ambiguous
     @SuppressWarnings({"resource", "java:S1602"})
     void deleteTag(String id) {
-        int deletedRecords = database.write(context -> {
+        int deletedRecords = database.writeAndProvide(context -> {
             return context.deleteFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).execute();
         });
         if (deletedRecords == 0) {
