@@ -43,9 +43,7 @@ final class DatabaseCommandTest {
     void setupDatabase() throws SQLException {
         // TODO This has to be done dynamically by the Flyway script, adjust gradle test settings
         database = new Database("jdbc:sqlite:");
-        database.write(context -> {
-            context.ddl(Storage.STORAGE).executeBatch();
-        });
+        database.write(context -> context.ddl(Storage.STORAGE).executeBatch());
     }
 
     @Test
@@ -131,11 +129,11 @@ final class DatabaseCommandTest {
     }
 
     private void assertValueInDatabase(@NotNull String key, @NotNull String value) {
-        Result<Record1<String>> results = database.read(context -> {
-            try (var select = context.select(Storage.STORAGE.VALUE)) {
-                return select.from(Storage.STORAGE).where(Storage.STORAGE.KEY.eq(key)).fetch();
-            }
-        });
+        Result<Record1<String>> results =
+                database.read(context -> context.select(Storage.STORAGE.VALUE)
+                    .from(Storage.STORAGE)
+                    .where(Storage.STORAGE.KEY.eq(key))
+                    .fetch());
         assertEquals(1, results.size());
         assertEquals(value, results.get(0).get(Storage.STORAGE.VALUE));
     }
