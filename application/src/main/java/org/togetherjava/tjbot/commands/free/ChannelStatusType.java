@@ -9,7 +9,7 @@ public enum ChannelStatusType {
     private final String description;
     private final String emoji;
 
-    ChannelStatusType(String description, String emoji) {
+    ChannelStatusType(@NotNull String description, @NotNull String emoji) {
         this.description = description;
         this.emoji = emoji;
     }
