@@ -115,9 +115,9 @@ public class AuditCommand extends SlashCommandAdapter {
      * @param event the event of the command
      */
     private void handleWarnSubCommand(@NotNull CommandInteraction event) {
-        OptionMapping userOption =
+        OptionMapping warnUserOption =
                 Objects.requireNonNull(event.getOption(WARN_USER_OPTION), OPTION_IS_NULL);
-        User target = userOption.getAsUser();
+        User target = warnUserOption.getAsUser();
         Guild guild = Objects.requireNonNull(event.getGuild(), GUILD_IS_NULL);
 
         Member bot = guild.getSelfMember();
@@ -192,9 +192,9 @@ public class AuditCommand extends SlashCommandAdapter {
      * @param event the event of the command
      */
     private void handleKickSubCommand(@NotNull CommandInteraction event) {
-        OptionMapping userOption =
+        OptionMapping kickUserOption =
                 Objects.requireNonNull(event.getOption(KICK_USER_OPTION), OPTION_IS_NULL);
-        User target = userOption.getAsUser();
+        User target = kickUserOption.getAsUser();
         Guild guild = Objects.requireNonNull(event.getGuild(), GUILD_IS_NULL);
 
         Member bot = guild.getSelfMember();
@@ -269,9 +269,9 @@ public class AuditCommand extends SlashCommandAdapter {
      * @param event the event of the command
      */
     private void handleBanSubCommand(@NotNull CommandInteraction event) {
-        OptionMapping userOption =
+        OptionMapping banUserOption =
                 Objects.requireNonNull(event.getOption(BAN_USER_OPTION), OPTION_IS_NULL);
-        User target = userOption.getAsUser();
+        User target = banUserOption.getAsUser();
         Guild guild = Objects.requireNonNull(event.getGuild(), GUILD_IS_NULL);
 
         Member bot = guild.getSelfMember();
