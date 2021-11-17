@@ -42,7 +42,6 @@ public class WarnCommand extends SlashCommandAdapter {
     private final Database database;
     private final Predicate<String> hasRequiredRole;
 
-
     /**
      * Creates a new Instance.
      */
@@ -71,12 +70,14 @@ public class WarnCommand extends SlashCommandAdapter {
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
         User target = userOption.getAsUser();
         Member targetMember = userOption.getAsMember();
-        Member author = userOption.getAsMember();
+        Member author = Objects.requireNonNull(event.getMember(), "The author is null");
         Guild guild = Objects.requireNonNull(event.getGuild());
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        if (!handleChecks(guild.getSelfMember(), author, targetMember, reason, guild, event)) {
+        Member bot = guild.getSelfMember();
+
+        if (!handleChecks(bot, author, targetMember, reason, guild, event)) {
             return;
         }
 
@@ -124,10 +125,13 @@ public class WarnCommand extends SlashCommandAdapter {
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
-        // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.
-        if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
+
+        // Member doesn't exist if attempting to ban a user who is not part of the guild.
+        if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
+                target, event)) {
             return false;
         }
+
         if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }

@@ -215,7 +215,11 @@ enum ModerationUtils {
         /**
          * When a user kicks another user.
          */
-        KICK("kicked");
+        KICK("kicked"),
+        /**
+         * When a user warns another user
+         */
+        WARN("warned");
 
         private final String verb;
 
