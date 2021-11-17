@@ -36,6 +36,7 @@ public final class FreeCommandConfig {
     public static final ChronoUnit INACTIVE_UNIT = ChronoUnit.HOURS;
     public static final long INACTIVE_TEST_INTERVAL = 15;
     public static final ChronoUnit INACTIVE_TEST_UNIT = ChronoUnit.MINUTES;
+    public static final int MESSAGE_RETRIEVE_LIMIT = 10;
 
     private final long statusChannel;
     private final List<Long> monitoredChannels;
