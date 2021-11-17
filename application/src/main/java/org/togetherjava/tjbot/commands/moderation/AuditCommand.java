@@ -18,7 +18,9 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.BanSystem;
 import org.togetherjava.tjbot.db.generated.tables.WarnSystem;
+import org.togetherjava.tjbot.db.generated.tables.records.BanSystemRecord;
 import org.togetherjava.tjbot.db.generated.tables.records.WarnSystemRecord;
 
 import java.awt.*;
@@ -94,7 +96,7 @@ public class AuditCommand extends SlashCommandAdapter {
     //TODO add javadoc
     private void handleWarnCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(WARN_USER_OPTION), USER_IS_NULL;
+                Objects.requireNonNull(event.getOption(WARN_USER_OPTION), USER_IS_NULL);
         User target = userOption.getAsUser();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
@@ -164,6 +166,16 @@ public class AuditCommand extends SlashCommandAdapter {
                 Objects.requireNonNull(event.getOption(KICK_USER_OPTION), USER_IS_NULL);
         User target = userOption.getAsUser();
         Guild guild = Objects.requireNonNull(event.getGuild());
+
+        Member bot = guild.getSelfMember();
+        Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
+
+        if (!handleChecks(bot, author, guild, event)) {
+            return;
+        }
+
+        Long guildId = guild.getIdLong();
+        Long userId = target.getIdLong();
     }
 
     //TODO add javadoc
@@ -172,7 +184,67 @@ public class AuditCommand extends SlashCommandAdapter {
                 Objects.requireNonNull(event.getOption(BAN_USER_OPTION), USER_IS_NULL);
         User target = userOption.getAsUser();
         Guild guild = Objects.requireNonNull(event.getGuild());
+
+        Member bot = guild.getSelfMember();
+        Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
+
+        if (!handleChecks(bot, author, guild, event)) {
+            return;
+        }
+
+        Long guildId = guild.getIdLong();
+        Long userId = target.getIdLong();
+        Optional<String> banReason = database.read(context -> {
+            try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
+                return Optional
+                        .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
+                                .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                        .map(BanSystemRecord::getBanReason);
+            }
+        });
+
+        Optional<Long> AuthorId = database.read(context -> {
+            try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
+                return Optional
+                        .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
+                                .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                        .map(BanSystemRecord::getAuthorId);
+            }
+        });
+
+        String banned = "banned";
+        try {
+            Optional<Boolean> isBanned = database.read(context -> {
+                try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
+                    return Optional
+                            .ofNullable(
+                                    select
+                                            .where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
+                                                    .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId)))
+                                            .fetchOne())
+                            .map(BanSystemRecord::getIsBanned);
+                }
+            });
+            if (!noValueFound(isBanned, target, banned, event)
+                    && !noValueFound(banReason, target, banned, event)
+                    && !noValueFound(AuthorId, target, banned, event)) {
+                return;
+            }
+
+            event
+                    .replyEmbeds(new EmbedBuilder().setTitle("Null")
+                            .setDescription("The user " + target.getAsTag() + " was banned for the reason" + banReason
+                                    + " by " + AuthorId)
+                            .setColor(Color.decode("#895FE8"))
+                            .build())
+                    .setEphemeral(true)
+                    .queue();
+        } catch (Exception exception) {
+            logger.error("Failed to check if the user is warned", exception);
+            replyEphemeral("Failed to check if the user is warned", event);
+        }
     }
+
 
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author, @NotNull Guild guild,
             @NotNull Interaction event) {
