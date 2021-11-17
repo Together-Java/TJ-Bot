@@ -19,8 +19,10 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.BanSystem;
+import org.togetherjava.tjbot.db.generated.tables.KickSystem;
 import org.togetherjava.tjbot.db.generated.tables.WarnSystem;
 import org.togetherjava.tjbot.db.generated.tables.records.BanSystemRecord;
+import org.togetherjava.tjbot.db.generated.tables.records.KickSystemRecord;
 import org.togetherjava.tjbot.db.generated.tables.records.WarnSystemRecord;
 
 import java.awt.*;
@@ -31,7 +33,10 @@ import java.util.regex.Pattern;
 
 import static org.togetherjava.tjbot.commands.utils.MessageUtils.replyEphemeral;
 
-//TODO add javadoc
+/**
+ * This command can be used to retrieve data for moderation commands. For example this command
+ * allows you to retrieve how many warns a certain user has.
+ */
 public class AuditCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(AuditCommand.class);
     private static final String ACTION_VERB = "audit";
@@ -43,8 +48,12 @@ public class AuditCommand extends SlashCommandAdapter {
     private static final String BAN_USER_OPTION = "user";
     private static final String DESCRIPTION = "The user who you want to get the values for";
     private static final String USER_IS_NULL = "The user is null";
+    private static final String THE_USER = "the user ";
+    private static final String COLOR_CODE = "#895FE8";
     private final Database database;
-    private final Predicate<String> hasRequiredRole;
+    private final Predicate<String> hasKickANDWarnRequiredRole;
+    private final Predicate<String> hasBanRequiredRole;
+
 
     /**
      * Creates a new adapter with the given data.
@@ -63,7 +72,11 @@ public class AuditCommand extends SlashCommandAdapter {
                 new SubcommandData(COMMAND_BAN, "Gets the ban values for that user")
                     .addOption(OptionType.USER, BAN_USER_OPTION, DESCRIPTION, true));
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
+        hasKickANDWarnRequiredRole =
+                Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
+                    .asMatchPredicate();
+
+        hasBanRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
     }
 
@@ -77,14 +90,13 @@ public class AuditCommand extends SlashCommandAdapter {
         }
     }
 
-    private static boolean noValueFound(Optional<?> value, @NotNull User target, String commandName,
-            @NotNull CommandInteraction event) {
+    private static <T> boolean noValueFound(@NotNull Optional<T> value, @NotNull User target,
+            String commandName, @NotNull CommandInteraction event) {
         if (value.isEmpty()) {
             event
                 .replyEmbeds(new EmbedBuilder().setTitle("Null")
-                    .setDescription(
-                            "The user " + target.getAsTag() + " has never been " + commandName)
-                    .setColor(Color.decode("#895FE8"))
+                    .setDescription(THE_USER + target.getAsTag() + " has never been " + commandName)
+                    .setColor(Color.decode(COLOR_CODE))
                     .build())
                 .setEphemeral(true)
                 .queue();
@@ -93,7 +105,14 @@ public class AuditCommand extends SlashCommandAdapter {
         return true;
     }
 
-    //TODO add javadoc
+    /**
+     * This command allows you to retrieve the amount of warns a user has and the reason for the
+     * warns. This command only requires you to input the user as seen here
+     * {@code /audit warn @user}. To be able to use this command you need to have the role
+     * {@code @softModerationRolePattern} or have the permissions to be able to kick members.
+     *
+     * @param event the event of the command
+     */
     private void handleWarnCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(WARN_USER_OPTION), USER_IS_NULL);
@@ -103,7 +122,8 @@ public class AuditCommand extends SlashCommandAdapter {
         Member bot = guild.getSelfMember();
         Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
 
-        if (!handleChecks(bot, author, guild, event)) {
+        if (!handleChecks(bot, author, guild, event, Permission.KICK_MEMBERS,
+                hasKickANDWarnRequiredRole)) {
             return;
         }
 
@@ -148,9 +168,9 @@ public class AuditCommand extends SlashCommandAdapter {
 
             event
                 .replyEmbeds(new EmbedBuilder().setTitle("Null")
-                    .setDescription("The user " + target.getAsTag() + " has  " + amountOfWarns
+                    .setDescription(THE_USER + target.getAsTag() + " has  " + amountOfWarns
                             + "for the reasons " + warnReason)
-                    .setColor(Color.decode("#895FE8"))
+                    .setColor(Color.decode(COLOR_CODE))
                     .build())
                 .setEphemeral(true)
                 .queue();
@@ -160,7 +180,16 @@ public class AuditCommand extends SlashCommandAdapter {
         }
     }
 
-    //TODO add javadoc
+    /**
+     * This command gives you the ability to retrieve the reason why the user was kicked and who the
+     * user was kicked by. To uses this command all you have to do is input the user as seen here
+     * {@code /audit kick @user}.
+     *
+     * To be able to use this command you need to have the role {@code @softModerationRolePattern}
+     * or have the permissions to be able to kick members.
+     *
+     * @param event the event of the command
+     */
     private void handleKickCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(KICK_USER_OPTION), USER_IS_NULL);
@@ -170,15 +199,74 @@ public class AuditCommand extends SlashCommandAdapter {
         Member bot = guild.getSelfMember();
         Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
 
-        if (!handleChecks(bot, author, guild, event)) {
+        if (!handleChecks(bot, author, guild, event, Permission.KICK_MEMBERS,
+                hasKickANDWarnRequiredRole)) {
             return;
         }
 
         Long guildId = guild.getIdLong();
         Long userId = target.getIdLong();
+        Optional<String> kickReason = database.read(context -> {
+            try (var select = context.selectFrom(KickSystem.KICK_SYSTEM)) {
+                return Optional
+                    .ofNullable(select.where(KickSystem.KICK_SYSTEM.USERID.eq(userId)
+                        .and(KickSystem.KICK_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                    .map(KickSystemRecord::getKickReason);
+            }
+        });
+
+        Optional<Long> kickAuthorId = database.read(context -> {
+            try (var select = context.selectFrom(KickSystem.KICK_SYSTEM)) {
+                return Optional
+                    .ofNullable(select.where(KickSystem.KICK_SYSTEM.USERID.eq(userId)
+                        .and(KickSystem.KICK_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                    .map(KickSystemRecord::getAuthorId);
+            }
+        });
+
+        String kicked = "kicked";
+        try {
+            Optional<Boolean> isKicked = database.read(context -> {
+                try (var select = context.selectFrom(KickSystem.KICK_SYSTEM)) {
+                    return Optional
+                        .ofNullable(
+                                select
+                                    .where(KickSystem.KICK_SYSTEM.USERID.eq(userId)
+                                        .and(KickSystem.KICK_SYSTEM.GUILD_ID.eq(guildId)))
+                                    .fetchOne())
+                        .map(KickSystemRecord::getIsKicked);
+                }
+            });
+            if (!noValueFound(isKicked, target, kicked, event)
+                    && !noValueFound(kickReason, target, kicked, event)
+                    && !noValueFound(kickAuthorId, target, kicked, event)) {
+                return;
+            }
+
+            event
+                .replyEmbeds(new EmbedBuilder().setTitle("Null")
+                    .setDescription("The user " + target.getAsTag() + " was kicked for the reason"
+                            + kickReason + " by " + kickAuthorId)
+                    .setColor(Color.decode(COLOR_CODE))
+                    .build())
+                .setEphemeral(true)
+                .queue();
+        } catch (Exception exception) {
+            logger.error("Failed to check if the user is kicked", exception);
+            replyEphemeral("Failed to check if the user is kicked", event);
+        }
     }
 
-    //TODO add javadoc
+    /**
+     * This command gives you the ability to retrieve the reason why the user was banned and who the
+     * user was banned by. To uses this command all you have to do is input the user as seen here
+     * {@code /audit ban @user}.
+     *
+     * To be able to use this command you need to have the role {@code @heavyModerationRolePattern}
+     * or have the permissions to be able to ban members.
+     *
+     * @param event the event of the command
+     */
     private void handleBanCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(BAN_USER_OPTION), USER_IS_NULL);
@@ -188,7 +276,7 @@ public class AuditCommand extends SlashCommandAdapter {
         Member bot = guild.getSelfMember();
         Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
 
-        if (!handleChecks(bot, author, guild, event)) {
+        if (!handleChecks(bot, author, guild, event, Permission.BAN_MEMBERS, hasBanRequiredRole)) {
             return;
         }
 
@@ -197,18 +285,18 @@ public class AuditCommand extends SlashCommandAdapter {
         Optional<String> banReason = database.read(context -> {
             try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
                 return Optional
-                        .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
-                                .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
-                        .map(BanSystemRecord::getBanReason);
+                    .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
+                        .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                    .map(BanSystemRecord::getBanReason);
             }
         });
 
-        Optional<Long> AuthorId = database.read(context -> {
+        Optional<Long> banAuthorId = database.read(context -> {
             try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
                 return Optional
-                        .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
-                                .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
-                        .map(BanSystemRecord::getAuthorId);
+                    .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
+                        .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                    .map(BanSystemRecord::getAuthorId);
             }
         });
 
@@ -217,46 +305,43 @@ public class AuditCommand extends SlashCommandAdapter {
             Optional<Boolean> isBanned = database.read(context -> {
                 try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
                     return Optional
-                            .ofNullable(
-                                    select
-                                            .where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
-                                                    .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId)))
-                                            .fetchOne())
-                            .map(BanSystemRecord::getIsBanned);
+                        .ofNullable(select.where(BanSystem.BAN_SYSTEM.USERID.eq(userId)
+                            .and(BanSystem.BAN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
+                        .map(BanSystemRecord::getIsBanned);
                 }
             });
             if (!noValueFound(isBanned, target, banned, event)
                     && !noValueFound(banReason, target, banned, event)
-                    && !noValueFound(AuthorId, target, banned, event)) {
+                    && !noValueFound(banAuthorId, target, banned, event)) {
                 return;
             }
 
             event
-                    .replyEmbeds(new EmbedBuilder().setTitle("Null")
-                            .setDescription("The user " + target.getAsTag() + " was banned for the reason" + banReason
-                                    + " by " + AuthorId)
-                            .setColor(Color.decode("#895FE8"))
-                            .build())
-                    .setEphemeral(true)
-                    .queue();
+                .replyEmbeds(new EmbedBuilder().setTitle("Null")
+                    .setDescription("The user " + target.getAsTag() + " was banned for the reason"
+                            + banReason + " by " + banAuthorId)
+                    .setColor(Color.decode(COLOR_CODE))
+                    .build())
+                .setEphemeral(true)
+                .queue();
         } catch (Exception exception) {
-            logger.error("Failed to check if the user is warned", exception);
-            replyEphemeral("Failed to check if the user is warned", event);
+            logger.error("Failed to check if the user is banned", exception);
+            replyEphemeral("Failed to check if the user is banned", event);
         }
     }
 
 
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull Interaction event, Permission permission,
+            @NotNull Predicate<? super String> hasRequiredRole) {
 
         if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
-        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot,
-                guild, event)) {
+        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, permission, bot, guild, event)) {
             return false;
         }
-        return ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.KICK_MEMBERS,
-                author, guild, event);
+        return ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, permission, author, guild,
+                event);
     }
 }
