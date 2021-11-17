@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
@@ -176,18 +177,22 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
             applicationId = idOption.getAsString();
-            applicationName = "an activity";
 
-            // Get the application name from the ID
-            for (var entry : VC_APPLICATION_TO_ID.entrySet()) {
-                if (applicationId.equals(entry.getValue())) {
-                    applicationName = entry.getKey();
-                    break;
-                }
-            }
+            applicationName =
+                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
         handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
+    }
+
+    private static <K, V> Optional<K> getKeyByValue(@NotNull Map<K, V> map, @NotNull V value) {
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            if (value.equals(entry.getKey())) {
+                return Optional.of(entry.getKey());
+            }
+        }
+
+        return Optional.empty();
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
