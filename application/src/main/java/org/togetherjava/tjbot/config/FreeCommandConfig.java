@@ -29,7 +29,7 @@ import java.util.List;
  * The long channel ID can be found by right-clicking on the channel and selecting 'Copy ID'
  */
 @SuppressWarnings("ClassCanBeRecord")
-@JsonRootName(value = "freeCommand")
+@JsonRootName("freeCommand")
 public final class FreeCommandConfig {
     // TODO make constants configurable via config file once config templating (#234) is pushed
     public static final long INACTIVE_DURATION = 1;
