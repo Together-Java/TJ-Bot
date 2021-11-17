@@ -58,8 +58,8 @@ public class WarnCommand extends SlashCommandAdapter {
             .asMatchPredicate();
     }
 
-    private static RestAction<Boolean> dmUser(long userId, @NotNull String reason,
-            @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+    private static @NotNull RestAction<Boolean> dmUser(long userId, @NotNull String reason,
+                                                       @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         return event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(privateChannel -> event.replyEmbeds(new EmbedBuilder().setTitle("Warned")
