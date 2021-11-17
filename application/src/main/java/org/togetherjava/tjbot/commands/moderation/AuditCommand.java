@@ -106,6 +106,20 @@ public class AuditCommand extends SlashCommandAdapter {
         return true;
     }
 
+    private boolean handleChecks(@NotNull Member bot, @NotNull Member author, @NotNull Guild guild,
+            @NotNull Interaction event, Permission permission,
+            @NotNull Predicate<? super String> hasRequiredRole) {
+
+        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, permission, bot, guild, event)) {
+            return false;
+        }
+        return ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, permission, author, guild,
+                event);
+    }
+
     /**
      * This command allows you to retrieve the amount of warns a user has and the reason for the
      * warns. This command only requires you to input the user as seen here
@@ -329,20 +343,5 @@ public class AuditCommand extends SlashCommandAdapter {
             logger.error("Failed to check if the user is banned", exception);
             replyEphemeral("Failed to check if the user is banned", event);
         }
-    }
-
-
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author, @NotNull Guild guild,
-            @NotNull Interaction event, Permission permission,
-            @NotNull Predicate<? super String> hasRequiredRole) {
-
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, permission, bot, guild, event)) {
-            return false;
-        }
-        return ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, permission, author, guild,
-                event);
     }
 }

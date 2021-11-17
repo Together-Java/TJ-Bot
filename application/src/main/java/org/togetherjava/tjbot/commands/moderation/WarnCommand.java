@@ -62,7 +62,7 @@ public class WarnCommand extends SlashCommandAdapter {
             @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         return event.getJDA()
             .openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessageEmbeds(new EmbedBuilder().setTitle("Warn")
+            .flatMap(privateChannel -> event.replyEmbeds(new EmbedBuilder().setTitle("Warned")
                 .setDescription("You have been warned in " + guild.getName() + " for " + reason)
                 .setColor(Color.decode("#895FE8"))
                 .build()))
