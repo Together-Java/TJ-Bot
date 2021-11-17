@@ -203,7 +203,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         long latestMessageId = channel.getLatestMessageIdLong();
         Optional<Message> statusMessage = getStatusMessageIn(channel);
         if (statusMessage.isPresent()) {
-            Message message = statusMessage.get();
+            Message message = statusMessage.orElseThrow();
             if (message.getIdLong() != latestMessageId) {
                 message.delete().queue();
                 channel.sendMessageEmbeds(embed)
