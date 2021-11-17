@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -106,7 +105,7 @@ public class WarnCommand extends SlashCommandAdapter {
                     warnSystemRecord.insert();
                 }
             });
-            logger.info("Saved the user '{}' to the ban system.", target.getAsTag());
+            logger.info("Saved the user '{}' to the warn system.", target.getAsTag());
         } catch (Exception exception) {
             exception.printStackTrace();
         }
