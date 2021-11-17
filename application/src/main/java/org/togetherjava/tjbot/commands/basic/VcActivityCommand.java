@@ -176,7 +176,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
             applicationId = idOption.getAsString();
-            applicationName = applicationId;
+            applicationName = "an activity";
 
             // Get the application name from the ID
             for (var entry : VC_APPLICATION_TO_ID.entrySet()) {
@@ -206,8 +206,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             @NotNull Invite invite, @NotNull String applicationName) {
         return event.reply("""
                 %s wants to start %s.
-                Feel free to join by clicking %s, enjoy!
-                 """.formatted(event.getMember(), applicationName, invite.getUrl()));
+                Feel free to join by clicking %s , enjoy!
+                If it says the activity ended, click on the URL instead.
+                 """.formatted(Objects.requireNonNull(event.getMember()).getEffectiveName(),
+                applicationName, invite.getUrl()));
     }
 
     private static void handleErrors(@NotNull SlashCommandEvent event,
