@@ -223,6 +223,15 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         channelMonitor.guildIds().map(jda::getGuildById).forEach(channelMonitor::updateStatusFor);
     }
 
+    /**
+     * Method for creating the message that shows the channel statuses for the specified guild.
+     *
+     * @param guild the guild that the message is required for.
+     * @return the message to display showing the channel statuses. Includes Discord specific
+     *         formatting, trying to display elsewhere may have unpredictable results.
+     * @throws IllegalArgumentException if the guild passed in is not configured in the free command
+     *         system, see {@link ChannelMonitor#addChannelForStatus(TextChannel)}.
+     */
     public @NotNull String buildStatusMessage(@NotNull Guild guild) {
         if (!channelMonitor.isMonitoringGuild(guild.getIdLong())) {
             throw new IllegalArgumentException(
@@ -307,9 +316,9 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             .getFreeCommandConfig()
             .stream()
             .map(FreeCommandConfig::getStatusChannel)
-            .distinct() // not necessary? (validates user input, since input is from file)
             .map(jda::getTextChannelById)
-            .filter(Objects::nonNull) // not necessary? this will hide errors in the config file
+            // throws NPE if id from config does not match a text channel
+            .map(Objects::requireNonNull)
             .forEach(channelMonitor::addChannelForStatus);
     }
 
@@ -317,7 +326,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         // Attempts to find the existing status message, for all guilds. On launch.
         channelMonitor.statusIds()
             .map(jda::getTextChannelById)
-            .filter(Objects::nonNull) // not necessary? this will hide errors in the config file
+            .filter(Objects::nonNull) // only here for sonarLint
             .map(this::getStatusMessageIn)
             .flatMap(Optional::stream)
             .forEach(message -> channelIdToMessageIdForStatus.put(message.getChannel().getIdLong(),
