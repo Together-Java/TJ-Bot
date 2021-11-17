@@ -62,7 +62,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private ChannelMonitor channelMonitor;
-    private final Map<Long, Long> channelToStatusMessage;
+    private final Map<Long, Long> channelIdToMessageIdForStatus;
 
     private boolean isReady;
 
@@ -77,7 +77,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         super(COMMAND_NAME, "marks this channel as free for another user to ask a question",
                 SlashCommandVisibility.GUILD);
 
-        channelToStatusMessage = new HashMap<>();
+        channelIdToMessageIdForStatus = new HashMap<>();
         channelMonitor = new ChannelMonitor();
 
         isReady = false;
@@ -207,14 +207,14 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             if (message.getIdLong() != latestMessageId) {
                 message.delete().queue();
                 channel.sendMessageEmbeds(embed)
-                    .queue(message1 -> channelToStatusMessage.put(channel.getIdLong(),
+                    .queue(message1 -> channelIdToMessageIdForStatus.put(channel.getIdLong(),
                             message1.getIdLong()));
             } else {
                 message.editMessageEmbeds(embed).queue();
             }
         } else {
             channel.sendMessageEmbeds(embed)
-                .queue(message1 -> channelToStatusMessage.put(channel.getIdLong(),
+                .queue(message1 -> channelIdToMessageIdForStatus.put(channel.getIdLong(),
                         message1.getIdLong()));
         }
     }
@@ -268,10 +268,10 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     private @NotNull Optional<Message> getStatusMessageIn(@NotNull TextChannel channel) {
-        if (!channelToStatusMessage.containsKey(channel.getIdLong())) {
+        if (!channelIdToMessageIdForStatus.containsKey(channel.getIdLong())) {
             return findExistingStatusMessage(channel);
         }
-        return Optional.ofNullable(channelToStatusMessage.get(channel.getIdLong()))
+        return Optional.ofNullable(channelIdToMessageIdForStatus.get(channel.getIdLong()))
             .map(channel::retrieveMessageById)
             .map(RestAction::complete);
     }
@@ -288,7 +288,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
                 .findFirst())
             .complete();
 
-        channelToStatusMessage.put(channel.getIdLong(),
+        channelIdToMessageIdForStatus.put(channel.getIdLong(),
                 result.map(Message::getIdLong).orElse(null));
         return result;
     }
@@ -320,7 +320,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             .filter(Objects::nonNull) // not necessary? this will hide errors in the config file
             .map(this::getStatusMessageIn)
             .flatMap(Optional::stream)
-            .forEach(message -> channelToStatusMessage.put(message.getChannel().getIdLong(),
+            .forEach(message -> channelIdToMessageIdForStatus.put(message.getChannel().getIdLong(),
                     message.getIdLong()));
     }
 }
