@@ -25,20 +25,30 @@ public final class Config {
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
     private final String mutedRolePattern;
+    private final String heavyModerationRolePattern;
+    private final String softModerationRolePattern;
+    private final String tagManageRolePattern;
 
+    @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
             @JsonProperty("discordGuildInvite") String discordGuildInvite,
             @JsonProperty("modAuditLogChannelPattern") String modAuditLogChannelPattern,
-            @JsonProperty("mutedRolePattern") String mutedRolePattern) {
+            @JsonProperty("mutedRolePattern") String mutedRolePattern,
+            @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
+            @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
+            @JsonProperty("tagManageRolePattern") String tagManageRolePattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
         this.modAuditLogChannelPattern = modAuditLogChannelPattern;
         this.mutedRolePattern = mutedRolePattern;
+        this.heavyModerationRolePattern = heavyModerationRolePattern;
+        this.softModerationRolePattern = softModerationRolePattern;
+        this.tagManageRolePattern = tagManageRolePattern;
     }
 
     /**
@@ -118,5 +128,35 @@ public final class Config {
      */
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use heavy moderation
+     * commands, such as banning, based on role names.
+     * 
+     * @return the REGEX pattern
+     */
+    public String getHeavyModerationRolePattern() {
+        return heavyModerationRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use soft moderation
+     * commands, such as kicking, muting or message deletion, based on role names.
+     * 
+     * @return the REGEX pattern
+     */
+    public String getSoftModerationRolePattern() {
+        return softModerationRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use the tag-manage command,
+     * such as creating or editing tags.
+     *
+     * @return the REGEX pattern
+     */
+    public String getTagManageRolePattern() {
+        return tagManageRolePattern;
     }
 }

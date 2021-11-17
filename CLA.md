@@ -1,6 +1,4 @@
-## Fiduciary License Agreement 2.0
-
-based on the
+## Contributor Agreement
 
 ## Individual Contributor Exclusive License Agreement
 
@@ -10,19 +8,7 @@ Thank you for your interest in contributing to Together Java's TJ-Bot ("We" or "
 
 The purpose of this contributor agreement ("Agreement") is to clarify and document the rights granted by contributors to Us. To make this document effective, please follow the instructions given by the CLA-assistant bot in your Pull-Request.
 
-### 0\. Preamble
-
-Software is deeply embedded in all aspects of our lives and it is important that it empower, rather than restrict us. Free Software gives everybody the rights to use, understand, adapt and share software. These rights help support other fundamental freedoms like freedom of speech, press and privacy.
-
-Development of Free Software can follow many patterns. In some cases whole development is handled by a sole programmer or a small group of people. But usually, the creation and maintenance of software is a complex process that requires the contribution of many individuals. This also affects who owns the rights to the software. In the latter case, rights in software are owned jointly by a great number of individuals.
-
-To tackle this issue some projects require a full copyright assignment to be signed by all contributors. The problem with such assignments is that they often lack checks and balances that would protect the contributors from potential abuse of power from the new copyright holder.
-
-FSFE’s Fiduciary License Agreement (FLA) was created by the Free Software Foundation Europe e.V. with just that in mind – to concentrate all deciding power within one entity and prevent fragmentation of rights on one hand, while on the other preventing that single entity from abusing its power. The main aim is to ensure that the software covered under the FLA will forever remain Free Software.
-
-This process only serves for the transfer of economic rights. So-called moral rights (e.g. authors right to be identified as author) remain with the original author(s) and are inalienable.
-
-### How to use this FLA
+### How to use this Contributor Agreement
 
 If You are an employee and have created the Contribution as part of your employment, You need to have Your employer approve this Agreement or sign the Entity version of this document. If You do not own the Copyright in the entire work of authorship, any other author of the Contribution should also sign this – in any event, please contact Us at together.java.tjbot@gmail.com
 
@@ -48,7 +34,7 @@ If You are an employee and have created the Contribution as part of your employm
 
 #### 2.1 Copyright license to Us
 
-Subject to the terms and conditions of this Agreement, You hereby grant to Us a worldwide, royalty-free, exclusive, perpetual and irrevocable (except as stated in Section 8.2) license, with the right to transfer an unlimited number of non-exclusive licenses or to grant sublicenses to third parties, under the Copyright covering the Contribution to use the Contribution by all means, including, but not limited to:
+Subject to the terms and conditions of this Agreement, You hereby grant to Us a worldwide, royalty-free, Exclusive, perpetual and irrevocable (except as stated in Section 8.2) license, with the right to transfer an unlimited number of non-exclusive licenses or to grant sublicenses to third parties, under the Copyright covering the Contribution to use the Contribution by all means, including, but not limited to:
 
 * publish the Contribution,
 * modify the Contribution,
@@ -84,9 +70,11 @@ You reserve the right to revoke the patent license stated in section 3.1 if We m
 
 ### 4\. License obligations by Us
 
-We agree to (sub)license the Contribution or any Materials containing, based on or derived from your Contribution under the terms of any licenses the Free Software Foundation classifies as Free Software License and which are approved by the Open Source Initiative as Open Source licenses.
+We agree to license the Contribution only under the terms of the license or licenses that We are using on the Submission Date for the Material (including any rights to adopt any future version of a license).
 
-We agree to license patents owned or controlled by You only to the extent necessary to (sub)license Your Contribution(s) and the combination of Your Contribution(s) with the Material under the terms of any licenses the Free Software Foundation classifies as Free Software licenses and which are approved by the Open Source Initiative as Open Source licenses..
+In addition, We may use the following licenses for Documentation in the Contribution: CC-BY-SA-4.0 (including any right to adopt any future version of a license).
+
+We agree to license patents owned or controlled by You only to the extent necessary to (sub)license Your Contribution(s) and the combination of Your Contribution(s) with the Material under the terms of the license or licenses that We are using on the Submission Date.
 
 ### 5. Disclaimer
 
@@ -106,9 +94,9 @@ IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION 5. AND SECTION 6. CANNO
 
 8.2 This Agreement shall apply for the term of the copyright and patents licensed here. However, You shall have the right to terminate the Agreement if We do not fulfill the obligations as set forth in Section 4. Such termination must be made in writing.
 
-8.3 In the event of a termination of this Agreement Sections 5., 6., 7., 8., and 9. shall survive such termination and shall remain in full force thereafter. For the avoidance of doubt, Free and Open Source Software (sub)licenses that have already been granted for Contributions at the date of the termination shall remain in full force after the termination of this Agreement.
+8.3 In the event of a termination of this Agreement Sections 5, 6, 7, 8 and 9 shall survive such termination and shall remain in full force thereafter. For the avoidance of doubt, Free and Open Source Software (sub)licenses that have already been granted for Contributions at the date of the termination shall remain in full force after the termination of this Agreement.
 
-### 9. Miscellaneous
+### 9 Miscellaneous
 
 9.1 This Agreement and all disputes, claims, actions, suits or other proceedings arising out of this agreement or relating in any way to it shall be governed by the laws of Germany excluding its private international law provisions.
 
@@ -119,6 +107,7 @@ IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION 5. AND SECTION 6. CANNO
 9.4 If any provision of this Agreement is found void and unenforceable, such provision will be replaced to the extent possible with a provision that comes closest to the meaning of the original provision and that is enforceable. The terms and conditions set forth in this Agreement shall apply notwithstanding any failure of essential purpose of this Agreement or any limited remedy to the maximum extent possible under law.
 
 9.5 You agree to notify Us of any facts or circumstances of which you become aware that would make this Agreement inaccurate in any respect.
+
 
 ### You
 
@@ -132,6 +121,6 @@ Organization: https://github.com/Together-Java
 
 Contact: https://discord.com/invite/XXFUXzK
 
-#### Misc
+#### Note
 
-This document can be recreated or adjusted [here](https://contributoragreements.org/ca-cla-chooser/?beneficiary-name=Together+Java&project-name=TJ-Bot&project-website=https%3A%2F%2Fgithub.com%2FTogether-Java%2FTJ-Bot&project-email=together.java.tjbot%40gmail.com&process-url=&project-jurisdiction=Germany&agreement-exclusivity=exclusive&fsfe-compliance=&fsfe-fla=&outbound-option=fsfe&outboundlist=GPL-3.0&outboundlist-custom=&medialist=CC-BY-SA-4.0&patent-option=Traditional&your-date=&your-name=&your-title=&your-address=&your-patents=&pos=apply&action=).
+This document can be recreated or adjusted [here](https://contributoragreements.org/ca-cla-chooser/?beneficiary-name=Together+Java&project-name=TJ-Bot&project-website=https%3A%2F%2Fgithub.com%2FTogether-Java%2FTJ-Bot&project-email=together.java.tjbot%40gmail.com&process-url=&project-jurisdiction=Germany&agreement-exclusivity=exclusive&fsfe-compliance=&fsfe-fla=&outbound-option=same&outboundlist=GPL-3.0&outboundlist-custom=&medialist=CC-BY-SA-4.0&patent-option=Traditional&your-date=&your-name=&your-title=&your-address=&your-patents=&pos=apply&action=).
