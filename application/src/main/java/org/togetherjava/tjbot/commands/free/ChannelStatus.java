@@ -114,12 +114,12 @@ public final class ChannelStatus {
                     "The guild passed in '%s' is not related to the channel this status is for: %s"
                         .formatted(guild.getName(), this));
         }
-        if (channel instanceof TextChannel textChannel) {
+        if (!(channel instanceof TextChannel textChannel)) {
+            throw new IllegalStateException("This channel status was created with the id for a"
+                    + "non-text-channel and status cannot be monitored: '%s'".formatted(channelId));
+        } else {
             setName(textChannel.getAsMention());
-        } else
-            throw new IllegalStateException(
-                    "This channel status was created with the id for a non-text-channel and status cannot be monitored: '%s'"
-                        .formatted(channelId));
+        }
     }
 
     /**
@@ -150,7 +150,7 @@ public final class ChannelStatus {
      * This functionality is not yet implemented so the id can be anything atm.
      */
     public synchronized void setFree() {
-            status = ChannelStatusType.FREE;
+        status = ChannelStatusType.FREE;
     }
 
     /**
@@ -162,7 +162,8 @@ public final class ChannelStatus {
      */
     @Override
     public boolean equals(final Object o) {
-        // TODO should I overload equals with equals(long) so that a Set may be used instead of a Map
+        // TODO should I overload equals with equals(long) so that a Set may be used instead of a
+        // Map
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
