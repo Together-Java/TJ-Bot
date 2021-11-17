@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -75,6 +77,34 @@ public enum MessageUtils {
         // NOTE Unfortunately the utility does not escape backslashes '\', so we have to do it
         // ourselves
         return MarkdownSanitizer.escape(text.replace("\\", "\\\\"));
+    }
+
+    /**
+     * Instead of always queuing the reply message you can just make a method which queues
+     * automatically.
+     *
+     * @param message the message that you want to send
+     */
+    public static void reply(String message, @NotNull SlashCommandEvent event) {
+        event.reply(message).queue();
+    }
+
+    public static void reply(String message, @NotNull CommandInteraction event) {
+        event.reply(message).queue();
+    }
+
+    /**
+     * Instead of always setting ephemeral as true making one method and using it makes life easier.
+     *
+     * @param message the message that you want to send
+     * @param event The slash command event
+     */
+    public static void replyEphemeral(String message, @NotNull SlashCommandEvent event) {
+        event.reply(message).setEphemeral(true).queue();
+    }
+
+    public static void replyEphemeral(String message, @NotNull CommandInteraction event) {
+        event.reply(message).setEphemeral(true).queue();
     }
 
 }

@@ -155,6 +155,7 @@ public final class KickCommand extends SlashCommandAdapter {
                     .setUserid(target.getUser().getIdLong())
                     .setAuthorId(author.getIdLong())
                     .setGuildId(guild.getIdLong())
+                    .setIsKicked(true)
                     .setKickReason(reason);
                 if (kickSystemRecord.update() == 0) {
                     kickSystemRecord.insert();

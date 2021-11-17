@@ -207,6 +207,7 @@ public final class BanCommand extends SlashCommandAdapter {
                     .setUserid(target.getIdLong())
                     .setAuthorId(author.getIdLong())
                     .setGuildId(guild.getIdLong())
+                    .setIsBanned(true)
                     .setBanReason(reason);
                 if (banSystemRecord.update() == 0) {
                     banSystemRecord.insert();
