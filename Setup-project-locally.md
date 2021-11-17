@@ -105,7 +105,8 @@ To run the bot, you will need a `config.json` file with content like this:
     "modAuditLogChannelPattern": "mod_audit_log",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
-    "softModerationRolePattern": "Moderator|Staff Assistant"
+    "softModerationRolePattern": "Moderator|Staff Assistant",
+    "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+"
 }
 ```
 Replace `<your_token_here>` with your bot token; you can also adjust the other settings if you want.
