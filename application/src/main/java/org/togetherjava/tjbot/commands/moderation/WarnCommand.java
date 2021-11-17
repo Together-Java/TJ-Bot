@@ -115,11 +115,11 @@ public class WarnCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The option is null");
         User target = userOption.getAsUser();
         Member targetMember = userOption.getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
-        Guild guild = Objects.requireNonNull(event.getGuild());
+        Guild guild = Objects.requireNonNull(event.getGuild(), "The guild is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 

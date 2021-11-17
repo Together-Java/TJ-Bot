@@ -40,14 +40,15 @@ import static org.togetherjava.tjbot.commands.utils.MessageUtils.replyEphemeral;
 public class AuditCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(AuditCommand.class);
     private static final String ACTION_VERB = "audit";
-    private static final String COMMAND_WARN = "warn";
+    private static final String WARN_SUBCOMMAND = "warn";
     private static final String WARN_USER_OPTION = "user";
-    private static final String COMMAND_KICK = "kick";
+    private static final String KICK_SUBCOMMAND = "kick";
     private static final String KICK_USER_OPTION = "user";
-    private static final String COMMAND_BAN = "ban";
+    private static final String BAN_SUBCOMMAND = "ban";
     private static final String BAN_USER_OPTION = "user";
     private static final String DESCRIPTION = "The user who you want to get the values for";
-    private static final String USER_IS_NULL = "The user is null";
+    private static final String OPTION_IS_NULL = "The option is null";
+    private static final String GUILD_IS_NULL = "he guild is null";
     private static final String THE_USER = "the user ";
     private static final String COLOR_CODE = "#895FE8";
     private final Database database;
@@ -65,11 +66,11 @@ public class AuditCommand extends SlashCommandAdapter {
         this.database = database;
 
         getData().addSubcommands(
-                new SubcommandData(COMMAND_WARN, "Gets the warn values for that user")
+                new SubcommandData(WARN_SUBCOMMAND, "Gets the warn values for that user")
                     .addOption(OptionType.USER, WARN_USER_OPTION, DESCRIPTION, true),
-                new SubcommandData(COMMAND_KICK, "Gets the kick values for that user")
+                new SubcommandData(KICK_SUBCOMMAND, "Gets the kick values for that user")
                     .addOption(OptionType.USER, KICK_USER_OPTION, DESCRIPTION, true),
-                new SubcommandData(COMMAND_BAN, "Gets the ban values for that user")
+                new SubcommandData(BAN_SUBCOMMAND, "Gets the ban values for that user")
                     .addOption(OptionType.USER, BAN_USER_OPTION, DESCRIPTION, true));
 
         hasKickANDWarnRequiredRole =
@@ -83,9 +84,9 @@ public class AuditCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         switch (Objects.requireNonNull(event.getSubcommandName())) {
-            case COMMAND_WARN -> handleWarnCommand(event);
-            case COMMAND_KICK -> handleKickCommand(event);
-            case COMMAND_BAN -> handleBanCommand(event);
+            case WARN_SUBCOMMAND -> handleWarnSubCommand(event);
+            case KICK_SUBCOMMAND -> handleKickSubCommand(event);
+            case BAN_SUBCOMMAND -> handleBanSubCommand(event);
             default -> throw new AssertionError();
         }
     }
@@ -113,14 +114,14 @@ public class AuditCommand extends SlashCommandAdapter {
      *
      * @param event the event of the command
      */
-    private void handleWarnCommand(@NotNull CommandInteraction event) {
+    private void handleWarnSubCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(WARN_USER_OPTION), USER_IS_NULL);
+                Objects.requireNonNull(event.getOption(WARN_USER_OPTION), OPTION_IS_NULL);
         User target = userOption.getAsUser();
-        Guild guild = Objects.requireNonNull(event.getGuild());
+        Guild guild = Objects.requireNonNull(event.getGuild(), GUILD_IS_NULL);
 
         Member bot = guild.getSelfMember();
-        Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
+        Member author = Objects.requireNonNull(event.getMember(), OPTION_IS_NULL);
 
         if (!handleChecks(bot, author, guild, event, Permission.KICK_MEMBERS,
                 hasKickANDWarnRequiredRole)) {
@@ -190,14 +191,14 @@ public class AuditCommand extends SlashCommandAdapter {
      *
      * @param event the event of the command
      */
-    private void handleKickCommand(@NotNull CommandInteraction event) {
+    private void handleKickSubCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(KICK_USER_OPTION), USER_IS_NULL);
+                Objects.requireNonNull(event.getOption(KICK_USER_OPTION), OPTION_IS_NULL);
         User target = userOption.getAsUser();
-        Guild guild = Objects.requireNonNull(event.getGuild());
+        Guild guild = Objects.requireNonNull(event.getGuild(), GUILD_IS_NULL);
 
         Member bot = guild.getSelfMember();
-        Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
+        Member author = Objects.requireNonNull(event.getMember(), OPTION_IS_NULL);
 
         if (!handleChecks(bot, author, guild, event, Permission.KICK_MEMBERS,
                 hasKickANDWarnRequiredRole)) {
@@ -267,14 +268,14 @@ public class AuditCommand extends SlashCommandAdapter {
      *
      * @param event the event of the command
      */
-    private void handleBanCommand(@NotNull CommandInteraction event) {
+    private void handleBanSubCommand(@NotNull CommandInteraction event) {
         OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(BAN_USER_OPTION), USER_IS_NULL);
+                Objects.requireNonNull(event.getOption(BAN_USER_OPTION), OPTION_IS_NULL);
         User target = userOption.getAsUser();
-        Guild guild = Objects.requireNonNull(event.getGuild());
+        Guild guild = Objects.requireNonNull(event.getGuild(), GUILD_IS_NULL);
 
         Member bot = guild.getSelfMember();
-        Member author = Objects.requireNonNull(event.getMember(), USER_IS_NULL);
+        Member author = Objects.requireNonNull(event.getMember(), OPTION_IS_NULL);
 
         if (!handleChecks(bot, author, guild, event, Permission.BAN_MEMBERS, hasBanRequiredRole)) {
             return;
