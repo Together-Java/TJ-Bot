@@ -42,10 +42,13 @@ public class AuditCommand extends SlashCommandAdapter {
     private static final String ACTION_VERB = "audit";
     private static final String WARN_SUBCOMMAND = "warn";
     private static final String WARN_USER_OPTION = "user";
+    private static final String WARNED = "warned";
     private static final String KICK_SUBCOMMAND = "kick";
     private static final String KICK_USER_OPTION = "user";
+    private static final String KICKED = "kicked";
     private static final String BAN_SUBCOMMAND = "ban";
     private static final String BAN_USER_OPTION = "user";
+    private static final String BANNED = "banned";
     private static final String DESCRIPTION = "The user who you want to get the values for";
     private static final String OPTION_IS_NULL = "The option is null";
     private static final String GUILD_IS_NULL = "he guild is null";
@@ -162,7 +165,6 @@ public class AuditCommand extends SlashCommandAdapter {
             }
         });
 
-        String warned = "warned";
         try {
             Optional<Boolean> isWarned = database.read(context -> {
                 try (var select = context.selectFrom(WarnSystem.WARN_SYSTEM)) {
@@ -175,9 +177,10 @@ public class AuditCommand extends SlashCommandAdapter {
                         .map(WarnSystemRecord::getIsWarned);
                 }
             });
-            if (!noValueFound(isWarned, target, warned, event)
-                    && !noValueFound(amountOfWarns, target, warned, event)
-                    && !noValueFound(warnReason, target, warned, event)) {
+
+            if (!noValueFound(isWarned, target, WARNED, event)
+                    && !noValueFound(amountOfWarns, target, WARNED, event)
+                    && !noValueFound(warnReason, target, WARNED, event)) {
                 return;
             }
 
@@ -239,7 +242,6 @@ public class AuditCommand extends SlashCommandAdapter {
             }
         });
 
-        String kicked = "kicked";
         try {
             Optional<Boolean> isKicked = database.read(context -> {
                 try (var select = context.selectFrom(KickSystem.KICK_SYSTEM)) {
@@ -252,9 +254,9 @@ public class AuditCommand extends SlashCommandAdapter {
                         .map(KickSystemRecord::getIsKicked);
                 }
             });
-            if (!noValueFound(isKicked, target, kicked, event)
-                    && !noValueFound(kickReason, target, kicked, event)
-                    && !noValueFound(kickAuthorId, target, kicked, event)) {
+            if (!noValueFound(isKicked, target, KICKED, event)
+                    && !noValueFound(kickReason, target, KICKED, event)
+                    && !noValueFound(kickAuthorId, target, KICKED, event)) {
                 return;
             }
 
@@ -315,7 +317,6 @@ public class AuditCommand extends SlashCommandAdapter {
             }
         });
 
-        String banned = "banned";
         try {
             Optional<Boolean> isBanned = database.read(context -> {
                 try (var select = context.selectFrom(BanSystem.BAN_SYSTEM)) {
@@ -325,9 +326,9 @@ public class AuditCommand extends SlashCommandAdapter {
                         .map(BanSystemRecord::getIsBanned);
                 }
             });
-            if (!noValueFound(isBanned, target, banned, event)
-                    && !noValueFound(banReason, target, banned, event)
-                    && !noValueFound(banAuthorId, target, banned, event)) {
+            if (!noValueFound(isBanned, target, BANNED, event)
+                    && !noValueFound(banReason, target, BANNED, event)
+                    && !noValueFound(banAuthorId, target, BANNED, event)) {
                 return;
             }
 
