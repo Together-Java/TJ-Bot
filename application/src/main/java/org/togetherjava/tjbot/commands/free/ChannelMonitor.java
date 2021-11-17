@@ -1,6 +1,9 @@
 package org.togetherjava.tjbot.commands.free;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Category;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -122,12 +125,10 @@ public final class ChannelMonitor {
         requiresIsMonitored(channel.getIdLong());
 
         // TODO change the entire inactive test to work via restactions
-        return channel.getHistory()
-            .retrievePast(1)
-            .map(messages -> messages.get(0))
-            .map(Message::getTimeCreated)
+        return FreeUtil.getLastMessageId(channel)
+            .map(FreeUtil::timeFromId)
             .map(createdTime -> createdTime.isBefore(FreeUtil.inactiveTimeLimit()))
-            .complete();
+            .orElse(true);
     }
 
     /**
