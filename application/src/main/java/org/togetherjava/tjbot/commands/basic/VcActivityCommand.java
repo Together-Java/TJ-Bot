@@ -213,8 +213,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 %s wants to start %s.
                 Feel free to join by clicking %s , enjoy!
                 If it says the activity ended, click on the URL instead.
-                 """.formatted(Objects.requireNonNull(event.getMember()).getEffectiveName(),
-                applicationName, invite.getUrl()));
+                 """.formatted(event.getUser().getAsTag(), applicationName, invite.getUrl()));
     }
 
     private static void handleErrors(@NotNull SlashCommandEvent event,
