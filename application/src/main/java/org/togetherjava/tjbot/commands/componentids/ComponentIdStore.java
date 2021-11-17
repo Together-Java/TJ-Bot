@@ -234,7 +234,7 @@ public final class ComponentIdStore implements AutoCloseable {
     private void heatRecord(@NotNull UUID uuid) {
         int updatedRecords;
         synchronized (storeLock) {
-            updatedRecords = database.write(context -> {
+            updatedRecords = database.writeAndProvide(context -> {
                 return context.update(ComponentIds.COMPONENT_IDS)
                     .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())
                     .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
