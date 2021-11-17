@@ -58,8 +58,8 @@ public final class FreeCommandConfig {
     }
 
     /**
-     * Retrieves a List of the channels on this guild that the guild wants monitored by the
-     * free/busy command system
+     * Retrieves a Collection of the channels that this guild wants to have registered for
+     * monitoring by the free/busy command system
      *
      * @return an Unmodifiable List of Channel ID's
      */

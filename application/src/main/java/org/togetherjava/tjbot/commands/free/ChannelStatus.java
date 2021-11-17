@@ -44,7 +44,7 @@ public final class ChannelStatus {
      * 
      * @return the current stored status related to the channel id.
      */
-    public boolean isBusy() {
+    public synchronized boolean isBusy() {
         return status.isBusy();
     }
 
@@ -169,8 +169,8 @@ public final class ChannelStatus {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        ChannelStatus status = (ChannelStatus) o;
-        return channelId == status.channelId;
+        ChannelStatus channelStatus = (ChannelStatus) o;
+        return channelId == channelStatus.channelId;
     }
 
     /**

@@ -6,10 +6,7 @@ import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.stream.Stream;
 
 
@@ -124,7 +121,7 @@ public final class ChannelMonitor {
     public boolean isChannelInactive(@NotNull final TextChannel channel) {
         requiresIsMonitored(channel.getIdLong());
 
-        // TODO change the entire inactive test to work via restactions
+        // TODO change the entire inactive test to work via rest-actions
         return FreeUtil.getLastMessageId(channel)
             .map(FreeUtil::timeFromId)
             .map(createdTime -> createdTime.isBefore(FreeUtil.inactiveTimeLimit()))
@@ -167,8 +164,8 @@ public final class ChannelMonitor {
     }
 
     /**
-     * This method provides a stream of the id's for channels that status's are displayed in. This
-     * is streamed purely as a simple method of encapsulation.
+     * This method provides a stream of the id's for channels where statuses are displayed. This is
+     * streamed purely as a simple method of encapsulation.
      * 
      * @return a stream of channel id's
      */
@@ -208,13 +205,18 @@ public final class ChannelMonitor {
         StringJoiner content = new StringJoiner("\n");
         String categoryName = "";
         for (ChannelStatus status : statusFor) {
-            Category category = guild.getGuildChannelById(status.getChannelId()).getParent();
+            TextChannel channel = guild.getTextChannelById(status.getChannelId());
+            if (channel == null) {
+                // pointless ... added to remove warnings
+                continue;
+            }
+            Category category = channel.getParent();
             if (category != null && !category.getName().equals(categoryName)) {
                 categoryName = category.getName();
                 // append the category name on a new line with markup for underlining
                 // FIXME possible bug when not all channels are part of categories, may mistakenly
-                // include uncategoried channels inside previous category. will an uncategoried
-                // channel return an empty string or null? javadocs dont say.
+                // include uncategorized channels inside previous category. will an uncategorized
+                // channel return an empty string or null? javadocs don't say.
                 content.add("\n__" + categoryName + "__");
             }
             content.add(status.toDiscordContentRaw());
@@ -241,6 +243,7 @@ public final class ChannelMonitor {
             .filter(ChannelStatus::isBusy)
             .map(ChannelStatus::getChannelId)
             .map(guild::getTextChannelById)
+            .filter(Objects::nonNull) // pointless, added for warnings
             .filter(this::isChannelInactive)
             .map(TextChannel::getIdLong)
             .forEach(this::setChannelFree);
@@ -261,7 +264,12 @@ public final class ChannelMonitor {
                     "Guild %s is not configured in the free command system."
                         .formatted(guild.getName()));
         }
-        return guild.getTextChannelById(guildIdToStatusChannel.get(guild.getIdLong()));
+        long channelId = guildIdToStatusChannel.get(guild.getIdLong());
+        TextChannel channel = guild.getTextChannelById(channelId);
+        if (channel == null)
+            throw new IllegalStateException("Status channel %d does not exist in guild %s"
+                .formatted(channelId, guild.getName()));
+        return channel;
     }
 
     /**

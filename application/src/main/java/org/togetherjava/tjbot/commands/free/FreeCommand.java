@@ -30,7 +30,8 @@ import java.util.*;
 // TODO test if message is a reply and don't mark as busy if it is
 // TODO add button query to confirm that message is new question not additional info for existing
 // discussion before marking as busy
-// TODO add scheduled tasks to check last message every 15mins and mark as free if 1hr (2hrs?) has
+// TODO add scheduled tasks to check last message every predefined duration and mark as free if
+// applicable
 // passed
 
 /**
@@ -61,7 +62,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     private static final Color MESSAGE_HIGHLIGHT_COLOR = Color.decode("#CCCC00");
 
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
-    private ChannelMonitor channelMonitor;
+    private final ChannelMonitor channelMonitor;
     private final Map<Long, Long> channelIdToMessageIdForStatus;
 
     private boolean isReady;
@@ -99,7 +100,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     @Override
     public void onReady(@NotNull final ReadyEvent event) {
         final JDA jda = event.getJDA();
-        // TODO remove this when onGuildMessageRecieved has another access point
+        // TODO remove this when onGuildMessageReceived has another access point
         jda.addEventListener(this);
 
         initChannelsToMonitor();
@@ -142,6 +143,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         }
         // TODO check if /free called by original author, if not put message asking if he approves
         channelMonitor.setChannelFree(id);
+        // null impossible for event.getGuild (tested in handleShouldBeProcessed) ignore warning
         displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
         event.reply(UserStrings.MARK_AS_FREE.message()).queue();
     }
@@ -163,6 +165,11 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
                     "Slash command requested by {} in {}(channel: {}) before command is ready.",
                     event.getUser().getIdLong(), event.getGuild(), event.getChannel().getName());
             FreeUtil.sendErrorMessage(event, UserStrings.NOT_READY_ERROR.message());
+            return false;
+        }
+        if (event.getGuild() == null) {
+            logger.error("This is an impossible event, because CommandSystem controls routing,"
+                    + "added to remove warnings. Guild for slash event is null");
             return false;
         }
         if (!channelMonitor.isMonitoringGuild(event.getGuild().getIdLong())) {
@@ -222,7 +229,10 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     private void checkBusyStatusAllChannels(@NotNull JDA jda) {
-        channelMonitor.guildIds().map(jda::getGuildById).forEach(channelMonitor::updateStatusFor);
+        channelMonitor.guildIds()
+            .map(jda::getGuildById)
+            .filter(Objects::nonNull)
+            .forEach(channelMonitor::updateStatusFor);
     }
 
     /**
@@ -292,7 +302,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     private @NotNull Optional<Message> findExistingStatusMessage(@NotNull TextChannel channel) {
-        // will only run when bots starts, afterwards its stored in a map
+        // will only run when bot starts, afterwards its stored in a map
 
         Optional<Message> statusMessage = FreeUtil
             .getChannelHistory(channel, FreeCommandConfig.MESSAGE_RETRIEVE_LIMIT)
