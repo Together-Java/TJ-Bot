@@ -133,7 +133,7 @@ public final class ChannelStatus {
      * 
      * @param userId the id of the user who changed the status to 'busy'
      */
-    public void setBusy(final long userId) {
+    public synchronized void setBusy(final long userId) {
         if (status.isFree()) {
             status = ChannelStatusType.BUSY;
             this.userId = userId;
@@ -149,10 +149,8 @@ public final class ChannelStatus {
      * <p>
      * This functionality is not yet implemented so the id can be anything atm.
      */
-    public void setFree() {
-        if (status.isBusy()) {
+    public synchronized void setFree() {
             status = ChannelStatusType.FREE;
-        }
     }
 
     // TODO should I overload equals with equals(long) so that a Set may be used instead of a Map
