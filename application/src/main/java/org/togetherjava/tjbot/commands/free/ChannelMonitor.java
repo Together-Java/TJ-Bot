@@ -271,7 +271,7 @@ public final class ChannelMonitor {
      */
     @Override
     public String toString() {
-        // This is called on boot by as a debug level logger
+        // This is called on boot as a debug level message by the logger
         return "Monitoring Channels: %s%nDisplaying on Channels: %s"
             .formatted(channelsToMonitorById, guildIdToStatusChannel);
     }
