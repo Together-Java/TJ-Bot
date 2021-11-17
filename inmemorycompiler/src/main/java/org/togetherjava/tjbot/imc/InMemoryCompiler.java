@@ -69,10 +69,8 @@ public final class InMemoryCompiler {
      * @return the generated compilation unit
      */
     private static @NotNull SimpleJavaFileObject genCompilationUnitJFO(@NotNull String content) {
-        return new SimpleJavaFileObject(URI.create("string:///" + TEMP_CLASS_NAME.replace('.', '/') // random
-                                                                                                    // protocol,
-                                                                                                    // any
-                                                                                                    // works
+        // random protocol, any works
+        return new SimpleJavaFileObject(URI.create("string:///" + TEMP_CLASS_NAME.replace('.', '/')
                 + JavaFileObject.Kind.SOURCE.extension), JavaFileObject.Kind.SOURCE) {
             /**
              * Returns the content given in the generation of this {@code SimpleJavaFileObject}
