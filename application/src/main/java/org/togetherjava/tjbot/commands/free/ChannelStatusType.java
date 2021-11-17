@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.free;
 
 import org.jetbrains.annotations.NotNull;
 
-public enum ChannelStatusType {
+enum ChannelStatusType {
     FREE("free", ":green_circle:"),
     BUSY("busy", ":red_circle:");
 
