@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands.free;
 
+import org.jetbrains.annotations.NotNull;
+
 public enum ChannelStatusType {
     FREE("free", ":green_circle:"),
     BUSY("busy", ":red_circle:");
@@ -20,11 +22,11 @@ public enum ChannelStatusType {
         return this == BUSY;
     }
 
-    public String description() {
+    public @NotNull String description() {
         return description;
     }
 
-    public String toDiscordContentRaw() {
+    public @NotNull String toDiscordContentRaw() {
         return emoji;
     }
 }
