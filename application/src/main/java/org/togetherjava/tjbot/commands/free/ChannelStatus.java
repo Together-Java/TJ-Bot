@@ -153,7 +153,6 @@ public final class ChannelStatus {
             status = ChannelStatusType.FREE;
     }
 
-    // TODO should I overload equals with equals(long) so that a Set may be used instead of a Map
     /**
      * The identity of this object is solely based on the id value. Compares the long id's and
      * determines if they are equal.
@@ -163,6 +162,7 @@ public final class ChannelStatus {
      */
     @Override
     public boolean equals(final Object o) {
+        // TODO should I overload equals with equals(long) so that a Set may be used instead of a Map
         if (this == o)
             return true;
         if (o == null || getClass() != o.getClass())
