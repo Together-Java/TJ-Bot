@@ -80,11 +80,9 @@ public final class TagSystem {
      * @return whether the tag is known to the tag system
      */
     boolean hasTag(String id) {
-        return database.readTransaction(context -> {
-            try (var selectFrom = context.selectFrom(Tags.TAGS)) {
-                return selectFrom.where(Tags.TAGS.ID.eq(id)).fetchOne() != null;
-            }
-        });
+        return database.readTransaction(context -> context.selectFrom(Tags.TAGS)
+            .where(Tags.TAGS.ID.eq(id))
+            .fetchOne() != null);
     }
 
     /**
@@ -94,12 +92,9 @@ public final class TagSystem {
      * @throws IllegalArgumentException if the tag is unknown to the system, see
      *         {@link #hasTag(String)}
      */
-    // Execute closes resources; without curly braces on the lambda, the call would be ambiguous
-    @SuppressWarnings({"resource", "java:S1602"})
     void deleteTag(String id) {
-        int deletedRecords = database.writeAndProvide(context -> {
-            return context.deleteFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).execute();
-        });
+        int deletedRecords = database.writeAndProvide(
+                context -> context.deleteFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).execute());
         if (deletedRecords == 0) {
             throw new IllegalArgumentException(
                     "Unable to delete the tag '%s', it is unknown to the system".formatted(id));
@@ -113,15 +108,13 @@ public final class TagSystem {
      * @param content the content of the tag to put
      */
     // Execute closes resources; without curly braces on the lambda, the call would be ambiguous
-    @SuppressWarnings({"resource", "java:S1602"})
     void putTag(String id, String content) {
-        database.writeTransaction(context -> {
-            context.insertInto(Tags.TAGS, Tags.TAGS.ID, Tags.TAGS.CONTENT)
-                .values(id, content)
-                .onDuplicateKeyUpdate()
-                .set(Tags.TAGS.CONTENT, content)
-                .execute();
-        });
+        database.writeTransaction(
+                context -> context.insertInto(Tags.TAGS, Tags.TAGS.ID, Tags.TAGS.CONTENT)
+                    .values(id, content)
+                    .onDuplicateKeyUpdate()
+                    .set(Tags.TAGS.CONTENT, content)
+                    .execute());
     }
 
     /**
@@ -132,12 +125,9 @@ public final class TagSystem {
      * @return the content of the tag, if the tag is known to the system
      */
     Optional<String> getTag(String id) {
-        return database.readTransaction(context -> {
-            try (var selectFrom = context.selectFrom(Tags.TAGS)) {
-                return Optional.ofNullable(selectFrom.where(Tags.TAGS.ID.eq(id)).fetchOne())
-                    .map(TagsRecord::getContent);
-            }
-        });
+        return database.readTransaction(context -> Optional
+            .ofNullable(context.selectFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).fetchOne())
+            .map(TagsRecord::getContent));
     }
 
     /**
@@ -146,14 +136,11 @@ public final class TagSystem {
      * @return a set of all ids known to the system, not backed
      */
     Set<String> getAllIds() {
-        return database.readTransaction(context -> {
-            try (var select = context.select(Tags.TAGS.ID)) {
-                return select.from(Tags.TAGS)
-                    .fetch()
-                    .stream()
-                    .map(dbRecord -> dbRecord.getValue(Tags.TAGS.ID))
-                    .collect(Collectors.toSet());
-            }
-        });
+        return database.readTransaction(context -> context.select(Tags.TAGS.ID)
+            .from(Tags.TAGS)
+            .fetch()
+            .stream()
+            .map(dbRecord -> dbRecord.getValue(Tags.TAGS.ID))
+            .collect(Collectors.toSet()));
     }
 }

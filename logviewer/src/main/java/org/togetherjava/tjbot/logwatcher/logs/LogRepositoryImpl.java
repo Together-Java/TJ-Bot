@@ -44,22 +44,16 @@ public class LogRepositoryImpl implements LogRepository {
     }
 
     @Override
-    @SuppressWarnings("java:S1602") // Curly Braces are necessary here
     public List<Logevents> findAll() {
-        return this.db.read(ctx -> {
-            return ctx.selectFrom(LOGEVENTS).fetch(this::recordToPojo);
-        });
+        return this.db.read(ctx -> ctx.selectFrom(LOGEVENTS).fetch(this::recordToPojo));
     }
 
 
     @Override
-    @SuppressWarnings("java:S1602") // Curly Braces are necessary here
     public List<Logevents> findWithLevelMatching(Collection<String> logLevels) {
-        return this.db.read(ctx -> {
-            return ctx.selectFrom(LOGEVENTS)
-                .where(LOGEVENTS.LEVEL.in(logLevels))
-                .fetch(this::recordToPojo);
-        });
+        return this.db.read(ctx -> ctx.selectFrom(LOGEVENTS)
+            .where(LOGEVENTS.LEVEL.in(logLevels))
+            .fetch(this::recordToPojo));
     }
 
     private Logevents recordToPojo(final LogeventsRecord logRecord) {

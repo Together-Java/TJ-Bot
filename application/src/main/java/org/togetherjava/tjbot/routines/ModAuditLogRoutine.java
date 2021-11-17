@@ -259,15 +259,15 @@ public final class ModAuditLogRoutine {
     private void handleAuditLogs(@NotNull MessageChannel auditLogChannel,
             @NotNull PaginationAction<? extends AuditLogEntry, AuditLogPaginationAction> auditLogAction,
             long guildId) {
-        @SuppressWarnings("squid:S1602")
-        Instant lastAuditLogEntryTimestamp = database.read(context -> {
-            return Optional
-                .ofNullable(context.fetchOne(ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS,
-                        ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS.GUILD_ID.eq(guildId)))
-                .map(entry -> entry.get(
-                        ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS.LAST_PROCESSED_AUDIT_LOG_ENTRY))
-                .orElse(Instant.now());
-        });
+        Instant lastAuditLogEntryTimestamp =
+                database.read(context -> Optional
+                    .ofNullable(context.fetchOne(
+                            ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS,
+                            ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS.GUILD_ID
+                                .eq(guildId)))
+                    .map(entry -> entry.get(
+                            ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS.LAST_PROCESSED_AUDIT_LOG_ENTRY))
+                    .orElse(Instant.now()));
         // NOTE This is a minor race condition. By taking the time before the actual lookup we
         // ensure that we do not miss anything but instead it is possible to receive an
         // action twice in such a rare case, which is okay.
