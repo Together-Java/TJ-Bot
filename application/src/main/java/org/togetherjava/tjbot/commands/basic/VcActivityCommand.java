@@ -185,7 +185,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
     }
 
-    private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map, @NotNull V value) {
+    private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
+            @NotNull V value) {
         for (Map.Entry<K, V> entry : map.entrySet()) {
             if (value.equals(entry.getKey())) {
                 return Optional.of(entry.getKey());
