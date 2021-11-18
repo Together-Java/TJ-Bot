@@ -214,7 +214,7 @@ public final class ChannelMonitor {
             if (category != null && !category.getName().equals(categoryName)) {
                 categoryName = category.getName();
                 // append the category name on a new line with markup for underlining
-                // FIXME possible bug when not all channels are part of categories, may mistakenly
+                // TODO possible bug when not all channels are part of categories, may mistakenly
                 // include uncategorized channels inside previous category. will an uncategorized
                 // channel return an empty string or null? javadocs don't say.
                 content.add("\n__" + categoryName + "__");
