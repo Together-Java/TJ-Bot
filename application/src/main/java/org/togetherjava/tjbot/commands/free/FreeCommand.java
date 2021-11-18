@@ -21,10 +21,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FreeCommandConfig;
 
 import java.awt.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 // TODO (can SlashCommandVisibility be narrower than GUILD?)
 // TODO monitor all channels when list is empty? monitor none?
@@ -227,18 +224,13 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     }
 
     private @NotNull Optional<Message> deleteIfNotLatest(@NotNull Message message) {
-        if (FreeUtil.getLastMessageId(message.getTextChannel())
-            // black magic to convert OptionalLong to Optional<Long> because OptionalLong does not
-            // have .filter
-            .stream()
-            .boxed()
-            .findFirst()
-            .filter(lastId -> message.getIdLong() != lastId)
-            .isPresent()) {
 
+        OptionalLong lastId = FreeUtil.getLastMessageId(message.getTextChannel());
+        if (lastId.isPresent() && lastId.getAsLong() == message.getIdLong()) {
             message.delete().queue();
             return Optional.empty();
         }
+
         return Optional.of(message);
     }
 
