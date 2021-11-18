@@ -21,7 +21,10 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FreeCommandConfig;
 
 import java.awt.*;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 // TODO (can SlashCommandVisibility be narrower than GUILD?)
 // TODO monitor all channels when list is empty? monitor none?
@@ -32,7 +35,6 @@ import java.util.*;
 // discussion before marking as busy
 // TODO add scheduled tasks to check last message every predefined duration and mark as free if
 // applicable
-// passed
 
 /**
  * Implementation of the free command. It is used to monitor a predefined list of channels and show
@@ -99,6 +101,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      */
     @Override
     public void onReady(@NotNull final ReadyEvent event) {
+        @NotNull
         final JDA jda = event.getJDA();
         // TODO remove this when onGuildMessageReceived has another access point
         jda.addEventListener(this);
@@ -108,11 +111,9 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         logger.debug("Config loaded:\n{}", channelMonitor);
 
         checkBusyStatusAllChannels(jda);
-        initStatusMessages(jda);
 
         channelMonitor.statusIds()
-            .map(event.getJDA()::getTextChannelById)
-            .filter(Objects::nonNull)
+            .map(id -> requiresTextChannel(jda, id))
             .forEach(this::displayStatus);
 
         isReady = true;
@@ -143,9 +144,18 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         }
         // TODO check if /free called by original author, if not put message asking if he approves
         channelMonitor.setChannelFree(id);
-        // null impossible for event.getGuild (tested in handleShouldBeProcessed) ignore warning
-        displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
+        displayStatus(channelMonitor.getStatusChannelFor(requiresGuild(event)));
         event.reply(UserStrings.MARK_AS_FREE.message()).queue();
+    }
+
+    private @NotNull Guild requiresGuild(SlashCommandEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            throw new IllegalStateException(
+                    "A global slash command '%s' somehow got routed to the free system which requires a guild"
+                        .formatted(event.getCommandString()));
+        }
+        return guild;
     }
 
     /**
@@ -167,22 +177,20 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             FreeUtil.sendErrorMessage(event, UserStrings.NOT_READY_ERROR.message());
             return false;
         }
-        if (event.getGuild() == null) {
-            logger.error("This is an impossible event, because CommandSystem controls routing,"
-                    + "added to remove warnings. Guild for slash event is null");
-            return false;
-        }
-        if (!channelMonitor.isMonitoringGuild(event.getGuild().getIdLong())) {
+        // checks if guild is null and throws IllegalStateException if it is
+        @NotNull
+        Guild guild = requiresGuild(event);
+        if (!channelMonitor.isMonitoringGuild(guild.getIdLong())) {
             logger.error(
                     "Slash command used by {} in {}(channel: {}) when guild is not configured for Free Command",
-                    event.getUser().getIdLong(), event.getGuild(), event.getChannel().getName());
+                    event.getUser().getIdLong(), guild, event.getChannel().getName());
             FreeUtil.sendErrorMessage(event,
-                    UserStrings.NOT_CONFIGURED_ERROR.formatted(event.getGuild().getName()));
+                    UserStrings.NOT_CONFIGURED_ERROR.formatted(guild.getName()));
             return false;
         }
         if (!channelMonitor.isMonitoringChannel(event.getChannel().getIdLong())) {
-            logger.debug("'/free called in un-configured channel {}({})",
-                    event.getGuild().getName(), event.getChannel().getName());
+            logger.debug("'/free called in un-configured channel {}({})", guild.getName(),
+                    event.getChannel().getName());
             FreeUtil.sendErrorMessage(event, UserStrings.NOT_MONITORED_ERROR.message());
             return false;
         }
@@ -235,9 +243,18 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
     private void checkBusyStatusAllChannels(@NotNull JDA jda) {
         channelMonitor.guildIds()
-            .map(jda::getGuildById)
-            .filter(Objects::nonNull)
+            .map(id -> requiresGuild(jda, id))
             .forEach(channelMonitor::updateStatusFor);
+    }
+
+    private @NotNull Guild requiresGuild(@NotNull JDA jda, long id) {
+        Guild guild = jda.getGuildById(id);
+        if (guild == null) {
+            throw new IllegalStateException(
+                    "The guild with id '%d' has been deleted since free command system was configured."
+                        .formatted(id));
+        }
+        return guild;
     }
 
     /**
@@ -337,7 +354,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             .getFreeCommandConfig()
             .stream()
             .map(FreeCommandConfig::getStatusChannel)
-            // throws IllegalState if the id's don't match TextChannels
+            // throws IllegalStateException if the id's don't match TextChannels
             .map(id -> requiresTextChannel(jda, id))
             .forEach(channelMonitor::addChannelForStatus);
     }
@@ -350,16 +367,5 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
                         .formatted(id));
         }
         return channel;
-    }
-
-    private void initStatusMessages(@NotNull final JDA jda) {
-        // Attempts to find the existing status message, for all guilds. On launch.
-        channelMonitor.statusIds()
-            .map(jda::getTextChannelById)
-            .filter(Objects::nonNull) // only here for sonarLint
-            .map(this::getStatusMessageIn)
-            .flatMap(Optional::stream)
-            .forEach(message -> channelIdToMessageIdForStatus.put(message.getChannel().getIdLong(),
-                    message.getIdLong()));
     }
 }
