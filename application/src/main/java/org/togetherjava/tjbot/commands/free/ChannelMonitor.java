@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * After successful configuration, any changes in busy/free status will automatically be displayed
  * in the configured {@code Status Channel} for that guild.
  */
-public final class ChannelMonitor {
+final class ChannelMonitor {
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private final Map<Long, ChannelStatus> channelsToMonitorById;
     private final Map<Long, Long> guildIdToStatusChannel;

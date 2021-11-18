@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * Class that tracks the current free/busy status of a channel that requires monitoring.
  */
-public final class ChannelStatus {
+final class ChannelStatus {
 
     private final long channelId;
     private volatile long userId;
