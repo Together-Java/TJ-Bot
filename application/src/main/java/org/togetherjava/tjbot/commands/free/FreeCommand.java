@@ -337,10 +337,19 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             .getFreeCommandConfig()
             .stream()
             .map(FreeCommandConfig::getStatusChannel)
-            .map(jda::getTextChannelById)
-            // throws NPE if id from config does not match a text channel
-            .map(Objects::requireNonNull)
+            // throws IllegalState if the id's don't match TextChannels
+            .map(id -> requiresTextChannel(jda, id))
             .forEach(channelMonitor::addChannelForStatus);
+    }
+
+    private @NotNull TextChannel requiresTextChannel(@NotNull JDA jda, long id) {
+        TextChannel channel = jda.getTextChannelById(id);
+        if (channel == null) {
+            throw new IllegalStateException(
+                    "The id '%d' supplied in the config file, is not a valid id for a TextChannel"
+                        .formatted(id));
+        }
+        return channel;
     }
 
     private void initStatusMessages(@NotNull final JDA jda) {
