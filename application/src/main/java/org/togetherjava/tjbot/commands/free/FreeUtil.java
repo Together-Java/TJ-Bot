@@ -43,16 +43,14 @@ enum FreeUtil {
      */
     public static @NotNull Optional<List<Message>> getChannelHistory(@NotNull TextChannel channel,
             final int limit) {
-        return Optional
-            .ofNullable(channel.getHistory().retrievePast(limit).mapToResult().map(listResult -> {
-                if (listResult.isFailure()) {
-                    logger.error("Failed to retrieve messages from %s because of:"
-                        .formatted(channel.getAsMention()), listResult.getFailure());
-                    return null;
-                } else {
-                    return listResult.get();
-                }
-            }).complete());
+        return channel.getHistory().retrievePast(limit).mapToResult().map(listResult -> {
+            if (listResult.isFailure()) {
+                logger.error("Failed to retrieve messages from %s because of:"
+                    .formatted(channel.getAsMention()), listResult.getFailure());
+                return Optional.<List<Message>>empty();
+            }
+            return Optional.of(listResult.get());
+        }).complete();
     }
 
     /**
