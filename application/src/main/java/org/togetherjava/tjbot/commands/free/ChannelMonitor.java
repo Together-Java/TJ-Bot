@@ -123,6 +123,11 @@ final class ChannelMonitor {
 
         // TODO change the entire inactive test to work via rest-actions
         return FreeUtil.getLastMessageId(channel)
+            // black magic to convert OptionalLong into Optional<Long> because OptionalLong does not
+            // have .map
+            .stream()
+            .boxed()
+            .findFirst()
             .map(FreeUtil::timeFromId)
             .map(createdTime -> createdTime.isBefore(FreeUtil.inactiveTimeLimit()))
             .orElse(true);

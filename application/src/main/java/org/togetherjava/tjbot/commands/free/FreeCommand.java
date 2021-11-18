@@ -219,6 +219,11 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
 
     private @NotNull Optional<Message> deleteIfNotLatest(@NotNull Message message) {
         if (FreeUtil.getLastMessageId(message.getTextChannel())
+            // black magic to convert OptionalLong to Optional<Long> because OptionalLong does not
+            // have .filter
+            .stream()
+            .boxed()
+            .findFirst()
             .filter(lastId -> message.getIdLong() != lastId)
             .isPresent()) {
 
