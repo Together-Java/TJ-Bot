@@ -127,6 +127,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      * {@link FreeCommandConfig}) the user will receive an ephemeral message stating such.
      * 
      * @param event the event that triggered this
+     * @throws IllegalStateException if this method is called for a Global Slash Command
      */
     @Override
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
