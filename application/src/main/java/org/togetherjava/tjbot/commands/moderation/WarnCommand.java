@@ -145,7 +145,6 @@ public class WarnCommand extends SlashCommandAdapter {
             }
         });
 
-        int newWarnAmount = oldWarnAmount.orElse(0) + 1;
         try {
             database.write(context -> {
                 WarnSystemRecord warnSystemRecord = context.newRecord(WarnSystem.WARN_SYSTEM)
@@ -153,7 +152,7 @@ public class WarnCommand extends SlashCommandAdapter {
                     .setGuildId(guildId)
                     .setWarnReason(reason)
                     .setIsWarned(true)
-                    .setWarningAmount(newWarnAmount);
+                    .setWarningAmount(oldWarnAmount.orElse(0) + 1);
                 if (warnSystemRecord.update() == 0) {
                     warnSystemRecord.insert();
                 }
