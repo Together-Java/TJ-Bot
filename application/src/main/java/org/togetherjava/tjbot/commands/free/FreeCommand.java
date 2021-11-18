@@ -309,7 +309,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             .flatMap(history -> history.stream()
                 .filter(message -> !message.getEmbeds().isEmpty())
                 .filter(message -> message.getAuthor().equals(channel.getJDA().getSelfUser()))
-                // FIXME the equals is not working, i believe its because there is no getTitleRaw()
+                // TODO the equals is not working, i believe its because there is no getTitleRaw()
                 // .filter(message -> STATUS_TITLE.equals(message.getEmbeds().get(0).getTitle()))
                 .findFirst());
 
