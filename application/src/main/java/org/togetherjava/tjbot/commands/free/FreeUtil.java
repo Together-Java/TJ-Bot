@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.config.FreeCommandConfig;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 
 /**
  * A class containing helper methods required by the free package command.
@@ -62,11 +63,16 @@ enum FreeUtil {
      * @param channel the channel from which the latest message is required.
      * @return the id of the latest message or empty if it could not be retrieved.
      */
-    public static @NotNull Optional<Long> getLastMessageId(@NotNull TextChannel channel) {
-        return Optional
-            .ofNullable(channel.hasLatestMessage() ? channel.getLatestMessageIdLong() : null)
-            .or(() -> getChannelHistory(channel, 1)
-                .map(list -> !list.isEmpty() ? list.get(0).getIdLong() : null));
+    public static @NotNull OptionalLong getLastMessageId(@NotNull TextChannel channel) {
+        if (channel.hasLatestMessage()) {
+            return OptionalLong.of(channel.getLatestMessageIdLong());
+        }
+        // black magic to convert Optional<Long> into OptionalLong because Optional does not have
+        // .mapToLong
+        return getChannelHistory(channel, 1).stream()
+            .flatMap(List::stream)
+            .mapToLong(Message::getIdLong)
+            .findFirst();
     }
 
     /**
