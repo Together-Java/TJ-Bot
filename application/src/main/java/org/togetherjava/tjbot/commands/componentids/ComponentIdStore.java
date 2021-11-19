@@ -210,16 +210,13 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    @SuppressWarnings({"resource", "java:S1602"})
     private @NotNull Optional<ComponentId> getFromDatabase(@NotNull UUID uuid) {
-        return database.read(context -> {
-            return Optional
-                .ofNullable(context.selectFrom(ComponentIds.COMPONENT_IDS)
-                    .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
-                    .fetchOne())
-                .map(ComponentIdsRecord::getComponentId)
-                .map(ComponentIdStore::deserializeComponentId);
-        });
+        return database.read(context -> Optional
+            .ofNullable(context.selectFrom(ComponentIds.COMPONENT_IDS)
+                .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
+                .fetchOne())
+            .map(ComponentIdsRecord::getComponentId)
+            .map(ComponentIdStore::deserializeComponentId));
     }
 
     /**
@@ -230,16 +227,14 @@ public final class ComponentIdStore implements AutoCloseable {
      * @param uuid the uuid to heat
      * @throws IllegalArgumentException if there is no, or multiple, records associated to that UUID
      */
-    @SuppressWarnings({"resource", "java:S1602"})
     private void heatRecord(@NotNull UUID uuid) {
         int updatedRecords;
         synchronized (storeLock) {
-            updatedRecords = database.write(context -> {
-                return context.update(ComponentIds.COMPONENT_IDS)
-                    .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())
-                    .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
-                    .execute();
-            });
+            updatedRecords =
+                    database.writeAndProvide(context -> context.update(ComponentIds.COMPONENT_IDS)
+                        .set(ComponentIds.COMPONENT_IDS.LAST_USED, Instant.now())
+                        .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
+                        .execute());
         }
 
         // NOTE Case 0, where no records are updated, is ignored on purpose.
@@ -255,7 +250,6 @@ public final class ComponentIdStore implements AutoCloseable {
         AtomicInteger evictedCounter = new AtomicInteger(0);
         synchronized (storeLock) {
             database.write(context -> {
-                @SuppressWarnings("resource")
                 Result<ComponentIdsRecord> oldRecords = context
                     .selectFrom(ComponentIds.COMPONENT_IDS)
                     .where(ComponentIds.COMPONENT_IDS.LIFESPAN.notEqual(Lifespan.PERMANENT.name())
@@ -317,13 +311,11 @@ public final class ComponentIdStore implements AutoCloseable {
             return;
         }
 
-        // Without curly braces on the lambda, the call would be ambiguous
-        @SuppressWarnings("java:S1602")
         Map<Lifespan, Integer> lifespanToCount = Arrays.stream(Lifespan.values())
-            .collect(Collectors.toMap(Function.identity(), lifespan -> database.read(context -> {
-                return context.fetchCount(ComponentIds.COMPONENT_IDS,
-                        ComponentIds.COMPONENT_IDS.LIFESPAN.eq(lifespan.name()));
-            })));
+            .collect(Collectors.toMap(Function.identity(),
+                    lifespan -> database
+                        .read(context -> context.fetchCount(ComponentIds.COMPONENT_IDS,
+                                ComponentIds.COMPONENT_IDS.LIFESPAN.eq(lifespan.name())))));
         int recordsCount = lifespanToCount.values().stream().mapToInt(Integer::intValue).sum();
 
         logger.debug("The component id store consists of {} records ({})", recordsCount,

@@ -71,12 +71,13 @@ public final class Database {
     }
 
     /**
-     * Acquires read-only access to the database.
+     * Acquires read-only access to the database and consumes the result directly.
      *
      * @param action the action that consumes the DSL context, e.g. a query
      * @throws DatabaseException if an error occurs in the given action
      */
-    public void read(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
+    public void readAndConsume(
+            CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
         read(context -> {
             action.accept(context);
             // noinspection ReturnOfNull
@@ -85,14 +86,14 @@ public final class Database {
     }
 
     /**
-     * Acquires read and write access to the database.
+     * Acquires read and write access to the database and provides the computed result.
      *
      * @param action the action to apply to the DSL context, e.g. a query
      * @param <T> the type returned by the given action
      * @return the result returned by the given action
      * @throws DatabaseException if an error occurs in the given action
      */
-    public <T> T write(
+    public <T> T writeAndProvide(
             CheckedFunction<? super DSLContext, T, ? extends DataAccessException> action) {
         writeLock.lock();
         try {
@@ -111,7 +112,7 @@ public final class Database {
      * @throws DatabaseException if an error occurs in the given action
      */
     public void write(CheckedConsumer<? super DSLContext, ? extends DataAccessException> action) {
-        write(context -> {
+        writeAndProvide(context -> {
             action.accept(context);
             // noinspection ReturnOfNull
             return null;
@@ -141,13 +142,13 @@ public final class Database {
     }
 
     /**
-     * Acquires a transaction that can only read from the database.
+     * Acquires a transaction that can only read from the database and consumes the result directly.
      *
      * @param handler the handler that is executed within the context of the transaction. It has no
      *        return value.
      * @throws DatabaseException if an error occurs in the given handler function
      */
-    public void readTransaction(
+    public void readTransactionAndConsume(
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
         readTransaction(dsl -> {
             handler.accept(dsl);
@@ -157,7 +158,8 @@ public final class Database {
     }
 
     /**
-     * Acquires a transaction that can read and write to the database.
+     * Acquires a transaction that can read and write to the database and provides the computed
+     * result.
      *
      * @param handler the handler that is executed within the context of the transaction. The
      *        handler will be called once and its return value is returned from the transaction.
@@ -165,7 +167,7 @@ public final class Database {
      * @return the object that is returned by the given handler
      * @throws DatabaseException if an error occurs in the given handler function
      */
-    public <T> T writeTransaction(
+    public <T> T writeTransactionAndProvide(
             CheckedFunction<? super DSLContext, T, DataAccessException> handler) {
         var holder = new ResultHolder<T>();
 
@@ -190,7 +192,7 @@ public final class Database {
      */
     public void writeTransaction(
             CheckedConsumer<? super DSLContext, ? extends DataAccessException> handler) {
-        writeTransaction(dsl -> {
+        writeTransactionAndProvide(dsl -> {
             handler.accept(dsl);
             // noinspection ReturnOfNull
             return null;

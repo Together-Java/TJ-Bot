@@ -85,12 +85,12 @@ public final class DatabaseCommand extends SlashCommandAdapter {
         // /db get hello
         String key = Objects.requireNonNull(event.getOption(KEY_OPTION)).getAsString();
         try {
-            Optional<String> value = database.read(context -> {
-                try (var select = context.selectFrom(Storage.STORAGE)) {
-                    return Optional.ofNullable(select.where(Storage.STORAGE.KEY.eq(key)).fetchOne())
-                        .map(StorageRecord::getValue);
-                }
-            });
+            Optional<String> value = database.read(
+                    context -> Optional
+                        .ofNullable(context.selectFrom(Storage.STORAGE)
+                            .where(Storage.STORAGE.KEY.eq(key))
+                            .fetchOne())
+                        .map(StorageRecord::getValue));
             if (value.isEmpty()) {
                 event.reply("Nothing found for the key '" + key + "'").setEphemeral(true).queue();
                 return;
