@@ -24,54 +24,40 @@ public final class Javap {
     // Hide constructor
     public Javap() {}
 
-    private static final String TEMP_FILE_NAME = "tmp";
-    private static final String ANNOYING_WARNING_MESSAGE =
-            "Warning: File /%s does not contain class %<s";
+    private static final String TEMP_FILE_NAME = "tmp",
+            ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
 
-    // ======== reflection
+    private static final Class<?> javapFileManagerCls, javapTaskCls;
 
-    // ---- classes
-    private static final Class<?> R_C_JavapFileManager;
-    private static final Class<?> R_C_JavapTask;
+    private static final Method javapFileManagerCreateMethod, javapTaskRunMethod,
+            javapTaskGetDiagnosticListenerForWriterMethod;
 
-    // ---- methods
-    private static final Method R_C_JavapFileManager_M_create;
-    private static final Method R_C_JavapTask_M_run;
-    private static final Method R_C_JavapTask_M_getDiagnosticListenerForWriter;
-
-    // ---- fields
-    private static final Field R_C_JavapTask_F_defaultFileManager;
-    private static final Field R_C_JavapTask_F_log;
+    private static final Field javapTaskDefaultFileManagerField, javapTaskLogField;
 
     static {
         try {
-            R_C_JavapFileManager = Class.forName("com.sun.tools.javap.JavapFileManager");
-            R_C_JavapFileManager_M_create = R_C_JavapFileManager.getDeclaredMethod("create",
+            javapFileManagerCls = Class.forName("com.sun.tools.javap.JavapFileManager");
+            javapFileManagerCreateMethod = javapFileManagerCls.getDeclaredMethod("create",
                     DiagnosticListener.class, PrintWriter.class);
 
-            R_C_JavapTask = Class.forName("com.sun.tools.javap.JavapTask");
-            R_C_JavapTask_F_defaultFileManager =
-                    R_C_JavapTask.getDeclaredField("defaultFileManager");
-            R_C_JavapTask_F_log = R_C_JavapTask.getDeclaredField("log");
-            R_C_JavapTask_M_run = R_C_JavapTask.getDeclaredMethod("run", String[].class);
-            R_C_JavapTask_M_getDiagnosticListenerForWriter =
-                    R_C_JavapTask.getDeclaredMethod("getDiagnosticListenerForWriter", Writer.class);
+            javapTaskCls = Class.forName("com.sun.tools.javap.JavapTask");
+            javapTaskDefaultFileManagerField = javapTaskCls.getDeclaredField("defaultFileManager");
+            javapTaskLogField = javapTaskCls.getDeclaredField("log");
+            javapTaskRunMethod = javapTaskCls.getDeclaredMethod("run", String[].class);
+            javapTaskGetDiagnosticListenerForWriterMethod =
+                    javapTaskCls.getDeclaredMethod("getDiagnosticListenerForWriter", Writer.class);
 
-            // ------- make things accessible
-
-            R_C_JavapFileManager_M_create.setAccessible(true);
-            R_C_JavapTask_F_defaultFileManager.setAccessible(true);
-            R_C_JavapTask_F_log.setAccessible(true);
-            R_C_JavapTask_M_run.setAccessible(true);
-            R_C_JavapTask_M_getDiagnosticListenerForWriter.setAccessible(true);
+            javapFileManagerCreateMethod.setAccessible(true);
+            javapTaskDefaultFileManagerField.setAccessible(true);
+            javapTaskLogField.setAccessible(true);
+            javapTaskRunMethod.setAccessible(true);
+            javapTaskGetDiagnosticListenerForWriterMethod.setAccessible(true);
         } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ex) {
             throw new ReflectionException(
                     "A fatal exception has occurred while using reflection in the non-static initializer of org.togetherjava.tjbot.javap.Javap",
                     ex);
         }
     }
-
-    // ========
 
     /**
      * Disassembles the given classfile bytecode with given program arguments
@@ -87,12 +73,12 @@ public final class Javap {
         PrintWriter log = new PrintWriter(stringWriter);
 
         try {
-            Object JavapTask = R_I_JavapTask();
+            Object javapTaskInstance = createJavapTaskObject();
 
-            R_C_JavapTask_F_defaultFileManager.set(JavapTask, new IMJavapFileManager(
-                    getDefaultFileManager(JavapTask, log), bytes, TEMP_FILE_NAME));
+            javapTaskDefaultFileManagerField.set(javapTaskInstance, new IMJavapFileManager(
+                    getDefaultFileManager(javapTaskInstance, log), bytes, TEMP_FILE_NAME));
 
-            R_C_JavapTask_F_log.set(JavapTask, log);
+            javapTaskLogField.set(javapTaskInstance, log);
 
             List<String> invokeOptions = Arrays.stream(options)
                 .map(JavapOption::getOption)
@@ -100,7 +86,7 @@ public final class Javap {
 
             invokeOptions.add(TEMP_FILE_NAME);
 
-            R_C_JavapTask_M_run.invoke(JavapTask,
+            javapTaskRunMethod.invoke(javapTaskInstance,
                     new Object[] {invokeOptions.toArray(new String[0])});
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException
                 | IllegalAccessException ex) {
@@ -119,16 +105,16 @@ public final class Javap {
      */
     private static @NotNull JavaFileManager getDefaultFileManager(@NotNull Object JavapTask,
             @NotNull PrintWriter log) throws InvocationTargetException, IllegalAccessException {
-        return (JavaFileManager) R_C_JavapFileManager_M_create.invoke(null,
+        return (JavaFileManager) javapFileManagerCreateMethod.invoke(null,
                 getDiagnosticListenerForWriter(JavapTask, log), log);
     }
 
     /**
      * Creates a new {@link com.sun.tools.javap.JavapTask} instance
      */
-    private static @NotNull Object R_I_JavapTask() throws NoSuchMethodException,
+    private static @NotNull Object createJavapTaskObject() throws NoSuchMethodException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
-        return R_C_JavapTask.getConstructor().newInstance();
+        return javapTaskCls.getConstructor().newInstance();
     }
 
     /**
@@ -140,7 +126,7 @@ public final class Javap {
     private static @NotNull DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(
             @NotNull Object JavapTask, @NotNull PrintWriter log)
             throws InvocationTargetException, IllegalAccessException {
-        return (DiagnosticListener<JavaFileObject>) R_C_JavapTask_M_getDiagnosticListenerForWriter
+        return (DiagnosticListener<JavaFileObject>) javapTaskGetDiagnosticListenerForWriterMethod
             .invoke(JavapTask, log); // getDiagnosticListenerForWriter's signature:
                                      // DiagnosticListener<JavaFileObject>
                                      // getDiagnosticListenerForWriter(Writer)
