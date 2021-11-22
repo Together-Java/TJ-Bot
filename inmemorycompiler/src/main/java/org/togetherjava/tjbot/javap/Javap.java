@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  */
 public final class Javap {
     // Hide constructor
-    public Javap() {}
+    private Javap() {}
 
     private static final String TEMP_FILE_NAME = "tmp",
             ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
