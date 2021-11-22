@@ -27,12 +27,15 @@ public final class Javap {
     private static final String TEMP_FILE_NAME = "tmp",
             ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
 
-    private static final Class<?> javapFileManagerCls, javapTaskCls;
+    private static final Class<?> javapFileManagerCls;
+    private static final Class<?> javapTaskCls;
 
-    private static final Method javapFileManagerCreateMethod, javapTaskRunMethod,
-            javapTaskGetDiagnosticListenerForWriterMethod;
+    private static final Method javapFileManagerCreateMethod;
+    private static final Method javapTaskRunMethod;
+    private static final Method javapTaskGetDiagnosticListenerForWriterMethod;
 
-    private static final Field javapTaskDefaultFileManagerField, javapTaskLogField;
+    private static final Field javapTaskDefaultFileManagerField;
+    private static final Field javapTaskLogField;
 
     static {
         try {
