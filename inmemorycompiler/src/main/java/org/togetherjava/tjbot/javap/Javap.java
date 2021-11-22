@@ -106,10 +106,10 @@ public final class Javap {
      * {@link PrintWriter} using
      * {@link com.sun.tools.javap.JavapFileManager#create(DiagnosticListener, PrintWriter)}
      */
-    private static @NotNull JavaFileManager getDefaultFileManager(@NotNull Object JavapTask,
+    private static @NotNull JavaFileManager getDefaultFileManager(@NotNull Object javapTaskInstance,
             @NotNull PrintWriter log) throws InvocationTargetException, IllegalAccessException {
         return (JavaFileManager) javapFileManagerCreateMethod.invoke(null,
-                getDiagnosticListenerForWriter(JavapTask, log), log);
+                getDiagnosticListenerForWriter(javapTaskInstance, log), log);
     }
 
     /**
@@ -127,10 +127,10 @@ public final class Javap {
      */
     @SuppressWarnings("unchecked")
     private static @NotNull DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(
-            @NotNull Object JavapTask, @NotNull PrintWriter log)
+            @NotNull Object javapTaskInstance, @NotNull PrintWriter log)
             throws InvocationTargetException, IllegalAccessException {
         return (DiagnosticListener<JavaFileObject>) javapTaskGetDiagnosticListenerForWriterMethod
-            .invoke(JavapTask, log); // getDiagnosticListenerForWriter's signature:
+            .invoke(javapTaskInstance, log); // getDiagnosticListenerForWriter's signature:
                                      // DiagnosticListener<JavaFileObject>
                                      // getDiagnosticListenerForWriter(Writer)
     }
