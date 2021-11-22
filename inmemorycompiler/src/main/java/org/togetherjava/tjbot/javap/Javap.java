@@ -24,8 +24,8 @@ public final class Javap {
     // Hide constructor
     private Javap() {}
 
-    private static final String TEMP_FILE_NAME = "tmp",
-            ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
+    private static final String TEMP_FILE_NAME = "tmp";
+    private static final String ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
 
     private static final Class<?> javapFileManagerCls;
     private static final Class<?> javapTaskCls;
