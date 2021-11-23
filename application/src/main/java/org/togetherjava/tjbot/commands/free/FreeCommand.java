@@ -146,16 +146,6 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         event.reply(UserStrings.MARK_AS_FREE.message()).queue();
     }
 
-    private @NotNull Guild requiresGuild(SlashCommandEvent event) {
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            throw new IllegalStateException(
-                    "A global slash command '%s' somehow got routed to the free system which requires a guild"
-                        .formatted(event.getCommandString()));
-        }
-        return guild;
-    }
-
     /**
      * Method to test event to see if it should be processed.
      * <p>
@@ -246,6 +236,16 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             throw new IllegalStateException(
                     "The guild with id '%d' has been deleted since free command system was configured."
                         .formatted(id));
+        }
+        return guild;
+    }
+
+    private @NotNull Guild requiresGuild(SlashCommandEvent event) {
+        Guild guild = event.getGuild();
+        if (guild == null) {
+            throw new IllegalStateException(
+                    "A global slash command '%s' somehow got routed to the free system which requires a guild"
+                            .formatted(event.getCommandString()));
         }
         return guild;
     }
