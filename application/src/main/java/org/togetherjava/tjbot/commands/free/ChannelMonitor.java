@@ -130,7 +130,7 @@ final class ChannelMonitor {
             .findFirst()
             .map(FreeUtil::timeFromId)
             .map(createdTime -> createdTime.isBefore(FreeUtil.inactiveTimeLimit()))
-            .orElse(true);
+            .orElse(true); // if no channel history could be fetched assume channel is free
     }
 
     /**
