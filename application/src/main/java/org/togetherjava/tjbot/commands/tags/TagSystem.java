@@ -107,7 +107,6 @@ public final class TagSystem {
      * @param id the id of the tag to put
      * @param content the content of the tag to put
      */
-    // Execute closes resources; without curly braces on the lambda, the call would be ambiguous
     void putTag(String id, String content) {
         database.writeTransaction(
                 context -> context.insertInto(Tags.TAGS, Tags.TAGS.ID, Tags.TAGS.CONTENT)
