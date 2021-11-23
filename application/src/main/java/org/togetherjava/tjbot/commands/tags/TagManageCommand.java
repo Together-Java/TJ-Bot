@@ -22,6 +22,7 @@ import java.util.OptionalLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -47,6 +48,30 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String CONTENT_DESCRIPTION = "the content of the tag";
     private static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
+    /**
+     * A whitespace-ish character that is not recognized by Discord as whitespace, and hence not
+     * left-trimmed. See {@link #preserveLeadingSpaces(CharSequence)} for details.
+     */
+    private static final String DISCORD_SAFE_BLANK = "\u2800";
+    /**
+     * How many leading spaces it needs to form a group that will be identified and replaced by
+     * {@link #preserveLeadingSpaces(CharSequence)}.
+     */
+    private static final int LEADING_SPACES_GROUP_SIZE = 2;
+    /**
+     * Matches groups of line-leading spaces. The group size is determined by
+     * {@link #LEADING_SPACES_GROUP_SIZE}. See {@link #preserveLeadingSpaces(CharSequence)} for
+     * details.
+     */
+    private static final Pattern LEADING_SPACES_PATTERN =
+            Pattern.compile("(?m)^(?: {" + LEADING_SPACES_GROUP_SIZE + "})+");
+    /**
+     * Matches line-leading discord-safe-blanks. See {@link #preserveLeadingSpaces(CharSequence)}
+     * for details.
+     */
+    private static final Pattern LEADING_DISCORD_SAFE_BLANKS_PATTERN =
+            Pattern.compile("(?m)^" + DISCORD_SAFE_BLANK + "+");
+
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
@@ -120,6 +145,55 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
     }
 
+    /**
+     * Replaces all line-leading whitespaces by a blank character that is not recognized by Discord
+     * as whitespace, and hence not left-trimmed.
+     * <p>
+     * Use {@link #undoPreserveLeadingSpaces(CharSequence)} to undo the changes. I.e.
+     * {@code undoPreserveLeadingSpaces(preserveLeadingSpaces(text))} is given to yield back
+     * {@code text}.
+     *
+     * @param content the content to fix
+     * @return the fixed content
+     */
+    static @NotNull String preserveLeadingSpaces(@NotNull CharSequence content) {
+        // NOTE This replacement system is not really nice and kinda dirty. Unfortunately, there
+        // does not seem to be a better solution to the original problem. See
+        // https://github.com/Together-Java/TJ-Bot/issues/273.
+        Matcher matcher = LEADING_SPACES_PATTERN.matcher(content);
+        StringBuilder sb = new StringBuilder(content.length());
+        while (matcher.find()) {
+            // Replaces for example every two (group size) leading whitespaces by a single discord
+            // safe blank
+            int spaceGroups = matcher.group(0).length() / LEADING_SPACES_GROUP_SIZE;
+            matcher.appendReplacement(sb, DISCORD_SAFE_BLANK.repeat(spaceGroups));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
+    /**
+     * Undoes the changes made by {@link #preserveLeadingSpaces(CharSequence)}. I.e. replaces the
+     * special blank character, if leading a message, by whitespaces again.
+     * <p>
+     * It is given that {@code undoPreserveLeadingSpaces(preserveLeadingSpaces(text))} yields back
+     * {@code text}.
+     *
+     * @param content the fixed content to undo
+     * @return the original content
+     */
+    static @NotNull String undoPreserveLeadingSpaces(@NotNull CharSequence content) {
+        Matcher matcher = LEADING_DISCORD_SAFE_BLANKS_PATTERN.matcher(content);
+        StringBuilder sb = new StringBuilder(content.length());
+        while (matcher.find()) {
+            // Replaces for example every leading discord safe blank by two (group size) whitespaces
+            int spaces = matcher.group(0).length() * LEADING_SPACES_GROUP_SIZE;
+            matcher.appendReplacement(sb, " ".repeat(spaces));
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         if (!hasTagManageRole(Objects.requireNonNull(event.getMember()))) {
@@ -147,14 +221,18 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        event.replyEmbeds(MessageUtils.generateEmbed(null,
-                MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()), event.getUser(),
-                TagSystem.AMBIENT_COLOR))
+        String message = preserveLeadingSpaces(
+                MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()));
+
+        event
+            .replyEmbeds(MessageUtils.generateEmbed(null, message, event.getUser(),
+                    TagSystem.AMBIENT_COLOR))
             .queue();
     }
 
     private void createTag(@NotNull CommandInteraction event) {
-        String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString();
+        String content = undoPreserveLeadingSpaces(
+                Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString());
 
         handleAction(TagStatus.NOT_EXISTS, id -> tagSystem.putTag(id, content), "created", event);
     }
@@ -164,7 +242,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     private void editTag(@NotNull CommandInteraction event) {
-        String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString();
+        String content = undoPreserveLeadingSpaces(
+                Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString());
 
         handleAction(TagStatus.EXISTS, id -> tagSystem.putTag(id, content), "edited", event);
     }
@@ -232,7 +311,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
-            idAndContentAction.accept(tagId, message.getContentRaw());
+            String content = undoPreserveLeadingSpaces(message.getContentRaw());
+            idAndContentAction.accept(tagId, content);
             sendSuccessMessage(event, tagId, actionVerb);
         }, failure -> {
             if (failure instanceof ErrorResponseException ex
