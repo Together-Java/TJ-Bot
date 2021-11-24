@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
  * A javap-interface that uses reflection to access locked-down classes of the jdk.jdeps module and
  * keep everything in-memory
  */
+// Disables "Reflection should not be used to increase accessibility of classes, methods, or fields" rule (Reflection is required for the Javap class to work).
+@SuppressWarnings({"java:S3011"})
 public final class Javap {
     // Hide constructor
     private Javap() {}

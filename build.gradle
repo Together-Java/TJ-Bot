@@ -48,9 +48,6 @@ subprojects {
             // https://sonarcloud.io/project/issues?id=Together-Java_TJ-Bot&issues=AXvleoajNC7zjjhmSufQ&open=AXvleoajNC7zjjhmSufQ
             // https://sonarcloud.io/project/issues?id=Together-Java_TJ-Bot&issues=AXvleoX5NC7zjjhmSufP&open=AXvleoX5NC7zjjhmSufP
             message 'java:S5998'
-
-            // Disables "Reflection should not be used to increase accessibility of classes, methods, or fields" rule (Reflection is required for the Javap class to work).
-            message 'java:S3011'
         }
     }
 
