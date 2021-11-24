@@ -17,6 +17,8 @@ Unsure where to begin contributing to TJ-Bot? You can start by looking through t
 * [good first issue](https://github.com/Together-Java/TJ-Bot/issues/?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) - issues which should only require a few lines of code, and a test or two.
 * [help wanted](https://github.com/Together-Java/TJ-Bot/issues/?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)  - issues which should be a bit more involved than good first issues.
 
+Let us know that you intend to work on the issue by commenting on it, and we will assign it to you.
+
 Working on your first Pull Request? You can check these resources:
 * http://makeapullrequest.com/
 * http://www.firsttimersonly.com/
@@ -27,7 +29,13 @@ At this point, you're ready to make your changes! Feel free to ask for help; eve
 
 ### Create an issue
 
-Most code changes originate in creation of an [issue](https://github.com/Together-Java/TJ-Bot/issues), where you describe what you would like to change. While this step is generally recommended, it is not necessary.
+Before creating a new issue, make sure to [search](https://github.com/Together-Java/TJ-Bot/issues?q=is%3Aissue) for existing issues first.
+
+If the issue already exists, comment on it saying that you intend to work on it, and we will assign it to you!
+
+In case it doesn't, feel free to open a new issue describing what you would like to change, improve or fix. The community will then discuss the issue, and assign it to you.
+
+Now you are ready to do some work!
 
 ### Create a feature-branch or fork
 
