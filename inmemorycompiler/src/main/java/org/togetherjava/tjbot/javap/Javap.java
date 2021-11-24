@@ -92,7 +92,7 @@ public final class Javap {
             invokeOptions.add(TEMP_FILE_NAME);
 
             javapTaskRunMethod.invoke(javapTaskInstance,
-                    (Object) invokeOptions.toArray(new String[0]));
+                    (Object) invokeOptions.toArray(String[]::new));
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException
                 | IllegalAccessException ex) {
             throw new ReflectionException("A fatal exception has occurred while using reflection",
