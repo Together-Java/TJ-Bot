@@ -69,13 +69,11 @@ Each pull request should be clear, concise, and informative. Please consider che
 
 A pull request should only implement one feature or bugfix. If you want to add or fix more than one thing, please submit another pull request.
 
-### Merge your pull request
+### Automated checks and review
 
-Once your code passed those checks and has been reviewed and **accepted by at least two members** of the community, you can merge it to the `develop` branch.
+After you created a PR, automated checks will be run. PR cannot be merged without all tests passing, so make sure to fix all the issues that are found.
 
-We require a *linear history*, that means you have two options to get your code merged:
-* `squash`, merges all your commits together into a single commit, which will then be merged into the project's history
-* `rebase`, puts your changes aside, updates the original code base you worked with and then puts your changes back on top of it, all your commits will be preserved and land in the project's history
+Your PR will be reviewed, and after being accepted by at least two members of the community, it will get merged to the `develop` branch! :tada: 
 
 From there on, it will lead to an automatic re-deployment of the bot on a test environment, where you can test out your changes live.
 
