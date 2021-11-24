@@ -37,9 +37,9 @@ In case it doesn't, feel free to open a new issue describing what you would like
 
 Now you are ready to do some work!
 
-### Create a feature-branch or fork
+### Create a fork
 
-Then, you either create a `feature/name_of_your_feature` branch for your changes or a fork of the repository.
+Then, you  fork the repository.
 
 The repository has two main branches:
 * `master`, a stable branch mostly used for releases that receives changes only occasionally
@@ -48,6 +48,10 @@ The repository has two main branches:
 Your work will be based off the `develop` branch.
 
 To incorporate new commits from `develop` into your feature branch, use `git pull --rebase` or equivalent GUI action. We strongly prefer having linear history, and PRs with merge commits will have to be squashed before the merge, which results in losing all valuable commit history.
+
+After your first contribution, you will be invited to the contributor team, and you will be able to work on the project directly, without a fork.
+
+In that case, create a branch like this `feature/name-of-your-feature`, and push directly to the repo!
 
 ### Commit your changes
 
