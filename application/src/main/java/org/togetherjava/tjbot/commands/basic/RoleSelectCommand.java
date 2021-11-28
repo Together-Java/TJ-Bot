@@ -62,11 +62,11 @@ public class RoleSelectCommand extends SlashCommandAdapter {
 
         SubcommandData allRoles =
                 new SubcommandData(ALL_OPTION, "Lists all the rolls in the server for users")
-                        .addOptions(messageOptions);
+                    .addOptions(messageOptions);
 
         SubcommandData selectRoles =
                 new SubcommandData(CHOOSE_OPTION, "Choose the roles for users to select")
-                        .addOptions(messageOptions);
+                    .addOptions(messageOptions);
 
         getData().addSubcommands(allRoles, selectRoles);
     }
@@ -100,9 +100,9 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         String description = handleOption(descriptionOption);
 
         event.replyEmbeds(makeEmbed(title, description))
-                .addActionRow(menu.build())
-                .setEphemeral(ephemeral)
-                .queue();
+            .addActionRow(menu.build())
+            .setEphemeral(ephemeral)
+            .queue();
     }
 
     /**
@@ -115,8 +115,8 @@ public class RoleSelectCommand extends SlashCommandAdapter {
      * @param minValues the minimum number of selections. nullable {@link Integer}
      */
     private static void addMenuOptions(@NotNull SlashCommandEvent event,
-                                       @NotNull SelectionMenu.Builder menu, @NotNull String placeHolder,
-                                       @Nullable Integer minValues) {
+            @NotNull SelectionMenu.Builder menu, @NotNull String placeHolder,
+            @Nullable Integer minValues) {
 
         Role highestBotRole =
                 Objects.requireNonNull(event.getGuild()).getSelfMember().getRoles().get(1);
@@ -149,7 +149,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
      * @return the formatted embed {@link MessageEmbed}
      */
     private static @NotNull MessageEmbed makeEmbed(@Nullable String title,
-                                                   @Nullable String description) {
+            @Nullable String description) {
 
         if (title == null) {
             title = "Select your roles";
@@ -194,8 +194,8 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             }
 
             event.replyEmbeds(event.getMessage().getEmbeds().get(0))
-                    .addActionRow(menu.build())
-                    .queue();
+                .addActionRow(menu.build())
+                .queue();
 
             return;
         }
