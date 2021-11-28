@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
@@ -57,6 +58,7 @@ public enum Commands {
         commands.add(new UnbanCommand(actionsStore));
         commands.add(new FreeCommand());
         commands.add(new AuditCommand(actionsStore));
+        commands.add(new RoleSelectCommand());
 
         return commands;
     }
