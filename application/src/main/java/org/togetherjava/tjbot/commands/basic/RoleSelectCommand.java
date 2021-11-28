@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
@@ -25,10 +24,11 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 /**
- * Implements the {@code roleSelect} command.
+ * Implements the {@code roleselect} command.
  *
  * <p>
  * Allows users to select their roles without using reactions, instead it uses selection menus where
@@ -62,11 +62,11 @@ public class RoleSelectCommand extends SlashCommandAdapter {
 
         SubcommandData allRoles =
                 new SubcommandData(ALL_OPTION, "Lists all the rolls in the server for users")
-                    .addOptions(messageOptions);
+                        .addOptions(messageOptions);
 
         SubcommandData selectRoles =
                 new SubcommandData(CHOOSE_OPTION, "Choose the roles for users to select")
-                    .addOptions(messageOptions);
+                        .addOptions(messageOptions);
 
         getData().addSubcommands(allRoles, selectRoles);
     }
@@ -74,12 +74,6 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
-        if (!member.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("You dont have the right permissions to use this command")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
 
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
@@ -105,19 +99,10 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         String title = handleOption(titleOption);
         String description = handleOption(descriptionOption);
 
-        if (ephemeral) {
-            event.replyEmbeds(makeEmbed(title, description))
+        event.replyEmbeds(makeEmbed(title, description))
                 .addActionRow(menu.build())
-                .setEphemeral(true)
+                .setEphemeral(ephemeral)
                 .queue();
-        } else {
-            event.getChannel()
-                .sendMessageEmbeds(makeEmbed(title, description))
-                .setActionRow(menu.build())
-                .queue();
-
-            event.reply("Message sent successfully!").setEphemeral(true).queue();
-        }
     }
 
     /**
@@ -130,8 +115,8 @@ public class RoleSelectCommand extends SlashCommandAdapter {
      * @param minValues the minimum number of selections. nullable {@link Integer}
      */
     private static void addMenuOptions(@NotNull SlashCommandEvent event,
-            @NotNull SelectionMenu.Builder menu, @NotNull String placeHolder,
-            @Nullable Integer minValues) {
+                                       @NotNull SelectionMenu.Builder menu, @NotNull String placeHolder,
+                                       @Nullable Integer minValues) {
 
         Role highestBotRole =
                 Objects.requireNonNull(event.getGuild()).getSelfMember().getRoles().get(1);
@@ -147,9 +132,8 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         menu.setPlaceholder(placeHolder).setMaxValues(roles.size());
 
         for (Role role : roles) {
-            if (role.getName().equals("@everyone") || role.getTags().getBotId() != null) {
+            if (role.getName().equals("@everyone"))
                 continue;
-            }
             menu.addOption(role.getName(), role.getId());
         }
     }
@@ -165,29 +149,36 @@ public class RoleSelectCommand extends SlashCommandAdapter {
      * @return the formatted embed {@link MessageEmbed}
      */
     private static @NotNull MessageEmbed makeEmbed(@Nullable String title,
-            @Nullable String description) {
+                                                   @Nullable String description) {
 
         if (title == null) {
-            title = "Select your roles:";
+            title = "Select your roles";
         }
 
-        return new EmbedBuilder().setTitle(title)
-            .setDescription(description)
-            .setColor(new Color(24, 221, 136))
-            .build();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        embedBuilder.setTitle(title);
+
+        if (description != null) {
+            embedBuilder.setDescription(description);
+        }
+
+        embedBuilder.setColor(new Color(24, 221, 136));
+
+        return embedBuilder.build();
     }
 
     @Override
     public void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args) {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
 
-        Guild guild = Objects.requireNonNull(event.getGuild());
+        // Get the roles the bot can interact with
+        List<Role> guildRoles = Objects.requireNonNull(event.getGuild()).getRoles();
+        List<String> roleIds = guildRoles.stream().map(Role::getId).collect(Collectors.toList());
 
-        List<Role> selectedRoles = new ArrayList<>();
-        for (SelectOption selectedOption : Objects.requireNonNull(event.getSelectedOptions())) {
-            Role selectedRole = guild.getRoleById(selectedOption.getValue());
-            if (selectedRole != null && guild.getSelfMember().canInteract(selectedRole)) {
-                selectedRoles.add(selectedRole);
+        List<Role> roles = new ArrayList<>();
+        for (SelectOption role : Objects.requireNonNull(event.getSelectedOptions())) {
+            if (roleIds.contains(role.getValue())) {
+                roles.add(guildRoles.get(roleIds.indexOf(role.getValue())));
             }
         }
 
@@ -195,45 +186,28 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         if (event.getMessage().isEphemeral()) {
 
             SelectionMenu.Builder menu = SelectionMenu.create(generateComponentId(member.getId()));
-            menu.setPlaceholder("Select your roles")
-                .setMaxValues(selectedRoles.size())
-                .setMinValues(0);
+            menu.setPlaceholder("Select your roles").setMaxValues(roles.size());
 
-            // Add selected options to the menu
-            selectedRoles.forEach(role -> menu.addOption(role.getName(), role.getId()));
+            for (SelectOption roleOption : Objects.requireNonNull(event.getSelectedOptions())) {
+                Role role = guildRoles.get(roleIds.indexOf(roleOption.getValue()));
+                menu.addOption(role.getName(), role.getId());
+            }
 
-            event.getChannel()
-                .sendMessageEmbeds(event.getMessage().getEmbeds().get(0))
-                .setActionRow(menu.build())
-                .queue();
-
-            event.reply("Message sent successfully!").setEphemeral(true).queue();
+            event.replyEmbeds(event.getMessage().getEmbeds().get(0))
+                    .addActionRow(menu.build())
+                    .queue();
 
             return;
         }
 
-        List<SelectOption> menuOptions =
-                Objects.requireNonNull(event.getInteraction().getComponent()).getOptions();
-
-
-        for (SelectOption selectedOption : menuOptions) {
-            Role role = guild.getRoleById(selectedOption.getValue());
-
-            if (role == null) {
-                logger.info(
-                        "The {} ({}) role has been removed but is still an option in the selection menu",
-                        selectedOption.getLabel(), selectedOption.getValue());
-                continue;
-            }
-
-            if (selectedRoles.contains(role)) {
-                guild.addRoleToMember(member, role).queue();
-            } else {
-                event.getGuild().removeRoleFromMember(member, role).queue();
+        // Add the selected roles to the member
+        for (Role role : guildRoles) {
+            if (roles.contains(role)) {
+                Objects.requireNonNull(event.getGuild()).addRoleToMember(member, role).queue();
             }
         }
 
-        event.reply("Updated your roles!").setEphemeral(true).queue();
+        event.reply("Added your roles!").setEphemeral(true).queue();
     }
 
     /**
