@@ -74,6 +74,12 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
+        if (!member.hasPermission(Permission.MANAGE_ROLES)) {
+            event.reply("You dont have the right permissions to use this command")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
 
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
