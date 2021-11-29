@@ -190,10 +190,10 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         List<Role> guildRoles = Objects.requireNonNull(event.getGuild()).getRoles();
         List<String> roleIds = guildRoles.stream().map(Role::getId).collect(Collectors.toList());
 
-        List<Role> roles = new ArrayList<>();
+        List<Role> selectedRoles = new ArrayList<>();
         for (SelectOption role : Objects.requireNonNull(event.getSelectedOptions())) {
             if (roleIds.contains(role.getValue())) {
-                roles.add(guildRoles.get(roleIds.indexOf(role.getValue())));
+                selectedRoles.add(guildRoles.get(roleIds.indexOf(role.getValue())));
             }
         }
 
@@ -201,7 +201,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         if (event.getMessage().isEphemeral()) {
 
             SelectionMenu.Builder menu = SelectionMenu.create(generateComponentId(member.getId()));
-            menu.setPlaceholder("Select your roles").setMaxValues(roles.size());
+            menu.setPlaceholder("Select your roles").setMaxValues(selectedRoles.size());
 
             for (SelectOption roleOption : Objects.requireNonNull(event.getSelectedOptions())) {
                 Role role = guildRoles.get(roleIds.indexOf(roleOption.getValue()));
@@ -218,14 +218,25 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             return;
         }
 
+        List<SelectOption> menuOptions =
+                Objects.requireNonNull(event.getInteraction().getComponent()).getOptions();
+
+        // Remove deselected roles
+        for (SelectOption option : menuOptions) {
+            Role role = guildRoles.get(roleIds.indexOf(option.getValue()));
+            if (!selectedRoles.contains(role)) {
+                Objects.requireNonNull(event.getGuild()).removeRoleFromMember(member, role).queue();
+            }
+        }
+
         // Add the selected roles to the member
         for (Role role : guildRoles) {
-            if (roles.contains(role)) {
+            if (selectedRoles.contains(role)) {
                 Objects.requireNonNull(event.getGuild()).addRoleToMember(member, role).queue();
             }
         }
 
-        event.reply("Added your roles!").setEphemeral(true).queue();
+        event.reply("Updated your roles!").setEphemeral(true).queue();
     }
 
     /**
