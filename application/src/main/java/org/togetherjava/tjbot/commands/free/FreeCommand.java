@@ -98,7 +98,6 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      */
     @Override
     public void onReady(@NotNull final ReadyEvent event) {
-        @NotNull
         final JDA jda = event.getJDA();
         // TODO remove this when onGuildMessageReceived has another access point
         jda.addEventListener(this);
@@ -166,8 +165,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             return false;
         }
         // checks if guild is null and throws IllegalStateException if it is
-        @NotNull
-        Guild guild = requiresGuild(event);
+        @NotNull Guild guild = requiresGuild(event);
         if (!channelMonitor.isMonitoringGuild(guild.getIdLong())) {
             logger.error(
                     "Slash command used by {} in {}(channel: {}) when guild is not configured for Free Command",
