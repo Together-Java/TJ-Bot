@@ -105,10 +105,19 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         String title = handleOption(titleOption);
         String description = handleOption(descriptionOption);
 
-        event.replyEmbeds(makeEmbed(title, description))
-            .addActionRow(menu.build())
-            .setEphemeral(ephemeral)
-            .queue();
+        if (ephemeral) {
+            event.replyEmbeds(makeEmbed(title, description))
+                .addActionRow(menu.build())
+                .setEphemeral(true)
+                .queue();
+        } else {
+            event.getChannel()
+                .sendMessageEmbeds(makeEmbed(title, description))
+                .setActionRow(menu.build())
+                .queue();
+
+            event.reply("Message sent successfully!").setEphemeral(true).queue();
+        }
     }
 
     /**
@@ -158,7 +167,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             @Nullable String description) {
 
         if (title == null) {
-            title = "Select your roles";
+            title = "Select your roles:";
         }
 
         EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -199,9 +208,12 @@ public class RoleSelectCommand extends SlashCommandAdapter {
                 menu.addOption(role.getName(), role.getId());
             }
 
-            event.replyEmbeds(event.getMessage().getEmbeds().get(0))
-                .addActionRow(menu.build())
+            event.getChannel()
+                .sendMessageEmbeds(event.getMessage().getEmbeds().get(0))
+                .setActionRow(menu.build())
                 .queue();
+
+            event.reply("Message sent successfully!").setEphemeral(true).queue();
 
             return;
         }
