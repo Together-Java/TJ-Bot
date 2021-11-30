@@ -165,7 +165,8 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             return false;
         }
         // checks if guild is null and throws IllegalStateException if it is
-        @NotNull Guild guild = requiresGuild(event);
+        @NotNull
+        Guild guild = requiresGuild(event);
         if (!channelMonitor.isMonitoringGuild(guild.getIdLong())) {
             logger.error(
                     "Slash command used by {} in {}(channel: {}) when guild is not configured for Free Command",
@@ -243,7 +244,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         if (guild == null) {
             throw new IllegalStateException(
                     "A global slash command '%s' somehow got routed to the free system which requires a guild"
-                            .formatted(event.getCommandString()));
+                        .formatted(event.getCommandString()));
         }
         return guild;
     }
