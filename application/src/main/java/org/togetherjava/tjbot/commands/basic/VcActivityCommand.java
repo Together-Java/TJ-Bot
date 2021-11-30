@@ -45,7 +45,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    private static final String YOUTUBE_TOGETHER_NAME = " YouTube Together";
+    public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
     public static final String BETRAYAL_IO_NAME = "Betrayal.io";
     public static final String FISHINGTON_IO_NAME = "Fishington.io";
