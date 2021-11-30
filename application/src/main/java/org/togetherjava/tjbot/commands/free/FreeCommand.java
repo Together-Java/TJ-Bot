@@ -165,7 +165,6 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
             return false;
         }
         // checks if guild is null and throws IllegalStateException if it is
-        @NotNull
         Guild guild = requiresGuild(event);
         if (!channelMonitor.isMonitoringGuild(guild.getIdLong())) {
             logger.error(
