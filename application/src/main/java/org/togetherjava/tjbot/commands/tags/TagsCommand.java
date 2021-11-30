@@ -8,8 +8,12 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Implements the {@code /tags} command which lets the bot respond with all available tags.
@@ -42,11 +46,22 @@ public final class TagsCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // TODO A list might be better than comma separated, which is hard to read
-        event.replyEmbeds(MessageUtils.generateEmbed("All available tags",
-                String.join(", ", tagSystem.getAllIds()), event.getUser(), TagSystem.AMBIENT_COLOR))
-            .addActionRow(
-                    TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
-            .queue();
+
+        ArrayList<String> list = new ArrayList<>(tagSystem.getAllIds());
+        if (list.size() > 200) {
+            Logger logger = Logger.getLogger(TagsCommand.class.getName());
+            logger.setLevel(Level.WARNING);
+            logger.warning("- WARNING - TAGS ARE BEYOND 200 LINES ");
+        }
+
+        event
+                .replyEmbeds(MessageUtils.generateEmbed("All available tags",
+                        "* " + String.join("\n ",
+                                list.stream().sorted().collect(Collectors.joining("\n * "))),
+                        event.getUser(), TagSystem.AMBIENT_COLOR))
+                .addActionRow(
+                        TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
+                .queue();
     }
 
     @Override
