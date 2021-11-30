@@ -45,17 +45,18 @@ public final class TagsCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        // TODO A list might be better than comma separated, which is hard to read
 
         ArrayList<String> list = new ArrayList<>(tagSystem.getAllIds());
+
         if (list.size() > 200) {
+
             Logger logger = Logger.getLogger(TagsCommand.class.getName());
+
             logger.setLevel(Level.WARNING);
             logger.warning("- WARNING - TAGS ARE BEYOND 200 LINES ");
         }
 
-        event
-                .replyEmbeds(MessageUtils.generateEmbed("All available tags",
+        event.replyEmbeds(MessageUtils.generateEmbed("All available tags",
                         "* " + String.join("\n ",
                                 list.stream().sorted().collect(Collectors.joining("\n * "))),
                         event.getUser(), TagSystem.AMBIENT_COLOR))
