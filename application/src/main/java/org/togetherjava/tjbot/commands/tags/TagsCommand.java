@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -31,9 +30,9 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public final class TagsCommand extends SlashCommandAdapter {
-    private final TagSystem tagSystem;
     private static final Logger logger = LoggerFactory.getLogger(TagsCommand.class);
     private static final int MAX_TAGS_THRESHOLD_WARNING = 200;
+    private final TagSystem tagSystem;
 
     /**
      * Creates a new instance, using the given tag system as base.
