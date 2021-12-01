@@ -45,7 +45,7 @@ shadowJar {
 dependencies {
     implementation project(':database')
 
-    implementation 'net.dv8tion:JDA:4.3.0_339'
+    implementation 'net.dv8tion:JDA:4.4.0_351'
 
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
