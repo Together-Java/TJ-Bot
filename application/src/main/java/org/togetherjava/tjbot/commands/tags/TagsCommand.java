@@ -9,8 +9,11 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.slf4j.Logger;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +33,7 @@ import java.util.stream.Collectors;
 public final class TagsCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
     private static final Logger logger = LoggerFactory.getLogger(TagsCommand.class);
+    private static final int MAX_TAGS_THRESHOLD_WARNING = 200;
 
     /**
      * Creates a new instance, using the given tag system as base.
@@ -44,17 +48,16 @@ public final class TagsCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        int MAX_TAGS_THRESHOLD_WARNING = 200;
-        if (tagSystem.getAllIds().size() > MAX_TAGS_THRESHOLD_WARNING) {
+        Collection<String> tagIds = tagSystem.getAllIds();
+        if (tagIds.size() > MAX_TAGS_THRESHOLD_WARNING) {
             // TODO Implement the edge case
 
             logger.warn(
                     "The amount of tags is very high and it might soon exceed the maximum character limit. The code should be adjusted to support this edge case soon.");
         }
-        String tagListText = tagSystem.getAllIds()
-            .stream()
+        String tagListText = tagIds.stream()
             .sorted()
-            .map(tag -> "* " + tag)
+            .map(tag -> "\u2022 " + tag)
             .collect(Collectors.joining("\n"));
 
         event
