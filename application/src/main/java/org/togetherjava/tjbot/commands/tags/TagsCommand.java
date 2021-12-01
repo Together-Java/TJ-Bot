@@ -49,7 +49,7 @@ public final class TagsCommand extends SlashCommandAdapter {
             // TODO Implement the edge case
 
             logger.warn(
-                    "The amount of tags is very high and it might soon exceed the maximum character limit. The code should be adjusted to support this edge case soon.\n");
+                    "The amount of tags is very high and it might soon exceed the maximum character limit. The code should be adjusted to support this edge case soon.");
         }
         String tagListText = tagSystem.getAllIds()
             .stream()
