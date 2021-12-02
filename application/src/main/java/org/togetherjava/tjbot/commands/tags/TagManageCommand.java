@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -11,12 +12,16 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.utils.ModAuditLogWriter;
 
+import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
@@ -51,6 +56,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
+
+    /**
+     * stolen from {@link org.togetherjava.tjbot.routines.ModAuditLogRoutine}
+     */
+    private static final Color MOD_AUDIT_LOG_COLOR = Color.decode("#4FC3F7");
 
     /**
      * Creates a new instance, using the given tag system as base.
@@ -156,6 +166,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         String content = tagSystem.getTag(id).orElseThrow();
         event.reply("").addFile(content.getBytes(StandardCharsets.UTF_8), "content.md").queue();
+
+        logAction(event, id);
     }
 
     private void createTag(@NotNull CommandInteraction event) {
@@ -204,6 +216,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         idAction.accept(id);
         sendSuccessMessage(event, id, actionVerb);
+
+        if (event.getOptions().stream().anyMatch(o -> o.getName().equals(CONTENT_OPTION)))
+            logAction((SlashCommandEvent) event, id,
+                    Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString());
+        else
+            logAction((SlashCommandEvent) event, id);
     }
 
     /**
@@ -239,6 +257,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
             idAndContentAction.accept(tagId, message.getContentRaw());
             sendSuccessMessage(event, tagId, actionVerb);
+
+            logAction((SlashCommandEvent) event, tagId, message.getContentRaw());
         }, failure -> {
             if (failure instanceof ErrorResponseException ex
                     && ex.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
@@ -283,6 +303,50 @@ public final class TagManageCommand extends SlashCommandAdapter {
             throw new AssertionError("Unknown tag status '%s'".formatted(requiredTagStatus));
         }
         return false;
+    }
+
+    private void logAction(@NotNull SlashCommandEvent event, @NotNull String id,
+            @Nullable String content) {
+        Guild guild = Objects.requireNonNull(event.getGuild());
+
+        EmbedBuilder embed = new EmbedBuilder()
+            .setAuthor(event.getUser().getAsTag(), null, event.getUser().getAvatarUrl())
+            .setColor(MOD_AUDIT_LOG_COLOR);
+
+        switch (Subcommand.fromName(event.getSubcommandName())) {
+            case RAW -> {
+                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Raw")
+                    .setDescription(String.format("viewed raw tag **%s**", id)));
+            }
+            case CREATE -> {
+                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Create")
+                    .setDescription(
+                            String.format("created tag **%s** with content: %n*%s*", id, content)));
+            }
+            case CREATE_WITH_MESSAGE -> {
+                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Create with message")
+                    .setDescription(
+                            String.format("created tag **%s** with content: %n*%s*", id, content)));
+            }
+            case EDIT -> {
+                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Edit")
+                    .setDescription(
+                            String.format("edited tag **%s** to content: %n*%s*", id, content)));
+            }
+            case EDIT_WITH_MESSAGE -> {
+                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Edit with message")
+                    .setDescription(
+                            String.format("edited tag **%s** to content: %n*%s*", id, content)));
+            }
+            case DELETE -> {
+                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Delete")
+                    .setDescription(String.format("deleted tag **%s**", id)));
+            }
+        }
+    }
+
+    private void logAction(@NotNull SlashCommandEvent event, @NotNull String id) {
+        logAction(event, id, null);
     }
 
     private boolean hasTagManageRole(@NotNull Member member) {
