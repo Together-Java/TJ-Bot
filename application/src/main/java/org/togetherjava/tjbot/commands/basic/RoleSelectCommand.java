@@ -200,8 +200,8 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             SelectionMenu.Builder menu = SelectionMenu.create(generateComponentId(member.getId()));
             menu.setPlaceholder("Select your roles").setMaxValues(selectedRoles.size());
 
-            for (SelectOption roleOption : Objects.requireNonNull(event.getSelectedOptions())) {
-                Role role = guildRoles.get(roleIds.indexOf(roleOption.getValue()));
+            for (SelectOption selectedOption : event.getSelectedOptions()) {
+                Role role = guildRoles.get(roleIds.indexOf(selectedOption.getValue()));
                 menu.addOption(role.getName(), role.getId());
             }
 
@@ -229,7 +229,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         // Add the selected roles to the member
         for (Role role : guildRoles) {
             if (selectedRoles.contains(role)) {
-                Objects.requireNonNull(event.getGuild()).addRoleToMember(member, role).queue();
+                event.getGuild().addRoleToMember(member, role).queue();
             }
         }
 
