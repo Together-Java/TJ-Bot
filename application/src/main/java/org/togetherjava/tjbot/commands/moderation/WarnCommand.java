@@ -76,7 +76,7 @@ public class WarnCommand extends SlashCommandAdapter {
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
         }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.BAN,
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.WARN,
                 target, dmNoticeText, reason);
     }
 
@@ -139,7 +139,7 @@ public class WarnCommand extends SlashCommandAdapter {
         Optional<Integer> oldWarnAmount = database.read(context -> {
             try (var select = context.selectFrom(WarnSystem.WARN_SYSTEM)) {
                 return Optional
-                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USERID.eq(userId)
+                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USER_ID .eq(userId)
                         .and(WarnSystem.WARN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
                     .map(WarnSystemRecord::getWarningAmount);
             }
@@ -148,10 +148,9 @@ public class WarnCommand extends SlashCommandAdapter {
         try {
             database.write(context -> {
                 WarnSystemRecord warnSystemRecord = context.newRecord(WarnSystem.WARN_SYSTEM)
-                    .setUserid(target.getIdLong())
+                    .setUserId(target.getIdLong())
                     .setGuildId(guildId)
                     .setWarnReason(reason)
-                    .setIsWarned(true)
                     .setWarningAmount(oldWarnAmount.orElse(0) + 1);
                 if (warnSystemRecord.update() == 0) {
                     warnSystemRecord.insert();

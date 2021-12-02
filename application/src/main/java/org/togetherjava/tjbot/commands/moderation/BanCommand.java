@@ -53,7 +53,7 @@ public final class BanCommand extends SlashCommandAdapter {
      * 
      * @param database used to store the bans in the database
      */
-    public BanCommand(Database database) {
+    public BanCommand(@NotNull Database database) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
         this.database = database;
 
@@ -204,11 +204,11 @@ public final class BanCommand extends SlashCommandAdapter {
         try {
             database.write(context -> {
                 BanSystemRecord banSystemRecord = context.newRecord(BanSystem.BAN_SYSTEM)
-                    .setUserid(target.getIdLong())
-                    .setAuthorId(author.getIdLong())
+                     .setCaseId(1)
+                    .setUserId(target.getIdLong())
                     .setGuildId(guild.getIdLong())
-                    .setIsBanned(true)
-                    .setBanReason(reason);
+                    .setBanReason(reason)
+                        .setActionType(ModerationUtils.Action.BAN.getVerb());
                 if (banSystemRecord.update() == 0) {
                     banSystemRecord.insert();
                 }

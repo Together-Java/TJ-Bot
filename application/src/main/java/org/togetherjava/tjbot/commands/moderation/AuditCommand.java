@@ -64,7 +64,7 @@ public class AuditCommand extends SlashCommandAdapter {
      *
      * @param database used to retrieve the user data for the moderation commands
      */
-    public AuditCommand(Database database) {
+    public AuditCommand(@NotNull Database database) {
         super(ACTION_VERB, "get the audit for the commands", SlashCommandVisibility.GUILD);
         this.database = database;
 
@@ -150,7 +150,7 @@ public class AuditCommand extends SlashCommandAdapter {
         Optional<Integer> amountOfWarns = database.read(context -> {
             try (var select = context.selectFrom(WarnSystem.WARN_SYSTEM)) {
                 return Optional
-                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USERID.eq(userId)
+                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USER_ID.eq(userId)
                         .and(WarnSystem.WARN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
                     .map(WarnSystemRecord::getWarningAmount);
             }

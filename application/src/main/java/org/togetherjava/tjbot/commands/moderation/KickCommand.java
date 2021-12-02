@@ -46,7 +46,7 @@ public final class KickCommand extends SlashCommandAdapter {
      * 
      * @param database used to store the kicks in the database
      */
-    public KickCommand(Database database) {
+    public KickCommand(@NotNull Database database) {
         super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
         this.database = database;
 
