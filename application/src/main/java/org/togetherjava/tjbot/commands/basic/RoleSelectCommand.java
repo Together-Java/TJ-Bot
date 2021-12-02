@@ -173,9 +173,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         EmbedBuilder embedBuilder = new EmbedBuilder();
         embedBuilder.setTitle(title);
 
-        if (description != null) {
-            embedBuilder.setDescription(description);
-        }
+        embedBuilder.setDescription(description);
 
         embedBuilder.setColor(new Color(24, 221, 136));
 
