@@ -20,14 +20,16 @@ import java.util.stream.Collectors;
  * A javap-interface that uses reflection to access locked-down classes of the jdk.jdeps module and
  * keep everything in-memory
  */
-// Disables "Reflection should not be used to increase accessibility of classes, methods, or fields" rule (Reflection is required for the Javap class to work).
+// Disables "Reflection should not be used to increase accessibility of classes, methods, or fields"
+// rule (Reflection is required for the Javap class to work).
 @SuppressWarnings({"java:S3011"})
 public final class Javap {
     // Hide constructor
     private Javap() {}
 
     private static final String TEMP_FILE_NAME = "tmp";
-    private static final String ANNOYING_WARNING_MESSAGE = "Warning: File /%s does not contain class %<s";
+    private static final String ANNOYING_WARNING_MESSAGE =
+            "Warning: File /%s does not contain class %<s";
 
     private static final Class<?> javapFileManagerCls;
     private static final Class<?> javapTaskCls;
@@ -133,7 +135,7 @@ public final class Javap {
             throws InvocationTargetException, IllegalAccessException {
         return (DiagnosticListener<JavaFileObject>) javapTaskGetDiagnosticListenerForWriterMethod
             .invoke(javapTaskInstance, log); // getDiagnosticListenerForWriter's signature:
-                                     // DiagnosticListener<JavaFileObject>
-                                     // getDiagnosticListenerForWriter(Writer)
+        // DiagnosticListener<JavaFileObject>
+        // getDiagnosticListenerForWriter(Writer)
     }
 }
