@@ -188,12 +188,12 @@ public class RoleSelectCommand extends SlashCommandAdapter {
 
         // Get the roles the bot can interact with
         List<Role> guildRoles = event.getGuild().getRoles();
-        List<String> roleIds = guildRoles.stream().map(Role::getId).collect(Collectors.toList());
+        List<String> roleIds = guildRoles.stream().map(Role::getId).toList();
 
         List<Role> selectedRoles = new ArrayList<>();
-        for (SelectOption role : Objects.requireNonNull(event.getSelectedOptions())) {
-            if (roleIds.contains(role.getValue())) {
-                selectedRoles.add(guildRoles.get(roleIds.indexOf(role.getValue())));
+        for (SelectOption selectedOption : event.getSelectedOptions()) {
+            if (roleIds.contains(selectedOption.getValue())) {
+                selectedRoles.add(guildRoles.get(roleIds.indexOf(selectedOption.getValue())));
             }
         }
 
@@ -225,7 +225,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         for (SelectOption option : menuOptions) {
             Role role = guildRoles.get(roleIds.indexOf(option.getValue()));
             if (!selectedRoles.contains(role)) {
-                Objects.requireNonNull(event.getGuild()).removeRoleFromMember(member, role).queue();
+                event.getGuild().removeRoleFromMember(member, role).queue();
             }
         }
 
