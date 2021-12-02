@@ -85,10 +85,6 @@ jib {
     }
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 vaadin {
     pnpmEnable = true
     productionMode = true

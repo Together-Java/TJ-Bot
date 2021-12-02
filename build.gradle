@@ -68,4 +68,8 @@ subprojects {
             eclipse('4.19.0').configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }
     }
+
+    test {
+        useJUnitPlatform()
+    }
 }

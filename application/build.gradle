@@ -71,7 +71,3 @@ dependencies {
 application {
     mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
 }
-
-test {
-    useJUnitPlatform()
-}
