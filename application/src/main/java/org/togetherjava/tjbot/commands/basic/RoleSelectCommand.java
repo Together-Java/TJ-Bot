@@ -187,7 +187,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
 
         // Get the roles the bot can interact with
-        List<Role> guildRoles = Objects.requireNonNull(event.getGuild()).getRoles();
+        List<Role> guildRoles = event.getGuild().getRoles();
         List<String> roleIds = guildRoles.stream().map(Role::getId).collect(Collectors.toList());
 
         List<Role> selectedRoles = new ArrayList<>();
