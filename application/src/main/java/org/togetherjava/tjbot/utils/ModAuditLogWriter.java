@@ -34,7 +34,7 @@ public class ModAuditLogWriter {
      *
      * @param files the files added to the message.
      */
-    public static void log(@NotNull Guild guild, @NotNull EmbedBuilder embed,
+    public static synchronized void log(@NotNull Guild guild, @NotNull EmbedBuilder embed,
             VirtualFile... files) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
