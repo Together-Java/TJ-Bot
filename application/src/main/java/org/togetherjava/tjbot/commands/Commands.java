@@ -54,7 +54,6 @@ public enum Commands {
         commands.add(new BanCommand(database));
         commands.add(new UnbanCommand());
         commands.add(new WarnCommand(database));
-        commands.add(new AuditCommand(database));
 
         return commands;
     }
