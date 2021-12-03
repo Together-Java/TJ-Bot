@@ -22,7 +22,9 @@ public class ModAuditLogWriter {
     private static final Predicate<TextChannel> isAuditLogChannel =
             channel -> isAuditLogChannelName.test(channel.getName());
 
-    private ModAuditLogWriter() { throw new IllegalStateException("Utility class"); }
+    private ModAuditLogWriter() {
+        throw new IllegalStateException("Utility class");
+    }
 
     /**
      * logs an entry in the mod audit log channel.

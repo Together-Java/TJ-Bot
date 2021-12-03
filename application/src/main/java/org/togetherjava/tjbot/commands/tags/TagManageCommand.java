@@ -342,6 +342,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
                 ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Delete")
                     .setDescription(String.format("deleted tag **%s**", id)));
             }
+            default -> {
+                throw new IllegalArgumentException("Subcommand Enum isn't valid");
+            }
         }
     }
 
