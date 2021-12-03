@@ -56,10 +56,8 @@ public final class TagsCommand extends SlashCommandAdapter {
             logger.warn(
                     "The amount of tags is very high and it might soon exceed the maximum character limit. The code should be adjusted to support this edge case soon.");
         }
-        String tagListText = tagIds.stream()
-            .sorted()
-            .map(tag -> "\u2022 " + tag)
-            .collect(Collectors.joining("\n"));
+        String tagListText =
+                tagIds.stream().sorted().map(tag -> "• " + tag).collect(Collectors.joining("\n"));
 
         event
             .replyEmbeds(MessageUtils.generateEmbed("All available tags", tagListText,
