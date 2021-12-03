@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Optional;
 
 // FIXME Javadoc on the whole class
-final class ModerationActionsStore {
+public final class ModerationActionsStore {
     private final Database database;
 
-    ModerationActionsStore(@NotNull Database database) {
+    public ModerationActionsStore(@NotNull Database database) {
         this.database = database;
     }
 
@@ -75,7 +75,7 @@ final class ModerationActionsStore {
         });
     }
 
-    record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, long authorId,
+    public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, long authorId,
             long targetId, @NotNull ModerationUtils.Action actionType,
             @Nullable Instant actionExpiresAt, @NotNull String reason) {
         private static ActionRecord of(@NotNull ModerationActionsRecord action) {
