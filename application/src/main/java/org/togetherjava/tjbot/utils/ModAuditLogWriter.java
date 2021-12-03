@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -32,9 +31,11 @@ public class ModAuditLogWriter {
      * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
      *
      * @param embed the embed that will be sent.
+     *
+     * @param files the files added to the message.
      */
-    public static void log(@Nonnull Guild guild, @Nonnull EmbedBuilder embed) {
-
+    public static void log(@NotNull Guild guild, @NotNull EmbedBuilder embed,
+            VirtualFile... files) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             logger.warn(
@@ -44,6 +45,9 @@ public class ModAuditLogWriter {
         }
 
         auditLogChannel.get().sendMessageEmbeds(embed.build()).queue();
+        for (VirtualFile file : files) {
+            auditLogChannel.get().sendFile(file.getAsInputStream(), file.getName()).queue();
+        }
     }
 
 
