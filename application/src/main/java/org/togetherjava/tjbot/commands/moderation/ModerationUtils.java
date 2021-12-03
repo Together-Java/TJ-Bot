@@ -217,7 +217,7 @@ enum ModerationUtils {
          */
         KICK("kicked"),
         /**
-         * When a user warns another user
+         * When a user warns another user.
          */
         WARN("warned");
 

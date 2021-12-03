@@ -24,6 +24,7 @@ import org.togetherjava.tjbot.db.generated.tables.WarnSystem;
 import org.togetherjava.tjbot.db.generated.tables.records.WarnSystemRecord;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
  * warned and will receive a dm telling them why there were warned. After that all the data will be
  * added to the database.
  */
-public class WarnCommand extends SlashCommandAdapter {
+public final class WarnCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(WarnCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
@@ -141,6 +142,8 @@ public class WarnCommand extends SlashCommandAdapter {
                     .setUserId(target.getIdLong())
                     .setGuildId(guildId)
                     .setWarnReason(reason)
+                    .setActionType(ModerationUtils.Action.WARN.getVerb())
+                    .setTimestamp(Instant.now())
                     .setWarningAmount(oldWarnAmount.orElse(0) + 1);
                 if (warnSystemRecord.update() == 0) {
                     warnSystemRecord.insert();
