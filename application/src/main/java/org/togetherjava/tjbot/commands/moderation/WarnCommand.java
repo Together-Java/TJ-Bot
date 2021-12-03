@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -13,7 +12,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -23,7 +21,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.WarnSystem;
 import org.togetherjava.tjbot.db.generated.tables.records.WarnSystemRecord;
 
-import java.awt.*;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,7 +57,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private static @NotNull RestAction<Boolean> dmUser(long userId, @NotNull String reason,
-            @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            @NotNull SlashCommandEvent event) {
         return event.getJDA()
             .openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(
@@ -85,8 +82,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull CharSequence reason, @NotNull Guild guild, @NotNull Interaction event) {
 
         if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
@@ -107,7 +103,6 @@ public final class WarnCommand extends SlashCommandAdapter {
         OptionMapping userOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The option is null");
         User target = userOption.getAsUser();
-        Member targetMember = userOption.getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
         Guild guild = Objects.requireNonNull(event.getGuild(), "The guild is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
@@ -115,12 +110,12 @@ public final class WarnCommand extends SlashCommandAdapter {
 
         Member bot = guild.getSelfMember();
 
-        if (!handleChecks(bot, author, targetMember, reason, guild, event)) {
+        if (!handleChecks(bot, author, reason, guild, event)) {
             return;
         }
 
         long userId = target.getIdLong();
-        dmUser(userId, reason, guild, event)
+        dmUser(userId, reason, event)
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
             .flatMap(event::replyEmbeds)
             .queue();
