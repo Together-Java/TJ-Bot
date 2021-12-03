@@ -4,8 +4,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
@@ -41,8 +39,8 @@ public enum MessageUtils {
         }
 
         message
-            .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
-            .queue();
+                .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
+                .queue();
     }
 
     /**
@@ -56,55 +54,31 @@ public enum MessageUtils {
      * @return the generated embed
      */
     public static @NotNull MessageEmbed generateEmbed(@Nullable String title,
-            @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor) {
+                                                      @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor) {
         return new EmbedBuilder().setTitle(title)
-            .setDescription(content)
-            .setTimestamp(Instant.now())
-            .setFooter(user == null ? null : user.getName())
-            .setColor(ambientColor)
-            .build();
+                .setDescription(content)
+                .setTimestamp(Instant.now())
+                .setFooter(user == null ? null : user.getName())
+                .setColor(ambientColor)
+                .build();
     }
 
     /**
      * Escapes every markdown content in the given string.
      *
      * If the escaped message is sent to Discord, it will display the original message.
-     * 
+     *
      * @param text the text to escape
      * @return the escaped text
      */
     public static @NotNull String escapeMarkdown(@NotNull String text) {
         // NOTE Unfortunately the utility does not escape backslashes '\', so we have to do it
         // ourselves
-        return MarkdownSanitizer.escape(text.replace("\\", "\\\\"));
-    }
-
-    /**
-     * Instead of always queuing the reply message you can just make a method which queues
-     * automatically.
-     *
-     * @param message the message that you want to send
-     */
-    public static void reply(String message, @NotNull SlashCommandEvent event) {
-        event.reply(message).queue();
-    }
-
-    public static void reply(String message, @NotNull CommandInteraction event) {
-        event.reply(message).queue();
-    }
-
-    /**
-     * Instead of always setting ephemeral as true making one method and using it makes life easier.
-     *
-     * @param message the message that you want to send
-     * @param event The slash command event
-     */
-    public static void replyEphemeral(String message, @NotNull SlashCommandEvent event) {
-        event.reply(message).setEphemeral(true).queue();
-    }
-
-    public static void replyEphemeral(String message, @NotNull CommandInteraction event) {
-        event.reply(message).setEphemeral(true).queue();
+        // NOTE It also does not properly escape three backticks '```', it makes it '\```' but we
+        // need '\`\`\`'
+        String beforeEscape = text.replace("\\", "\\\\");
+        String afterEscape = MarkdownSanitizer.escape(beforeEscape);
+        return afterEscape.replace("\\```", "\\`\\`\\`");
     }
 
 }
