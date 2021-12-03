@@ -6,13 +6,8 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jooq.UpdatableRecord;
-import org.jooq.impl.UpdatableRecordImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.BanSystem;
-import org.togetherjava.tjbot.db.generated.tables.records.BanSystemRecord;
 
 import java.awt.*;
 import java.time.Instant;
@@ -52,28 +47,6 @@ enum ModerationUtils {
             .setEphemeral(true)
             .queue();
         return false;
-    }
-
-    static <T> void setModerationData(@NotNull Database database, User target, Guild guild,
-            int CaseId, String reason, Action action, UpdatableRecordImpl<T> updateTableRecord,
-            String commandName) {
-        try {
-            database.write(context -> {
-                UpdatableRecordImpl<updateTableRecord> updatableRecordImpl =
-                        context.newRecord(updatableRecord.action)
-                            .setCaseId(CaseId)
-                            .setUserId(target.getIdLong())
-                            .setGuildId(guild.getIdLong())
-                            .setBanReason(reason)
-                            .setActionType(action.getVerb());
-                if (updatableRecordImpl.update() == 0) {
-                    updatableRecordImpl.insert();
-                }
-            });
-            logger.info("Saved the user '{}' to the '{}' system.", target.getAsTag(), commandName);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
     }
 
     /**
@@ -247,6 +220,7 @@ enum ModerationUtils {
          * When a user warns another user
          */
         WARN("warned");
+
 
         private final String verb;
 

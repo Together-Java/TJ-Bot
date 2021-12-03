@@ -16,9 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
-import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.KickSystem;
-import org.togetherjava.tjbot.db.generated.tables.records.KickSystemRecord;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -38,17 +35,13 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "kick";
     private static final String ACTION_VERB = "kick";
-    private final Database database;
     private final Predicate<String> hasRequiredRole;
 
     /**
      * Constructs an instance.
-     * 
-     * @param database used to store the kicks in the database
      */
-    public KickCommand(@NotNull Database database) {
+    public KickCommand() {
         super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
-        this.database = database;
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
@@ -148,22 +141,5 @@ public final class KickCommand extends SlashCommandAdapter {
             return;
         }
         kickUserFlow(Objects.requireNonNull(target), author, reason, guild, event);
-
-        try {
-            database.write(context -> {
-                KickSystemRecord kickSystemRecord = context.newRecord(KickSystem.KICK_SYSTEM)
-                    .setUserid(target.getUser().getIdLong())
-                    .setAuthorId(author.getIdLong())
-                    .setGuildId(guild.getIdLong())
-                    .setIsKicked(true)
-                    .setKickReason(reason);
-                if (kickSystemRecord.update() == 0) {
-                    kickSystemRecord.insert();
-                }
-            });
-            logger.info("Saved the user '{}' to the kick system.", target.getUser().getAsTag());
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
     }
 }

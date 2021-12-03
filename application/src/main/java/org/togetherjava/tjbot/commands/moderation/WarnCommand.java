@@ -54,7 +54,7 @@ public class WarnCommand extends SlashCommandAdapter {
         getData().addOption(OptionType.USER, USER_OPTION, "The user to warn", true)
             .addOption(OptionType.STRING, REASON_OPTION, "The reason for the warning", true);
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
+        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
     }
 
@@ -62,10 +62,14 @@ public class WarnCommand extends SlashCommandAdapter {
             @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         return event.getJDA()
             .openPrivateChannelById(userId)
-            .flatMap(privateChannel -> event.replyEmbeds(new EmbedBuilder().setTitle("Warned")
-                .setDescription("You have been warned in " + guild.getName() + " for " + reason)
-                .setColor(Color.decode("#895FE8"))
-                .build()))
+            .flatMap(channel -> channel.sendMessage(
+                    """
+                            Hey there, We are sorry to inform you that you have been warned for the following reason: %s
+                            The repercussion of this warning depends on the severity of the warning or one the number of warnings you have received.\040
+                            The warn system works as follows:
+
+                            """
+                        .formatted(reason)))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -84,34 +88,20 @@ public class WarnCommand extends SlashCommandAdapter {
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
 
-        // Member doesn't exist if attempting to ban a user who is not part of the guild.
-        if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
-                target, event)) {
-            return false;
-        }
-
         if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
-        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot,
+        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
                 guild, event)) {
             return false;
         }
-        if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.KICK_MEMBERS,
-                author, guild, event)) {
+        if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.BAN_MEMBERS, author,
+                guild, event)) {
             return false;
         }
         return ModerationUtils.handleReason(reason, event);
     }
 
-    /**
-     * Handles {@code /warn user reason} command. Saves the value under the given user, given guild,
-     * given reason and adds one to the number of warns the user has.
-     * <p>
-     * This command can only be used by users with the {@code KICK_MEMBERS} permission.
-     *
-     * @param event the event of the command
-     */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping userOption =
