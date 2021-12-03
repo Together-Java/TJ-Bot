@@ -314,10 +314,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
             .setColor(MOD_AUDIT_LOG_COLOR);
 
         switch (Subcommand.fromName(event.getSubcommandName())) {
-            case RAW -> {
-                ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Raw")
-                    .setDescription(String.format("viewed raw tag **%s**", id)));
-            }
             case CREATE -> {
                 ModAuditLogWriter.log(guild, embed.setTitle("Tag-Manage Create")
                     .setDescription(
