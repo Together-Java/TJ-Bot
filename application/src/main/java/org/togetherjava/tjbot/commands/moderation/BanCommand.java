@@ -204,11 +204,11 @@ public final class BanCommand extends SlashCommandAdapter {
         try {
             database.write(context -> {
                 BanSystemRecord banSystemRecord = context.newRecord(BanSystem.BAN_SYSTEM)
-                     .setCaseId(1)
+                    .setCaseId(1)
                     .setUserId(target.getIdLong())
                     .setGuildId(guild.getIdLong())
                     .setBanReason(reason)
-                        .setActionType(ModerationUtils.Action.BAN.getVerb());
+                    .setActionType(ModerationUtils.Action.BAN.getVerb());
                 if (banSystemRecord.update() == 0) {
                     banSystemRecord.insert();
                 }

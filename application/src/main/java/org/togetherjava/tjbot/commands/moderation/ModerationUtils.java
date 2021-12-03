@@ -54,16 +54,18 @@ enum ModerationUtils {
         return false;
     }
 
-    static <T> void setModerationData(@NotNull Database database, User target, Guild guild, int CaseId, String reason,
-                                                                 Action action, UpdatableRecordImpl<T> updateTableRecord, String commandName) {
+    static <T> void setModerationData(@NotNull Database database, User target, Guild guild,
+            int CaseId, String reason, Action action, UpdatableRecordImpl<T> updateTableRecord,
+            String commandName) {
         try {
             database.write(context -> {
-                UpdatableRecordImpl<updateTableRecord> updatableRecordImpl = context.newRecord(updatableRecord.action)
-                        .setCaseId(CaseId)
-                        .setUserId(target.getIdLong())
-                        .setGuildId(guild.getIdLong())
-                        .setBanReason(reason)
-                        .setActionType(action.getVerb());
+                UpdatableRecordImpl<updateTableRecord> updatableRecordImpl =
+                        context.newRecord(updatableRecord.action)
+                            .setCaseId(CaseId)
+                            .setUserId(target.getIdLong())
+                            .setGuildId(guild.getIdLong())
+                            .setBanReason(reason)
+                            .setActionType(action.getVerb());
                 if (updatableRecordImpl.update() == 0) {
                     updatableRecordImpl.insert();
                 }

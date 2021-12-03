@@ -139,7 +139,7 @@ public class WarnCommand extends SlashCommandAdapter {
         Optional<Integer> oldWarnAmount = database.read(context -> {
             try (var select = context.selectFrom(WarnSystem.WARN_SYSTEM)) {
                 return Optional
-                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USER_ID .eq(userId)
+                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USER_ID.eq(userId)
                         .and(WarnSystem.WARN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
                     .map(WarnSystemRecord::getWarningAmount);
             }
