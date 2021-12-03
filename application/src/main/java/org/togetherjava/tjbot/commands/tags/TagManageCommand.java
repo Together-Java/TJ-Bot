@@ -336,21 +336,17 @@ public final class TagManageCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         switch (Subcommand.fromName(event.getSubcommandName())) {
-            case CREATE -> {
-                ModAuditLogWriter.log(guild,
-                        getLogEmbed(event).setTitle("Tag-Manage Create")
-                            .setDescription(String.format("created tag **%s**", id)),
-                        new VirtualFile("content.md", content));
-            }
-            case CREATE_WITH_MESSAGE -> {
-                ModAuditLogWriter.log(guild,
-                        getLogEmbed(event).setTitle("Tag-Manage Create with message")
-                            .setDescription(String.format("created tag **%s**", id)),
-                        new VirtualFile("content.md", content));
-            }
-            default -> {
-                throw new IllegalArgumentException("Subcommand Enum invalid");
-            }
+            case CREATE -> ModAuditLogWriter.log(guild,
+                    getLogEmbed(event).setTitle("Tag-Manage Create")
+                        .setDescription(String.format("created tag **%s**", id)),
+                    new VirtualFile(Filename.CONTENT.get(), content));
+
+            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
+                    getLogEmbed(event).setTitle("Tag-Manage Create with message")
+                        .setDescription(String.format("created tag **%s**", id)),
+                    new VirtualFile(Filename.CONTENT.get(), content));
+
+            default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
     }
 
@@ -359,23 +355,19 @@ public final class TagManageCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         switch (Subcommand.fromName(event.getSubcommandName())) {
-            case EDIT -> {
-                ModAuditLogWriter.log(guild,
-                        getLogEmbed(event).setTitle("Tag-Manage Edit")
-                            .setDescription(String.format("edited tag **%s**", id)),
-                        new VirtualFile("new_content.md", newContent),
-                        new VirtualFile("old_content.md", oldContent));
-            }
-            case EDIT_WITH_MESSAGE -> {
-                ModAuditLogWriter.log(guild,
-                        getLogEmbed(event).setTitle("Tag-Manage Edit with message")
-                            .setDescription(String.format("edited tag **%s**", id)),
-                        new VirtualFile("new_content.md", newContent),
-                        new VirtualFile("old_content.md", oldContent));
-            }
-            default -> {
-                throw new IllegalArgumentException("Subcommand Enum invalid");
-            }
+            case EDIT -> ModAuditLogWriter.log(guild,
+                    getLogEmbed(event).setTitle("Tag-Manage Edit")
+                        .setDescription(String.format("edited tag **%s**", id)),
+                    new VirtualFile(Filename.NEW_CONTENT.get(), newContent),
+                    new VirtualFile(Filename.OLD_CONTENT.get(), oldContent));
+
+            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
+                    getLogEmbed(event).setTitle("Tag-Manage Edit with message")
+                        .setDescription(String.format("edited tag **%s**", id)),
+                    new VirtualFile(Filename.NEW_CONTENT.get(), newContent),
+                    new VirtualFile(Filename.OLD_CONTENT.get(), oldContent));
+
+            default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
     }
 
@@ -386,7 +378,23 @@ public final class TagManageCommand extends SlashCommandAdapter {
         ModAuditLogWriter.log(guild,
                 getLogEmbed(event).setTitle("Tag-Manage Delete")
                     .setDescription(String.format("deleted tag **%s**", id)),
-                new VirtualFile("old_content.md", oldContent));
+                new VirtualFile(Filename.OLD_CONTENT.get(), oldContent));
+    }
+
+    private enum Filename {
+        CONTENT("content.md"),
+        OLD_CONTENT("old_content.md"),
+        NEW_CONTENT("new_content.md");
+
+        private final String name;
+
+        Filename(String name) {
+            this.name = name;
+        }
+
+        private String get() {
+            return name;
+        }
     }
 
     private boolean hasTagManageRole(@NotNull Member member) {

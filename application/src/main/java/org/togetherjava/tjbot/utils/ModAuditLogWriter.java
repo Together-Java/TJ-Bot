@@ -50,14 +50,10 @@ public class ModAuditLogWriter {
         }
     }
 
-
     /**
      * stolen from {@link org.togetherjava.tjbot.routines.ModAuditLogRoutine}
      */
     private static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
-        return guild.getTextChannelCache()
-            .stream()
-            .filter(isAuditLogChannel)
-            .findAny();
+        return guild.getTextChannelCache().stream().filter(isAuditLogChannel).findAny();
     }
 }
