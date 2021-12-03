@@ -39,8 +39,8 @@ public enum MessageUtils {
         }
 
         message
-                .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
-                .queue();
+            .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
+            .queue();
     }
 
     /**
@@ -54,13 +54,13 @@ public enum MessageUtils {
      * @return the generated embed
      */
     public static @NotNull MessageEmbed generateEmbed(@Nullable String title,
-                                                      @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor) {
+            @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor) {
         return new EmbedBuilder().setTitle(title)
-                .setDescription(content)
-                .setTimestamp(Instant.now())
-                .setFooter(user == null ? null : user.getName())
-                .setColor(ambientColor)
-                .build();
+            .setDescription(content)
+            .setTimestamp(Instant.now())
+            .setFooter(user == null ? null : user.getName())
+            .setColor(ambientColor)
+            .build();
     }
 
     /**
