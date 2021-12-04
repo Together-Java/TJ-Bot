@@ -64,7 +64,7 @@ public final class WarnCommand extends SlashCommandAdapter {
                     """
                             Hey there, We are sorry to inform you that you have been warned for the following reason: %s
                             The repercussion of this warning depends on the severity of the warning or one the number of warnings you have received.\040
-                            The warn system can be seen in the #rule channel.
+                            The warn system can be seen in the <#652440333107331082> channel.\040
                             """
                         .formatted(reason)))
             .mapToResult()
