@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.utils;
+package org.togetherjava.tjbot.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,17 +15,16 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class ModAuditLogWriter {
+/**
+ * used to log activities in the mod audit log channel
+ */
+public enum ModAuditLogWriter {;
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
 
     private static final Predicate<String> isAuditLogChannelName =
             Pattern.compile(Config.getInstance().getModAuditLogChannelPattern()).asMatchPredicate();
     private static final Predicate<TextChannel> isAuditLogChannel =
             channel -> isAuditLogChannelName.test(channel.getName());
-
-    private ModAuditLogWriter() {
-        throw new IllegalStateException("Utility class");
-    }
 
     /**
      * logs an entry in the mod audit log channel.
@@ -36,7 +35,7 @@ public class ModAuditLogWriter {
      *
      * @param files the files added to the message.
      */
-    public static synchronized void log(@NotNull Guild guild, @NotNull EmbedBuilder embed,
+    public static void log(@NotNull Guild guild, @NotNull EmbedBuilder embed,
             Attachment... files) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {

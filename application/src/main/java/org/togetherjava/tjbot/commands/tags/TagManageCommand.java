@@ -18,7 +18,7 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
-import org.togetherjava.tjbot.utils.ModAuditLogWriter;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
