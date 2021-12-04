@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -36,7 +37,7 @@ public class ModAuditLogWriter {
      * @param files the files added to the message.
      */
     public static synchronized void log(@NotNull Guild guild, @NotNull EmbedBuilder embed,
-            VirtualFile... files) {
+            Attachment... files) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             logger.warn(
@@ -46,8 +47,8 @@ public class ModAuditLogWriter {
         }
 
         MessageAction message = auditLogChannel.get().sendMessageEmbeds(embed.build());
-        for (VirtualFile file : files) {
-            message = message.addFile(file.getAsInputStream(), file.getName());
+        for (Attachment file : files) {
+            message = message.addFile(file.getContent(), file.getName());
         }
         message.queue();
     }
@@ -57,5 +58,27 @@ public class ModAuditLogWriter {
      */
     private static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
         return guild.getTextChannelCache().stream().filter(isAuditLogChannel).findAny();
+    }
+
+    /**
+     * used to add a file to a message without having an actual file.
+     * 
+     * @param name the name of the file, example: {@code "foo.md"}
+     * @param content the content of the file
+     */
+    public static final record Attachment(@NotNull String name, @NotNull String content) {
+        /**
+         * @return the name of the file. used by JDA methods
+         */
+        public @NotNull String getName() {
+            return name;
+        }
+
+        /**
+         * @return the content of the file as a {@code byte[]}. used by JDA methods
+         */
+        public byte[] getContent() {
+            return content.getBytes(StandardCharsets.UTF_8);
+        }
     }
 }

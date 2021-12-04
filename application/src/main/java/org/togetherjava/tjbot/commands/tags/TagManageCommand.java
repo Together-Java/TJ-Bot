@@ -19,7 +19,6 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.utils.ModAuditLogWriter;
-import org.togetherjava.tjbot.utils.VirtualFile;
 
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
@@ -339,12 +338,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
             case CREATE -> ModAuditLogWriter.log(guild,
                     getLogEmbed(event).setTitle("Tag-Manage Create")
                         .setDescription(String.format("created tag **%s**", id)),
-                    new VirtualFile(Filename.CONTENT.get(), content));
+                    new ModAuditLogWriter.Attachment(Filename.CONTENT.get(), content));
 
             case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
                     getLogEmbed(event).setTitle("Tag-Manage Create with message")
                         .setDescription(String.format("created tag **%s**", id)),
-                    new VirtualFile(Filename.CONTENT.get(), content));
+                    new ModAuditLogWriter.Attachment(Filename.CONTENT.get(), content));
 
             default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
@@ -358,14 +357,14 @@ public final class TagManageCommand extends SlashCommandAdapter {
             case EDIT -> ModAuditLogWriter.log(guild,
                     getLogEmbed(event).setTitle("Tag-Manage Edit")
                         .setDescription(String.format("edited tag **%s**", id)),
-                    new VirtualFile(Filename.NEW_CONTENT.get(), newContent),
-                    new VirtualFile(Filename.OLD_CONTENT.get(), previousContent));
+                    new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(), newContent),
+                    new ModAuditLogWriter.Attachment(Filename.OLD_CONTENT.get(), previousContent));
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
                     getLogEmbed(event).setTitle("Tag-Manage Edit with message")
                         .setDescription(String.format("edited tag **%s**", id)),
-                    new VirtualFile(Filename.NEW_CONTENT.get(), newContent),
-                    new VirtualFile(Filename.OLD_CONTENT.get(), previousContent));
+                    new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(), newContent),
+                    new ModAuditLogWriter.Attachment(Filename.OLD_CONTENT.get(), previousContent));
 
             default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
@@ -378,7 +377,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         ModAuditLogWriter.log(guild,
                 getLogEmbed(event).setTitle("Tag-Manage Delete")
                     .setDescription(String.format("deleted tag **%s**", id)),
-                new VirtualFile(Filename.OLD_CONTENT.get(), previousContent));
+                new ModAuditLogWriter.Attachment(Filename.OLD_CONTENT.get(), previousContent));
     }
 
     private enum Filename {
