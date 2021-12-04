@@ -214,10 +214,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        String oldContent = "";
+        String previousContent = "";
         if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.EDIT
                 || Subcommand.fromName(event.getSubcommandName()) == Subcommand.DELETE)
-            oldContent = tagSystem.getTag(id).orElseThrow();
+            previousContent = tagSystem.getTag(id).orElseThrow();
 
         idAction.accept(id);
         sendSuccessMessage(event, id, actionVerb);
@@ -228,9 +228,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
         if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.EDIT)
             logEditAction(event, id,
                     Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString(),
-                    oldContent);
+                    previousContent);
         if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.DELETE)
-            logDeleteAction(event, id, oldContent);
+            logDeleteAction(event, id, previousContent);
     }
 
     /**
@@ -264,9 +264,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
-            String oldContent = "";
+            String previousContent = "";
             if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.EDIT_WITH_MESSAGE)
-                oldContent = tagSystem.getTag(tagId).orElseThrow();
+                previousContent = tagSystem.getTag(tagId).orElseThrow();
 
             idAndContentAction.accept(tagId, message.getContentRaw());
             sendSuccessMessage(event, tagId, actionVerb);
@@ -274,7 +274,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.CREATE_WITH_MESSAGE)
                 logCreateAction(event, tagId, message.getContentRaw());
             if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.EDIT_WITH_MESSAGE)
-                logEditAction(event, tagId, message.getContentRaw(), oldContent);
+                logEditAction(event, tagId, message.getContentRaw(), previousContent);
 
         }, failure -> {
             if (failure instanceof ErrorResponseException ex
@@ -351,7 +351,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     private void logEditAction(@NotNull CommandInteraction event, @NotNull String id,
-            @NotNull String newContent, @NotNull String oldContent) {
+            @NotNull String newContent, @NotNull String previousContent) {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         switch (Subcommand.fromName(event.getSubcommandName())) {
@@ -359,31 +359,31 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     getLogEmbed(event).setTitle("Tag-Manage Edit")
                         .setDescription(String.format("edited tag **%s**", id)),
                     new VirtualFile(Filename.NEW_CONTENT.get(), newContent),
-                    new VirtualFile(Filename.OLD_CONTENT.get(), oldContent));
+                    new VirtualFile(Filename.OLD_CONTENT.get(), previousContent));
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
                     getLogEmbed(event).setTitle("Tag-Manage Edit with message")
                         .setDescription(String.format("edited tag **%s**", id)),
                     new VirtualFile(Filename.NEW_CONTENT.get(), newContent),
-                    new VirtualFile(Filename.OLD_CONTENT.get(), oldContent));
+                    new VirtualFile(Filename.OLD_CONTENT.get(), previousContent));
 
             default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
     }
 
     private void logDeleteAction(@NotNull CommandInteraction event, @NotNull String id,
-            @NotNull String oldContent) {
+            @NotNull String previousContent) {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         ModAuditLogWriter.log(guild,
                 getLogEmbed(event).setTitle("Tag-Manage Delete")
                     .setDescription(String.format("deleted tag **%s**", id)),
-                new VirtualFile(Filename.OLD_CONTENT.get(), oldContent));
+                new VirtualFile(Filename.OLD_CONTENT.get(), previousContent));
     }
 
     private enum Filename {
         CONTENT("content.md"),
-        OLD_CONTENT("old_content.md"),
+        OLD_CONTENT("previous_content.md"),
         NEW_CONTENT("new_content.md");
 
         private final String name;
