@@ -56,9 +56,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
-    /**
-     * stolen from {@link org.togetherjava.tjbot.routines.ModAuditLogRoutine}
-     */
     private static final Color MOD_AUDIT_LOG_COLOR = Color.decode("#4FC3F7");
 
     /**
@@ -264,8 +261,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
             String previousContent = "";
-            if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.EDIT_WITH_MESSAGE)
+            if (Subcommand.fromName(event.getSubcommandName()) == Subcommand.EDIT_WITH_MESSAGE) {
                 previousContent = tagSystem.getTag(tagId).orElseThrow();
+            }
 
             idAndContentAction.accept(tagId, message.getContentRaw());
             sendSuccessMessage(event, tagId, actionVerb);
