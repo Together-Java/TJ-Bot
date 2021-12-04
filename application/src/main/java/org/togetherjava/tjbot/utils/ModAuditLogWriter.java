@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +45,11 @@ public class ModAuditLogWriter {
             return;
         }
 
-        auditLogChannel.get().sendMessageEmbeds(embed.build()).queue();
+        MessageAction message = auditLogChannel.get().sendMessageEmbeds(embed.build());
         for (VirtualFile file : files) {
-            auditLogChannel.get().sendFile(file.getAsInputStream(), file.getName()).queue();
+            message = message.addFile(file.getAsInputStream(), file.getName());
         }
+        message.queue();
     }
 
     /**
