@@ -50,7 +50,7 @@ public enum ModAuditLogWriter {
      */
     public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
             @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-            @NotNull Attachment[] files) {
+            @NotNull Attachment @NotNull [] files) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             logger.warn(
@@ -116,7 +116,7 @@ public enum ModAuditLogWriter {
         /**
          * @return the content of the file as a {@code byte[]}. used by JDA methods
          */
-        public byte[] getContent() {
+        public byte @NotNull [] getContent() {
             return content.getBytes(StandardCharsets.UTF_8);
         }
     }
