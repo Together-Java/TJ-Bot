@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,6 +37,8 @@ import java.util.Optional;
  */
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
+
+    private static final Duration DURATION = Duration.ofDays(7);
 
     private static final String APPLICATION_SUBCOMMAND = "application";
 
@@ -88,7 +91,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                         .setRequiredRange(0, 100),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(0, 604800));
+                        .setRequiredRange(0, DURATION.getSeconds()));
 
 
     /**
