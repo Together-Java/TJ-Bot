@@ -10,8 +10,20 @@
 
 ### Changes
 
-- [ ] Existing code
 - [ ] New feature
+- [ ] Bug fix
+- [ ] Documentation
+- [ ] Style
+- [ ] Performance
+
+### Checks
+- [ ] Code style
+- [ ] Gradle Test
+- [ ] CodeQL
+- [ ] spotlessApply
+- [ ] SonarCloud
+- [ ] Signed the license
+- [ ] Code works and has been tested.
 
 <!--
 While an issue isn't required, this is preferred for most changes.
