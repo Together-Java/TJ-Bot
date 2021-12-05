@@ -59,7 +59,7 @@ public enum ModAuditLogWriter {
             return;
         }
 
-        MessageAction message = auditLogChannel.get()
+        MessageAction message = auditLogChannel.orElseThrow()
             .sendMessageEmbeds(new EmbedBuilder().setTitle(title)
                 .setDescription(description)
                 .setAuthor(author.getAsTag(), null, author.getAvatarUrl())
