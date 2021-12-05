@@ -56,8 +56,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
-    private static final Color MOD_AUDIT_LOG_COLOR = Color.decode("#4FC3F7");
-
     /**
      * Creates a new instance, using the given tag system as base.
      *
@@ -319,29 +317,20 @@ public final class TagManageCommand extends SlashCommandAdapter {
         return false;
     }
 
-    /**
-     * used to get a base {@link EmbedBuilder} for log embeds.
-     */
-    private EmbedBuilder getLogEmbed(@NotNull CommandInteraction event) {
-        return new EmbedBuilder()
-            .setAuthor(event.getUser().getAsTag(), null, event.getUser().getAvatarUrl())
-            .setColor(MOD_AUDIT_LOG_COLOR);
-    }
-
     private void logCreateAction(@NotNull CommandInteraction event, @NotNull String id,
             @NotNull String content) {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         switch (Subcommand.fromName(event.getSubcommandName())) {
-            case CREATE -> ModAuditLogWriter.log(guild,
-                    getLogEmbed(event).setTitle("Tag-Manage Create")
-                        .setDescription(String.format("created tag **%s**", id)),
-                    new ModAuditLogWriter.Attachment(Filename.CONTENT.get(), content));
+            case CREATE -> ModAuditLogWriter.log("Tag-Manage Create",
+                    String.format("created tag **%s**", id), event.getUser(),
+                    event.getTimeCreated(), guild, new ModAuditLogWriter.Attachment[] {
+                            new ModAuditLogWriter.Attachment(Filename.CONTENT.get(), content)});
 
-            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
-                    getLogEmbed(event).setTitle("Tag-Manage Create with message")
-                        .setDescription(String.format("created tag **%s**", id)),
-                    new ModAuditLogWriter.Attachment(Filename.CONTENT.get(), content));
+            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Create with message",
+                    String.format("created tag **%s**", id), event.getUser(),
+                    event.getTimeCreated(), guild, new ModAuditLogWriter.Attachment[] {
+                            new ModAuditLogWriter.Attachment(Filename.CONTENT.get(), content)});
 
             default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
@@ -352,17 +341,23 @@ public final class TagManageCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         switch (Subcommand.fromName(event.getSubcommandName())) {
-            case EDIT -> ModAuditLogWriter.log(guild,
-                    getLogEmbed(event).setTitle("Tag-Manage Edit")
-                        .setDescription(String.format("edited tag **%s**", id)),
-                    new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(), newContent),
-                    new ModAuditLogWriter.Attachment(Filename.OLD_CONTENT.get(), previousContent));
+            case EDIT -> ModAuditLogWriter.log("Tag-Manage Edit",
+                    String.format("edited tag **%s**", id), event.getUser(), event.getTimeCreated(),
+                    guild,
+                    new ModAuditLogWriter.Attachment[] {
+                            new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(),
+                                    newContent),
+                            new ModAuditLogWriter.Attachment(Filename.PREVIOUS_CONTENT.get(),
+                                    previousContent)});
 
-            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log(guild,
-                    getLogEmbed(event).setTitle("Tag-Manage Edit with message")
-                        .setDescription(String.format("edited tag **%s**", id)),
-                    new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(), newContent),
-                    new ModAuditLogWriter.Attachment(Filename.OLD_CONTENT.get(), previousContent));
+            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Edit with message",
+                    String.format("edited tag **%s**", id), event.getUser(), event.getTimeCreated(),
+                    guild,
+                    new ModAuditLogWriter.Attachment[] {
+                            new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(),
+                                    newContent),
+                            new ModAuditLogWriter.Attachment(Filename.PREVIOUS_CONTENT.get(),
+                                    previousContent)});
 
             default -> throw new IllegalArgumentException("Subcommand Enum invalid");
         }
@@ -372,15 +367,15 @@ public final class TagManageCommand extends SlashCommandAdapter {
             @NotNull String previousContent) {
         Guild guild = Objects.requireNonNull(event.getGuild());
 
-        ModAuditLogWriter.log(guild,
-                getLogEmbed(event).setTitle("Tag-Manage Delete")
-                    .setDescription(String.format("deleted tag **%s**", id)),
-                new ModAuditLogWriter.Attachment(Filename.OLD_CONTENT.get(), previousContent));
+        ModAuditLogWriter.log("Tag-Manage Delete", String.format("delete tag **%s**", id),
+                event.getUser(), event.getTimeCreated(), guild,
+                new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
+                        Filename.PREVIOUS_CONTENT.get(), previousContent)});
     }
 
     private enum Filename {
         CONTENT("content.md"),
-        OLD_CONTENT("previous_content.md"),
+        PREVIOUS_CONTENT("previous_content.md"),
         NEW_CONTENT("new_content.md");
 
         private final String name;
