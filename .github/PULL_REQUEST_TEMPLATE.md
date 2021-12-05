@@ -15,8 +15,10 @@
 - [ ] Documentation
 - [ ] Style
 - [ ] Performance
+- [ ] Other: 
 
 ### Checks
+
 - [ ] Code style
 - [ ] Gradle Test
 - [ ] CodeQL
