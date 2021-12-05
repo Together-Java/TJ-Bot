@@ -122,7 +122,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "member is null");
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
-                "Voicestates aren't being cached, check the JDABuilder");
+                "Voice states aren't being cached, check the JDABuilder");
 
         if (!voiceState.inVoiceChannel()) {
             event.reply("You need to be in a voice channel to run this command!")
