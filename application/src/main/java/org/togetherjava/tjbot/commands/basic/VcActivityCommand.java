@@ -39,7 +39,7 @@ import java.util.Optional;
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
 
-    private static final Duration MIN_AGE_DURATION = ChronoUnit.SECONDS.getDuration();
+    private static final int MIN_AGE_DURATION = 0;
     private static final Duration MAX_AGE_DURATION = ChronoUnit.DAYS.getDuration();
 
     private static final int MIN_USE_AMOUNT = 0;
@@ -95,8 +95,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     "The amount of times the invite can be used, default is infinity", false)
                         .setRequiredRange(MIN_USE_AMOUNT, MAX_USE_AMOUNT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
-                    "Max age in seconds. Default is 1 day. The minimum is one second", false)
-                        .setRequiredRange(MIN_AGE_DURATION.getSeconds(),
+                    "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
+                        .setRequiredRange(MIN_AGE_DURATION,
                                 MAX_AGE_DURATION.getSeconds()));
 
 
