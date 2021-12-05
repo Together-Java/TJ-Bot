@@ -19,11 +19,11 @@
 
 ### Checks
 
-- [ ] Code style
-- [ ] Gradle Test
-- [ ] CodeQL
-- [ ] spotlessApply
-- [ ] SonarCloud
+- [ ] Code style is up to the standard required by the [code guidelines][code_guidelines].
+- [ ] Gradle Test has passed
+- [ ] CodeQL has passed
+- [ ] Code has been formatted by running spotless
+- [ ] SonarCloud has passed.
 - [ ] Signed the license
 - [ ] Code works and has been tested.
 
