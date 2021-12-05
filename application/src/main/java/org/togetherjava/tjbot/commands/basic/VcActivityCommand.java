@@ -38,7 +38,7 @@ import java.util.Optional;
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
 
-    private static final int MIN_AGE_DURATION = 0;
+    private static final Duration MIN_AGE_DURATION = Duration.ofSeconds(0);
     private static final Duration MAX_AGE_DURATION = Duration.ofDays(7);
 
     private static final int MIN_USE_DURATION = 0;
@@ -95,7 +95,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                         .setRequiredRange(MIN_USE_DURATION, MAX_USE_DURATION),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(MIN_AGE_DURATION, MAX_AGE_DURATION.getSeconds()));
+                        .setRequiredRange(MIN_AGE_DURATION.getSeconds(), MAX_AGE_DURATION.getSeconds()));
 
 
     /**
