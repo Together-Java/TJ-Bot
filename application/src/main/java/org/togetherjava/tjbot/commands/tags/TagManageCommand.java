@@ -368,8 +368,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
                             Filename.PREVIOUS_CONTENT.get(), previousContent.orElseThrow())});
 
-            default -> throw new IllegalArgumentException("Shouldn't log subcommand " + subcommand);
-            // in case the subcommand is "raw" or something else
+            default -> throw new IllegalArgumentException(String.format(
+                    "The subcommand '%s' is not intended to be logged to the mod audit channel.",
+                    subcommand.name()));
         }
     }
 
