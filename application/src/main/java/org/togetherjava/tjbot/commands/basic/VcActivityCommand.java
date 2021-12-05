@@ -38,7 +38,11 @@ import java.util.Optional;
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
 
-    private static final Duration DURATION = Duration.ofDays(7);
+    private static final int MIN_AGE_DURATION = 0;
+    private static final Duration MAX_AGE_DURATION = Duration.ofDays(7);
+
+    private static final int MIN_USE_DURATION = 0;
+    private static final int MAX_USE_DURATION = 100;
 
     private static final String APPLICATION_SUBCOMMAND = "application";
 
@@ -88,10 +92,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final List<OptionData> inviteOptions = List.of(
             new OptionData(OptionType.STRING, MAX_USES_OPTION,
                     "The amount of times the invite can be used, default is infinity", false)
-                        .setRequiredRange(0, 100),
+                        .setRequiredRange(MIN_USE_DURATION, MAX_USE_DURATION),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(0, DURATION.getSeconds()));
+                        .setRequiredRange(MIN_AGE_DURATION, MAX_AGE_DURATION.getSeconds()));
 
 
     /**
@@ -126,10 +130,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "member is null");
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
-                "Voice states aren't being cached, check the JDABuilder");
+                "Voicestates aren't being cached, check the JDABuilder");
 
         if (!voiceState.inVoiceChannel()) {
-            event.reply("You need to be in a voice channel to run this command!")
+            event.reply("You need to be in a voicechannel to run this command!")
                 .setEphemeral(true)
                 .queue();
 
