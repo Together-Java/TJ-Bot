@@ -21,6 +21,7 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,8 +39,8 @@ import java.util.Optional;
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
 
-    private static final Duration MIN_AGE_DURATION = Duration.ofSeconds(0);
-    private static final Duration MAX_AGE_DURATION = Duration.ofDays(7);
+    private static final Duration MIN_AGE_DURATION = ChronoUnit.SECONDS.getDuration();
+    private static final Duration MAX_AGE_DURATION = ChronoUnit.DAYS.getDuration();
 
     private static final int MIN_USE_AMOUNT = 0;
     private static final int MAX_USE_AMOUNT = 100;
