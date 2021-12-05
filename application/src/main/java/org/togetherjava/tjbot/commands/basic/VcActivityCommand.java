@@ -125,7 +125,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 "Voicestates aren't being cached, check the JDABuilder");
 
         if (!voiceState.inVoiceChannel()) {
-            event.reply("You need to be in a voicechannel to run this command!")
+            event.reply("You need to be in a voice channel to run this command!")
                 .setEphemeral(true)
                 .queue();
 
