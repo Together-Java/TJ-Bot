@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -20,10 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -157,22 +153,22 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
         OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
 
-        Integer maxUses;
+        OptionalInt maxUses;
 
         // the user already received the error in the handleIntegerTypeOption method
         // it still throws to tell us to return this method and stop the proceeding code
         try {
-            maxUses = handleIntegerTypeOption(event, maxUsesOption);
+            maxUses = getIntegerOptionIfPresent(maxUsesOption);
         } catch (IllegalArgumentException ignore) {
             return;
         }
 
-        Integer maxAge;
+        OptionalInt maxAge;
 
         // the user already received the error in the handleIntegerTypeOption method
         // it still throws to tell us to return this method and stop the proceeding code
         try {
-            maxAge = handleIntegerTypeOption(event, maxAgeOption);
+            maxAge = getIntegerOptionIfPresent(maxAgeOption);
         } catch (IllegalArgumentException ignore) {
             return;
         }
@@ -191,7 +187,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
+        handleSubcommand(event, voiceChannel, applicationId, maxUses.getAsInt(), maxAge.getAsInt(),
+                applicationName);
     }
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
@@ -235,48 +232,18 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     /**
      * This grabs the OptionMapping, after this it <br />
-     * - validates whenever it's within an {@link Integer Integer's} range <br />
-     * - validates whenever it's positive <br />
+     * - validates whenever It's null or not <br />
      *
      * <p>
      * <p/>
      *
-     * @param event the {@link SlashCommandEvent}
-     * @param optionMapping the {@link OptionMapping}
-     * @return nullable {@link Integer}
-     * @throws java.lang.IllegalArgumentException if the option's value is - outside of
-     *         {@link Integer#MAX_VALUE} - negative
+     * @param optionMapping the {@link OptionMapping} to validate
      */
-    @Contract("_, null -> null")
-    private static @Nullable Integer handleIntegerTypeOption(@NotNull SlashCommandEvent event,
-            @Nullable OptionMapping optionMapping) {
-
-        int optionValue;
-
-        if (optionMapping == null) {
-            return null;
-        }
-
-        try {
-            optionValue = Math.toIntExact(optionMapping.getAsLong());
-        } catch (ArithmeticException e) {
-            event
-                .reply("The " + optionMapping.getName() + " is above `" + Integer.MAX_VALUE
-                        + "`, which is too high")
-                .setEphemeral(true)
-                .queue();
-            throw new IllegalArgumentException(
-                    optionMapping.getName() + " can't be above " + Integer.MAX_VALUE);
-        }
-
-        if (optionValue < 0) {
-            event.reply("The " + optionMapping.getName() + " is negative, which isn't supported")
-                .setEphemeral(true)
-                .queue();
-            throw new IllegalArgumentException(optionMapping.getName() + " can't be negative");
-        }
-
-
-        return optionValue;
+    private static OptionalInt getIntegerOptionIfPresent(@Nullable OptionMapping optionMapping) {
+        return Optional.ofNullable(optionMapping)
+            .stream()
+            .map(OptionMapping::getAsLong)
+            .mapToInt(Math::toIntExact)
+            .findFirst();
     }
 }
