@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(VcActivityCommand.class);
 
-    private static final int  MIN_AGE_DURATION_SECONDS = 0;
+    private static final int MIN_AGE_DURATION_SECONDS = 0;
     private static final long MAX_AGE_DURATION_SECONDS = TimeUnit.DAYS.toSeconds(7);
 
     private static final int MIN_USE_AMOUNT = 0;
@@ -95,7 +95,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                         .setRequiredRange(MIN_USE_AMOUNT, MAX_USE_AMOUNT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(MIN_AGE_DURATION_SECONDS, MIX_AGE_DURATION_SECONDS));
+                        .setRequiredRange(MIN_AGE_DURATION_SECONDS,
+                                          MAX_AGE_DURATION_SECONDS));
 
 
     /**
