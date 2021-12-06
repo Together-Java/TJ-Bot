@@ -20,12 +20,11 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
@@ -96,7 +95,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                         .setRequiredRange(MIN_USE_AMOUNT, MAX_USE_AMOUNT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(MIN_AGE_DURATION, MAX_AGE_DURATION);
+                        .setRequiredRange(MIN_AGE_DURATION, MAX_AGE_DURATION));
 
 
     /**
