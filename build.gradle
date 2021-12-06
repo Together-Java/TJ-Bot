@@ -53,6 +53,8 @@ subprojects {
 
 
     compileJava {
+        options.encoding = 'UTF-8'
+
         // Makes spotlessApply task run on every compile/build.
         dependsOn 'spotlessApply'
 
@@ -67,5 +69,10 @@ subprojects {
             targetExclude("build/**")
             eclipse('4.19.0').configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }
+    }
+
+    test {
+        systemProperty 'file.encoding', 'UTF-8'
+        useJUnitPlatform()
     }
 }
