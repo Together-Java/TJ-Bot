@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -334,44 +335,62 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     private void logAction(@NotNull Subcommand subcommand, @NotNull Guild guild,
             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull String id,
-            @Nullable String newContentNullable, @Nullable String previousContentNullable) {
+            @Nullable String newContent, @Nullable String previousContent) {
 
-        Optional<String> newContent =
-                (newContentNullable == null) ? Optional.empty() : Optional.of(newContentNullable);
-        Optional<String> previousContent = (previousContentNullable == null) ? Optional.empty()
-                : Optional.of(previousContentNullable);
+        if (List.of(
+                Subcommand.CREATE,
+                Subcommand.CREATE_WITH_MESSAGE,
+                Subcommand.EDIT,
+                Subcommand.EDIT_WITH_MESSAGE
+        ).contains(subcommand) && newContent == null) {
+            logger.debug("newContent is null even though the subcommand should supply a value.");
+            return;
+        }
+
+        if (List.of(
+                Subcommand.EDIT,
+                Subcommand.EDIT_WITH_MESSAGE,
+                Subcommand.DELETE
+        ).contains(subcommand) && previousContent == null) {
+            logger.debug("previousContent is null even though the subcommand should supply a value.");
+            return;
+        }
+
+        //to suppress warning "Argument '' might be null"
+        if (newContent == null) newContent = "";
+        if (previousContent == null) previousContent = "";
 
         switch (subcommand) {
             case CREATE -> ModAuditLogWriter.log("Tag-Manage Create",
                     String.format("created tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
-                            CONTENT_FILE_NAME, newContent.orElseThrow())});
+                            CONTENT_FILE_NAME, newContent)});
 
             case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Create with message",
                     String.format("created tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
-                            CONTENT_FILE_NAME, newContent.orElseThrow())});
+                            CONTENT_FILE_NAME, newContent)});
 
             case EDIT -> ModAuditLogWriter.log("Tag-Manage Edit",
                     String.format("edited tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {
                             new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
-                                    newContent.orElseThrow()),
+                                    newContent),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    previousContent.orElseThrow())});
+                                    previousContent)});
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Edit with message",
                     String.format("edited tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {
                             new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
-                                    newContent.orElseThrow()),
+                                    newContent),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    previousContent.orElseThrow())});
+                                    previousContent)});
 
             case DELETE -> ModAuditLogWriter.log("Tag-Manage Delete",
                     String.format("delete tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
-                            PREVIOUS_CONTENT_FILE_NAME, previousContent.orElseThrow())});
+                            PREVIOUS_CONTENT_FILE_NAME, previousContent)});
 
             default -> throw new IllegalArgumentException(String.format(
                     "The subcommand '%s' is not intended to be logged to the mod audit channel.",
