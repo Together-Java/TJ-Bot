@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Condition;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModerationActions;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
@@ -49,13 +50,8 @@ public final class ModerationActionsStore {
      */
     public @NotNull List<ActionRecord> getActionsByTypeAscending(long guildId,
             @NotNull ModerationUtils.Action actionType) {
-        return database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
-            .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
-                .and(ModerationActions.MODERATION_ACTIONS.ACTION_TYPE.eq(actionType.name())))
-            .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.asc())
-            .stream()
-            .map(ActionRecord::of)
-            .toList());
+        return getActionsFromGuildAscending(guildId,
+                ModerationActions.MODERATION_ACTIONS.ACTION_TYPE.eq(actionType.name()));
     }
 
     /**
@@ -68,13 +64,8 @@ public final class ModerationActionsStore {
      * @return a list of all actions executed against the target, chronologically ascending
      */
     public @NotNull List<ActionRecord> getActionsByTargetAscending(long guildId, long targetId) {
-        return database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
-            .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
-                .and(ModerationActions.MODERATION_ACTIONS.TARGET_ID.eq(targetId)))
-            .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.asc())
-            .stream()
-            .map(ActionRecord::of)
-            .toList());
+        return getActionsFromGuildAscending(guildId,
+                ModerationActions.MODERATION_ACTIONS.TARGET_ID.eq(targetId));
     }
 
     /**
@@ -87,13 +78,8 @@ public final class ModerationActionsStore {
      * @return a list of all actions executed by the author, chronologically ascending
      */
     public @NotNull List<ActionRecord> getActionsByAuthorAscending(long guildId, long authorId) {
-        return database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
-            .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
-                .and(ModerationActions.MODERATION_ACTIONS.AUTHOR_ID.eq(authorId)))
-            .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.asc())
-            .stream()
-            .map(ActionRecord::of)
-            .toList());
+        return getActionsFromGuildAscending(guildId,
+                ModerationActions.MODERATION_ACTIONS.AUTHOR_ID.eq(authorId));
     }
 
     /**
@@ -145,5 +131,15 @@ public final class ModerationActionsStore {
             actionRecord.insert();
             return actionRecord.getCaseId();
         });
+    }
+
+    private @NotNull List<ActionRecord> getActionsFromGuildAscending(long guildId,
+            @NotNull Condition condition) {
+        return database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
+            .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId).and(condition))
+            .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.asc())
+            .stream()
+            .map(ActionRecord::of)
+            .toList());
     }
 }
