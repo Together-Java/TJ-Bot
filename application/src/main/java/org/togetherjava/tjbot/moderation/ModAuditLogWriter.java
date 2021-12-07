@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  */
 public enum ModAuditLogWriter {
     ;
-    private static final Color EMBED_COLOR = Color.decode("#4FC3F7");
+    private static final Color EMBED_COLOR = Color.decode("#3788AC");
 
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
 
