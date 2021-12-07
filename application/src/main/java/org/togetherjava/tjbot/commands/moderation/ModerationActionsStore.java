@@ -14,13 +14,16 @@ import java.util.Optional;
  * Store for moderation actions, e.g. as banning users. Can be used to retrieve information about
  * past events, such as when a user has been banned the last time.
  *
- * The store persists the actions and is thread safe.
- *
  * Actions have to be added to the store using
  * {@link #addAction(long, long, long, ModerationUtils.Action, Instant, String)} at the time they
  * are executed and can then be retrieved by methods such as
  * {@link #getActionsByTypeAscending(long, ModerationUtils.Action)} or
  * {@link #findActionByCaseId(int)}.
+ *
+ * Be aware that timestamps associated with actions, such as {@link ActionRecord#issuedAt()} are
+ * slightly off the timestamps used by Discord.
+ *
+ * The store persists the actions and is thread safe.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public final class ModerationActionsStore {
@@ -113,6 +116,8 @@ public final class ModerationActionsStore {
      *
      * It is assumed that the action is issued at the point in time this method is called. It is not
      * possible to assign a different timestamp, especially not an earlier point in time.
+     * Consequently, this causes the timestamps to be slightly off from the timestamps recorded by
+     * Discord itself.
      *
      * @param guildId the id of the guild in which context this action happened
      * @param authorId the id of the user who issued the action
