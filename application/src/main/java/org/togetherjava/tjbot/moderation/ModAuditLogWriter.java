@@ -14,6 +14,7 @@ import org.togetherjava.tjbot.config.Config;
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -46,11 +47,11 @@ public enum ModAuditLogWriter {
      *
      * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
      *
-     * @param files the files that'll be added to the message
+     * @param attachments the attachments that'll be added to the message
      */
     public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
-            @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-            @NotNull Attachment @NotNull [] files) {
+                           @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+                           @NotNull List<@NotNull Attachment> attachments) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             logger.warn(
@@ -67,10 +68,31 @@ public enum ModAuditLogWriter {
                 .setColor(EMBED_COLOR)
                 .build());
 
-        for (Attachment file : files) {
-            message = message.addFile(file.getContent(), file.getName());
+        for (Attachment attachment : attachments) {
+            message = message.addFile(attachment.getContent(), attachment.getName());
         }
         message.queue();
+    }
+
+    /**
+     * logs an entry in the mod audit log channel.
+     *
+     * @param title the title of the log embed
+     *
+     * @param description the description of the log embed
+     *
+     * @param author the user who triggered the action
+     *
+     * @param timestamp the timestamp of the action. usually use
+     *        {@link GenericInteractionCreateEvent#getTimeCreated()}
+     *
+     * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
+     *
+     * @param attachment an attachment that'll be added to the message
+     */
+    public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
+                           @NotNull TemporalAccessor timestamp, @NotNull Guild guild, @NotNull Attachment attachment) {
+        log(title, description, author, timestamp, guild, List.of(attachment));
     }
 
     /**
@@ -89,7 +111,7 @@ public enum ModAuditLogWriter {
      */
     public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
             @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
-        log(title, description, author, timestamp, guild, new Attachment[] {});
+        log(title, description, author, timestamp, guild, List.of());
     }
 
     /**
