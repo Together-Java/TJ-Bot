@@ -26,6 +26,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +34,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static org.togetherjava.tjbot.moderation.ModAuditLogWriter.getModAuditLogChannel;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
@@ -315,15 +318,6 @@ public final class ModAuditLogRoutine implements Routine {
             .filter(changeEntry -> "name".equals(changeEntry.getKey()))
             .map(Map.Entry::getValue)
             .anyMatch(ModerationUtils.getIsMutedRolePredicate(config));
-    }
-
-    private Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
-        // Check cache first, then get full list
-        return guild.getTextChannelCache()
-            .stream()
-            .filter(isAuditLogChannel)
-            .findAny()
-            .or(() -> guild.getTextChannels().stream().filter(isAuditLogChannel).findAny());
     }
 
     private enum Action {

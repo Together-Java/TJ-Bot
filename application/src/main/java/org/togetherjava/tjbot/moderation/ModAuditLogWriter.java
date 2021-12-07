@@ -116,9 +116,11 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * stolen from {@link org.togetherjava.tjbot.routines.ModAuditLogRoutine}
+     * used to get the mod audit log channel.
+     *
+     * @param guild the current guild
      */
-    private static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
+    public static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
         return guild.getTextChannelCache().stream().filter(isAuditLogChannel).findAny();
     }
 
