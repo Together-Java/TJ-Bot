@@ -178,30 +178,29 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private void createTag(@NotNull CommandInteraction event) {
         String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString();
 
-        handleAction(TagStatus.NOT_EXISTS, id -> tagSystem.putTag(id, content), "created", event,
+        handleAction(TagStatus.NOT_EXISTS, id -> tagSystem.putTag(id, content), event,
                 Subcommand.CREATE, content);
     }
 
     private void createTagWithMessage(@NotNull CommandInteraction event) {
-        handleActionWithMessage(TagStatus.NOT_EXISTS, tagSystem::putTag, "created", event,
+        handleActionWithMessage(TagStatus.NOT_EXISTS, tagSystem::putTag, event,
                 Subcommand.CREATE_WITH_MESSAGE);
     }
 
     private void editTag(@NotNull CommandInteraction event) {
         String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString();
 
-        handleAction(TagStatus.EXISTS, id -> tagSystem.putTag(id, content), "edited", event,
-                Subcommand.EDIT, content);
+        handleAction(TagStatus.EXISTS, id -> tagSystem.putTag(id, content), event, Subcommand.EDIT,
+                content);
     }
 
     private void editTagWithMessage(@NotNull CommandInteraction event) {
-        handleActionWithMessage(TagStatus.EXISTS, tagSystem::putTag, "edited", event,
+        handleActionWithMessage(TagStatus.EXISTS, tagSystem::putTag, event,
                 Subcommand.EDIT_WITH_MESSAGE);
     }
 
     private void deleteTag(@NotNull CommandInteraction event) {
-        handleAction(TagStatus.EXISTS, tagSystem::deleteTag, "deleted", event, Subcommand.DELETE,
-                null);
+        handleAction(TagStatus.EXISTS, tagSystem::deleteTag, event, Subcommand.DELETE, null);
     }
 
     /**
@@ -212,16 +211,13 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *
      * @param requiredTagStatus the required status of the tag
      * @param idAction the action to perform on the id
-     * @param actionVerb the verb describing the executed action, i.e. <i>edited</i> or
-     *        <i>created</i>, will be displayed in the message send to the user
      * @param event the event to send messages with, it must have an {@code id} option set
      * @param subcommand the executed subcommand
      * @param newContent the new content of the tag, or null if content is unchanged
      */
     private void handleAction(@NotNull TagStatus requiredTagStatus,
-            @NotNull Consumer<? super String> idAction, @NotNull String actionVerb,
-            @NotNull CommandInteraction event, @NotNull Subcommand subcommand,
-            @Nullable String newContent) {
+            @NotNull Consumer<? super String> idAction, @NotNull CommandInteraction event,
+            @NotNull Subcommand subcommand, @Nullable String newContent) {
 
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         if (isWrongTagStatusAndHandle(requiredTagStatus, id, event)) {
@@ -239,7 +235,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         idAction.accept(id);
-        sendSuccessMessage(event, id, actionVerb);
+        sendSuccessMessage(event, id, subcommand.getActionVerb());
 
         Guild guild = Objects.requireNonNull(event.getGuild());
         logAction(subcommand, guild, event.getUser(), event.getTimeCreated(), id, newContent,
@@ -257,16 +253,13 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *
      * @param requiredTagStatus the required status of the tag
      * @param idAndContentAction the action to perform on the id and content
-     * @param actionVerb the verb describing the executed action, i.e. <i>edited</i> or
-     *        <i>created</i>, will be displayed in the message send to the user
      * @param event the event to send messages with, it must have an {@code id} and
      *        {@code message-id} option set
      * @param subcommand the subcommand executed
      */
     private void handleActionWithMessage(@NotNull TagStatus requiredTagStatus,
             @NotNull BiConsumer<? super String, ? super String> idAndContentAction,
-            @NotNull String actionVerb, @NotNull CommandInteraction event,
-            @NotNull Subcommand subcommand) {
+            @NotNull CommandInteraction event, @NotNull Subcommand subcommand) {
 
         String tagId = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionalLong messageIdOpt = parseMessageIdAndHandle(
@@ -291,7 +284,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             }
 
             idAndContentAction.accept(tagId, message.getContentRaw());
-            sendSuccessMessage(event, tagId, actionVerb);
+            sendSuccessMessage(event, tagId, subcommand.getActionVerb());
 
             Guild guild = Objects.requireNonNull(event.getGuild());
             logAction(subcommand, guild, event.getUser(), event.getTimeCreated(), tagId,
@@ -415,16 +408,23 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     enum Subcommand {
         RAW("raw"),
-        CREATE("create"),
-        CREATE_WITH_MESSAGE("create-with-message"),
-        EDIT("edit"),
-        EDIT_WITH_MESSAGE("edit-with-message"),
-        DELETE("delete");
+        CREATE("create", "created"),
+        CREATE_WITH_MESSAGE("create-with-message", "created"),
+        EDIT("edit", "edited"),
+        EDIT_WITH_MESSAGE("edit-with-message", "edited"),
+        DELETE("delete", "deleted");
 
         private final String name;
+        private final String actionVerb;
 
         Subcommand(@NotNull String name) {
             this.name = name;
+            this.actionVerb = "";
+        }
+
+        Subcommand(String name, String actionVerb) {
+            this.name = name;
+            this.actionVerb = actionVerb;
         }
 
         @NotNull
@@ -440,6 +440,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
             }
             throw new IllegalArgumentException(
                     "Subcommand with name '%s' is unknown".formatted(name));
+        }
+
+        String getActionVerb() {
+            return this.actionVerb;
         }
     }
 }
