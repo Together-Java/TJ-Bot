@@ -336,49 +336,53 @@ public final class TagManageCommand extends SlashCommandAdapter {
             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull String id,
             @Nullable String newContent, @Nullable String previousContent) {
 
-        if (List.of(
-                Subcommand.CREATE,
-                Subcommand.CREATE_WITH_MESSAGE,
-                Subcommand.EDIT,
-                Subcommand.EDIT_WITH_MESSAGE
-        ).contains(subcommand) && newContent == null) {
+        if (List
+            .of(Subcommand.CREATE, Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT,
+                    Subcommand.EDIT_WITH_MESSAGE)
+            .contains(subcommand) && newContent == null) {
             logger.debug("newContent is null even though the subcommand should supply a value.");
             return;
         }
 
-        if (List.of(
-                Subcommand.EDIT,
-                Subcommand.EDIT_WITH_MESSAGE,
-                Subcommand.DELETE
-        ).contains(subcommand) && previousContent == null) {
-            logger.debug("previousContent is null even though the subcommand should supply a value.");
+        if (List.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE)
+            .contains(subcommand) && previousContent == null) {
+            logger
+                .debug("previousContent is null even though the subcommand should supply a value.");
             return;
         }
 
-        //to suppress warning "Argument '' might be null"
-        if (newContent == null) newContent = "";
-        if (previousContent == null) previousContent = "";
+        // to suppress warning "Argument '' might be null"
+        if (newContent == null) {
+            newContent = "";
+        }
+        if (previousContent == null) {
+            previousContent = "";
+        }
 
         switch (subcommand) {
-            case CREATE -> ModAuditLogWriter.log("Tag-Manage Create",
+            case CREATE -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Create",
                     String.format("created tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, newContent));
 
-            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Create with message",
-                    String.format("created tag **%s**", id), author, timestamp, guild,
+            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.writeModAuditLog(
+                    "Tag-Manage Create with message", String.format("created tag **%s**", id),
+                    author, timestamp, guild,
                     new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, newContent));
 
-            case EDIT -> ModAuditLogWriter.log("Tag-Manage Edit",
+            case EDIT -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Edit",
                     String.format("edited tag **%s**", id), author, timestamp, guild,
                     List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, newContent),
-                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, previousContent)));
+                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                                    previousContent)));
 
-            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Edit with message",
-                    String.format("edited tag **%s**", id), author, timestamp, guild,
+            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.writeModAuditLog(
+                    "Tag-Manage Edit with message", String.format("edited tag **%s**", id), author,
+                    timestamp, guild,
                     List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, newContent),
-                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, previousContent)));
+                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                                    previousContent)));
 
-            case DELETE -> ModAuditLogWriter.log("Tag-Manage Delete",
+            case DELETE -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Delete",
                     String.format("delete tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, previousContent));
 

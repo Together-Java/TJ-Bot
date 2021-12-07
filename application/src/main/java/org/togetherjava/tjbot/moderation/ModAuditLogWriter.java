@@ -49,9 +49,9 @@ public enum ModAuditLogWriter {
      *
      * @param attachments the attachments that'll be added to the message
      */
-    public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
-                           @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-                           @NotNull List<@NotNull Attachment> attachments) {
+    public static void writeModAuditLog(@NotNull String title, @NotNull String description,
+            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+            @NotNull List<@NotNull Attachment> attachments) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             logger.warn(
@@ -90,9 +90,10 @@ public enum ModAuditLogWriter {
      *
      * @param attachment an attachment that'll be added to the message
      */
-    public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
-                           @NotNull TemporalAccessor timestamp, @NotNull Guild guild, @NotNull Attachment attachment) {
-        log(title, description, author, timestamp, guild, List.of(attachment));
+    public static void writeModAuditLog(@NotNull String title, @NotNull String description,
+            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+            @NotNull Attachment attachment) {
+        writeModAuditLog(title, description, author, timestamp, guild, List.of(attachment));
     }
 
     /**
@@ -109,9 +110,9 @@ public enum ModAuditLogWriter {
      *
      * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
      */
-    public static void log(@NotNull String title, @NotNull String description, @NotNull User author,
-            @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
-        log(title, description, author, timestamp, guild, List.of());
+    public static void writeModAuditLog(@NotNull String title, @NotNull String description,
+            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
+        writeModAuditLog(title, description, author, timestamp, guild, List.of());
     }
 
     /**
