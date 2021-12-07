@@ -54,9 +54,6 @@ public enum ModAuditLogWriter {
             @NotNull List<@NotNull Attachment> attachments) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
-            logger.warn(
-                    "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
-                    Config.getInstance().getModAuditLogChannelPattern(), guild.getName());
             return;
         }
 
@@ -121,7 +118,14 @@ public enum ModAuditLogWriter {
      * @param guild the current guild
      */
     public static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
-        return guild.getTextChannelCache().stream().filter(isAuditLogChannel).findAny();
+        Optional<TextChannel> channel =
+                guild.getTextChannelCache().stream().filter(isAuditLogChannel).findAny();
+        if (channel.isEmpty()) {
+            logger.warn(
+                    "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
+                    Config.getInstance().getModAuditLogChannelPattern(), guild.getName());
+        }
+        return channel;
     }
 
     /**

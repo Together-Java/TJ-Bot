@@ -220,9 +220,6 @@ public final class ModAuditLogRoutine implements Routine {
 
             Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
             if (auditLogChannel.isEmpty()) {
-                logger.warn(
-                        "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
-                        modAuditLogChannelPattern, guild.getName());
                 return;
             }
 
