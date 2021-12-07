@@ -57,6 +57,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String CONTENT_DESCRIPTION = "the content of the tag";
     static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
+
+    private static final String CONTENT_FILE_NAME = "content.md";
+    private static final String NEW_CONTENT_FILE_NAME = "new_content.md";
+    private static final String PREVIOUS_CONTENT_FILE_NAME = "previous_content.md";
+
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
@@ -340,53 +345,37 @@ public final class TagManageCommand extends SlashCommandAdapter {
             case CREATE -> ModAuditLogWriter.log("Tag-Manage Create",
                     String.format("created tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
-                            Filename.CONTENT.get(), newContent.orElseThrow())});
+                            CONTENT_FILE_NAME, newContent.orElseThrow())});
 
             case CREATE_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Create with message",
                     String.format("created tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
-                            Filename.CONTENT.get(), newContent.orElseThrow())});
+                            CONTENT_FILE_NAME, newContent.orElseThrow())});
 
             case EDIT -> ModAuditLogWriter.log("Tag-Manage Edit",
                     String.format("edited tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {
-                            new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(),
+                            new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
                                     newContent.orElseThrow()),
-                            new ModAuditLogWriter.Attachment(Filename.PREVIOUS_CONTENT.get(),
+                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                                     previousContent.orElseThrow())});
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.log("Tag-Manage Edit with message",
                     String.format("edited tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {
-                            new ModAuditLogWriter.Attachment(Filename.NEW_CONTENT.get(),
+                            new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
                                     newContent.orElseThrow()),
-                            new ModAuditLogWriter.Attachment(Filename.PREVIOUS_CONTENT.get(),
+                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                                     previousContent.orElseThrow())});
 
             case DELETE -> ModAuditLogWriter.log("Tag-Manage Delete",
                     String.format("delete tag **%s**", id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
-                            Filename.PREVIOUS_CONTENT.get(), previousContent.orElseThrow())});
+                            PREVIOUS_CONTENT_FILE_NAME, previousContent.orElseThrow())});
 
             default -> throw new IllegalArgumentException(String.format(
                     "The subcommand '%s' is not intended to be logged to the mod audit channel.",
                     subcommand.name()));
-        }
-    }
-
-    private enum Filename {
-        CONTENT("content.md"),
-        PREVIOUS_CONTENT("previous_content.md"),
-        NEW_CONTENT("new_content.md");
-
-        private final String name;
-
-        Filename(String name) {
-            this.name = name;
-        }
-
-        private String get() {
-            return name;
         }
     }
 
