@@ -215,8 +215,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *        <i>created</i>, will be displayed in the message send to the user
      * @param event the event to send messages with, it must have an {@code id} option set
      * @param subcommand the executed subcommand
-     * @param newContent the new content of the tag (@{@link Nullable}: only if assigning new
-     *        content)
+     * @param newContent the new content of the tag, or null if content is unchanged
      */
     private void handleAction(@NotNull TagStatus requiredTagStatus,
             @NotNull Consumer<? super String> idAction, @NotNull String actionVerb,
