@@ -24,6 +24,7 @@ import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -229,7 +230,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         String previousContent = null;
         if (subcommand == Subcommand.EDIT || subcommand == Subcommand.DELETE) {
-            previousContent = tagSystem.getTag(id).orElseThrow();
+            try {
+                previousContent = tagSystem.getTag(id).orElseThrow();
+            } catch (NoSuchElementException exception) {
+                logger.debug(
+                        "tried to retrieve previous content of tag '%s', but the content doesn't exist.");
+            }
         }
 
         idAction.accept(id);
@@ -276,7 +282,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
             String previousContent = null;
             if (subcommand == Subcommand.EDIT_WITH_MESSAGE) {
-                previousContent = tagSystem.getTag(tagId).orElseThrow();
+                try {
+                    previousContent = tagSystem.getTag(tagId).orElseThrow();
+                } catch (NoSuchElementException exception) {
+                    logger.debug(
+                            "tried to retrieve previous content of tag '%s', but the content doesn't exist.");
+                }
             }
 
             idAndContentAction.accept(tagId, message.getContentRaw());
