@@ -26,8 +26,9 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -52,8 +53,6 @@ public final class ModAuditLogRoutine implements Routine {
     private static final int HOURS_OF_DAY = 24;
     private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
-    private final String modAuditLogChannelPattern;
-    private final Predicate<TextChannel> isAuditLogChannel;
     private final Database database;
     private final Config config;
 
@@ -64,11 +63,6 @@ public final class ModAuditLogRoutine implements Routine {
      * @param config the config to use for this
      */
     public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config) {
-        modAuditLogChannelPattern = config.getModAuditLogChannelPattern();
-        Predicate<String> isAuditLogChannelName =
-                Pattern.compile(modAuditLogChannelPattern).asMatchPredicate();
-        isAuditLogChannel = channel -> isAuditLogChannelName.test(channel.getName());
-
         this.config = config;
         this.database = database;
     }
