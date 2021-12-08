@@ -170,11 +170,10 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             title = "Select your roles:";
         }
 
-        return new EmbedBuilder()
-                .setTitle(title)
-                .setDescription(description)
-                .setColor(new Color(24, 221, 136))
-                .build();
+        return new EmbedBuilder().setTitle(title)
+            .setDescription(description)
+            .setColor(new Color(24, 221, 136))
+            .build();
     }
 
     @Override
