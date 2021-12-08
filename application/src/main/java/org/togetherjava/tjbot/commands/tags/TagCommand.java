@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands.tags;
 
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -43,9 +45,11 @@ public final class TagCommand extends SlashCommandAdapter {
             return;
         }
 
-        event
-            .replyEmbeds(MessageUtils.generateEmbed(null, tagSystem.getTag(id).orElseThrow(),
-                    event.getUser(), TagSystem.AMBIENT_COLOR, event.getCommandString()))
-            .queue();
+        event.replyEmbeds(tagEmbed(id, event.getUser(), event.getCommandString())).queue();
+    }
+
+    private MessageEmbed tagEmbed(String id, User user, String commandString) {
+        return MessageUtils.generateEmbed(null, tagSystem.getTag(id).orElseThrow(), user,
+                TagSystem.AMBIENT_COLOR, user.getName() + " " + commandString);
     }
 }
