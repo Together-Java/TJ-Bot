@@ -189,8 +189,9 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             if (selectedRole != null && guild.getSelfMember().canInteract(selectedRole)) {
                 selectedRoles.add(selectedRole);
             } else {
-                logger.info("The " + selectedOption.getLabel() + " (" + selectedOption.getValue()
-                        + ") role has been removed but is still an option in the selection menu");
+                logger.info(
+                        "The {} ({}) role has been removed but is still an option in the selection menu",
+                        selectedOption.getLabel(), selectedOption.getValue());
             }
         }
 
@@ -226,8 +227,9 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             if (role != null && !selectedRoles.contains(role)) {
                 event.getGuild().removeRoleFromMember(member, role).queue();
             } else if (role == null) {
-                logger.info("The " + option.getLabel() + " (" + option.getValue()
-                        + ") role has been removed but is still an option in the selection menu");
+                logger.info(
+                        "The {} ({}) role has been removed but is still an option in the selection menu",
+                        option.getLabel(), option.getValue());
             }
         }
 
