@@ -28,7 +28,7 @@ import java.util.Objects;
 
 
 /**
- * Implements the {@code roleselect} command.
+ * Implements the {@code roleSelect} command.
  *
  * <p>
  * Allows users to select their roles without using reactions, instead it uses selection menus where
@@ -187,10 +187,6 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             Role selectedRole = guild.getRoleById(selectedOption.getValue());
             if (selectedRole != null && guild.getSelfMember().canInteract(selectedRole)) {
                 selectedRoles.add(selectedRole);
-            } else {
-                logger.info(
-                        "The {} ({}) role has been removed but is still an option in the selection menu",
-                        selectedOption.getLabel(), selectedOption.getValue());
             }
         }
 
@@ -198,14 +194,12 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         if (event.getMessage().isEphemeral()) {
 
             SelectionMenu.Builder menu = SelectionMenu.create(generateComponentId(member.getId()));
-            menu.setPlaceholder("Select your roles").setMaxValues(selectedRoles.size());
+            menu.setPlaceholder("Select your roles")
+                .setMaxValues(selectedRoles.size())
+                .setMinValues(0);
 
-            for (SelectOption selectedOption : event.getSelectedOptions()) {
-                Role role = guild.getRoleById(selectedOption.getValue());
-                if (role != null) {
-                    menu.addOption(role.getName(), role.getId());
-                }
-            }
+            // Add selected options to the menu
+            selectedRoles.forEach(role -> menu.addOption(role.getName(), role.getId()));
 
             event.getChannel()
                 .sendMessageEmbeds(event.getMessage().getEmbeds().get(0))
@@ -220,21 +214,22 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         List<SelectOption> menuOptions =
                 Objects.requireNonNull(event.getInteraction().getComponent()).getOptions();
 
-        // Remove deselected roles
-        for (SelectOption option : menuOptions) {
-            Role role = guild.getRoleById(option.getValue());
-            if (role != null && !selectedRoles.contains(role)) {
-                event.getGuild().removeRoleFromMember(member, role).queue();
-            } else if (role == null) {
+
+        for (SelectOption selectedOption : menuOptions) {
+            Role role = guild.getRoleById(selectedOption.getValue());
+
+            if (role == null) {
                 logger.info(
                         "The {} ({}) role has been removed but is still an option in the selection menu",
-                        option.getLabel(), option.getValue());
+                        selectedOption.getLabel(), selectedOption.getValue());
+                continue;
             }
-        }
 
-        // Add the selected roles to the member
-        for (Role role : selectedRoles) {
-            guild.addRoleToMember(member, role).queue();
+            if (selectedRoles.contains(role)) {
+                guild.addRoleToMember(member, role).queue();
+            } else {
+                event.getGuild().removeRoleFromMember(member, role).queue();
+            }
         }
 
         event.reply("Updated your roles!").setEphemeral(true).queue();
