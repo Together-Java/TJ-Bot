@@ -147,7 +147,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         menu.setPlaceholder(placeHolder).setMaxValues(roles.size());
 
         for (Role role : roles) {
-            if (role.getName().equals("@everyone"))
+            if (role.getName().equals("@everyone") || role.getTags().getBotId() != null)
                 continue;
             menu.addOption(role.getName(), role.getId());
         }
