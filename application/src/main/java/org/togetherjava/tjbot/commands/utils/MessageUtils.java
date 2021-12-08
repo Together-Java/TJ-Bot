@@ -54,11 +54,12 @@ public enum MessageUtils {
      * @return the generated embed
      */
     public static @NotNull MessageEmbed generateEmbed(@Nullable String title,
-            @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor) {
+            @NotNull CharSequence content, @Nullable User user, @Nullable Color ambientColor,
+            @Nullable String footer) {
         return new EmbedBuilder().setTitle(title)
             .setDescription(content)
             .setTimestamp(Instant.now())
-            .setFooter(user == null ? null : user.getName())
+            .setFooter(user == null ? null : user.getName() + " " + footer)
             .setColor(ambientColor)
             .build();
     }

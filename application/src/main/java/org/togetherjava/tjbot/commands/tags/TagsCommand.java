@@ -42,8 +42,10 @@ public final class TagsCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // TODO A list might be better than comma separated, which is hard to read
-        event.replyEmbeds(MessageUtils.generateEmbed("All available tags",
-                String.join(", ", tagSystem.getAllIds()), event.getUser(), TagSystem.AMBIENT_COLOR))
+        event
+            .replyEmbeds(MessageUtils.generateEmbed("All available tags",
+                    String.join(", ", tagSystem.getAllIds()), event.getUser(),
+                    TagSystem.AMBIENT_COLOR, null))
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
             .queue();

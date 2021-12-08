@@ -45,7 +45,7 @@ public final class TagCommand extends SlashCommandAdapter {
 
         event
             .replyEmbeds(MessageUtils.generateEmbed(null, tagSystem.getTag(id).orElseThrow(),
-                    event.getUser(), TagSystem.AMBIENT_COLOR))
+                    event.getUser(), TagSystem.AMBIENT_COLOR, event.getCommandString()))
             .queue();
     }
 }
