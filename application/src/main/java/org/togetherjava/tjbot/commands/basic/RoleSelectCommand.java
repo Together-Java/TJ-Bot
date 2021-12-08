@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
@@ -183,14 +184,16 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     public void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args) {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
 
-        // Get the roles the bot can interact with
-        List<Role> guildRoles = event.getGuild().getRoles();
-        List<String> roleIds = guildRoles.stream().map(Role::getId).toList();
+        Guild guild = Objects.requireNonNull(event.getGuild());
 
         List<Role> selectedRoles = new ArrayList<>();
-        for (SelectOption selectedOption : event.getSelectedOptions()) {
-            if (roleIds.contains(selectedOption.getValue())) {
-                selectedRoles.add(guildRoles.get(roleIds.indexOf(selectedOption.getValue())));
+        for (SelectOption selectedOption : Objects.requireNonNull(event.getSelectedOptions())) {
+            Role selectedRole = guild.getRoleById(selectedOption.getValue());
+            if (selectedRole != null && guild.getSelfMember().canInteract(selectedRole)) {
+                selectedRoles.add(selectedRole);
+            } else {
+                logger.info("The " + selectedOption.getLabel() + " (" + selectedOption.getValue()
+                        + ") role has been removed but is still an option in the selection menu");
             }
         }
 
@@ -201,8 +204,10 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             menu.setPlaceholder("Select your roles").setMaxValues(selectedRoles.size());
 
             for (SelectOption selectedOption : event.getSelectedOptions()) {
-                Role role = guildRoles.get(roleIds.indexOf(selectedOption.getValue()));
-                menu.addOption(role.getName(), role.getId());
+                Role role = guild.getRoleById(selectedOption.getValue());
+                if (role != null) {
+                    menu.addOption(role.getName(), role.getId());
+                }
             }
 
             event.getChannel()
@@ -220,17 +225,18 @@ public class RoleSelectCommand extends SlashCommandAdapter {
 
         // Remove deselected roles
         for (SelectOption option : menuOptions) {
-            Role role = guildRoles.get(roleIds.indexOf(option.getValue()));
-            if (!selectedRoles.contains(role)) {
+            Role role = guild.getRoleById(option.getValue());
+            if (role != null && !selectedRoles.contains(role)) {
                 event.getGuild().removeRoleFromMember(member, role).queue();
+            } else if (role == null) {
+                logger.info("The " + option.getLabel() + " (" + option.getValue()
+                        + ") role has been removed but is still an option in the selection menu");
             }
         }
 
         // Add the selected roles to the member
-        for (Role role : guildRoles) {
-            if (selectedRoles.contains(role)) {
-                event.getGuild().addRoleToMember(member, role).queue();
-            }
+        for (Role role : selectedRoles) {
+            guild.addRoleToMember(member, role).queue();
         }
 
         event.reply("Updated your roles!").setEphemeral(true).queue();
