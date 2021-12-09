@@ -46,7 +46,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
-        this.actionsStore = actionsStore;
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private void unban(@NotNull User target, @NotNull Member author, @NotNull String reason,

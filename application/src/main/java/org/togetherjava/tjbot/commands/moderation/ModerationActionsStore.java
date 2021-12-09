@@ -9,6 +9,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecor
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -36,7 +37,7 @@ public final class ModerationActionsStore {
      * @param database the database to write and retrieve actions from
      */
     public ModerationActionsStore(@NotNull Database database) {
-        this.database = database;
+        this.database = Objects.requireNonNull(database);
     }
 
     /**
@@ -50,6 +51,8 @@ public final class ModerationActionsStore {
      */
     public @NotNull List<ActionRecord> getActionsByTypeAscending(long guildId,
             @NotNull ModerationUtils.Action actionType) {
+        Objects.requireNonNull(actionType);
+
         return getActionsFromGuildAscending(guildId,
                 ModerationActions.MODERATION_ACTIONS.ACTION_TYPE.eq(actionType.name()));
     }
@@ -118,6 +121,9 @@ public final class ModerationActionsStore {
     public int addAction(long guildId, long authorId, long targetId,
             @NotNull ModerationUtils.Action actionType, @Nullable Instant actionExpiresAt,
             @NotNull String reason) {
+        Objects.requireNonNull(actionType);
+        Objects.requireNonNull(reason);
+
         return database.writeAndProvide(context -> {
             ModerationActionsRecord actionRecord =
                     context.newRecord(ModerationActions.MODERATION_ACTIONS)
@@ -135,6 +141,8 @@ public final class ModerationActionsStore {
 
     private @NotNull List<ActionRecord> getActionsFromGuildAscending(long guildId,
             @NotNull Condition condition) {
+        Objects.requireNonNull(condition);
+
         return database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
             .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId).and(condition))
             .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.asc())

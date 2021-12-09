@@ -51,7 +51,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();
-        this.actionsStore = actionsStore;
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static void handleAbsentTarget(@NotNull Interaction event) {
