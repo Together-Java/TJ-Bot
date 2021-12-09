@@ -61,7 +61,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
-        this.actionsStore = actionsStore;
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static RestAction<InteractionHook> handleAlreadyBanned(@NotNull Guild.Ban ban,
