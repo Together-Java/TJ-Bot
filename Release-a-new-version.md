@@ -7,7 +7,7 @@ It mainly consists of simply **pushing** `develop` over on `master`, creating an
 ## Checklist
 
 1. Determine the next release version (for example `v1.2.3`)
-2. Create a PR to merge `develop` into `master`, call it for exampke `Release 1.2.3` and tag it as `release`
+2. Create a PR to merge `develop` into `master`, call it for example `Release 1.2.3` and tag it as `release`; the PRs only purpose is visibility
 3. Ignore the PR and `rebase` `master` directly onto `develop`, then `force-push`. As a result, `master` and `develop` are fully identical  
   3.1. The PR should now automatically be marked as _merged_ by GitHub
   3.2. In the meantime, the pipeline automatically started deploying the new version to the server  
