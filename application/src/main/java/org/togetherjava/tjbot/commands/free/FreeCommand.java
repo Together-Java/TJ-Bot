@@ -198,7 +198,6 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      *
      * @param channel the text channel the status message will be posted in.
      */
-
     public void displayStatus(@NotNull TextChannel channel) {
         final Guild guild = channel.getGuild();
 
