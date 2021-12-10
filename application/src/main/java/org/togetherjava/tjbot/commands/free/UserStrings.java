@@ -12,7 +12,7 @@ enum UserStrings {
             Thank you for asking in an available channel. A helper will be with you shortly!
             Please be patient.
 
-            __**Do not post your question in other channels.**__
+            __Do not post your question in other channels.__
             """),
     MARK_AS_FREE("""
             This channel is now available for a question to be asked.
