@@ -43,7 +43,8 @@ Next up, you want to create your own bot.
 4. on the **Bot** tab  
   4.1. click on **Add Bot**  
   4.2. hit the **Yes, do it!** button  
-  4.3. you can now see your bots **Token**, you will need this when connecting the bot to a program later
+  4.3. you can now see your bots **Token**, you will need this when connecting the bot to a program later  
+  4.4. enable the **Server Members Intent**
 5. on the **OAuth** tab  
   5.1. select the `Bot` and `applications.commands` **Scope**s  
   5.2. select the desired **Bot permissions**, e.g. `Send Messages`, `Read Message History`, `Add Reactions`, `Use Slash Commands`  
@@ -55,6 +56,7 @@ Next up, you want to create your own bot.
 ![Add Bot](https://i.imgur.com/8jshb9M.png)
 ![Confim add bot](https://i.imgur.com/vps9yLt.png)
 ![Token](https://i.imgur.com/l0UZPD3.png)
+![Enable Server Members Intent](https://i.imgur.com/NoOgtkK.png)
 ![scopes](https://i.imgur.com/8x6WjDT.png)
 ![Bot permissions](https://i.imgur.com/pkTFsJq.png)
 ![url](https://i.imgur.com/j7yVKeM.png)
