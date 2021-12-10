@@ -96,6 +96,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder().setTitle("Success")
                 .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
+                    .setFooter(event.getUser().getName())
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
@@ -156,7 +157,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder()
                 .setDescription(MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()))
-                .setFooter(event.getUser().toString())
+                .setFooter(event.getUser().getName())
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())

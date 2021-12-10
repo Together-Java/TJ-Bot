@@ -205,7 +205,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
         String messageTxt = buildStatusMessage(guild);
         MessageEmbed embed = new EmbedBuilder().setTitle(STATUS_TITLE)
             .setDescription(messageTxt)
-            .setFooter(channel.getJDA().getSelfUser().toString())
+            .setFooter(channel.getJDA().getSelfUser().getName())
             .setTimestamp(Instant.now())
             .setColor(MESSAGE_HIGHLIGHT_COLOR)
             .build();
