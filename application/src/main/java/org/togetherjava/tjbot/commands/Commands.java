@@ -1,9 +1,9 @@
 package org.togetherjava.tjbot.commands;
-
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
@@ -38,6 +38,7 @@ public enum Commands {
     public static @NotNull Collection<SlashCommand> createSlashCommands(
             @NotNull Database database) {
         TagSystem tagSystem = new TagSystem(database);
+        ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
@@ -50,10 +51,11 @@ public enum Commands {
         commands.add(new TagManageCommand(tagSystem));
         commands.add(new TagsCommand(tagSystem));
         commands.add(new VcActivityCommand());
-        commands.add(new KickCommand());
-        commands.add(new BanCommand());
-        commands.add(new UnbanCommand());
         commands.add(new WarnCommand(database));
+        commands.add(new KickCommand(actionsStore));
+        commands.add(new BanCommand(actionsStore));
+        commands.add(new UnbanCommand(actionsStore));
+        commands.add(new FreeCommand());
 
         return commands;
     }

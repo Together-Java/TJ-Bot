@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
@@ -44,7 +45,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    private static final String YOUTUBE_TOGETHER_NAME = " YouTube Together";
+    public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
     public static final String BETRAYAL_IO_NAME = "Betrayal.io";
     public static final String FISHINGTON_IO_NAME = "Fishington.io";
@@ -169,34 +170,51 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
         String applicationId;
+        String applicationName;
 
         if (applicationOption != null) {
-            applicationId = VC_APPLICATION_TO_ID.get(applicationOption.getAsString());
+            applicationName = applicationOption.getAsString();
+            applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
             applicationId = idOption.getAsString();
+
+            applicationName =
+                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge);
+        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
+    }
+
+    private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
+            @NotNull V value) {
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            if (value.equals(entry.getKey())) {
+                return Optional.of(entry.getKey());
+            }
+        }
+
+        return Optional.empty();
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Integer maxUses, @Nullable Integer maxAge) {
+            @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
             .setMaxAge(maxAge)
-            .flatMap(invite -> replyInvite(event, invite))
+            .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
     }
 
     private static @NotNull ReplyAction replyInvite(@NotNull SlashCommandEvent event,
-            @NotNull Invite invite) {
+            @NotNull Invite invite, @NotNull String applicationName) {
         return event.reply("""
-                I wish you a lot of fun, here's the invite: %s
+                %s wants to start %s.
+                Feel free to join by clicking %s , enjoy!
                 If it says the activity ended, click on the URL instead.
-                 """.formatted(invite.getUrl()));
+                 """.formatted(event.getUser().getAsTag(), applicationName, invite.getUrl()));
     }
 
     private static void handleErrors(@NotNull SlashCommandEvent event,
