@@ -2,7 +2,7 @@
 
 Thanks to a rich pipeline, releasing a new version of the bot is fairly simple.
 
-It mainly consists of simply **pushing** `develop` over on `master`, creating an **annotated tag** for the release and possibly adjusting the configuration and the Discord environment, thats it.
+It mainly consists of simply **pushing** `develop` over on `master`, creating an **annotated tag** for the release and possibly adjusting the **configuration** and the Discord environment, thats it.
 
 ## Checklist
 
