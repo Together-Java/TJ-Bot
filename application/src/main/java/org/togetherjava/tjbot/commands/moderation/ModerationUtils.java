@@ -8,15 +8,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.config.Config;
 
 import java.awt.*;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Utility class offering helpers revolving around user moderation, such as banning or kicking.
  */
-enum ModerationUtils {
+public enum ModerationUtils {
     ;
 
     private static final Logger logger = LoggerFactory.getLogger(ModerationUtils.class);
@@ -26,6 +29,8 @@ enum ModerationUtils {
      */
     private static final int REASON_MAX_LENGTH = 512;
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
+    public static final Predicate<String> isMuteRole =
+            Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -308,6 +313,16 @@ enum ModerationUtils {
             .setTimestamp(Instant.now())
             .setColor(AMBIENT_COLOR)
             .build();
+    }
+
+    /**
+     * Gets the role used to mute a member in a guild.
+     *
+     * @param guild the guild to get the muted role from
+     * @return the muted role, if found
+     */
+    public static @NotNull Optional<Role> getMutedRole(@NotNull Guild guild) {
+        return guild.getRoles().stream().filter(role -> isMuteRole.test(role.getName())).findAny();
     }
 
     /**
