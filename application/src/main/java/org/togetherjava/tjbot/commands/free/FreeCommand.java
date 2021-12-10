@@ -199,17 +199,13 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      * @param channel the text channel the status message will be posted in.
      */
 
-    /*
-     * event.replyEmbeds(new EmbedBuilder() .setDescription(tagSystem.getTag(id).orElseThrow()
-     * .setFooter(event.getUser() + " - used /tag foo") .setColor(TagSystem.AMBIENT_COLOR)
-     * ).queue();
-     */
     public void displayStatus(@NotNull TextChannel channel) {
         final Guild guild = channel.getGuild();
 
         String messageTxt = buildStatusMessage(guild);
         MessageEmbed embed = new EmbedBuilder().setTitle(STATUS_TITLE)
             .setDescription(messageTxt)
+            .setFooter(channel.getJDA().getSelfUser().toString())
             .setTimestamp(Instant.now())
             .setColor(MESSAGE_HIGHLIGHT_COLOR)
             .build();

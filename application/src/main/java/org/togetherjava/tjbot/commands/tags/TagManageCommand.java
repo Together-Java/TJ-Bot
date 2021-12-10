@@ -156,6 +156,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder()
                 .setDescription(MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()))
+                .setFooter(event.getUser().toString())
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
