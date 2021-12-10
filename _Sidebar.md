@@ -28,4 +28,5 @@
   * [[Setup Log Viewer]]
 * [[Edit the Config]]
 * [[Shutdown or restart the bot]]
+* [[Release a new version]]
 * [[Reset or edit the databases]]
