@@ -49,6 +49,10 @@ public enum Commands {
         // which adds support for routines)
         new ModAuditLogRoutine(jda, database).start();
 
+        // TODO This should be moved into some proper command system instead (see GH issue #236
+        // which adds support for listeners)
+        jda.addEventListener(new RejoinMuteListener(actionsStore));
+
         // NOTE The command system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
