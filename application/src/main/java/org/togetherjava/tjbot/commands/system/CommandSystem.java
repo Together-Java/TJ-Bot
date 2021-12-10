@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.system;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -55,11 +56,12 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
      * <p>
      * Commands are fetched from {@link Commands}.
      *
+     * @param jda the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
      */
     @SuppressWarnings("ThisEscapedInObjectConstruction")
-    public CommandSystem(@NotNull Database database) {
-        nameToSlashCommands = Commands.createSlashCommands(database)
+    public CommandSystem(@NotNull JDA jda, @NotNull Database database) {
+        nameToSlashCommands = Commands.createSlashCommands(jda, database)
             .stream()
             .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
 

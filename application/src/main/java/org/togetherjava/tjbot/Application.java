@@ -2,6 +2,7 @@ package org.togetherjava.tjbot;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Commands;
@@ -77,14 +78,11 @@ public enum Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(token)
-                .addEventListeners(new CommandSystem(database))
+                .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .build();
+            jda.addEventListener(new CommandSystem(jda, database));
             jda.awaitReady();
             logger.info("Bot is ready");
-
-            // TODO This should be moved into some proper command system instead (see GH issue #235
-            // which adds support for routines)
-            new ModAuditLogRoutine(jda, database).start();
 
             Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
         } catch (LoginException e) {
