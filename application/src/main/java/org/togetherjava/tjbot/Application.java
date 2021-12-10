@@ -9,7 +9,6 @@ import org.togetherjava.tjbot.commands.Commands;
 import org.togetherjava.tjbot.commands.system.CommandSystem;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
