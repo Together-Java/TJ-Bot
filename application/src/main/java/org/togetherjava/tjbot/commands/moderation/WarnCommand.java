@@ -22,10 +22,11 @@ import java.util.regex.Pattern;
 
 
 /**
- * This command allows a moderator to warn a user. This moderator will need to have ban permission
- * and well need to type {@code /warn @user reason}. If the command is successful the user will be
- * warned and will receive a dm telling them why there were warned. After that all the data will be
- * added to the database.
+ * This command can warn users. Warning can also be paired with a warn reason. The command will also
+ * try to DM the user to inform them about the action and the reason.
+ * <p>
+ * The command fails if the user triggering it is lacking permissions to either ban other users or
+ * to ban the specific given user (for example a moderator attempting to ban an admin).
  */
 public final class WarnCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
