@@ -18,4 +18,4 @@ It mainly consists of simply **pushing** `develop` over on `master`, creating an
 6. In case the new version requires changes on Discord, such as other permissions, new channels or roles, make sure to update them as well
 7. Verify that the bot works as expected  
   7.1. Try `/ping` and see if you get a response  
-  7.2. Maybe chech the logs to see if any error pops up, see [[View the logs]]
+  7.2. Maybe check the logs to see if any error pops up, see [[View the logs]]
