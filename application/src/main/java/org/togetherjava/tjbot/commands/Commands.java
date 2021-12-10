@@ -1,4 +1,5 @@
 package org.togetherjava.tjbot.commands;
+
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
@@ -51,7 +52,7 @@ public enum Commands {
         commands.add(new TagManageCommand(tagSystem));
         commands.add(new TagsCommand(tagSystem));
         commands.add(new VcActivityCommand());
-        commands.add(new WarnCommand(database));
+        commands.add(new WarnCommand(actionsStore));
         commands.add(new KickCommand(actionsStore));
         commands.add(new BanCommand(actionsStore));
         commands.add(new UnbanCommand(actionsStore));

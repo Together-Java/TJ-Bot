@@ -12,18 +12,11 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
-import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.WarnSystem;
-import org.togetherjava.tjbot.db.generated.tables.records.WarnSystemRecord;
 
-import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -35,25 +28,26 @@ import java.util.regex.Pattern;
  * added to the database.
  */
 public final class WarnCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(WarnCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
     private static final String ACTION_VERB = "warn";
-    private final Database database;
+    private final ModerationActionsStore actionsStore;
     private final Predicate<String> hasRequiredRole;
 
     /**
      * Creates a new Instance.
+     *
+     * @param actionsStore used to store actions issued by this command
      */
-    public WarnCommand(@NotNull Database database) {
+    public WarnCommand(@NotNull ModerationActionsStore actionsStore) {
         super("warn", "warns the user", SlashCommandVisibility.GUILD);
-        this.database = database;
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user to warn", true)
             .addOption(OptionType.STRING, REASON_OPTION, "The reason for the warning", true);
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static @NotNull RestAction<Boolean> dmUser(long userId, @NotNull String reason,
@@ -113,39 +107,13 @@ public final class WarnCommand extends SlashCommandAdapter {
         if (!handleChecks(bot, author, reason, guild, event)) {
             return;
         }
-
         long userId = target.getIdLong();
         dmUser(userId, reason, event)
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
             .flatMap(event::replyEmbeds)
             .queue();
 
-        long guildId = guild.getIdLong();
-        Optional<Integer> oldWarnAmount = database.read(context -> {
-            try (var select = context.selectFrom(WarnSystem.WARN_SYSTEM)) {
-                return Optional
-                    .ofNullable(select.where(WarnSystem.WARN_SYSTEM.USER_ID.eq(userId)
-                        .and(WarnSystem.WARN_SYSTEM.GUILD_ID.eq(guildId))).fetchOne())
-                    .map(WarnSystemRecord::getWarningAmount);
-            }
-        });
-
-        try {
-            database.write(context -> {
-                WarnSystemRecord warnSystemRecord = context.newRecord(WarnSystem.WARN_SYSTEM)
-                    .setUserId(target.getIdLong())
-                    .setGuildId(guildId)
-                    .setWarnReason(reason)
-                    .setActionType(ModerationUtils.Action.WARN.getVerb())
-                    .setTimestamp(Instant.now())
-                    .setWarningAmount(oldWarnAmount.orElse(0) + 1);
-                if (warnSystemRecord.update() == 0) {
-                    warnSystemRecord.insert();
-                }
-            });
-            logger.info("Saved the user '{}' to the warn system.", target.getAsTag());
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.WARN, null, reason);
     }
 }

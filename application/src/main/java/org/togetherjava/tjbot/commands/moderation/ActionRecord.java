@@ -9,7 +9,7 @@ import java.time.Instant;
 /**
  * Record for actions as maintained by {@link ModerationActionsStore}. Each action has a unique
  * caseId.
- *
+ * 
  * @param caseId the unique case id associated with this action
  * @param issuedAt the instant at which this action was issued
  * @param guildId the id of the guild in which context this action happened
