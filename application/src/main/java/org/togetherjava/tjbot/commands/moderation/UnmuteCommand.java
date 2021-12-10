@@ -36,11 +36,14 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private static final String ACTION_VERB = "unmute";
     private final Predicate<String> hasRequiredRole;
     private final Predicate<String> isMuteRole;
+    private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
+     *
+     * @param actionsStore used to store actions issued by this command
      */
-    public UnmuteCommand() {
+    public UnmuteCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME,
                 "Unmutes the given already muted user so that they can send messages again",
                 SlashCommandVisibility.GUILD);
@@ -51,6 +54,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();
         isMuteRole = Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static void handleNotMutedTarget(@NotNull Interaction event) {
@@ -86,6 +90,9 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         logger.info("'{}' ({}) unmuted the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
+
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.UNMUTE, null, reason);
 
         return guild.removeRoleFromMember(target, getMutedRole(guild).orElseThrow()).reason(reason);
     }
