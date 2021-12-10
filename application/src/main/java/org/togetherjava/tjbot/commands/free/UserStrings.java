@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 enum UserStrings {
     NEW_QUESTION("""
             Thank you for asking in an available channel. A helper will be with you shortly!
-            Please be patient.
 
             __Do not post your question in other channels.__
             """),
