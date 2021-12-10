@@ -9,7 +9,7 @@ import java.time.Instant;
 /**
  * Record for actions as maintained by {@link ModerationActionsStore}. Each action has a unique
  * caseId.
- * 
+ *
  * @param caseId the unique case id associated with this action
  * @param issuedAt the instant at which this action was issued
  * @param guildId the id of the guild in which context this action happened
@@ -26,7 +26,7 @@ public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, 
 
     /**
      * Creates the action record that corresponds to the given action entry from the database table.
-     * 
+     *
      * @param action the action to convert
      * @return the corresponding action record
      */
