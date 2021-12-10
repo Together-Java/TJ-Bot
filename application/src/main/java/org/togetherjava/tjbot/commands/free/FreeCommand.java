@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.free;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -16,11 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FreeCommandConfig;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.*;
 
 // TODO (can SlashCommandVisibility be narrower than GUILD?)
@@ -197,12 +198,27 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      *
      * @param channel the text channel the status message will be posted in.
      */
+
+    /*
+     * event.replyEmbeds(new EmbedBuilder() .setDescription(tagSystem.getTag(id).orElseThrow()
+     * .setFooter(event.getUser() + " - used /tag foo") .setColor(TagSystem.AMBIENT_COLOR)
+     * ).queue();
+     */
     public void displayStatus(@NotNull TextChannel channel) {
         final Guild guild = channel.getGuild();
 
+        /*
+         * MessageUtils.generateEmbed(STATUS_TITLE, messageTxt, channel.getJDA().getSelfUser(),
+         * MESSAGE_HIGHLIGHT_COLOR, null)
+         */
+
         String messageTxt = buildStatusMessage(guild);
-        MessageEmbed embed = MessageUtils.generateEmbed(STATUS_TITLE, messageTxt,
-                channel.getJDA().getSelfUser(), MESSAGE_HIGHLIGHT_COLOR, null);
+        MessageEmbed embed = new EmbedBuilder().setTitle(STATUS_TITLE)
+            .setDescription(messageTxt)
+            .setAuthor(String.valueOf(channel.getJDA().getSelfUser()))
+            .setTimestamp(Instant.now())
+            .setColor(MESSAGE_HIGHLIGHT_COLOR)
+            .build();
 
         getStatusMessageIn(channel).flatMap(this::deleteIfNotLatest)
             .ifPresentOrElse(message -> message.editMessageEmbeds(embed).queue(),

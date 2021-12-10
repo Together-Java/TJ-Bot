@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.tags;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -17,6 +18,7 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.function.BiConsumer;
@@ -90,10 +92,18 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static void sendSuccessMessage(@NotNull Interaction event, @NotNull String id,
             @NotNull String actionVerb) {
         logger.info("User '{}' {} the tag with id '{}'.", event.getUser().getId(), actionVerb, id);
+        /*
+         * MessageUtils.generateEmbed("Success", "Successfully %s tag '%s'.".formatted(actionVerb,
+         * id), event.getUser(), TagSystem.AMBIENT_COLOR, null)
+         */
+
         event
-            .replyEmbeds(MessageUtils.generateEmbed("Success",
-                    "Successfully %s tag '%s'.".formatted(actionVerb, id), event.getUser(),
-                    TagSystem.AMBIENT_COLOR, null))
+            .replyEmbeds(new EmbedBuilder().setTitle("Success")
+                .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
+                .setAuthor(String.valueOf(event.getUser()))
+                .setTimestamp(Instant.now())
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
             .queue();
     }
 
@@ -147,10 +157,17 @@ public final class TagManageCommand extends SlashCommandAdapter {
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
-
-        event.replyEmbeds(MessageUtils.generateEmbed(null,
-                MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()), event.getUser(),
-                TagSystem.AMBIENT_COLOR, null))
+        /*
+         * MessageUtils.generateEmbed(null,
+         * MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()), event.getUser(),
+         * TagSystem.AMBIENT_COLOR, null)
+         */
+        event
+            .replyEmbeds(new EmbedBuilder()
+                .setDescription(MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()))
+                .setAuthor(String.valueOf(event.getUser()))
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
             .queue();
     }
 

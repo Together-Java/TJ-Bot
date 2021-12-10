@@ -1,13 +1,14 @@
 package org.togetherjava.tjbot.commands.tags;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,10 +43,18 @@ public final class TagsCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // TODO A list might be better than comma separated, which is hard to read
+        /*
+         * MessageUtils.generateEmbed("All available tags", String.join(", ",
+         * tagSystem.getAllIds()), event.getUser(), TagSystem.AMBIENT_COLOR, null)
+         */
+
         event
-            .replyEmbeds(MessageUtils.generateEmbed("All available tags",
-                    String.join(", ", tagSystem.getAllIds()), event.getUser(),
-                    TagSystem.AMBIENT_COLOR, null))
+            .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
+                .setDescription(String.join(", ", tagSystem.getAllIds()))
+                .setFooter(event.getUser().getName() + " - used /tag foo")
+                .setTimestamp(Instant.now())
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
             .queue();

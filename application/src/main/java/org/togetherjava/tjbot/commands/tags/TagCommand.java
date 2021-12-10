@@ -1,14 +1,13 @@
 package org.togetherjava.tjbot.commands.tags;
 
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -44,12 +43,22 @@ public final class TagCommand extends SlashCommandAdapter {
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
-
-        event.replyEmbeds(tagEmbed(id, event.getUser(), event.getCommandString())).queue();
+/*
+event.replyEmbeds(tagEmbed(id, event.getUser(), event.getCommandString())).queue();
     }
 
     private MessageEmbed tagEmbed(String id, User user, String commandString) {
         return MessageUtils.generateEmbed(null, tagSystem.getTag(id).orElseThrow(), user,
                 TagSystem.AMBIENT_COLOR, user.getName() + " " + commandString);
+    }
+ */
+
+        event
+            .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(id).orElseThrow())
+                .setFooter(event.getUser().getName() + " - used /tag foo")
+                .setTimestamp(Instant.now())
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
+            .queue();
     }
 }
