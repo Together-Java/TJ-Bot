@@ -10,10 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Reapplies existing mutes to users who have left and rejoined a guild.
@@ -58,8 +55,8 @@ public final class RejoinMuteListener extends ListenerAdapter {
     }
 
     private boolean shouldMemberBeMuted(@NotNull IPermissionHolder member) {
-        List<ActionRecord> actions = actionsStore
-            .getActionsByTargetAscending(member.getGuild().getIdLong(), member.getIdLong());
+        List<ActionRecord> actions = new ArrayList<>(actionsStore
+            .getActionsByTargetAscending(member.getGuild().getIdLong(), member.getIdLong()));
         Collections.reverse(actions);
 
         Optional<ActionRecord> lastMute = actions.stream()
