@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * action and the reason.
  * <p>
  * The command fails if the user triggering it is lacking permissions to either warn other users or
- * to warn the specific given user (for example a moderator attempting to ban an admin).
+ * to warn the specific given user (for example a moderator attempting to warn an admin).
  */
 public final class WarnCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
