@@ -24,5 +24,5 @@ As well as some tutorials regarding on how to maintain the project:
   * [[View the logs]]
   * [[Setup Log Viewer]]
 * [[Edit the Config]]
-* [[Shutdown or restart of the bot]]
+* [[Shutdown or restart the bot]]
 * [[Reset or edit the databases]]
