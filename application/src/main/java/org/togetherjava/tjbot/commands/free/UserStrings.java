@@ -9,11 +9,10 @@ import org.jetbrains.annotations.Nullable;
  */
 enum UserStrings {
     NEW_QUESTION("""
-            Thank you for asking a question in an available channel.
-            When a helper who can answer this question reads it they will help you.
+            Thank you for asking in an available channel. A helper will be with you shortly!
             Please be patient.
 
-            __Please do not post your question in other channels__
+            __**Do not post your question in other channels.**__
             """),
     MARK_AS_FREE("""
             This channel is now available for a question to be asked.
