@@ -35,7 +35,6 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "mute";
     private static final String ACTION_VERB = "mute";
     private final Predicate<String> hasRequiredRole;
-    private final Predicate<String> isMuteRole;
     private final ModerationActionsStore actionsStore;
 
     /**
@@ -52,7 +51,6 @@ public final class MuteCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();
-        isMuteRole = Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -96,7 +94,8 @@ public final class MuteCommand extends SlashCommandAdapter {
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationUtils.Action.MUTE, null, reason);
 
-        return guild.addRoleToMember(target, getMutedRole(guild).orElseThrow()).reason(reason);
+        return guild.addRoleToMember(target, ModerationUtils.getMutedRole(guild).orElseThrow())
+            .reason(reason);
     }
 
     private void muteUserFlow(@NotNull Member target, @NotNull Member author,
@@ -113,15 +112,16 @@ public final class MuteCommand extends SlashCommandAdapter {
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
             @NotNull Interaction event) {
-        if (!ModerationUtils.handleRoleChangeChecks(getMutedRole(guild).orElse(null), ACTION_VERB,
-                target, bot, author, guild, hasRequiredRole, reason, event)) {
+        if (!ModerationUtils.handleRoleChangeChecks(
+                ModerationUtils.getMutedRole(guild).orElse(null), ACTION_VERB, target, bot, author,
+                guild, hasRequiredRole, reason, event)) {
             return false;
         }
         if (Objects.requireNonNull(target)
             .getRoles()
             .stream()
             .map(Role::getName)
-            .anyMatch(isMuteRole)) {
+            .anyMatch(ModerationUtils.isMuteRole)) {
             handleAlreadyMutedTarget(event);
             return false;
         }
@@ -144,9 +144,5 @@ public final class MuteCommand extends SlashCommandAdapter {
         }
 
         muteUserFlow(Objects.requireNonNull(target), author, reason, guild, event);
-    }
-
-    private @NotNull Optional<Role> getMutedRole(@NotNull Guild guild) {
-        return guild.getRoles().stream().filter(role -> isMuteRole.test(role.getName())).findAny();
     }
 }
