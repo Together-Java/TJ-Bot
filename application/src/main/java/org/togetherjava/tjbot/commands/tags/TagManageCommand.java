@@ -92,15 +92,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static void sendSuccessMessage(@NotNull Interaction event, @NotNull String id,
             @NotNull String actionVerb) {
         logger.info("User '{}' {} the tag with id '{}'.", event.getUser().getId(), actionVerb, id);
-        /*
-         * MessageUtils.generateEmbed("Success", "Successfully %s tag '%s'.".formatted(actionVerb,
-         * id), event.getUser(), TagSystem.AMBIENT_COLOR, null)
-         */
 
         event
             .replyEmbeds(new EmbedBuilder().setTitle("Success")
                 .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
-                .setAuthor(String.valueOf(event.getUser()))
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
@@ -157,15 +152,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
-        /*
-         * MessageUtils.generateEmbed(null,
-         * MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()), event.getUser(),
-         * TagSystem.AMBIENT_COLOR, null)
-         */
+
         event
             .replyEmbeds(new EmbedBuilder()
                 .setDescription(MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()))
-                .setAuthor(String.valueOf(event.getUser()))
+                .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
             .queue();

@@ -43,15 +43,11 @@ public final class TagsCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         // TODO A list might be better than comma separated, which is hard to read
-        /*
-         * MessageUtils.generateEmbed("All available tags", String.join(", ",
-         * tagSystem.getAllIds()), event.getUser(), TagSystem.AMBIENT_COLOR, null)
-         */
 
         event
             .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
                 .setDescription(String.join(", ", tagSystem.getAllIds()))
-                .setFooter(event.getUser().getName() + " - used /tag foo")
+                .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())

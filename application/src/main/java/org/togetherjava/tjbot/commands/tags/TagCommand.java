@@ -43,17 +43,10 @@ public final class TagCommand extends SlashCommandAdapter {
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
-        /*
-         * event.replyEmbeds(tagEmbed(id, event.getUser(), event.getCommandString())).queue(); }
-         * 
-         * private MessageEmbed tagEmbed(String id, User user, String commandString) { return
-         * MessageUtils.generateEmbed(null, tagSystem.getTag(id).orElseThrow(), user,
-         * TagSystem.AMBIENT_COLOR, user.getName() + " " + commandString); }
-         */
 
         event
             .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(id).orElseThrow())
-                .setFooter(event.getUser().getName() + " - used /tag foo")
+                .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
