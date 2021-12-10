@@ -36,11 +36,14 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static final String ACTION_VERB = "mute";
     private final Predicate<String> hasRequiredRole;
     private final Predicate<String> isMuteRole;
+    private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
+     *
+     * @param actionsStore used to store actions issued by this command
      */
-    public MuteCommand() {
+    public MuteCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Mutes the given user so that they can not send messages anymore",
                 SlashCommandVisibility.GUILD);
 
@@ -50,6 +53,7 @@ public final class MuteCommand extends SlashCommandAdapter {
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();
         isMuteRole = Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static void handleAlreadyMutedTarget(@NotNull Interaction event) {
@@ -88,6 +92,10 @@ public final class MuteCommand extends SlashCommandAdapter {
         logger.info("'{}' ({}) muted the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
+
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.MUTE, null, reason);
+
         return guild.addRoleToMember(target, getMutedRole(guild).orElseThrow()).reason(reason);
     }
 
