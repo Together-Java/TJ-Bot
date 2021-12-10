@@ -57,6 +57,8 @@ public enum Commands {
         commands.add(new UnbanCommand(actionsStore));
         commands.add(new FreeCommand());
         commands.add(new AuditCommand(actionsStore));
+        commands.add(new MuteCommand());
+        commands.add(new UnmuteCommand());
 
         return commands;
     }
