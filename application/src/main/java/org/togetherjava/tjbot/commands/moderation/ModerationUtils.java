@@ -215,7 +215,15 @@ enum ModerationUtils {
         /**
          * When a user kicks another user.
          */
-        KICK("kicked");
+        KICK("kicked"),
+        /**
+         * When a user mutes another user.
+         */
+        MUTE("muted"),
+        /**
+         * When a user unmutes another user.
+         */
+        UNMUTE("unmuted");
 
         private final String verb;
 
