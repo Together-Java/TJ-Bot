@@ -1,17 +1,16 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
@@ -29,6 +28,7 @@ import java.util.regex.Pattern;
  * to warn the specific given user (for example a moderator attempting to warn an admin).
  */
 public final class WarnCommand extends SlashCommandAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(WarnCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
     private static final String ACTION_VERB = "warn";
@@ -43,27 +43,48 @@ public final class WarnCommand extends SlashCommandAdapter {
     public WarnCommand(@NotNull ModerationActionsStore actionsStore) {
         super("warn", "warns the user", SlashCommandVisibility.GUILD);
 
-        getData().addOption(OptionType.USER, USER_OPTION, "The user to warn", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "The reason for the warning", true);
+        getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to warn", true)
+            .addOption(OptionType.STRING, REASON_OPTION, "The user who you want to warn", true);
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static @NotNull RestAction<Boolean> dmUser(long userId, @NotNull String reason,
-            @NotNull SlashCommandEvent event) {
+    private @NotNull RestAction<InteractionHook> warnUserFlow(@NotNull User target, @NotNull Member author,
+                                                              @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+        return dmUser(target, reason, guild, event).map(hasSentDm -> {
+            warnUser(target, author, reason, guild);
+            return hasSentDm;
+        })
+            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
+            .flatMap(event::replyEmbeds);
+    }
+
+    private static @NotNull RestAction<Boolean> dmUser(@NotNull ISnowflake target,
+            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         return event.getJDA()
-            .openPrivateChannelById(userId)
+            .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
                     """
-                            Hey there, We are sorry to inform you that you have been warned for the following reason: %s
-                            The repercussion of this warning depends on the severity of the warning or one the number of warnings you have received.\040
-                            The warn system can be seen in the <#652440333107331082> channel.\040
+                            Hey there, sorry to tell you but unfortunately you have been warned in the server %s.
+                            If you think this was a mistake, please contact a moderator or admin of the server.
+                            The reason for the warning is: %s
                             """
-                        .formatted(reason)))
+                        .formatted(guild.getName(), reason)))
             .mapToResult()
             .map(Result::isSuccess);
+    }
+
+    private void warnUser(@NotNull User target, @NotNull Member author, @NotNull String reason,
+            @NotNull Guild guild) {
+        logger.info("'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
+                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                reason);
+
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.WARN, null, reason);
+
     }
 
     private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull User target,
@@ -76,45 +97,38 @@ public final class WarnCommand extends SlashCommandAdapter {
                 target, dmNoticeText, reason);
     }
 
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @NotNull CharSequence reason, @NotNull Guild guild, @NotNull Interaction event) {
-
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
-                guild, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.BAN_MEMBERS, author,
-                guild, event)) {
-            return false;
-        }
-        return ModerationUtils.handleReason(reason, event);
-    }
-
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        OptionMapping userOption =
-                Objects.requireNonNull(event.getOption(USER_OPTION), "The option is null");
-        User target = userOption.getAsUser();
+        OptionMapping targetOption =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
+        User target = targetOption.getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
         Guild guild = Objects.requireNonNull(event.getGuild(), "The guild is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
 
-        Member bot = guild.getSelfMember();
-
-        if (!handleChecks(bot, author, reason, guild, event)) {
+        if (!handleChecks(guild.getSelfMember(), author, targetOption.getAsMember(), reason,
+                event)) {
             return;
         }
-        long userId = target.getIdLong();
-        dmUser(userId, reason, event)
-            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
-            .flatMap(event::replyEmbeds)
-            .queue();
 
-        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.WARN, null, reason);
+        warnUserFlow(target, author, reason, guild, event).queue();
+    }
+
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
+    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
+            @Nullable Member target, String reason, @NotNull SlashCommandEvent event) {
+        if (target == null) {
+            if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
+                return false;
+            }
+        } else {
+            // Check if the author can warn a user with higher perms.
+            if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target,
+                    event)) {
+                return false;
+            }
+        }
+        return ModerationUtils.handleReason(reason, event);
     }
 }
