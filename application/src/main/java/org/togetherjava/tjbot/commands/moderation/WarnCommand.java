@@ -41,7 +41,7 @@ public final class WarnCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public WarnCommand(@NotNull ModerationActionsStore actionsStore) {
-        super("warn", "warns the user", SlashCommandVisibility.GUILD);
+        super("warn", "Warns the given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to warn", true)
             .addOption(OptionType.STRING, REASON_OPTION, "The user who you want to warn", true);

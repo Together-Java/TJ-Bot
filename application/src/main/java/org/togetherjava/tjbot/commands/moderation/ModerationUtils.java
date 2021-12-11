@@ -221,7 +221,6 @@ enum ModerationUtils {
          */
         WARN("warned");
 
-
         private final String verb;
 
         /**
