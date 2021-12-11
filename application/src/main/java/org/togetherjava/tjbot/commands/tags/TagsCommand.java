@@ -5,12 +5,15 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-
 import java.time.Instant;
+import org.slf4j.Logger;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Implements the {@code /tags} command which lets the bot respond with all available tags.
@@ -27,6 +30,10 @@ import java.util.Objects;
  * </pre>
  */
 public final class TagsCommand extends SlashCommandAdapter {
+
+    private static final Logger logger = LoggerFactory.getLogger(TagsCommand.class);
+    private static final int MAX_TAGS_THRESHOLD_WARNING = 200;
+
     private final TagSystem tagSystem;
 
     /**
@@ -42,16 +49,27 @@ public final class TagsCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
+
         // TODO A list might be better than comma separated, which is hard to read
 
+      Collection<String> tagIds = tagSystem.getAllIds();
+        if (tagIds.size() > MAX_TAGS_THRESHOLD_WARNING) {
+            // TODO Implement the edge case
+
+            logger.warn(
+                    "The amount of tags is very high and it might soon exceed the maximum character limit. The code should be adjusted to support this edge case soon.");
+        }
+       String tagListText =
+                tagIds.stream().sorted().map(tag -> "• " + tag).collect(Collectors.joining("\n"));
+      
         event
             .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
-                .setDescription(String.join(", ", tagSystem.getAllIds()))
+                .setDescription(tagListText)
                 .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
-            .addActionRow(
+          .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
             .queue();
     }

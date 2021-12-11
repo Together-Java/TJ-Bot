@@ -43,11 +43,14 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
     private final Predicate<String> hasRequiredRole;
+    private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
+     *
+     * @param actionsStore used to store actions issued by this command
      */
-    public BanCommand() {
+    public BanCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to ban", true)
@@ -58,6 +61,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static RestAction<InteractionHook> handleAlreadyBanned(@NotNull Guild.Ban ban,
@@ -72,9 +76,9 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     @SuppressWarnings("MethodWithTooManyParameters")
-    private static RestAction<InteractionHook> banUserFlow(@NotNull User target,
-            @NotNull Member author, @NotNull String reason, int deleteHistoryDays,
-            @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+    private RestAction<InteractionHook> banUserFlow(@NotNull User target, @NotNull Member author,
+            @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild,
+            @NotNull SlashCommandEvent event) {
         return sendDm(target, reason, guild, event)
             .flatMap(hasSentDm -> banUser(target, author, reason, deleteHistoryDays, guild)
                 .map(banResult -> hasSentDm))
@@ -97,12 +101,15 @@ public final class BanCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private static AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
+    private AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
             @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild) {
         logger.info(
                 "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                 guild.getName(), deleteHistoryDays, reason);
+
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.BAN, null, reason);
 
         return guild.ban(target, deleteHistoryDays, reason);
     }
