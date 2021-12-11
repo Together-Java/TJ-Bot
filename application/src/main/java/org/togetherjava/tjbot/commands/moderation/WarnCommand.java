@@ -51,8 +51,9 @@ public final class WarnCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private @NotNull RestAction<InteractionHook> warnUserFlow(@NotNull User target, @NotNull Member author,
-                                                              @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+    private @NotNull RestAction<InteractionHook> warnUserFlow(@NotNull User target,
+            @NotNull Member author, @NotNull String reason, @NotNull Guild guild,
+            @NotNull SlashCommandEvent event) {
         return dmUser(target, reason, guild, event).map(hasSentDm -> {
             warnUser(target, author, reason, guild);
             return hasSentDm;
@@ -118,16 +119,12 @@ public final class WarnCommand extends SlashCommandAdapter {
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, String reason, @NotNull SlashCommandEvent event) {
-        if (target == null) {
-            if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
-                return false;
-            }
-        } else {
-            // Check if the author can warn a user with higher perms.
-            if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target,
-                    event)) {
-                return false;
-            }
+        if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
+                target, event)) {
+            return false;
+        }
+        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
+            return false;
         }
         return ModerationUtils.handleReason(reason, event);
     }
