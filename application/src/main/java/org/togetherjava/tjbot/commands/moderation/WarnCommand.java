@@ -36,7 +36,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     private final Predicate<String> hasRequiredRole;
 
     /**
-     * Creates a new Instance.
+     * Creates a new instance.
      *
      * @param actionsStore used to store actions issued by this command
      */
@@ -85,7 +85,6 @@ public final class WarnCommand extends SlashCommandAdapter {
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationUtils.Action.WARN, null, reason);
-
     }
 
     private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull User target,
@@ -102,7 +101,6 @@ public final class WarnCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
-        User target = targetOption.getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
         Guild guild = Objects.requireNonNull(event.getGuild(), "The guild is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
@@ -113,7 +111,7 @@ public final class WarnCommand extends SlashCommandAdapter {
             return;
         }
 
-        warnUserFlow(target, author, reason, guild, event).queue();
+        warnUserFlow(targetOption.getAsUser(), author, reason, guild, event).queue();
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
