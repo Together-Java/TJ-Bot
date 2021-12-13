@@ -16,12 +16,10 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * This command lists all moderation actions that have been taken against a given user, for example
@@ -54,20 +52,39 @@ public final class AuditCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static MessageEmbed createSummaryMessage(@NotNull User user,
+    private static @NotNull MessageEmbed createSummaryMessage(@NotNull User user,
             @NotNull Collection<ActionRecord> actions) {
-        int actionAmount = actions.size();
-        String description = actionAmount == 0 ? "There are **no actions** against the user."
-                : "There are **%d actions** against the user.".formatted(actionAmount);
-
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
             .setAuthor(user.getName(), null, user.getAvatarUrl())
-            .setDescription(description)
+            .setDescription(createSummaryMessageDescription(actions))
             .setColor(ModerationUtils.AMBIENT_COLOR)
             .build();
     }
 
-    private static RestAction<MessageEmbed> actionToMessage(@NotNull ActionRecord action,
+    private static @NotNull String createSummaryMessageDescription(
+            @NotNull Collection<ActionRecord> actions) {
+        int actionAmount = actions.size();
+        if (actionAmount == 0) {
+            return "There are **no actions** against the user.";
+        }
+
+        String shortSummary = "There are **%d actions** against the user.".formatted(actionAmount);
+
+        // Summary of all actions with their count, like "- Warn: 5", descending
+        Map<ModerationUtils.Action, Long> actionTypeToCount = actions.stream()
+            .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
+        String typeCountSummary = actionTypeToCount.entrySet()
+            .stream()
+            .filter(typeAndCount -> typeAndCount.getValue() > 0)
+            .sorted(Map.Entry.<ModerationUtils.Action, Long>comparingByValue().reversed())
+            .map(typeAndCount -> "- **%s**: %d".formatted(typeAndCount.getKey(),
+                    typeAndCount.getValue()))
+            .collect(Collectors.joining("\n"));
+
+        return shortSummary + "\n" + typeCountSummary;
+    }
+
+    private static @NotNull RestAction<MessageEmbed> actionToMessage(@NotNull ActionRecord action,
             @NotNull JDA jda) {
         String footer = action.actionExpiresAt() == null ? null
                 : "Temporary action, expires at %s".formatted(TimeUtil
@@ -84,7 +101,8 @@ public final class AuditCommand extends SlashCommandAdapter {
                 .build());
     }
 
-    private static <E> List<E> prependElement(E element, Collection<? extends E> elements) {
+    private static <E> @NotNull List<E> prependElement(@NotNull E element,
+            @NotNull Collection<? extends E> elements) {
         List<E> allElements = new ArrayList<>(elements.size() + 1);
         allElements.add(element);
         allElements.addAll(elements);
