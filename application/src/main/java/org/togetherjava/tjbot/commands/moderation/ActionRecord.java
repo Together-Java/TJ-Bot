@@ -26,7 +26,7 @@ public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, 
 
     /**
      * Creates the action record that corresponds to the given action entry from the database table.
-     *
+     * 
      * @param action the action to convert
      * @return the corresponding action record
      */
