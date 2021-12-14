@@ -345,7 +345,7 @@ public enum ModerationUtils {
          * When a user warns another user.
          */
         WARN("warned"),
-         /**
+        /**
          * When a user mutes another user.
          */
         MUTE("muted"),
