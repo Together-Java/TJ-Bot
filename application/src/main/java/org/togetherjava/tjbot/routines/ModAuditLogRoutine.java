@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModAuditLogGuildProcess;
@@ -49,7 +50,6 @@ public final class ModAuditLogRoutine {
     private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
     private final Predicate<TextChannel> isAuditLogChannel;
-    private final Predicate<String> isMutedRole;
     private final Database database;
     private final JDA jda;
     private final ScheduledExecutorService checkAuditLogService =
@@ -67,8 +67,6 @@ public final class ModAuditLogRoutine {
                     .asMatchPredicate();
         isAuditLogChannel = channel -> isAuditLogChannelName.test(channel.getName());
 
-        isMutedRole =
-                Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
         this.database = database;
         this.jda = jda;
     }
@@ -293,8 +291,8 @@ public final class ModAuditLogRoutine {
         });
     }
 
-    private Optional<RestAction<Message>> handleAuditLog(@NotNull MessageChannel auditLogChannel,
-            @NotNull AuditLogEntry entry) {
+    private static Optional<RestAction<Message>> handleAuditLog(
+            @NotNull MessageChannel auditLogChannel, @NotNull AuditLogEntry entry) {
         Optional<RestAction<MessageEmbed>> maybeMessage = switch (entry.getType()) {
             case BAN -> handleBanEntry(entry);
             case UNBAN -> handleUnbanEntry(entry);
@@ -306,7 +304,7 @@ public final class ModAuditLogRoutine {
         return maybeMessage.map(message -> message.flatMap(auditLogChannel::sendMessageEmbeds));
     }
 
-    private @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
+    private static @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
             @NotNull AuditLogEntry entry) {
         if (containsMutedRole(entry, AuditLogKey.MEMBER_ROLES_ADD)) {
             return handleMuteEntry(entry);
@@ -317,7 +315,8 @@ public final class ModAuditLogRoutine {
         return Optional.empty();
     }
 
-    private boolean containsMutedRole(@NotNull AuditLogEntry entry, @NotNull AuditLogKey key) {
+    private static boolean containsMutedRole(@NotNull AuditLogEntry entry,
+            @NotNull AuditLogKey key) {
         List<Map<String, String>> roleChanges = Optional.ofNullable(entry.getChangeByKey(key))
             .<List<Map<String, String>>>map(AuditLogChange::getNewValue)
             .orElse(List.of());
@@ -326,7 +325,7 @@ public final class ModAuditLogRoutine {
             .flatMap(Collection::stream)
             .filter(changeEntry -> "name".equals(changeEntry.getKey()))
             .map(Map.Entry::getValue)
-            .anyMatch(isMutedRole);
+            .anyMatch(ModerationUtils.isMuteRole);
     }
 
     private Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
