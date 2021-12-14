@@ -40,13 +40,13 @@ dependencies {
         version {
             require '2.16.0'
         }
-        because 'Log4Shell happend'
+        because 'Log4Shell happened'
     }
     runtimeOnly('org.apache.logging.log4j:log4j-core') {
         version {
             require '2.16.0'
         }
-        because 'Log4Shell happend'
+        because 'Log4Shell happened'
     }
 
     runtimeOnly 'org.apache.logging.log4j:log4j-jul:2.16.0'
