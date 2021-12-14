@@ -9,7 +9,7 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import java.awt.*;
 
 /**
- * The command will inform the user that the bot is alive, and it will also show the latency.
+ * The command will inform tell the bots' latency to the user.
  */
 public final class PingCommand extends SlashCommandAdapter {
     /**
@@ -26,10 +26,9 @@ public final class PingCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        long latency = event.getJDA().getGatewayPing();
         event
             .replyEmbeds(new EmbedBuilder().setTitle("Here is the ping:")
-                .setDescription("The WS ping is: " + latency + "ms")
+                .setDescription("The WS ping is: " + event.getJDA().getGatewayPing() + "ms")
                 .setColor(Color.decode("#895FE8"))
                 .build())
             .queue();
