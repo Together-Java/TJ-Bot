@@ -19,9 +19,9 @@
         <Async name="AsyncHttp">
             <AppenderRef ref="Http"/>
         </Async>
-        <ConditionalHTTPAppender name="Conditional">
+        <ConditionalAppender name="Conditional">
             <AppenderRef ref="AsyncHttp"/>
-        </ConditionalHTTPAppender>
+        </ConditionalAppender>
     </Appenders>
     <Loggers>
         <Root level="info">

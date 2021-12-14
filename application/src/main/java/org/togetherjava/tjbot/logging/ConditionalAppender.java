@@ -11,16 +11,16 @@ import org.apache.logging.log4j.core.filter.AbstractFilterable;
 
 import java.io.Serializable;
 
-@Plugin(name = "ConditionalHTTPAppender", category = Core.CATEGORY_NAME,
+@Plugin(name = "ConditionalAppender", category = Core.CATEGORY_NAME,
         elementType = Appender.ELEMENT_TYPE)
-public final class ConditionalHTTPAppender extends AbstractAppender {
+public final class ConditionalAppender extends AbstractAppender {
 
     public static final String LOGGING_FLAG = "TJ_APPENDER";
 
     private final AppenderRef ref;
     private final Configuration map;
 
-    private ConditionalHTTPAppender(final String name, final Filter filter,
+    private ConditionalAppender(final String name, final Filter filter,
             final Layout<? extends Serializable> layout, final boolean ignoreExceptions,
             final Property[] properties, AppenderRef ref, Configuration map) {
         super(name, filter, layout, ignoreExceptions, properties);
@@ -42,7 +42,7 @@ public final class ConditionalHTTPAppender extends AbstractAppender {
     }
 
     public static class Builder<B extends Builder<B>> extends AbstractFilterable.Builder<B>
-            implements org.apache.logging.log4j.core.util.Builder<ConditionalHTTPAppender> {
+            implements org.apache.logging.log4j.core.util.Builder<ConditionalAppender> {
 
 
         @PluginElement("AppenderRef")
@@ -57,8 +57,8 @@ public final class ConditionalHTTPAppender extends AbstractAppender {
         private Configuration configuration;
 
         @Override
-        public ConditionalHTTPAppender build() {
-            return new ConditionalHTTPAppender(this.name, getFilter(), null, false, null,
+        public ConditionalAppender build() {
+            return new ConditionalAppender(this.name, getFilter(), null, false, null,
                     this.appenderRefs[0], this.configuration);
         }
     }
