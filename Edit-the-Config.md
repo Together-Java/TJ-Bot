@@ -10,4 +10,4 @@ See [[Access the VPS]] for details of the login process.
 2. Either `cd ~/docker-infra/master-bot` or `cd ~/docker-infra/develop-bot` to go to the directory of the corresponding bot
 3. Use `cd config`
 4. Edit the `config.json` file, for example `vim config.json` or `nano config.json`
-4. Save the file and [[restart the bot|Shutdown or restart of the bot]].
+4. Save the file and [[restart the bot|Shutdown or restart the bot]].
