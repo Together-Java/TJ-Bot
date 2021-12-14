@@ -44,7 +44,7 @@ public final class WarnCommand extends SlashCommandAdapter {
         super("warn", "Warns the given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to warn", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "The user who you want to warn", true);
+            .addOption(OptionType.STRING, REASON_OPTION, "Why you want to warn the user", true);
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();

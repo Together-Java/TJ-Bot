@@ -67,7 +67,7 @@ public enum MessageUtils {
      * Escapes every markdown content in the given string.
      *
      * If the escaped message is sent to Discord, it will display the original message.
-     *
+     * 
      * @param text the text to escape
      * @return the escaped text
      */
