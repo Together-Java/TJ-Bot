@@ -213,17 +213,4 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
     }
-
-
-    /**
-     * Interprets the option as integer, if present.
-     *
-     * @param optionMapping the option to interpret or null if not present
-     * @return the integer contained in the option, if present
-     */
-    private static OptionalInt getIntegerOptionIfPresent(@Nullable OptionMapping optionMapping) {
-        return optionMapping == null ? OptionalInt.empty()
-                : OptionalInt.of(Math.toIntExact(optionMapping.getAsLong()));
-
-    }
 }
