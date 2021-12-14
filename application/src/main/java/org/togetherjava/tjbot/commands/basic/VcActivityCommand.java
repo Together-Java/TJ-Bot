@@ -150,30 +150,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         OptionMapping applicationOption = event.getOption(APPLICATION_OPTION);
         OptionMapping idOption = event.getOption(ID_OPTION);
 
-        OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
-        OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
-
-        OptionalInt maxUses;
-
-        // the user already received the error in the handleIntegerTypeOption method
-        // it still throws to tell us to return this method and stop the proceeding code
-        try {
-            maxUses = getIntegerOptionIfPresent(maxUsesOption);
-        } catch (IllegalArgumentException ignore) {
-            return;
-        }
-
-        OptionalInt maxAge;
-
-        // the user already received the error in the handleIntegerTypeOption method
-        // it still throws to tell us to return this method and stop the proceeding code
-        try {
-            maxAge = getIntegerOptionIfPresent(maxAgeOption);
-        } catch (IllegalArgumentException ignore) {
-            return;
-        }
-
-
         String applicationId;
         String applicationName;
 
@@ -187,8 +163,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, maxUses.getAsInt(), maxAge.getAsInt(),
-                applicationName);
+        handleSubcommand(event, voiceChannel, applicationId,
+                event.getOption(MAX_USES_OPTION).getAsLong(),
+                event.getOption(MAX_AGE_OPTION).getAsLong(), applicationName);
     }
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
@@ -204,12 +181,12 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
+            @Nullable Long maxUses, @Nullable Long maxAge, @NotNull String applicationName) {
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
-            .setMaxUses(maxUses)
-            .setMaxAge(maxAge)
+            .setMaxUses(Math.toIntExact(maxUses))
+            .setMaxAge(Math.toIntExact(maxAge))
             .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
     }
@@ -231,19 +208,14 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
     /**
-     * This grabs the OptionMapping, after this it <br />
-     * - validates whenever It's null or not <br />
+     * Interprets the option as integer, if present.
      *
-     * <p>
-     * <p/>
-     *
-     * @param optionMapping the {@link OptionMapping} to validate
+     * @param optionMapping the option to interpret or null if not present
+     * @return the integer contained in the option, if present
      */
     private static OptionalInt getIntegerOptionIfPresent(@Nullable OptionMapping optionMapping) {
-        return Optional.ofNullable(optionMapping)
-            .stream()
-            .map(OptionMapping::getAsLong)
-            .mapToInt(Math::toIntExact)
-            .findFirst();
+        return optionMapping == null ? OptionalInt.empty()
+                : OptionalInt.of(Math.toIntExact(optionMapping.getAsLong()));
+
     }
 }
