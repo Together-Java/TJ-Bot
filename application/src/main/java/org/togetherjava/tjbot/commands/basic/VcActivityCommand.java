@@ -162,10 +162,18 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             applicationName =
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
+        OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
+        OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
 
-        handleSubcommand(event, voiceChannel, applicationId,
-                event.getOption(MAX_USES_OPTION).getAsLong(),
-                event.getOption(MAX_AGE_OPTION).getAsLong(), applicationName);
+
+        if (maxUsesOption == null || maxAgeOption == null) {
+            handleSubcommand(event, voiceChannel, applicationId, 0, 86400, applicationName);
+        } else {
+            handleSubcommand(event, voiceChannel, applicationId, (int) maxUsesOption.getAsLong(),
+                    (int) maxAgeOption.getAsLong(), applicationName);
+        }
+
+
     }
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
@@ -181,12 +189,12 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Long maxUses, @Nullable Long maxAge, @NotNull String applicationName) {
+            @Nullable int maxUses, @Nullable int maxAge, @NotNull String applicationName) {
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
-            .setMaxUses(Math.toIntExact(maxUses))
-            .setMaxAge(Math.toIntExact(maxAge))
+            .setMaxUses(maxUses)
+            .setMaxAge(maxAge)
             .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
     }
