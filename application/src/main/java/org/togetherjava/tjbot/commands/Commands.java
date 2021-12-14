@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.basic.DatabaseCommand;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
@@ -58,7 +57,6 @@ public enum Commands {
         Collection<SlashCommand> commands = new ArrayList<>();
 
         commands.add(new PingCommand());
-        commands.add(new DatabaseCommand(database));
         commands.add(new TeXCommand());
         commands.add(new TagCommand(tagSystem));
         commands.add(new TagManageCommand(tagSystem));
