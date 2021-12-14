@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" monitorInterval="30">
+<Configuration status="WARN" monitorInterval="30" packages="org.togetherjava.tjbot.logging">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
@@ -19,12 +19,15 @@
         <Async name="AsyncHttp">
             <AppenderRef ref="Http"/>
         </Async>
+        <ConditionalHTTPAppender name="Conditional">
+            <AppenderRef ref="AsyncHttp"/>
+        </ConditionalHTTPAppender>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
-            <AppenderRef ref="AsyncHttp"/>
+            <AppenderRef ref="Conditional"/>
         </Root>
     </Loggers>
 </Configuration>
