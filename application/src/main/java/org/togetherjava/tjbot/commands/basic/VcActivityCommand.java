@@ -162,15 +162,16 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             applicationName =
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
+
         OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
         OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
-
 
         if (maxUsesOption == null || maxAgeOption == null) {
             handleSubcommand(event, voiceChannel, applicationId, 0, 86400, applicationName);
         } else {
-            handleSubcommand(event, voiceChannel, applicationId, (int) maxUsesOption.getAsLong(),
-                    (int) maxAgeOption.getAsLong(), applicationName);
+            handleSubcommand(event, voiceChannel, applicationId,
+                    getOptionAsInteger(maxUsesOption).getAsInt(),
+                    getOptionAsInteger(maxAgeOption).getAsInt(), applicationName);
         }
     }
 
@@ -210,5 +211,16 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             @Nullable Throwable throwable) {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
+    }
+
+    /**
+     * Interprets the option as integer, if present.
+     *
+     * @param optionMapping the option to interpret or null if not present
+     * @return the integer contained in the option, if present
+     */
+    private static OptionalInt getOptionAsInteger(@Nullable OptionMapping optionMapping) {
+        return optionMapping == null ? OptionalInt.empty()
+                : OptionalInt.of(Math.toIntExact(optionMapping.getAsLong()));
     }
 }
