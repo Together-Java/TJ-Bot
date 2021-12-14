@@ -46,11 +46,11 @@ dependencies {
     implementation project(':database')
     implementation project(':inmemorycompiler')
 
-    implementation 'net.dv8tion:JDA:4.3.0_339'
+    implementation 'net.dv8tion:JDA:4.4.0_351'
 
-    implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
-    implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
-    implementation 'org.apache.logging.log4j:log4j-slf4j18-impl:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.15.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.15.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j18-impl:2.15.0'
 
     implementation 'org.jooq:jooq:3.15.3'
 
@@ -75,8 +75,4 @@ application {
     applicationDefaultJvmArgs = [
         '--add-opens=jdk.jdeps/com.sun.tools.javap=ALL-UNNAMED'
     ]
-}
-
-test {
-    useJUnitPlatform()
 }

@@ -15,7 +15,6 @@ import java.util.Set;
 import static org.togetherjava.tjbot.db.generated.tables.Users.USERS;
 
 @Component
-@SuppressWarnings("java:S1602") // Curly Braces are necessary here
 public class UserRepositoryImpl implements UserRepository {
 
     private final Database db;
@@ -26,60 +25,48 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Users findByDiscordID(long discordID) {
-        return this.db.readTransaction(ctx -> {
-            return ctx.selectFrom(USERS)
-                .where(USERS.DISCORDID.eq(discordID))
-                .fetchOne(this::recordToRole);
-        });
+        return this.db.readTransaction(ctx -> ctx.selectFrom(USERS)
+            .where(USERS.DISCORDID.eq(discordID))
+            .fetchOne(this::recordToRole));
     }
 
     @Override
     public Users findByUsername(String username) {
-        return this.db.readTransaction(ctx -> {
-            return ctx.selectFrom(USERS)
-                .where(USERS.USERNAME.eq(username))
-                .fetchOne(this::recordToRole);
-        });
+        return this.db.readTransaction(ctx -> ctx.selectFrom(USERS)
+            .where(USERS.USERNAME.eq(username))
+            .fetchOne(this::recordToRole));
     }
 
     @Override
     public List<Users> findAll() {
-        return this.db.readTransaction(ctx -> {
-            return ctx.selectFrom(USERS).fetch(this::recordToRole);
-        });
+        return this.db.readTransaction(ctx -> ctx.selectFrom(USERS).fetch(this::recordToRole));
     }
 
     @Override
     public int count() {
-        return this.db.readTransaction(ctx -> {
-            return ctx.fetchCount(USERS);
-        });
+        return this.db.readTransaction(ctx -> ctx.fetchCount(USERS));
     }
 
     @Override
     public void save(Users user) {
-        this.db.writeTransaction(ctx -> {
-            ctx.newRecord(USERS)
-                .setDiscordid(user.getDiscordid())
-                .setUsername(user.getUsername())
-                .merge();
-        });
+        this.db.writeTransaction(ctx -> ctx.newRecord(USERS)
+            .setDiscordid(user.getDiscordid())
+            .setUsername(user.getUsername())
+            .merge());
     }
 
     @Override
     public void delete(Users user) {
-        this.db.writeTransaction(ctx -> {
-            ctx.deleteFrom(USERS).where(USERS.DISCORDID.eq(user.getDiscordid())).execute();
-        });
+        this.db.writeTransaction(ctx -> ctx.deleteFrom(USERS)
+            .where(USERS.DISCORDID.eq(user.getDiscordid()))
+            .execute());
     }
 
     @Override
     public Set<Role> fetchRolesForUser(Users user) {
-        return new HashSet<>(this.db.readTransaction(ctx -> {
-            return ctx.selectFrom(Userroles.USERROLES)
-                .where(Userroles.USERROLES.USERID.eq(user.getDiscordid()))
-                .fetch(this::recordToRole);
-        }));
+        return new HashSet<>(this.db.readTransaction(ctx -> ctx.selectFrom(Userroles.USERROLES)
+            .where(Userroles.USERROLES.USERID.eq(user.getDiscordid()))
+            .fetch(this::recordToRole)));
     }
 
     @Override

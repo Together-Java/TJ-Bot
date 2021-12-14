@@ -3,9 +3,13 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -23,16 +27,36 @@ public final class Config {
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
+    private final String modAuditLogChannelPattern;
+    private final String mutedRolePattern;
+    private final String heavyModerationRolePattern;
+    private final String softModerationRolePattern;
+    private final String tagManageRolePattern;
 
+    private final List<FreeCommandConfig> freeCommand;
+
+    @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite) {
+            @JsonProperty("discordGuildInvite") String discordGuildInvite,
+            @JsonProperty("modAuditLogChannelPattern") String modAuditLogChannelPattern,
+            @JsonProperty("mutedRolePattern") String mutedRolePattern,
+            @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
+            @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
+            @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
+            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
+        this.modAuditLogChannelPattern = modAuditLogChannelPattern;
+        this.mutedRolePattern = mutedRolePattern;
+        this.heavyModerationRolePattern = heavyModerationRolePattern;
+        this.softModerationRolePattern = softModerationRolePattern;
+        this.tagManageRolePattern = tagManageRolePattern;
+        this.freeCommand = Collections.unmodifiableList(freeCommand);
     }
 
     /**
@@ -57,6 +81,25 @@ public final class Config {
     public static Config getInstance() {
         return Objects.requireNonNull(config,
                 "can not get the configuration before it has been loaded");
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the role assigned to muted users.
+     *
+     * @return the role name pattern
+     */
+    public String getMutedRolePattern() {
+        return mutedRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain all mod audit
+     * logs.
+     *
+     * @return the channel name pattern
+     */
+    public String getModAuditLogChannelPattern() {
+        return modAuditLogChannelPattern;
     }
 
     /**
@@ -93,5 +136,46 @@ public final class Config {
      */
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use heavy moderation
+     * commands, such as banning, based on role names.
+     *
+     * @return the REGEX pattern
+     */
+    public String getHeavyModerationRolePattern() {
+        return heavyModerationRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use soft moderation
+     * commands, such as kicking, muting or message deletion, based on role names.
+     *
+     * @return the REGEX pattern
+     */
+    public String getSoftModerationRolePattern() {
+        return softModerationRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use the tag-manage command,
+     * such as creating or editing tags.
+     *
+     * @return the REGEX pattern
+     */
+    public String getTagManageRolePattern() {
+        return tagManageRolePattern;
+    }
+
+    /**
+     * Gets a List of channel id's required to configure the free command system see
+     * {@link FreeCommandConfig}
+     *
+     * @return a List of instances of FreeCommandConfig, each of the instances are separated by
+     *         guild.
+     */
+    public @NotNull Collection<FreeCommandConfig> getFreeCommandConfig() {
+        return freeCommand; // already unmodifiable
     }
 }

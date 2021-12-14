@@ -74,7 +74,11 @@ public enum MessageUtils {
     public static @NotNull String escapeMarkdown(@NotNull String text) {
         // NOTE Unfortunately the utility does not escape backslashes '\', so we have to do it
         // ourselves
-        return MarkdownSanitizer.escape(text.replace("\\", "\\\\"));
+        // NOTE It also does not properly escape three backticks '```', it makes it '\```' but we
+        // need '\`\`\`'
+        String beforeEscape = text.replace("\\", "\\\\");
+        String afterEscape = MarkdownSanitizer.escape(beforeEscape);
+        return afterEscape.replace("\\```", "\\`\\`\\`");
     }
 
 }
