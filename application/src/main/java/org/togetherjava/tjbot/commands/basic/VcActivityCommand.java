@@ -172,8 +172,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             handleSubcommand(event, voiceChannel, applicationId, (int) maxUsesOption.getAsLong(),
                     (int) maxAgeOption.getAsLong(), applicationName);
         }
-
-
     }
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
@@ -188,8 +186,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
-            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable int maxUses, @Nullable int maxAge, @NotNull String applicationName) {
+            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId, int maxUses,
+            int maxAge, @NotNull String applicationName) {
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
