@@ -95,13 +95,15 @@ public final class ModerationActionsStore {
     // FIXME javadoc
     public @NotNull Optional<ActionRecord> findLastActionAgainstTargetByType(long guildId,
             long targetId, @NotNull ModerationAction actionType) {
-        return Optional.of(database.read(context -> context
-            .selectFrom(ModerationActions.MODERATION_ACTIONS)
-            .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
-                .and(ModerationActions.MODERATION_ACTIONS.TARGET_ID.eq(targetId)
-                    .and(ModerationActions.MODERATION_ACTIONS.ACTION_TYPE.eq(actionType.name()))))
-            .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.desc())
-            .fetchOne())).map(ActionRecord::of);
+        return database
+            .read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
+                .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
+                    .and(ModerationActions.MODERATION_ACTIONS.TARGET_ID.eq(targetId))
+                    .and(ModerationActions.MODERATION_ACTIONS.ACTION_TYPE.eq(actionType.name())))
+                .orderBy(ModerationActions.MODERATION_ACTIONS.ISSUED_AT.desc())
+                .limit(1)
+                .fetchOptional())
+            .map(ActionRecord::of);
     }
 
     /**
@@ -111,10 +113,10 @@ public final class ModerationActionsStore {
      * @return the action with the given case id, if present
      */
     public @NotNull Optional<ActionRecord> findActionByCaseId(int caseId) {
-        return Optional
-            .of(database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
+        return database
+            .read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
                 .where(ModerationActions.MODERATION_ACTIONS.CASE_ID.eq(caseId))
-                .fetchOne()))
+                .fetchOptional())
             .map(ActionRecord::of);
     }
 
