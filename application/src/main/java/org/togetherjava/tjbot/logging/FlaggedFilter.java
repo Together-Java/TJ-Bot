@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
  * logviewer is not running.
  */
 @Plugin(name = "FlaggedFilter", category = Core.CATEGORY_NAME, elementType = Filter.ELEMENT_TYPE)
-public final class FlaggedFilter extends AbstractFilter {
+public class FlaggedFilter extends AbstractFilter {
 
     /**
      * The environment Variable that needs to bet set in order for this Filter to let events through
@@ -44,7 +44,11 @@ public final class FlaggedFilter extends AbstractFilter {
      */
     @Override
     public Result filter(LogEvent event) {
-        return System.getenv().containsKey(LOGGING_FLAG) ? Result.NEUTRAL : Result.DENY;
+        return isLoggingEnabled() ? Result.NEUTRAL : Result.DENY;
+    }
+
+    boolean isLoggingEnabled() {
+        return System.getenv().containsKey(LOGGING_FLAG);
     }
 
     /**
