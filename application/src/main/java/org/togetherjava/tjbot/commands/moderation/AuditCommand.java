@@ -71,12 +71,12 @@ public final class AuditCommand extends SlashCommandAdapter {
         String shortSummary = "There are **%d actions** against the user.".formatted(actionAmount);
 
         // Summary of all actions with their count, like "- Warn: 5", descending
-        Map<ModerationUtils.Action, Long> actionTypeToCount = actions.stream()
+        Map<ModerationAction, Long> actionTypeToCount = actions.stream()
             .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
         String typeCountSummary = actionTypeToCount.entrySet()
             .stream()
             .filter(typeAndCount -> typeAndCount.getValue() > 0)
-            .sorted(Map.Entry.<ModerationUtils.Action, Long>comparingByValue().reversed())
+            .sorted(Map.Entry.<ModerationAction, Long>comparingByValue().reversed())
             .map(typeAndCount -> "- **%s**: %d".formatted(typeAndCount.getKey(),
                     typeAndCount.getValue()))
             .collect(Collectors.joining("\n"));

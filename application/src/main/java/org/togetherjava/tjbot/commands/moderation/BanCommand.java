@@ -118,8 +118,8 @@ public final class BanCommand extends SlashCommandAdapter {
         if (!hasSentDm) {
             dmNoticeText = "\n(Unable to send them a DM.)";
         }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.BAN,
-                target, durationText + dmNoticeText, reason);
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationAction.BAN, target,
+                durationText + dmNoticeText, reason);
     }
 
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
@@ -190,7 +190,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         Instant expiresAt = temporaryBanData == null ? null : temporaryBanData.unbanTime;
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.BAN, expiresAt, reason);
+                ModerationAction.BAN, expiresAt, reason);
 
         return guild.ban(target, deleteHistoryDays, reason);
     }

@@ -60,7 +60,7 @@ public final class RejoinMuteListener extends ListenerAdapter {
         Collections.reverse(actions);
 
         Optional<ActionRecord> lastMute = actions.stream()
-            .filter(action -> action.actionType() == ModerationUtils.Action.MUTE)
+            .filter(action -> action.actionType() == ModerationAction.MUTE)
             .findFirst();
         if (lastMute.isEmpty()) {
             // User was never muted
@@ -68,7 +68,7 @@ public final class RejoinMuteListener extends ListenerAdapter {
         }
 
         Optional<ActionRecord> lastUnmute = actions.stream()
-            .filter(action -> action.actionType() == ModerationUtils.Action.UNMUTE)
+            .filter(action -> action.actionType() == ModerationAction.UNMUTE)
             .findFirst();
         if (lastUnmute.isEmpty()) {
             // User was never unmuted

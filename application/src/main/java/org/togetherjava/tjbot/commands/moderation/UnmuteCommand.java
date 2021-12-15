@@ -78,7 +78,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
         }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.UNMUTE,
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationAction.UNMUTE,
                 target.getUser(), dmNoticeText, reason);
     }
 
@@ -89,7 +89,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
                 target.getId(), guild.getName(), reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.UNMUTE, null, reason);
+                ModerationAction.UNMUTE, null, reason);
 
         return guild.removeRoleFromMember(target, ModerationUtils.getMutedRole(guild).orElseThrow())
             .reason(reason);

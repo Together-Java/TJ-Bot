@@ -21,8 +21,8 @@ import java.time.Instant;
  * @param reason the reason why this action was executed
  */
 public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, long authorId,
-        long targetId, @NotNull ModerationUtils.Action actionType,
-        @Nullable Instant actionExpiresAt, @NotNull String reason) {
+        long targetId, @NotNull ModerationAction actionType, @Nullable Instant actionExpiresAt,
+        @NotNull String reason) {
 
     /**
      * Creates the action record that corresponds to the given action entry from the database table.
@@ -34,7 +34,7 @@ public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, 
     static @NotNull ActionRecord of(@NotNull ModerationActionsRecord action) {
         return new ActionRecord(action.getCaseId(), action.getIssuedAt(), action.getGuildId(),
                 action.getAuthorId(), action.getTargetId(),
-                ModerationUtils.Action.valueOf(action.getActionType()), action.getActionExpiresAt(),
+                ModerationAction.valueOf(action.getActionType()), action.getActionExpiresAt(),
                 action.getReason());
     }
 }

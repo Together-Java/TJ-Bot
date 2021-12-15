@@ -17,10 +17,9 @@ import java.util.Optional;
  * past events, such as when a user has been banned the last time.
  * <p>
  * Actions have to be added to the store using
- * {@link #addAction(long, long, long, ModerationUtils.Action, Instant, String)} at the time they
- * are executed and can then be retrieved by methods such as
- * {@link #getActionsByTypeAscending(long, ModerationUtils.Action)} or
- * {@link #findActionByCaseId(int)}.
+ * {@link #addAction(long, long, long, ModerationAction, Instant, String)} at the time they are
+ * executed and can then be retrieved by methods such as
+ * {@link #getActionsByTypeAscending(long, ModerationAction)} or {@link #findActionByCaseId(int)}.
  * <p>
  * Be aware that timestamps associated with actions, such as {@link ActionRecord#issuedAt()} are
  * slightly off the timestamps used by Discord.
@@ -58,7 +57,7 @@ public final class ModerationActionsStore {
      * @return a list of all actions with the given type, chronologically ascending
      */
     public @NotNull List<ActionRecord> getActionsByTypeAscending(long guildId,
-            @NotNull ModerationUtils.Action actionType) {
+            @NotNull ModerationAction actionType) {
         Objects.requireNonNull(actionType);
 
         return getActionsFromGuildAscending(guildId,
@@ -95,7 +94,7 @@ public final class ModerationActionsStore {
 
     // FIXME javadoc
     public @NotNull Optional<ActionRecord> findLastActionAgainstTargetByType(long guildId,
-            long targetId, @NotNull ModerationUtils.Action actionType) {
+            long targetId, @NotNull ModerationAction actionType) {
         return Optional.of(database.read(context -> context
             .selectFrom(ModerationActions.MODERATION_ACTIONS)
             .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
@@ -139,7 +138,7 @@ public final class ModerationActionsStore {
      */
     @SuppressWarnings("MethodWithTooManyParameters")
     public int addAction(long guildId, long authorId, long targetId,
-            @NotNull ModerationUtils.Action actionType, @Nullable Instant actionExpiresAt,
+            @NotNull ModerationAction actionType, @Nullable Instant actionExpiresAt,
             @NotNull String reason) {
         Objects.requireNonNull(actionType);
         Objects.requireNonNull(reason);

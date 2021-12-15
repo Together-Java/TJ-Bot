@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
 // FIXME javadoc
 public final class TemporaryModerationRoutine {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryModerationRoutine.class);
-    private static final Set<ModerationUtils.Action> REVOCABLE_ACTIONS =
-            EnumSet.of(ModerationUtils.Action.BAN, ModerationUtils.Action.MUTE);
+    private static final Set<ModerationAction> REVOCABLE_ACTIONS =
+            EnumSet.of(ModerationAction.BAN, ModerationAction.MUTE);
 
     private final ModerationActionsStore actionsStore;
     private final JDA jda;
@@ -96,9 +96,9 @@ public final class TemporaryModerationRoutine {
         // Do not revoke an action which was already revoked by another action issued afterwards
         // For example if a user was unbanned manually after being temp-banned,
         // but also if the system automatically revoked a temp-ban already itself
-        ModerationUtils.Action revokeActionType = switch (groupIdentifier.type) {
-            case BAN -> ModerationUtils.Action.UNBAN;
-            case MUTE -> ModerationUtils.Action.UNMUTE;
+        ModerationAction revokeActionType = switch (groupIdentifier.type) {
+            case BAN -> ModerationAction.UNBAN;
+            case MUTE -> ModerationAction.UNMUTE;
             default -> throw new AssertionError("Unsupported action type: " + groupIdentifier.type);
         };
         ActionRecord lastRevokeAction = actionsStore
@@ -134,7 +134,7 @@ public final class TemporaryModerationRoutine {
     }
 
     private @NotNull AuditableRestAction<Void> executeRevocation(@NotNull Guild guild,
-            @NotNull User target, @NotNull ModerationUtils.Action actionType) {
+            @NotNull User target, @NotNull ModerationAction actionType) {
         logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
                 target.getAsTag(), target.getId());
 
@@ -162,7 +162,7 @@ public final class TemporaryModerationRoutine {
     }
 
     private record RevocationGroupIdentifier(long guildId, long targetId,
-            @NotNull ModerationUtils.Action type) {
+            @NotNull ModerationAction type) {
         public static RevocationGroupIdentifier of(@NotNull ActionRecord actionRecord) {
             return new RevocationGroupIdentifier(actionRecord.guildId(), actionRecord.targetId(),
                     actionRecord.actionType());
