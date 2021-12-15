@@ -3,34 +3,35 @@ package org.togetherjava.tjbot.commands.moderation.temp;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ActionRecord;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
-import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // FIXME javadoc
 public final class TemporaryModerationRoutine {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryModerationRoutine.class);
-    private static final Set<ModerationAction> REVOCABLE_ACTIONS =
-            EnumSet.of(ModerationAction.BAN, ModerationAction.MUTE);
 
     private final ModerationActionsStore actionsStore;
     private final JDA jda;
     private final ScheduledExecutorService checkExpiredActionsService =
             Executors.newSingleThreadScheduledExecutor();
+    private final Map<ModerationAction, RevocableModerationAction> typeToRevocableAction;
 
     /**
      * Creates a new instance.
@@ -42,29 +43,10 @@ public final class TemporaryModerationRoutine {
             @NotNull ModerationActionsStore actionsStore) {
         this.actionsStore = actionsStore;
         this.jda = jda;
-    }
 
-    private static void handleFailure(@NotNull Throwable failure,
-            @NotNull RevocationGroupIdentifier groupIdentifier) {
-        if (failure instanceof ErrorResponseException errorResponseException) {
-            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                logger.info(
-                        "Attempted to revoke a temporary moderation action but user '{}' does not exist anymore.",
-                        groupIdentifier.targetId);
-                return;
-            }
-
-            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
-                logger.info(
-                        "Attempted to revoke a temporary moderation action but the action is not relevant for user '{}' anymore.",
-                        groupIdentifier.targetId);
-                return;
-            }
-        }
-
-        logger.warn(
-                "Attempted to revoke a temporary moderation action for user '{}' but something unexpected went wrong.",
-                groupIdentifier.targetId, failure);
+        typeToRevocableAction = Stream.of(new TemporaryBanAction(), new TemporaryMuteAction())
+            .collect(
+                    Collectors.toMap(RevocableModerationAction::getApplyType, Function.identity()));
     }
 
     private void checkExpiredActions() {
@@ -72,7 +54,7 @@ public final class TemporaryModerationRoutine {
 
         actionsStore.getExpiredActionsAscending()
             .stream()
-            .filter(action -> REVOCABLE_ACTIONS.contains(action.actionType()))
+            .filter(action -> typeToRevocableAction.containsKey(action.actionType()))
             .collect(Collectors.groupingBy(RevocationGroupIdentifier::of))
             .forEach(this::processGroupedActions);
 
@@ -100,11 +82,8 @@ public final class TemporaryModerationRoutine {
         // Do not revoke an action which was already revoked by another action issued afterwards
         // For example if a user was unbanned manually after being temp-banned,
         // but also if the system automatically revoked a temp-ban already itself
-        ModerationAction revokeActionType = switch (groupIdentifier.type) {
-            case BAN -> ModerationAction.UNBAN;
-            case MUTE -> ModerationAction.UNMUTE;
-            default -> throw new AssertionError("Unsupported action type: " + groupIdentifier.type);
-        };
+        ModerationAction revokeActionType =
+                getRevocableActionByType(groupIdentifier.type).getRevokeType();
         ActionRecord lastRevokeAction = actionsStore
             .findLastActionAgainstTargetByType(groupIdentifier.guildId, groupIdentifier.targetId,
                     revokeActionType)
@@ -119,10 +98,6 @@ public final class TemporaryModerationRoutine {
     }
 
     private void revokeAction(@NotNull RevocationGroupIdentifier groupIdentifier) {
-        if (!REVOCABLE_ACTIONS.contains(groupIdentifier.type)) {
-            throw new AssertionError("Unsupported action type: " + groupIdentifier.type);
-        }
-
         Guild guild = jda.getGuildById(groupIdentifier.guildId);
         if (guild == null) {
             logger.info(
@@ -137,8 +112,8 @@ public final class TemporaryModerationRoutine {
             }, failure -> handleFailure(failure, groupIdentifier));
     }
 
-    private @NotNull AuditableRestAction<Void> executeRevocation(@NotNull Guild guild,
-            @NotNull User target, @NotNull ModerationAction actionType) {
+    private @NotNull RestAction<Void> executeRevocation(@NotNull Guild guild, @NotNull User target,
+            @NotNull ModerationAction actionType) {
         logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
                 target.getAsTag(), target.getId());
 
@@ -146,12 +121,25 @@ public final class TemporaryModerationRoutine {
         actionsStore.addAction(guild.getIdLong(), jda.getSelfUser().getIdLong(), target.getIdLong(),
                 actionType, null, reason);
 
-        return (switch (actionType) {
-            case BAN -> guild.unban(target);
-            case MUTE -> guild.removeRoleFromMember(target.getIdLong(),
-                    ModerationUtils.getMutedRole(guild).orElseThrow());
-            default -> throw new AssertionError("Unsupported action type: " + actionType);
-        }).reason(reason);
+        return getRevocableActionByType(actionType).revokeAction(guild, target, reason);
+    }
+
+    private void handleFailure(@NotNull Throwable failure,
+            @NotNull RevocationGroupIdentifier groupIdentifier) {
+        if (getRevocableActionByType(groupIdentifier.type).handleRevokeFailure(failure,
+                groupIdentifier.targetId) == RevocableModerationAction.FailureIdentification.KNOWN) {
+            return;
+        }
+
+        logger.warn(
+                "Attempted to revoke a temporary moderation action for user '{}' but something unexpected went wrong.",
+                groupIdentifier.targetId, failure);
+    }
+
+    private @NotNull RevocableModerationAction getRevocableActionByType(
+            @NotNull ModerationAction type) {
+        return Objects.requireNonNull(typeToRevocableAction.get(type),
+                "Action type is not revocable: " + type);
     }
 
     /**
