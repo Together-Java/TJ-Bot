@@ -7,6 +7,7 @@ import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
+import org.togetherjava.tjbot.commands.modmail.ModmailSlashCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
 import org.togetherjava.tjbot.commands.tags.TagSystem;
@@ -69,6 +70,7 @@ public enum Commands {
         commands.add(new AuditCommand(actionsStore));
         commands.add(new MuteCommand(actionsStore));
         commands.add(new UnmuteCommand(actionsStore));
+        commands.add(new ModmailSlashCommand());
 
         return commands;
     }
