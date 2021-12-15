@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class FilterTest {
+class FilterTest {
 
     FlaggedFilter filter;
     LogEvent event;
