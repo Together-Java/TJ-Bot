@@ -34,6 +34,7 @@ public final class Config {
     private final String tagManageRolePattern;
 
     private final List<FreeCommandConfig> freeCommand;
+    private final long guildId;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -46,7 +47,8 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand) {
+            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
+            @JsonProperty("guildId") long guildId) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -57,6 +59,7 @@ public final class Config {
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
         this.freeCommand = Collections.unmodifiableList(freeCommand);
+        this.guildId = guildId;
     }
 
     /**
@@ -177,5 +180,9 @@ public final class Config {
      */
     public @NotNull Collection<FreeCommandConfig> getFreeCommandConfig() {
         return freeCommand; // already unmodifiable
+    }
+
+    public long getGuildId() {
+        return guildId;
     }
 }
