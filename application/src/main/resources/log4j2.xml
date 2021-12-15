@@ -17,17 +17,15 @@
             <JsonLayout/>
         </Http>
         <Async name="AsyncHttp">
+            <FlaggedFilter/>
             <AppenderRef ref="Http"/>
         </Async>
-        <ConditionalAppender name="Conditional">
-            <AppenderRef ref="AsyncHttp"/>
-        </ConditionalAppender>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
-            <AppenderRef ref="Conditional"/>
+            <AppenderRef ref="AsyncHttp"/>
         </Root>
     </Loggers>
 </Configuration>
