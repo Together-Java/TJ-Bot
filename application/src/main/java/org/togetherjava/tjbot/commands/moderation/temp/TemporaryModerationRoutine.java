@@ -55,27 +55,22 @@ public final class TemporaryModerationRoutine {
         actionsStore.getExpiredActionsAscending()
             .stream()
             .filter(action -> typeToRevocableAction.containsKey(action.actionType()))
-            .collect(Collectors.groupingBy(RevocationGroupIdentifier::of))
+            .map(RevocationGroupIdentifier::of)
+            .collect(Collectors.toSet())
             .forEach(this::processGroupedActions);
 
         logger.debug("Finished checking expired temporary moderation actions to revoke.");
     }
 
-    private void processGroupedActions(@NotNull RevocationGroupIdentifier groupIdentifier,
-            @NotNull Collection<ActionRecord> expiredActions) {
-        // Last issued temporary action takes priority
-        ActionRecord actionToRevoke = expiredActions.stream()
-            .max(Comparator.comparing(ActionRecord::issuedAt))
-            .orElseThrow();
-
+    private void processGroupedActions(@NotNull RevocationGroupIdentifier groupIdentifier) {
         // Do not revoke an action which was overwritten by a permanent action that was issued
         // afterwards
         // For example if a user was perm-banned after being temp-banned
-        ActionRecord lastAction = actionsStore
+        ActionRecord lastApplyAction = actionsStore
             .findLastActionAgainstTargetByType(groupIdentifier.guildId, groupIdentifier.targetId,
                     groupIdentifier.type)
             .orElseThrow();
-        if (lastAction.actionExpiresAt() == null) {
+        if (lastApplyAction.actionExpiresAt() == null) {
             return;
         }
 
@@ -88,7 +83,7 @@ public final class TemporaryModerationRoutine {
             .findLastActionAgainstTargetByType(groupIdentifier.guildId, groupIdentifier.targetId,
                     revokeActionType)
             .orElseThrow();
-        if (lastRevokeAction.issuedAt().isAfter(actionToRevoke.issuedAt())
+        if (lastRevokeAction.issuedAt().isAfter(lastApplyAction.issuedAt())
                 && (lastRevokeAction.actionExpiresAt() == null
                         || lastRevokeAction.actionExpiresAt().isAfter(Instant.now()))) {
             return;
@@ -149,7 +144,9 @@ public final class TemporaryModerationRoutine {
     public void start() {
         // TODO This should be registered at some sort of routine system instead (see GH issue #235
         // which adds support for routines)
-        checkExpiredActionsService.scheduleWithFixedDelay(this::checkExpiredActions, 0, 5,
+        // NOTE The initial run has to be delayed until after the guild cache has been updated
+        // (during CommandSystem startup)
+        checkExpiredActionsService.scheduleWithFixedDelay(this::checkExpiredActions, 5, 5,
                 TimeUnit.MINUTES);
     }
 
