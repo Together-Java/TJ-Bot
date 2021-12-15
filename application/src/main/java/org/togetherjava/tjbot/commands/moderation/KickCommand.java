@@ -92,7 +92,7 @@ public final class KickCommand extends SlashCommandAdapter {
                 target.getId(), guild.getName(), reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.KICK, null, reason);
+                ModerationAction.KICK, null, reason);
 
         return guild.kick(target, reason).reason(reason);
     }
@@ -103,7 +103,7 @@ public final class KickCommand extends SlashCommandAdapter {
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
         }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.KICK,
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationAction.KICK,
                 target.getUser(), dmNoticeText, reason);
     }
 

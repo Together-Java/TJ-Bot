@@ -53,7 +53,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
             @NotNull Guild guild, @NotNull Interaction event) {
         guild.unban(target).reason(reason).queue(result -> {
             MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
-                    ModerationUtils.Action.UNBAN, target, null, reason);
+                    ModerationAction.UNBAN, target, null, reason);
             event.replyEmbeds(message).queue();
 
             logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
@@ -61,7 +61,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
                     guild.getName(), reason);
 
             actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                    ModerationUtils.Action.UNBAN, null, reason);
+                    ModerationAction.UNBAN, null, reason);
         }, unbanFailure -> handleFailure(unbanFailure, target, event));
     }
 

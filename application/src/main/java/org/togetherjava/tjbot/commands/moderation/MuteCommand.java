@@ -102,7 +102,7 @@ public final class MuteCommand extends SlashCommandAdapter {
         if (!hasSentDm) {
             dmNoticeText = "\n(Unable to send them a DM.)";
         }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.MUTE,
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationAction.MUTE,
                 target.getUser(), durationText + dmNoticeText, reason);
     }
 
@@ -139,7 +139,7 @@ public final class MuteCommand extends SlashCommandAdapter {
 
         Instant expiresAt = temporaryMuteData == null ? null : temporaryMuteData.unmuteTime;
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.MUTE, expiresAt, reason);
+                ModerationAction.MUTE, expiresAt, reason);
 
         return guild.addRoleToMember(target, ModerationUtils.getMutedRole(guild).orElseThrow())
             .reason(reason);
