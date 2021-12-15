@@ -1,4 +1,4 @@
 /**
- * This package is for the custom appender of the bot.
+ * This package is for custom logging plugins of the bot.
  */
 package org.togetherjava.tjbot.logging;
