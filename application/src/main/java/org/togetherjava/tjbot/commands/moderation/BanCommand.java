@@ -22,6 +22,9 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -38,10 +41,14 @@ import java.util.regex.Pattern;
 public final class BanCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BanCommand.class);
     private static final String TARGET_OPTION = "user";
+    private static final String DURATION_OPTION = "duration";
     private static final String DELETE_HISTORY_OPTION = "delete-history";
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
+    private static final String PERMANENT_DURATION = "permanent";
+    private static final List<String> DURATIONS = List.of(PERMANENT_DURATION, "1 hour", "3 hours",
+            "1 day", "2 days", "3 days", "7 days", "1 month");
     private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
@@ -53,7 +60,12 @@ public final class BanCommand extends SlashCommandAdapter {
     public BanCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
+        OptionData durationData = new OptionData(OptionType.STRING, DURATION_OPTION,
+                "the duration of the ban, permanent or temporary", true);
+        DURATIONS.forEach(duration -> durationData.addChoice(duration, duration));
+
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to ban", true)
+            .addOptions(durationData)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
                     "the amount of days of the message history to delete, none means no messages are deleted.",
@@ -75,53 +87,39 @@ public final class BanCommand extends SlashCommandAdapter {
         return event.reply(message).setEphemeral(true);
     }
 
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private RestAction<InteractionHook> banUserFlow(@NotNull User target, @NotNull Member author,
-            @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild,
-            @NotNull SlashCommandEvent event) {
-        return sendDm(target, reason, guild, event)
-            .flatMap(hasSentDm -> banUser(target, author, reason, deleteHistoryDays, guild)
-                .map(banResult -> hasSentDm))
-            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
-            .flatMap(event::replyEmbeds);
-    }
-
-    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
+    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target,
+            @Nullable TemporaryBanData temporaryBanData, @NotNull String reason,
             @NotNull Guild guild, @NotNull GenericEvent event) {
+        String durationMessage =
+                temporaryBanData == null ? "permanently" : "for " + temporaryBanData.duration;
+        String dmMessage =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been banned %s from the server %s.
+                        If you think this was a mistake, please contact a moderator or admin of the server.
+                        The reason for the ban is: %s
+                        """
+                    .formatted(durationMessage, guild.getName(), reason);
+
         return event.getJDA()
             .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been banned from the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
-                            The reason for the ban is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+            .flatMap(channel -> channel.sendMessage(dmMessage))
             .mapToResult()
             .map(Result::isSuccess);
     }
 
-    private AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
-            @NotNull String reason, int deleteHistoryDays, @NotNull Guild guild) {
-        logger.info(
-                "'{}' ({}) banned the user '{}' ({}) from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
-                guild.getName(), deleteHistoryDays, reason);
-
-        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.BAN, null, reason);
-
-        return guild.ban(target, deleteHistoryDays, reason);
-    }
-
     private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull User target,
-            @NotNull Member author, @NotNull String reason) {
+            @NotNull Member author, @Nullable TemporaryBanData temporaryBanData,
+            @NotNull String reason) {
+        @SuppressWarnings("java:S1192") // this is not the name of the option but the user-friendly
+        // display text
+        String durationText = "The ban duration is: "
+                + (temporaryBanData == null ? "permanent" : temporaryBanData.duration);
         String dmNoticeText = "";
         if (!hasSentDm) {
-            dmNoticeText = "(Unable to send them a DM.)";
+            dmNoticeText = "\n(Unable to send them a DM.)";
         }
         return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.BAN,
-                target, dmNoticeText, reason);
+                target, durationText + dmNoticeText, reason);
     }
 
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
@@ -145,6 +143,56 @@ public final class BanCommand extends SlashCommandAdapter {
                 target.getAsTag(), alreadyBannedFailure);
         return Optional.of(event.reply("Failed to ban the user due to an unexpected problem.")
             .setEphemeral(true));
+    }
+
+    private static @NotNull Optional<TemporaryBanData> computeTemporaryBanData(
+            @NotNull String durationText) {
+        if (PERMANENT_DURATION.equals(durationText)) {
+            return Optional.empty();
+        }
+
+        // 1 day, 1 days, 1 month, ...
+        String[] data = durationText.split(" ", 2);
+        int duration = Integer.parseInt(data[0]);
+        ChronoUnit unit = switch (data[1]) {
+            case "minute", "minutes" -> ChronoUnit.MINUTES;
+            case "hour", "hours" -> ChronoUnit.HOURS;
+            case "day", "days" -> ChronoUnit.DAYS;
+            case "week", "weeks" -> ChronoUnit.WEEKS;
+            case "month", "months" -> ChronoUnit.MONTHS;
+            default -> throw new IllegalArgumentException(
+                    "Unsupported ban duration: " + durationText);
+        };
+
+        return Optional.of(new TemporaryBanData(Instant.now().plus(duration, unit), durationText));
+    }
+
+    @SuppressWarnings("MethodWithTooManyParameters")
+    private RestAction<InteractionHook> banUserFlow(@NotNull User target, @NotNull Member author,
+            @Nullable TemporaryBanData temporaryBanData, @NotNull String reason,
+            int deleteHistoryDays, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+        return sendDm(target, temporaryBanData, reason, guild, event)
+            .flatMap(hasSentDm -> banUser(target, author, temporaryBanData, reason,
+                    deleteHistoryDays, guild).map(banResult -> hasSentDm))
+            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryBanData, reason))
+            .flatMap(event::replyEmbeds);
+    }
+
+    private AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
+            @Nullable TemporaryBanData temporaryBanData, @NotNull String reason,
+            int deleteHistoryDays, @NotNull Guild guild) {
+        String durationMessage =
+                temporaryBanData == null ? "permanently" : "for " + temporaryBanData.duration;
+        logger.info(
+                "'{}' ({}) banned the user '{}' ({}) {} from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
+                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                durationMessage, guild.getName(), deleteHistoryDays, reason);
+
+        Instant expiresAt = temporaryBanData == null ? null : temporaryBanData.unbanTime;
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.BAN, expiresAt, reason);
+
+        return guild.ban(target, deleteHistoryDays, reason);
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
@@ -178,9 +226,13 @@ public final class BanCommand extends SlashCommandAdapter {
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION), "The reason is null")
             .getAsString();
+        String duration =
+                Objects.requireNonNull(event.getOption(DURATION_OPTION), "The duration is null")
+                    .getAsString();
 
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
+        Optional<TemporaryBanData> temporaryBanData = computeTemporaryBanData(duration);
 
         if (!handleChecks(bot, author, targetOption.getAsMember(), reason, guild, event)) {
             return;
@@ -195,9 +247,14 @@ public final class BanCommand extends SlashCommandAdapter {
                 return handleAlreadyBanned(alreadyBanned.get(), event);
             }
 
-            return handleNotAlreadyBannedResponse(Objects
-                .requireNonNull(alreadyBanned.getFailure()), event, guild, target).orElseGet(
-                        () -> banUserFlow(target, author, reason, deleteHistoryDays, guild, event));
+            return handleNotAlreadyBannedResponse(
+                    Objects.requireNonNull(alreadyBanned.getFailure()), event, guild, target)
+                        .orElseGet(() -> banUserFlow(target, author, temporaryBanData.orElse(null),
+                                reason, deleteHistoryDays, guild, event));
         }).queue();
+    }
+
+
+    private record TemporaryBanData(@NotNull Instant unbanTime, @NotNull String duration) {
     }
 }
