@@ -48,7 +48,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String ACTION_VERB = "ban";
     private static final String PERMANENT_DURATION = "permanent";
     private static final List<String> DURATIONS = List.of(PERMANENT_DURATION, "1 hour", "3 hours",
-            "1 day", "2 days", "3 days", "7 days", "1 month");
+            "1 day", "2 days", "3 days", "7 days", "30 days");
     private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
@@ -151,15 +151,13 @@ public final class BanCommand extends SlashCommandAdapter {
             return Optional.empty();
         }
 
-        // 1 day, 1 days, 1 month, ...
+        // 1 minute, 1 day, 2 days, ...
         String[] data = durationText.split(" ", 2);
         int duration = Integer.parseInt(data[0]);
         ChronoUnit unit = switch (data[1]) {
             case "minute", "minutes" -> ChronoUnit.MINUTES;
             case "hour", "hours" -> ChronoUnit.HOURS;
             case "day", "days" -> ChronoUnit.DAYS;
-            case "week", "weeks" -> ChronoUnit.WEEKS;
-            case "month", "months" -> ChronoUnit.MONTHS;
             default -> throw new IllegalArgumentException(
                     "Unsupported ban duration: " + durationText);
         };
