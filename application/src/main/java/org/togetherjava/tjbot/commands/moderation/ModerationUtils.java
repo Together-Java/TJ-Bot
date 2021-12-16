@@ -30,10 +30,20 @@ public enum ModerationUtils {
      * {@link Guild#ban(User, int, String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
-    // FIXME Javadoc
+    /**
+     * Human-readable text representing the duration of a permanent action, will be shown to the
+     * user as option for selection.
+     */
     static final String PERMANENT_DURATION = "permanent";
+    /**
+     * The ambient color used by moderation actions, often used to streamline the color theme of
+     * embeds.
+     */
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
-    // FIXME Javadoc
+    /**
+     * Matches the name of the role that is used to mute users, as used by {@link MuteCommand} and
+     * similar.
+     */
     public static final Predicate<String> isMuteRole =
             Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
 
@@ -331,6 +341,15 @@ public enum ModerationUtils {
         return guild.getRoles().stream().filter(role -> isMuteRole.test(role.getName())).findAny();
     }
 
+    /**
+     * Computes a temporary data wrapper representing the action with the given duration.
+     *
+     * @param durationText the duration of the action, either {@code "permanent"} or a time window
+     *        such as {@code 1 day} or {@code 2 minutes}. Supports all units supported by
+     *        {@link Instant#plus(long, TemporalUnit)}.
+     * @return the temporary data represented by the given duration or empty if the duration is
+     *         {@code "permanent"}
+     */
     static @NotNull Optional<TemporaryData> computeTemporaryData(@NotNull String durationText) {
         if (PERMANENT_DURATION.equals(durationText)) {
             return Optional.empty();
@@ -350,6 +369,13 @@ public enum ModerationUtils {
         return Optional.of(new TemporaryData(Instant.now().plus(duration, unit), durationText));
     }
 
+    /**
+     * Wrapper to hold data relevant to temporary actions, for example the time it expires.
+     *
+     * @param expiresAt the time the temporary action expires
+     * @param duration a human-readable text representing the duration of the temporary action, such
+     *        as {@code "1 day"}.
+     */
     record TemporaryData(@NotNull Instant expiresAt, @NotNull String duration) {
     }
 }

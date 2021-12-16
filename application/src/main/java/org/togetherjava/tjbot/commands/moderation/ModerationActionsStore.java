@@ -39,7 +39,12 @@ public final class ModerationActionsStore {
         this.database = Objects.requireNonNull(database);
     }
 
-    // FIXME javadoc
+    /**
+     * Gets all already expired actions, measured by the current time, which have been written to
+     * the store, chronologically ascending with the action issued the earliest first.
+     * 
+     * @return a list of all expired actions, chronologically ascending
+     */
     public @NotNull List<ActionRecord> getExpiredActionsAscending() {
         return getActionsAscendingWhere(
                 ModerationActions.MODERATION_ACTIONS.ACTION_EXPIRES_AT.isNotNull()
@@ -92,7 +97,16 @@ public final class ModerationActionsStore {
                 ModerationActions.MODERATION_ACTIONS.AUTHOR_ID.eq(authorId));
     }
 
-    // FIXME javadoc
+    /**
+     * Gets the action of the given type that was issued the latest against the given target, if
+     * present.
+     * 
+     * @param guildId the id of the guild, only actions that happened in the context of that guild
+     *        will be retrieved
+     * @param targetId the id of the target user to filter for
+     * @param actionType the type of the action
+     * @return the last action issued against the given user of the given type, if present
+     */
     public @NotNull Optional<ActionRecord> findLastActionAgainstTargetByType(long guildId,
             long targetId, @NotNull ModerationAction actionType) {
         return database

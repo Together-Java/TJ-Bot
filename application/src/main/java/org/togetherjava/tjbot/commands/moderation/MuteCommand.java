@@ -38,6 +38,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "mute";
     private static final String ACTION_VERB = "mute";
+    @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of("10 minutes", "30 minutes", "1 hour",
             "3 hours", "1 day", "3 days", "7 days", ModerationUtils.PERMANENT_DURATION);
     private final Predicate<String> hasRequiredRole;
@@ -119,6 +120,7 @@ public final class MuteCommand extends SlashCommandAdapter {
             .reason(reason);
     }
 
+    @SuppressWarnings("MethodWithTooManyParameters")
     private void muteUserFlow(@NotNull Member target, @NotNull Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
             @NotNull Guild guild, @NotNull SlashCommandEvent event) {

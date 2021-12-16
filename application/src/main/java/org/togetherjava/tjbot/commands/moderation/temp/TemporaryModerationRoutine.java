@@ -21,7 +21,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-// FIXME javadoc
+/**
+ * Routine that revokes temporary moderation actions, such as temporary bans, as listed by
+ * {@link ModerationActionsStore}.
+ * <p>
+ * The routine is started by using {@link #start()} and then automatically executes on a schedule.
+ * <p>
+ * Revoked actions are compatible with {@link ModerationActionsStore} and commands such as
+ * {@link org.togetherjava.tjbot.commands.moderation.UnbanCommand} and
+ * {@link org.togetherjava.tjbot.commands.moderation.AuditCommand}.
+ */
 public final class TemporaryModerationRoutine {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryModerationRoutine.class);
 
@@ -142,7 +151,7 @@ public final class TemporaryModerationRoutine {
     public void start() {
         // TODO This should be registered at some sort of routine system instead (see GH issue #235
         // which adds support for routines)
-        // NOTE The initial run has to be delayed until after the guild cache has been updated
+        // TODO The initial run has to be delayed until after the guild cache has been updated
         // (during CommandSystem startup)
         checkExpiredActionsService.scheduleWithFixedDelay(this::checkExpiredActions, 5, 5,
                 TimeUnit.MINUTES);
@@ -150,7 +159,7 @@ public final class TemporaryModerationRoutine {
 
     private record RevocationGroupIdentifier(long guildId, long targetId,
             @NotNull ModerationAction type) {
-        public static RevocationGroupIdentifier of(@NotNull ActionRecord actionRecord) {
+        static RevocationGroupIdentifier of(@NotNull ActionRecord actionRecord) {
             return new RevocationGroupIdentifier(actionRecord.guildId(), actionRecord.targetId(),
                     actionRecord.actionType());
         }
