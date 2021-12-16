@@ -30,6 +30,13 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
 
     private final JDA jda;
 
+    /**
+     * Creates the reload command, using the given provider as source of truth for the commands to
+     * reload
+     *
+     * @param jda the jda of slash commands to reload when this command is
+     *        triggered
+     */
     public ModmailSlashCommand(JDA jda) {
         super(COMMAND_NAME,
                 "sends a message to either a single moderator or on the mod_audit_log channel",
@@ -88,21 +95,23 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
         event.reply("Message now sent to moderator").setEphemeral(true).queue();
     }
 
-    private void sendToMod(String modId, String message, SelectionMenuEvent event) {
+    private void sendToMod(@NotNull String modId, @NotNull String message,
+            @NotNull SelectionMenuEvent event) {
         User mod = modsMap.get(modId);
-        try {
+        if (mod != null) {
             mod.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
-        } catch (NullPointerException e) {
-            logger
-                .warn("""
-                        The map storing the moderators is either not in-sync with the list of moderators for the selection menu or
-                        an unknown error has occurred.
-                        """);
-
-            event.reply("The moderator you chose is not on the list of moderators on the guild")
-                .setEphemeral(true)
-                .queue();
+            return;
         }
+
+        logger
+            .warn("""
+                    The map storing the moderators is either not in-sync with the list of moderators for the selection menu or
+                    an unknown error has occurred.
+                    """);
+
+        event.reply("The moderator you chose is not on the list of moderators on the guild")
+            .setEphemeral(true)
+            .queue();
     }
 
     /**
@@ -111,13 +120,14 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
      * If this method has not yet been called prior to calling this method, it will call an
      * expensive query to discord, otherwise, it will return the previous result.
      * <p>
-     * This method also stores the moderators on a map for later use. The map's values are always
+     * This method av lso stores the moderators on a map for later use. The map's values are always
      * and should be exactly the same with the previous results.
      *
      * @return a list of options containing the moderators name to choose from in a selection menu.
      */
-    private List<SelectOption> selectionMenuOptions() {
-        Guild guild = jda.getGuildById(config.getGuildId());
+    private @NotNull List<SelectOption> selectionMenuOptions() {
+        Guild guild = Objects.requireNonNull(jda.getGuildById(config.getGuildId()),
+                "Guild ID is required to use this command");
 
         // checks if method has been called before.
         if (mods.size() == 1) {
