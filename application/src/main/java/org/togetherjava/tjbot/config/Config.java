@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.modmail.ModmailSlashCommand;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,9 +33,9 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
+    private final String guildId;
 
     private final List<FreeCommandConfig> freeCommand;
-    private final long guildId;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -47,8 +48,8 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
-            @JsonProperty("guildId") long guildId) {
+            @JsonProperty("guildId") String guildId,
+            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -58,8 +59,8 @@ public final class Config {
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
-        this.freeCommand = Collections.unmodifiableList(freeCommand);
         this.guildId = guildId;
+        this.freeCommand = Collections.unmodifiableList(freeCommand);
     }
 
     /**
@@ -182,7 +183,12 @@ public final class Config {
         return freeCommand; // already unmodifiable
     }
 
-    public long getGuildId() {
+    /**
+     * Gets the id of the guild. See {@link ModmailSlashCommand} for such uses
+     *
+     * @return the guildId.
+     */
+    public String getGuildId() {
         return guildId;
     }
 }
