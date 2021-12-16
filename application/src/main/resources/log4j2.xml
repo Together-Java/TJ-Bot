@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" monitorInterval="30">
+<Configuration status="WARN" monitorInterval="30" packages="org.togetherjava.tjbot.logging">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
@@ -17,6 +17,7 @@
             <JsonLayout/>
         </Http>
         <Async name="AsyncHttp">
+            <FlaggedFilter/>
             <AppenderRef ref="Http"/>
         </Async>
     </Appenders>
