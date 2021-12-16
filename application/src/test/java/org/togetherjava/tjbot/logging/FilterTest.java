@@ -8,10 +8,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-class FilterTest {
+final class FilterTest {
 
-    FlaggedFilter filter;
-    LogEvent event;
+    private FlaggedFilter filter;
+    private LogEvent event;
 
     @BeforeEach
     void setUp() {
