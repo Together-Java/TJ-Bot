@@ -39,16 +39,21 @@ final class TemporaryBanAction implements RevocableModerationAction {
             long targetId) {
         if (failure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                logger.info(
+                logger.debug(
                         "Attempted to revoke a temporary ban but user '{}' does not exist anymore.",
                         targetId);
                 return FailureIdentification.KNOWN;
             }
 
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
-                logger.info(
+                logger.debug(
                         "Attempted to revoke a temporary ban but the user '{}' is not banned anymore.",
                         targetId);
+                return FailureIdentification.KNOWN;
+            }
+
+            if (errorResponseException.getErrorResponse() == ErrorResponse.MISSING_PERMISSIONS) {
+                logger.warn("Attempted to revoke a temporary ban but the bot lacks permission.");
                 return FailureIdentification.KNOWN;
             }
         }
