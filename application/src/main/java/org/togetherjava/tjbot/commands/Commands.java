@@ -70,7 +70,7 @@ public enum Commands {
         commands.add(new AuditCommand(actionsStore));
         commands.add(new MuteCommand(actionsStore));
         commands.add(new UnmuteCommand(actionsStore));
-        commands.add(new ModmailSlashCommand());
+        commands.add(new ModmailSlashCommand(jda));
 
         return commands;
     }
