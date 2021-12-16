@@ -14,6 +14,7 @@ import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -86,14 +87,15 @@ public final class TemporaryModerationRoutine {
         // but also if the system automatically revoked a temp-ban already itself
         ModerationAction revokeActionType =
                 getRevocableActionByType(groupIdentifier.type).getRevokeType();
-        ActionRecord lastRevokeAction = actionsStore
-            .findLastActionAgainstTargetByType(groupIdentifier.guildId, groupIdentifier.targetId,
-                    revokeActionType)
-            .orElseThrow();
-        if (lastRevokeAction.issuedAt().isAfter(lastApplyAction.issuedAt())
-                && (lastRevokeAction.actionExpiresAt() == null
-                        || lastRevokeAction.actionExpiresAt().isAfter(Instant.now()))) {
-            return;
+        Optional<ActionRecord> lastRevokeActionOpt = actionsStore.findLastActionAgainstTargetByType(
+                groupIdentifier.guildId, groupIdentifier.targetId, revokeActionType);
+        if (lastRevokeActionOpt.isPresent()) {
+            ActionRecord lastRevokeAction = lastRevokeActionOpt.orElseThrow();
+            if (lastRevokeAction.issuedAt().isAfter(lastApplyAction.issuedAt())
+                    && (lastRevokeAction.actionExpiresAt() == null
+                            || lastRevokeAction.actionExpiresAt().isAfter(Instant.now()))) {
+                return;
+            }
         }
 
         revokeAction(groupIdentifier);
@@ -102,7 +104,7 @@ public final class TemporaryModerationRoutine {
     private void revokeAction(@NotNull RevocationGroupIdentifier groupIdentifier) {
         Guild guild = jda.getGuildById(groupIdentifier.guildId);
         if (guild == null) {
-            logger.info(
+            logger.debug(
                     "Attempted to revoke a temporary moderation action but the bot is not connected to the guild '{}' anymore, skipping revoking.",
                     groupIdentifier.guildId);
             return;
