@@ -45,6 +45,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
+    @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of(ModerationUtils.PERMANENT_DURATION,
             "1 hour", "3 hours", "1 day", "2 days", "3 days", "7 days", "30 days");
     private final Predicate<String> hasRequiredRole;
@@ -152,6 +153,7 @@ public final class BanCommand extends SlashCommandAdapter {
             .flatMap(event::replyEmbeds);
     }
 
+    @SuppressWarnings("MethodWithTooManyParameters")
     private AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
             int deleteHistoryDays, @NotNull Guild guild) {

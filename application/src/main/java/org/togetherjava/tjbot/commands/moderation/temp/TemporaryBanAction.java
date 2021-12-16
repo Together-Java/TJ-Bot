@@ -10,7 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 
-// FIXME Javadoc
+/**
+ * Action to revoke temporary bans, as applied by
+ * {@link org.togetherjava.tjbot.commands.moderation.BanCommand} and executed by
+ * {@link TemporaryModerationRoutine}.
+ */
 final class TemporaryBanAction implements RevocableModerationAction {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryBanAction.class);
 

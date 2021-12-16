@@ -11,7 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 
-// FIXME Javadoc
+/**
+ * Action to revoke temporary mutes, as applied by
+ * {@link org.togetherjava.tjbot.commands.moderation.MuteCommand} and executed by
+ * {@link TemporaryModerationRoutine}.
+ */
 final class TemporaryMuteAction implements RevocableModerationAction {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryMuteAction.class);
 
@@ -37,13 +41,12 @@ final class TemporaryMuteAction implements RevocableModerationAction {
     @Override
     public @NotNull FailureIdentification handleRevokeFailure(@NotNull Throwable failure,
             long targetId) {
-        if (failure instanceof ErrorResponseException errorResponseException) {
-            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                logger.info(
-                        "Attempted to revoke a temporary mute but user '{}' does not exist anymore.",
-                        targetId);
-                return FailureIdentification.KNOWN;
-            }
+        if (failure instanceof ErrorResponseException errorResponseException
+                && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
+            logger.info(
+                    "Attempted to revoke a temporary mute but user '{}' does not exist anymore.",
+                    targetId);
+            return FailureIdentification.KNOWN;
         }
         return FailureIdentification.UNKNOWN;
     }
