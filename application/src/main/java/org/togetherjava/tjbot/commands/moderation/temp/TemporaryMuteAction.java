@@ -41,12 +41,31 @@ final class TemporaryMuteAction implements RevocableModerationAction {
     @Override
     public @NotNull FailureIdentification handleRevokeFailure(@NotNull Throwable failure,
             long targetId) {
-        if (failure instanceof ErrorResponseException errorResponseException
-                && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-            logger.info(
-                    "Attempted to revoke a temporary mute but user '{}' does not exist anymore.",
-                    targetId);
-            return FailureIdentification.KNOWN;
+        if (failure instanceof ErrorResponseException errorResponseException) {
+            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
+                logger.debug(
+                        "Attempted to revoke a temporary mute but user '{}' does not exist anymore.",
+                        targetId);
+                return FailureIdentification.KNOWN;
+            }
+
+            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MEMBER) {
+                logger.debug(
+                        "Attempted to revoke a temporary mute but user '{}' is not a member of the guild anymore.",
+                        targetId);
+                return FailureIdentification.KNOWN;
+            }
+
+            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_ROLE) {
+                logger.warn(
+                        "Attempted to revoke a temporary mute but the mute role can not be found.");
+                return FailureIdentification.KNOWN;
+            }
+
+            if (errorResponseException.getErrorResponse() == ErrorResponse.MISSING_PERMISSIONS) {
+                logger.warn("Attempted to revoke a temporary mute but the bot lacks permission.");
+                return FailureIdentification.KNOWN;
+            }
         }
         return FailureIdentification.UNKNOWN;
     }
