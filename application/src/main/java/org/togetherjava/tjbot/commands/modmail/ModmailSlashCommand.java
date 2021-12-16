@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.modmail;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -15,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.*;
@@ -62,7 +60,8 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
     @Override
     public void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args) {
         String message = args.get(1);
-        // Ignore if another user clicked the button which is only possible when used within the guild.
+        // Ignore if another user clicked the button which is only possible when used within the
+        // guild.
         String userId = args.get(0);
         if (event.isFromGuild()
                 && !userId.equals(Objects.requireNonNull(event.getMember()).getId())) {
@@ -78,7 +77,7 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
         // did user select to send message to all mods
         String modId = event.getValues().get(0);
         if (modId.equals("all")) {
-            //currently blocked by #296
+            // currently blocked by #296
             event.reply("Message now sent to all mods").setEphemeral(true).queue();
             return;
         }
@@ -86,11 +85,14 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
         sendToMod(modId, message, event);
 
         event.getMessage().editMessageComponents(ActionRow.of(disabledMenu)).queue();
+        event.reply("Message now sent to moderator").setEphemeral(true).queue();
     }
 
     private void sendToMod(String modId, String message, SelectionMenuEvent event) {
         User mod = modsMap.get(modId);
-        if (mod == null) {
+        try {
+            mod.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
+        } catch (NullPointerException e) {
             logger
                 .warn("""
                         The map storing the moderators is either not in-sync with the list of moderators for the selection menu or
@@ -101,8 +103,6 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
                 .setEphemeral(true)
                 .queue();
         }
-
-        mod.openPrivateChannel().queue((channel) -> channel.sendMessage(message).queue());
     }
 
     /**
