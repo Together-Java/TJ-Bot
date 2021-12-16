@@ -18,7 +18,6 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,9 +38,8 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "mute";
     private static final String ACTION_VERB = "mute";
-    private static final String PERMANENT_DURATION = "permanent";
     private static final List<String> DURATIONS = List.of("10 minutes", "30 minutes", "1 hour",
-            "3 hours", "1 day", "3 days", "7 days", PERMANENT_DURATION);
+            "3 hours", "1 day", "3 days", "7 days", ModerationUtils.PERMANENT_DURATION);
     private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
@@ -72,10 +70,10 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(@NotNull ISnowflake target,
-            @Nullable TemporaryMuteData temporaryMuteData, @NotNull String reason,
+            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
             @NotNull Guild guild, @NotNull GenericEvent event) {
         String durationMessage =
-                temporaryMuteData == null ? "permanently" : "for " + temporaryMuteData.duration;
+                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         String dmMessage =
                 """
                         Hey there, sorry to tell you but unfortunately you have been muted %s in the server %s.
@@ -92,12 +90,10 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
-            @NotNull Member author, @Nullable TemporaryMuteData temporaryMuteData,
+            @NotNull Member author, @Nullable ModerationUtils.TemporaryData temporaryData,
             @NotNull String reason) {
-        @SuppressWarnings("java:S1192") // this is not the name of the option but the user-friendly
-        // display text
         String durationText = "The mute duration is: "
-                + (temporaryMuteData == null ? "permanent" : temporaryMuteData.duration);
+                + (temporaryData == null ? "permanent" : temporaryData.duration());
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "\n(Unable to send them a DM.)";
@@ -106,37 +102,16 @@ public final class MuteCommand extends SlashCommandAdapter {
                 target.getUser(), durationText + dmNoticeText, reason);
     }
 
-    // FIXME Code duplication with BanCommand, get rid of it
-    private static @NotNull Optional<TemporaryMuteData> computeTemporaryMuteData(
-            @NotNull String durationText) {
-        if (PERMANENT_DURATION.equals(durationText)) {
-            return Optional.empty();
-        }
-
-        // 1 minute, 1 day, 2 days, ...
-        String[] data = durationText.split(" ", 2);
-        int duration = Integer.parseInt(data[0]);
-        ChronoUnit unit = switch (data[1]) {
-            case "minute", "minutes" -> ChronoUnit.MINUTES;
-            case "hour", "hours" -> ChronoUnit.HOURS;
-            case "day", "days" -> ChronoUnit.DAYS;
-            default -> throw new IllegalArgumentException(
-                    "Unsupported mute duration: " + durationText);
-        };
-
-        return Optional.of(new TemporaryMuteData(Instant.now().plus(duration, unit), durationText));
-    }
-
     private AuditableRestAction<Void> muteUser(@NotNull Member target, @NotNull Member author,
-            @Nullable TemporaryMuteData temporaryMuteData, @NotNull String reason,
+            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
             @NotNull Guild guild) {
         String durationMessage =
-                temporaryMuteData == null ? "permanently" : "for " + temporaryMuteData.duration;
+                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         logger.info("'{}' ({}) muted the user '{}' ({}) {} in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), durationMessage, guild.getName(), reason);
 
-        Instant expiresAt = temporaryMuteData == null ? null : temporaryMuteData.unmuteTime;
+        Instant expiresAt = temporaryData == null ? null : temporaryData.expiresAt();
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationAction.MUTE, expiresAt, reason);
 
@@ -145,12 +120,12 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private void muteUserFlow(@NotNull Member target, @NotNull Member author,
-            @Nullable TemporaryMuteData temporaryMuteData, @NotNull String reason,
+            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
             @NotNull Guild guild, @NotNull SlashCommandEvent event) {
-        sendDm(target, temporaryMuteData, reason, guild, event)
-            .flatMap(hasSentDm -> muteUser(target, author, temporaryMuteData, reason, guild)
+        sendDm(target, temporaryData, reason, guild, event)
+            .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(banResult -> hasSentDm))
-            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryMuteData, reason))
+            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))
             .flatMap(event::replyEmbeds)
             .queue();
     }
@@ -188,16 +163,14 @@ public final class MuteCommand extends SlashCommandAdapter {
 
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
-        Optional<TemporaryMuteData> temporaryMuteData = computeTemporaryMuteData(duration);
+        Optional<ModerationUtils.TemporaryData> temporaryData =
+                ModerationUtils.computeTemporaryData(duration);
 
         if (!handleChecks(bot, author, target, reason, guild, event)) {
             return;
         }
 
-        muteUserFlow(Objects.requireNonNull(target), author, temporaryMuteData.orElse(null), reason,
+        muteUserFlow(Objects.requireNonNull(target), author, temporaryData.orElse(null), reason,
                 guild, event);
-    }
-
-    private record TemporaryMuteData(@NotNull Instant unmuteTime, @NotNull String duration) {
     }
 }

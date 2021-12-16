@@ -12,6 +12,8 @@ import org.togetherjava.tjbot.config.Config;
 
 import java.awt.*;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -28,7 +30,10 @@ public enum ModerationUtils {
      * {@link Guild#ban(User, int, String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
+    // FIXME Javadoc
+    static final String PERMANENT_DURATION = "permanent";
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
+    // FIXME Javadoc
     public static final Predicate<String> isMuteRole =
             Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
 
@@ -326,4 +331,25 @@ public enum ModerationUtils {
         return guild.getRoles().stream().filter(role -> isMuteRole.test(role.getName())).findAny();
     }
 
+    static @NotNull Optional<TemporaryData> computeTemporaryData(@NotNull String durationText) {
+        if (PERMANENT_DURATION.equals(durationText)) {
+            return Optional.empty();
+        }
+
+        // 1 minute, 1 day, 2 days, ...
+        String[] data = durationText.split(" ", 2);
+        int duration = Integer.parseInt(data[0]);
+        ChronoUnit unit = switch (data[1]) {
+            case "minute", "minutes" -> ChronoUnit.MINUTES;
+            case "hour", "hours" -> ChronoUnit.HOURS;
+            case "day", "days" -> ChronoUnit.DAYS;
+            default -> throw new IllegalArgumentException(
+                    "Unsupported mute duration: " + durationText);
+        };
+
+        return Optional.of(new TemporaryData(Instant.now().plus(duration, unit), durationText));
+    }
+
+    record TemporaryData(@NotNull Instant expiresAt, @NotNull String duration) {
+    }
 }
