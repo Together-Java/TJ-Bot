@@ -18,33 +18,32 @@ import org.togetherjava.tjbot.config.Config;
 
 import java.util.*;
 
-public class ModmailSlashCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(ModmailSlashCommand.class);
+public class ModmailCommand extends SlashCommandAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(ModmailCommand.class);
 
     private static final String COMMAND_NAME = "modmail";
     private static final String TARGET_OPTION = "message";
     private static final Config config = Config.getInstance();
 
-    private final List<SelectOption> mods = new ArrayList<>();
-    private final Map<String, User> modsMap = new HashMap<>();
+    static final List<SelectOption> mods = new ArrayList<>();
+    static final Map<String, User> modsMap = new HashMap<>();
 
     private final JDA jda;
 
     /**
-     * Creates the reload command, using the given provider as source of truth for the commands to
-     * reload
+     * Creates an instance of the ModMail command.
      *
-     * @param jda the jda of slash commands to reload when this command is
-     *        triggered
+     * @param jda the {@link JDA} instance of all slash commands to find the target guild or the
+     *        guild where the moderators are.
      */
-    public ModmailSlashCommand(JDA jda) {
+    public ModmailCommand(@NotNull JDA jda) {
         super(COMMAND_NAME,
                 "sends a message to either a single moderator or on the mod_audit_log channel",
                 SlashCommandVisibility.GLOBAL);
 
         getData().addOption(OptionType.STRING, TARGET_OPTION, "The message to send", true);
 
-        this.jda = jda;
+        this.jda = Objects.requireNonNull(jda);
 
         mods.add(SelectOption.of("All Moderators", "all"));
     }
@@ -52,13 +51,19 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         String memberId = event.getUser().getId();
+
+        // checks if selection menu already contains the moderators
+        if (mods.size() == 1) {
+            loadMenuOptions();
+        }
+
         event.reply("""
                 Select the moderator to send message to, or select "All Moderators" to send to
                 the guild's mod audit channel.
                 """)
             .addActionRow(SelectionMenu
                 .create(generateComponentId(memberId, event.getOption(TARGET_OPTION).getAsString()))
-                .addOptions(selectionMenuOptions())
+                .addOptions(mods)
                 .build())
             .setEphemeral(false)
             .queue();
@@ -120,28 +125,14 @@ public class ModmailSlashCommand extends SlashCommandAdapter {
      * If this method has not yet been called prior to calling this method, it will call an
      * expensive query to discord, otherwise, it will return the previous result.
      * <p>
-     * This method av lso stores the moderators on a map for later use. The map's values are always
+     * This method also stores the moderators on a map for later use. The map's values are always
      * and should be exactly the same with the previous results.
-     *
-     * @return a list of options containing the moderators name to choose from in a selection menu.
      */
-    private @NotNull List<SelectOption> selectionMenuOptions() {
+    private void loadMenuOptions() {
         Guild guild = Objects.requireNonNull(jda.getGuildById(config.getGuildId()),
-                "Guild ID is required to use this command");
+                "A Guild is required to use this command. Perhaps the bot isn't on the guild yet");
 
-        // checks if method has been called before.
-        if (mods.size() == 1) {
-            guild.findMembersWithRoles(guild.getRolesByName("moderator", true))
-                .get()
-                .stream()
-                .forEach(mod -> {
-                    String modId = mod.getId();
-                    mods.add(SelectOption.of(mod.getEffectiveName(), modId));
-                    modsMap.put(modId, mod.getUser());
-                });
-        }
-
-        return mods;
+        ModMailUtil.loadMenuOptions(guild);
     }
 
 }
