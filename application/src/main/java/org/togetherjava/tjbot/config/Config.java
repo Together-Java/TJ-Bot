@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.modmail.ModmailSlashCommand;
+import org.togetherjava.tjbot.commands.modmail.ModmailCommand;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -184,7 +184,7 @@ public final class Config {
     }
 
     /**
-     * Gets the id of the guild. See {@link ModmailSlashCommand} for such uses
+     * Gets the id of the guild. See {@link ModmailCommand} for such uses
      *
      * @return the guildId.
      */
