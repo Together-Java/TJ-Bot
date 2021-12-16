@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -45,6 +46,11 @@ public final class RejoinMuteListener extends ListenerAdapter {
             .queue();
     }
 
+    private static boolean isActionEffective(@NotNull ActionRecord action) {
+        // Effective if permanent or expires in the future
+        return action.actionExpiresAt() == null || action.actionExpiresAt().isAfter(Instant.now());
+    }
+
     @Override
     public void onGuildMemberJoin(@Nonnull GuildMemberJoinEvent event) {
         Member member = event.getMember();
@@ -55,27 +61,24 @@ public final class RejoinMuteListener extends ListenerAdapter {
     }
 
     private boolean shouldMemberBeMuted(@NotNull IPermissionHolder member) {
-        List<ActionRecord> actions = new ArrayList<>(actionsStore
-            .getActionsByTargetAscending(member.getGuild().getIdLong(), member.getIdLong()));
-        Collections.reverse(actions);
-
-        Optional<ActionRecord> lastMute = actions.stream()
-            .filter(action -> action.actionType() == ModerationAction.MUTE)
-            .findFirst();
+        Optional<ActionRecord> lastMute = actionsStore.findLastActionAgainstTargetByType(
+                member.getGuild().getIdLong(), member.getIdLong(), ModerationAction.MUTE);
         if (lastMute.isEmpty()) {
             // User was never muted
             return false;
         }
 
-        Optional<ActionRecord> lastUnmute = actions.stream()
-            .filter(action -> action.actionType() == ModerationAction.UNMUTE)
-            .findFirst();
+        Optional<ActionRecord> lastUnmute = actionsStore.findLastActionAgainstTargetByType(
+                member.getGuild().getIdLong(), member.getIdLong(), ModerationAction.UNMUTE);
         if (lastUnmute.isEmpty()) {
             // User was never unmuted
-            return true;
+            return isActionEffective(lastMute.orElseThrow());
         }
 
         // The last issued action takes priority
-        return lastMute.orElseThrow().issuedAt().isAfter(lastUnmute.orElseThrow().issuedAt());
+        if (lastMute.orElseThrow().issuedAt().isAfter(lastUnmute.orElseThrow().issuedAt())) {
+            return isActionEffective(lastMute.orElseThrow());
+        }
+        return false;
     }
 }
