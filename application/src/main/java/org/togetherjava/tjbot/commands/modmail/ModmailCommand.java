@@ -1,8 +1,7 @@
 package org.togetherjava.tjbot.commands.modmail;
 
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -16,8 +15,14 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
+/**
+ * Command that either sends a direct message to a moderator or sends the message to the dedicated
+ * mod audit channel by the moderators.
+ */
 public class ModmailCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ModmailCommand.class);
 
@@ -25,25 +30,17 @@ public class ModmailCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "message";
     private static final Config config = Config.getInstance();
 
-    static final List<SelectOption> mods = new ArrayList<>();
-    static final Map<String, User> modsMap = new HashMap<>();
-
-    private final JDA jda;
+    final List<SelectOption> mods = new ArrayList<>();
 
     /**
      * Creates an instance of the ModMail command.
-     *
-     * @param jda the {@link JDA} instance of all slash commands to find the target guild or the
-     *        guild where the moderators are.
      */
-    public ModmailCommand(@NotNull JDA jda) {
+    public ModmailCommand() {
         super(COMMAND_NAME,
                 "sends a message to either a single moderator or on the mod_audit_log channel",
                 SlashCommandVisibility.GLOBAL);
 
         getData().addOption(OptionType.STRING, TARGET_OPTION, "The message to send", true);
-
-        this.jda = Objects.requireNonNull(jda);
 
         mods.add(SelectOption.of("All Moderators", "all"));
     }
@@ -51,11 +48,6 @@ public class ModmailCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
         String memberId = event.getUser().getId();
-
-        // checks if selection menu already contains the moderators
-        if (mods.size() == 1) {
-            loadMenuOptions();
-        }
 
         event.reply("""
                 Select the moderator to send message to, or select "All Moderators" to send to
@@ -72,11 +64,9 @@ public class ModmailCommand extends SlashCommandAdapter {
     @Override
     public void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args) {
         String message = args.get(1);
-        // Ignore if another user clicked the button which is only possible when used within the
-        // guild.
+        // Ignore if another user clicked the button.
         String userId = args.get(0);
-        if (event.isFromGuild()
-                && !userId.equals(Objects.requireNonNull(event.getMember()).getId())) {
+        if (!userId.equals(event.getUser().getId())) {
             event.reply(
                     "Sorry, but only the user who triggered the command can interact with the menu.")
                 .setEphemeral(true)
@@ -94,45 +84,86 @@ public class ModmailCommand extends SlashCommandAdapter {
             return;
         }
 
-        sendToMod(modId, message, event);
-
+        // disable selection menu
         event.getMessage().editMessageComponents(ActionRow.of(disabledMenu)).queue();
-        event.reply("Message now sent to moderator").setEphemeral(true).queue();
-    }
 
-    private void sendToMod(@NotNull String modId, @NotNull String message,
-            @NotNull SelectionMenuEvent event) {
-        User mod = modsMap.get(modId);
-        if (mod != null) {
-            mod.openPrivateChannel().queue(channel -> channel.sendMessage(message).queue());
+        boolean wasSent = sendToMod(modId, message, event);
+        if (!wasSent) {
+            event.reply("The moderator you chose was not found on the guild.")
+                .setEphemeral(true)
+                .queue();
+
+            String modSelectedByUser = event.getSelectedOptions().get(0).getLabel();
+            logger.warn("""
+                    Moderator '{}' chosen by user is not on the guild. Use the /reloadmod command
+                    to update the list of moderators.
+                    """, modSelectedByUser);
+
             return;
         }
 
-        logger
-            .warn("""
-                    The map storing the moderators is either not in-sync with the list of moderators for the selection menu or
-                    an unknown error has occurred.
-                    """);
-
-        event.reply("The moderator you chose is not on the list of moderators on the guild")
-            .setEphemeral(true)
-            .queue();
+        event.reply("Message now sent to selected moderator").setEphemeral(true).queue();
     }
 
     /**
-     * Creates a list of options containing the moderators for use in the modmail slash command.
-     * <p/>
-     * If this method has not yet been called prior to calling this method, it will call an
-     * expensive query to discord, otherwise, it will return the previous result.
-     * <p>
-     * This method also stores the moderators on a map for later use. The map's values are always
-     * and should be exactly the same with the previous results.
+     * Populates the list of moderators and stores it into a list to avoid querying an expensive
+     * call to discord everytime the command is used.
+     *
+     * @param event the event that triggered this method
      */
-    private void loadMenuOptions() {
-        Guild guild = Objects.requireNonNull(jda.getGuildById(config.getGuildId()),
-                "A Guild is required to use this command. Perhaps the bot isn't on the guild yet");
-
-        ModMailUtil.loadMenuOptions(guild);
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        Guild guild = event.getJDA().getGuildById(config.getGuildId());
+        ModmailUtil.listOfMod(guild, mods);
     }
+
+    private boolean sendToMod(@NotNull String modId, @NotNull String message,
+            @NotNull SelectionMenuEvent event) {
+        // the else is when the user invoked the command not on the context of a guild.
+        Guild guild = Objects.requireNonNullElse(event.getGuild(),
+                event.getJDA().getGuildById(config.getGuildId()));
+
+        return !guild.retrieveMemberById(modId)
+            .submit()
+            .thenCompose(user -> user.getUser().openPrivateChannel().submit())
+            .thenAccept(channel -> channel
+                .sendMessageEmbeds(ModmailUtil.messageEmbed(event.getUser().getName(), message))
+                .queue())
+            .whenComplete((v, err) -> {
+                if (err != null)
+                    err.printStackTrace();
+            })
+            .isCompletedExceptionally();
+    }
+
+    /**
+     * Reloads the list of moderators to choose from from the {@link ModmailCommand}.
+     * <p>
+     * Only members who have the Moderator role can use this command.
+     */
+    public class ReloadModmailCommand extends SlashCommandAdapter {
+
+        private static final String COMMAND_NAME = "reloadmod";
+
+        public ReloadModmailCommand() {
+            super(COMMAND_NAME, "reloads the moderators in the modmail command",
+                    SlashCommandVisibility.GUILD);
+        }
+
+        @Override
+        public void onSlashCommand(@NotNull SlashCommandEvent event) {
+            mods.clear();
+            ModmailUtil.listOfMod(event.getGuild(), mods);
+
+            if (ModmailUtil.doesUserHaveModRole(event.getMember(), event.getGuild())) {
+                event.reply("List of moderators has now been updated.").setEphemeral(true).queue();
+                return;
+            }
+
+            event.reply("Only moderators can use this command.").setEphemeral(true).queue();
+        }
+
+    }
+
 
 }
