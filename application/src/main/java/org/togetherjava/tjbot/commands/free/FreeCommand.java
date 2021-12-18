@@ -74,7 +74,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      * {@link FreeCommandConfig}) for further details.
      */
     public FreeCommand() {
-        super(COMMAND_NAME, "marks this channel as free for another user to ask a question",
+        super(COMMAND_NAME, "Marks this channel as free for another user to ask a question",
                 SlashCommandVisibility.GUILD);
 
         channelIdToMessageIdForStatus = new HashMap<>();
