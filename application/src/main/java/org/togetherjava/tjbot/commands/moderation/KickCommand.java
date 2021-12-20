@@ -36,11 +36,14 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "kick";
     private static final String ACTION_VERB = "kick";
     private final Predicate<String> hasRequiredRole;
+    private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
+     *
+     * @param actionsStore used to store actions issued by this command
      */
-    public KickCommand() {
+    public KickCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
@@ -48,6 +51,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
     private static void handleAbsentTarget(@NotNull Interaction event) {
@@ -56,7 +60,7 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static void kickUserFlow(@NotNull Member target, @NotNull Member author,
+    private void kickUserFlow(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
@@ -81,11 +85,14 @@ public final class KickCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private static AuditableRestAction<Void> kickUser(@NotNull Member target,
-            @NotNull Member author, @NotNull String reason, @NotNull Guild guild) {
+    private AuditableRestAction<Void> kickUser(@NotNull Member target, @NotNull Member author,
+            @NotNull String reason, @NotNull Guild guild) {
         logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
+
+        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                ModerationUtils.Action.KICK, null, reason);
 
         return guild.kick(target, reason).reason(reason);
     }

@@ -25,7 +25,7 @@ enum ModerationUtils {
      * {@link Guild#ban(User, int, String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
-    private static final Color AMBIENT_COLOR = Color.decode("#895FE8");
+    static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to

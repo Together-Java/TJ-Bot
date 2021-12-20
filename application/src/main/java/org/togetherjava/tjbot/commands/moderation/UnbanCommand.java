@@ -29,11 +29,14 @@ public final class UnbanCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "unban";
     private static final String ACTION_VERB = "unban";
     private final Predicate<String> hasRequiredRole;
+    private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
+     *
+     * @param actionsStore used to store actions issued by this command
      */
-    public UnbanCommand() {
+    public UnbanCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Unbans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData()
@@ -43,9 +46,10 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
         hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
             .asMatchPredicate();
+        this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void unban(@NotNull User target, @NotNull Member author, @NotNull String reason,
+    private void unban(@NotNull User target, @NotNull Member author, @NotNull String reason,
             @NotNull Guild guild, @NotNull Interaction event) {
         guild.unban(target).reason(reason).queue(result -> {
             MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
@@ -55,6 +59,9 @@ public final class UnbanCommand extends SlashCommandAdapter {
             logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
                     author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                     guild.getName(), reason);
+
+            actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
+                    ModerationUtils.Action.UNBAN, null, reason);
         }, unbanFailure -> handleFailure(unbanFailure, target, event));
     }
 
