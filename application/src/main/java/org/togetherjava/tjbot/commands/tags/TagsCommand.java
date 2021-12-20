@@ -42,8 +42,6 @@ public final class TagsCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        // TODO A list might be better than comma separated, which is hard to read
-
         event
             .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
                 .setDescription(String.join(", ", tagSystem.getAllIds()))
@@ -68,7 +66,6 @@ public final class TagsCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
-
         event.getMessage().delete().queue();
     }
 }
