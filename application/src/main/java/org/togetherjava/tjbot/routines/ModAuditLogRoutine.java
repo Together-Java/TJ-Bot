@@ -36,7 +36,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.togetherjava.tjbot.moderation.ModAuditLogWriter.getModAuditLogChannel;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
@@ -218,7 +218,7 @@ public final class ModAuditLogRoutine implements Routine {
                 return;
             }
 
-            Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
+            Optional<TextChannel> auditLogChannel = ModAuditLogWriter.getModAuditLogChannel(guild);
             if (auditLogChannel.isEmpty()) {
                 return;
             }
