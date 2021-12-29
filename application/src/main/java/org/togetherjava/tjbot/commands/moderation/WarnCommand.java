@@ -84,7 +84,7 @@ public final class WarnCommand extends SlashCommandAdapter {
                 reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationUtils.Action.WARN, null, reason);
+                ModerationAction.WARN, null, reason);
     }
 
     private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull User target,
@@ -93,8 +93,8 @@ public final class WarnCommand extends SlashCommandAdapter {
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
         }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationUtils.Action.WARN,
-                target, dmNoticeText, reason);
+        return ModerationUtils.createActionResponse(author.getUser(), ModerationAction.WARN, target,
+                dmNoticeText, reason);
     }
 
     @Override
