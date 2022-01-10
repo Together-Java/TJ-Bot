@@ -11,7 +11,7 @@ It mainly consists of simply **pushing** `develop` over on `master`, creating an
 3. Ignore the PR and `rebase` `master` directly onto `develop`, then `force-push`. As a result, `master` and `develop` are fully identical  
   3.1. The PR should now automatically be marked as _merged_ by GitHub  
   3.2. In the meantime, the pipeline automatically started deploying the new version to the server  
-4. Create and push an **annotated tag** like `v1.2.3` with a short release description from the state of `master`  
+4. Create and push an **annotated tag** like `v.1.2.3` with a short release description from the state of `master`  
   4.1. The pipeline will now create a new release on GitHub  
   4.2. Once the release has been created, you can adjust and beautify the description, see [releases](https://github.com/Together-Java/TJ-Bot/releases)
 5. In case the configuration (`config.json`) changed, make sure to update it; see [[Edit the Config]]
