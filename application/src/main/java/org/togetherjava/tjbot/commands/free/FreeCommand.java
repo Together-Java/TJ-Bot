@@ -6,11 +6,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -54,7 +52,7 @@ import java.util.*;
  * channel may be one of the monitored channels however it is recommended that a different channel
  * is used.
  */
-public final class FreeCommand extends SlashCommandAdapter implements EventListener {
+public final class FreeCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(FreeCommand.class);
 
     private static final String STATUS_TITLE = "**__CHANNEL STATUS__**\n\n";
@@ -122,7 +120,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      * <p>
      * If this is called on from a channel that was not configured for monitoring (see
      * {@link FreeCommandConfig}) the user will receive an ephemeral message stating such.
-     * 
+     *
      * @param event the event that triggered this
      * @throws IllegalStateException if this method is called for a Global Slash Command
      */
@@ -285,30 +283,30 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      *
      * @param event the generic event that includes the 'onGuildMessageReceived'.
      */
+
+
     @Override
-    public void onEvent(@NotNull GenericEvent event) {
-        if (event instanceof GuildMessageReceivedEvent guildEvent) {
-            if (guildEvent.isWebhookMessage() || guildEvent.getAuthor().isBot()) {
-                return;
-            }
-            if (!channelMonitor.isMonitoringChannel(guildEvent.getChannel().getIdLong())) {
-                logger.debug(
-                        "Channel is not being monitored, ignoring message received in {} from {}",
-                        guildEvent.getChannel().getName(), guildEvent.getAuthor());
-                return;
-            }
-            if (channelMonitor.isChannelBusy(guildEvent.getChannel().getIdLong())) {
-                logger.debug(
-                        "Channel status is currently busy, ignoring message received in {} from {}",
-                        guildEvent.getChannel().getName(), guildEvent.getAuthor());
-                return;
-            }
-            channelMonitor.setChannelBusy(guildEvent.getChannel().getIdLong(),
-                    guildEvent.getAuthor().getIdLong());
-            displayStatus(channelMonitor.getStatusChannelFor(guildEvent.getGuild()));
-            guildEvent.getMessage().reply(UserStrings.NEW_QUESTION.message()).queue();
+    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+        if (event.isWebhookMessage() || event.getAuthor().isBot()) {
+            return;
         }
+        if (!channelMonitor.isMonitoringChannel(event.getChannel().getIdLong())) {
+            logger.debug("Channel is not being monitored, ignoring message received in {} from {}",
+                    event.getChannel().getName(), event.getAuthor());
+            return;
+        }
+        if (channelMonitor.isChannelBusy(event.getChannel().getIdLong())) {
+            logger.debug(
+                    "Channel status is currently busy, ignoring message received in {} from {}",
+                    event.getChannel().getName(), event.getAuthor());
+            return;
+        }
+        channelMonitor.setChannelBusy(event.getChannel().getIdLong(),
+                event.getAuthor().getIdLong());
+        displayStatus(channelMonitor.getStatusChannelFor(event.getGuild()));
+        event.getMessage().reply(UserStrings.NEW_QUESTION.message()).queue();
     }
+
 
     private @NotNull Optional<Message> getStatusMessageIn(@NotNull TextChannel channel) {
         if (!channelIdToMessageIdForStatus.containsKey(channel.getIdLong())) {

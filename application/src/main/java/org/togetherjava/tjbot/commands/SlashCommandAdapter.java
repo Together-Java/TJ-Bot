@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
@@ -56,7 +57,7 @@ import java.util.Objects;
  * <p>
  * and registration of an instance of that class in {@link Commands}.
  */
-public abstract class SlashCommandAdapter implements SlashCommand {
+public abstract class SlashCommandAdapter extends ListenerAdapter implements SlashCommand {
     private final String name;
     private final String description;
     private final SlashCommandVisibility visibility;

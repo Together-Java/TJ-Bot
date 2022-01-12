@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
@@ -36,7 +37,7 @@ import java.util.List;
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
-public interface SlashCommand {
+public interface SlashCommand extends EventListener {
 
     /**
      * Gets the name of the command.

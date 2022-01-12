@@ -74,13 +74,15 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(CommandSystem::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
-        nameToSlashCommands.values()
-            .forEach(slashCommand -> slashCommand
-                .acceptComponentIdGenerator(((componentId, lifespan) -> {
-                    UUID uuid = UUID.randomUUID();
-                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                    return uuid.toString();
-                })));
+        nameToSlashCommands.values().forEach(slashCommand -> {
+            slashCommand.acceptComponentIdGenerator(((componentId, lifespan) -> {
+                UUID uuid = UUID.randomUUID();
+                componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                return uuid.toString();
+            }));
+
+            jda.addEventListener(slashCommand);
+        });
 
         if (logger.isInfoEnabled()) {
             logger.info("Available commands: {}", nameToSlashCommands.keySet());
@@ -99,10 +101,11 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
+        JDA jda = event.getJDA();
+
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
-        event.getJDA()
-            .getGuildCache()
+        jda.getGuildCache()
             .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
@@ -110,8 +113,9 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
 
         // Propagate the onReady event to all commands
         // NOTE 'registerReloadCommands' will not be finished running, this does not wait for it
-        nameToSlashCommands.values()
-            .forEach(command -> COMMAND_SERVICE.execute(() -> command.onReady(event)));
+        nameToSlashCommands.values().forEach(command -> {
+            COMMAND_SERVICE.execute(() -> command.onReady(event));
+        });
     }
 
     @Override
