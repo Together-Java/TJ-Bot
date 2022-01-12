@@ -86,7 +86,6 @@ public final class ModAuditLogRoutine {
             description += "\n\nReason: " + reason;
         }
         return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
-            .setTitle(action.getTitle())
             .setDescription(description)
             .setTimestamp(timestamp)
             .setColor(AMBIENT_COLOR)
