@@ -89,7 +89,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     "The amount of times the invite can be used, default is infinity", false),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(0, MAX_AGE_DURATION_ONE_WEEK)); // Max duration 0 - 7 days in seconds.
+                        .setRequiredRange(0, MAX_VALUE_MAX_AGE));
 
     /**
      * Constructs an instance
