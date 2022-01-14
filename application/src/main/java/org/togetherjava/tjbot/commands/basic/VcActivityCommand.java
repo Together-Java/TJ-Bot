@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -46,9 +45,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-
-    private static final long MAX_VALUE_MAX_AGE = TimeUnit.DAYS.toSeconds(7);
-    private static final long MAX_VALUE_MAX_USES = 100;
+    // sets the Max_age duration of the voice channel in seconds - converts to days.
+    private static final long MAX_AGE_MAX_VALUE = TimeUnit.SECONDS.toDays(7);
+    private static final long MAX_USES_MAX_VALUE = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
@@ -88,11 +87,12 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             "879863976006127627", LETTERTILE_NAME, "879863686565621790");
 
     private static final List<OptionData> inviteOptions = List.of(
-            new OptionData(OptionType.STRING, MAX_USES_OPTION,
-                    "The amount of times the invite can be used, default is infinity", false),
+            new OptionData(OptionType.INTEGER, MAX_USES_OPTION,
+                    "The amount of times the invite can be used, default is infinity", false)
+                    .setRequiredRange(0, MAX_USES_MAX_VALUE),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(1, TimeUnit.DAYS.toSeconds(MAX_AGE_DURATION)));
+                        .setRequiredRange(1, MAX_AGE_MAX_VALUE));
 
     /**
      * Constructs an instance
@@ -150,29 +150,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         OptionMapping applicationOption = event.getOption(APPLICATION_OPTION);
         OptionMapping idOption = event.getOption(ID_OPTION);
 
-        OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
-        OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
-
-        Integer maxUses;
-
-        // the user already received the error in the handleIntegerTypeOption method
-        // it still throws to tell us to return this method and stop the proceeding code
-        try {
-            maxUses = handleIntegerTypeOption(event, maxUsesOption);
-        } catch (IllegalArgumentException ignore) {
-            return;
-        }
-
-        Integer maxAge;
-
-        // the user already received the error in the handleIntegerTypeOption method
-        // it still throws to tell us to return this method and stop the proceeding code
-        try {
-            maxAge = handleIntegerTypeOption(event, maxAgeOption);
-        } catch (IllegalArgumentException ignore) {
-            return;
-        }
-
 
         String applicationId;
         String applicationName;
@@ -187,7 +164,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
+        handleSubcommand(event, voiceChannel, applicationId, applicationName);
     }
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
@@ -202,13 +179,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
-            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
+                                         @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
+                                         @NotNull String applicationName) {
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
-            .setMaxUses(maxUses)
-            .setMaxAge(maxAge)
             .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
     }
@@ -226,53 +201,5 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             @Nullable Throwable throwable) {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
-    }
-
-
-    /**
-     * This grabs the OptionMapping, after this it <br />
-     * - validates whenever it's within an {@link Integer Integer's} range <br />
-     * - validates whenever it's positive <br />
-     *
-     * <p>
-     * <p/>
-     *
-     * @param event the {@link SlashCommandEvent}
-     * @param optionMapping the {@link OptionMapping}
-     * @return nullable {@link Integer}
-     * @throws java.lang.IllegalArgumentException if the option's value is - outside of
-     *         {@link Integer#MAX_VALUE} - negative
-     */
-    @Contract("_, null -> null")
-    private static @Nullable Integer handleIntegerTypeOption(@NotNull SlashCommandEvent event,
-            @Nullable OptionMapping optionMapping) {
-
-        int optionValue;
-
-        if (optionMapping == null) {
-            return null;
-        }
-
-        try {
-            optionValue = Math.toIntExact(optionMapping.getAsLong());
-        } catch (ArithmeticException e) {
-            event
-                .reply("The " + optionMapping.getName() + " is above `" + Integer.MAX_VALUE
-                        + "`, which is too high")
-                .setEphemeral(true)
-                .queue();
-            throw new IllegalArgumentException(
-                    optionMapping.getName() + " can't be above " + Integer.MAX_VALUE);
-        }
-
-        if (optionValue < 0) {
-            event.reply("The " + optionMapping.getName() + " is negative, which isn't supported")
-                .setEphemeral(true)
-                .queue();
-            throw new IllegalArgumentException(optionMapping.getName() + " can't be negative");
-        }
-
-
-        return optionValue;
     }
 }
