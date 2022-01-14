@@ -46,8 +46,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_AGE_OPTION = "max-age";
 
     // sets the Max_age duration of the voice channel in seconds - converts to days.
-    private static final long MAX_AGE_MAX_VALUE = TimeUnit.SECONDS.toDays(7);
-    private static final long MAX_USES_MAX_VALUE = 100;
+    private static final long MAX_VALUE_MAX_AGE = TimeUnit.SECONDS.toDays(7);
+    private static final long MAX_VALE_MAX_USES = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
@@ -89,10 +89,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final List<OptionData> inviteOptions = List.of(
             new OptionData(OptionType.INTEGER, MAX_USES_OPTION,
                     "The amount of times the invite can be used, default is infinity", false)
-                    .setRequiredRange(0, MAX_USES_MAX_VALUE),
+                    .setRequiredRange(0, MAX_VALE_MAX_USES),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(1, MAX_AGE_MAX_VALUE));
+                        .setRequiredRange(1, MAX_VALUE_MAX_AGE));
 
     /**
      * Constructs an instance
