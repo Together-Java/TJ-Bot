@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
@@ -46,8 +45,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    // sets the Max_age duration of the voice channel in seconds - converts to days.
-    private static final long MAX_AGE_DURATION = TimeUnit.SECONDS.toDays(7);
+    //The amount of seconds in one week.
+    private static final int MAX_AGE_DURATION_ONE_WEEK = 60 * 60 * 24;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
@@ -91,7 +90,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     "The amount of times the invite can be used, default is infinity", false),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(1, TimeUnit.DAYS.toSeconds(MAX_AGE_DURATION)));
+                        .setRequiredRange(0, MAX_AGE_DURATION_ONE_WEEK)); // Max duration 0 - 7 days in seconds.
 
     /**
      * Constructs an instance
