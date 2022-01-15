@@ -119,7 +119,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     .addOptions(inviteOptions);
 
 
-
         getData().addSubcommands(applicationSubCommand, idSubCommand);
     }
 
