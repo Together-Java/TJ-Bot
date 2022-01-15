@@ -46,8 +46,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    // sets the Max_age duration of the voice channel in seconds - converts to days.
-    private static final long MAX_VALUE_MAX_AGE = TimeUnit.SECONDS.toDays(604800);
+    private static final long MAX_VALUE_MAX_AGE = TimeUnit.DAYS.toSeconds(7);
     private static final long MAX_VALE_MAX_USES = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
@@ -106,18 +105,18 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 SlashCommandVisibility.GUILD);
 
 
-        SubcommandData applicationSubCommand = Objects.requireNonNull(
+        SubcommandData applicationSubCommand =
                 new SubcommandData(APPLICATION_SUBCOMMAND, "Choose an application from our list")
                     .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
                             "the application", true).addChoices(VC_APPLICATIONS))
-                    .addOptions(inviteOptions));
+                    .addOptions(inviteOptions);
 
 
 
-        SubcommandData idSubCommand = Objects
-            .requireNonNull(new SubcommandData("id", "specify the ID for the application manually")
-                .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
-                .addOptions(inviteOptions));
+        SubcommandData idSubCommand =
+                new SubcommandData("id", "specify the ID for the application manually")
+                    .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
+                    .addOptions(inviteOptions);
 
 
 
@@ -161,27 +160,20 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         Integer maxUses;
         Integer maxAge;
 
-        try {
-            maxUses = handleIntegerTypeOption(maxUsesOption);
-        } catch (IllegalArgumentException ignored) {
-            return;
-        }
 
-        try {
-            maxAge = handleIntegerTypeOption(maxAgeOption);
-        } catch (IllegalArgumentException ignored) {
-            return;
-        }
+        maxUses = handleIntegerTypeOption(maxUsesOption);
+        maxAge = handleIntegerTypeOption(maxAgeOption);
+
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
-            applicationId = Objects.requireNonNull(VC_APPLICATION_TO_ID.get(applicationName));
+            applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
 
-            applicationId = (Objects.requireNonNull(idOption.getAsString()));
+            applicationId = idOption.getAsString();
 
-            applicationName = (Objects.requireNonNull(
-                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity")));
+            applicationName =
+                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
 
@@ -229,6 +221,16 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
     }
 
+    /**
+     * This grabs the OptionMapping, after this it returns null of the OptionMapping is null, else
+     * it'll return the number option as an Integer
+     *
+     * <p>
+     * <p/>
+     *
+     * @param optionMapping the {@link OptionMapping}
+     * @return nullable {@link Integer}
+     **/
     @Contract("null -> null")
     private static @Nullable Integer handleIntegerTypeOption(
             @Nullable OptionMapping optionMapping) {
