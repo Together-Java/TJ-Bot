@@ -46,7 +46,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    private static final long MAX_VALUE_MAX_AGE = TimeUnit.SECONDS.toDays(604800);
+    private static final long MAX_VALUE_MAX_AGE = TimeUnit.DAYS.toSeconds(7);
     private static final long MAX_VALE_MAX_USES = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
