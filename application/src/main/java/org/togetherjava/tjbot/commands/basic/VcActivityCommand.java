@@ -160,17 +160,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         Integer maxUses;
         Integer maxAge;
 
-        try {
-            maxUses = handleIntegerTypeOption(maxUsesOption);
-        } catch (IllegalArgumentException ignored) {
-            return;
-        }
-
-        try {
-            maxAge = handleIntegerTypeOption(maxAgeOption);
-        } catch (IllegalArgumentException ignored) {
-            return;
-        }
+        
+        maxUses = handleIntegerTypeOption(maxUsesOption);
+        maxAge = handleIntegerTypeOption(maxAgeOption);
+        
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
