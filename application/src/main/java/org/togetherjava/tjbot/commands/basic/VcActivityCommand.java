@@ -228,6 +228,15 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
     }
 
+    /**
+     * This grabs the OptionMapping, after this it returns null of the OptionMapping is null, else it'll return the number option as an Integer
+     *
+     * <p>
+     * <p/>
+     *
+     * @param optionMapping the {@link OptionMapping}
+     * @return nullable {@link Integer}
+     **/
     @Contract("null -> null")
     private static @Nullable Integer handleIntegerTypeOption(
             @Nullable OptionMapping optionMapping) {
