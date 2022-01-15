@@ -112,7 +112,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     .addOptions(inviteOptions);
 
 
-
         SubcommandData idSubCommand =
                 new SubcommandData("id", "specify the ID for the application manually")
                     .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
