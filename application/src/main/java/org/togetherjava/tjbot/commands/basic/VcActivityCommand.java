@@ -191,7 +191,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
             @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
 
-
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
