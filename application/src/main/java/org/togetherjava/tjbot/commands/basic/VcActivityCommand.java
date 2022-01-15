@@ -105,18 +105,18 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 SlashCommandVisibility.GUILD);
 
 
-        SubcommandData applicationSubCommand = Objects.requireNonNull(
+        SubcommandData applicationSubCommand = 
                 new SubcommandData(APPLICATION_SUBCOMMAND, "Choose an application from our list")
                     .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
                             "the application", true).addChoices(VC_APPLICATIONS))
-                    .addOptions(inviteOptions));
+                    .addOptions(inviteOptions);
 
 
 
-        SubcommandData idSubCommand = Objects
-            .requireNonNull(new SubcommandData("id", "specify the ID for the application manually")
+        SubcommandData idSubCommand = 
+            new SubcommandData("id", "specify the ID for the application manually")
                 .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
-                .addOptions(inviteOptions));
+                .addOptions(inviteOptions);
 
 
 
@@ -174,13 +174,13 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
-            applicationId = Objects.requireNonNull(VC_APPLICATION_TO_ID.get(applicationName));
+            applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
 
-            applicationId = (Objects.requireNonNull(idOption.getAsString()));
+            applicationId = idOption.getAsString();
 
-            applicationName = (Objects.requireNonNull(
-                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity")));
+            applicationName = 
+                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity"));
         }
 
 
