@@ -46,7 +46,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    // sets the Max_age duration of the voice channel in seconds - converts to days.
     private static final long MAX_VALUE_MAX_AGE = TimeUnit.SECONDS.toDays(604800);
     private static final long MAX_VALE_MAX_USES = 100;
 
