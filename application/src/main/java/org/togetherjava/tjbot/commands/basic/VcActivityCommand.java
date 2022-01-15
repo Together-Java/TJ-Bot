@@ -169,7 +169,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             applicationName = applicationOption.getAsString();
             applicationId = VC_APPLICATION_TO_ID.get(applicationName);
         } else {
-
             applicationId = idOption.getAsString();
 
             applicationName =
