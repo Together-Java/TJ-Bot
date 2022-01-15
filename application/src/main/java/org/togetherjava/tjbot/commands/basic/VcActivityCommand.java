@@ -173,7 +173,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
-
         handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
     }
 
