@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_AGE_OPTION = "max-age";
 
     // sets the Max_age duration of the voice channel in seconds - converts to days.
-    private static final long MAX_VALUE_MAX_AGE = TimeUnit.SECONDS.toDays(7);
+    private static final long MAX_VALUE_MAX_AGE = TimeUnit.SECONDS.toDays(604800);
     private static final long MAX_VALE_MAX_USES = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
@@ -89,10 +90,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final List<OptionData> inviteOptions = List.of(
             new OptionData(OptionType.INTEGER, MAX_USES_OPTION,
                     "The amount of times the invite can be used, default is infinity", false)
-                    .setRequiredRange(0, MAX_VALE_MAX_USES),
+                        .setRequiredRange(0, MAX_VALE_MAX_USES),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(1, MAX_VALUE_MAX_AGE));
+                        .setRequiredRange(0, MAX_VALUE_MAX_AGE));
 
     /**
      * Constructs an instance
@@ -105,17 +106,19 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 SlashCommandVisibility.GUILD);
 
 
-        SubcommandData applicationSubCommand =
+        SubcommandData applicationSubCommand = Objects.requireNonNull(
                 new SubcommandData(APPLICATION_SUBCOMMAND, "Choose an application from our list")
                     .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
                             "the application", true).addChoices(VC_APPLICATIONS))
-                    .addOptions(inviteOptions);
+                    .addOptions(inviteOptions));
 
 
-        SubcommandData idSubCommand =
-                new SubcommandData("id", "specify the ID for the application manually")
-                    .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
-                    .addOptions(inviteOptions);
+
+        SubcommandData idSubCommand = Objects
+            .requireNonNull(new SubcommandData("id", "specify the ID for the application manually")
+                .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
+                .addOptions(inviteOptions));
+
 
 
         getData().addSubcommands(applicationSubCommand, idSubCommand);
@@ -150,22 +153,42 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         OptionMapping applicationOption = event.getOption(APPLICATION_OPTION);
         OptionMapping idOption = event.getOption(ID_OPTION);
 
+        OptionMapping maxUsesOption = event.getOption(MAX_USES_OPTION);
+        OptionMapping maxAgeOption = event.getOption(MAX_AGE_OPTION);
 
         String applicationId;
         String applicationName;
+        Integer maxUses;
+        Integer maxAge;
+
+        try {
+            maxUses = handleIntegerTypeOption(maxUsesOption);
+        } catch (IllegalArgumentException ignored) {
+            return;
+        }
+
+        try {
+            maxAge = handleIntegerTypeOption(maxAgeOption);
+        } catch (IllegalArgumentException ignored) {
+            return;
+        }
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
-            applicationId = VC_APPLICATION_TO_ID.get(applicationName);
+            applicationId = Objects.requireNonNull(VC_APPLICATION_TO_ID.get(applicationName));
         } else {
-            applicationId = idOption.getAsString();
 
-            applicationName =
-                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
+            applicationId = (Objects.requireNonNull(idOption.getAsString()));
+
+            applicationName = (Objects.requireNonNull(
+                    getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity")));
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, applicationName);
+
+        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
     }
+
+
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
             @NotNull V value) {
@@ -179,11 +202,14 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     }
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
-                                         @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-                                         @NotNull String applicationName) {
+            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
+            @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
+
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
+            .setMaxUses(maxUses)
+            .setMaxAge(maxAge)
             .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
     }
@@ -201,5 +227,21 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             @Nullable Throwable throwable) {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
+    }
+
+    @Contract("null -> null")
+    private static @Nullable Integer handleIntegerTypeOption(
+            @Nullable OptionMapping optionMapping) {
+
+        int optionValue;
+
+        if (optionMapping == null) {
+            return null;
+        } else {
+
+            optionValue = Math.toIntExact(optionMapping.getAsLong());
+
+        }
+        return optionValue;
     }
 }
