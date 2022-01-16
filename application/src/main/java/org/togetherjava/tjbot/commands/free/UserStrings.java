@@ -12,6 +12,8 @@ enum UserStrings {
             Thank you for asking in an available channel. A helper will be with you shortly!
 
             __Do not post your question in other channels.__
+                 
+            After you are satisfied with the given answer don't forget to free the channel for others with the '/free' command!
             """),
     MARK_AS_FREE("""
             This channel is now available for a question to be asked.
