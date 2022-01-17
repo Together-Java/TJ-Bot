@@ -46,7 +46,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    private static final long MAX_AGE_DAYS_LIMIT = TimeUnit.DAYS.toSeconds(7);
+    private static final long MAX_AGE_DAYS_LIMIT = 7;
     private static final long MAX_USES_LIMIT = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
@@ -91,7 +91,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 .formatted(MAX_USES_LIMIT),
             false).setRequiredRange(0, MAX_USES_LIMIT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
-                    "How long, in days this activity can be used before it expires, 0 (No expiry), Maximum is %d days. "
+                    "How long, in days this activity can be used before it expires, 0 (No expiry), Max is %d days."
                         .formatted(MAX_AGE_DAYS_LIMIT),
                     false).setRequiredRange(0, MAX_AGE_DAYS_LIMIT));
 
