@@ -85,13 +85,13 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             "852509694341283871", DOODLECREW_NAME, "878067389634314250", WORDSNACK_NAME,
             "879863976006127627", LETTERTILE_NAME, "879863686565621790");
 
-    private static final List<OptionData> inviteOptions = List.of(
-            new OptionData(OptionType.INTEGER, MAX_USES_OPTION,
-                    "Max uses for invites, 0 for infinite, 100 is the top limit.", false)
-                        .setRequiredRange(0, MAX_USES_LIMIT),
+    private static final List<OptionData> inviteOptions = List.of(new OptionData(OptionType.INTEGER,
+            MAX_USES_OPTION,
+            "How many times this invite can be used, 0 infinite (default) - 100 being the highest.",
+            false).setRequiredRange(0, MAX_USES_LIMIT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
-                    "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(0, MAX_AGE_LIMIT));
+                    "How long, in days this activity can be used before it expires, 0 (No expiry), Maximum is 7 days. ",
+                    false).setRequiredRange(0, MAX_AGE_LIMIT));
 
     /**
      * Constructs an instance
@@ -154,8 +154,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         String applicationId;
         String applicationName;
-        Integer maxUses = handleIntegerTypeOption(maxUsesOption);
-        Integer maxAge = handleIntegerTypeOption(maxAgeOption);
+        Integer maxUses = requiredIntOptionIfPresent(maxUsesOption);
+        Integer maxAge = requiredIntOptionIfPresent(maxAgeOption);
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
@@ -210,28 +210,15 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     }
 
     /**
-     * This grabs the OptionMapping, and interprets the given option as Integer, throws is the given
-     * option is not an integer. it'll return the number option as an Integer returns the option
-     * interpreted as int, null if option was null already.
-     * <p>
-     * <p/>
-     *
-     * @param optionMapping the {@link OptionMapping}
-     * @return nullable {@link Integer}
+     * Interprets the given option as integer. Throws if the option is not an integer.
+     * 
+     * @param option the option that contains the integer to extract, or null if not present
+     * @return the extracted integer if present, null otherwise
      **/
     @Contract("null -> null")
-    private static @Nullable Integer handleIntegerTypeOption(
-            @Nullable OptionMapping optionMapping) {
+    private static @Nullable Integer requiredIntOptionIfPresent(@Nullable OptionMapping option) {
 
-        int optionValue;
+        return option == null ? null : Math.toIntExact(option.getAsLong());
 
-        if (optionMapping == null) {
-            return null;
-        } else {
-
-            optionValue = Math.toIntExact(optionMapping.getAsLong());
-
-        }
-        return optionValue;
     }
 }
