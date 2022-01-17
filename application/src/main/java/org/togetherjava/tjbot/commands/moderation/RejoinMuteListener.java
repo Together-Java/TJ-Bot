@@ -3,15 +3,16 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.IPermissionHolder;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.EventReceiver;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Reapplies existing mutes to users who have left and rejoined a guild.
@@ -21,7 +22,7 @@ import java.util.*;
  * join events and reapplies the mute role in case the user is supposed to be muted still (according
  * to the {@link ModerationActionsStore}).
  */
-public final class RejoinMuteListener extends ListenerAdapter {
+public final class RejoinMuteListener implements EventReceiver {
     private static final Logger logger = LoggerFactory.getLogger(RejoinMuteListener.class);
 
     private final ModerationActionsStore actionsStore;
@@ -52,7 +53,13 @@ public final class RejoinMuteListener extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMemberJoin(@Nonnull GuildMemberJoinEvent event) {
+    public void onEvent(@NotNull GenericEvent event) {
+        if (event instanceof GuildMemberJoinEvent joinEvent) {
+            onGuildMemberJoin(joinEvent);
+        }
+    }
+
+    private void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         Member member = event.getMember();
         if (!shouldMemberBeMuted(member)) {
             return;
