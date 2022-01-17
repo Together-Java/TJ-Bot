@@ -87,10 +87,12 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     private static final List<OptionData> inviteOptions = List.of(new OptionData(OptionType.INTEGER,
             MAX_USES_OPTION,
-            "How many times this invite can be used, 0 infinite (default) - 100 being the highest.",
+            "How many times this invite can be used, 0 infinite (default) - %d being the highest."
+                .formatted(MAX_USES_LIMIT),
             false).setRequiredRange(0, MAX_USES_LIMIT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
-                    "How long, in days this activity can be used before it expires, 0 (No expiry), Maximum is 7 days. ",
+                    "How long, in days this activity can be used before it expires, 0 (No expiry), Maximum is %d days. "
+                        .formatted(MAX_AGE_DAYS_LIMIT),
                     false).setRequiredRange(0, MAX_AGE_DAYS_LIMIT));
 
     /**
@@ -154,8 +156,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         String applicationId;
         String applicationName;
-        Integer maxUses = requiredIntOptionIfPresent(maxUsesOption);
-        Integer maxAgeDays = requiredIntOptionIfPresent(maxAgeOption);
+        Integer maxUses = requireIntOptionIfPresent(maxUsesOption);
+        Integer maxAgeDays = requireIntOptionIfPresent(maxAgeOption);
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
@@ -220,7 +222,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * @return the extracted integer if present, null otherwise
      **/
     @Contract("null -> null")
-    private static @Nullable Integer requiredIntOptionIfPresent(@Nullable OptionMapping option) {
+    private static @Nullable Integer requireIntOptionIfPresent(@Nullable OptionMapping option) {
 
         return option == null ? null : Math.toIntExact(option.getAsLong());
 
