@@ -46,8 +46,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    private static final long MAX_VALUE_MAX_AGE = TimeUnit.DAYS.toSeconds(7);
-    private static final long MAX_VALE_MAX_USES = 100;
+    private static final long MAX_AGE_LIMIT = TimeUnit.DAYS.toSeconds(7);
+    private static final long MAX_USES_LIMIT = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
@@ -73,7 +73,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     new Command.Choice(WORDSNACK_NAME, WORDSNACK_NAME),
                     new Command.Choice(LETTERTILE_NAME, LETTERTILE_NAME));
 
-
     /**
      * List comes from <a href="https://github.com/DV8FromTheWorld/JDA/pull/1628">the "Implement
      * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
@@ -88,11 +87,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     private static final List<OptionData> inviteOptions = List.of(
             new OptionData(OptionType.INTEGER, MAX_USES_OPTION,
-                    "The amount of times the invite can be used, default is infinity", false)
-                        .setRequiredRange(0, MAX_VALE_MAX_USES),
+                    "Max uses for invites, 0 for infinite, 100 is the top limit.", false)
+                        .setRequiredRange(0, MAX_USES_LIMIT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "Max age in seconds. Set this to 0 to never expire, default is 1 day", false)
-                        .setRequiredRange(0, MAX_VALUE_MAX_AGE));
+                        .setRequiredRange(0, MAX_AGE_LIMIT));
 
     /**
      * Constructs an instance
@@ -155,13 +154,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         String applicationId;
         String applicationName;
-        Integer maxUses;
-        Integer maxAge;
-
-
-        maxUses = handleIntegerTypeOption(maxUsesOption);
-        maxAge = handleIntegerTypeOption(maxAgeOption);
-
+        Integer maxUses = handleIntegerTypeOption(maxUsesOption);
+        Integer maxAge = handleIntegerTypeOption(maxAgeOption);
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
@@ -175,6 +169,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
     }
+
 
     private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
             @NotNull V value) {
@@ -215,9 +210,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     }
 
     /**
-     * This grabs the OptionMapping, after this it returns null of the OptionMapping is null, else
-     * it'll return the number option as an Integer
-     *
+     * This grabs the OptionMapping, and interprets the given option as Integer, throws is the given
+     * option is not an integer. it'll return the number option as an Integer returns the option
+     * interpreted as int, null if option was null already.
      * <p>
      * <p/>
      *
