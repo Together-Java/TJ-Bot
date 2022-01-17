@@ -21,7 +21,7 @@ import java.util.List;
  * <p>
  * All slash commands have to implement this interface. For convenience, there is a
  * {@link SlashCommandAdapter} available that implemented most methods already. A new command can
- * then be registered by adding it to {@link Commands}.
+ * then be registered by adding it to {@link Features}.
  * <p>
  * <p>
  * Slash commands can either be visible globally in Discord or just to specific guilds. They can
@@ -36,7 +36,7 @@ import java.util.List;
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
-public interface SlashCommand {
+public interface SlashCommand extends Feature {
 
     /**
      * Gets the name of the command.
@@ -84,8 +84,8 @@ public interface SlashCommand {
      * <p>
      * <p>
      * This method may be called multiple times, implementations must not create new data each time
-     * but instead configure it once beforehand. The command system will automatically call this
-     * method to register the command to Discord.
+     * but instead configure it once beforehand. The core system will automatically call this method
+     * to register the command to Discord.
      *
      * @return the command data of this command
      */
@@ -93,7 +93,7 @@ public interface SlashCommand {
     CommandData getData();
 
     /**
-     * Triggered by the command system after system startup is complete. This can be used for
+     * Triggered by the core system after system startup is complete. This can be used for
      * initialisation actions that cannot occur during construction.
      * <p>
      * This method may be called multi-threaded. There is no guarantee as to the order that commands
@@ -114,8 +114,8 @@ public interface SlashCommand {
     void onReady(@NotNull ReadyEvent event);
 
     /**
-     * Triggered by the command system when a slash command corresponding to this implementation
-     * (based on {@link #getData()}) has been triggered.
+     * Triggered by the core system when a slash command corresponding to this implementation (based
+     * on {@link #getData()}) has been triggered.
      * <p>
      * This method may be called multi-threaded. In particular, there are no guarantees that it will
      * be executed on the same thread repeatedly or on the same thread that other event methods have
@@ -127,7 +127,7 @@ public interface SlashCommand {
      * Buttons or menus have to be created with a component ID (see
      * {@link ComponentInteraction#getComponentId()},
      * {@link net.dv8tion.jda.api.interactions.components.Button#of(ButtonStyle, String, Emoji)}) in
-     * a very specific format, otherwise the command system will fail to identify the command that
+     * a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>
      * The component ID has to be a UUID-string (see {@link java.util.UUID}), which is associated to
@@ -154,7 +154,7 @@ public interface SlashCommand {
     void onSlashCommand(@NotNull SlashCommandEvent event);
 
     /**
-     * Triggered by the command system when a button corresponding to this implementation (based on
+     * Triggered by the core system when a button corresponding to this implementation (based on
      * {@link #getData()}) has been clicked.
      * <p>
      * This method may be called multi-threaded. In particular, there are no guarantees that it will
@@ -174,7 +174,7 @@ public interface SlashCommand {
     void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args);
 
     /**
-     * Triggered by the command system when a selection menu corresponding to this implementation
+     * Triggered by the core system when a selection menu corresponding to this implementation
      * (based on {@link #getData()}) has been clicked.
      * <p>
      * This method may be called multi-threaded. In particular, there are no guarantees that it will
@@ -194,10 +194,10 @@ public interface SlashCommand {
     void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args);
 
     /**
-     * Triggered by the command system during its setup phase. It will provide the command a
-     * component id generator through this method, which can be used to generate component ids, as
-     * used for button or selection menus. See {@link #onSlashCommand(SlashCommandEvent)} for
-     * details on how to use this.
+     * Triggered by the core system during its setup phase. It will provide the command a component
+     * id generator through this method, which can be used to generate component ids, as used for
+     * button or selection menus. See {@link #onSlashCommand(SlashCommandEvent)} for details on how
+     * to use this.
      *
      * @param generator the provided component id generator
      */
