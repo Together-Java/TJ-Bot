@@ -19,12 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
 
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
@@ -46,7 +46,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final String MAX_USES_OPTION = "max-uses";
     private static final String MAX_AGE_OPTION = "max-age";
 
-    private static final long MAX_AGE_LIMIT = TimeUnit.DAYS.toSeconds(7);
+    private static final long MAX_AGE_DAYS_LIMIT = TimeUnit.DAYS.toSeconds(7);
     private static final long MAX_USES_LIMIT = 100;
 
     public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
@@ -91,7 +91,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             false).setRequiredRange(0, MAX_USES_LIMIT),
             new OptionData(OptionType.INTEGER, MAX_AGE_OPTION,
                     "How long, in days this activity can be used before it expires, 0 (No expiry), Maximum is 7 days. ",
-                    false).setRequiredRange(0, MAX_AGE_LIMIT));
+                    false).setRequiredRange(0, MAX_AGE_DAYS_LIMIT));
 
     /**
      * Constructs an instance
@@ -155,7 +155,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         String applicationId;
         String applicationName;
         Integer maxUses = requiredIntOptionIfPresent(maxUsesOption);
-        Integer maxAge = requiredIntOptionIfPresent(maxAgeOption);
+        Integer maxAgeDays = requiredIntOptionIfPresent(maxAgeOption);
 
         if (applicationOption != null) {
             applicationName = applicationOption.getAsString();
@@ -167,7 +167,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                     getKeyByValue(VC_APPLICATION_TO_ID, applicationId).orElse("an activity");
         }
 
-        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAge, applicationName);
+        handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAgeDays, applicationName);
     }
 
 
@@ -184,14 +184,18 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     private static void handleSubcommand(@NotNull SlashCommandEvent event,
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Integer maxUses, @Nullable Integer maxAge, @NotNull String applicationName) {
+            @Nullable Integer maxUses, @Nullable Integer maxAgeDays,
+            @NotNull String applicationName) {
+
 
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
-            .setMaxAge(maxAge)
+            .setMaxAge(maxAgeDays == null ? null
+                    : Math.toIntExact(TimeUnit.DAYS.toSeconds(maxAgeDays)))
             .flatMap(invite -> replyInvite(event, invite, applicationName))
             .queue(null, throwable -> handleErrors(event, throwable));
+
     }
 
     private static @NotNull ReplyAction replyInvite(@NotNull SlashCommandEvent event,
