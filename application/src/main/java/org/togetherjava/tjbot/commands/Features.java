@@ -51,10 +51,8 @@ public enum Features {
         Collection<Feature> features = new ArrayList<>();
 
         // Routines
-        // TODO This should be moved into some proper command system instead (see GH issue #235
-        // which adds support for routines)
-        new ModAuditLogRoutine(jda, database).start();
-        new TemporaryModerationRoutine(jda, actionsStore).start();
+        features.add(new ModAuditLogRoutine(database));
+        features.add(new TemporaryModerationRoutine(jda, actionsStore));
 
         // Message receivers
 

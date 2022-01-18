@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
@@ -26,7 +27,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -36,13 +36,13 @@ import java.util.stream.Collectors;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
- * channels. Use {@link #start()} to trigger automatic execution of the routine.
+ * channels.
  * <p>
  * The routine is executed periodically, for example three times per day. When it runs, it checks
  * all moderator actions, such as user bans, kicks, muting or message deletion. Actions are then
  * logged to a dedicated channel, given by {@link Config#getModAuditLogChannelPattern()}.
  */
-public final class ModAuditLogRoutine {
+public final class ModAuditLogRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogRoutine.class);
     private static final int CHECK_AUDIT_LOG_START_HOUR = 4;
     private static final int CHECK_AUDIT_LOG_EVERY_HOURS = 8;
@@ -51,24 +51,19 @@ public final class ModAuditLogRoutine {
 
     private final Predicate<TextChannel> isAuditLogChannel;
     private final Database database;
-    private final JDA jda;
-    private final ScheduledExecutorService checkAuditLogService =
-            Executors.newSingleThreadScheduledExecutor();
 
     /**
      * Creates a new instance.
      *
-     * @param jda the JDA instance to use to send messages and retrieve information
      * @param database the database for memorizing audit log dates
      */
-    public ModAuditLogRoutine(@NotNull JDA jda, @NotNull Database database) {
+    public ModAuditLogRoutine(@NotNull Database database) {
         Predicate<String> isAuditLogChannelName =
                 Pattern.compile(Config.getInstance().getModAuditLogChannelPattern())
                     .asMatchPredicate();
         isAuditLogChannel = channel -> isAuditLogChannelName.test(channel.getName());
 
         this.database = database;
-        this.jda = jda;
     }
 
     private static @NotNull RestAction<MessageEmbed> handleAction(@NotNull Action action,
@@ -105,7 +100,7 @@ public final class ModAuditLogRoutine {
     }
 
     /**
-     * Schedules the given task for execution at a fixed rate (see
+     * Creates a schedule for execution at a fixed rate (see
      * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}). The
      * initial first execution will be delayed to the next fixed time that matches the given period,
      * effectively making execution stable at fixed times of a day - regardless of when this method
@@ -119,14 +114,11 @@ public final class ModAuditLogRoutine {
      * Execution will also correctly roll over to the next day, for example if the method is
      * triggered at 21:30, the next execution will be at 4:00 the following day.
      *
-     * @param service the scheduler to use
-     * @param command the command to schedule
      * @param periodStartHour the hour of the day that marks the start of this period
      * @param periodHours the scheduling period in hours
-     * @return the instant when the command will be executed the first time
+     * @return the according schedule representing the planned execution
      */
-    private static @NotNull Instant scheduleAtFixedRateFromNextFixedTime(
-            @NotNull ScheduledExecutorService service, @NotNull Runnable command,
+    private static @NotNull Schedule scheduleAtFixedRateFromNextFixedTime(
             @SuppressWarnings("SameParameterValue") int periodStartHour,
             @SuppressWarnings("SameParameterValue") int periodHours) {
         // NOTE This scheduler could be improved, for example supporting arbitrary periods (not just
@@ -152,9 +144,8 @@ public final class ModAuditLogRoutine {
         Instant now = Instant.now();
         Instant nextFixedTime =
                 computeClosestNextScheduleDate(now, fixedScheduleHours, periodHours);
-        service.scheduleAtFixedRate(command, ChronoUnit.SECONDS.between(now, nextFixedTime),
+        return new Schedule(ScheduleMode.FIXED_RATE, ChronoUnit.SECONDS.between(now, nextFixedTime),
                 TimeUnit.HOURS.toSeconds(periodHours), TimeUnit.SECONDS);
-        return nextFixedTime;
     }
 
     private static @NotNull Instant computeClosestNextScheduleDate(@NotNull Instant instant,
@@ -212,19 +203,21 @@ public final class ModAuditLogRoutine {
         return Optional.of(handleAction(Action.MESSAGE_DELETION, entry));
     }
 
-    /**
-     * Starts the routine, automatically checking the audit logs on a schedule.
-     */
-    public void start() {
-        // TODO This should be registered at some sort of routine system instead (see GH issue #235
-        // which adds support for routines)
-        Instant startInstant = scheduleAtFixedRateFromNextFixedTime(checkAuditLogService,
-                this::checkAuditLogsRoutine, CHECK_AUDIT_LOG_START_HOUR,
-                CHECK_AUDIT_LOG_EVERY_HOURS);
-        logger.info("Checking audit logs is scheduled for {}.", startInstant);
+    @Override
+    public void run(@NotNull JDA jda) {
+        checkAuditLogsRoutine(jda);
     }
 
-    private void checkAuditLogsRoutine() {
+    @Override
+    public @NotNull Schedule createSchedule() {
+        Schedule schedule = scheduleAtFixedRateFromNextFixedTime(CHECK_AUDIT_LOG_START_HOUR,
+                CHECK_AUDIT_LOG_EVERY_HOURS);
+        logger.info("Checking audit logs is scheduled for {}.",
+                Instant.now().plus(schedule.initialDuration(), schedule.unit().toChronoUnit()));
+        return schedule;
+    }
+
+    private void checkAuditLogsRoutine(@NotNull JDA jda) {
         logger.info("Checking audit logs of all guilds...");
 
         jda.getGuildCache().forEach(guild -> {
