@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.commands.moderation.ActionRecord;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
@@ -15,8 +16,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,19 +25,15 @@ import java.util.stream.Stream;
  * Routine that revokes temporary moderation actions, such as temporary bans, as listed by
  * {@link ModerationActionsStore}.
  * <p>
- * The routine is started by using {@link #start()} and then automatically executes on a schedule.
- * <p>
  * Revoked actions are compatible with {@link ModerationActionsStore} and commands such as
  * {@link org.togetherjava.tjbot.commands.moderation.UnbanCommand} and
  * {@link org.togetherjava.tjbot.commands.moderation.AuditCommand}.
  */
-public final class TemporaryModerationRoutine {
+public final class TemporaryModerationRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryModerationRoutine.class);
 
     private final ModerationActionsStore actionsStore;
     private final JDA jda;
-    private final ScheduledExecutorService checkExpiredActionsService =
-            Executors.newSingleThreadScheduledExecutor();
     private final Map<ModerationAction, RevocableModerationAction> typeToRevocableAction;
 
     /**
@@ -55,6 +50,16 @@ public final class TemporaryModerationRoutine {
         typeToRevocableAction = Stream.of(new TemporaryBanAction(), new TemporaryMuteAction())
             .collect(
                     Collectors.toMap(RevocableModerationAction::getApplyType, Function.identity()));
+    }
+
+    @Override
+    public void run(@NotNull JDA jda) {
+        checkExpiredActions();
+    }
+
+    @Override
+    public @NotNull Schedule createSchedule() {
+        return new Schedule(ScheduleMode.FIXED_DELAY, 5, 5, TimeUnit.MINUTES);
     }
 
     private void checkExpiredActions() {
@@ -144,19 +149,6 @@ public final class TemporaryModerationRoutine {
             @NotNull ModerationAction type) {
         return Objects.requireNonNull(typeToRevocableAction.get(type),
                 "Action type is not revocable: " + type);
-    }
-
-    /**
-     * Starts the routine, automatically checking expired temporary moderation actions on a
-     * schedule.
-     */
-    public void start() {
-        // TODO This should be registered at some sort of routine system instead (see GH issue #235
-        // which adds support for routines)
-        // TODO The initial run has to be delayed until after the guild cache has been updated
-        // (during CommandSystem startup)
-        checkExpiredActionsService.scheduleWithFixedDelay(this::checkExpiredActions, 5, 5,
-                TimeUnit.MINUTES);
     }
 
     private record RevocationGroupIdentifier(long guildId, long targetId,
