@@ -30,6 +30,7 @@ import org.togetherjava.tjbot.db.Database;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -51,6 +52,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
     private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
+    private static final ScheduledExecutorService ROUTINE_SERVICE =
+            Executors.newScheduledThreadPool(5);
     private final Map<String, SlashCommand> nameToSlashCommands;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
@@ -80,6 +83,22 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .filter(EventReceiver.class::isInstance)
             .map(EventReceiver.class::cast)
             .forEach(jda::addEventListener);
+
+        // Routines
+        features.stream()
+            .filter(Routine.class::isInstance)
+            .map(Routine.class::cast)
+            .forEach(routine -> {
+                Routine.Schedule schedule = routine.createSchedule();
+                switch (schedule.mode()) {
+                    case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(() -> routine.run(jda),
+                            schedule.initialDuration(), schedule.duration(), schedule.unit());
+                    case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(
+                            () -> routine.run(jda), schedule.initialDuration(), schedule.duration(),
+                            schedule.unit());
+                    default -> throw new AssertionError("Unsupported schedule mode");
+                }
+            });
 
         // Slash commands
         nameToSlashCommands = features.stream()
