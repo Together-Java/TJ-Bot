@@ -72,10 +72,12 @@ public enum Features {
         features.add(new KickCommand(actionsStore));
         features.add(new BanCommand(actionsStore));
         features.add(new UnbanCommand(actionsStore));
-        features.add(new FreeCommand());
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore));
         features.add(new UnmuteCommand(actionsStore));
+
+        // Mixtures
+        features.add(new FreeCommand());
 
         return features;
     }

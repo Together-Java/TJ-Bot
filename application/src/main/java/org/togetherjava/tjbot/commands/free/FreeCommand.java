@@ -10,11 +10,11 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
@@ -54,7 +54,7 @@ import java.util.*;
  * channel may be one of the monitored channels however it is recommended that a different channel
  * is used.
  */
-public final class FreeCommand extends SlashCommandAdapter implements EventListener {
+public final class FreeCommand extends SlashCommandAdapter implements EventReceiver {
     private static final Logger logger = LoggerFactory.getLogger(FreeCommand.class);
 
     private static final String STATUS_TITLE = "**__CHANNEL STATUS__**\n\n";
@@ -65,7 +65,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
     private final ChannelMonitor channelMonitor;
     private final Map<Long, Long> channelIdToMessageIdForStatus;
 
-    private boolean isReady;
+    private volatile boolean isReady;
 
 
     /**
@@ -97,11 +97,8 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      *
      * @param event the event this method reacts to
      */
-    @Override
     public void onReady(@NotNull final ReadyEvent event) {
         final JDA jda = event.getJDA();
-        // TODO remove this when onGuildMessageReceived has another access point
-        jda.addEventListener(this);
 
         initChannelsToMonitor();
         initStatusMessageChannels(jda);
@@ -287,7 +284,9 @@ public final class FreeCommand extends SlashCommandAdapter implements EventListe
      */
     @Override
     public void onEvent(@NotNull GenericEvent event) {
-        if (event instanceof GuildMessageReceivedEvent guildEvent) {
+        if (event instanceof ReadyEvent readyEvent) {
+            onReady(readyEvent);
+        } else if (event instanceof GuildMessageReceivedEvent guildEvent) {
             if (guildEvent.isWebhookMessage() || guildEvent.getAuthor().isBot()) {
                 return;
             }
