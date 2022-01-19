@@ -271,9 +271,10 @@ final class ChannelMonitor {
         }
         long channelId = guildIdToStatusChannel.get(guild.getIdLong());
         TextChannel channel = guild.getTextChannelById(channelId);
-        if (channel == null)
+        if (channel == null) {
             throw new IllegalStateException("Status channel %d does not exist in guild %s"
                 .formatted(channelId, guild.getName()));
+        }
         return channel;
     }
 
