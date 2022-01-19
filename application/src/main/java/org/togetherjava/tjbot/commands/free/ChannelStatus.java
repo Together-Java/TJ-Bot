@@ -164,10 +164,12 @@ final class ChannelStatus {
     public boolean equals(final Object o) {
         // TODO should I overload equals with equals(long) so that a Set may be used instead of a
         // Map
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         ChannelStatus channelStatus = (ChannelStatus) o;
         return channelId == channelStatus.channelId;
