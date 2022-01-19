@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -91,27 +90,6 @@ public interface SlashCommand extends Feature {
      */
     @NotNull
     CommandData getData();
-
-    /**
-     * Triggered by the core system after system startup is complete. This can be used for
-     * initialisation actions that cannot occur during construction.
-     * <p>
-     * This method may be called multi-threaded. There is no guarantee as to the order that commands
-     * will get called and there is no guarantee which thread they will be called on or even that
-     * they will be called by the same thread.
-     * <p>
-     * There is also no guarantee that slashCommands will be registered on guilds before this is
-     * called. Do not use this method to interact with slashCommands.
-     * <p>
-     * Details are available in the given event and the event also enables implementations to
-     * respond to it.
-     * <p>
-     * This method will be called in a multi-threaded context and the event may not be hold valid
-     * forever.
-     *
-     * @param event the event that triggered this
-     */
-    void onReady(@NotNull ReadyEvent event);
 
     /**
      * Triggered by the core system when a slash command corresponding to this implementation (based
