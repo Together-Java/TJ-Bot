@@ -282,6 +282,9 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      *
      * @param event the generic event that includes the 'onGuildMessageReceived'.
      */
+    @SuppressWarnings("squid:S2583") // False-positive about the if-else-instanceof, sonar thinks
+                                     // the second case is unreachable; but it passes without
+                                     // pattern-matching. Probably a bug in SonarLint with Java 17.
     @Override
     public void onEvent(@NotNull GenericEvent event) {
         if (event instanceof ReadyEvent readyEvent) {
