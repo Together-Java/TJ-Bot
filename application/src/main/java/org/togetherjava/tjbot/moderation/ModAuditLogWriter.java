@@ -20,7 +20,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * used to log activities in the mod audit log channel
+ * Utility class that allows you to easily log an entry on the mod audit log channel.
+ * Thread-Safe.
  */
 public enum ModAuditLogWriter {
     ;
@@ -34,18 +35,17 @@ public enum ModAuditLogWriter {
             channel -> isAuditLogChannelName.test(channel.getName());
 
     /**
-     * logs an entry in the mod audit log channel.
+     * Sends a log embed on the mod audit log channel.
      *
      * @param title the title of the log embed
      *
      * @param description the description of the log embed
      *
-     * @param author the user who triggered the action
+     * @param author the user to be added to the embed
      *
-     * @param timestamp the timestamp of the action. usually use
-     *        {@link GenericInteractionCreateEvent#getTimeCreated()}
+     * @param timestamp the timestamp to be added to the embed
      *
-     * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
+     * @param guild the guild to write this log to
      *
      * @param attachments the attachments that'll be added to the message
      */
@@ -72,18 +72,17 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * logs an entry in the mod audit log channel.
+     * Sends a log embed on the mod audit log channel.
      *
      * @param title the title of the log embed
      *
      * @param description the description of the log embed
      *
-     * @param author the user who triggered the action
+     * @param author the user to be added to the embed
      *
-     * @param timestamp the timestamp of the action. usually use
-     *        {@link GenericInteractionCreateEvent#getTimeCreated()}
+     * @param timestamp the timestamp to be added to the embed
      *
-     * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
+     * @param guild the guild to write this log to
      *
      * @param attachment an attachment that'll be added to the message
      */
@@ -94,18 +93,17 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * logs an entry in the mod audit log channel.
+     * Sends a log embed on the mod audit log channel.
      *
      * @param title the title of the log embed
      *
      * @param description the description of the log embed
      *
-     * @param author the user who triggered the action
+     * @param author the user to be added to the embed
      *
-     * @param timestamp the timestamp of the action. usually use
-     *        {@link GenericInteractionCreateEvent#getTimeCreated()}
+     * @param timestamp the timestamp to be added to the embed
      *
-     * @param guild the guild. usually use {@link GenericInteractionCreateEvent#getGuild()}
+     * @param guild the guild to write this log to
      */
     public static void writeModAuditLog(@NotNull String title, @NotNull String description,
             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
@@ -113,9 +111,10 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * used to get the mod audit log channel.
+     * Gets the channel used for moderation audit logs, if present.
+     * If the channel doesn't exist, this method will return an empty optional, and a warning message will be written.
      *
-     * @param guild the current guild
+     * @param guild the guild to look for the channel in
      */
     public static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
         Optional<TextChannel> channel =
@@ -129,10 +128,10 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * used to add a file to a message without having an actual file.
+     * Represents attachment to messages, as for example used by {@link MessageAction#addFile(File, String, AttachmentOption...)}.
      * 
-     * @param name the name of the file, example: {@code "foo.md"}
-     * @param content the content of the file
+     * @param name the name of the attachment, example: {@code "foo.md"}
+     * @param content the content of the attachment
      */
     public static final record Attachment(@NotNull String name, @NotNull String content) {
         /**

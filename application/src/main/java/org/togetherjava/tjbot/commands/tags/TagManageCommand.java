@@ -212,7 +212,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param requiredTagStatus the required status of the tag
      * @param idAction the action to perform on the id
      * @param event the event to send messages with, it must have an {@code id} option set
-     * @param subcommand the executed subcommand
+     * @param subcommand the subcommand to be executed
      * @param newContent the new content of the tag, or null if content is unchanged
      */
     private void handleAction(@NotNull TagStatus requiredTagStatus,
@@ -255,7 +255,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param idAndContentAction the action to perform on the id and content
      * @param event the event to send messages with, it must have an {@code id} and
      *        {@code message-id} option set
-     * @param subcommand the subcommand executed
+     * @param subcommand the subcommand to be executed
      */
     private void handleActionWithMessage(@NotNull TagStatus requiredTagStatus,
             @NotNull BiConsumer<? super String, ? super String> idAndContentAction,
