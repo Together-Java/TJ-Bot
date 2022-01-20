@@ -2,9 +2,9 @@ package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.AbstractChannel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
@@ -32,7 +31,9 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The bot core is the core of command handling in this application.
@@ -53,6 +54,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     private final Map<String, SlashCommand> nameToSlashCommands;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
+    private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -70,8 +72,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         features.stream()
             .filter(MessageReceiver.class::isInstance)
             .map(MessageReceiver.class::cast)
-            .map(MessageReceiverAsEventListener::new)
-            .forEach(jda::addEventListener);
+            .forEach(messageReceiver -> channelNameToMessageReceiver
+                .put(messageReceiver.getChannelNamePattern(), messageReceiver));
 
         // Event receivers
         features.stream()
@@ -127,6 +129,29 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Bot core is now ready");
+    }
+
+    @Override
+    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+        getMessageReceiversSubscribedTo(event.getChannel())
+            .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+    }
+
+    @Override
+    public void onGuildMessageUpdate(@NotNull GuildMessageUpdateEvent event) {
+        getMessageReceiversSubscribedTo(event.getChannel())
+            .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+    }
+
+    private @NotNull Stream<MessageReceiver> getMessageReceiversSubscribedTo(
+            @NotNull AbstractChannel channel) {
+        String channelName = channel.getName();
+        return channelNameToMessageReceiver.entrySet()
+            .stream()
+            .filter(patternAndReceiver -> patternAndReceiver.getKey()
+                .matcher(channelName)
+                .matches())
+            .map(Map.Entry::getValue);
     }
 
     @Override
@@ -282,26 +307,5 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
          * @param third the third input argument
          */
         void accept(A first, B second, C third);
-    }
-
-    private static final class MessageReceiverAsEventListener implements EventListener {
-        private final MessageReceiver messageReceiver;
-
-        MessageReceiverAsEventListener(MessageReceiver messageReceiver) {
-            this.messageReceiver = messageReceiver;
-        }
-
-        @SuppressWarnings("squid:S2583") // False-positive about the if-else-instanceof, sonar
-                                         // thinks the second case is unreachable; but it passes
-                                         // without pattern-matching. Probably a bug in SonarLint
-                                         // with Java 17.
-        @Override
-        public void onEvent(@NotNull GenericEvent event) {
-            if (event instanceof GuildMessageReceivedEvent receivedEvent) {
-                messageReceiver.onMessageReceived(receivedEvent);
-            } else if (event instanceof GuildMessageUpdateEvent updateEvent) {
-                messageReceiver.onMessageUpdated(updateEvent);
-            }
-        }
     }
 }
