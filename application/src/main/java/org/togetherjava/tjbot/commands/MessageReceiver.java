@@ -17,13 +17,13 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface MessageReceiver extends Feature {
     /**
-     * Triggered by the core system whenever a new message was sent in a text channel of a guild the
-     * bot has been added to.
+     * Triggered by the core system whenever a new message was sent and received in a text channel
+     * of a guild the bot has been added to.
      *
      * @param event the event that triggered this, containing information about the corresponding
-     *        message that was sent
+     *        message that was sent and received
      */
-    void onMessageSent(@NotNull GuildMessageReceivedEvent event);
+    void onMessageReceived(@NotNull GuildMessageReceivedEvent event);
 
     /**
      * Triggered by the core system whenever an existing message was edited in a text channel of a

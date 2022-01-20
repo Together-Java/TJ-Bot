@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
@@ -282,21 +284,24 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         void accept(A first, B second, C third);
     }
 
-    private static final class MessageReceiverAsEventListener extends ListenerAdapter {
+    private static final class MessageReceiverAsEventListener implements EventListener {
         private final MessageReceiver messageReceiver;
 
         MessageReceiverAsEventListener(MessageReceiver messageReceiver) {
             this.messageReceiver = messageReceiver;
         }
 
+        @SuppressWarnings("squid:S2583") // False-positive about the if-else-instanceof, sonar
+                                         // thinks the second case is unreachable; but it passes
+                                         // without pattern-matching. Probably a bug in SonarLint
+                                         // with Java 17.
         @Override
-        public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
-            messageReceiver.onMessageSent(event);
-        }
-
-        @Override
-        public void onGuildMessageUpdate(@NotNull GuildMessageUpdateEvent event) {
-            messageReceiver.onMessageUpdated(event);
+        public void onEvent(@NotNull GenericEvent event) {
+            if (event instanceof GuildMessageReceivedEvent receivedEvent) {
+                messageReceiver.onMessageReceived(receivedEvent);
+            } else if (event instanceof GuildMessageUpdateEvent updateEvent) {
+                messageReceiver.onMessageUpdated(updateEvent);
+            }
         }
     }
 }

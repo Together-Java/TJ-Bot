@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
  * Adapter implementation of a {@link MessageReceiver}. A new receiver can then be registered by
  * adding it to {@link Features}.
  * <p>
- * {@link #onMessageSent(GuildMessageReceivedEvent)} and
+ * {@link #onMessageReceived(GuildMessageReceivedEvent)} and
  * {@link #onMessageUpdated(GuildMessageUpdateEvent)} can be overridden if desired. The default
  * implementation is empty, the adapter will not react to such events.
  */
@@ -16,7 +16,7 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onMessageSent(@NotNull GuildMessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull GuildMessageReceivedEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
