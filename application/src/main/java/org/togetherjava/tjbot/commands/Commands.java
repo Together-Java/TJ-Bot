@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.modmail.ModmailSlashCommand;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
 import org.togetherjava.tjbot.commands.modmail.ModmailCommand;
+import org.togetherjava.tjbot.commands.modmail.ModmailCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
 import org.togetherjava.tjbot.commands.tags.TagSystem;
