@@ -29,11 +29,6 @@ public enum ModAuditLogWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
 
-    private static final Predicate<String> isAuditLogChannelName =
-            Pattern.compile(Config.getInstance().getModAuditLogChannelPattern()).asMatchPredicate();
-    private static final Predicate<TextChannel> isAuditLogChannel =
-            channel -> isAuditLogChannelName.test(channel.getName());
-
     /**
      * Sends a log embed on the mod audit log channel.
      *
@@ -117,8 +112,13 @@ public enum ModAuditLogWriter {
      * @param guild the guild to look for the channel in
      */
     public static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
-        Optional<TextChannel> channel =
-                guild.getTextChannelCache().stream().filter(isAuditLogChannel).findAny();
+        Optional<TextChannel> channel = guild.getTextChannelCache()
+            .stream()
+            .filter(c -> Pattern.compile(Config.getInstance().getModAuditLogChannelPattern())
+                .asMatchPredicate()
+                .test(c.getName()))
+            .findAny();
+
         if (channel.isEmpty()) {
             logger.warn(
                     "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
