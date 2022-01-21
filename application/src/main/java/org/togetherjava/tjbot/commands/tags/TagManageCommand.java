@@ -225,16 +225,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        String previousContent = "Unable to retrieve previous content";
-        if (subcommand == Subcommand.EDIT || subcommand == Subcommand.DELETE) {
-            try {
-                previousContent = tagSystem.getTag(id).orElseThrow();
-            } catch (NoSuchElementException e) {
-                //NOTE Rare race condition, for example if another thread deleted the tag in the meantime
-                logger.debug(
-                        "tried to retrieve previous content of tag '%s', but the content doesn't exist.");
-            }
-        }
+        String previousContent = getTagPreviousContent(subcommand, id);
 
         idAction.accept(id);
         sendSuccessMessage(event, id, subcommand.getActionVerb());
@@ -275,15 +266,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
-            String previousContent = null;
-            if (subcommand == Subcommand.EDIT_WITH_MESSAGE) {
-                try {
-                    previousContent = tagSystem.getTag(tagId).orElseThrow();
-                } catch (NoSuchElementException exception) {
-                    logger.debug(
-                            "tried to retrieve previous content of tag '%s', but the content doesn't exist.");
-                }
-            }
+            String previousContent = getTagPreviousContent(subcommand, tagId);
 
             idAndContentAction.accept(tagId, message.getContentRaw());
             sendSuccessMessage(event, tagId, subcommand.getActionVerb());
@@ -309,6 +292,25 @@ public final class TagManageCommand extends SlashCommandAdapter {
                 .setEphemeral(true)
                 .queue();
         });
+    }
+
+    /**
+     * Gets the previous content of a tag, or {@code "Unable to retrieve previous content"} if was unable to.
+     * @param subcommand the subcommand to be executed
+     * @param id the id of the tag to get its previous content
+     * @return the previous content of the tag, or {@code "Unable to retrieve previous content"} if was unable to
+     */
+    private String getTagPreviousContent(Subcommand subcommand, String id) {
+        if (EnumSet.of(Subcommand.DELETE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE).contains(subcommand)) {
+            try {
+                return tagSystem.getTag(id).orElseThrow();
+            } catch (NoSuchElementException e) {
+                //NOTE Rare race condition, for example if another thread deleted the tag in the meantime
+                logger.warn(
+                        String.format("tried to retrieve previous content of tag '%s', but the content doesn't exist.", id));
+            }
+        }
+        return "Unable to retrieve previous content";
     }
 
     /**
