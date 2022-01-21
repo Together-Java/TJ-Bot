@@ -4,14 +4,15 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.utils.AttachmentOption;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
 import java.awt.*;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -20,8 +21,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * Utility class that allows you to easily log an entry on the mod audit log channel.
- * Thread-Safe.
+ * Utility class that allows you to easily log an entry on the mod audit log channel. Thread-Safe.
  */
 public enum ModAuditLogWriter {
     ;
@@ -111,8 +111,8 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * Gets the channel used for moderation audit logs, if present.
-     * If the channel doesn't exist, this method will return an empty optional, and a warning message will be written.
+     * Gets the channel used for moderation audit logs, if present. If the channel doesn't exist,
+     * this method will return an empty optional, and a warning message will be written.
      *
      * @param guild the guild to look for the channel in
      */
@@ -128,7 +128,8 @@ public enum ModAuditLogWriter {
     }
 
     /**
-     * Represents attachment to messages, as for example used by {@link MessageAction#addFile(File, String, AttachmentOption...)}.
+     * Represents attachment to messages, as for example used by
+     * {@link MessageAction#addFile(File, String, AttachmentOption...)}.
      * 
      * @param name the name of the attachment, example: {@code "foo.md"}
      * @param content the content of the attachment
