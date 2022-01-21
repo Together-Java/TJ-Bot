@@ -134,7 +134,7 @@ public enum ModAuditLogWriter {
      * @param name the name of the attachment, example: {@code "foo.md"}
      * @param content the content of the attachment
      */
-    public static final record Attachment(@NotNull String name, @NotNull String content) {
+    public record Attachment(@NotNull String name, @NotNull String content) {
         /**
          * @return the name of the file. used by JDA methods
          */
