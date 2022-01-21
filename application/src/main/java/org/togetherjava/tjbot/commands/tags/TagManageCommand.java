@@ -428,7 +428,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     "Subcommand with name '%s' is unknown".formatted(name));
         }
 
-        String getActionVerb() {
+        @NotNull String getActionVerb() {
             return this.actionVerb;
         }
     }
