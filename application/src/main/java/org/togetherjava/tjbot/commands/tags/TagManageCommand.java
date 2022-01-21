@@ -398,7 +398,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
 
     enum Subcommand {
-        RAW("raw"),
+        RAW("raw", ""),
         CREATE("create", "created"),
         CREATE_WITH_MESSAGE("create-with-message", "created"),
         EDIT("edit", "edited"),
@@ -408,12 +408,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         private final String name;
         private final String actionVerb;
 
-        Subcommand(@NotNull String name) {
-            this.name = name;
-            this.actionVerb = "";
-        }
-
-        Subcommand(String name, String actionVerb) {
+        Subcommand(@NotNull String name, @NotNull String actionVerb) {
             this.name = name;
             this.actionVerb = actionVerb;
         }
