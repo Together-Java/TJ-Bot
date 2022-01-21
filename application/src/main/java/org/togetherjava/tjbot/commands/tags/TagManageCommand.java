@@ -368,16 +368,16 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
             case EDIT -> ModAuditLogWriter.write("Tag-Manage Edit",
                     String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
-                    List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
+                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    Objects.requireNonNull(previousContent))));
+                                    Objects.requireNonNull(previousContent)));
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.write(
                     "Tag-Manage Edit with message", String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
                     timestamp, guild,
-                    List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
+                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    Objects.requireNonNull(previousContent))));
+                                    Objects.requireNonNull(previousContent)));
 
             case DELETE -> ModAuditLogWriter.write("Tag-Manage Delete",
                     String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,

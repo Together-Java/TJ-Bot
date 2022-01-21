@@ -41,11 +41,11 @@ public enum ModAuditLogWriter {
      *
      * @param guild the guild to write this log to
      *
-     * @param attachments the attachments that'll be added to the message
+     * @param attachments attachments that'll be added to the message
      */
     public static void write(@NotNull String title, @NotNull String description,
                              @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-                             @NotNull List<@NotNull Attachment> attachments) {
+                             @NotNull Attachment... attachments) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             return;
@@ -63,45 +63,6 @@ public enum ModAuditLogWriter {
             message = message.addFile(attachment.getContentRaw(), attachment.name());
         }
         message.queue();
-    }
-
-    /**
-     * Sends a log embed on the mod audit log channel.
-     *
-     * @param title the title of the log embed
-     *
-     * @param description the description of the log embed
-     *
-     * @param author the user to be added to the embed
-     *
-     * @param timestamp the timestamp to be added to the embed
-     *
-     * @param guild the guild to write this log to
-     *
-     * @param attachment an attachment that'll be added to the message
-     */
-    public static void write(@NotNull String title, @NotNull String description,
-                             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-                             @NotNull Attachment attachment) {
-        write(title, description, author, timestamp, guild, List.of(attachment));
-    }
-
-    /**
-     * Sends a log embed on the mod audit log channel.
-     *
-     * @param title the title of the log embed
-     *
-     * @param description the description of the log embed
-     *
-     * @param author the user to be added to the embed
-     *
-     * @param timestamp the timestamp to be added to the embed
-     *
-     * @param guild the guild to write this log to
-     */
-    public static void write(@NotNull String title, @NotNull String description,
-                             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
-        write(title, description, author, timestamp, guild, List.of());
     }
 
     /**
