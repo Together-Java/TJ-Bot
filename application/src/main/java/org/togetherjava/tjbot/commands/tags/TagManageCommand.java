@@ -295,19 +295,25 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Gets the previous content of a tag, or {@code "Unable to retrieve previous content"} if was unable to.
+     * Gets the previous content of a tag, or {@code "Unable to retrieve previous content"} if was
+     * unable to.
+     * 
      * @param subcommand the subcommand to be executed
      * @param id the id of the tag to get its previous content
-     * @return the previous content of the tag, or {@code "Unable to retrieve previous content"} if was unable to
+     * @return the previous content of the tag, or {@code "Unable to retrieve previous content"} if
+     *         was unable to
      */
     private String getTagPreviousContent(Subcommand subcommand, String id) {
-        if (EnumSet.of(Subcommand.DELETE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE).contains(subcommand)) {
+        if (EnumSet.of(Subcommand.DELETE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE)
+            .contains(subcommand)) {
             try {
                 return tagSystem.getTag(id).orElseThrow();
             } catch (NoSuchElementException e) {
-                //NOTE Rare race condition, for example if another thread deleted the tag in the meantime
-                logger.warn(
-                        String.format("tried to retrieve previous content of tag '%s', but the content doesn't exist.", id));
+                // NOTE Rare race condition, for example if another thread deleted the tag in the
+                // meantime
+                logger.warn(String.format(
+                        "tried to retrieve previous content of tag '%s', but the content doesn't exist.",
+                        id));
             }
         }
         return "Unable to retrieve previous content";
@@ -348,40 +354,47 @@ public final class TagManageCommand extends SlashCommandAdapter {
             .of(Subcommand.CREATE, Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT,
                     Subcommand.EDIT_WITH_MESSAGE)
             .contains(subcommand) && newContent == null) {
-            throw new IllegalArgumentException("newContent is null even though the subcommand should supply a value.");
+            throw new IllegalArgumentException(
+                    "newContent is null even though the subcommand should supply a value.");
         }
 
         if (EnumSet.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE)
             .contains(subcommand) && previousContent == null) {
-            throw new IllegalArgumentException("previousContent is null even though the subcommand should supply a value.");
+            throw new IllegalArgumentException(
+                    "previousContent is null even though the subcommand should supply a value.");
         }
 
         switch (subcommand) {
             case CREATE -> ModAuditLogWriter.write("Tag-Manage Create",
-                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, Objects.requireNonNull(newContent)));
+                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
+                    timestamp, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
+                            Objects.requireNonNull(newContent)));
 
-            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.write(
-                    "Tag-Manage Create with message", String.format("%s tag **%s**", subcommand.getActionVerb(), id),
-                    author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, Objects.requireNonNull(newContent)));
+            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.write("Tag-Manage Create with message",
+                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
+                    timestamp, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
+                            Objects.requireNonNull(newContent)));
 
             case EDIT -> ModAuditLogWriter.write("Tag-Manage Edit",
-                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
-                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    Objects.requireNonNull(previousContent)));
-
-            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.write(
-                    "Tag-Manage Edit with message", String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
+                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
                     timestamp, guild,
-                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
-                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    Objects.requireNonNull(previousContent)));
+                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
+                            Objects.requireNonNull(newContent)),
+                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                            Objects.requireNonNull(previousContent)));
+
+            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.write("Tag-Manage Edit with message",
+                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
+                    timestamp, guild,
+                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
+                            Objects.requireNonNull(newContent)),
+                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                            Objects.requireNonNull(previousContent)));
 
             case DELETE -> ModAuditLogWriter.write("Tag-Manage Delete",
-                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, Objects.requireNonNull(previousContent)));
+                    String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
+                    timestamp, guild, new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                            Objects.requireNonNull(previousContent)));
 
             default -> throw new IllegalArgumentException(String.format(
                     "The subcommand '%s' is not intended to be logged to the mod audit channel.",
@@ -430,7 +443,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     "Subcommand with name '%s' is unknown".formatted(name));
         }
 
-        @NotNull String getActionVerb() {
+        @NotNull
+        String getActionVerb() {
             return this.actionVerb;
         }
     }

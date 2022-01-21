@@ -44,8 +44,8 @@ public enum ModAuditLogWriter {
      * @param attachments attachments that'll be added to the message
      */
     public static void write(@NotNull String title, @NotNull String description,
-                             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-                             @NotNull Attachment... attachments) {
+            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+            @NotNull Attachment... attachments) {
         Optional<TextChannel> auditLogChannel = getAndHandleModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             return;
