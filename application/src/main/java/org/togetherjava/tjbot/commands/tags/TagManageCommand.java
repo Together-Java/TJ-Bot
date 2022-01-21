@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.*;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.awt.*;
@@ -341,7 +342,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull String id,
             @Nullable String newContent, @Nullable String previousContent) {
 
-        if (List
+        if (EnumSet
             .of(Subcommand.CREATE, Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT,
                     Subcommand.EDIT_WITH_MESSAGE)
             .contains(subcommand) && newContent == null) {
@@ -349,7 +350,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (List.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE)
+        if (EnumSet.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE)
             .contains(subcommand) && previousContent == null) {
             logger
                 .debug("previousContent is null even though the subcommand should supply a value.");
