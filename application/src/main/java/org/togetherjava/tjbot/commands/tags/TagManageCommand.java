@@ -346,51 +346,40 @@ public final class TagManageCommand extends SlashCommandAdapter {
             .of(Subcommand.CREATE, Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT,
                     Subcommand.EDIT_WITH_MESSAGE)
             .contains(subcommand) && newContent == null) {
-            logger.debug("newContent is null even though the subcommand should supply a value.");
-            return;
+            throw new IllegalArgumentException("newContent is null even though the subcommand should supply a value.");
         }
 
         if (EnumSet.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE)
             .contains(subcommand) && previousContent == null) {
-            logger
-                .debug("previousContent is null even though the subcommand should supply a value.");
-            return;
-        }
-
-        // to suppress warning "Argument '' might be null"
-        if (newContent == null) {
-            newContent = "";
-        }
-        if (previousContent == null) {
-            previousContent = "";
+            throw new IllegalArgumentException("previousContent is null even though the subcommand should supply a value.");
         }
 
         switch (subcommand) {
             case CREATE -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Create",
                     String.format("created tag **%s**", id), author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, newContent));
+                    new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, Objects.requireNonNull(newContent)));
 
             case CREATE_WITH_MESSAGE -> ModAuditLogWriter.writeModAuditLog(
                     "Tag-Manage Create with message", String.format("created tag **%s**", id),
                     author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, newContent));
+                    new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, Objects.requireNonNull(newContent)));
 
             case EDIT -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Edit",
                     String.format("edited tag **%s**", id), author, timestamp, guild,
-                    List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, newContent),
+                    List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    previousContent)));
+                                    Objects.requireNonNull(previousContent))));
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.writeModAuditLog(
                     "Tag-Manage Edit with message", String.format("edited tag **%s**", id), author,
                     timestamp, guild,
-                    List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, newContent),
+                    List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                                    previousContent)));
+                                    Objects.requireNonNull(previousContent))));
 
             case DELETE -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Delete",
                     String.format("delete tag **%s**", id), author, timestamp, guild,
-                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, previousContent));
+                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, Objects.requireNonNull(previousContent)));
 
             default -> throw new IllegalArgumentException(String.format(
                     "The subcommand '%s' is not intended to be logged to the mod audit channel.",
