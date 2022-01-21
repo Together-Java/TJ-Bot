@@ -17,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -44,9 +43,9 @@ public enum ModAuditLogWriter {
      *
      * @param attachments the attachments that'll be added to the message
      */
-    public static void writeModAuditLog(@NotNull String title, @NotNull String description,
-            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-            @NotNull List<@NotNull Attachment> attachments) {
+    public static void write(@NotNull String title, @NotNull String description,
+                             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+                             @NotNull List<@NotNull Attachment> attachments) {
         Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             return;
@@ -81,10 +80,10 @@ public enum ModAuditLogWriter {
      *
      * @param attachment an attachment that'll be added to the message
      */
-    public static void writeModAuditLog(@NotNull String title, @NotNull String description,
-            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-            @NotNull Attachment attachment) {
-        writeModAuditLog(title, description, author, timestamp, guild, List.of(attachment));
+    public static void write(@NotNull String title, @NotNull String description,
+                             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+                             @NotNull Attachment attachment) {
+        write(title, description, author, timestamp, guild, List.of(attachment));
     }
 
     /**
@@ -100,9 +99,9 @@ public enum ModAuditLogWriter {
      *
      * @param guild the guild to write this log to
      */
-    public static void writeModAuditLog(@NotNull String title, @NotNull String description,
-            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
-        writeModAuditLog(title, description, author, timestamp, guild, List.of());
+    public static void write(@NotNull String title, @NotNull String description,
+                             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild) {
+        write(title, description, author, timestamp, guild, List.of());
     }
 
     /**

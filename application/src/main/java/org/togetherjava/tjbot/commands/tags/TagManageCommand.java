@@ -357,29 +357,29 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         switch (subcommand) {
-            case CREATE -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Create",
+            case CREATE -> ModAuditLogWriter.write("Tag-Manage Create",
                     String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, Objects.requireNonNull(newContent)));
 
-            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.writeModAuditLog(
+            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.write(
                     "Tag-Manage Create with message", String.format("%s tag **%s**", subcommand.getActionVerb(), id),
                     author, timestamp, guild,
                     new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME, Objects.requireNonNull(newContent)));
 
-            case EDIT -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Edit",
+            case EDIT -> ModAuditLogWriter.write("Tag-Manage Edit",
                     String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
                     List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                                     Objects.requireNonNull(previousContent))));
 
-            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.writeModAuditLog(
+            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.write(
                     "Tag-Manage Edit with message", String.format("%s tag **%s**", subcommand.getActionVerb(), id), author,
                     timestamp, guild,
                     List.of(new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME, Objects.requireNonNull(newContent)),
                             new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                                     Objects.requireNonNull(previousContent))));
 
-            case DELETE -> ModAuditLogWriter.writeModAuditLog("Tag-Manage Delete",
+            case DELETE -> ModAuditLogWriter.write("Tag-Manage Delete",
                     String.format("%s tag **%s**", subcommand.getActionVerb(), id), author, timestamp, guild,
                     new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, Objects.requireNonNull(previousContent)));
 
