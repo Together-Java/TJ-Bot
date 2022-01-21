@@ -224,11 +224,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        String previousContent = null;
+        String previousContent = "Unable to retrieve previous content";
         if (subcommand == Subcommand.EDIT || subcommand == Subcommand.DELETE) {
             try {
                 previousContent = tagSystem.getTag(id).orElseThrow();
-            } catch (NoSuchElementException exception) {
+            } catch (NoSuchElementException e) {
+                //NOTE Rare race condition, for example if another thread deleted the tag in the meantime
                 logger.debug(
                         "tried to retrieve previous content of tag '%s', but the content doesn't exist.");
             }
