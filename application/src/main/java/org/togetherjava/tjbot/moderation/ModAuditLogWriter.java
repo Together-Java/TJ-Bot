@@ -46,7 +46,7 @@ public enum ModAuditLogWriter {
     public static void write(@NotNull String title, @NotNull String description,
                              @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
                              @NotNull Attachment... attachments) {
-        Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
+        Optional<TextChannel> auditLogChannel = getAndHandleModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             return;
         }
@@ -71,7 +71,7 @@ public enum ModAuditLogWriter {
      *
      * @param guild the guild to look for the channel in
      */
-    public static Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
+    public static Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
         Optional<TextChannel> channel = guild.getTextChannelCache()
             .stream()
             .filter(c -> Pattern.compile(Config.getInstance().getModAuditLogChannelPattern())

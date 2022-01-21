@@ -218,7 +218,7 @@ public final class ModAuditLogRoutine implements Routine {
                 return;
             }
 
-            Optional<TextChannel> auditLogChannel = ModAuditLogWriter.getModAuditLogChannel(guild);
+            Optional<TextChannel> auditLogChannel = ModAuditLogWriter.getAndHandleModAuditLogChannel(guild);
             if (auditLogChannel.isEmpty()) {
                 return;
             }
