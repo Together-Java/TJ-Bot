@@ -95,29 +95,8 @@ See the following guide if you still have to create a server and a bot first:
 
 ![Discord Developer Portal - Bot Token](https://i.imgur.com/IB5W8vZ.png)
 
-To run the bot, you will need a `config.json` file with content like this:
-```json
-{
-    "token": "<your_token_here>",
-    "databasePath": "local-database.db",
-    "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
-    "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
-    "modAuditLogChannelPattern": "mod_audit_log",
-    "mutedRolePattern": "Muted",
-    "heavyModerationRolePattern": "Moderator",
-    "softModerationRolePattern": "Moderator|Staff Assistant",
-    "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
-    "freeCommand": [
-        {
-            "statusChannel": <Channel_ID>,
-            "monitoredChannels": [
-                    <Channel_ID>,
-                    ...
-                  ]
-        }
-   ]
-}
-```
+To run the bot, you will need a `config.json` file with specific content. You can find a template for this file, with meaningful default values, in `application/config.json.template`.
+
 Replace `<your_token_here>` with your bot token; you can also adjust the other settings if you want.
 
 ### IntelliJ
