@@ -61,7 +61,7 @@ public enum ModAuditLogWriter {
                 .build());
 
         for (Attachment attachment : attachments) {
-            message = message.addFile(attachment.getContent(), attachment.getName());
+            message = message.addFile(attachment.getContentRaw(), attachment.name());
         }
         message.queue();
     }
@@ -136,16 +136,11 @@ public enum ModAuditLogWriter {
      */
     public record Attachment(@NotNull String name, @NotNull String content) {
         /**
-         * @return the name of the file. used by JDA methods
+         * Gets the content raw, interpreted as UTF-8.
+         * 
+         * @return the raw content of the file as a {@code byte[]}.
          */
-        public @NotNull String getName() {
-            return name;
-        }
-
-        /**
-         * @return the content of the file as a {@code byte[]}. used by JDA methods
-         */
-        public byte @NotNull [] getContent() {
+        public byte @NotNull [] getContentRaw() {
             return content.getBytes(StandardCharsets.UTF_8);
         }
     }
