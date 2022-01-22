@@ -13,7 +13,7 @@ enum UserStrings {
 
             __Do not post your question in other channels.__
                  
-            After you are satisfied with the given answer don't forget to free the channel for others with the '/free' command!
+            Once your issue is resolved, feel free to /free the channel, thanks.
             """),
     MARK_AS_FREE("""
             This channel is now available for a question to be asked.
