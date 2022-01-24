@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -113,13 +112,9 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             .setActionRows(ActionRow.of(menu.build()));
 
         if (ephemeral) {
-            event.reply(messageBuilder.build())
-                .setEphemeral(true)
-                .queue();
+            event.reply(messageBuilder.build()).setEphemeral(true).queue();
         } else {
-            event.getChannel()
-                .sendMessage(messageBuilder.build())
-                .queue();
+            event.getChannel().sendMessage(messageBuilder.build()).queue();
 
             event.reply("Message sent successfully!").setEphemeral(true).queue();
         }
