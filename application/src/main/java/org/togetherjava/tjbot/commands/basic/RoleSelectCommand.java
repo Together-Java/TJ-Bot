@@ -36,7 +36,7 @@ import java.util.Objects;
  * <p>
  * Allows users to select their roles without using reactions, instead it uses selection menus where
  * you can select multiple roles. <br />
- * Note: the bot can only use roles below its highest one
+* Note: the bot can only use roles with a position below its highest one
  */
 public class RoleSelectCommand extends SlashCommandAdapter {
 
@@ -289,7 +289,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             final Member member, final @NotNull Guild guild, final Collection<Role> additionRoles,
             final Collection<Role> removalRoles) {
         guild.modifyMemberRoles(member, additionRoles, removalRoles)
-            .flatMap(empty -> event.reply("Updated your roles!").setEphemeral(true))
+            .flatMap(empty -> event.reply("Your roles have been updated!").setEphemeral(true))
             .queue();
     }
 
