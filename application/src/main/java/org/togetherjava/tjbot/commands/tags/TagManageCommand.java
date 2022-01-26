@@ -18,19 +18,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
-import java.util.List;
 import java.util.NoSuchElementException;
-import java.awt.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -172,8 +168,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         String content = tagSystem.getTag(id).orElseThrow();
         event.reply("").addFile(content.getBytes(StandardCharsets.UTF_8), "content.md").queue();
-
-        logAction(event, id);
     }
 
     private void createTag(@NotNull CommandInteraction event) {

@@ -15,7 +15,6 @@ import java.awt.*;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
