@@ -36,7 +36,7 @@ import java.util.Objects;
  * <p>
  * Allows users to select their roles without using reactions, instead it uses selection menus where
  * you can select multiple roles. <br />
-* Note: the bot can only use roles with a position below its highest one
+ * Note: the bot can only use roles with a position below its highest one
  */
 public class RoleSelectCommand extends SlashCommandAdapter {
 
