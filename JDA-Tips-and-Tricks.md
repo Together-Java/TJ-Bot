@@ -92,3 +92,21 @@ Due to the complexity of JDA, you might easily run into a situation where you so
 JDA offers some shortcuts to methods and patterns frequently used:
 * [JDA#openPrivateChannelById](https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/JDA.html#openPrivateChannelById(long)), instead of manually retrieving the user and calling [User#openPrivateChannel](https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/entities/User.html#openPrivateChannel())
 * [JDA#getGuildChannelById](https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/JDA.html#getGuildChannelById(long)) also applies to _textchannels_, _storechannels_ and more. So a [Guild](https://ci.dv8tion.net/job/JDA/javadoc/net/dv8tion/jda/api/entities/Guild.html) instance is not required to get channels.
+
+### Raw events
+
+In case you need to inspect an event send by Discord or JDA closely in its raw JSON form, one can enable raw events and inspect the payloads:
+```java
+// where the JDA instance is created
+JDA jda = JDABuilder.createDefault(...)
+  .setRawEventsEnabled(true) // add this call
+  ...
+  .build();
+
+// and then add a raw event listener
+jda.addEventListener((EventListener) event -> {
+  if (event instanceof RawGatewayEvent rawEvent) {
+    System.out.println(rawEvent.getPayload());
+  }
+});
+```
