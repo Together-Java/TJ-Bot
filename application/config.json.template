@@ -15,5 +15,6 @@
                     <put_a_channel_id_here>
                   ]
         }
-   ]
+   ],
+   "helpChannelPattern": "([a-zA-Z_]+_)?help(_\\d+)?"
 }

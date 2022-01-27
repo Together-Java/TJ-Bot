@@ -59,6 +59,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.13.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
 
+	implementation 'com.github.freva:ascii-table:1.2.0'
+
     implementation 'com.github.ben-manes.caffeine:caffeine:3.0.4'
 
     testImplementation 'org.mockito:mockito-core:4.0.0'
