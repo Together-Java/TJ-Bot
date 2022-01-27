@@ -32,8 +32,8 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
-
     private final List<FreeCommandConfig> freeCommand;
+    private final String helpChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -46,7 +46,8 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand) {
+            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
+            @JsonProperty("helpChannelPattern") String helpChannelPattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -57,6 +58,7 @@ public final class Config {
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
         this.freeCommand = Collections.unmodifiableList(freeCommand);
+        this.helpChannelPattern = helpChannelPattern;
     }
 
     /**
@@ -177,5 +179,15 @@ public final class Config {
      */
     public @NotNull Collection<FreeCommandConfig> getFreeCommandConfig() {
         return freeCommand; // already unmodifiable
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify channels that are used for helping people with their
+     * questions.
+     *
+     * @return the channel name pattern
+     */
+    public String getHelpChannelPattern() {
+        return helpChannelPattern;
     }
 }

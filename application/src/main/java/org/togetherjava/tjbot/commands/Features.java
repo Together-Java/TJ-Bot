@@ -13,6 +13,8 @@ import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
 import org.togetherjava.tjbot.commands.tags.TagSystem;
 import org.togetherjava.tjbot.commands.tags.TagsCommand;
+import org.togetherjava.tjbot.commands.tophelper.TopHelpersCommand;
+import org.togetherjava.tjbot.commands.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
@@ -55,6 +57,7 @@ public enum Features {
         features.add(new TemporaryModerationRoutine(jda, actionsStore));
 
         // Message receivers
+        features.add(new TopHelpersMessageListener(database));
 
         // Event receivers
         features.add(new RejoinMuteListener(actionsStore));
@@ -73,6 +76,7 @@ public enum Features {
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore));
         features.add(new UnmuteCommand(actionsStore));
+        features.add(new TopHelpersCommand(database));
 
         // Mixtures
         features.add(new FreeCommand());
