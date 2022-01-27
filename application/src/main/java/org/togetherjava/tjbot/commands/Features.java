@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
+import org.togetherjava.tjbot.commands.modmail.ModmailCommand;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
@@ -59,7 +60,8 @@ public enum Features {
         // Message receivers
 
         // Event receivers
-        features.add(new RejoinMuteListener(actionsStore));
+        features.add(new UnmuteCommand(actionsStore));
+        features.add(new ModmailCommand());
 
         // Slash commands
         features.add(new PingCommand());
