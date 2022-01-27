@@ -204,7 +204,7 @@ public final class ModAuditLogRoutine implements Routine {
     }
 
     @Override
-    public void run(@NotNull JDA jda) {
+    public void runRoutine(@NotNull JDA jda) {
         checkAuditLogsRoutine(jda);
     }
 
