@@ -71,6 +71,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
 
         if (topHelpers.isEmpty()) {
             event.reply("No entries for the selected time range.").queue();
+            return;
         }
         event.deferReply().queue();
 
