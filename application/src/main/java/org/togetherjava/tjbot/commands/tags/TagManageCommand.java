@@ -57,7 +57,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
     static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
 
-    private static final String LOG_EMBED_DESCRIPTION = "%s tag **%s**"; //%s is formatted to the action verb.
+    private static final String LOG_EMBED_DESCRIPTION = "%s tag **%s**"; // %s is formatted to the
+                                                                         // action verb.
     private static final String CONTENT_FILE_NAME = "content.md";
     private static final String NEW_CONTENT_FILE_NAME = "new_content.md";
     private static final String PREVIOUS_CONTENT_FILE_NAME = "previous_content.md";
