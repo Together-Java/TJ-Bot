@@ -12,16 +12,16 @@ import java.util.concurrent.TimeUnit;
  * to {@link Features}.
  * <p>
  * <p>
- * After registration, the system will automatically start and execute {@link #run(JDA)} on the
- * schedule defined by {@link #createSchedule()}.
+ * After registration, the system will automatically start and execute {@link #runRoutine(JDA)} on
+ * the schedule defined by {@link #createSchedule()}.
  */
 public interface Routine extends Feature {
     /**
-     * Triggered by the core system on the schedule defined by
+     * Triggered by the core system on the schedule defined by {@link #createSchedule()}.
      *
      * @param jda the JDA instance the bot is operating with
      */
-    void run(@NotNull JDA jda);
+    void runRoutine(@NotNull JDA jda);
 
     /**
      * Retrieves the schedule of this routine. Called by the core system once during the startup in
