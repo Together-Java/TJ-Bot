@@ -27,6 +27,8 @@ public enum ModAuditLogWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
 
+    private static Pattern AUDIT_LOG_CHANNEL_NAME_PATTERN = null;
+
     /**
      * Sends a log embed on the mod audit log channel.
      *
@@ -71,9 +73,13 @@ public enum ModAuditLogWriter {
      * @param guild the guild to look for the channel in
      */
     public static Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
+        if (AUDIT_LOG_CHANNEL_NAME_PATTERN == null) {
+            AUDIT_LOG_CHANNEL_NAME_PATTERN = Pattern.compile(Config.getInstance().getModAuditLogChannelPattern());
+        }
+
         Optional<TextChannel> channel = guild.getTextChannelCache()
             .stream()
-            .filter(c -> Pattern.compile(Config.getInstance().getModAuditLogChannelPattern())
+            .filter(c -> AUDIT_LOG_CHANNEL_NAME_PATTERN
                 .asMatchPredicate()
                 .test(c.getName()))
             .findAny();
