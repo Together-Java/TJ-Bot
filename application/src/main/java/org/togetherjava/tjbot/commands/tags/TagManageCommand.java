@@ -167,7 +167,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         String content = tagSystem.getTag(id).orElseThrow();
-        event.reply("").addFile(content.getBytes(StandardCharsets.UTF_8), "content.md").queue();
+        event.reply("")
+            .addFile(content.getBytes(StandardCharsets.UTF_8), CONTENT_FILE_NAME)
+            .queue();
     }
 
     private void createTag(@NotNull CommandInteraction event) {
