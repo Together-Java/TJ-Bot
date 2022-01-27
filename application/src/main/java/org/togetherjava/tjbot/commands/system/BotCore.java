@@ -2,12 +2,15 @@ package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.AbstractChannel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -16,8 +19,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.Commands;
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.*;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdParser;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdStore;
@@ -29,40 +31,60 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * The command system is the core of command handling in this application.
+ * The bot core is the core of command handling in this application.
  * <p>
  * It knows and manages all commands, registers them towards Discord and is the entry point of all
  * events. It forwards events to their corresponding commands and does the heavy lifting on all sort
  * of event parsing.
  * <p>
  * <p>
- * Commands are made available via {@link Commands}, then the system has to be added to JDA as an
+ * Commands are made available via {@link Features}, then the system has to be added to JDA as an
  * event listener, using {@link net.dv8tion.jda.api.JDA#addEventListener(Object...)}. Afterwards,
  * the system is ready and will correctly forward events to all commands.
  */
-public final class CommandSystem extends ListenerAdapter implements SlashCommandProvider {
-    private static final Logger logger = LoggerFactory.getLogger(CommandSystem.class);
+public final class BotCore extends ListenerAdapter implements SlashCommandProvider {
+    private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
     private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
     private final Map<String, SlashCommand> nameToSlashCommands;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
+    private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
      * <p>
-     * Commands are fetched from {@link Commands}.
+     * Commands are fetched from {@link Features}.
      *
      * @param jda the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
      */
     @SuppressWarnings("ThisEscapedInObjectConstruction")
-    public CommandSystem(@NotNull JDA jda, @NotNull Database database) {
-        nameToSlashCommands = Commands.createSlashCommands(jda, database)
-            .stream()
+    public BotCore(@NotNull JDA jda, @NotNull Database database) {
+        Collection<Feature> features = Features.createFeatures(jda, database);
+
+        // Message receivers
+        features.stream()
+            .filter(MessageReceiver.class::isInstance)
+            .map(MessageReceiver.class::cast)
+            .forEach(messageReceiver -> channelNameToMessageReceiver
+                .put(messageReceiver.getChannelNamePattern(), messageReceiver));
+
+        // Event receivers
+        features.stream()
+            .filter(EventReceiver.class::isInstance)
+            .map(EventReceiver.class::cast)
+            .forEach(jda::addEventListener);
+
+        // Slash commands
+        nameToSlashCommands = features.stream()
+            .filter(SlashCommand.class::isInstance)
+            .map(SlashCommand.class::cast)
             .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
 
         if (nameToSlashCommands.containsKey(RELOAD_COMMAND)) {
@@ -72,7 +94,7 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
         nameToSlashCommands.put(RELOAD_COMMAND, new ReloadCommand(this));
 
         componentIdStore = new ComponentIdStore(database);
-        componentIdStore.addComponentIdRemovedListener(CommandSystem::onComponentIdRemoved);
+        componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
         nameToSlashCommands.values()
             .forEach(slashCommand -> slashCommand
@@ -106,12 +128,30 @@ public final class CommandSystem extends ListenerAdapter implements SlashCommand
             .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
-        logger.debug("Command system is now ready");
+        logger.debug("Bot core is now ready");
+    }
 
-        // Propagate the onReady event to all commands
-        // NOTE 'registerReloadCommands' will not be finished running, this does not wait for it
-        nameToSlashCommands.values()
-            .forEach(command -> COMMAND_SERVICE.execute(() -> command.onReady(event)));
+    @Override
+    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+        getMessageReceiversSubscribedTo(event.getChannel())
+            .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+    }
+
+    @Override
+    public void onGuildMessageUpdate(@NotNull GuildMessageUpdateEvent event) {
+        getMessageReceiversSubscribedTo(event.getChannel())
+            .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+    }
+
+    private @NotNull Stream<MessageReceiver> getMessageReceiversSubscribedTo(
+            @NotNull AbstractChannel channel) {
+        String channelName = channel.getName();
+        return channelNameToMessageReceiver.entrySet()
+            .stream()
+            .filter(patternAndReceiver -> patternAndReceiver.getKey()
+                .matcher(channelName)
+                .matches())
+            .map(Map.Entry::getValue);
     }
 
     @Override

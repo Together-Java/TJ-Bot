@@ -12,6 +12,8 @@ enum UserStrings {
             Thank you for asking in an available channel. A helper will be with you shortly!
 
             __Do not post your question in other channels.__
+
+            Once your issue is resolved, feel free to /free the channel, thanks.
             """),
     MARK_AS_FREE("""
             This channel is now available for a question to be asked.
@@ -23,8 +25,8 @@ enum UserStrings {
             Command not ready please try again in a minute.
             """),
     NOT_MONITORED_ERROR("This channel is not being monitored for free/busy status. If you"
-            + "believe this channel should be part of the free/busy status system, please discuss it"
-            + "with a moderator"),
+            + " believe this channel should be part of the free/busy status system, please"
+            + " consult a moderator."),
     NOT_CONFIGURED_ERROR("""
             This guild (%s) is not configured to use the '/free' command.
             Please add entries in the config, restart the bot and try again.

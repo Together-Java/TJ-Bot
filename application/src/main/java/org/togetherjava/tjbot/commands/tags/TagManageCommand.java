@@ -15,9 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.OptionalLong;
@@ -154,14 +154,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        event
-            .replyEmbeds(new EmbedBuilder()
-                .setDescription(MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()))
-                .setFooter(event.getUser().getName())
-                .setTimestamp(Instant.now())
-                .setColor(TagSystem.AMBIENT_COLOR)
-                .build())
-            .queue();
+        String content = tagSystem.getTag(id).orElseThrow();
+        event.reply("").addFile(content.getBytes(StandardCharsets.UTF_8), "content.md").queue();
     }
 
     private void createTag(@NotNull CommandInteraction event) {

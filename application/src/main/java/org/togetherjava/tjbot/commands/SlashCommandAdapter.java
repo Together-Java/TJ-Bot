@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands;
 
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -17,7 +16,7 @@ import java.util.Objects;
 /**
  * Adapter implementation of a {@link SlashCommand}. The minimal setup only requires implementation
  * of {@link #onSlashCommand(SlashCommandEvent)}. A new command can then be registered by adding it
- * to {@link Commands}.
+ * to {@link Features}.
  * <p>
  * Further, {@link #onButtonClick(ButtonClickEvent, List)} and
  * {@link #onSelectionMenu(SelectionMenuEvent, List)} can be overridden if desired. The default
@@ -54,7 +53,7 @@ import java.util.Objects;
  * }
  * </pre>
  * <p>
- * and registration of an instance of that class in {@link Commands}.
+ * and registration of an instance of that class in {@link Features}.
  */
 public abstract class SlashCommandAdapter implements SlashCommand {
     private final String name;
@@ -104,12 +103,6 @@ public abstract class SlashCommandAdapter implements SlashCommand {
     @Override
     public final void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator) {
         componentIdGenerator = generator;
-    }
-
-    @SuppressWarnings("NoopMethodInAbstractClass")
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
-        // Adapter does not react by default, subclasses may change this behavior
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")

@@ -53,8 +53,9 @@ public class InstantWrapper {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof InstantWrapper other))
+        if (!(o instanceof InstantWrapper other)) {
             return false;
+        }
 
         return epochSecond == other.epochSecond && nanoOfSecond != other.nanoOfSecond;
     }
