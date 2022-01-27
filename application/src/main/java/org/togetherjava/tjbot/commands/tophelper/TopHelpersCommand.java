@@ -20,9 +20,13 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
 import java.time.Instant;
-import java.time.Period;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.TextStyle;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -53,11 +57,11 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
      * @param database the database containing the message counts of top helpers
      */
     public TopHelpersCommand(@NotNull Database database) {
-        super(COMMAND_NAME, "Lists top helpers for the last 30 days", SlashCommandVisibility.GUILD);
-        this.database = database;
-
+        super(COMMAND_NAME, "Lists top helpers for the last month", SlashCommandVisibility.GUILD);
+        // TODO Add options to optionally pick a time range once JDA/Discord offers a date-picker
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();
+        this.database = database;
     }
 
     @Override
@@ -66,11 +70,15 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             return;
         }
 
+        TimeRange timeRange = computeDefaultTimeRange();
         List<TopHelperResult> topHelpers =
-                computeTopHelpersDescending(event.getGuild().getIdLong());
+                computeTopHelpersDescending(event.getGuild().getIdLong(), timeRange);
 
         if (topHelpers.isEmpty()) {
-            event.reply("No entries for the selected time range.").queue();
+            event
+                .reply("No entries for the selected time range (%s)."
+                    .formatted(timeRange.description()))
+                .queue();
             return;
         }
         event.deferReply().queue();
@@ -79,7 +87,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         event.getGuild()
             .retrieveMembersByIds(topHelperIds)
             .onError(error -> handleError(error, event))
-            .onSuccess(members -> handleTopHelpers(topHelpers, members, event));
+            .onSuccess(members -> handleTopHelpers(topHelpers, members, timeRange, event));
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
@@ -93,12 +101,24 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private @NotNull List<TopHelperResult> computeTopHelpersDescending(long guildId) {
+    private static @NotNull TimeRange computeDefaultTimeRange() {
+        // Last month
+        ZonedDateTime start = Instant.now()
+            .atZone(ZoneOffset.UTC)
+            .minusMonths(1)
+            .with(TemporalAdjusters.firstDayOfMonth());
+        ZonedDateTime end = start.with(TemporalAdjusters.lastDayOfMonth());
+        String description = start.getMonth().getDisplayName(TextStyle.FULL_STANDALONE, Locale.US);
+
+        return new TimeRange(start.toInstant(), end.toInstant(), description);
+    }
+
+    private @NotNull List<TopHelperResult> computeTopHelpersDescending(long guildId,
+            @NotNull TimeRange timeRange) {
         return database.read(context -> context.select(HELP_CHANNEL_MESSAGES.AUTHOR_ID, DSL.count())
             .from(HELP_CHANNEL_MESSAGES)
             .where(HELP_CHANNEL_MESSAGES.GUILD_ID.eq(guildId)
-                .and(HELP_CHANNEL_MESSAGES.SENT_AT
-                    .greaterOrEqual(Instant.now().minus(Period.ofDays(30)))))
+                .and(HELP_CHANNEL_MESSAGES.SENT_AT.between(timeRange.start(), timeRange.end())))
             .groupBy(HELP_CHANNEL_MESSAGES.AUTHOR_ID)
             .orderBy(DSL.count().desc())
             .limit(TOP_HELPER_LIMIT)
@@ -111,7 +131,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     private static void handleTopHelpers(@NotNull Collection<TopHelperResult> topHelpers,
-            @NotNull Collection<? extends Member> members, @NotNull Interaction event) {
+            @NotNull Collection<? extends Member> members, @NotNull TimeRange timeRange,
+            @NotNull Interaction event) {
         Map<Long, Member> userIdToMember =
                 members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
 
@@ -120,7 +141,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                     userIdToMember.get(topHelper.authorId())))
             .toList();
 
-        String message = "```java%n%s%n```".formatted(dataTableToString(topHelpersDataTable));
+        String message =
+                "```java%n%s%n```".formatted(dataTableToString(topHelpersDataTable, timeRange));
 
         event.getHook().editOriginal(message).queue();
     }
@@ -134,11 +156,14 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return List.of(id, name, messageCount);
     }
 
-    private static @NotNull String dataTableToString(@NotNull Collection<List<String>> dataTable) {
+    private static @NotNull String dataTableToString(@NotNull Collection<List<String>> dataTable,
+            @NotNull TimeRange timeRange) {
         return dataTableToAsciiTable(dataTable,
                 List.of(new ColumnSetting("Id", HorizontalAlign.RIGHT),
                         new ColumnSetting("Name", HorizontalAlign.RIGHT),
-                        new ColumnSetting("Message count (30 days)", HorizontalAlign.RIGHT)));
+                        new ColumnSetting(
+                                "Message count (for %s)".formatted(timeRange.description()),
+                                HorizontalAlign.RIGHT)));
     }
 
     private static @NotNull String dataTableToAsciiTable(
@@ -156,6 +181,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                 IntStream.range(0, columnSettings.size()).mapToObj(indexToColumn).toList();
 
         return AsciiTable.getTable(AsciiTable.BASIC_ASCII_NO_DATA_SEPARATORS, dataTable, columns);
+    }
+
+    private record TimeRange(Instant start, Instant end, String description) {
     }
 
     private record TopHelperResult(long authorId, int messageCount) {
