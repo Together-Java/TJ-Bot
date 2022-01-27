@@ -5,6 +5,7 @@ import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.ColumnData;
 import com.github.freva.asciitable.HorizontalAlign;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
 import java.time.Instant;
@@ -24,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -31,7 +35,7 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 
 /**
  * Command that displays the top helpers of a given time range.
- *
+ * <p>
  * Top helpers are measured by their message count in help channels, as set by
  * {@link TopHelpersMessageListener}.
  */
@@ -41,19 +45,27 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     private static final int TOP_HELPER_LIMIT = 20;
 
     private final Database database;
+    private final Predicate<String> hasRequiredRole;
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param database the database containing the message counts of top helpers
      */
     public TopHelpersCommand(@NotNull Database database) {
         super(COMMAND_NAME, "Lists top helpers for the last 30 days", SlashCommandVisibility.GUILD);
         this.database = database;
+
+        hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
+            .asMatchPredicate();
     }
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        if (!handleHasAuthorRole(event.getMember(), event)) {
+            return;
+        }
+
         List<TopHelperResult> topHelpers =
                 computeTopHelpersDescending(event.getGuild().getIdLong());
 
@@ -67,6 +79,17 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             .retrieveMembersByIds(topHelperIds)
             .onError(error -> handleError(error, event))
             .onSuccess(members -> handleTopHelpers(topHelpers, members, event));
+    }
+
+    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
+    private boolean handleHasAuthorRole(@NotNull Member author, @NotNull Interaction event) {
+        if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
+            return true;
+        }
+        event.reply("You can not compute the top-helpers since you do not have the required role.")
+            .setEphemeral(true)
+            .queue();
+        return false;
     }
 
     private @NotNull List<TopHelperResult> computeTopHelpersDescending(long guildId) {
