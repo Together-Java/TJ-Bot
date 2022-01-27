@@ -7,26 +7,30 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.Period;
 import java.util.regex.Pattern;
 
+import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HELP_CHANNEL_MESSAGES;
+
 /**
- * Listener responsible for persistence of text message metadata.
+ * Listener that receives all sent help messages and puts them into the database for
+ * {@link TopHelpersCommand} to pick them up.
+ *
+ * Also runs a cleanup routine to get rid of old entries. In general, it manages the database data
+ * to determine top-helpers.
  */
 public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(TopHelpersMessageListener.class);
-
-    private static final int MESSAGE_METADATA_ARCHIVAL_DAYS = 30;
+    private static final Period DELETE_MESSAGE_RECORDS_AFTER = Period.ofDays(90);
 
     private final Database database;
 
     /**
-     * Creates a new message metadata listener, using the given database.
+     * Creates a new listener to receive all message sent in help channels.
      *
-     * @param database the database to store message metadata.
+     * @param database to store message meta-data in
      */
     public TopHelpersMessageListener(@NotNull Database database) {
         super(Pattern.compile(Config.getInstance().getHelpChannelPattern()));
@@ -35,31 +39,36 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(@NotNull GuildMessageReceivedEvent event) {
-        var channel = event.getChannel();
-        if (!event.getAuthor().isBot() && !event.isWebhookMessage()) {
-            var messageId = event.getMessage().getIdLong();
-            var guildId = event.getGuild().getIdLong();
-            var channelId = channel.getIdLong();
-            var userId = event.getAuthor().getIdLong();
-            var createTimestamp = event.getMessage().getTimeCreated().toInstant();
-            database.write(dsl -> {
-                dsl.newRecord(HelpChannelMessages.HELP_CHANNEL_MESSAGES)
-                    .setMessageId(messageId)
-                    .setGuildId(guildId)
-                    .setChannelId(channelId)
-                    .setAuthorId(userId)
-                    .setSentAt(createTimestamp)
-                    .insert();
-                int noOfRowsDeleted = dsl.deleteFrom(HelpChannelMessages.HELP_CHANNEL_MESSAGES)
-                    .where(HelpChannelMessages.HELP_CHANNEL_MESSAGES.SENT_AT
-                        .le(Instant.now().minus(MESSAGE_METADATA_ARCHIVAL_DAYS, ChronoUnit.DAYS)))
-                    .execute();
-                if (noOfRowsDeleted > 0) {
-                    logger.debug(
-                            "{} old records have been deleted based on archival criteria of {} days.",
-                            noOfRowsDeleted, MESSAGE_METADATA_ARCHIVAL_DAYS);
-                }
-            });
+        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+            return;
+        }
+
+        addMessageRecord(event);
+        // TODO Use a routine that runs every 4 hours for the deletion instead
+        deleteOldMessageRecords();
+    }
+
+    private void addMessageRecord(@NotNull GuildMessageReceivedEvent event) {
+        database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
+            .setMessageId(event.getMessage().getIdLong())
+            .setGuildId(event.getGuild().getIdLong())
+            .setChannelId(event.getChannel().getIdLong())
+            .setAuthorId(event.getAuthor().getIdLong())
+            .setSentAt(event.getMessage().getTimeCreated().toInstant())
+            .insert());
+    }
+
+    private void deleteOldMessageRecords() {
+        int recordsDeleted =
+                database.writeAndProvide(context -> context.deleteFrom(HELP_CHANNEL_MESSAGES)
+                    .where(HELP_CHANNEL_MESSAGES.SENT_AT
+                        .lessOrEqual(Instant.now().minus(DELETE_MESSAGE_RECORDS_AFTER)))
+                    .execute());
+
+        if (recordsDeleted > 0) {
+            logger.debug(
+                    "{} old help message records have been deleted because they are older than {}.",
+                    recordsDeleted, DELETE_MESSAGE_RECORDS_AFTER);
         }
     }
 }
