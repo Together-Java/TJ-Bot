@@ -63,6 +63,17 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    compileTestJava {
+        options.encoding = 'UTF-8'
+
+        // Makes spotlessApply task run on every compile/build.
+        dependsOn 'spotlessApply'
+
+        // Nails the Java-Version of every Subproject
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
     spotless {
         java {
             // Excludes build folder since it contains generated java classes.
@@ -72,7 +83,6 @@ subprojects {
     }
 
     test {
-        systemProperty 'file.encoding', 'UTF-8'
         useJUnitPlatform()
     }
 }
