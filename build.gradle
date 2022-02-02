@@ -51,8 +51,7 @@ subprojects {
         }
     }
 
-
-    compileJava {
+    def compileTasks = {
         options.encoding = 'UTF-8'
 
         // Makes spotlessApply task run on every compile/build.
@@ -63,16 +62,8 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    compileTestJava {
-        options.encoding = 'UTF-8'
-
-        // Makes spotlessApply task run on every compile/build.
-        dependsOn 'spotlessApply'
-
-        // Nails the Java-Version of every Subproject
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
+    compileJava(compileTasks)
+    compileTestJava(compileTasks)
 
     spotless {
         java {
