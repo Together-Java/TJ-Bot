@@ -154,13 +154,13 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         getMessageReceiversSubscribedTo(event.getChannel())
-            .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+                .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
     }
 
     @Override
     public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
         getMessageReceiversSubscribedTo(event.getChannel())
-            .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+                .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
     }
 
 
