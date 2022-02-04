@@ -1,10 +1,7 @@
 package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.Invite;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -129,7 +126,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "Voicestates aren't being cached, check the JDABuilder");
 
-        if (!voiceState.inVoiceChannel()) {
+        if (!voiceState.inAudioChannel()) {
             event.reply("You need to be in a voicechannel to run this command!")
                 .setEphemeral(true)
                 .queue();
@@ -137,7 +134,14 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             return;
         }
 
-        VoiceChannel voiceChannel = Objects.requireNonNull(voiceState.getChannel());
+        AudioChannel audioChannel = Objects.requireNonNull(voiceState.getChannel());
+
+        if (!(audioChannel instanceof VoiceChannel voiceChannel)) {
+            event.reply("You've to be in a voicechannel, not a stage channel!")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
 
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.CREATE_INSTANT_INVITE)) {
@@ -217,7 +221,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     /**
      * Interprets the given option as integer. Throws if the option is not an integer.
-     * 
+     *
      * @param option the option that contains the integer to extract, or null if not present
      * @return the extracted integer if present, null otherwise
      **/

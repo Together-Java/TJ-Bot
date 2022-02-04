@@ -64,7 +64,7 @@ final class ChannelMonitor {
      * This method tests whether a guild id is configured for monitoring in the free command system.
      * To add a guild for monitoring see {@link org.togetherjava.tjbot.config.FreeCommandConfig} or
      * {@link #addChannelForStatus(TextChannel)}.
-     * 
+     *
      * @param guildId the id of the guild to test.
      * @return whether the guild is configured in the free command system or not.
      */
@@ -77,7 +77,7 @@ final class ChannelMonitor {
      * system. To add a channel for monitoring see
      * {@link org.togetherjava.tjbot.config.FreeCommandConfig} or
      * {@link #addChannelToMonitor(long)}.
-     * 
+     *
      * @param channelId the id of the channel to test.
      * @return {@code true} if the channel is configured in the system, {@code false} otherwise.
      */
@@ -136,7 +136,7 @@ final class ChannelMonitor {
     /**
      * This method sets the channel's status to 'busy' see {@link ChannelStatus#setBusy(long)} for
      * details.
-     * 
+     *
      * @param channelId the id for the channel status to modify.
      * @param userId the id of the user changing the status to busy.
      * @throws IllegalArgumentException if the channel passed is not monitored. See
@@ -149,7 +149,7 @@ final class ChannelMonitor {
     /**
      * This method sets the channel's status to 'free', see {@link ChannelStatus#setFree()} for
      * details.
-     * 
+     *
      * @param channelId the id for the channel status to modify.
      * @throws IllegalArgumentException if the channel passed is not monitored. See
      *         {@link #addChannelToMonitor(long)}
@@ -171,7 +171,7 @@ final class ChannelMonitor {
     /**
      * This method provides a stream of the id's for channels where statuses are displayed. This is
      * streamed purely as a simple method of encapsulation.
-     * 
+     *
      * @return a stream of channel id's
      */
     public @NotNull Stream<Long> statusIds() {
@@ -194,7 +194,7 @@ final class ChannelMonitor {
      * It first updates the channel names, order and grouping(categories) according to
      * {@link net.dv8tion.jda.api.JDA} for the monitored channels. So that the output is always
      * consistent with remote changes.
-     * 
+     *
      * @param guild the guild the message is intended for.
      * @return a string representing the busy/free status of channels in this guild. The String
      *         includes emojis and other discord specific markup. Attempting to display this
@@ -215,7 +215,7 @@ final class ChannelMonitor {
                 // pointless ... added to remove warnings
                 continue;
             }
-            Category category = channel.getParent();
+            Category category = channel.getParentCategory();
             if (category != null && !category.getName().equals(categoryName)) {
                 categoryName = category.getName();
                 // append the category name on a new line with markup for underlining
@@ -239,7 +239,7 @@ final class ChannelMonitor {
      * This method is run automatically during startup and should be run on a set schedule, as
      * defined in {@link org.togetherjava.tjbot.config.FreeCommandConfig}. The scheduled execution
      * is not currently implemented
-     * 
+     *
      * @param guild the guild for which to test the channel statuses of.
      */
     public void updateStatusFor(@NotNull Guild guild) {
@@ -284,7 +284,7 @@ final class ChannelMonitor {
     /**
      * The toString method for this class, it generates a human-readable text string of the
      * currently monitored channels and the channels the status are printed in.
-     * 
+     *
      * @return the human-readable text string that describes this class.
      */
     @Override
