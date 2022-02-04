@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Pattern;
@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
  * Adapter implementation of a {@link MessageReceiver}. A new receiver can then be registered by
  * adding it to {@link Features}.
  * <p>
- * {@link #onMessageReceived(GuildMessageReceivedEvent)} and
- * {@link #onMessageUpdated(GuildMessageUpdateEvent)} can be overridden if desired. The default
+ * {@link #onMessageReceived(MessageReceivedEvent)} and
+ * {@link #onMessageUpdated(MessageUpdateEvent)} can be overridden if desired. The default
  * implementation is empty, the adapter will not react to such events.
  */
 public abstract class MessageReceiverAdapter implements MessageReceiver {
@@ -35,13 +35,13 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onMessageUpdated(@NotNull GuildMessageUpdateEvent event) {
+    public void onMessageUpdated(@NotNull MessageUpdateEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 }
