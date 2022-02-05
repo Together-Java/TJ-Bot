@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public enum ModerationUtils {
      * @return whether the reason is valid
      */
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleReason(@NotNull CharSequence reason, @NotNull Interaction event) {
+    static boolean handleReason(@NotNull CharSequence reason, @NotNull IReplyCallback event) {
         if (reason.length() <= REASON_MAX_LENGTH) {
             return true;
         }
@@ -84,7 +84,7 @@ public enum ModerationUtils {
      */
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     static boolean handleCanInteractWithTarget(@NotNull String actionVerb, @NotNull Member bot,
-            @NotNull Member author, @NotNull Member target, @NotNull Interaction event) {
+            @NotNull Member author, @NotNull Member target, @NotNull IReplyCallback event) {
         String targetTag = target.getUser().getAsTag();
         if (!author.canInteract(target)) {
             event
@@ -119,7 +119,7 @@ public enum ModerationUtils {
      */
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     static boolean handleCanInteractWithRole(@NotNull Member bot, @NotNull Member author,
-            @NotNull Role role, @NotNull Interaction event) {
+            @NotNull Role role, @NotNull IReplyCallback event) {
         if (!author.canInteract(role)) {
             event
                 .reply("The role %s is too powerful for you to interact with."
@@ -155,7 +155,7 @@ public enum ModerationUtils {
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     static boolean handleHasBotPermissions(@NotNull String actionVerb,
             @NotNull Permission permission, @NotNull IPermissionHolder bot, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         if (!bot.hasPermission(permission)) {
             event
                 .reply("I can not %s users in this guild since I do not have the %s permission."
@@ -170,7 +170,8 @@ public enum ModerationUtils {
         return true;
     }
 
-    private static void handleAbsentTarget(@NotNull String actionVerb, @NotNull Interaction event) {
+    private static void handleAbsentTarget(@NotNull String actionVerb,
+            @NotNull IReplyCallback event) {
         event
             .reply("I can not %s the given user since they are not part of the guild anymore."
                 .formatted(actionVerb))
@@ -212,7 +213,7 @@ public enum ModerationUtils {
     static boolean handleRoleChangeChecks(@Nullable Role role, @NotNull String actionVerb,
             @Nullable Member target, @NotNull Member bot, @NotNull Member author,
             @NotNull Guild guild, @NotNull Predicate<? super String> hasRequiredRole,
-            @NotNull CharSequence reason, @NotNull Interaction event) {
+            @NotNull CharSequence reason, @NotNull IReplyCallback event) {
         if (role == null) {
             event
                 .reply("Can not %s the user, unable to find the corresponding role on this server"
@@ -260,7 +261,7 @@ public enum ModerationUtils {
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     static boolean handleHasAuthorPermissions(@NotNull String actionVerb,
             @NotNull Permission permission, @NotNull IPermissionHolder author, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         if (!author.hasPermission(permission)) {
             event
                 .reply("You can not %s users in this guild since you do not have the %s permission."
@@ -287,7 +288,7 @@ public enum ModerationUtils {
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     static boolean handleHasAuthorRole(@NotNull String actionVerb,
             @NotNull Predicate<? super String> hasRequiredRole, @NotNull Member author,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
             return true;
         }

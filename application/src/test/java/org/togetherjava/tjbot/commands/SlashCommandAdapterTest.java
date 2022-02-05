@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
@@ -19,7 +19,7 @@ final class SlashCommandAdapterTest {
         // noinspection AnonymousInnerClass
         return new SlashCommandAdapter(NAME, DESCRIPTION, VISIBILITY) {
             @Override
-            public void onSlashCommand(@NotNull SlashCommandEvent event) {
+            public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
                 // No implementation needed for the test
             }
         };
@@ -43,7 +43,7 @@ final class SlashCommandAdapterTest {
     @Test
     void getData() {
         SlashCommandAdapter adapter = createAdapter();
-        CommandData data = adapter.getData();
+        SlashCommandData data = adapter.getData();
         assertEquals(NAME, data.getName(),
                 "adapters name is inconsistent with the base data object");
         assertEquals(DESCRIPTION, data.getDescription(),
@@ -53,7 +53,7 @@ final class SlashCommandAdapterTest {
         String otherName = NAME + "-bar";
         String otherDescription = DESCRIPTION + "-bar";
         data.setName(otherName).setDescription(otherDescription);
-        CommandData otherData = adapter.getData();
+        SlashCommandData otherData = adapter.getData();
 
         assertSame(data, otherData, "adapter changed the data object");
         assertEquals(otherName, otherData.getName(), "name changes did not carry over");

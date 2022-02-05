@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -53,7 +53,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
     private @NotNull RestAction<InteractionHook> warnUserFlow(@NotNull User target,
             @NotNull Member author, @NotNull String reason, @NotNull Guild guild,
-            @NotNull SlashCommandEvent event) {
+            @NotNull SlashCommandInteractionEvent event) {
         return dmUser(target, reason, guild, event).map(hasSentDm -> {
             warnUser(target, author, reason, guild);
             return hasSentDm;
@@ -63,7 +63,8 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private static @NotNull RestAction<Boolean> dmUser(@NotNull ISnowflake target,
-            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            @NotNull String reason, @NotNull Guild guild,
+            @NotNull SlashCommandInteractionEvent event) {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
@@ -98,7 +99,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The target is null");
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");
@@ -116,7 +117,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, String reason, @NotNull SlashCommandEvent event) {
+            @Nullable Member target, String reason, @NotNull SlashCommandInteractionEvent event) {
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
             return false;
