@@ -3,10 +3,10 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.jetbrains.annotations.NotNull;
@@ -110,7 +110,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteraction event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null");
         User target = targetOption.getAsUser();
@@ -128,7 +128,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull Guild guild, @NotNull Interaction event) {
+            @Nullable Member target, @NotNull Guild guild, @NotNull IReplyCallback event) {
         // Member doesn't exist if attempting to audit a user who is not part of the guild.
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
@@ -138,7 +138,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private void auditUser(@NotNull User user, @NotNull ISnowflake guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         List<ActionRecord> actions =
                 actionsStore.getActionsByTargetAscending(guild.getIdLong(), user.getIdLong());
 

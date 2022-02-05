@@ -1,13 +1,13 @@
 package org.togetherjava.tjbot.commands.componentids;
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 /**
  * Payload carried by component IDs. See
- * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandEvent)} for its
+ * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandInteraction)} for its
  * usages.
  *
  * @param commandName the name of the command that handles the event associated to this component

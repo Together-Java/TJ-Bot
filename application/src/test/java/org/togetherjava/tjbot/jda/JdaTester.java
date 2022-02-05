@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.jda;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.SelfUser;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -10,7 +10,7 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.*;
 import net.dv8tion.jda.internal.requests.Requester;
 import net.dv8tion.jda.internal.requests.restaction.MessageActionImpl;
-import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyActionImpl;
+import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
 import org.jetbrains.annotations.NotNull;
 import org.mockito.ArgumentMatchers;
@@ -27,18 +27,18 @@ import static org.mockito.Mockito.*;
  * Utility class for testing {@link SlashCommand}s.
  * <p>
  * Mocks JDA and can create events that can be used to test {@link SlashCommand}s, e.g.
- * {@link #createSlashCommandEvent(SlashCommand)}. The created events are Mockito mocks, which can
+ * {@link #createSlashCommandInteraction(SlashCommand)}. The created events are Mockito mocks, which can
  * be exploited for testing.
  * <p>
  * An example test using this class might look like:
- * 
+ *
  * <pre>
  * {
  *     &#64;code
  *     SlashCommand command = new PingCommand();
  *     JdaTester jdaTester = new JdaTester();
  *
- *     SlashCommandEvent event = jdaTester.createSlashCommandEvent(command).build();
+ *     SlashCommandInteraction event = jdaTester.createSlashCommandInteraction(command).build();
  *     command.onSlashCommand(event);
  *
  *     verify(event, times(1)).reply("Pong!");
@@ -105,7 +105,7 @@ public final class JdaTester {
 
     /**
      * Creates a Mockito mocked slash command event, which can be used for
-     * {@link SlashCommand#onSlashCommand(SlashCommandEvent)}.
+     * {@link SlashCommand#onSlashCommand(SlashCommandInteraction)}.
      * <p>
      * The method creates a builder that can be used to further adjust the event before creation,
      * e.g. provide options.
@@ -113,11 +113,11 @@ public final class JdaTester {
      * @param command the command to create an event for
      * @return a builder used to create a Mockito mocked slash command event
      */
-    public @NotNull SlashCommandEventBuilder createSlashCommandEvent(
+    public @NotNull SlashCommandInteractionBuilder createSlashCommandInteraction(
             @NotNull SlashCommand command) {
-        UnaryOperator<SlashCommandEvent> mockOperator = event -> {
-            SlashCommandEvent slashCommandEvent = spy(event);
-            ReplyActionImpl replyAction = mock(ReplyActionImpl.class);
+        UnaryOperator<SlashCommandInteraction> mockOperator = event -> {
+            SlashCommandInteraction slashCommandEvent = spy(event);
+            ReplyCallbackActionImpl replyAction = mock(ReplyCallbackActionImpl.class);
 
             doReturn(replyAction).when(slashCommandEvent).reply(anyString());
             when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
@@ -126,7 +126,7 @@ public final class JdaTester {
             return slashCommandEvent;
         };
 
-        return new SlashCommandEventBuilder(jda, mockOperator).command(command)
+        return new SlashCommandInteractionBuilder(jda, mockOperator).command(command)
             .token(TEST_TOKEN)
             .channelId(String.valueOf(TEXT_CHANNEL_ID))
             .applicationId(String.valueOf(APPLICATION_ID))
