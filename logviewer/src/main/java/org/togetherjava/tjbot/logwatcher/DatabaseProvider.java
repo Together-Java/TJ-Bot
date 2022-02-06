@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.logwatcher;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -21,6 +22,8 @@ public class DatabaseProvider {
     private final Database db;
     private final Config config;
 
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseProvider.class);
+
     public DatabaseProvider(final Config config) {
         this.config = config;
         this.db = createDB();
@@ -34,8 +37,7 @@ public class DatabaseProvider {
         try {
             return new Database("jdbc:sqlite:%s".formatted(dbPath.toAbsolutePath()));
         } catch (final SQLException e) {
-            LoggerFactory.getLogger(DatabaseProvider.class)
-                .error("Exception while creating Database.", e);
+            logger.error("Exception while creating Database.", e);
             throw new FatalBeanException("Could not create Database.", e);
         }
     }
@@ -46,8 +48,7 @@ public class DatabaseProvider {
         try {
             Files.createDirectories(dbPath.getParent());
         } catch (final IOException e) {
-            LoggerFactory.getLogger(DatabaseProvider.class)
-                .error("Exception while creating Database-Path.", e);
+            logger.error("Exception while creating Database-Path.", e);
         }
 
         return dbPath;
