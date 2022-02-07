@@ -22,12 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 
 /**
@@ -38,7 +40,7 @@ import java.util.Objects;
  * you can select multiple roles. <br />
  * Note: the bot can only use roles with a position below its highest one
  */
-public class RoleSelectCommand extends SlashCommandAdapter {
+public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(RoleSelectCommand.class);
 
@@ -57,7 +59,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
 
 
     /**
-     * Construct an instance
+     * Construct an instance.
      */
     public RoleSelectCommand() {
         super("role-select", "Sends a message where users can select their roles",
@@ -74,6 +76,18 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         getData().addSubcommands(allRoles, selectRoles);
     }
 
+    @NotNull
+    private static SelectOption mapToSelectOption(@NotNull Role role) {
+        RoleIcon roleIcon = role.getIcon();
+
+        if (null == roleIcon || !roleIcon.isEmoji()) {
+            return SelectOption.of(role.getName(), role.getId());
+        } else {
+            return SelectOption.of(role.getName(), role.getId())
+                .withEmoji((Emoji.fromUnicode(roleIcon.getEmoji())));
+        }
+    }
+
     @Override
     public void onSlashCommand(@NotNull final SlashCommandEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
@@ -87,16 +101,17 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
             event.reply("The bot needs the manage role permissions").setEphemeral(true).queue();
-            logger.warn("The bot needs the manage role permissions");
+            logger.error("The bot needs the manage role permissions");
             return;
         }
 
-        SelectionMenu.Builder menu = SelectionMenu.create(generateComponentId(member.getId()));
-        boolean ephemeral = false;
+        SelectionMenu.Builder menu =
+                SelectionMenu.create(generateComponentId(Lifespan.PERMANENT, member.getId()));
+        boolean isEphemeral = false;
 
-        if (Objects.equals(event.getSubcommandName(), CHOOSE_OPTION)) {
+        if (CHOOSE_OPTION.equals(event.getSubcommandName())) {
             addMenuOptions(event, menu, "Select the roles to display", 1);
-            ephemeral = true;
+            isEphemeral = true;
         } else {
             addMenuOptions(event, menu, "Select your roles", 0);
         }
@@ -111,7 +126,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         MessageBuilder messageBuilder = new MessageBuilder(makeEmbed(title, description))
             .setActionRows(ActionRow.of(menu.build()));
 
-        if (ephemeral) {
+        if (isEphemeral) {
             event.reply(messageBuilder.build()).setEphemeral(true).queue();
         } else {
             event.getChannel().sendMessage(messageBuilder.build()).queue();
@@ -121,7 +136,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Adds role options to a selection menu
+     * Adds role options to a selection menu.
      * <p>
      *
      * @param event the {@link SlashCommandEvent}
@@ -132,7 +147,6 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     private static void addMenuOptions(@NotNull final Interaction event,
             @NotNull final SelectionMenu.Builder menu, @NotNull final String placeHolder,
             @Nullable final Integer minValues) {
-
 
         Guild guild = Objects.requireNonNull(event.getGuild(), "The given guild cannot be null");
 
@@ -151,24 +165,12 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             .addOptions(roles.stream()
                 .filter(role -> !role.isPublicRole())
                 .filter(role -> !role.getTags().isBot())
-                .map(role -> {
-                    RoleIcon roleIcon = role.getIcon();
-
-                    if (null == roleIcon || !roleIcon.isEmoji()) {
-                        return SelectOption.of(role.getName(), role.getId());
-                    } else {
-                        return SelectOption.of(role.getName(), role.getId())
-                            .withEmoji((Emoji.fromUnicode(roleIcon.getEmoji())));
-                    }
-                })
+                .map(RoleSelectCommand::mapToSelectOption)
                 .toList());
     }
 
     /**
-     * Creates an embedded message to send with the selection menu
-     *
-     * <p>
-     * </p>
+     * Creates an embedded message to send with the selection menu.
      *
      * @param title for the embedded message. nullable {@link String}
      * @param description for the embedded message. nullable {@link String}
@@ -193,7 +195,6 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         List<SelectOption> selectedOptions = Objects.requireNonNull(event.getSelectedOptions(),
                 "The given selectedOptions cannot be null");
 
-
         List<Role> selectedRoles = selectedOptions.stream()
             .map(SelectOption::getValue)
             .map(guild::getRoleById)
@@ -210,7 +211,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Handles selection of a {@link SelectionMenuEvent}
+     * Handles selection of a {@link SelectionMenuEvent}.
      *
      * @param event the <b>unacknowledged</b> {@link SelectionMenuEvent}
      * @param selectedRoles the {@link Role roles} selected
@@ -221,7 +222,26 @@ public class RoleSelectCommand extends SlashCommandAdapter {
         Collection<Role> rolesToAdd = new ArrayList<>(selectedRoles.size());
         Collection<Role> rolesToRemove = new ArrayList<>(selectedRoles.size());
 
-        event.getInteraction().getComponent().getOptions().stream().map(selectedOption -> {
+        event.getInteraction()
+            .getComponent()
+            .getOptions()
+            .stream()
+            .map(roleFromSelectOptionFunction(guild))
+            .filter(Objects::nonNull)
+            .forEach(role -> {
+                if (selectedRoles.contains(role)) {
+                    rolesToAdd.add(role);
+                } else {
+                    rolesToRemove.add(role);
+                }
+            });
+
+        handleRoleModifications(event, event.getMember(), guild, rolesToAdd, rolesToRemove);
+    }
+
+    @NotNull
+    private static Function<SelectOption, Role> roleFromSelectOptionFunction(Guild guild) {
+        return selectedOption -> {
             Role role = guild.getRoleById(selectedOption.getValue());
 
             if (null == role) {
@@ -229,15 +249,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
             }
 
             return role;
-        }).filter(Objects::nonNull).forEach(role -> {
-            if (selectedRoles.contains(role)) {
-                rolesToAdd.add(role);
-            } else {
-                rolesToRemove.add(role);
-            }
-        });
-
-        handleRoleModifications(event, event.getMember(), guild, rolesToAdd, rolesToRemove);
+        };
     }
 
     /**
@@ -277,7 +289,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Updates the roles of the given member
+     * Updates the roles of the given member.
      *
      * @param event an <b>unacknowledged</b> {@link Interaction} event
      * @param member the member to update the roles of
@@ -294,10 +306,7 @@ public class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     /**
-     * This gets the OptionMapping and returns the value as a string if there is one
-     *
-     * <p>
-     * </p>
+     * This gets the OptionMapping and returns the value as a string if there is one.
      *
      * @param option the {@link OptionMapping}
      * @return the value. nullable {@link String}
