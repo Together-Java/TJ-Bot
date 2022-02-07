@@ -35,6 +35,7 @@ import org.vaadin.artur.helpers.LaunchUtil;
 @Push
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
 
+    @SuppressWarnings({"java:S2387"})
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
