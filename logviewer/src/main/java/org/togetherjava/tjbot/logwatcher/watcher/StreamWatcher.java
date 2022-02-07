@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.logwatcher.watcher;
 
-import com.github.fge.jsonschema.core.report.AbstractProcessingReport;
-import com.helger.commons.log.InMemoryLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

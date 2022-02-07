@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.logwatcher.views.usermanagement;
 
-import com.github.fge.jsonschema.core.report.AbstractProcessingReport;
 import com.vaadin.componentfactory.EnhancedDialog;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Text;
