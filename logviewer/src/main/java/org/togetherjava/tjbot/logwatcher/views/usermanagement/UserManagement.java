@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.logwatcher.views.usermanagement;
 
+import com.github.fge.jsonschema.core.report.AbstractProcessingReport;
 import com.vaadin.componentfactory.EnhancedDialog;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Text;
@@ -15,6 +16,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.Role;
@@ -42,6 +44,7 @@ public class UserManagement extends VerticalLayout {
 
     private final transient UserRepository repo;
     private final Grid<UserWrapper> grid = new Grid<>(UserWrapper.class, false);
+    private static final Logger logger = LoggerFactory.getLogger(UserManagement.class);
 
     public UserManagement(UserRepository repository) {
         this.repo = repository;
@@ -81,8 +84,7 @@ public class UserManagement extends VerticalLayout {
                 .map(user -> new UserWrapper(user.getDiscordid(), user.getUsername(),
                         this.repo.fetchRolesForUser(user)));
         } catch (final DatabaseException e) {
-            LoggerFactory.getLogger(UserManagement.class)
-                .error("Exception occurred while fetching.", e);
+            logger.error("Exception occurred while fetching.", e);
             NotificationUtils.getNotificationForError(e).open();
             return Stream.empty();
         }
@@ -133,8 +135,7 @@ public class UserManagement extends VerticalLayout {
 
                 UserManagement.this.repo.saveRolesForUser(toSave, user.getRoles());
             } catch (DatabaseException e) {
-                LoggerFactory.getLogger(UserManagement.class)
-                    .error("Exception occurred while saving.", e);
+                logger.error("Exception occurred while saving.", e);
                 NotificationUtils.getNotificationForError(e).open();
             }
 
@@ -193,8 +194,7 @@ public class UserManagement extends VerticalLayout {
             try {
                 UserManagement.this.repo.delete(new Users(user.getDiscordID(), user.getUserName()));
             } catch (DatabaseException e) {
-                LoggerFactory.getLogger(UserManagement.class)
-                    .error("Exception occurred while removing.", e);
+                logger.error("Exception occurred while removing.", e);
                 NotificationUtils.getNotificationForError(e).open();
             }
         }

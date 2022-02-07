@@ -1,5 +1,8 @@
 package org.togetherjava.tjbot.logwatcher.watcher;
 
+import com.github.fge.jsonschema.core.report.AbstractProcessingReport;
+import com.helger.commons.log.InMemoryLogger;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
@@ -10,6 +13,7 @@ public class StreamWatcher {
     private static final int EXPECTED_CONCURRENT_LOG_WATCHERS = 3;
     private static final Map<UUID, Runnable> consumerMap =
             new ConcurrentHashMap<>(EXPECTED_CONCURRENT_LOG_WATCHERS);
+    private static final Logger logger = LoggerFactory.getLogger(StreamWatcher.class);
 
     private StreamWatcher() {}
 
@@ -48,7 +52,7 @@ public class StreamWatcher {
         try {
             run.run();
         } catch (final Exception e) {
-            LoggerFactory.getLogger(StreamWatcher.class).error("Runnable threw Exception.", e);
+            logger.error("Runnable threw Exception.", e);
         }
     }
 }
