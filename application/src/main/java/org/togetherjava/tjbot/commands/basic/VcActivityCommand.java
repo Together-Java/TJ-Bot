@@ -72,10 +72,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
      * our best bet.
      */
-    private static final Map<String, String> VC_APPLICATION_TO_ID = Map.of(POKER_NAME, "755827207812677713", BETRAYAL_IO_NAME,
-            "773336526917861400", FISHINGTON_IO_NAME, "814288819477020702",SPELLCAST_NAME,
-            "852509694341283871", DOODLECREW_NAME, "878067389634314250", WORDSNACK_NAME,
-            "879863976006127627", LETTERTILE_NAME, "879863686565621790");
+    private static final Map<String, String> VC_APPLICATION_TO_ID =
+            Map.of(POKER_NAME, "755827207812677713", BETRAYAL_IO_NAME, "773336526917861400",
+                    FISHINGTON_IO_NAME, "814288819477020702", SPELLCAST_NAME, "852509694341283871",
+                    DOODLECREW_NAME, "878067389634314250", WORDSNACK_NAME, "879863976006127627",
+                    LETTERTILE_NAME, "879863686565621790");
 
     private static final List<OptionData> inviteOptions = List.of(new OptionData(OptionType.INTEGER,
             MAX_USES_OPTION,
