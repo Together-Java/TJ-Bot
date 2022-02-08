@@ -22,6 +22,6 @@ Cool things they are, they allow better UX using a ton of features Discord has a
 Easiest is to just show it tbh
 
 
-video::YITP0roprFM[youtube]
+https://user-images.githubusercontent.com/49957334/153073679-c645dd26-3b8b-48a1-b7f5-967a889b5df5.mp4
 
 ## Context Commands
