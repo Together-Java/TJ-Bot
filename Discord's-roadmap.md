@@ -6,9 +6,9 @@ I'll explain those features here, so you can be up-to-date just by reading this.
 ## Slash-commmands
 
 Known with most people, won't go far into this.
-A short GIF of their UX can be seen below.
+A short video of their UX can be seen below.
 
-![GIF showing slash-command UI](https://auralytical.notion.site/image/https%3A%2F%2Fs3-us-west-2.amazonaws.com%2Fsecure.notion-static.com%2F1c71a843-813d-4ee0-8b76-76b2148f5beb%2FS3513QB6sQ.gif?table=block&id=24c631bc-a26a-4fee-9744-528b627d1623&spaceId=34a0c761-ea04-4be9-bf12-abdd17355d64&userId=&cache=v2)
+https://user-images.githubusercontent.com/49957334/153074909-be11f7d5-3c2d-42e5-8e02-d891d784b04c.mp4
 
 To elaborate on how they work.
 
@@ -21,7 +21,8 @@ Cool things they are, they allow better UX using a ton of features Discord has a
 
 Easiest is to just show it tbh
 
-
 https://user-images.githubusercontent.com/49957334/153073679-c645dd26-3b8b-48a1-b7f5-967a889b5df5.mp4
+
+
 
 ## Context Commands
