@@ -49,12 +49,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final long MAX_AGE_DAYS_LIMIT = 7;
     private static final long MAX_USES_LIMIT = 100;
 
-    public static final String YOUTUBE_TOGETHER_NAME = "YouTube Together";
     public static final String POKER_NAME = "Poker";
     public static final String BETRAYAL_IO_NAME = "Betrayal.io";
     public static final String FISHINGTON_IO_NAME = "Fishington.io";
-    public static final String CHESS_CG_2_DEV = "Chess / CG 2 Dev";
-    public static final String AWKWORD_NAME = "Awkword";
     public static final String SPELLCAST_NAME = "Spellcast";
     public static final String DOODLECREW_NAME = "Doodlecrew";
     public static final String WORDSNACK_NAME = "Wordsnack";
@@ -62,12 +59,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
     private static final List<Command.Choice> VC_APPLICATIONS =
-            List.of(new Command.Choice(YOUTUBE_TOGETHER_NAME, YOUTUBE_TOGETHER_NAME),
-                    new Command.Choice(POKER_NAME, POKER_NAME),
+            List.of(new Command.Choice(POKER_NAME, POKER_NAME),
                     new Command.Choice(BETRAYAL_IO_NAME, BETRAYAL_IO_NAME),
                     new Command.Choice(FISHINGTON_IO_NAME, FISHINGTON_IO_NAME),
-                    new Command.Choice(CHESS_CG_2_DEV, CHESS_CG_2_DEV),
-                    new Command.Choice(AWKWORD_NAME, AWKWORD_NAME),
                     new Command.Choice(SPELLCAST_NAME, SPELLCAST_NAME),
                     new Command.Choice(DOODLECREW_NAME, DOODLECREW_NAME),
                     new Command.Choice(WORDSNACK_NAME, WORDSNACK_NAME),
@@ -78,12 +72,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
      * our best bet.
      */
-    private static final Map<String, String> VC_APPLICATION_TO_ID = Map.of(YOUTUBE_TOGETHER_NAME,
-            "755600276941176913", POKER_NAME, "755827207812677713", BETRAYAL_IO_NAME,
-            "773336526917861400", FISHINGTON_IO_NAME, "814288819477020702", CHESS_CG_2_DEV,
-            "832012586023256104", AWKWORD_NAME, "879863881349087252", SPELLCAST_NAME,
-            "852509694341283871", DOODLECREW_NAME, "878067389634314250", WORDSNACK_NAME,
-            "879863976006127627", LETTERTILE_NAME, "879863686565621790");
+    private static final Map<String, String> VC_APPLICATION_TO_ID =
+            Map.of(POKER_NAME, "755827207812677713", BETRAYAL_IO_NAME, "773336526917861400",
+                    FISHINGTON_IO_NAME, "814288819477020702", SPELLCAST_NAME, "852509694341283871",
+                    DOODLECREW_NAME, "878067389634314250", WORDSNACK_NAME, "879863976006127627",
+                    LETTERTILE_NAME, "879863686565621790");
 
     private static final List<OptionData> inviteOptions = List.of(new OptionData(OptionType.INTEGER,
             MAX_USES_OPTION,
@@ -217,7 +210,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     /**
      * Interprets the given option as integer. Throws if the option is not an integer.
-     * 
+     *
      * @param option the option that contains the integer to extract, or null if not present
      * @return the extracted integer if present, null otherwise
      **/
