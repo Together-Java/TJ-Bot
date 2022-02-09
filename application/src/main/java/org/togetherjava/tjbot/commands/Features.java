@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
+import org.togetherjava.tjbot.commands.reminder.ReminderCommand;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
@@ -86,6 +87,7 @@ public enum Features {
         features.add(new TopHelpersCommand(database, config));
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore, config));
+        features.add(new ReminderCommand());
 
         // Mixtures
         features.add(new FreeCommand(config));
