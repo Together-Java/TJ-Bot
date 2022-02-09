@@ -125,12 +125,13 @@ public final class TemporaryModerationRoutine implements Routine {
             @NotNull ModerationAction actionType) {
         logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
                 target.getAsTag(), target.getId());
+        RevocableModerationAction action = getRevocableActionByType(actionType);
 
         String reason = "Automatic revocation of temporary action.";
         actionsStore.addAction(guild.getIdLong(), jda.getSelfUser().getIdLong(), target.getIdLong(),
-                actionType, null, reason);
+                action.getRevokeType(), null, reason);
 
-        return getRevocableActionByType(actionType).revokeAction(guild, target, reason);
+        return action.revokeAction(guild, target, reason);
     }
 
     private void handleFailure(@NotNull Throwable failure,
