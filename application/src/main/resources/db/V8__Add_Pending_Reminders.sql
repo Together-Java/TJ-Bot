@@ -1,4 +1,4 @@
-CREATE TABLE reminders
+CREATE TABLE pending_reminders
 (
     id         INTEGER   NOT NULL PRIMARY KEY AUTOINCREMENT,
     created_at TIMESTAMP NOT NULL,
