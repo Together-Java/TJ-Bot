@@ -11,6 +11,7 @@ import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
 import org.togetherjava.tjbot.commands.reminder.RemindCommand;
+import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
@@ -62,6 +63,7 @@ public enum Features {
         features.add(new ModAuditLogRoutine(database, config));
         features.add(new TemporaryModerationRoutine(jda, actionsStore, config));
         features.add(new TopHelpersPurgeMessagesRoutine(database));
+        features.add(new RemindRoutine(database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
