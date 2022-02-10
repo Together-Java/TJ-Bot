@@ -369,8 +369,7 @@ public enum ModerationUtils {
             case "minute", "minutes" -> ChronoUnit.MINUTES;
             case "hour", "hours" -> ChronoUnit.HOURS;
             case "day", "days" -> ChronoUnit.DAYS;
-            default -> throw new IllegalArgumentException(
-                    "Unsupported mute duration: " + durationText);
+            default -> throw new IllegalArgumentException("Unsupported duration: " + durationText);
         };
 
         return Optional.of(new TemporaryData(Instant.now().plus(duration, unit), durationText));
