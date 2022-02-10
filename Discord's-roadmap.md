@@ -1,28 +1,69 @@
 Discord is working on a ton, and has been working a ton.
-I'll explain those features here, so you can be up-to-date just by reading this.
+I'll explain some of the relavant features really short here, so you can stay up-to-date with ease
 
-# Interactions
+## Slash-commands
 
-## Slash-commmands
+Command's with a `/` as their prefix.
+Examples can be the `/thread` command, allows you to create a command
 
-Known with most people, won't go far into this.
-A short video of their UX can be seen below.
+## Attachment option
 
-https://user-images.githubusercontent.com/49957334/153074909-be11f7d5-3c2d-42e5-8e02-d891d784b04c.mp4
+Added 8/9 febuary, so really recent. \
+Just allow you to request a file from the user in a command.
 
-To elaborate on how they work.
-
-A command's hierachy:
-
-
-Cool things they are, they allow better UX using a ton of features Discord has and is going to add.
-
-### Auto-complete
+## Slash-command auto-complete
 
 Easiest is to just show it tbh
 
-https://user-images.githubusercontent.com/49957334/153073679-c645dd26-3b8b-48a1-b7f5-967a889b5df5.mp4
+See a link to the YouTube video [here](https://www.youtube.com/watch?v=kTbCTxZEtZ0)
 
-
+Allows us to give the user "options" live, this means you won't be limited to 25 hardcoded options. \
+An example use-case would be the tag command, you can show the user possible tags live.
 
 ## Context Commands
+
+Command's visible when right clicking a member/user
+
+![context-commands example](https://user-images.githubusercontent.com/49957334/153312109-74d92dcf-b245-4e7f-9130-9b5c1e2f0850.png)
+
+## forms/modals
+
+
+Also added the 8th of Feburary! Another recent addition. \
+It's more or less a form, currently only accepts the text input. \
+Selection menu support will be added in the future, unsure about other things that might get added.
+
+![form](https://user-images.githubusercontent.com/49957334/153312434-8539d6ea-896b-4a01-94ad-bdb0e00c71a9.png)
+
+
+Now let's talk about features that are in WIP, and unfortunately not yet released.
+
+
+## date-picker option for slash-commands
+
+Explains itself, no new info on this.
+
+## NSFW commands
+
+Don't question
+
+## Slash-commands improved UI
+
+Current UI isn't that nice, so they're working on the improvements seen below.
+
+- all required options are selected instead of 1
+- errors are rendered inside the editor
+- multi-line support
+
+![new_slash_command_ux](https://user-images.githubusercontent.com/49957334/153312840-138c29d6-b373-4cda-88d8-c51e6da4c00b.gif)
+
+This info is a few months old, I don't know anything more recent about it "it'll enable more new features"
+
+## Permission system rework
+
+This one is so important, currently you can **only** allow/deny specific roles/users. That's fine for our bot, but just shitty to manage and such.
+Discord is now allowing a lot more, you can set permissions instead, or specific roles/users. 
+And even better, moderators of the server can set everything too! If they only want the command to be used in specific channels by specific people, this is possible easily, see pictures below (might has received some changes) :p
+
+![specific_bot](https://user-images.githubusercontent.com/49957334/153314174-1b552e2d-11bd-429c-9470-cf890425a6da.png)
+![specific_command](https://user-images.githubusercontent.com/49957334/153314171-b793ef2b-e779-4111-8956-fd84f6c6e0de.png)
