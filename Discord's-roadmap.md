@@ -67,3 +67,10 @@ And even better, moderators of the server can set everything too! If they only w
 
 ![specific_bot](https://user-images.githubusercontent.com/49957334/153314174-1b552e2d-11bd-429c-9470-cf890425a6da.png)
 ![specific_command](https://user-images.githubusercontent.com/49957334/153314171-b793ef2b-e779-4111-8956-fd84f6c6e0de.png)
+
+
+Source(s):
+[GitHub Discussions](https://github.com/discord/discord-api-docs/discussions)
+[API-Plans discussion](https://github.com/discord/discord-api-docs/discussions/3581)
+[Editor upgrades article](https://auralytical.notion.site/Editor-Upgrades-dee51c93462c44b8a0a53fed3d94c4cd)
+[Autocomplete article](https://devsnek.notion.site/Application-Command-Option-Autocomplete-Interactions-dacc980320c948768cec5ae3a96a5886)
