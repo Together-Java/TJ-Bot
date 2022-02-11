@@ -92,6 +92,7 @@ public final class AuditCommand extends SlashCommandAdapter {
                     .getDateTimeString(action.actionExpiresAt().atOffset(ZoneOffset.UTC)));
 
         return jda.retrieveUserById(action.authorId())
+            .onErrorMap(error -> null)
             .map(author -> new EmbedBuilder().setTitle(action.actionType().name())
                 .setAuthor(author == null ? "(unknown user)" : author.getAsTag(), null,
                         author == null ? null : author.getAvatarUrl())
