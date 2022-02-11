@@ -14,14 +14,16 @@ See [[Access the VPS]] for details of the login process.
 ## Working with the database
 
 To ease inspecting and editing the database, the `sqlite3` CLI is installed on the VPS. Here are some simple example queries:
+* List all available tables:
 ```sql
-// List all available tables
 .tables
-
-// Show the structure of the table
+```
+* Show the structure of the table
+```sql
 .schema moderation_actions
-
-// Show all against against a user
+```
+* Show all against against a user
+```sql
 SELECT * FROM moderation_actions WHERE author_id = 123456789
 ```
 
