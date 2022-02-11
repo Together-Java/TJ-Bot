@@ -76,7 +76,7 @@ public final class RemindRoutine implements Routine {
             return;
         }
 
-        jda.retrieveUserById(authorId).flatMap(author -> {
+        jda.retrieveUserById(authorId).onErrorMap(error -> null).flatMap(author -> {
             String authorName = author == null ? "Unknown user" : author.getAsTag();
             String authorIconUrl = author == null ? null : author.getAvatarUrl();
 
@@ -87,8 +87,10 @@ public final class RemindRoutine implements Routine {
                 .setColor(AMBIENT_COLOR)
                 .build();
 
-            return channel.sendMessage(author == null ? "" : author.getAsMention())
-                .setEmbeds(embed);
+            if (author == null) {
+                return channel.sendMessageEmbeds(embed);
+            }
+            return channel.sendMessage(author.getAsMention()).setEmbeds(embed);
         }).queue();
     }
 }

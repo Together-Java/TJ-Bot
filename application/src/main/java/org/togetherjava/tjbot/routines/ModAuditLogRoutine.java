@@ -95,6 +95,7 @@ public final class ModAuditLogRoutine implements Routine {
         // If the target is null, the user got deleted in the meantime
         return entry.getJDA()
             .retrieveUserById(entry.getTargetIdLong())
+            .onErrorMap(error -> null)
             .map(target -> target == null ? "(user unknown)" : target.getAsTag());
     }
 
