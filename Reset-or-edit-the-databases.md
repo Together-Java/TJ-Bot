@@ -10,3 +10,19 @@ See [[Access the VPS]] for details of the login process.
 2. Consider temporarilly shutting down the bot during the database edits (see [[Shutdown or restart the bot]])
 3. Either `cd /var/lib/docker/volumes/tj-bot-master-database/_data` or `cd /var/lib/docker/volumes/tj-bot-develop-database/_data` to go to the directory of the corresponding database
 4. Edit the database manually, it is a [SQLite 3](https://www.sqlite.org/index.html) database.
+
+## Working with the database
+
+To ease inspecting and editing the database, the `sqlite3` CLI is installed on the VPS. Here are some simple example queries:
+```sql
+// List all available tables
+.tables
+
+// Show the structure of the table
+.schema moderation_actions
+
+// Show all against against a user
+SELECT * FROM moderation_actions WHERE author_id = 123456789
+```
+
+![example](https://i.imgur.com/zmJtYrD.png)
