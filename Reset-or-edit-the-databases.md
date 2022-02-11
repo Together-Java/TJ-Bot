@@ -15,7 +15,7 @@ See [[Access the VPS]] for details of the login process.
 
 To ease inspecting and editing the database, the `sqlite3` CLI is installed on the VPS.
 
-Please make sure to either shut down the bot in the meantime or working on a copy of the database instead, to avoid locking the actual database:
+Please make sure to either shut down the bot in the meantime or working on a copy of the database instead, to **avoid locking the actual database**:
 ```bash
 cp database.db database_copy.db
 ```
