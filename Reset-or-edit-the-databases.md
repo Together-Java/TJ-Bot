@@ -13,7 +13,18 @@ See [[Access the VPS]] for details of the login process.
 
 ## Working with the database
 
-To ease inspecting and editing the database, the `sqlite3` CLI is installed on the VPS. Here are some simple example queries:
+To ease inspecting and editing the database, the `sqlite3` CLI is installed on the VPS.
+
+Please make sure to either shut down the bot in the meantime or working on a copy of the database instead, to avoid locking the actual database:
+```bash
+cp database.db database_copy.db
+```
+
+Here are some simple example queries:
+* Connect to the database
+```bash
+sqlite3 database_copy.db
+```
 * List all available tables:
 ```sql
 .tables
@@ -25,6 +36,10 @@ To ease inspecting and editing the database, the `sqlite3` CLI is installed on t
 * Show all against against a user
 ```sql
 SELECT * FROM moderation_actions WHERE author_id = 123456789
+```
+* Exist the database
+```sql
+.exit
 ```
 
 ![example](https://i.imgur.com/zmJtYrD.png)
