@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands.reminder;
 
+import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -20,7 +22,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  * a future date.
  * <p>
  * Example usage:
- * 
+ *
  * <pre>
  * {@code
  * /remind amount: 5 unit: weeks content: Hello World!
@@ -40,6 +42,7 @@ public final class RemindCommand extends SlashCommandAdapter {
     private static final List<String> WHEN_UNITS =
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_WHEN_PERIOD = Period.ofYears(3);
+    private static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
 
@@ -74,7 +77,12 @@ public final class RemindCommand extends SlashCommandAdapter {
         String content = event.getOption(CONTENT_OPTION).getAsString();
 
         Instant when = parseWhen(whenAmount, whenUnit);
+        User author = event.getUser();
+
         if (!handleIsWhenWithinLimits(when, event)) {
+            return;
+        }
+        if (!handleIsUserBelowMaxPendingReminders(author, event)) {
             return;
         }
 
@@ -86,7 +94,7 @@ public final class RemindCommand extends SlashCommandAdapter {
             .setCreatedAt(Instant.now())
             .setGuildId(event.getGuild().getIdLong())
             .setChannelId(event.getChannel().getIdLong())
-            .setAuthorId(event.getUser().getIdLong())
+            .setAuthorId(author.getIdLong())
             .setRemindAt(when)
             .setContent(content)
             .insert());
@@ -118,6 +126,24 @@ public final class RemindCommand extends SlashCommandAdapter {
         event
             .reply("The reminder is set too far in the future. The maximal allowed period is '%s'."
                 .formatted(MAX_WHEN_PERIOD))
+            .setEphemeral(true)
+            .queue();
+
+        return false;
+    }
+
+    private boolean handleIsUserBelowMaxPendingReminders(@NotNull ISnowflake author,
+            @NotNull Interaction event) {
+        int pendingReminders = database.read(context -> context.fetchCount(PENDING_REMINDERS,
+                PENDING_REMINDERS.AUTHOR_ID.equal(author.getIdLong())));
+
+        if (pendingReminders < MAX_PENDING_REMINDERS_PER_USER) {
+            return true;
+        }
+
+        event.reply(
+                "You have reached the maximum amount of pending reminders per user (%s). Please wait until some of them have been sent."
+                    .formatted(MAX_PENDING_REMINDERS_PER_USER))
             .setEphemeral(true)
             .queue();
 
