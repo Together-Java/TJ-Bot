@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.reminder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
 /**
  * Routine that processes and sends pending reminders.
- *
+ * <p>
  * Reminders can be set by using {@link RemindCommand}.
  */
 public final class RemindRoutine implements Routine {
@@ -75,17 +76,19 @@ public final class RemindRoutine implements Routine {
             return;
         }
 
-        jda.retrieveUserById(authorId).map(author -> {
+        jda.retrieveUserById(authorId).flatMap(author -> {
             String authorName = author == null ? "Unknown user" : author.getAsTag();
             String authorIconUrl = author == null ? null : author.getAvatarUrl();
 
-            return new EmbedBuilder().setAuthor(authorName, null, authorIconUrl)
-                .setTitle("Reminder")
+            MessageEmbed embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl)
                 .setDescription(content)
-                .setFooter("from")
+                .setFooter("reminder from")
                 .setTimestamp(createdAt)
                 .setColor(AMBIENT_COLOR)
                 .build();
-        }).flatMap(channel::sendMessageEmbeds).queue();
+
+            return channel.sendMessage(author == null ? "" : author.getAsMention())
+                .setEmbeds(embed);
+        }).queue();
     }
 }
