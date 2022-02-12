@@ -82,6 +82,10 @@ public enum Features {
         features.add(new RoleSelectCommand());
         features.add(new TopHelpersCommand(database));
 
+        // Message context commands
+
+        // User context commands
+
         // Mixtures
         features.add(new FreeCommand());
 

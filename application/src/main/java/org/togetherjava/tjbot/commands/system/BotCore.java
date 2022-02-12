@@ -6,7 +6,10 @@ import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -55,6 +58,11 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Map<String, SlashCommand> nameToSlashCommands;
+    private final Map<String, UserContextCommand> nameToUserContextCommands;
+    private final Map<String, MessageContextCommand> nameToMessageContextCommands;
+
+    private final List<BotCommand> commands;
+
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
@@ -70,6 +78,10 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     @SuppressWarnings("ThisEscapedInObjectConstruction")
     public BotCore(@NotNull JDA jda, @NotNull Database database) {
         Collection<Feature> features = Features.createFeatures(jda, database);
+
+        commands = features.stream()
+                .filter(BotCommand.class::isInstance)
+                .map(BotCommand.class::cast).toList();
 
         // Message receivers
         features.stream()
@@ -105,7 +117,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         nameToSlashCommands = features.stream()
             .filter(SlashCommand.class::isInstance)
             .map(SlashCommand.class::cast)
-            .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
+            .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
 
         if (nameToSlashCommands.containsKey(RELOAD_COMMAND)) {
             throw new IllegalStateException(
@@ -113,16 +125,25 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         }
         nameToSlashCommands.put(RELOAD_COMMAND, new ReloadCommand(this));
 
+        // User context commands
+        nameToUserContextCommands = features.stream()
+                .filter(UserContextCommand.class::isInstance)
+                .map(UserContextCommand.class::cast)
+                .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
+
+        // Message context commands
+        nameToMessageContextCommands = features.stream()
+                .filter(MessageContextCommand.class::isInstance)
+                .map(MessageContextCommand.class::cast)
+                .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
+
+        // Component users
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
-        nameToSlashCommands.values()
-            .forEach(slashCommand -> slashCommand
-                .acceptComponentIdGenerator(((componentId, lifespan) -> {
-                    UUID uuid = UUID.randomUUID();
-                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                    return uuid.toString();
-                })));
+
+        // Set component ID generators
+        nameToSlashCommands.values().forEach(this::setComponentIdGenerator);
 
         if (logger.isInfoEnabled()) {
             logger.info("Available commands: {}", nameToSlashCommands.keySet());
@@ -176,12 +197,36 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .map(Map.Entry::getValue);
     }
 
+
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", event.getName(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireSlashCommand(event.getName()).onSlashCommand(event));
     }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
+        logger.debug("Received autocomplete '{}' (#{}) option '{}' on guild '{}'", event.getName(), event.getFocusedOption().getName(),
+                event.getId(), event.getGuild());
+        COMMAND_SERVICE.execute(() -> requireSlashCommand(event.getName()).onAutoComplete(event));
+    }
+
+
+    @Override
+    public void onUserContextInteraction(@NotNull UserContextInteractionEvent event) {
+        logger.debug("Received user context-command '{}' (#{}) on guild '{}'", event.getName(),
+                event.getId(), event.getGuild());
+        COMMAND_SERVICE.execute(() -> requireUserCommand(event.getName()).onUserContext(event));
+    }
+
+    @Override
+    public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
+        logger.debug("Received message context-command '{}' (#{}) on guild '{}'", event.getName(),
+                event.getId(), event.getGuild());
+        COMMAND_SERVICE.execute(() -> requireMessageCommand(event.getName()).onMessageContext(event));
+    }
+
 
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
@@ -197,6 +242,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         COMMAND_SERVICE
             .execute(() -> forwardComponentCommand(event, SlashCommand::onSelectionMenu));
     }
+
 
     private void registerReloadCommand(@NotNull Guild guild) {
         guild.retrieveCommands().queue(commands -> {
@@ -273,6 +319,29 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         return Objects.requireNonNull(nameToSlashCommands.get(name));
     }
 
+    /**
+     * Gets the given user context-command by its name and requires that it exists.
+     *
+     * @param name the name of the command to get
+     * @return the command with the given name
+     * @throws NullPointerException if the command with the given name was not registered
+     */
+    private @NotNull UserContextCommand requireUserCommand(@NotNull String name) {
+        return Objects.requireNonNull(nameToUserContextCommands.get(name));
+    }
+
+    /**
+     * Gets the given message context-command by its name and requires that it exists.
+     *
+     * @param name the name of the command to get
+     * @return the command with the given name
+     * @throws NullPointerException if the command with the given name was not registered
+     */
+    private @NotNull MessageContextCommand requireMessageCommand(@NotNull String name) {
+        return Objects.requireNonNull(nameToMessageContextCommands.get(name));
+    }
+
+
     private static void handleRegisterErrors(Throwable ex, Guild guild) {
         new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, errorResponse -> {
             // Find a channel that we have permissions to write to
@@ -306,6 +375,14 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     private static void onComponentIdRemoved(ComponentId componentId) {
         // NOTE As of now, we do not act on this event, but we could use it
         // in the future to, for example, disable buttons or delete the associated message
+    }
+
+    private void setComponentIdGenerator(@NotNull BotCommand command) {
+        command.acceptComponentIdGenerator(((componentId, lifespan) -> {
+                    UUID uuid = UUID.randomUUID();
+                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                    return uuid.toString();
+                }));
     }
 
     /**
