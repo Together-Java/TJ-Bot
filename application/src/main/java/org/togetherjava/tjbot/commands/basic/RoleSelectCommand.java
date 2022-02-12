@@ -22,8 +22,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import java.awt.*;
@@ -65,7 +65,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      */
     public RoleSelectCommand() {
         super("role-select", "Sends a message where users can select their roles",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         SubcommandData allRoles =
                 new SubcommandData(ALL_OPTION, "Lists all the rolls in the server for users")
