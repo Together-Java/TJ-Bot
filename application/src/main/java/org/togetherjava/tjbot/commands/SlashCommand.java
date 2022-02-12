@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -90,4 +91,21 @@ public interface SlashCommand extends BotCommand {
      * @param event the event that triggered this
      */
     void onSlashCommand(@NotNull SlashCommandInteractionEvent event);
+
+    /**
+     * Triggered by the core system when a slash command's autocomplete corresponding to this implementation (based
+     * on {@link #getData()}) has been triggered.
+     * <p>
+     * This method may be called multithreaded. In particular, there are no guarantees that it will
+     * be executed on the same thread repeatedly or on the same thread that other event methods have
+     * been called on.
+     * <p>
+     * Details are available in the given event and the event also enables implementations to
+     * respond to it.
+     * <p>
+     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's
+     *
+     * @param event the event that triggered this
+     */
+    void onAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event);
 }

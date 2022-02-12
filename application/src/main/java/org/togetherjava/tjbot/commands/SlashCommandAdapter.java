@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -82,5 +83,11 @@ public abstract class SlashCommandAdapter extends BotCommandAdapter implements S
     @Override
     public final SlashCommandData getData() {
         return data;
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event) {
+        // Adapter does not react by default, subclasses may change this behavior
     }
 }
