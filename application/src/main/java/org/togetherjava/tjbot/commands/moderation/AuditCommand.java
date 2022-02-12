@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.utils.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.ZoneOffset;
@@ -42,7 +42,7 @@ public final class AuditCommand extends SlashCommandAdapter {
      */
     public AuditCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Lists all moderation actions that have been taken against a user",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who to retrieve actions for",
                 true);

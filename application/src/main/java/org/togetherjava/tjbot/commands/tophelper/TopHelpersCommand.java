@@ -16,7 +16,7 @@ import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
@@ -58,7 +58,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
      * @param database the database containing the message counts of top helpers
      */
     public TopHelpersCommand(@NotNull Database database) {
-        super(COMMAND_NAME, "Lists top helpers for the last month", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Lists top helpers for the last month", CommandVisibility.GUILD);
         // TODO Add options to optionally pick a time range once JDA/Discord offers a date-picker
         hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
             .asMatchPredicate();

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
@@ -51,7 +51,7 @@ public final class MuteCommand extends SlashCommandAdapter {
      */
     public MuteCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Mutes the given user so that they can not send messages anymore",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         OptionData durationData = new OptionData(OptionType.STRING, DURATION_OPTION,
                 "the duration of the mute, permanent or temporary", true);

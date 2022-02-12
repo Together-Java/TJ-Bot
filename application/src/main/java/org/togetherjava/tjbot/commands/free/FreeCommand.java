@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FreeCommandConfig;
 
@@ -24,7 +24,7 @@ import java.awt.*;
 import java.time.Instant;
 import java.util.*;
 
-// TODO (can SlashCommandVisibility be narrower than GUILD?)
+// TODO (can CommandVisibility be narrower than GUILD?)
 // TODO monitor all channels when list is empty? monitor none?
 // TODO (use other emojis? use images?)
 // TODO add command to add/remove/status channels to monitor?
@@ -76,7 +76,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      */
     public FreeCommand() {
         super(COMMAND_NAME, "Marks this channel as free for another user to ask a question",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         channelIdToMessageIdForStatus = new HashMap<>();
         channelMonitor = new ChannelMonitor();

@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
@@ -47,7 +47,7 @@ public final class KickCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public KickCommand(@NotNull ModerationActionsStore actionsStore) {
-        super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Kicks the given user from the server", CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);

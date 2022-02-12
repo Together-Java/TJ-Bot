@@ -38,7 +38,7 @@ import java.util.List;
  *     &#64;code
  *     public class PingCommand extends ContextCommandAdapter implements UserContextCommand {
  *         public PingCommand() {
- *             super(Command.Type.USER, "ping", SlashCommandVisibility.GUILD);
+ *             super(Command.Type.USER, "ping", CommandVisibility.GUILD);
  *         }
  *
  *         &#64;Override

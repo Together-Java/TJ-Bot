@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
@@ -57,7 +57,7 @@ public final class BanCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public BanCommand(@NotNull ModerationActionsStore actionsStore) {
-        super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Bans the given user from the server", CommandVisibility.GUILD);
 
         OptionData durationData = new OptionData(OptionType.STRING, DURATION_OPTION,
                 "the duration of the ban, permanent or temporary", true);

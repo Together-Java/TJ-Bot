@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -93,7 +93,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     public VcActivityCommand() {
         super("vc-activity",
                 "Starts a VC activity (you need to be in an voice channel to run this command)",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
 
         SubcommandData applicationSubCommand =

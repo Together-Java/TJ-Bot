@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
@@ -44,7 +44,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     public UnmuteCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME,
                 "Unmutes the given already muted user so that they can send messages again",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to unmute", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unmuted", true);

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.nio.charset.StandardCharsets;
@@ -58,7 +58,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param tagSystem the system providing the actual tag data
      */
     public TagManageCommand(TagSystem tagSystem) {
-        super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
+        super("tag-manage", "Provides commands to manage all tags", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
         hasRequiredRole =

@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
@@ -37,7 +37,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public UnbanCommand(@NotNull ModerationActionsStore actionsStore) {
-        super(COMMAND_NAME, "Unbans the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Unbans the given user from the server", CommandVisibility.GUILD);
 
         getData()
             .addOption(OptionType.USER, TARGET_OPTION, "The banned user who you want to unban",

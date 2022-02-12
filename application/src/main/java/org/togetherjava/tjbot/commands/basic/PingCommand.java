@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.commands.basic;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 /**
  * Implementation of an example command to illustrate how to respond to a user.
@@ -15,7 +15,7 @@ public final class PingCommand extends SlashCommandAdapter {
      * Creates an instance of the ping pong command.
      */
     public PingCommand() {
-        super("ping", "Bot responds with 'Pong!'", SlashCommandVisibility.GUILD);
+        super("ping", "Bot responds with 'Pong!'", CommandVisibility.GUILD);
     }
 
     /**
