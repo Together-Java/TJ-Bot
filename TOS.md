@@ -61,7 +61,7 @@ The materials used by **TJ-Bot** may include technical, typographical, or photog
 
 ## Your Privacy
 
-Please read our **Privacy Policy**.
+Please read our [Privacy Policy](https://github.com/Together-Java/TJ-Bot/blob/develop/PP.md).
 
 ## Governing Law
 
