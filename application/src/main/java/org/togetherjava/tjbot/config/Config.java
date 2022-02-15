@@ -10,18 +10,12 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * Configuration of the application, as singleton.
- * <p>
- * Create instances using {@link #load(Path)} and then access them with {@link #getInstance()}.
+ * Configuration of the application. Create instances using {@link #load(Path)}.
  */
-@SuppressWarnings({"Singleton", "ClassCanBeRecord"})
+@SuppressWarnings("ClassCanBeRecord")
 public final class Config {
-
-    @SuppressWarnings("RedundantFieldInitialization")
-    private static Config config = null;
 
     private final String token;
     private final String databasePath;
@@ -62,27 +56,14 @@ public final class Config {
     }
 
     /**
-     * Loads the configuration from the given file. Will override any previously loaded data.
-     * <p>
-     * Access the instance using {@link #getInstance()}.
+     * Loads the configuration from the given file.
      *
      * @param path the configuration file, as JSON object
+     * @return the loaded configuration
      * @throws IOException if the file could not be loaded
      */
-    public static void load(Path path) throws IOException {
-        config = new ObjectMapper().readValue(path.toFile(), Config.class);
-    }
-
-    /**
-     * Gets the singleton instance of the configuration.
-     * <p>
-     * Must be loaded beforehand using {@link #load(Path)}.
-     *
-     * @return the previously loaded configuration
-     */
-    public static Config getInstance() {
-        return Objects.requireNonNull(config,
-                "can not get the configuration before it has been loaded");
+    public static Config load(Path path) throws IOException {
+        return new ObjectMapper().readValue(path.toFile(), Config.class);
     }
 
     /**

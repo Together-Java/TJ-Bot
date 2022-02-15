@@ -49,20 +49,24 @@ public final class ModAuditLogRoutine implements Routine {
     private static final int HOURS_OF_DAY = 24;
     private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
+    private final String modAuditLogChannelPattern;
     private final Predicate<TextChannel> isAuditLogChannel;
     private final Database database;
+    private final Config config;
 
     /**
      * Creates a new instance.
      *
      * @param database the database for memorizing audit log dates
+     * @param config the config to use for this
      */
-    public ModAuditLogRoutine(@NotNull Database database) {
+    public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config) {
+        modAuditLogChannelPattern = config.getModAuditLogChannelPattern();
         Predicate<String> isAuditLogChannelName =
-                Pattern.compile(Config.getInstance().getModAuditLogChannelPattern())
-                    .asMatchPredicate();
+                Pattern.compile(modAuditLogChannelPattern).asMatchPredicate();
         isAuditLogChannel = channel -> isAuditLogChannelName.test(channel.getName());
 
+        this.config = config;
         this.database = database;
     }
 
@@ -232,7 +236,7 @@ public final class ModAuditLogRoutine implements Routine {
             if (auditLogChannel.isEmpty()) {
                 logger.warn(
                         "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
-                        Config.getInstance().getModAuditLogChannelPattern(), guild.getName());
+                        modAuditLogChannelPattern, guild.getName());
                 return;
             }
 
@@ -283,8 +287,8 @@ public final class ModAuditLogRoutine implements Routine {
         });
     }
 
-    private static Optional<RestAction<Message>> handleAuditLog(
-            @NotNull MessageChannel auditLogChannel, @NotNull AuditLogEntry entry) {
+    private Optional<RestAction<Message>> handleAuditLog(@NotNull MessageChannel auditLogChannel,
+            @NotNull AuditLogEntry entry) {
         Optional<RestAction<MessageEmbed>> maybeMessage = switch (entry.getType()) {
             case BAN -> handleBanEntry(entry);
             case UNBAN -> handleUnbanEntry(entry);
@@ -296,7 +300,7 @@ public final class ModAuditLogRoutine implements Routine {
         return maybeMessage.map(message -> message.flatMap(auditLogChannel::sendMessageEmbeds));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
+    private @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
             @NotNull AuditLogEntry entry) {
         if (containsMutedRole(entry, AuditLogKey.MEMBER_ROLES_ADD)) {
             return handleMuteEntry(entry);
@@ -307,8 +311,7 @@ public final class ModAuditLogRoutine implements Routine {
         return Optional.empty();
     }
 
-    private static boolean containsMutedRole(@NotNull AuditLogEntry entry,
-            @NotNull AuditLogKey key) {
+    private boolean containsMutedRole(@NotNull AuditLogEntry entry, @NotNull AuditLogKey key) {
         List<Map<String, String>> roleChanges = Optional.ofNullable(entry.getChangeByKey(key))
             .<List<Map<String, String>>>map(AuditLogChange::getNewValue)
             .orElse(List.of());
@@ -317,7 +320,7 @@ public final class ModAuditLogRoutine implements Routine {
             .flatMap(Collection::stream)
             .filter(changeEntry -> "name".equals(changeEntry.getKey()))
             .map(Map.Entry::getValue)
-            .anyMatch(ModerationUtils.isMuteRole);
+            .anyMatch(ModerationUtils.getIsMutedRolePredicate(config));
     }
 
     private Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {

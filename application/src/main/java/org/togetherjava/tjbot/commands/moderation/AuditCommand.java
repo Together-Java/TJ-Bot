@@ -39,16 +39,17 @@ public final class AuditCommand extends SlashCommandAdapter {
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
+     * @param config the config to use for this
      */
-    public AuditCommand(@NotNull ModerationActionsStore actionsStore) {
+    public AuditCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
         super(COMMAND_NAME, "Lists all moderation actions that have been taken against a user",
                 SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who to retrieve actions for",
                 true);
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
-            .asMatchPredicate();
+        hasRequiredRole =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 

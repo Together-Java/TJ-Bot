@@ -54,6 +54,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
+    private final Config config;
     private final Map<String, SlashCommand> nameToSlashCommands;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
@@ -66,10 +67,12 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      *
      * @param jda the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
+     * @param config the configuration to use for this system
      */
     @SuppressWarnings("ThisEscapedInObjectConstruction")
-    public BotCore(@NotNull JDA jda, @NotNull Database database) {
-        Collection<Feature> features = Features.createFeatures(jda, database);
+    public BotCore(@NotNull JDA jda, @NotNull Database database, @NotNull Config config) {
+        this.config = config;
+        Collection<Feature> features = Features.createFeatures(jda, database, config);
 
         // Message receivers
         features.stream()
@@ -271,7 +274,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         return Objects.requireNonNull(nameToSlashCommands.get(name));
     }
 
-    private static void handleRegisterErrors(Throwable ex, Guild guild) {
+    private void handleRegisterErrors(Throwable ex, Guild guild) {
         new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, errorResponse -> {
             // Find a channel that we have permissions to write to
             // NOTE Unfortunately, there is no better accurate way to find a proper channel
@@ -283,7 +286,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
                 .findAny();
 
             // Report the problem to the guild
-            Config config = Config.getInstance();
             channelToReportTo.ifPresent(textChannel -> textChannel
                 .sendMessage("I need the commands scope, please invite me correctly."
                         + " You can join '%s' or visit '%s' for more info, I will leave your guild now."

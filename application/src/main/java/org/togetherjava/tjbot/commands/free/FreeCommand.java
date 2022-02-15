@@ -61,6 +61,8 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
     private static final String COMMAND_NAME = "free";
     private static final Color MESSAGE_HIGHLIGHT_COLOR = Color.decode("#CCCC00");
 
+    private final Config config;
+
     // Map to store channel ID's, use Guild.getChannels() to guarantee order for display
     private final ChannelMonitor channelMonitor;
     private final Map<Long, Long> channelIdToMessageIdForStatus;
@@ -73,11 +75,14 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      * <p>
      * This fetches configuration information from a json configuration file (see
      * {@link FreeCommandConfig}) for further details.
+     * 
+     * @param config the config to use for this
      */
-    public FreeCommand() {
+    public FreeCommand(@NotNull Config config) {
         super(COMMAND_NAME, "Marks this channel as free for another user to ask a question",
                 SlashCommandVisibility.GUILD);
 
+        this.config = config;
         channelIdToMessageIdForStatus = new HashMap<>();
         channelMonitor = new ChannelMonitor();
 
@@ -339,8 +344,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
     }
 
     private void initChannelsToMonitor() {
-        Config.getInstance()
-            .getFreeCommandConfig()
+        config.getFreeCommandConfig()
             .stream()
             .map(FreeCommandConfig::getMonitoredChannels)
             .flatMap(Collection::stream)
@@ -348,8 +352,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
     }
 
     private void initStatusMessageChannels(@NotNull final JDA jda) {
-        Config.getInstance()
-            .getFreeCommandConfig()
+        config.getFreeCommandConfig()
             .stream()
             .map(FreeCommandConfig::getStatusChannel)
             // throws IllegalStateException if the id's don't match TextChannels

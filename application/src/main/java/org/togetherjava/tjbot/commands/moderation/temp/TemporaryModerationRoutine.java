@@ -11,6 +11,7 @@ import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.commands.moderation.ActionRecord;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
+import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
 import java.util.Map;
@@ -41,13 +42,14 @@ public final class TemporaryModerationRoutine implements Routine {
      *
      * @param jda the JDA instance to use to send messages and retrieve information
      * @param actionsStore the store used to retrieve temporary moderation actions
+     * @param config the config to use for this
      */
     public TemporaryModerationRoutine(@NotNull JDA jda,
-            @NotNull ModerationActionsStore actionsStore) {
+            @NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
         this.actionsStore = actionsStore;
         this.jda = jda;
 
-        typeToRevocableAction = Stream.of(new TemporaryBanAction(), new TemporaryMuteAction())
+        typeToRevocableAction = Stream.of(new TemporaryBanAction(), new TemporaryMuteAction(config))
             .collect(
                     Collectors.toMap(RevocableModerationAction::getApplyType, Function.identity()));
     }

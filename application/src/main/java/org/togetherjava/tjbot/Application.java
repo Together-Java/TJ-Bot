@@ -44,8 +44,9 @@ public enum Application {
         }
 
         Path configPath = Path.of(args.length == 1 ? args[0] : DEFAULT_CONFIG_PATH);
+        Config config;
         try {
-            Config.load(configPath);
+            config = Config.load(configPath);
         } catch (IOException e) {
             logger.error("Unable to load the configuration file from path '{}'",
                     configPath.toAbsolutePath(), e);
@@ -53,8 +54,7 @@ public enum Application {
         }
 
         try {
-            Config config = Config.getInstance();
-            runBot(config.getToken(), Path.of(config.getDatabasePath()));
+            runBot(config);
         } catch (Exception t) {
             logger.error("Unknown error", t);
         }
@@ -63,12 +63,13 @@ public enum Application {
     /**
      * Runs an instance of the bot, connecting to the given token and using the given database.
      *
-     * @param token the Discord Bot token to connect with
-     * @param databasePath the path to the database to use
+     * @param config the configuration to run the bot with
      */
     @SuppressWarnings("WeakerAccess")
-    public static void runBot(String token, Path databasePath) {
+    public static void runBot(Config config) {
         logger.info("Starting bot...");
+
+        Path databasePath = Path.of(config.getDatabasePath());
         try {
             Path parentDatabasePath = databasePath.toAbsolutePath().getParent();
             if (parentDatabasePath != null) {
@@ -76,10 +77,10 @@ public enum Application {
             }
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
-            JDA jda = JDABuilder.createDefault(token)
+            JDA jda = JDABuilder.createDefault(config.getToken())
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .build();
-            jda.addEventListener(new BotCore(jda, database));
+            jda.addEventListener(new BotCore(jda, database, config));
             jda.awaitReady();
             logger.info("Bot is ready");
 

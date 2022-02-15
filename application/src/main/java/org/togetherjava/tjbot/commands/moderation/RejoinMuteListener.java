@@ -9,9 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.EventReceiver;
+import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -26,23 +26,27 @@ public final class RejoinMuteListener implements EventReceiver {
     private static final Logger logger = LoggerFactory.getLogger(RejoinMuteListener.class);
 
     private final ModerationActionsStore actionsStore;
+    private final Config config;
 
     /**
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command and to retrieve whether a
      *        user should be muted
+     * @param config the config to use for this
      */
-    public RejoinMuteListener(@NotNull ModerationActionsStore actionsStore) {
-        this.actionsStore = Objects.requireNonNull(actionsStore);
+    public RejoinMuteListener(@NotNull ModerationActionsStore actionsStore,
+            @NotNull Config config) {
+        this.actionsStore = actionsStore;
+        this.config = config;
     }
 
-    private static void muteMember(@NotNull Member member) {
+    private void muteMember(@NotNull Member member) {
         Guild guild = member.getGuild();
         logger.info("Reapplied existing mute to user '{}' ({}) in guild '{}' after rejoining.",
                 member.getUser().getAsTag(), member.getId(), guild.getName());
 
-        guild.addRoleToMember(member, ModerationUtils.getMutedRole(guild).orElseThrow())
+        guild.addRoleToMember(member, ModerationUtils.getMutedRole(guild, config).orElseThrow())
             .reason("Reapplied existing mute after rejoining the server")
             .queue();
     }

@@ -40,12 +40,6 @@ public enum ModerationUtils {
      * embeds.
      */
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
-    /**
-     * Matches the name of the role that is used to mute users, as used by {@link MuteCommand} and
-     * similar.
-     */
-    public static final Predicate<String> isMuteRole =
-            Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -332,13 +326,26 @@ public enum ModerationUtils {
     }
 
     /**
+     * Gets a predicate that identifies the role used to mute a member in a guild.
+     *
+     * @param config the config used to identify the muted role
+     * @return predicate that matches the name of the muted role
+     */
+    public static Predicate<String> getIsMutedRolePredicate(@NotNull Config config) {
+        return Pattern.compile(config.getMutedRolePattern()).asMatchPredicate();
+    }
+
+    /**
      * Gets the role used to mute a member in a guild.
      *
      * @param guild the guild to get the muted role from
+     * @param config the config used to identify the muted role
      * @return the muted role, if found
      */
-    public static @NotNull Optional<Role> getMutedRole(@NotNull Guild guild) {
-        return guild.getRoles().stream().filter(role -> isMuteRole.test(role.getName())).findAny();
+    public static @NotNull Optional<Role> getMutedRole(@NotNull Guild guild,
+            @NotNull Config config) {
+        Predicate<String> isMutedRole = getIsMutedRolePredicate(config);
+        return guild.getRoles().stream().filter(role -> isMutedRole.test(role.getName())).findAny();
     }
 
     /**

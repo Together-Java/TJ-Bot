@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
+import org.togetherjava.tjbot.config.Config;
 
 /**
  * Action to revoke temporary mutes, as applied by
@@ -18,6 +19,16 @@ import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
  */
 final class TemporaryMuteAction implements RevocableModerationAction {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryMuteAction.class);
+    private final Config config;
+
+    /**
+     * Creates a new instance of a temporary mute action.
+     * 
+     * @param config the config to use to identify the muted role
+     */
+    TemporaryMuteAction(@NotNull Config config) {
+        this.config = config;
+    }
 
     @Override
     public @NotNull ModerationAction getApplyType() {
@@ -34,7 +45,7 @@ final class TemporaryMuteAction implements RevocableModerationAction {
             @NotNull String reason) {
         return guild
             .removeRoleFromMember(target.getIdLong(),
-                    ModerationUtils.getMutedRole(guild).orElseThrow())
+                    ModerationUtils.getMutedRole(guild, config).orElseThrow())
             .reason(reason);
     }
 

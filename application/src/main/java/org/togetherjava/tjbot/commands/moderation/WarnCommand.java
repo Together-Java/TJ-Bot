@@ -39,15 +39,16 @@ public final class WarnCommand extends SlashCommandAdapter {
      * Creates a new instance.
      *
      * @param actionsStore used to store actions issued by this command
+     * @param config the config to use for this
      */
-    public WarnCommand(@NotNull ModerationActionsStore actionsStore) {
+    public WarnCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
         super("warn", "Warns the given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to warn", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why you want to warn the user", true);
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
-            .asMatchPredicate();
+        hasRequiredRole =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
