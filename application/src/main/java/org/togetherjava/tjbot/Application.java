@@ -20,7 +20,7 @@ import java.sql.SQLException;
  * Main class of the application. Use {@link #main(String[])} to start an instance of it.
  * <p>
  * New commands can be created by implementing
- * {@link net.dv8tion.jda.api.events.interaction.SlashCommandEvent} or extending
+ * {@link net.dv8tion.jda.api.events.interaction.SlashCommandInteractionEvent} or extending
  * {@link org.togetherjava.tjbot.commands.SlashCommandAdapter}. They can then be registered in
  * {@link Features}.
  */

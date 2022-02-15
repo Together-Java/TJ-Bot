@@ -8,8 +8,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -119,12 +119,12 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      * <p>
      * If this is called on from a channel that was not configured for monitoring (see
      * {@link FreeCommandConfig}) the user will receive an ephemeral message stating such.
-     * 
+     *
      * @param event the event that triggered this
      * @throws IllegalStateException if this method is called for a Global Slash Command
      */
     @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
         logger.debug("/free used by {} on channel {}", event.getUser().getAsTag(),
                 event.getChannel().getName());
         if (!handleShouldBeProcessed(event)) {
@@ -154,7 +154,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      * @param event the event to test for validity.
      * @return true if the event should be processed false otherwise.
      */
-    private boolean handleShouldBeProcessed(@NotNull final SlashCommandEvent event) {
+    private boolean handleShouldBeProcessed(@NotNull final SlashCommandInteractionEvent event) {
         if (!isReady) {
             logger.debug(
                     "Slash command requested by {} in {}(channel: {}) before command is ready.",
@@ -240,7 +240,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
         return guild;
     }
 
-    private @NotNull Guild requiresGuild(SlashCommandEvent event) {
+    private @NotNull Guild requiresGuild(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
             throw new IllegalStateException(
@@ -289,26 +289,30 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
     public void onEvent(@NotNull GenericEvent event) {
         if (event instanceof ReadyEvent readyEvent) {
             onReady(readyEvent);
-        } else if (event instanceof GuildMessageReceivedEvent guildEvent) {
-            if (guildEvent.isWebhookMessage() || guildEvent.getAuthor().isBot()) {
+        } else if (event instanceof MessageReceivedEvent messageEvent) {
+            if (!messageEvent.isFromGuild()) {
                 return;
             }
-            if (!channelMonitor.isMonitoringChannel(guildEvent.getChannel().getIdLong())) {
+
+            if (messageEvent.isWebhookMessage() || messageEvent.getAuthor().isBot()) {
+                return;
+            }
+            if (!channelMonitor.isMonitoringChannel(messageEvent.getChannel().getIdLong())) {
                 logger.debug(
                         "Channel is not being monitored, ignoring message received in {} from {}",
-                        guildEvent.getChannel().getName(), guildEvent.getAuthor());
+                        messageEvent.getChannel().getName(), messageEvent.getAuthor());
                 return;
             }
-            if (channelMonitor.isChannelBusy(guildEvent.getChannel().getIdLong())) {
+            if (channelMonitor.isChannelBusy(messageEvent.getChannel().getIdLong())) {
                 logger.debug(
                         "Channel status is currently busy, ignoring message received in {} from {}",
-                        guildEvent.getChannel().getName(), guildEvent.getAuthor());
+                        messageEvent.getChannel().getName(), messageEvent.getAuthor());
                 return;
             }
-            channelMonitor.setChannelBusy(guildEvent.getChannel().getIdLong(),
-                    guildEvent.getAuthor().getIdLong());
-            displayStatus(channelMonitor.getStatusChannelFor(guildEvent.getGuild()));
-            guildEvent.getMessage().reply(UserStrings.NEW_QUESTION.message()).queue();
+            channelMonitor.setChannelBusy(messageEvent.getChannel().getIdLong(),
+                    messageEvent.getAuthor().getIdLong());
+            displayStatus(channelMonitor.getStatusChannelFor(messageEvent.getGuild()));
+            messageEvent.getMessage().reply(UserStrings.NEW_QUESTION.message()).queue();
         }
     }
 

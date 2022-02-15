@@ -1,10 +1,10 @@
 package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
@@ -43,7 +43,7 @@ public final class TagCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
@@ -51,7 +51,7 @@ public final class TagCommand extends SlashCommandAdapter {
             return;
         }
 
-        ReplyAction message = event
+        ReplyCallbackAction message = event
             .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(id).orElseThrow())
                 .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
                 .setTimestamp(Instant.now())

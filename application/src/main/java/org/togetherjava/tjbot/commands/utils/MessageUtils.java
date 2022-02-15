@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.utils;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,7 +42,7 @@ public enum MessageUtils {
      * Escapes every markdown content in the given string.
      *
      * If the escaped message is sent to Discord, it will display the original message.
-     * 
+     *
      * @param text the text to escape
      * @return the escaped text
      */
