@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
@@ -78,6 +79,7 @@ public enum Features {
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore));
         features.add(new UnmuteCommand(actionsStore));
+        features.add(new RoleSelectCommand());
         features.add(new TopHelpersCommand(database));
 
         // Mixtures
