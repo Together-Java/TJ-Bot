@@ -13,9 +13,9 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.SlashCommand;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.BotCommand;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  */
 public final class ReloadCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ReloadCommand.class);
-    private final SlashCommandProvider commandProvider;
+    private final BotCommandProvider commandProvider;
 
     /**
      * Creates the reload command, using the given provider as source of truth for the commands to
@@ -46,7 +46,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @param commandProvider the provider of slash commands to reload when this command is
      *        triggered
      */
-    public ReloadCommand(@NotNull SlashCommandProvider commandProvider) {
+    public ReloadCommand(@NotNull BotCommandProvider commandProvider) {
         super("reload",
                 "Uploads all existing slash-commands to Discord so they are fully up-to-date.",
                 CommandVisibility.GUILD);
@@ -135,12 +135,12 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @return the given upstream for chaining
      */
     private @NotNull CommandListUpdateAction updateCommandsIf(
-            @NotNull Predicate<? super SlashCommand> commandFilter,
+            @NotNull Predicate<? super BotCommand> commandFilter,
             @NotNull CommandListUpdateAction updateAction) {
-        return commandProvider.getSlashCommands()
+        return commandProvider.getBotCommands()
             .stream()
             .filter(commandFilter)
-            .map(SlashCommand::getData)
+            .map(BotCommand::getData)
             .reduce(updateAction, CommandListUpdateAction::addCommands, (x, y) -> x);
     }
 

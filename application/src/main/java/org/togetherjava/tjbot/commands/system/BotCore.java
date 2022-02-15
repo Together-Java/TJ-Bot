@@ -51,7 +51,7 @@ import java.util.stream.Stream;
  * event listener, using {@link net.dv8tion.jda.api.JDA#addEventListener(Object...)}. Afterwards,
  * the system is ready and will correctly forward events to all commands.
  */
-public final class BotCore extends ListenerAdapter implements SlashCommandProvider {
+public final class BotCore extends ListenerAdapter implements BotCommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
     private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
@@ -80,8 +80,9 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         Collection<Feature> features = Features.createFeatures(jda, database);
 
         commands = features.stream()
-                .filter(BotCommand.class::isInstance)
-                .map(BotCommand.class::cast).toList();
+            .filter(BotCommand.class::isInstance)
+            .map(BotCommand.class::cast)
+            .toList();
 
         // Message receivers
         features.stream()
@@ -127,15 +128,15 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
 
         // User context commands
         nameToUserContextCommands = features.stream()
-                .filter(UserContextCommand.class::isInstance)
-                .map(UserContextCommand.class::cast)
-                .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
+            .filter(UserContextCommand.class::isInstance)
+            .map(UserContextCommand.class::cast)
+            .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
 
         // Message context commands
         nameToMessageContextCommands = features.stream()
-                .filter(MessageContextCommand.class::isInstance)
-                .map(MessageContextCommand.class::cast)
-                .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
+            .filter(MessageContextCommand.class::isInstance)
+            .map(MessageContextCommand.class::cast)
+            .collect(Collectors.toMap(BotCommand::getName, Function.identity()));
 
         // Component users
         componentIdStore = new ComponentIdStore(database);
@@ -151,13 +152,15 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public @NotNull Collection<SlashCommand> getSlashCommands() {
-        return Collections.unmodifiableCollection(nameToSlashCommands.values());
+    public @NotNull Collection<BotCommand> getBotCommands() {
+        return Collections.unmodifiableCollection(commands);
     }
 
     @Override
-    public @NotNull Optional<SlashCommand> getSlashCommand(@NotNull String name) {
-        return Optional.ofNullable(nameToSlashCommands.get(name));
+    public @NotNull Optional<BotCommand> getBotCommand(@NotNull String name) {
+        return Optional.<BotCommand>ofNullable(nameToSlashCommands.get(name))
+            .or(() -> Optional.ofNullable(nameToUserContextCommands.get(name)))
+            .or(() -> Optional.ofNullable(nameToMessageContextCommands.get(name)));
     }
 
     @Override
@@ -175,13 +178,13 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         getMessageReceiversSubscribedTo(event.getChannel())
-                .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+            .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
     }
 
     @Override
     public void onMessageUpdate(@NotNull MessageUpdateEvent event) {
         getMessageReceiversSubscribedTo(event.getChannel())
-                .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+            .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
     }
 
 
@@ -206,9 +209,10 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
-        logger.debug("Received autocomplete '{}' (#{}) option '{}' on guild '{}'", event.getName(), event.getFocusedOption().getName(),
-                event.getId(), event.getGuild());
+    public void onCommandAutoCompleteInteraction(
+            @NotNull CommandAutoCompleteInteractionEvent event) {
+        logger.debug("Received autocomplete '{}' (#{}) option '{}' on guild '{}'", event.getName(),
+                event.getFocusedOption().getName(), event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireSlashCommand(event.getName()).onAutoComplete(event));
     }
 
@@ -224,7 +228,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     public void onMessageContextInteraction(@NotNull MessageContextInteractionEvent event) {
         logger.debug("Received message context-command '{}' (#{}) on guild '{}'", event.getName(),
                 event.getId(), event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireMessageCommand(event.getName()).onMessageContext(event));
+        COMMAND_SERVICE
+            .execute(() -> requireMessageCommand(event.getName()).onMessageContext(event));
     }
 
 
@@ -379,10 +384,10 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
 
     private void setComponentIdGenerator(@NotNull BotCommand command) {
         command.acceptComponentIdGenerator(((componentId, lifespan) -> {
-                    UUID uuid = UUID.randomUUID();
-                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                    return uuid.toString();
-                }));
+            UUID uuid = UUID.randomUUID();
+            componentIdStore.putOrThrow(uuid, componentId, lifespan);
+            return uuid.toString();
+        }));
     }
 
     /**

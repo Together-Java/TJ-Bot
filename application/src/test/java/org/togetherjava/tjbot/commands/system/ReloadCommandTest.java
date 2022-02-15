@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.system;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.BotCommand;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,14 +15,14 @@ final class ReloadCommandTest {
     void ReloadCommand() {
         @SuppressWarnings({"AnonymousInnerClassWithTooManyMethods", "AnonymousInnerClass",
                 "AnonymousInnerClassMayBeStatic"})
-        SlashCommandProvider slashCommandProvider = new SlashCommandProvider() {
+        BotCommandProvider slashCommandProvider = new BotCommandProvider() {
             @Override
-            public @NotNull Collection<SlashCommand> getSlashCommands() {
+            public @NotNull Collection<BotCommand> getBotCommands() {
                 return List.of();
             }
 
             @Override
-            public @NotNull Optional<SlashCommand> getSlashCommand(@NotNull String name) {
+            public @NotNull Optional<BotCommand> getBotCommand(@NotNull String name) {
                 return Optional.empty();
             }
         };
