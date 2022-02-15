@@ -35,8 +35,9 @@ public final class UnbanCommand extends SlashCommandAdapter {
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
+     * @param config the config to use for this
      */
-    public UnbanCommand(@NotNull ModerationActionsStore actionsStore) {
+    public UnbanCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
         super(COMMAND_NAME, "Unbans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData()
@@ -44,8 +45,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
                     true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unbanned", true);
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
-            .asMatchPredicate();
+        hasRequiredRole =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 

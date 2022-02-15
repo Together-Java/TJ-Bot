@@ -17,6 +17,7 @@ import org.togetherjava.tjbot.commands.tags.TagsCommand;
 import org.togetherjava.tjbot.commands.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.commands.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.commands.tophelper.TopHelpersPurgeMessagesRoutine;
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
@@ -29,7 +30,7 @@ import java.util.Collection;
  * it with the system.
  * <p>
  * To add a new slash command, extend the commands returned by
- * {@link #createFeatures(JDA, Database)}.
+ * {@link #createFeatures(JDA, Database, Config)}.
  */
 public enum Features {
     ;
@@ -42,10 +43,11 @@ public enum Features {
      *
      * @param jda the JDA instance commands will be registered at
      * @param database the database of the application, which features can use to persist data
+     * @param config the configuration features should use
      * @return a collection of all features
      */
     public static @NotNull Collection<Feature> createFeatures(@NotNull JDA jda,
-            @NotNull Database database) {
+            @NotNull Database database, @NotNull Config config) {
         TagSystem tagSystem = new TagSystem(database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
 
@@ -55,35 +57,35 @@ public enum Features {
         Collection<Feature> features = new ArrayList<>();
 
         // Routines
-        features.add(new ModAuditLogRoutine(database));
-        features.add(new TemporaryModerationRoutine(jda, actionsStore));
+        features.add(new ModAuditLogRoutine(database, config));
+        features.add(new TemporaryModerationRoutine(jda, actionsStore, config));
         features.add(new TopHelpersPurgeMessagesRoutine(database));
 
         // Message receivers
-        features.add(new TopHelpersMessageListener(database));
+        features.add(new TopHelpersMessageListener(database, config));
 
         // Event receivers
-        features.add(new RejoinMuteListener(actionsStore));
+        features.add(new RejoinMuteListener(actionsStore, config));
 
         // Slash commands
         features.add(new PingCommand());
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem));
-        features.add(new TagManageCommand(tagSystem));
+        features.add(new TagManageCommand(tagSystem, config));
         features.add(new TagsCommand(tagSystem));
         features.add(new VcActivityCommand());
-        features.add(new WarnCommand(actionsStore));
-        features.add(new KickCommand(actionsStore));
-        features.add(new BanCommand(actionsStore));
-        features.add(new UnbanCommand(actionsStore));
-        features.add(new AuditCommand(actionsStore));
-        features.add(new MuteCommand(actionsStore));
-        features.add(new UnmuteCommand(actionsStore));
+        features.add(new WarnCommand(actionsStore, config));
+        features.add(new KickCommand(actionsStore, config));
+        features.add(new BanCommand(actionsStore, config));
+        features.add(new UnbanCommand(actionsStore, config));
+        features.add(new AuditCommand(actionsStore, config));
+        features.add(new MuteCommand(actionsStore, config));
+        features.add(new UnmuteCommand(actionsStore, config));
+        features.add(new TopHelpersCommand(database, config));
         features.add(new RoleSelectCommand());
-        features.add(new TopHelpersCommand(database));
 
         // Mixtures
-        features.add(new FreeCommand());
+        features.add(new FreeCommand(config));
 
         return features;
     }

@@ -56,13 +56,13 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * Creates a new instance, using the given tag system as base.
      *
      * @param tagSystem the system providing the actual tag data
+     * @param config the config to use for this
      */
-    public TagManageCommand(TagSystem tagSystem) {
+    public TagManageCommand(TagSystem tagSystem, @NotNull Config config) {
         super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
-        hasRequiredRole =
-                Pattern.compile(Config.getInstance().getTagManageRolePattern()).asMatchPredicate();
+        hasRequiredRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
 
         // TODO Think about adding a "Are you sure"-dialog to 'edit', 'edit-with-message' and
         // 'delete'

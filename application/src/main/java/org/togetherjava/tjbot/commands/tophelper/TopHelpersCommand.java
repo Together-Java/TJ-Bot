@@ -55,12 +55,12 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
      * Creates a new instance.
      *
      * @param database the database containing the message counts of top helpers
+     * @param config the config to use for this
      */
-    public TopHelpersCommand(@NotNull Database database) {
+    public TopHelpersCommand(@NotNull Database database, @NotNull Config config) {
         super(COMMAND_NAME, "Lists top helpers for the last month", SlashCommandVisibility.GUILD);
         // TODO Add options to optionally pick a time range once JDA/Discord offers a date-picker
-        hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
-            .asMatchPredicate();
+        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.database = database;
     }
 

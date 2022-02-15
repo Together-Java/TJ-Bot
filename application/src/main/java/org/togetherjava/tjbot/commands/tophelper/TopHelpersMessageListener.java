@@ -21,9 +21,10 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
      * Creates a new listener to receive all message sent in help channels.
      *
      * @param database to store message meta-data in
+     * @param config the config to use for this
      */
-    public TopHelpersMessageListener(@NotNull Database database) {
-        super(Pattern.compile(Config.getInstance().getHelpChannelPattern()));
+    public TopHelpersMessageListener(@NotNull Database database, @NotNull Config config) {
+        super(Pattern.compile(config.getHelpChannelPattern()));
         this.database = database;
     }
 

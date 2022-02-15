@@ -55,8 +55,9 @@ public final class BanCommand extends SlashCommandAdapter {
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
+     * @param config the config to use for this
      */
-    public BanCommand(@NotNull ModerationActionsStore actionsStore) {
+    public BanCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
         OptionData durationData = new OptionData(OptionType.STRING, DURATION_OPTION,
@@ -70,8 +71,8 @@ public final class BanCommand extends SlashCommandAdapter {
                     "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
-            .asMatchPredicate();
+        hasRequiredRole =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 

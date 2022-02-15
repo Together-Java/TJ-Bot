@@ -42,15 +42,15 @@ public final class KickCommand extends SlashCommandAdapter {
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
+     * @param config the config to use for this
      */
-    public KickCommand(@NotNull ModerationActionsStore actionsStore) {
+    public KickCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
         super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getSoftModerationRolePattern())
-            .asMatchPredicate();
+        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
