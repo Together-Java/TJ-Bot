@@ -22,9 +22,9 @@ import java.util.List;
  * <p>
  * <p>
  * The adapter manages all command related data itself, which can be provided during construction
- * (see {@link #SlashCommandAdapter(String, String, CommandVisibility)}). In order to add
- * options, subcommands or similar command configurations, use {@link #getData()} and mutate the
- * returned data object (see {@link CommandData} for details on how to work with this class).
+ * (see {@link #SlashCommandAdapter(String, String, CommandVisibility)}). In order to add options,
+ * subcommands or similar command configurations, use {@link #getData()} and mutate the returned
+ * data object (see {@link CommandData} for details on how to work with this class).
  * <p>
  * <p>
  * If implementations want to add buttons or selection menus, it is highly advised to use component

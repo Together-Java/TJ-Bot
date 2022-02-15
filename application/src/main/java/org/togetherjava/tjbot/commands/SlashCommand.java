@@ -93,8 +93,8 @@ public interface SlashCommand extends BotCommand {
     void onSlashCommand(@NotNull SlashCommandInteractionEvent event);
 
     /**
-     * Triggered by the core system when a slash command's autocomplete corresponding to this implementation (based
-     * on {@link #getData()}) has been triggered.
+     * Triggered by the core system when a slash command's autocomplete corresponding to this
+     * implementation (based on {@link #getData()}) has been triggered.
      * <p>
      * This method may be called multithreaded. In particular, there are no guarantees that it will
      * be executed on the same thread repeatedly or on the same thread that other event methods have

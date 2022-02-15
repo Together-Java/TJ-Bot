@@ -15,18 +15,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Adapter implementation of a {@link BotCommand}. The minimal setup only requires implementation
- * of their respective command method. A new command can then be registered by adding it
- * to {@link Features}.
+ * Adapter implementation of a {@link BotCommand}. The minimal setup only requires implementation of
+ * their respective command method. A new command can then be registered by adding it to
+ * {@link Features}.
  * <p>
  * Further, {@link #onButtonClick(ButtonInteractionEvent, List)} and
- * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)} can be overridden if desired. The default
- * implementation is empty, the adapter will not react to such events.
+ * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)} can be overridden if desired. The
+ * default implementation is empty, the adapter will not react to such events.
  * <p>
  * <p>
- * The adapter manages some getters for you, you've to create the {@link CommandData} yourself.
- * See {@link #BotCommandAdapter(CommandData, CommandVisibility)}} for more info on that.
- * Minimal modifications can be done on the {@link CommandData} returned by {@link #getData()}
+ * The adapter manages some getters for you, you've to create the {@link CommandData} yourself. See
+ * {@link #BotCommandAdapter(CommandData, CommandVisibility)}} for more info on that. Minimal
+ * modifications can be done on the {@link CommandData} returned by {@link #getData()}
  * <p>
  * <p>
  * If implementations want to add buttons or selection menus, it is highly advised to use component
@@ -81,7 +81,8 @@ public abstract class BotCommandAdapter implements BotCommand {
 
     @Override
     public final void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator) {
-        componentIdGenerator = Objects.requireNonNull(generator, "The given generator cannot be null");
+        componentIdGenerator =
+                Objects.requireNonNull(generator, "The given generator cannot be null");
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
@@ -92,7 +93,8 @@ public abstract class BotCommandAdapter implements BotCommand {
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event, @NotNull List<String> args) {
+    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
+            @NotNull List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
@@ -129,7 +131,8 @@ public abstract class BotCommandAdapter implements BotCommand {
      */
     @SuppressWarnings({"OverloadedVarargsMethod", "WeakerAccess"})
     protected final @NotNull String generateComponentId(@NotNull Lifespan lifespan,
-                                                        @NotNull String... args) {
-        return componentIdGenerator.generate(new ComponentId(getName(), Arrays.asList(args)), lifespan);
+            @NotNull String... args) {
+        return componentIdGenerator.generate(new ComponentId(getName(), Arrays.asList(args)),
+                lifespan);
     }
 }

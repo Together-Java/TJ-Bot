@@ -131,8 +131,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
         if (!(audioChannel instanceof VoiceChannel voiceChannel)) {
             event.reply("You've to be in a voicechannel, not a stage channel!")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
 

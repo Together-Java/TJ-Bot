@@ -87,9 +87,9 @@ public class TeXCommand extends SlashCommandAdapter {
             return;
         }
         event.getHook()
-                .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
-                .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
-                .queue();
+            .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
+            .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
+            .queue();
     }
 
 

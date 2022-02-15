@@ -11,12 +11,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 /**
- * Adapter implementation of a {@link BotCommand}. A new command can be registered by adding it
- * to {@link Features}.
+ * Adapter implementation of a {@link BotCommand}. A new command can be registered by adding it to
+ * {@link Features}.
  * <p>
  * Further, {@link #onButtonClick(ButtonInteractionEvent, List)} and
- * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)} can be overridden if desired. The default
- * implementation is empty, the adapter will not react to such events.
+ * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)} can be overridden if desired. The
+ * default implementation is empty, the adapter will not react to such events.
  * <p>
  * <p>
  * The adapter manages all command related data itself, which can be provided during construction
@@ -57,11 +57,13 @@ public abstract class ContextCommandAdapter extends BotCommandAdapter {
      * Creates a new adapter with the given data.
      *
      * @param type the {@link Command.Type type} of the command, can be either
-     *              {@link Command.Type#MESSAGE} or {@link Command.Type#USER}
-     * @param name the name of the command, see {@link Commands#context(Command.Type, String)} for the requirements
+     *        {@link Command.Type#MESSAGE} or {@link Command.Type#USER}
+     * @param name the name of the command, see {@link Commands#context(Command.Type, String)} for
+     *        the requirements
      * @param visibility the visibility of the command
      */
-    protected ContextCommandAdapter(@NotNull Command.Type type, @NotNull String name, @NotNull CommandVisibility visibility) {
+    protected ContextCommandAdapter(@NotNull Command.Type type, @NotNull String name,
+            @NotNull CommandVisibility visibility) {
         super(Commands.context(type, name), visibility);
     }
 }

@@ -15,15 +15,16 @@ import java.util.List;
  * Represents a Discord command.
  * <p>
  * All commands have to implement this interface. For convenience, there is a
- * {@link BotCommandAdapter} available that implemented most methods already. A new command can
- * then be registered by adding it to {@link Features}.
+ * {@link BotCommandAdapter} available that implemented most methods already. A new command can then
+ * be registered by adding it to {@link Features}.
  * <p>
  * <p>
- * Commands can either be visible globally in Discord or just to specific guilds. Some configurations can be made via {@link CommandData}, which
- * is then to be returned by {@link #getData()} where the system will then pick it up from.
+ * Commands can either be visible globally in Discord or just to specific guilds. Some
+ * configurations can be made via {@link CommandData}, which is then to be returned by
+ * {@link #getData()} where the system will then pick it up from.
  * <p>
- * After registration, the system will notify a command whenever one of its corresponding
- * command method, buttons ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
+ * After registration, the system will notify a command whenever one of its corresponding command
+ * method, buttons ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
  * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
  * <p>
@@ -49,7 +50,8 @@ public interface BotCommand extends Feature {
      *
      * @return the type of the command
      */
-    @NotNull Command.Type getType();
+    @NotNull
+    Command.Type getType();
 
 
     /**
@@ -65,7 +67,8 @@ public interface BotCommand extends Feature {
     /**
      * Gets the command data belonging to this command.
      * <p>
-     * See {@link net.dv8tion.jda.api.interactions.commands.build.Commands} for details on how to create and configure instances of it.
+     * See {@link net.dv8tion.jda.api.interactions.commands.build.Commands} for details on how to
+     * create and configure instances of it.
      * <p>
      * <p>
      * This method may be called multiple times, implementations must not create new data each time
@@ -94,7 +97,8 @@ public interface BotCommand extends Feature {
      *
      * @param event the event that triggered this
      * @param args the arguments transported with the button, see
-     *        {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for details on how these are created
+     *        {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for details on how these are
+     *        created
      */
     void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args);
 
@@ -114,7 +118,8 @@ public interface BotCommand extends Feature {
      *
      * @param event the event that triggered this
      * @param args the arguments transported with the selection menu, see
-     *        {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for details on how these are created
+     *        {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for details on how these are
+     *        created
      */
     void onSelectionMenu(@NotNull SelectMenuInteractionEvent event, @NotNull List<String> args);
 
@@ -129,8 +134,8 @@ public interface BotCommand extends Feature {
      * a database entry can be created and a UUID be obtained by using
      * {@link ComponentIdGenerator#generate(ComponentId, Lifespan)}, as provided by the instance
      * given to this method during system setup. The required {@link ComponentId} instance accepts
-     * optional extra arguments, which, if provided, can be picked up during the corresponding
-     * event (see {@link #onButtonClick(ButtonInteractionEvent, List)},
+     * optional extra arguments, which, if provided, can be picked up during the corresponding event
+     * (see {@link #onButtonClick(ButtonInteractionEvent, List)},
      * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)}).
      * <p>
      * Alternatively, if {@link BotCommandAdapter} has been extended, it also offers a handy

@@ -20,9 +20,9 @@ import java.util.List;
  * then be registered by adding it to {@link Features}.
  * <p>
  * <p>
- * Context commands can either be visible globally in Discord or just to specific guilds.
- * Small things can be configured via {@link CommandData}, which is then to be returned by {@link #getData()}
- * where the system will then pick it up from.
+ * Context commands can either be visible globally in Discord or just to specific guilds. Small
+ * things can be configured via {@link CommandData}, which is then to be returned by
+ * {@link #getData()} where the system will then pick it up from.
  * <p>
  * After registration, the system will notify a command whenever one of its corresponding slash
  * commands ({@link #onMessageContext(MessageContextInteractionEvent)}), buttons
@@ -36,8 +36,8 @@ public interface MessageContextCommand extends BotCommand {
 
 
     /**
-     * Triggered by the core system when a message context-command corresponding to this implementation (based
-     * on {@link #getData()}) has been triggered.
+     * Triggered by the core system when a message context-command corresponding to this
+     * implementation (based on {@link #getData()}) has been triggered.
      * <p>
      * This method may be called multithreaded. In particular, there are no guarantees that it will
      * be executed on the same thread repeatedly or on the same thread that other event methods have
@@ -48,8 +48,8 @@ public interface MessageContextCommand extends BotCommand {
      * <p>
      * Buttons or menus have to be created with a component ID (see
      * {@link ComponentInteraction#getComponentId()},
-     * {@link net.dv8tion.jda.api.interactions.components.buttons.Button#of(ButtonStyle, String, Emoji)}) in
-     * a very specific format, otherwise the core system will fail to identify the command that
+     * {@link net.dv8tion.jda.api.interactions.components.buttons.Button#of(ButtonStyle, String, Emoji)})
+     * in a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>
      * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info
