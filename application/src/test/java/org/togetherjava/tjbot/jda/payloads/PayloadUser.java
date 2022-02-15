@@ -1,17 +1,20 @@
-package org.togetherjava.tjbot.jda;
+package org.togetherjava.tjbot.jda.payloads;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-final class PayloadSlashCommandUser {
+public final class PayloadUser {
+    private boolean bot;
     @JsonProperty("public_flags")
-    private int publicFlags;
+    private long publicFlags;
     private String id;
     private String avatar;
     private String username;
     private String discriminator;
 
-    PayloadSlashCommandUser(int publicFlags, @NotNull String id, @NotNull String avatar,
+    public PayloadUser(boolean bot, long publicFlags, @NotNull String id, @Nullable String avatar,
             @NotNull String username, @NotNull String discriminator) {
         this.publicFlags = publicFlags;
         this.id = id;
@@ -20,11 +23,24 @@ final class PayloadSlashCommandUser {
         this.discriminator = discriminator;
     }
 
-    public int getPublicFlags() {
+    public static @NotNull PayloadUser of(@NotNull User user) {
+        return new PayloadUser(user.isBot(), user.getFlagsRaw(), user.getId(), user.getAvatarId(),
+                user.getName(), user.getDiscriminator());
+    }
+
+    public boolean isBot() {
+        return bot;
+    }
+
+    public void setBot(boolean bot) {
+        this.bot = bot;
+    }
+
+    public long getPublicFlags() {
         return publicFlags;
     }
 
-    public void setPublicFlags(int publicFlags) {
+    public void setPublicFlags(long publicFlags) {
         this.publicFlags = publicFlags;
     }
 
@@ -37,12 +53,12 @@ final class PayloadSlashCommandUser {
         this.id = id;
     }
 
-    @NotNull
+    @Nullable
     public String getAvatar() {
         return avatar;
     }
 
-    public void setAvatar(@NotNull String avatar) {
+    public void setAvatar(@Nullable String avatar) {
         this.avatar = avatar;
     }
 

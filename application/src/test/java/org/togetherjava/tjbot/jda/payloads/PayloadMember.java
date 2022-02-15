@@ -1,6 +1,9 @@
-package org.togetherjava.tjbot.jda;
+package org.togetherjava.tjbot.jda.payloads;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings("ClassWithTooManyFields")
-final class PayloadSlashCommandMember {
+public final class PayloadMember {
     @JsonProperty("premium_since")
     private String premiumSince;
     private String nick;
@@ -23,13 +26,13 @@ final class PayloadSlashCommandMember {
     private String avatar;
     @JsonProperty("is_pending")
     private boolean isPending;
-    private PayloadSlashCommandUser user;
+    private PayloadUser user;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
-    PayloadSlashCommandMember(@Nullable String premiumSince, @Nullable String nick,
+    public PayloadMember(@Nullable String premiumSince, @Nullable String nick,
             @NotNull String joinedAt, @NotNull String permissions, @NotNull List<String> roles,
             boolean pending, boolean deaf, boolean mute, @Nullable String avatar, boolean isPending,
-            PayloadSlashCommandUser user) {
+            PayloadUser user) {
         this.premiumSince = premiumSince;
         this.nick = nick;
         this.joinedAt = joinedAt;
@@ -43,11 +46,22 @@ final class PayloadSlashCommandMember {
         this.user = user;
     }
 
-    public @NotNull PayloadSlashCommandUser getUser() {
+    public static @NotNull PayloadMember of(@NotNull Member member) {
+        String permissions = Long
+            .toString(Permission.getRaw(member.getPermissions().toArray(Permission[]::new)));
+        List<String> roles = member.getRoles().stream().map(Role::getId).toList();
+        PayloadUser user = PayloadUser.of(member.getUser());
+
+        return new PayloadMember(null, member.getNickname(), member.getTimeJoined().toString(),
+                permissions, roles, member.isPending(), false, false, member.getAvatarId(),
+                member.isPending(), user);
+    }
+
+    public @NotNull PayloadUser getUser() {
         return user;
     }
 
-    public void setUser(@NotNull PayloadSlashCommandUser user) {
+    public void setUser(@NotNull PayloadUser user) {
         this.user = user;
     }
 
