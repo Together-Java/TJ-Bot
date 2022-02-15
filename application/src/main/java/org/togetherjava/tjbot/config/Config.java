@@ -14,7 +14,6 @@ import java.util.List;
 /**
  * Configuration of the application. Create instances using {@link #load(Path)}.
  */
-@SuppressWarnings("ClassCanBeRecord")
 public final class Config {
 
     private final String token;

@@ -43,11 +43,11 @@ import java.util.regex.Pattern;
  */
 public final class TagManageCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(TagManageCommand.class);
-    private static final String ID_OPTION = "id";
+    static final String ID_OPTION = "id";
     private static final String ID_DESCRIPTION = "the id of the tag";
-    private static final String CONTENT_OPTION = "content";
+    static final String CONTENT_OPTION = "content";
     private static final String CONTENT_DESCRIPTION = "the content of the tag";
-    private static final String MESSAGE_ID_OPTION = "message-id";
+    static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
@@ -295,7 +295,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
 
-    private enum Subcommand {
+    enum Subcommand {
         RAW("raw"),
         CREATE("create"),
         CREATE_WITH_MESSAGE("create-with-message"),
@@ -305,11 +305,16 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         private final String name;
 
-        Subcommand(String name) {
+        Subcommand(@NotNull String name) {
             this.name = name;
         }
 
-        static Subcommand fromName(String name) {
+        @NotNull
+        String getName() {
+            return name;
+        }
+
+        static Subcommand fromName(@NotNull String name) {
             for (Subcommand subcommand : Subcommand.values()) {
                 if (subcommand.name.equals(name)) {
                     return subcommand;

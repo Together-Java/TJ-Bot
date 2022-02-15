@@ -22,8 +22,8 @@ import java.util.Objects;
 public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
 
-    private static final String ID_OPTION = "id";
-    private static final String REPLY_TO_USER_OPTION = "reply-to";
+    static final String ID_OPTION = "id";
+    static final String REPLY_TO_USER_OPTION = "reply-to";
 
     /**
      * Creates a new instance, using the given tag system as base.

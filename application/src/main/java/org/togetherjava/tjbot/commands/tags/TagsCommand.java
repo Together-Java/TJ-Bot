@@ -5,11 +5,12 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+
 import java.time.Instant;
-import org.slf4j.Logger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
