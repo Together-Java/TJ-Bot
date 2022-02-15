@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.jda;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -12,12 +14,19 @@ import net.dv8tion.jda.internal.interactions.CommandInteractionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.jda.payloads.PayloadMember;
+import org.togetherjava.tjbot.jda.payloads.PayloadUser;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 /**
  * Builder to create slash command events that can be used for example with
@@ -26,12 +35,12 @@ import java.util.function.UnaryOperator;
  * Create instances of this class by using {@link JdaTester#createSlashCommandEvent(SlashCommand)}.
  * <p>
  * Among other Discord related things, the builder optionally accepts a subcommand
- * ({@link #subcommand(String)}) and options ({@link #option(String, String)}). An already set
- * subcommand can be cleared by using {@link #subcommand(String)} with {@code null}, options are
+ * ({@link #setSubcommand(String)}) and options ({@link #setOption(String, String)}). An already set
+ * subcommand can be cleared by using {@link #setSubcommand(String)} with {@code null}, options are
  * cleared using {@link #clearOptions()}.
  * <p>
  * Refer to the following examples: the command {@code ping} is build using
- * 
+ *
  * <pre>
  * {@code
  * // /ping
@@ -39,15 +48,15 @@ import java.util.function.UnaryOperator;
  *
  * // /days start:10.01.2021 end:13.01.2021
  * jdaTester.createSlashCommandEvent(command)
- *   .option("start", "10.01.2021")
- *   .option("end", "13.01.2021")
+ *   .setOption("start", "10.01.2021")
+ *   .setOption("end", "13.01.2021")
  *   .build();
  *
  * // /db put key:foo value:bar
  * jdaTester.createSlashCommandEvent(command)
- *   .subcommand("put")
- *   .option("key", "foo")
- *   .option("value", "bar")
+ *   .setSubcommand("put")
+ *   .setOption("key", "foo")
+ *   .setOption("value", "bar")
  *   .build();
  * }
  * </pre>
@@ -63,8 +72,9 @@ public final class SlashCommandEventBuilder {
     private String guildId;
     private String userId;
     private SlashCommand command;
-    private final Map<String, Option> nameToOption = new HashMap<>();
+    private final Map<String, Option<?>> nameToOption = new HashMap<>();
     private String subcommand;
+    private Member userWhoTriggered;
 
     SlashCommandEventBuilder(@NotNull JDAImpl jda, UnaryOperator<SlashCommandEvent> mockOperator) {
         this.jda = jda;
@@ -74,7 +84,7 @@ public final class SlashCommandEventBuilder {
     /**
      * Sets the given option, overriding an existing value under the same name.
      * <p>
-     * If {@link #subcommand(String)} is set, this option will be interpreted as option to the
+     * If {@link #setSubcommand(String)} is set, this option will be interpreted as option to the
      * subcommand.
      * <p>
      * Use {@link #clearOptions()} to clear any set options.
@@ -85,15 +95,53 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder option(@NotNull String name, @NotNull String value) {
-        // TODO Also add overloads for other types
-        requireOption(name, OptionType.STRING);
-        nameToOption.put(name, new Option(name, value, OptionType.STRING));
+    public @NotNull SlashCommandEventBuilder setOption(@NotNull String name,
+            @NotNull String value) {
+        putOptionRaw(name, value, OptionType.STRING);
         return this;
     }
 
     /**
-     * Clears all options previously set with {@link #option(String, String)}.
+     * Sets the given option, overriding an existing value under the same name.
+     * <p>
+     * If {@link #setSubcommand(String)} is set, this option will be interpreted as option to the
+     * subcommand.
+     * <p>
+     * Use {@link #clearOptions()} to clear any set options.
+     *
+     * @param name the name of the option
+     * @param value the value of the option
+     * @return this builder instance for chaining
+     * @throws IllegalArgumentException if the option does not exist in the corresponding command,
+     *         as specified by its {@link SlashCommand#getData()}
+     */
+    public @NotNull SlashCommandEventBuilder setOption(@NotNull String name, @NotNull User value) {
+        putOptionRaw(name, value, OptionType.USER);
+        return this;
+    }
+
+    /**
+     * Sets the given option, overriding an existing value under the same name.
+     * <p>
+     * If {@link #setSubcommand(String)} is set, this option will be interpreted as option to the
+     * subcommand.
+     * <p>
+     * Use {@link #clearOptions()} to clear any set options.
+     *
+     * @param name the name of the option
+     * @param value the value of the option
+     * @return this builder instance for chaining
+     * @throws IllegalArgumentException if the option does not exist in the corresponding command,
+     *         as specified by its {@link SlashCommand#getData()}
+     */
+    public @NotNull SlashCommandEventBuilder setOption(@NotNull String name,
+            @NotNull Member value) {
+        putOptionRaw(name, value, OptionType.USER);
+        return this;
+    }
+
+    /**
+     * Clears all options previously set with {@link #setOption(String, String)}.
      *
      * @return this builder instance for chaining
      */
@@ -105,15 +153,15 @@ public final class SlashCommandEventBuilder {
     /**
      * Sets the given subcommand. Call with {@code null} to clear any previously set subcommand.
      * <p>
-     * Once set, all options set by {@link #option(String, String)} will be interpreted as options
-     * to this subcommand.
+     * Once set, all options set by {@link #setOption(String, String)} will be interpreted as
+     * options to this subcommand.
      *
      * @param subcommand the name of the subcommand or {@code null} to clear it
      * @return this builder instance for chaining
      * @throws IllegalArgumentException if the subcommand does not exist in the corresponding
      *         command, as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder subcommand(@Nullable String subcommand) {
+    public @NotNull SlashCommandEventBuilder setSubcommand(@Nullable String subcommand) {
         if (subcommand != null) {
             requireSubcommand(subcommand);
         }
@@ -122,38 +170,50 @@ public final class SlashCommandEventBuilder {
         return this;
     }
 
+    /**
+     * Sets the user who triggered the slash command.
+     *
+     * @param userWhoTriggered the user who triggered the slash command
+     * @return this builder instance for chaining
+     */
     @NotNull
-    SlashCommandEventBuilder command(@NotNull SlashCommand command) {
+    public SlashCommandEventBuilder setUserWhoTriggered(@NotNull Member userWhoTriggered) {
+        this.userWhoTriggered = userWhoTriggered;
+        return this;
+    }
+
+    @NotNull
+    SlashCommandEventBuilder setCommand(@NotNull SlashCommand command) {
         this.command = command;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder channelId(@NotNull String channelId) {
+    SlashCommandEventBuilder setChannelId(@NotNull String channelId) {
         this.channelId = channelId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder token(@NotNull String token) {
+    SlashCommandEventBuilder setToken(@NotNull String token) {
         this.token = token;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder applicationId(@NotNull String applicationId) {
+    SlashCommandEventBuilder setApplicationId(@NotNull String applicationId) {
         this.applicationId = applicationId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder guildId(@NotNull String guildId) {
+    SlashCommandEventBuilder setGuildId(@NotNull String guildId) {
         this.guildId = guildId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder userId(@NotNull String userId) {
+    SlashCommandEventBuilder setUserId(@NotNull String userId) {
         this.userId = userId;
         return this;
     }
@@ -174,19 +234,29 @@ public final class SlashCommandEventBuilder {
             throw new IllegalStateException(e);
         }
 
-        return mockOperator.apply(new SlashCommandEvent(jda, 0,
-                new CommandInteractionImpl(jda, DataObject.fromJson(json))));
+        return spySlashCommandEvent(json);
+    }
+
+    private SlashCommandEvent spySlashCommandEvent(String jsonData) {
+        SlashCommandEvent event = spy(new SlashCommandEvent(jda, 0,
+                new CommandInteractionImpl(jda, DataObject.fromJson(jsonData))));
+        event = mockOperator.apply(event);
+
+        when(event.getMember()).thenReturn(userWhoTriggered);
+        User asUser = userWhoTriggered.getUser();
+        when(event.getUser()).thenReturn(asUser);
+
+        return event;
     }
 
     private @NotNull PayloadSlashCommand createEvent() {
         // TODO Validate that required options are set, check that subcommand is given if the
         // command has one
         // TODO Make as much of this configurable as needed
-        PayloadSlashCommandUser user = new PayloadSlashCommandUser(0, userId,
-                "286b894dc74634202d251d591f63537d", "Test-User", "3452");
-        PayloadSlashCommandMember member =
-                new PayloadSlashCommandMember(null, null, "2021-09-07T18:25:16.615000+00:00",
-                        "1099511627775", List.of(), false, false, false, null, false, user);
+        PayloadUser user = new PayloadUser(false, 0, userId, "286b894dc74634202d251d591f63537d",
+                "Test-User", "3452");
+        PayloadMember member = new PayloadMember(null, null, "2021-09-07T18:25:16.615000+00:00",
+                "1099511627775", List.of(), false, false, false, null, false, user);
 
         List<PayloadSlashCommandOption> options;
         if (subcommand == null) {
@@ -195,23 +265,92 @@ public final class SlashCommandEventBuilder {
             options = List.of(new PayloadSlashCommandOption(subcommand, 1, null,
                     extractOptionsOrNull(nameToOption)));
         }
-        PayloadSlashCommandData data =
-                new PayloadSlashCommandData(command.getName(), "1", 1, options);
+        PayloadSlashCommandData data = new PayloadSlashCommandData(command.getName(), "1", 1,
+                options, extractResolvedOrNull(nameToOption));
 
         return new PayloadSlashCommand(guildId, "897425767397466123", 2, 1, channelId,
                 applicationId, token, member, data);
     }
 
     private static @Nullable List<PayloadSlashCommandOption> extractOptionsOrNull(
-            @NotNull Map<String, Option> nameToOption) {
+            @NotNull Map<String, Option<?>> nameToOption) {
         if (nameToOption.isEmpty()) {
             return null;
         }
         return nameToOption.values()
             .stream()
-            .map(option -> new PayloadSlashCommandOption(option.name(), option.type.ordinal(),
-                    option.value(), null))
+            .map(option -> new PayloadSlashCommandOption(option.name(), option.type().ordinal(),
+                    serializeOptionValue(option.value(), option.type()), null))
             .toList();
+    }
+
+    private static <T> @NotNull String serializeOptionValue(@NotNull T value,
+            @NotNull OptionType type) {
+        if (type == OptionType.STRING) {
+            return (String) value;
+        } else if (type == OptionType.USER) {
+            if (value instanceof User user) {
+                return user.getId();
+            } else if (value instanceof Member member) {
+                return member.getId();
+            }
+
+            throw new IllegalArgumentException(
+                    "Expected a user or member, since the type was set to USER. But got '%s'"
+                        .formatted(value.getClass()));
+        }
+
+        throw new IllegalArgumentException(
+                "Unsupported type ('%s'), can not deserialize yet. Value is of type '%s'"
+                    .formatted(type, value.getClass()));
+    }
+
+    private static @Nullable PayloadSlashCommandResolved extractResolvedOrNull(
+            @NotNull Map<String, Option<?>> nameToOption) {
+        PayloadSlashCommandUsers users = extractUsersOrNull(nameToOption);
+        PayloadSlashCommandMembers members = extractMembersOrNull(nameToOption);
+
+        if (users == null && members == null) {
+            return null;
+        }
+
+        return new PayloadSlashCommandResolved(members, users);
+    }
+
+    private static @Nullable PayloadSlashCommandUsers extractUsersOrNull(
+            @NotNull Map<String, Option<?>> nameToOption) {
+        Map<String, PayloadUser> idToUser = nameToOption.values()
+            .stream()
+            .filter(option -> option.type == OptionType.USER)
+            .map(Option::value)
+            .map(userOrMember -> {
+                if (userOrMember instanceof Member member) {
+                    return member.getUser();
+                }
+                return (User) userOrMember;
+            })
+            .collect(Collectors.toMap(User::getId, PayloadUser::of));
+
+        return idToUser.isEmpty() ? null : new PayloadSlashCommandUsers(idToUser);
+    }
+
+    private static @Nullable PayloadSlashCommandMembers extractMembersOrNull(
+            @NotNull Map<String, Option<?>> nameToOption) {
+        Map<String, PayloadMember> idToMember = nameToOption.values()
+            .stream()
+            .filter(option -> option.type == OptionType.USER)
+            .map(Option::value)
+            .filter(Member.class::isInstance)
+            .map(Member.class::cast)
+            .collect(Collectors.toMap(Member::getId, PayloadMember::of));
+
+        return idToMember.isEmpty() ? null : new PayloadSlashCommandMembers(idToMember);
+    }
+
+    private <T> void putOptionRaw(@NotNull String name, @NotNull T value,
+            @NotNull OptionType type) {
+        requireOption(name, type);
+        nameToOption.put(name, new Option<>(name, value, type));
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -247,6 +386,6 @@ public final class SlashCommandEventBuilder {
             });
     }
 
-    private record Option(@NotNull String name, @NotNull String value, @NotNull OptionType type) {
+    private record Option<T> (@NotNull String name, @NotNull T value, @NotNull OptionType type) {
     }
 }

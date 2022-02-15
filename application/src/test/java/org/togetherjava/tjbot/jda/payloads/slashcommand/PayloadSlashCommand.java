@@ -1,9 +1,10 @@
-package org.togetherjava.tjbot.jda;
+package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 
-final class PayloadSlashCommand {
+public final class PayloadSlashCommand {
     @JsonProperty("guild_id")
     private String guildId;
     private String id;
@@ -14,13 +15,13 @@ final class PayloadSlashCommand {
     @JsonProperty("application_id")
     private String applicationId;
     private String token;
-    private PayloadSlashCommandMember member;
+    private PayloadMember member;
     private PayloadSlashCommandData data;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
-    PayloadSlashCommand(@NotNull String guildId, @NotNull String id, int type, int version,
+    public PayloadSlashCommand(@NotNull String guildId, @NotNull String id, int type, int version,
             @NotNull String channelId, @NotNull String applicationId, @NotNull String token,
-            @NotNull PayloadSlashCommandMember member, @NotNull PayloadSlashCommandData data) {
+            @NotNull PayloadMember member, @NotNull PayloadSlashCommandData data) {
         this.guildId = guildId;
         this.id = id;
         this.type = type;
@@ -94,11 +95,11 @@ final class PayloadSlashCommand {
     }
 
     @NotNull
-    public PayloadSlashCommandMember getMember() {
+    public PayloadMember getMember() {
         return member;
     }
 
-    public void setMember(@NotNull PayloadSlashCommandMember member) {
+    public void setMember(@NotNull PayloadMember member) {
         this.member = member;
     }
 

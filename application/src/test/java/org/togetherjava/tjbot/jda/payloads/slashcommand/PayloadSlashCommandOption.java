@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.jda;
+package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.jetbrains.annotations.NotNull;
@@ -8,14 +8,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final class PayloadSlashCommandOption {
+public final class PayloadSlashCommandOption {
     private String name;
     private int type;
     private String value;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<PayloadSlashCommandOption> options;
 
-    PayloadSlashCommandOption(@NotNull String name, int type, @Nullable String value,
+    public PayloadSlashCommandOption(@NotNull String name, int type, @Nullable String value,
             @Nullable List<PayloadSlashCommandOption> options) {
         this.name = name;
         this.type = type;
