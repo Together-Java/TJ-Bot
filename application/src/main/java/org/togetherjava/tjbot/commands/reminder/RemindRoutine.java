@@ -2,8 +2,12 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -15,6 +19,8 @@ import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
@@ -51,28 +57,25 @@ public final class RemindRoutine implements Routine {
             .where(PENDING_REMINDERS.REMIND_AT.lessOrEqual(now))
             .stream()
             .forEach(pendingReminder -> {
-                sendReminder(jda, pendingReminder.getId(), pendingReminder.getGuildId(),
-                        pendingReminder.getChannelId(), pendingReminder.getAuthorId(),
-                        pendingReminder.getContent(), pendingReminder.getCreatedAt());
+                sendReminder(jda, pendingReminder.getId(), pendingReminder.getChannelId(),
+                        pendingReminder.getAuthorId(), pendingReminder.getContent(),
+                        pendingReminder.getCreatedAt());
                 pendingReminder.delete();
             }));
     }
 
-    private static void sendReminder(@NotNull JDA jda, long id, long guildId, long channelId,
-            long authorId, @NotNull CharSequence content, @NotNull TemporalAccessor createdAt) {
-        RestAction<ReminderRoute> route = computeReminderRoute(jda, guildId, channelId, authorId);
+    private static void sendReminder(@NotNull JDA jda, long id, long channelId, long authorId,
+            @NotNull CharSequence content, @NotNull TemporalAccessor createdAt) {
+        RestAction<ReminderRoute> route = computeReminderRoute(jda, channelId, authorId);
         sendReminderViaRoute(route, id, content, createdAt);
     }
 
-    private static RestAction<ReminderRoute> computeReminderRoute(@NotNull JDA jda, long guildId,
-            long channelId, long authorId) {
-        // If guild and channel can still be found, send there
-        Guild guild = jda.getGuildById(guildId);
-        if (guild != null) {
-            TextChannel channel = guild.getTextChannelById(channelId);
-            if (channel != null) {
-                return createGuildReminderRoute(jda, authorId, channel);
-            }
+    private static RestAction<ReminderRoute> computeReminderRoute(@NotNull JDA jda, long channelId,
+            long authorId) {
+        // If guild channel can still be found, send there
+        TextChannel channel = jda.getTextChannelById(channelId);
+        if (channel != null) {
+            return createGuildReminderRoute(jda, authorId, channel);
         }
 
         // Otherwise, attempt to DM the user directly
@@ -90,31 +93,24 @@ public final class RemindRoutine implements Routine {
     private static @NotNull RestAction<ReminderRoute> createDmReminderRoute(@NotNull JDA jda,
             long authorId) {
         return jda.openPrivateChannelById(authorId)
-            .onErrorMap(error -> null)
-            .map(channel -> channel == null ? new ReminderRoute(null, null, null)
-                    : new ReminderRoute(channel, channel.getUser(),
-                            "(Sending your reminder directly, because I was unable to"
-                                    + " locate the original channel you wanted it to be send to)"));
+            .map(channel -> new ReminderRoute(channel, channel.getUser(),
+                    "(Sending your reminder directly, because I was unable to"
+                            + " locate the original channel you wanted it to be send to)"));
     }
 
     private static void sendReminderViaRoute(@NotNull RestAction<ReminderRoute> routeAction,
             long id, @NotNull CharSequence content, @NotNull TemporalAccessor createdAt) {
-        routeAction.flatMap(route -> {
-            if (route.isUndeliverable()) {
-                throw new IllegalStateException("Route is not deliverable");
-            }
+        Function<ReminderRoute, MessageAction> sendMessage = route -> route.channel
+            .sendMessageEmbeds(createReminderEmbed(content, createdAt, route.target()))
+            .content(route.description());
 
-            MessageEmbed embed = createReminderEmbed(content, createdAt, route.target());
-            if (route.description() == null) {
-                return route.channel().sendMessageEmbeds(embed);
-            }
-            return route.channel().sendMessage(route.description()).setEmbeds(embed);
-        }).queue(message -> {
-        }, failure -> logger.warn(
+        Consumer<Throwable> logFailure = failure -> logger.warn(
                 "Failed to send a reminder (id '{}'), skipping it. This can be due to a network issue,"
                         + " but also happen if the bot disconnected from the target guild and the"
                         + " user has disabled DMs or has been deleted.",
-                id));
+                id);
+
+        routeAction.flatMap(sendMessage).queue(doNothing(), logFailure);
     }
 
     private static @NotNull MessageEmbed createReminderEmbed(@NotNull CharSequence content,
@@ -130,10 +126,12 @@ public final class RemindRoutine implements Routine {
             .build();
     }
 
-    private record ReminderRoute(@Nullable MessageChannel channel, @Nullable User target,
+    private static <T> @NotNull Consumer<T> doNothing() {
+        return a -> {
+        };
+    }
+
+    private record ReminderRoute(@NotNull MessageChannel channel, @Nullable User target,
             @Nullable String description) {
-        boolean isUndeliverable() {
-            return channel == null && target == null;
-        }
     }
 }
