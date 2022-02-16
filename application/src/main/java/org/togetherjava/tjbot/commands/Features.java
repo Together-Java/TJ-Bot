@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
+import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
@@ -63,6 +64,7 @@ public enum Features {
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
+        features.add(new SuggestionsUpDownVoter(config));
 
         // Event receivers
         features.add(new RejoinMuteListener(actionsStore, config));
