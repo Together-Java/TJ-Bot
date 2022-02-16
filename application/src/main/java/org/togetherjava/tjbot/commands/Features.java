@@ -83,6 +83,7 @@ public enum Features {
         features.add(new UnmuteCommand(actionsStore, config));
         features.add(new TopHelpersCommand(database, config));
         features.add(new RoleSelectCommand());
+        features.add(new NoteCommand(actionsStore, config));
 
         // Mixtures
         features.add(new FreeCommand(config));

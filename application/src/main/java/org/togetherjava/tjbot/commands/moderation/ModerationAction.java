@@ -29,7 +29,11 @@ public enum ModerationAction {
     /**
      * When a user unmutes another user.
      */
-    UNMUTE("unmuted");
+    UNMUTE("unmuted"),
+    /**
+     * When a user writes a note about another user.
+     */
+    NOTE("wrote a note about");
 
     private final String verb;
 
