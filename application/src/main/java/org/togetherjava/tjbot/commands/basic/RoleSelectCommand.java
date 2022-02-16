@@ -263,11 +263,10 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      */
     private void handleNewRoleBuilderSelection(@NotNull final ComponentInteraction event,
             final @NotNull Collection<? extends Role> selectedRoles) {
-        SelectMenu.Builder menu =
-                SelectMenu.create(generateComponentId(event.getUser().getId()))
-                    .setPlaceholder("Select your roles")
-                    .setMaxValues(selectedRoles.size())
-                    .setMinValues(0);
+        SelectMenu.Builder menu = SelectMenu.create(generateComponentId(event.getUser().getId()))
+            .setPlaceholder("Select your roles")
+            .setMaxValues(selectedRoles.size())
+            .setMinValues(0);
 
         selectedRoles.forEach(role -> menu.addOption(role.getName(), role.getId()));
 
