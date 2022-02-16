@@ -16,5 +16,6 @@
                   ]
         }
    ],
-   "helpChannelPattern": "([a-zA-Z_]+_)?help(_\\d+)?"
+   "helpChannelPattern": "([a-zA-Z_]+_)?help(_\\d+)?",
+   "suggestionChannelPattern": "tj_suggestions"
 }
