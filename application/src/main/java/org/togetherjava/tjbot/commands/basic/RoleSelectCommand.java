@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
@@ -44,9 +43,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(RoleSelectCommand.class);
 
-    private static final String ALL_OPTION = "all";
-    private static final String CHOOSE_OPTION = "choose";
-
     private static final String TITLE_OPTION = "title";
     private static final String DESCRIPTION_OPTION = "description";
 
@@ -65,15 +61,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         super("role-select", "Sends a message where users can select their roles",
                 SlashCommandVisibility.GUILD);
 
-        SubcommandData allRoles =
-                new SubcommandData(ALL_OPTION, "Lists all the rolls in the server for users")
-                    .addOptions(messageOptions);
-
-        SubcommandData selectRoles =
-                new SubcommandData(CHOOSE_OPTION, "Choose the roles for users to select")
-                    .addOptions(messageOptions);
-
-        getData().addSubcommands(allRoles, selectRoles);
+        getData().addOptions(messageOptions);
     }
 
     @NotNull
@@ -107,14 +95,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
         SelectionMenu.Builder menu =
                 SelectionMenu.create(generateComponentId(Lifespan.PERMANENT, member.getId()));
-        boolean isEphemeral = false;
 
-        if (CHOOSE_OPTION.equals(event.getSubcommandName())) {
-            addMenuOptions(event, menu, "Select the roles to display", 1);
-            isEphemeral = true;
-        } else {
-            addMenuOptions(event, menu, "Select your roles", 0);
-        }
+        addMenuOptions(event, menu, "Select the roles to display", 1);
 
         // Handle Optional arguments
         OptionMapping titleOption = event.getOption(TITLE_OPTION);
@@ -126,13 +108,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         MessageBuilder messageBuilder = new MessageBuilder(makeEmbed(title, description))
             .setActionRows(ActionRow.of(menu.build()));
 
-        if (isEphemeral) {
-            event.reply(messageBuilder.build()).setEphemeral(true).queue();
-        } else {
-            event.getChannel().sendMessage(messageBuilder.build()).queue();
-
-            event.reply("Message sent successfully!").setEphemeral(true).queue();
-        }
+        event.reply(messageBuilder.build()).setEphemeral(true).queue();
     }
 
     /**
