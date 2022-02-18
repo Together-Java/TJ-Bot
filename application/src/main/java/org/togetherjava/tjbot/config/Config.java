@@ -15,7 +15,6 @@ import java.util.List;
  * Configuration of the application. Create instances using {@link #load(Path)}.
  */
 public final class Config {
-
     private final String token;
     private final String databasePath;
     private final String projectWebsite;
@@ -27,7 +26,7 @@ public final class Config {
     private final String tagManageRolePattern;
     private final List<FreeCommandConfig> freeCommand;
     private final String helpChannelPattern;
-    private final String suggestionChannelPattern;
+    private final SuggestionsConfig suggestions;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -42,7 +41,7 @@ public final class Config {
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
             @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
             @JsonProperty("helpChannelPattern") String helpChannelPattern,
-            @JsonProperty("suggestionChannelPattern") String suggestionChannelPattern) {
+            @JsonProperty("suggestions") SuggestionsConfig suggestions) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -54,7 +53,7 @@ public final class Config {
         this.tagManageRolePattern = tagManageRolePattern;
         this.freeCommand = Collections.unmodifiableList(freeCommand);
         this.helpChannelPattern = helpChannelPattern;
-        this.suggestionChannelPattern = suggestionChannelPattern;
+        this.suggestions = suggestions;
     }
 
     /**
@@ -175,11 +174,11 @@ public final class Config {
     }
 
     /**
-     * Gets the REGEX pattern used to identify channels that are used for sending suggestions.
+     * Gets the config for the suggestion system.
      *
-     * @return the channel name pattern
+     * @return the suggestion system config
      */
-    public String getSuggestionChannelPattern() {
-        return suggestionChannelPattern;
+    public SuggestionsConfig getSuggestions() {
+        return suggestions;
     }
 }
