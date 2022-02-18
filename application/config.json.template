@@ -17,5 +17,9 @@
         }
    ],
    "helpChannelPattern": "([a-zA-Z_]+_)?help(_\\d+)?",
-   "suggestionChannelPattern": "tj_suggestions"
+   "suggestions": {
+       "channelPattern": "tj_suggestions",
+       "upVoteEmoteName": "peepo_yes",
+       "downVoteEmoteName": "peepo_no"
+   }
 }

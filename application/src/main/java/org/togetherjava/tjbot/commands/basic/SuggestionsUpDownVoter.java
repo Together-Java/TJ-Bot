@@ -1,10 +1,17 @@
 package org.togetherjava.tjbot.commands.basic;
 
+import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.SuggestionsConfig;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -12,13 +19,21 @@ import java.util.regex.Pattern;
  * down-vote on them to indicate to users that they can vote on the suggestion.
  */
 public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(SuggestionsUpDownVoter.class);
+    private static final String FALLBACK_UP_VOTE = "👍";
+    private static final String FALLBACK_DOWN_VOTE = "👎";
+
+    private final SuggestionsConfig config;
+
     /**
      * Creates a new listener to receive all message sent in suggestion channels.
      *
      * @param config the config to use for this
      */
     public SuggestionsUpDownVoter(@NotNull Config config) {
-        super(Pattern.compile(config.getSuggestionChannelPattern()));
+        super(Pattern.compile(config.getSuggestions().getChannelPattern()));
+
+        this.config = config.getSuggestions();
     }
 
     @Override
@@ -27,7 +42,25 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
             return;
         }
 
-        event.getMessage().addReaction("👍").queue();
-        event.getMessage().addReaction("👎").queue();
+        Guild guild = event.getGuild();
+        Message message = event.getMessage();
+
+        reactWith(config.getUpVoteEmoteName(), FALLBACK_UP_VOTE, guild, message);
+        reactWith(config.getDownVoteEmoteName(), FALLBACK_DOWN_VOTE, guild, message);
+    }
+
+    private static void reactWith(@NotNull String emoteName, @NotNull String fallbackUnicodeEmote,
+            @NotNull Guild guild, @NotNull Message message) {
+        getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
+            logger.warn(
+                    "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
+                    emoteName);
+            return message.addReaction(fallbackUnicodeEmote);
+        }).queue();
+    }
+
+    private static @NotNull Optional<Emote> getEmoteByName(@NotNull String name,
+            @NotNull Guild guild) {
+        return guild.getEmotesByName(name, false).stream().findAny();
     }
 }
