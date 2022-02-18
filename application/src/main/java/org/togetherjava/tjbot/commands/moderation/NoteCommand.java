@@ -75,9 +75,11 @@ public final class NoteCommand extends SlashCommandAdapter {
                 target, event)) {
             return false;
         }
+
         if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
+
         return ModerationUtils.handleReason(content, event);
     }
 
@@ -101,6 +103,7 @@ public final class NoteCommand extends SlashCommandAdapter {
             @NotNull String noteContent, @NotNull Interaction event) {
         MessageEmbed feedback = ModerationUtils.createActionResponse(author.getUser(),
                 ModerationAction.NOTE, target, null, noteContent);
+
         event.replyEmbeds(feedback).queue();
     }
 }
