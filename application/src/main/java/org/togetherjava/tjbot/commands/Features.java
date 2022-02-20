@@ -2,10 +2,7 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.basic.PingCommand;
-import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
-import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
-import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.basic.*;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
