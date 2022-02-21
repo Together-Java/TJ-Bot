@@ -33,8 +33,8 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  */
 public final class RemindCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "remind";
-    private static final String WHEN_AMOUNT_OPTION = "amount";
-    private static final String WHEN_UNIT_OPTION = "unit";
+    private static final String WHEN_AMOUNT_OPTION = "when-amount";
+    private static final String WHEN_UNIT_OPTION = "when-unit";
     private static final String CONTENT_OPTION = "content";
 
     private static final int MIN_WHEN_AMOUNT = 1;
@@ -52,20 +52,20 @@ public final class RemindCommand extends SlashCommandAdapter {
      * @param database to store and fetch the reminders from
      */
     public RemindCommand(@NotNull Database database) {
-        super(COMMAND_NAME, "Reminds the user about something at a given time",
+        super(COMMAND_NAME, "Reminds you after a given time period has passed (e.g. in 5 weeks)",
                 SlashCommandVisibility.GUILD);
 
         // TODO As soon as JDA offers date/time selector input, this should also offer
         // "/remind at" next to "/remind in" and use subcommands then
         OptionData whenAmount = new OptionData(OptionType.INTEGER, WHEN_AMOUNT_OPTION,
-                "amount of the period (e.g. 5)", true).setRequiredRange(MIN_WHEN_AMOUNT,
-                        MAX_WHEN_AMOUNT);
+                "when to remind you, the amount of the time period (e.g. [5] weeks)", true)
+                    .setRequiredRange(MIN_WHEN_AMOUNT, MAX_WHEN_AMOUNT);
         OptionData whenUnit = new OptionData(OptionType.STRING, WHEN_UNIT_OPTION,
-                "unit of the period (e.g. weeks)", true);
+                "when to remind you, the unit of the time period (e.g. 5 [weeks])", true);
         WHEN_UNITS.forEach(unit -> whenUnit.addChoice(unit, unit));
 
         getData().addOptions(whenAmount, whenUnit)
-            .addOption(OptionType.STRING, CONTENT_OPTION, "the content of the reminder", true);
+            .addOption(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true);
 
         this.database = database;
     }
