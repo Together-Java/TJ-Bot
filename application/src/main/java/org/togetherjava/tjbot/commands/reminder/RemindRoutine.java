@@ -2,10 +2,7 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +57,7 @@ public final class RemindRoutine implements Routine {
                 sendReminder(jda, pendingReminder.getId(), pendingReminder.getChannelId(),
                         pendingReminder.getAuthorId(), pendingReminder.getContent(),
                         pendingReminder.getCreatedAt());
+
                 pendingReminder.delete();
             }));
     }
@@ -86,16 +84,13 @@ public final class RemindRoutine implements Routine {
             long authorId, @NotNull TextChannel channel) {
         return jda.retrieveUserById(authorId)
             .onErrorMap(error -> null)
-            .map(author -> new ReminderRoute(channel, author,
-                    author == null ? null : author.getAsMention()));
+            .map(author -> ReminderRoute.toPublic(channel, author));
     }
 
     private static @NotNull RestAction<ReminderRoute> createDmReminderRoute(@NotNull JDA jda,
             long authorId) {
         return jda.openPrivateChannelById(authorId)
-            .map(channel -> new ReminderRoute(channel, channel.getUser(),
-                    "(Sending your reminder directly, because I was unable to"
-                            + " locate the original channel you wanted it to be send to)"));
+            .map(channel -> ReminderRoute.toPrivate(channel, channel.getUser()));
     }
 
     private static void sendReminderViaRoute(@NotNull RestAction<ReminderRoute> routeAction,
@@ -133,5 +128,15 @@ public final class RemindRoutine implements Routine {
 
     private record ReminderRoute(@NotNull MessageChannel channel, @Nullable User target,
             @Nullable String description) {
+        static ReminderRoute toPublic(@NotNull TextChannel channel, @Nullable User target) {
+            return new ReminderRoute(channel, target,
+                    target == null ? null : target.getAsMention());
+        }
+
+        static ReminderRoute toPrivate(@NotNull PrivateChannel channel, @NotNull User target) {
+            return new ReminderRoute(channel, target,
+                    "(Sending your reminder directly, because I was unable to locate"
+                            + " the original channel you wanted it to be send to)");
+        }
     }
 }
