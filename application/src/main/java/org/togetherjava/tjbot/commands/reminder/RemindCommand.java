@@ -64,7 +64,7 @@ public final class RemindCommand extends SlashCommandAdapter {
                 "when to remind you, the unit of the time period (e.g. 5 [weeks])", true);
         WHEN_UNITS.forEach(unit -> whenUnit.addChoice(unit, unit));
 
-        getData().addOptions(whenAmount, whenUnit)
+        getData().addOptions(whenUnit, whenAmount)
             .addOption(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true);
 
         this.database = database;
