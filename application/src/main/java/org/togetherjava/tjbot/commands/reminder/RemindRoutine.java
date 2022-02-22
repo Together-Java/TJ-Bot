@@ -100,9 +100,10 @@ public final class RemindRoutine implements Routine {
             .content(route.description());
 
         Consumer<Throwable> logFailure = failure -> logger.warn(
-                "Failed to send a reminder (id '{}'), skipping it. This can be due to a network issue,"
-                        + " but also happen if the bot disconnected from the target guild and the"
-                        + " user has disabled DMs or has been deleted.",
+                """
+                        Failed to send a reminder (id '{}'), skipping it. This can be due to a network issue, \
+                        but also happen if the bot disconnected from the target guild and the \
+                        user has disabled DMs or has been deleted.""",
                 id);
 
         routeAction.flatMap(sendMessage).queue(doNothing(), logFailure);
