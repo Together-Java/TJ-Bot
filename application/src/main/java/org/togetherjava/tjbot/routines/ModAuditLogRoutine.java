@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -70,33 +71,15 @@ public final class ModAuditLogRoutine implements Routine {
         this.database = database;
     }
 
-    private static @NotNull RestAction<MessageEmbed> handleAction(@NotNull Action action,
+    private static @NotNull RestAction<AuditLogMessage> handleAction(@NotNull Action action,
             @NotNull AuditLogEntry entry) {
         User author = Objects.requireNonNull(entry.getUser());
-        return getTargetTagFromEntry(entry).map(targetTag -> createMessage(author, action,
-                targetTag, entry.getReason(), entry.getTimeCreated()));
+        return getTargetFromEntryOrNull(entry).map(target -> new AuditLogMessage(author, action,
+                target, entry.getReason(), entry.getTimeCreated()));
     }
 
-    private static @NotNull MessageEmbed createMessage(@NotNull User author, @NotNull Action action,
-            @NotNull String targetTag, @Nullable String reason,
-            @NotNull TemporalAccessor timestamp) {
-        String description = "%s **%s**.".formatted(action.getVerb(), targetTag);
-        if (reason != null && !reason.isBlank()) {
-            description += "\n\nReason: " + reason;
-        }
-        return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
-            .setDescription(description)
-            .setTimestamp(timestamp)
-            .setColor(AMBIENT_COLOR)
-            .build();
-    }
-
-    private static RestAction<String> getTargetTagFromEntry(@NotNull AuditLogEntry entry) {
-        // If the target is null, the user got deleted in the meantime
-        return entry.getJDA()
-            .retrieveUserById(entry.getTargetIdLong())
-            .onErrorMap(error -> null)
-            .map(target -> target == null ? "(user unknown)" : target.getAsTag());
+    private static RestAction<User> getTargetFromEntryOrNull(@NotNull AuditLogEntry entry) {
+        return entry.getJDA().retrieveUserById(entry.getTargetIdLong()).onErrorMap(error -> null);
     }
 
     private static boolean isSnowflakeAfter(@NotNull ISnowflake snowflake,
@@ -178,34 +161,42 @@ public final class ModAuditLogRoutine implements Routine {
             @NotNull AuditLogEntry entry) {
         // NOTE Temporary bans are realized as permanent bans with automated unban,
         // hence we can not differentiate a permanent or a temporary ban here
-        return Optional.of(handleAction(Action.BAN, entry));
+        return Optional.of(handleAction(Action.BAN, entry).map(AuditLogMessage::toEmbed));
     }
 
     private static @NotNull Optional<RestAction<MessageEmbed>> handleUnbanEntry(
             @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.UNBAN, entry));
+        return Optional.of(handleAction(Action.UNBAN, entry).map(AuditLogMessage::toEmbed));
     }
 
     private static @NotNull Optional<RestAction<MessageEmbed>> handleKickEntry(
             @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.KICK, entry));
+        return Optional.of(handleAction(Action.KICK, entry).map(AuditLogMessage::toEmbed));
     }
 
     private static @NotNull Optional<RestAction<MessageEmbed>> handleMuteEntry(
             @NotNull AuditLogEntry entry) {
         // NOTE Temporary mutes are realized as permanent mutes with automated unmute,
         // hence we can not differentiate a permanent or a temporary mute here
-        return Optional.of(handleAction(Action.MUTE, entry));
+        return Optional.of(handleAction(Action.MUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
     private static @NotNull Optional<RestAction<MessageEmbed>> handleUnmuteEntry(
             @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.UNMUTE, entry));
+        return Optional.of(handleAction(Action.UNMUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
     private static @NotNull Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
             @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.MESSAGE_DELETION, entry));
+        return Optional.of(handleAction(Action.MESSAGE_DELETION, entry).map(message -> {
+            if (message.target() != null && message.target().isBot()) {
+                // NOTE Unfortunately, JDA does not seem to offer any other way
+                // to gracefully enter the failed-flow of RestAction, other than throwing.
+                throw new CancellationException(
+                        "Message deletions against bots should be skipped. Action got cancelled.");
+            }
+            return message.toEmbed();
+        }));
     }
 
     @Override
@@ -357,6 +348,25 @@ public final class ModAuditLogRoutine implements Routine {
         @NotNull
         String getVerb() {
             return verb;
+        }
+    }
+
+    private record AuditLogMessage(@NotNull User author, @NotNull Action action,
+            @Nullable User target, @Nullable String reason, @NotNull TemporalAccessor timestamp) {
+        @NotNull
+        MessageEmbed toEmbed() {
+            String targetTag = target == null ? "(user unknown)" : target.getAsTag();
+            String description = "%s **%s**.".formatted(action.getVerb(), targetTag);
+
+            if (reason != null && !reason.isBlank()) {
+                description += "\n\nReason: " + reason;
+            }
+
+            return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
+                .setDescription(description)
+                .setTimestamp(timestamp)
+                .setColor(AMBIENT_COLOR)
+                .build();
         }
     }
 }
