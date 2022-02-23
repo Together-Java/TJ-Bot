@@ -35,12 +35,11 @@ import org.vaadin.artur.helpers.LaunchUtil;
 @Push
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
 
-    @SuppressWarnings({"java:S2387"})
-    private static final Logger logger = LoggerFactory.getLogger(Application.class);
+    private static final Logger applicationLogger = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
         if (args.length > 1) {
-            logger
+            applicationLogger
                 .error("Usage: Provide a single Argument, containing the Path to the Config-File");
             System.exit(1);
         }
