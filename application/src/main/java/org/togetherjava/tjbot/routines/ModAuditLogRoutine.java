@@ -25,9 +25,8 @@ import java.awt.*;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
 import java.util.List;
-import java.util.concurrent.CancellationException;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -190,10 +189,8 @@ public final class ModAuditLogRoutine implements Routine {
             @NotNull AuditLogEntry entry) {
         return Optional.of(handleAction(Action.MESSAGE_DELETION, entry).map(message -> {
             if (message.target() != null && message.target().isBot()) {
-                // NOTE Unfortunately, JDA does not seem to offer any other way
-                // to gracefully enter the failed-flow of RestAction, other than throwing.
-                throw new CancellationException(
-                        "Message deletions against bots should be skipped. Action got cancelled.");
+                // Message deletions against bots should be skipped. Cancel action.
+                return null;
             }
             return message.toEmbed();
         }));
@@ -265,8 +262,7 @@ public final class ModAuditLogRoutine implements Routine {
             .sorted(Comparator.comparing(TimeUtil::getTimeCreated))
             .map(entry -> handleAuditLog(auditLogChannel, entry))
             .flatMap(Optional::stream)
-            .reduce((firstMessage, secondMessage) -> firstMessage.flatMap(result -> secondMessage))
-            .ifPresent(RestAction::queue);
+            .forEach(RestAction::queue);
 
         database.write(context -> {
             var entry = context.newRecord(ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS);
@@ -289,7 +285,13 @@ public final class ModAuditLogRoutine implements Routine {
             case MESSAGE_DELETE -> handleMessageDeleteEntry(entry);
             default -> Optional.empty();
         };
-        return maybeMessage.map(message -> message.flatMap(auditLogChannel::sendMessageEmbeds));
+        // It can have 3 states:
+        // * empty optional - entry is irrelevant and should not be logged
+        // * has RestAction but that will contain null - entry was relevant at first, but at
+        // query-time we found out that it is irrelevant
+        // * has RestAction but will contain a message - entry is relevant, log the message
+        return maybeMessage
+            .map(message -> message.flatMap(Objects::nonNull, auditLogChannel::sendMessageEmbeds));
     }
 
     private @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
