@@ -33,15 +33,15 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  */
 public final class RemindCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "remind";
-    private static final String WHEN_AMOUNT_OPTION = "when-amount";
-    private static final String WHEN_UNIT_OPTION = "when-unit";
+    private static final String TIME_AMOUNT_OPTION = "time-amount";
+    private static final String TIME_UNIT_OPTION = "time-unit";
     private static final String CONTENT_OPTION = "content";
 
-    private static final int MIN_WHEN_AMOUNT = 1;
-    private static final int MAX_WHEN_AMOUNT = 1_000;
-    private static final List<String> WHEN_UNITS =
+    private static final int MIN_TIME_AMOUNT = 1;
+    private static final int MAX_TIME_AMOUNT = 1_000;
+    private static final List<String> TIME_UNITS =
             List.of("minutes", "hours", "days", "weeks", "months", "years");
-    private static final Period MAX_WHEN_PERIOD = Period.ofYears(3);
+    private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
     private static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
@@ -57,14 +57,14 @@ public final class RemindCommand extends SlashCommandAdapter {
 
         // TODO As soon as JDA offers date/time selector input, this should also offer
         // "/remind at" next to "/remind in" and use subcommands then
-        OptionData whenAmount = new OptionData(OptionType.INTEGER, WHEN_AMOUNT_OPTION,
-                "when to remind you, the amount of the time period (e.g. [5] weeks)", true)
-                    .setRequiredRange(MIN_WHEN_AMOUNT, MAX_WHEN_AMOUNT);
-        OptionData whenUnit = new OptionData(OptionType.STRING, WHEN_UNIT_OPTION,
-                "when to remind you, the unit of the time period (e.g. 5 [weeks])", true);
-        WHEN_UNITS.forEach(unit -> whenUnit.addChoice(unit, unit));
+        OptionData timeAmount = new OptionData(OptionType.INTEGER, TIME_AMOUNT_OPTION,
+                "period to remind you in, the amount of time (e.g. [5] weeks)", true)
+                    .setRequiredRange(MIN_TIME_AMOUNT, MAX_TIME_AMOUNT);
+        OptionData timeUnit = new OptionData(OptionType.STRING, TIME_UNIT_OPTION,
+                "period to remind you in, the unit of time (e.g. 5 [weeks])", true);
+        TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
 
-        getData().addOptions(whenUnit, whenAmount)
+        getData().addOptions(timeUnit, timeAmount)
             .addOption(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true);
 
         this.database = database;
@@ -72,21 +72,21 @@ public final class RemindCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        int whenAmount = Math.toIntExact(event.getOption(WHEN_AMOUNT_OPTION).getAsLong());
-        String whenUnit = event.getOption(WHEN_UNIT_OPTION).getAsString();
+        int timeAmount = Math.toIntExact(event.getOption(TIME_AMOUNT_OPTION).getAsLong());
+        String timeUnit = event.getOption(TIME_UNIT_OPTION).getAsString();
         String content = event.getOption(CONTENT_OPTION).getAsString();
 
-        Instant when = parseWhen(whenAmount, whenUnit);
+        Instant remindAt = parseWhen(timeAmount, timeUnit);
         User author = event.getUser();
 
-        if (!handleIsWhenWithinLimits(when, event)) {
+        if (!handleIsRemindAtWithinLimits(remindAt, event)) {
             return;
         }
         if (!handleIsUserBelowMaxPendingReminders(author, event)) {
             return;
         }
 
-        event.reply("Will remind you about '%s' in %d %s.".formatted(content, whenAmount, whenUnit))
+        event.reply("Will remind you about '%s' in %d %s.".formatted(content, timeAmount, timeUnit))
             .setEphemeral(true)
             .queue();
 
@@ -95,7 +95,7 @@ public final class RemindCommand extends SlashCommandAdapter {
             .setGuildId(event.getGuild().getIdLong())
             .setChannelId(event.getChannel().getIdLong())
             .setAuthorId(author.getIdLong())
-            .setRemindAt(when)
+            .setRemindAt(remindAt)
             .setContent(content)
             .insert());
     }
@@ -115,17 +115,17 @@ public final class RemindCommand extends SlashCommandAdapter {
         return ZonedDateTime.now(ZoneOffset.UTC).plus(period).toInstant();
     }
 
-    private static boolean handleIsWhenWithinLimits(@NotNull Instant when,
+    private static boolean handleIsRemindAtWithinLimits(@NotNull Instant remindAt,
             @NotNull Interaction event) {
-        ZonedDateTime maxWhen = ZonedDateTime.now(ZoneOffset.UTC).plus(MAX_WHEN_PERIOD);
+        ZonedDateTime maxWhen = ZonedDateTime.now(ZoneOffset.UTC).plus(MAX_TIME_PERIOD);
 
-        if (when.atZone(ZoneOffset.UTC).isBefore(maxWhen)) {
+        if (remindAt.atZone(ZoneOffset.UTC).isBefore(maxWhen)) {
             return true;
         }
 
         event
             .reply("The reminder is set too far in the future. The maximal allowed period is '%s'."
-                .formatted(MAX_WHEN_PERIOD))
+                .formatted(MAX_TIME_PERIOD))
             .setEphemeral(true)
             .queue();
 
