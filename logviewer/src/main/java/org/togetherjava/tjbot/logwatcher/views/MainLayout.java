@@ -10,6 +10,7 @@ import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouterLink;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.Role;
@@ -33,6 +34,7 @@ public class MainLayout extends AppLayout {
 
     private final transient AuthenticatedUser authenticatedUser;
     private H1 viewTitle;
+    private static final Logger logger = LoggerFactory.getLogger(MainLayout.class);
 
     public MainLayout(AuthenticatedUser authUser) {
         this.authenticatedUser = authUser;
@@ -124,8 +126,7 @@ public class MainLayout extends AppLayout {
         final AllowedRoles annotation = view.getAnnotation(AllowedRoles.class);
 
         if (annotation == null) {
-            LoggerFactory.getLogger(MainLayout.class)
-                .warn("Class {} not properly secured with Annotation", view);
+            logger.warn("Class {} not properly secured with Annotation", view);
             return false;
         }
 
