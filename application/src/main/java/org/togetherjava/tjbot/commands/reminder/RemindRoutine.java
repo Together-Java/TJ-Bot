@@ -89,8 +89,7 @@ public final class RemindRoutine implements Routine {
 
     private static @NotNull RestAction<ReminderRoute> createDmReminderRoute(@NotNull JDA jda,
             long authorId) {
-        return jda.openPrivateChannelById(authorId)
-            .map(channel -> ReminderRoute.toPrivate(channel, channel.getUser()));
+        return jda.openPrivateChannelById(authorId).map(ReminderRoute::toPrivate);
     }
 
     private static void sendReminderViaRoute(@NotNull RestAction<ReminderRoute> routeAction,
@@ -134,8 +133,8 @@ public final class RemindRoutine implements Routine {
                     target == null ? null : target.getAsMention());
         }
 
-        static ReminderRoute toPrivate(@NotNull PrivateChannel channel, @NotNull User target) {
-            return new ReminderRoute(channel, target,
+        static ReminderRoute toPrivate(@NotNull PrivateChannel channel) {
+            return new ReminderRoute(channel, channel.getUser(),
                     "(Sending your reminder directly, because I was unable to locate"
                             + " the original channel you wanted it to be send to)");
         }
