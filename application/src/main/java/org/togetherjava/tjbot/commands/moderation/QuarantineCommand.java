@@ -74,7 +74,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                         """
                     .formatted(guild.getName(), reason);
         return event.getJDA()
-            .openPrivateChannelById(target.getId())
+            .openPrivateChannelById(target.getIdLong())
             .flatMap(channel -> channel.sendMessage(dmMessage))
             .mapToResult()
             .map(Result::isSuccess);

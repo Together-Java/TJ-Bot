@@ -73,7 +73,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
                 The reason for the unquarantine is: %s
                 """.formatted(guild.getName(), reason);
         return event.getJDA()
-            .openPrivateChannelById(target.getId())
+            .openPrivateChannelById(target.getIdLong())
             .flatMap(channel -> channel.sendMessage(dmMessage))
             .mapToResult()
             .map(Result::isSuccess);
