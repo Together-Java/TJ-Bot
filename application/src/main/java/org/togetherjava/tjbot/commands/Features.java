@@ -70,7 +70,7 @@ public enum Features {
         features.add(new SuggestionsUpDownVoter(config));
 
         // Event receivers
-        features.add(new RejoinMuteListener(actionsStore, config));
+        features.add(new RejoinModerationRoleListener(actionsStore, config));
 
         // Slash commands
         features.add(new PingCommand());
@@ -90,6 +90,8 @@ public enum Features {
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore, config));
         features.add(new RemindCommand(database));
+        features.add(new QuarantineCommand(actionsStore, config));
+        features.add(new UnquarantineCommand(actionsStore, config));
 
         // Mixtures
         features.add(new FreeCommand(config));
