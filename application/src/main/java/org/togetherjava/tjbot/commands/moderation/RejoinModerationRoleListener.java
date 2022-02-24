@@ -64,7 +64,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
 
         for (ModerationRole moderationRole : moderationRoles) {
             if (shouldApplyModerationRole(moderationRole, member)) {
-                reapplyModerationRole(moderationRole, member);
+                applyModerationRole(moderationRole, member);
             }
         }
     }
@@ -82,7 +82,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
                 member.getGuild().getIdLong(), member.getIdLong(), moderationRole.revokeAction);
         if (lastRevokeAction.isEmpty()) {
             // User was never e.g. unmuted
-            return isActionEffective(lastRevokeAction.orElseThrow());
+            return isActionEffective(lastApplyAction.orElseThrow());
         }
 
         // The last issued action takes priority
@@ -99,7 +99,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
         return action.actionExpiresAt() == null || action.actionExpiresAt().isAfter(Instant.now());
     }
 
-    private static void reapplyModerationRole(@NotNull ModerationRole moderationRole,
+    private static void applyModerationRole(@NotNull ModerationRole moderationRole,
             @NotNull Member member) {
         Guild guild = member.getGuild();
         logger.info("Reapplied existing {} to user '{}' ({}) in guild '{}' after rejoining.",
