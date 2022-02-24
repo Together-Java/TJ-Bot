@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * Class which contains all actions a Discord client accepts.
- *
+ * <p>
  * This allows you to open DM's {@link Channels#DM_CHANNEL}, specific settings
  * {@link Settings.App#VOICE} and much more.
  *
@@ -19,6 +19,25 @@ import java.util.regex.Pattern;
  * <li>iOS and Android are NOT supported</li>
  * <li>It opens the LAST installed Discord version (Discord, Canary, PTB)</li>
  * </ul>
+ *
+ * <p>
+ * Example:
+ *
+ * <pre>
+ * <code>
+ * event.reply("Open Discord's secret home page!")
+ *      .addActionRow(DiscordClientAction.Guild.GUILD_HOME_CHANNEL.asLinkButton("Open home page!", event.getGuild().getId())
+ * </code>
+ * </pre>
+ *
+ * To improve readability, one might want to use a static import like:
+ *
+ * <pre>
+ * <code>
+ * event.reply(whoIsCommandOutput)
+ *      .addActionRow(USER.asLinkButton("Open home page!", target.getId())
+ * </code>
+ * </pre>
  */
 public class DiscordClientAction {
 
@@ -58,13 +77,17 @@ public class DiscordClientAction {
         public static final DiscordClientAction GUILDS_CREATE =
                 new DiscordClientAction("discord://-/guilds/create");
 
-        /** Beta Discord feature */
-        public static final DiscordClientAction GUILD_HOME_CHANNEL =
-                new DiscordClientAction("discord://-/channels/{GUILD-ID}/@home");
+
         public static final DiscordClientAction GUILD_EVENT =
                 new DiscordClientAction("discord://-/events/{GUILD-ID}/{EVENT-ID}");
         public static final DiscordClientAction GUILD_MEMBERSHIP_SCREENING =
                 new DiscordClientAction("discord://-/member-verification/{GUILD-ID}");
+
+        /**
+         * Beta Discord feature
+         */
+        public static final DiscordClientAction GUILD_HOME_CHANNEL =
+                new DiscordClientAction("discord://-/channels/{GUILD-ID}/@home");
     }
 
     /**
@@ -135,11 +158,15 @@ public class DiscordClientAction {
             public static final DiscordClientAction LOCALE =
                     new DiscordClientAction("discord://-/settings/locale");
 
-            /** @see #LINUX */
+            /**
+             * @see #LINUX
+             */
             public static final DiscordClientAction WINDOWS =
                     new DiscordClientAction("discord://-/settings/windows");
 
-            /** @see #WINDOWS */
+            /**
+             * @see #WINDOWS
+             */
             public static final DiscordClientAction LINUX =
                     new DiscordClientAction("discord://-/settings/linux");
 
@@ -195,7 +222,6 @@ public class DiscordClientAction {
      * argument is lacking.
      *
      * @return A {@link String} of the URL
-     *
      * @see #formatUrl(String...)
      */
     public String getRawUrl() {
@@ -206,9 +232,7 @@ public class DiscordClientAction {
      * Format's the URL with the given arguments.
      *
      * @param arguments An array of the arguments this action requires
-     *
      * @return The formatted URL as an {@link String}
-     *
      * @throws IllegalArgumentException When missing arguments
      */
     public String formatUrl(String @NotNull... arguments) {
@@ -231,9 +255,7 @@ public class DiscordClientAction {
      * @param label The label of the button, see {@link Button#link(String, String)} for the
      *        requirements
      * @param arguments An array of the arguments this action requires
-     *
      * @return A {@link Button} of {@link ButtonStyle#LINK} with the given label
-     *
      * @throws IllegalArgumentException When missing arguments
      */
     public Button asLinkButton(@NotNull String label, String... arguments) {
