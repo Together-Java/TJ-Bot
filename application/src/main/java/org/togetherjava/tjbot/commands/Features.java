@@ -105,6 +105,7 @@ public enum Features {
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
+        features.add(new WolframAlphaCommand(config));
 
         // Mixtures
         features.add(new FreeCommand(config, freeChannelMonitor));
