@@ -39,12 +39,14 @@ import java.util.regex.Pattern;
  * </code>
  * </pre>
  */
-public class DiscordClientAction {
+public final class DiscordClientAction {
 
     /**
      * Contains some of the more general actions
      */
-    public static class General {
+    public enum General {
+        ;
+
         public static final DiscordClientAction HOME = new DiscordClientAction("discord://-/");
         public static final DiscordClientAction FRIENDS = new DiscordClientAction("discord://-/");
 
@@ -66,7 +68,10 @@ public class DiscordClientAction {
     /**
      * Contains guild specific actions
      */
-    public static class Guild {
+    public enum Guild {
+        ;
+
+        @SuppressWarnings("squid:S1700")
         public static final DiscordClientAction GUILD =
                 new DiscordClientAction("discord://-/channels/{GUILD-ID}");
         public static final DiscordClientAction GUILD_CHANNEL =
@@ -93,7 +98,9 @@ public class DiscordClientAction {
     /**
      * Contains actions related to channels
      */
-    public static class Channels {
+    public enum Channels {
+        ;
+
         public static final DiscordClientAction DM_CHANNEL =
                 new DiscordClientAction("discord://-/channels/@me/{CHANNEL-ID}");
         public static final DiscordClientAction DM_CHANNEL_MESSAGE =
@@ -107,12 +114,21 @@ public class DiscordClientAction {
     /**
      * Contains actions related to the settings menu
      */
-    public static class Settings {
+    /*
+     * The warning is about this inner class being too long, and that it should be external This
+     * won't become an external class since it makes no sense for the design, and it requires the
+     * developer to remember all classes.
+     */
+    @SuppressWarnings("squid:S2972")
+    public enum Settings {
+        ;
 
         /**
          * Contains all user settings
          */
-        public static class User {
+        public enum User {
+            ;
+
             public static final DiscordClientAction ACCOUNT =
                     new DiscordClientAction("discord://-/settings/account");
             public static final DiscordClientAction PROFILE_CUSTOMIZATION =
@@ -128,7 +144,9 @@ public class DiscordClientAction {
         /**
          * Contains all payment settings
          */
-        public static class Payment {
+        public enum Payment {
+            ;
+
             public static final DiscordClientAction PREMIUM =
                     new DiscordClientAction("discord://-/settings/premium");
             public static final DiscordClientAction SUBSCRIPTIONS =
@@ -142,7 +160,9 @@ public class DiscordClientAction {
         /**
          * Contains all app settings
          */
-        public static class App {
+        public enum App {
+            ;
+
             public static final DiscordClientAction APPEARANCE =
                     new DiscordClientAction("discord://-/settings/appearance");
             public static final DiscordClientAction ACCESSIBILITY =
@@ -179,7 +199,9 @@ public class DiscordClientAction {
         /**
          * Contains some of the more general settings
          */
-        public static class General {
+        public enum General {
+            ;
+
             public static final DiscordClientAction ACTIVITY_STATUS =
                     new DiscordClientAction("discord://-/settings/activity-status");
             public static final DiscordClientAction ACTIVITY_OVERLAY =
@@ -191,7 +213,9 @@ public class DiscordClientAction {
         }
     }
 
-    public static class Library {
+    public enum Library {
+        ;
+
         public static final DiscordClientAction LIBRARY_GAMES =
                 new DiscordClientAction("discord://-/library");
         public static final DiscordClientAction LIBRARY_SETTINGS =
@@ -204,13 +228,15 @@ public class DiscordClientAction {
                 new DiscordClientAction("discord://-/store/applications/{APPLICATION-ID}");
     }
 
-    /* pattern for the arguments, finds everything within {} */
-    public final static Pattern argumentPattern = Pattern.compile("\\{[^}]*}");
+    /**
+     * Pattern for the arguments, finds everything within brackets
+     */
+    public static final Pattern argumentPattern = Pattern.compile("\\{[^}]*}");
 
     private final String url;
 
     @Contract(pure = true)
-    private DiscordClientAction(String url) {
+    private DiscordClientAction(final String url) {
         this.url = url;
     }
 
@@ -235,10 +261,10 @@ public class DiscordClientAction {
      * @return The formatted URL as an {@link String}
      * @throws IllegalArgumentException When missing arguments
      */
-    public String formatUrl(String @NotNull... arguments) {
+    public String formatUrl(final String @NotNull... arguments) {
         String localUrl = url;
 
-        for (String argument : arguments) {
+        for (final String argument : arguments) {
             localUrl = argumentPattern.matcher(localUrl).replaceFirst(argument);
         }
 
@@ -258,7 +284,12 @@ public class DiscordClientAction {
      * @return A {@link Button} of {@link ButtonStyle#LINK} with the given label
      * @throws IllegalArgumentException When missing arguments
      */
-    public Button asLinkButton(@NotNull String label, String... arguments) {
+    public Button asLinkButton(@NotNull final String label, final String... arguments) {
         return Button.link(formatUrl(arguments), label);
+    }
+
+    @Override
+    public String toString() {
+        return "DiscordClientAction{" + "url='" + url + '\'' + '}';
     }
 }
