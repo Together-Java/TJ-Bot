@@ -72,6 +72,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
                 This means you can now interact with others in the server again.
                 The reason for the unquarantine is: %s
                 """.formatted(guild.getName(), reason);
+
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
             .flatMap(channel -> channel.sendMessage(dmMessage))
@@ -123,6 +124,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
                 bot, author, guild, hasRequiredRole, reason, event)) {
             return false;
         }
+
         if (Objects.requireNonNull(target)
             .getRoles()
             .stream()
@@ -131,6 +133,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
             handleNotQuarantinedTarget(event);
             return false;
         }
+
         return true;
     }
 

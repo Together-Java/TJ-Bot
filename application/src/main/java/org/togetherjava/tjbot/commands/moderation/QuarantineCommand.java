@@ -73,6 +73,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                         The reason for the quarantine is: %s
                         """
                     .formatted(guild.getName(), reason);
+
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
             .flatMap(channel -> channel.sendMessage(dmMessage))
@@ -124,6 +125,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                 bot, author, guild, hasRequiredRole, reason, event)) {
             return false;
         }
+
         if (Objects.requireNonNull(target)
             .getRoles()
             .stream()
@@ -132,6 +134,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
             handleAlreadyQuarantinedTarget(event);
             return false;
         }
+
         return true;
     }
 
