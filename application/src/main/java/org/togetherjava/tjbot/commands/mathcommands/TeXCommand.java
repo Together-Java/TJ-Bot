@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -63,6 +62,7 @@ public class TeXCommand extends SlashCommandAdapter {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
         TeXFormula formula;
+
         try {
             if (latex.contains("$")) {
                 latex = convertInlineLatexToFull(latex);
@@ -72,49 +72,76 @@ public class TeXCommand extends SlashCommandAdapter {
             event.reply("That is an invalid latex: " + e.getMessage()).setEphemeral(true).queue();
             return;
         }
+
         event.deferReply().queue();
-        Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
-                FOREGROUND_COLOR, BACKGROUND_COLOR);
-        if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
-            event.getHook().setEphemeral(true).editOriginal(RENDERING_ERROR).queue();
-            logger.warn(
-                    "Unable to render latex, image does not have an accessible width or height. Formula was {}",
-                    latex);
-            return;
-        }
-        BufferedImage renderedTextImage = new BufferedImage(image.getWidth(null),
-                image.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
-        renderedTextImage.getGraphics().drawImage(image, 0, 0, null);
-        ByteArrayOutputStream renderedTextImageStream = new ByteArrayOutputStream();
 
         try {
-            ImageIO.write(renderedTextImage, "png", renderedTextImageStream);
+            Image image = renderImage(formula);
+            sendImage(event, userID, image);
         } catch (IOException e) {
-            event.getHook().setEphemeral(true).editOriginal(RENDERING_ERROR).queue();
+            event.getHook().editOriginal(RENDERING_ERROR).queue();
             logger.warn(
                     "Unable to render latex, could not convert the image into an attachable form. Formula was {}",
                     latex, e);
-            return;
+
+        } catch (IllegalStateException e) {
+            event.getHook().editOriginal(RENDERING_ERROR).queue();
+
+            logger.warn(
+                    "Unable to render latex, image does not have an accessible width or height. Formula was {}",
+                    latex, e);
         }
+    }
+
+    private @NotNull Image renderImage(@NotNull TeXFormula formula) {
+        Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
+                FOREGROUND_COLOR, BACKGROUND_COLOR);
+
+        if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
+            throw new IllegalStateException("Image has no height or width");
+        }
+        return image;
+    }
+
+    private void sendImage(@NotNull SlashCommandEvent event, @NotNull String userID,
+            @NotNull Image image) throws IOException {
+
+        ByteArrayOutputStream renderedTextImageStream = getRenderedTextImageStream(image);
         event.getHook()
             .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
             .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
             .queue();
     }
 
+    @NotNull
+    private ByteArrayOutputStream getRenderedTextImageStream(@NotNull Image image)
+            throws IOException {
+
+        BufferedImage renderedTextImage = new BufferedImage(image.getWidth(null),
+                image.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
+
+        renderedTextImage.getGraphics().drawImage(image, 0, 0, null);
+        ByteArrayOutputStream renderedTextImageStream = new ByteArrayOutputStream();
+
+        ImageIO.write(renderedTextImage, "png", renderedTextImageStream);
+
+        return renderedTextImageStream;
+    }
+
     /**
-     *
      * Converts inline latex like: {@code hello $\frac{x}{2}$ world} to full latex
      * {@code \text{hello}\frac{x}{2}\text{ world}}.
-     *
      */
     @NotNull
     private String convertInlineLatexToFull(@NotNull String latex) {
         if (isInvalidInlineFormat(latex)) {
-            throw new ParseException("One dollar sign is invalid, wrap whole expression with it. ");
+            throw new ParseException(
+                    "The amount of $-symbols must be divisible by two. Did you forget to close an expression? ");
         }
+
         Matcher matcher = INLINE_LATEX_REPLACEMENT.matcher(latex);
         StringBuilder sb = new StringBuilder();
+
         while (matcher.find()) {
             boolean isInsideMathRegion = matcher.group(1) != null;
             if (isInsideMathRegion) {
