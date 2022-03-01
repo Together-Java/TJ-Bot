@@ -39,6 +39,8 @@ shadowJar {
 }
 
 dependencies {
+    implementation 'org.jetbrains:annotations:23.0.0'
+
     implementation project(':database')
 
     implementation 'net.dv8tion:JDA:5.0.0-alpha.9'
