@@ -1,18 +1,16 @@
 package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import org.jetbrains.annotations.Contract;
@@ -22,14 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.awt.*;
+import java.awt.Color;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 /**
@@ -46,6 +45,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private static final String TITLE_OPTION = "title";
     private static final String DESCRIPTION_OPTION = "description";
+    private static final String ROLE_OPTION = "Selectable role";
 
     private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
 
@@ -54,19 +54,225 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             new OptionData(OptionType.STRING, DESCRIPTION_OPTION, "A description for the message",
                     false));
 
+    /**
+     * Amount of times the role-option will be copied ({@value})
+     */
+    private static final int ROLE_VAR_ARG_OPTION_AMOUNT = 22;
+
 
     /**
      * Construct an instance.
      */
     public RoleSelectCommand() {
-        super("role-select", "Sends a message where users can select their roles",
+        super("role-select",
+                "Sends a message where users can select their roles, system roles are ignored when selected.",
                 SlashCommandVisibility.GUILD);
 
-        getData().addOptions(messageOptions);
+        OptionData roleOption = new OptionData(OptionType.ROLE, ROLE_OPTION,
+                "The role to add to the selection menu", true);
+
+        getData().addOptions(messageOptions)
+            .addOptions(roleOption)
+            .addOptions(generateOptionalVarArgList(roleOption, ROLE_VAR_ARG_OPTION_AMOUNT));
     }
 
+    /**
+     * Collects the given {@link Collection} of {@link IMentionable IMentionables} to a comma
+     * separated String within {@code ()} <br/>
+     * It maps the {@link IMentionable IMentionables} to their mention using
+     * {@link IMentionable#getAsMention()}.
+     *
+     * @param mentionables The {@link Collection} of {@link IMentionable IMentionables} to collect
+     *        into a {@link String}
+     *
+     * @return The given mentionables their mention collected into a {@link String}
+     */
+    private static String mentionablesToJoinedString(
+            @NotNull final Collection<? extends IMentionable> mentionables) {
+        return mentionables.stream()
+            .map(IMentionable::getAsMention)
+            .collect(Collectors.joining(", ", "(", ")"));
+    }
+
+
+    /**
+     * Handles the event when all the given roles are system roles.
+     *
+     * @param systemRoles A {@link Collection} of the {@link Role roles} the bot cannot interact
+     *        with.
+     *
+     * @return A modified {@link MessageEmbed} for this error
+     */
+    private static @NotNull MessageEmbed generateLackingNonSystemRoles(
+            @NotNull final Collection<? extends Role> systemRoles) {
+
+        return makeEmbed("Error: The given roles are all system roles!", """
+                The bot can't/shouldn't interact with %s, these roles are created by Discord.
+                Examples are @everyone, or the role given automatically to boosters.
+                Are you sure you picked the correct role?
+                """.formatted(mentionablesToJoinedString(systemRoles)));
+    }
+
+    /**
+     * Handles the event when the bot cannot interact with certain roles.
+     *
+     * @param rolesBotCantInteractWith A {@link Collection} of the {@link Role roles} the bot cannot
+     *        interact with.
+     *
+     * @return A modified {@link MessageEmbed} for this error
+     */
+    private static @NotNull MessageEmbed generateCannotInteractWithRolesEmbed(
+            @NotNull final Collection<? extends Role> rolesBotCantInteractWith) {
+
+        return makeEmbed("Error: The role of the bot is too low!",
+                "The bot can't interact with %s, contact a staff member to move the bot above these roles."
+                    .formatted(mentionablesToJoinedString(rolesBotCantInteractWith)));
+    }
+
+    /**
+     * Creates an embed to send with the selection menu. <br>
+     * This embed is specifically designed for this command and might have unwanted side effects.
+     *
+     * @param title The title for {@link EmbedBuilder#setTitle(String)}.
+     * @param description The description for {@link EmbedBuilder#setDescription(CharSequence)}
+     *
+     * @return The formatted {@link MessageEmbed}.
+     */
+    private static @NotNull MessageEmbed makeEmbed(@Nullable final String title,
+            @Nullable final CharSequence description) {
+
+        return new EmbedBuilder().setTitle(title)
+            .setDescription(description)
+            .setColor(AMBIENT_COLOR)
+            .setTimestamp(Instant.now())
+            .build();
+    }
+
+
+    @Override
+    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
+
+        if (!event.getMember().hasPermission(Permission.MANAGE_ROLES)) {
+            event.reply("You dont have the required manage role permission to use this command")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        Member selfMember = event.getGuild().getSelfMember();
+        if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
+            event.reply("The bot needs the manage role permissions").setEphemeral(true).queue();
+            logger.error("The bot needs the manage role permissions");
+            return;
+        }
+
+
+        List<Role> rawRoles =
+                varArgOptionsToList(event.getOptionsByName(ROLE_OPTION), OptionMapping::getAsRole);
+        List<Role> roles = filterToBotAccessibleRoles(rawRoles);
+
+        if (roles.isEmpty()) {
+            event.replyEmbeds(generateLackingNonSystemRoles(rawRoles)).queue();
+            return;
+        }
+
+
+        List<Role> rolesBotCantInteractWith =
+                roles.stream().filter(role -> !selfMember.canInteract(role)).toList();
+
+        if (!rolesBotCantInteractWith.isEmpty()) {
+            event.replyEmbeds(generateCannotInteractWithRolesEmbed(rolesBotCantInteractWith))
+                .queue();
+            return;
+        }
+
+
+        handleCommandSuccess(event, roles);
+    }
+
+    /**
+     * Filters the given {@link Collection} of {@link Role roles} to not contain system roles. <br>
+     *
+     * See {@link #handleIsSystemRole(Role)} for more info on what this exactly filters.
+     *
+     * @param roles The {@link Collection} of the {@link Role roles} to filter
+     *
+     * @return A modifiable {@link List} of all filtered roles
+     */
     @NotNull
-    private static SelectOption mapToSelectOption(@NotNull Role role) {
+    private static List<Role> filterToBotAccessibleRoles(
+            @NotNull final Collection<? extends Role> roles) {
+
+        return roles.stream()
+            .filter(RoleSelectCommand::handleIsSystemRole)
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * Tests the given predicate, if true logs the role as a system role.
+     *
+     * <p>
+     * returns true if one of the following statements is true:
+     * <ul>
+     * <li>The given role is the {@code @everyone} role</li>
+     * <li>The given role is the is a bot/integration role</li>
+     * <li>The given role is the booster role</li>
+     * <li>The given role is the Twitch Subscriber role</li>
+     * </ul>
+     *
+     * @param role The {@link Role} to test
+     *
+     * @return Whenever the given {@link Role} is a system-role
+     */
+    @Contract(pure = true)
+    private static boolean handleIsSystemRole(final @NotNull Role role) {
+        boolean isSystemRole = role.isPublicRole() || role.getTags().isBot()
+                || role.getTags().isBoost() || role.getTags().isIntegration();
+
+        if (isSystemRole) {
+            logger.info("The {} ({}) role is a system role, and is ignored", role.getName(),
+                    role.getId());
+        }
+
+        return !isSystemRole;
+    }
+
+    /**
+     * Handles the event when no issues were found and the message can be sent.
+     *
+     * @param event The {@link CommandInteraction} to reply to.
+     * @param roles A {@link List} of the {@link Role roles} that the users should be able to pick.
+     */
+    private void handleCommandSuccess(@NotNull final CommandInteraction event,
+            @NotNull final Collection<? extends Role> roles) {
+
+        SelectionMenu.Builder menu =
+                SelectionMenu.create(generateComponentId(event.getUser().getId()))
+                    .setPlaceholder("Select your roles")
+                    .setMaxValues(roles.size())
+                    .setMinValues(0);
+
+        roles.forEach(role -> menu.addOptions(mapToSelectOption(role)));
+
+        String title = null == event.getOption(TITLE_OPTION) ? "Select your roles:"
+                : event.getOption(TITLE_OPTION).getAsString();
+
+        MessageEmbed generatedEmbed =
+                makeEmbed(title, event.getOption(DESCRIPTION_OPTION).getAsString());
+
+        event.replyEmbeds(generatedEmbed).addActionRow(menu.build()).queue();
+    }
+
+    /**
+     * Maps the given role to a {@link SelectOption} with the {@link SelectOption SelectOption's}
+     * emoji, if it has one.
+     *
+     * @param role The {@link Role} to base the option from.
+     *
+     * @return The generated {@link SelectOption}.
+     */
+    @NotNull
+    private static SelectOption mapToSelectOption(@NotNull final Role role) {
         RoleIcon roleIcon = role.getIcon();
 
         if (null == roleIcon || !roleIcon.isEmoji()) {
@@ -77,92 +283,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         }
     }
 
-    @Override
-    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
-        Member member = Objects.requireNonNull(event.getMember(), "Member is null");
-        if (!member.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("You dont have the right permissions to use this command")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
-        Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
-        if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("The bot needs the manage role permissions").setEphemeral(true).queue();
-            logger.error("The bot needs the manage role permissions");
-            return;
-        }
-
-        SelectMenu.Builder menu =
-                SelectMenu.create(generateComponentId(Lifespan.PERMANENT, member.getId()));
-
-        addMenuOptions(event, menu, "Select the roles to display", 1);
-
-        // Handle Optional arguments
-        OptionMapping titleOption = event.getOption(TITLE_OPTION);
-        OptionMapping descriptionOption = event.getOption(DESCRIPTION_OPTION);
-
-        String title = handleOption(titleOption);
-        String description = handleOption(descriptionOption);
-
-        MessageBuilder messageBuilder = new MessageBuilder(makeEmbed(title, description))
-            .setActionRows(ActionRow.of(menu.build()));
-
-        event.reply(messageBuilder.build()).setEphemeral(true).queue();
-    }
-
-    /**
-     * Adds role options to a selection menu.
-     * <p>
-     *
-     * @param event the {@link SlashCommandInteractionEvent}
-     * @param menu the menu to add options to {@link SelectMenu.Builder}
-     * @param placeHolder the placeholder for the menu {@link String}
-     * @param minValues the minimum number of selections. nullable {@link Integer}
-     */
-    private static void addMenuOptions(@NotNull final Interaction event,
-            @NotNull final SelectMenu.Builder menu, @NotNull final String placeHolder,
-            @Nullable final Integer minValues) {
-
-        Guild guild = Objects.requireNonNull(event.getGuild(), "The given guild cannot be null");
-
-        Role highestBotRole = guild.getSelfMember().getRoles().get(0);
-        List<Role> guildRoles = guild.getRoles();
-
-        Collection<Role> roles = new ArrayList<>(
-                guildRoles.subList(guildRoles.indexOf(highestBotRole) + 1, guildRoles.size()));
-
-        if (null != minValues) {
-            menu.setMinValues(minValues);
-        }
-
-        menu.setPlaceholder(placeHolder)
-            .setMaxValues(roles.size())
-            .addOptions(roles.stream()
-                .filter(role -> !role.isPublicRole())
-                .filter(role -> !role.getTags().isBot())
-                .map(RoleSelectCommand::mapToSelectOption)
-                .toList());
-    }
-
-    /**
-     * Creates an embedded message to send with the selection menu.
-     *
-     * @param title for the embedded message. nullable {@link String}
-     * @param description for the embedded message. nullable {@link String}
-     * @return the formatted embed {@link MessageEmbed}
-     */
-    private static @NotNull MessageEmbed makeEmbed(@Nullable final String title,
-            @Nullable final CharSequence description) {
-
-        String effectiveTitle = (null == title) ? "Select your roles:" : title;
-
-        return new EmbedBuilder().setTitle(effectiveTitle)
-            .setDescription(description)
-            .setColor(AMBIENT_COLOR)
-            .build();
-    }
 
     @Override
     public void onSelectionMenu(@NotNull final SelectMenuInteractionEvent event,
@@ -172,27 +292,33 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         List<SelectOption> selectedOptions = Objects.requireNonNull(event.getSelectedOptions(),
                 "The given selectedOptions cannot be null");
 
-        List<Role> selectedRoles = selectedOptions.stream()
+        List<Role> roles = selectedOptions.stream()
             .map(SelectOption::getValue)
             .map(guild::getRoleById)
             .filter(Objects::nonNull)
-            .filter(role -> guild.getSelfMember().canInteract(role))
             .toList();
 
+        List<Role> rolesBotCantInteractWith =
+                roles.stream().filter(role -> !guild.getSelfMember().canInteract(role)).toList();
 
-        if (event.getMessage().isEphemeral()) {
-            handleNewRoleBuilderSelection(event, selectedRoles);
-        } else {
-            handleRoleSelection(event, selectedRoles, guild);
+        if (!rolesBotCantInteractWith.isEmpty()) {
+            event.getChannel()
+                .sendMessageEmbeds(generateCannotInteractWithRolesEmbed(rolesBotCantInteractWith))
+                .queue();
         }
+
+        List<Role> usableRoles =
+                roles.stream().filter(role -> guild.getSelfMember().canInteract(role)).toList();
+
+        handleRoleSelection(event, usableRoles, guild);
     }
 
     /**
      * Handles selection of a {@link SelectMenuInteractionEvent}.
      *
-     * @param event the <b>unacknowledged</b> {@link SelectMenuInteractionEvent}
-     * @param selectedRoles the {@link Role roles} selected
-     * @param guild the {@link Guild}
+     * @param event the <b>unacknowledged</b> {@link SelectMenuInteractionEvent}.
+     * @param selectedRoles The {@link Role roles} selected.
+     * @param guild The {@link Guild}.
      */
     private static void handleRoleSelection(final @NotNull SelectMenuInteractionEvent event,
             final @NotNull Collection<Role> selectedRoles, final Guild guild) {
@@ -205,7 +331,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .stream()
             .map(roleFromSelectOptionFunction(guild))
             .filter(Objects::nonNull)
-            .forEach(role -> {
+            .forEach((Role role) -> {
                 if (selectedRoles.contains(role)) {
                     rolesToAdd.add(role);
                 } else {
@@ -216,13 +342,22 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         handleRoleModifications(event, event.getMember(), guild, rolesToAdd, rolesToRemove);
     }
 
+    /**
+     * Creates a function that maps the {@link SelectOption} to a {@link Role} from the given
+     * {@link Guild}.
+     *
+     * @param guild The {@link Guild} to grab the roles from.
+     *
+     * @return A {@link Function} which maps {@link SelectOption} to the relating {@link Role}.
+     */
+    @Contract(pure = true)
     @NotNull
-    private static Function<SelectOption, Role> roleFromSelectOptionFunction(Guild guild) {
-        return selectedOption -> {
+    private static Function<SelectOption, Role> roleFromSelectOptionFunction(final Guild guild) {
+        return (SelectOption selectedOption) -> {
             Role role = guild.getRoleById(selectedOption.getValue());
 
             if (null == role) {
-                handleNullRole(selectedOption);
+                logRemovedRole(selectedOption);
             }
 
             return role;
@@ -230,35 +365,11 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Handles the selection of the {@link SelectionMenu} if it came from a builder.
-     *
-     * @param event the <b>unacknowledged</b> {@link ComponentInteraction}
-     * @param selectedRoles the {@link Role roles} selected by the {@link User} from the
-     *        {@link ComponentInteraction} event
-     */
-    private void handleNewRoleBuilderSelection(@NotNull final ComponentInteraction event,
-            final @NotNull Collection<? extends Role> selectedRoles) {
-        SelectMenu.Builder menu = SelectMenu.create(generateComponentId(event.getUser().getId()))
-            .setPlaceholder("Select your roles")
-            .setMaxValues(selectedRoles.size())
-            .setMinValues(0);
-
-        selectedRoles.forEach(role -> menu.addOption(role.getName(), role.getId()));
-
-        event.getChannel()
-            .sendMessageEmbeds(event.getMessage().getEmbeds().get(0))
-            .setActionRow(menu.build())
-            .queue();
-
-        event.reply("Message sent successfully!").setEphemeral(true).queue();
-    }
-
-    /**
      * Logs that the role of the given {@link SelectOption} doesn't exist anymore.
      *
      * @param selectedOption the {@link SelectOption}
      */
-    private static void handleNullRole(final @NotNull SelectOption selectedOption) {
+    private static void logRemovedRole(final @NotNull SelectOption selectedOption) {
         logger.info(
                 "The {} ({}) role has been removed but is still an option in the selection menu",
                 selectedOption.getLabel(), selectedOption.getValue());
@@ -279,26 +390,5 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         guild.modifyMemberRoles(member, additionRoles, removalRoles)
             .flatMap(empty -> event.reply("Your roles have been updated!").setEphemeral(true))
             .queue();
-    }
-
-    /**
-     * This gets the OptionMapping and returns the value as a string if there is one.
-     *
-     * @param option the {@link OptionMapping}
-     * @return the value. nullable {@link String}
-     */
-    @Contract("null -> null")
-    private static @Nullable String handleOption(@Nullable final OptionMapping option) {
-        if (null == option) {
-            return null;
-        }
-
-        if (OptionType.STRING == option.getType()) {
-            return option.getAsString();
-        } else if (OptionType.BOOLEAN == option.getType()) {
-            return option.getAsBoolean() ? "true" : "false";
-        } else {
-            return null;
-        }
     }
 }
