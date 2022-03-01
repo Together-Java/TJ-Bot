@@ -6,14 +6,18 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
+import org.jetbrains.annotations.Unmodifiable;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Adapter implementation of a {@link SlashCommand}. The minimal setup only requires implementation
@@ -156,5 +160,47 @@ public abstract class SlashCommandAdapter implements SlashCommand {
             @NotNull String... args) {
         return Objects.requireNonNull(componentIdGenerator)
             .generate(new ComponentId(getName(), Arrays.asList(args)), lifespan);
+    }
+
+    /**
+     * This method copies the given {@link OptionData} for the given amount of times into a
+     * {@link List}. <br>
+     * This makes all the {@link OptionData OptionData's} optional! Everything else gets exactly
+     * copied.
+     *
+     * @param optionData The {@link OptionData} to copy.
+     * @param amount The amount of times to copy
+     *
+     * @return An unmodifiable {@link List} of the copied {@link OptionData OptionData's}
+     *
+     * @see #varArgOptionsToList(Collection, Function)
+     */
+    @Unmodifiable
+    protected static final @NotNull List<OptionData> generateOptionalVarArgList(
+            final @NotNull OptionData optionData, @Range(from = 1, to = 25) final int amount) {
+
+        OptionData varArgOption = new OptionData(optionData.getType(), optionData.getName(),
+                optionData.getDescription());
+
+        return IntStream.range(0, amount).mapToObj(i -> varArgOption).toList();
+    }
+
+    /**
+     * This method takes a {@link Collection} of {@link OptionMapping OptionMapping's}, these get
+     * mapped using the given {@link Function}
+     *
+     * @param options A {@link Collection} of {@link OptionMapping OptionMapping's}.
+     * @param mapper The mapper {@link Function}
+     * @param <T> The type to map it to.
+     *
+     * @return A modifiable {@link List} of the given type
+     *
+     * @see #generateOptionalVarArgList(OptionData, int)
+     */
+    protected static <T> List<T> varArgOptionsToList(
+            final @NotNull Collection<? extends OptionMapping> options,
+            final @NotNull Function<? super OptionMapping, ? extends T> mapper) {
+
+        return options.stream().map(mapper).collect(Collectors.toCollection(ArrayList::new));
     }
 }
