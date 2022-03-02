@@ -16,8 +16,8 @@ import java.util.List;
  * {@link net.dv8tion.jda.api.interactions.commands.Command}.
  * <p>
  * All message context-commands have to implement this interface. For convenience, there is a
- * {@link ContextCommandAdapter} available that implemented most methods already. A new command can
- * then be registered by adding it to {@link Features}.
+ * {@link BotCommandAdapter} available that implemented most methods already. A new command can then
+ * be registered by adding it to {@link Features}.
  * <p>
  * <p>
  * Context commands can either be visible globally in Discord or just to specific guilds. Small
