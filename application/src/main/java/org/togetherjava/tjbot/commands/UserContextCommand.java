@@ -12,6 +12,10 @@ import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import java.util.List;
 
 /**
+ * A user context-command is a command, accessible when right-clicking on a member in a guild. These
+ * commands aren't accessible within DM's.
+ *
+ * <p>
  * Represents a Discord user context-command. Mostly decorating
  * {@link net.dv8tion.jda.api.interactions.commands.Command}.
  * <p>

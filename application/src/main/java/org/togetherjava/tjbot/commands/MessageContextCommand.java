@@ -12,6 +12,9 @@ import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import java.util.List;
 
 /**
+ * A message context-command is a command, accessible when right-clicking on a message.
+ *
+ * <p>
  * Represents a Discord message context-command. Mostly decorating
  * {@link net.dv8tion.jda.api.interactions.commands.Command}.
  * <p>

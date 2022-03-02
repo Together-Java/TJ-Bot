@@ -16,6 +16,11 @@ import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import java.util.List;
 
 /**
+ * A slash-command is a command in Discord, with slash (/) as the prefix. These commands offer
+ * enhanced functionality and superior UX over text-commands. An example slash-command is the
+ * `/thread` command, this allows you to create threads using your keyboard. Try it out yourself!
+ *
+ * <p>
  * Represents a Discord slash-command. Mostly decorating
  * {@link net.dv8tion.jda.api.interactions.commands.Command}.
  * <p>
