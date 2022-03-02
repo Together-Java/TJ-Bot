@@ -7,11 +7,11 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * Provides all registered slash commands.
+ * Provides all registered commands.
  */
 public interface BotCommandProvider {
     /**
-     * Gets a list of all currently available and registered slash commands.
+     * Gets a list of all currently available and registered commands.
      *
      * @return all slash commands
      */
@@ -19,7 +19,7 @@ public interface BotCommandProvider {
     Collection<BotCommand> getBotCommands();
 
     /**
-     * Gets the slash command registered under the given name, if any.
+     * Gets the command registered under the given name, if any.
      *
      * @param name the name of the command
      * @return the command registered under this name, if any
