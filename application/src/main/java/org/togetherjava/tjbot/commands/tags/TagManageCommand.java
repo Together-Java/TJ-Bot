@@ -224,7 +224,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        String previousContent = getTagPreviousContent(subcommand, id);
+        String previousContent = getTagContent(subcommand, id);
 
         idAction.accept(id);
         sendSuccessMessage(event, id, subcommand.getActionVerb());
@@ -265,7 +265,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
-            String previousContent = getTagPreviousContent(subcommand, tagId);
+            String previousContent = getTagContent(subcommand, tagId);
 
             idAndContentAction.accept(tagId, message.getContentRaw());
             sendSuccessMessage(event, tagId, subcommand.getActionVerb());
@@ -294,17 +294,17 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Gets the previous content of a tag, or {@code "Unable to retrieve previous content"} if was
-     * unable to.
+     * Gets the content of a tag, or {@code "Unable to retrieve previous content"} if was unable to.
      * 
      * @param subcommand the subcommand to be executed
-     * @param id the id of the tag to get its previous content
-     * @return the previous content of the tag, or {@code "Unable to retrieve previous content"} if
-     *         was unable to
+     * @param id the id of the tag to get its content
+     * @return the content of the tag, or {@code "Unable to retrieve previous content"} if was
+     *         unable to
      */
-    private String getTagPreviousContent(Subcommand subcommand, String id) {
-        if (EnumSet.of(Subcommand.DELETE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE)
-            .contains(subcommand)) {
+    private @NotNull String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
+        Set<Subcommand> subcommandsWithContent =
+                EnumSet.of(Subcommand.DELETE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE);
+        if (subcommandsWithContent.contains(subcommand)) {
             try {
                 return tagSystem.getTag(id).orElseThrow();
             } catch (NoSuchElementException e) {
@@ -315,6 +315,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                         id));
             }
         }
+
         return "Unable to retrieve previous content";
     }
 
