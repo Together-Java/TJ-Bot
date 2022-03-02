@@ -67,7 +67,7 @@ public abstract class SlashCommandAdapter extends BotCommandAdapter implements S
      * @param visibility the visibility of the command
      */
     protected SlashCommandAdapter(@NotNull String name, @NotNull String description,
-            CommandVisibility visibility) {
+            @NotNull CommandVisibility visibility) {
         super(Commands.slash(name, description), visibility);
         this.description = description;
 

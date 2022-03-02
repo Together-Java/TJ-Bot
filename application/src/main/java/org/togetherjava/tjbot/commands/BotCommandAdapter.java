@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
@@ -50,12 +51,12 @@ public abstract class BotCommandAdapter implements BotCommand {
      * @param data the data for this command
      * @param visibility the visibility of the command
      */
-    protected BotCommandAdapter(@NotNull CommandData data, CommandVisibility visibility) {
-        this.data = data;
+    protected BotCommandAdapter(@NotNull CommandData data, @NotNull CommandVisibility visibility) {
+        this.data = Objects.requireNonNull(data, "The data shouldn't be null");
+        this.visibility = Objects.requireNonNull(visibility, "The visibility shouldn't be null");
 
         this.name = data.getName();
         this.type = data.getType();
-        this.visibility = visibility;
     }
 
     @Override
@@ -80,6 +81,7 @@ public abstract class BotCommandAdapter implements BotCommand {
     }
 
     @Override
+    @Contract(mutates = "this")
     public final void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator) {
         componentIdGenerator =
                 Objects.requireNonNull(generator, "The given generator cannot be null");
