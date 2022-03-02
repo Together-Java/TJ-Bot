@@ -23,12 +23,12 @@ import java.util.List;
  * be registered by adding it to {@link Features}.
  * <p>
  * <p>
- * Context commands can either be visible globally in Discord or just to specific guilds. Small
- * things can be configured via {@link CommandData}, which is then to be returned by
+ * Context commands can either be visible globally in Discord or just to specific guilds. Minor
+ * adjustments can be made via {@link CommandData}, which is then to be returned by
  * {@link #getData()} where the system will then pick it up from.
  * <p>
- * After registration, the system will notify a command whenever one of its corresponding slash
- * commands ({@link #onMessageContext(MessageContextInteractionEvent)}), buttons
+ * After registration, the system will notify a command whenever one of its corresponding message
+ * context-commands ({@link #onMessageContext(MessageContextInteractionEvent)}), buttons
  * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
  * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
