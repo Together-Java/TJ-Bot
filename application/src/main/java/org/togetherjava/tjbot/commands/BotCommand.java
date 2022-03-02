@@ -82,6 +82,12 @@ public interface BotCommand extends Feature {
 
 
     /**
+     * Buttons can be attached below messages, and all buttons should provide the styling Discord
+     * provides. This means, red only for destructive actions, green only for successful etc. For
+     * examples on how they look, see
+     * <a href="https://support.discord.com/hc/en-us/articles/1500012250861-Bots-Buttons">Discord's
+     * support article</a>.
+     *
      * Triggered by the core system when a button corresponding to this implementation (based on
      * {@link #getData()}) has been clicked.
      * <p>
@@ -103,6 +109,11 @@ public interface BotCommand extends Feature {
     void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args);
 
     /**
+     * Select menus can be attached below messages, just like Buttons. They allow you to configure a
+     * certain set of options, that the user can choose. For examples on how they look, see <a href=
+     * "https://support.discord.com/hc/en-us/articles/4403375759255-Bots-Select-Menus">Discord's
+     * support article.</a>
+     *
      * Triggered by the core system when a selection menu corresponding to this implementation
      * (based on {@link #getData()}) has been clicked.
      * <p>

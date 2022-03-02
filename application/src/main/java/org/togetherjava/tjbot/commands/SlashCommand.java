@@ -5,8 +5,10 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -98,16 +100,23 @@ public interface SlashCommand extends BotCommand {
     void onSlashCommand(@NotNull SlashCommandInteractionEvent event);
 
     /**
+     * Autocompletion is comparable, but not the same as slash-command choices. Choices allow you to
+     * set a static list of {@value OptionData#MAX_CHOICES} possible "choices" to the commmand.
+     * Autocomplete allows you to dynamically give the user a list of
+     * {@value OptionData#MAX_CHOICES} possible choices. These choices can be generated based on the
+     * input of the user, the functionality is comparable to Google's autocompletion when searching
+     * for something.
+     * <p/>
      * Triggered by the core system when a slash command's autocomplete corresponding to this
-     * implementation (based on {@link #getData()}) has been triggered.
-     * <p>
+     * implementation (based on {@link #getData()}) has been triggered. Don't forget to enable
+     * autocomplete using {@link OptionData#setAutoComplete(boolean)}!
+     * <p/>
      * This method may be called multithreaded. In particular, there are no guarantees that it will
      * be executed on the same thread repeatedly or on the same thread that other event methods have
      * been called on.
-     * <p>
+     * <p/>
      * Details are available in the given event and the event also enables implementations to
-     * respond to it.
-     * <p>
+     * respond to it. <br>
      * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's.
      *
      * @param event the event that triggered this
