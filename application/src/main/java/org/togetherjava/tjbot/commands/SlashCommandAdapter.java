@@ -33,7 +33,7 @@ import java.util.List;
  * <p>
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}. A minimal
- * setup would consist of a class like
+ * setup would consist of a class like:
  *
  * <pre>
  * {

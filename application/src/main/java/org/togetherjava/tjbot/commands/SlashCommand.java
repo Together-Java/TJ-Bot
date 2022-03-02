@@ -91,7 +91,7 @@ public interface SlashCommand extends BotCommand {
      * in a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>
-     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's
+     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's.
      *
      * @param event the event that triggered this
      */
@@ -108,7 +108,7 @@ public interface SlashCommand extends BotCommand {
      * Details are available in the given event and the event also enables implementations to
      * respond to it.
      * <p>
-     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's
+     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's.
      *
      * @param event the event that triggered this
      */

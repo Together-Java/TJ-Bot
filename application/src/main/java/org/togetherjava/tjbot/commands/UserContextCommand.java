@@ -38,7 +38,6 @@ import java.util.List;
  */
 public interface UserContextCommand extends BotCommand {
 
-
     /**
      * Triggered by the core system when a user context-command corresponding to this implementation
      * (based on {@link #getData()}) has been triggered.
@@ -56,7 +55,7 @@ public interface UserContextCommand extends BotCommand {
      * in a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>
-     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info
+     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info.
      *
      * @param event the event that triggered this
      */

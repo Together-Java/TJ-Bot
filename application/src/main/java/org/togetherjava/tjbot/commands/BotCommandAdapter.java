@@ -26,7 +26,7 @@ import java.util.Objects;
  * <p>
  * The adapter manages some getters for you, you've to create the {@link CommandData} yourself. See
  * {@link #BotCommandAdapter(CommandData, CommandVisibility)}} for more info on that. Minimal
- * modifications can be done on the {@link CommandData} returned by {@link #getData()}
+ * modifications can be done on the {@link CommandData} returned by {@link #getData()}.
  * <p>
  * <p>
  * If implementations want to add buttons or selection menus, it is highly advised to use component
