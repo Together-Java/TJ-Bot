@@ -100,6 +100,7 @@ public enum Features {
         features.add(new RemindCommand(database));
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
+        features.add(new WhoIsCommand());
 
         // Mixtures
         features.add(new FreeCommand(config));
