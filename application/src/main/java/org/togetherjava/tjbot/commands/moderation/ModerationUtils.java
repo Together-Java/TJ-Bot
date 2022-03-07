@@ -349,6 +349,32 @@ public enum ModerationUtils {
     }
 
     /**
+     * Gets a predicate that identifies the role used to quarantine a member in a guild.
+     *
+     * @param config the config used to identify the quarantined role
+     * @return predicate that matches the name of the quarantined role
+     */
+    public static Predicate<String> getIsQuarantinedRolePredicate(@NotNull Config config) {
+        return Pattern.compile(config.getQuarantinedRolePattern()).asMatchPredicate();
+    }
+
+    /**
+     * Gets the role used to quarantine a member in a guild.
+     *
+     * @param guild the guild to get the quarantined role from
+     * @param config the config used to identify the quarantined role
+     * @return the quarantined role, if found
+     */
+    public static @NotNull Optional<Role> getQuarantinedRole(@NotNull Guild guild,
+            @NotNull Config config) {
+        Predicate<String> isQuarantinedRole = getIsQuarantinedRolePredicate(config);
+        return guild.getRoles()
+            .stream()
+            .filter(role -> isQuarantinedRole.test(role.getName()))
+            .findAny();
+    }
+
+    /**
      * Computes a temporary data wrapper representing the action with the given duration.
      *
      * @param durationText the duration of the action, either {@code "permanent"} or a time window

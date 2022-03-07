@@ -49,7 +49,9 @@ public final class TemporaryModerationRoutine implements Routine {
         this.actionsStore = actionsStore;
         this.jda = jda;
 
-        typeToRevocableAction = Stream.of(new TemporaryBanAction(), new TemporaryMuteAction(config))
+        typeToRevocableAction = Stream
+            .of(new TemporaryBanAction(), new TemporaryMuteAction(config),
+                    new TemporaryQuarantineAction(config))
             .collect(
                     Collectors.toMap(RevocableModerationAction::getApplyType, Function.identity()));
     }
