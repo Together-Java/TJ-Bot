@@ -3,8 +3,8 @@ package org.togetherjava.tjbot.commands.free;
 import org.jetbrains.annotations.NotNull;
 
 enum ChannelStatusType {
-    FREE("free", ":green_circle:"),
-    BUSY("busy", ":red_circle:");
+    FREE("free", ":white_check_mark:"),
+    BUSY("busy", ":x:");
 
     private final String description;
     private final String emoji;
