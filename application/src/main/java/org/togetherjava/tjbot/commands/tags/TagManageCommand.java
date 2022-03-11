@@ -414,9 +414,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
         EDIT_WITH_MESSAGE("edit-with-message", "edited"),
         DELETE("delete", "deleted");
 
-        public static final Set<Subcommand> SUBCOMMANDS_WITH_NEW_CONTENT =
+        private static final Set<Subcommand> SUBCOMMANDS_WITH_NEW_CONTENT =
                 EnumSet.of(CREATE, CREATE_WITH_MESSAGE, EDIT, EDIT_WITH_MESSAGE);
-        public static final Set<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
+        private static final Set<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
                 EnumSet.of(EDIT, EDIT_WITH_MESSAGE, DELETE);
 
 
