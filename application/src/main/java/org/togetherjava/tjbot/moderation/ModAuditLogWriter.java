@@ -20,6 +20,8 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class that allows you to easily log an entry on the mod audit log channel. Thread-Safe.
+ * <br /><br />
+ * Use {@link ModAuditLogWriter#write(String, String, User, TemporalAccessor, Guild, Attachment...)} to log an entry.
  */
 public enum ModAuditLogWriter {
     ;
@@ -30,19 +32,14 @@ public enum ModAuditLogWriter {
     private static Pattern auditLogChannelNamePattern = null;
 
     /**
-     * Sends a log embed on the mod audit log channel.
+     * Sends a log on the mod audit log channel.
      *
      * @param title the title of the log embed
-     *
      * @param description the description of the log embed
-     *
-     * @param author the user to be added to the embed
-     *
-     * @param timestamp the timestamp to be added to the embed
-     *
+     * @param author the author of the log message
+     * @param timestamp the timestamp of the log message
      * @param guild the guild to write this log to
-     *
-     * @param attachments attachments that'll be added to the message
+     * @param attachments attachments that will be added to the message. none or many.
      */
     public static void write(@NotNull String title, @NotNull String description,
             @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
@@ -102,7 +99,7 @@ public enum ModAuditLogWriter {
         /**
          * Gets the content raw, interpreted as UTF-8.
          * 
-         * @return the raw content of the file as a {@code byte[]}.
+         * @return the raw content of the attachment
          */
         public byte @NotNull [] getContentRaw() {
             return content.getBytes(StandardCharsets.UTF_8);
