@@ -25,13 +25,23 @@ import java.util.regex.Pattern;
  * Use {@link ModAuditLogWriter#write(String, String, User, TemporalAccessor, Guild, Attachment...)}
  * to log an entry.
  */
-public enum ModAuditLogWriter {
-    ;
+public final class ModAuditLogWriter {
     private static final Color EMBED_COLOR = Color.decode("#3788AC");
 
-    private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
+    private final Config config;
 
-    private static Pattern auditLogChannelNamePattern = null;
+    private final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
+
+    private Pattern auditLogChannelNamePattern = null;
+
+    /**
+     * Creates a new instance.
+     *
+     * @param config the config to use for this
+     */
+    public ModAuditLogWriter(@NotNull Config config) {
+        this.config = config;
+    }
 
     /**
      * Sends a log on the mod audit log channel.
@@ -43,8 +53,8 @@ public enum ModAuditLogWriter {
      * @param guild the guild to write this log to
      * @param attachments attachments that will be added to the message. none or many.
      */
-    public static void write(@NotNull String title, @NotNull String description,
-            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
+    public void write(@NotNull String title, @NotNull String description, @NotNull User author,
+            @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
             @NotNull Attachment... attachments) {
         Optional<TextChannel> auditLogChannel = getAndHandleModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
@@ -71,10 +81,9 @@ public enum ModAuditLogWriter {
      *
      * @param guild the guild to look for the channel in
      */
-    public static Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
+    public Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
         if (auditLogChannelNamePattern == null) {
-            auditLogChannelNamePattern =
-                    Pattern.compile(Config.getInstance().getModAuditLogChannelPattern());
+            auditLogChannelNamePattern = Pattern.compile(config.getModAuditLogChannelPattern());
         }
 
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
@@ -86,7 +95,7 @@ public enum ModAuditLogWriter {
         if (auditLogChannel.isEmpty()) {
             logger.warn(
                     "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
-                    Config.getInstance().getModAuditLogChannelPattern(), guild.getName());
+                    config.getModAuditLogChannelPattern(), guild.getName());
         }
         return auditLogChannel;
     }

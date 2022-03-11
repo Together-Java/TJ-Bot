@@ -51,16 +51,20 @@ public final class ModAuditLogRoutine implements Routine {
 
     private final Database database;
     private final Config config;
+    private final ModAuditLogWriter modAuditLogWriter;
 
     /**
      * Creates a new instance.
      *
      * @param database the database for memorizing audit log dates
      * @param config the config to use for this
+     * @param modAuditLogWriter the mod audit log writer to use for this
      */
-    public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config) {
+    public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config,
+            @NotNull ModAuditLogWriter modAuditLogWriter) {
         this.config = config;
         this.database = database;
+        this.modAuditLogWriter = modAuditLogWriter;
     }
 
     private static @NotNull RestAction<AuditLogMessage> handleAction(@NotNull Action action,
@@ -215,7 +219,7 @@ public final class ModAuditLogRoutine implements Routine {
             }
 
             Optional<TextChannel> auditLogChannel =
-                    ModAuditLogWriter.getAndHandleModAuditLogChannel(guild);
+                    modAuditLogWriter.getAndHandleModAuditLogChannel(guild);
             if (auditLogChannel.isEmpty()) {
                 return;
             }

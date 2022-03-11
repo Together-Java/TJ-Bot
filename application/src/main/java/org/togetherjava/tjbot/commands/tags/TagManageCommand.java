@@ -67,17 +67,23 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
+    private final ModAuditLogWriter modAuditLogWriter;
+
     /**
      * Creates a new instance, using the given tag system as base.
      *
      * @param tagSystem the system providing the actual tag data
      * @param config the config to use for this
+     * @param modAuditLogWriter the mod audit log writer to use for this
      */
-    public TagManageCommand(TagSystem tagSystem, @NotNull Config config) {
+    public TagManageCommand(TagSystem tagSystem, @NotNull Config config,
+            @NotNull ModAuditLogWriter modAuditLogWriter) {
         super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
         hasRequiredRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
+
+        this.modAuditLogWriter = modAuditLogWriter;
 
         // TODO Think about adding a "Are you sure"-dialog to 'edit', 'edit-with-message' and
         // 'delete'
@@ -359,17 +365,17 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         switch (subcommand) {
-            case CREATE -> ModAuditLogWriter.write("Tag-Manage Create",
+            case CREATE -> modAuditLogWriter.write("Tag-Manage Create",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
                     triggeredAt, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
                             Objects.requireNonNull(newContent)));
 
-            case CREATE_WITH_MESSAGE -> ModAuditLogWriter.write("Tag-Manage Create with message",
+            case CREATE_WITH_MESSAGE -> modAuditLogWriter.write("Tag-Manage Create with message",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
                     triggeredAt, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
                             Objects.requireNonNull(newContent)));
 
-            case EDIT -> ModAuditLogWriter.write("Tag-Manage Edit",
+            case EDIT -> modAuditLogWriter.write("Tag-Manage Edit",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
                     triggeredAt, guild,
                     new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
@@ -377,7 +383,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                             Objects.requireNonNull(previousContent)));
 
-            case EDIT_WITH_MESSAGE -> ModAuditLogWriter.write("Tag-Manage Edit with message",
+            case EDIT_WITH_MESSAGE -> modAuditLogWriter.write("Tag-Manage Edit with message",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
                     triggeredAt, guild,
                     new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
@@ -385,7 +391,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                             Objects.requireNonNull(previousContent)));
 
-            case DELETE -> ModAuditLogWriter.write("Tag-Manage Delete",
+            case DELETE -> modAuditLogWriter.write("Tag-Manage Delete",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
                     triggeredAt, guild, new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                             Objects.requireNonNull(previousContent)));
