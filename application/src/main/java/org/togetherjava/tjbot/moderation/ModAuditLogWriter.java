@@ -20,8 +20,10 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class that allows you to easily log an entry on the mod audit log channel. Thread-Safe.
- * <br /><br />
- * Use {@link ModAuditLogWriter#write(String, String, User, TemporalAccessor, Guild, Attachment...)} to log an entry.
+ * <br />
+ * <br />
+ * Use {@link ModAuditLogWriter#write(String, String, User, TemporalAccessor, Guild, Attachment...)}
+ * to log an entry.
  */
 public enum ModAuditLogWriter {
     ;
@@ -77,7 +79,8 @@ public enum ModAuditLogWriter {
 
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
             .stream()
-            .filter(channel -> auditLogChannelNamePattern.asMatchPredicate().test(channel.getName()))
+            .filter(channel -> auditLogChannelNamePattern.asMatchPredicate()
+                .test(channel.getName()))
             .findAny();
 
         if (auditLogChannel.isEmpty()) {
