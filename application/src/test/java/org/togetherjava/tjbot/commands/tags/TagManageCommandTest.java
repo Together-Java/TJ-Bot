@@ -18,6 +18,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,7 @@ final class TagManageCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
     private Member moderator;
+    private ModAuditLogWriter modAuditLogWriter;
 
     private static @NotNull MessageEmbed getResponse(@NotNull SlashCommandEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
@@ -45,11 +47,12 @@ final class TagManageCommandTest {
         Config config = mock(Config.class);
         String moderatorRoleName = "Moderator";
         when(config.getTagManageRolePattern()).thenReturn(moderatorRoleName);
+        modAuditLogWriter = mock(ModAuditLogWriter.class);
 
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagManageCommand(system, config);
+        command = new TagManageCommand(system, config, modAuditLogWriter);
 
         moderator = jdaTester.createMemberSpy(1);
         Role moderatorRole = mock(Role.class);
