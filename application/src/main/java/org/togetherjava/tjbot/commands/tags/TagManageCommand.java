@@ -57,12 +57,15 @@ public final class TagManageCommand extends SlashCommandAdapter {
     static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
 
-    // %s is formatted to the action verb.
+    // "Edited tag **ask**"
     private static final String LOG_EMBED_DESCRIPTION = "%s tag **%s**";
 
     private static final String CONTENT_FILE_NAME = "content.md";
     private static final String NEW_CONTENT_FILE_NAME = "new_content.md";
     private static final String PREVIOUS_CONTENT_FILE_NAME = "previous_content.md";
+
+    private static final EnumSet<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
+            EnumSet.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE);
 
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
@@ -302,9 +305,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *         unable to
      */
     private @NotNull String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
-        Set<Subcommand> subcommandsWithContent =
-                EnumSet.of(Subcommand.DELETE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE);
-        if (subcommandsWithContent.contains(subcommand)) {
+        if (SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
             try {
                 return tagSystem.getTag(id).orElseThrow();
             } catch (NoSuchElementException e) {
@@ -347,7 +348,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     private void logAction(@NotNull Subcommand subcommand, @NotNull Guild guild,
-            @NotNull User author, @NotNull TemporalAccessor timestamp, @NotNull String id,
+            @NotNull User author, @NotNull TemporalAccessor triggeredAt, @NotNull String id,
             @Nullable String newContent, @Nullable String previousContent) {
 
         if (EnumSet
@@ -358,8 +359,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     "newContent is null even though the subcommand should supply a value.");
         }
 
-        if (EnumSet.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE)
-            .contains(subcommand) && previousContent == null) {
+        if (SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand) && previousContent == null) {
             throw new IllegalArgumentException(
                     "previousContent is null even though the subcommand should supply a value.");
         }
@@ -367,17 +367,17 @@ public final class TagManageCommand extends SlashCommandAdapter {
         switch (subcommand) {
             case CREATE -> ModAuditLogWriter.write("Tag-Manage Create",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    timestamp, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
+                    triggeredAt, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
                             Objects.requireNonNull(newContent)));
 
             case CREATE_WITH_MESSAGE -> ModAuditLogWriter.write("Tag-Manage Create with message",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    timestamp, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
+                    triggeredAt, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
                             Objects.requireNonNull(newContent)));
 
             case EDIT -> ModAuditLogWriter.write("Tag-Manage Edit",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    timestamp, guild,
+                    triggeredAt, guild,
                     new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
                             Objects.requireNonNull(newContent)),
                     new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
@@ -385,7 +385,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
             case EDIT_WITH_MESSAGE -> ModAuditLogWriter.write("Tag-Manage Edit with message",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    timestamp, guild,
+                    triggeredAt, guild,
                     new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
                             Objects.requireNonNull(newContent)),
                     new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
@@ -393,7 +393,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
             case DELETE -> ModAuditLogWriter.write("Tag-Manage Delete",
                     String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    timestamp, guild, new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                    triggeredAt, guild, new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
                             Objects.requireNonNull(previousContent)));
 
             default -> throw new IllegalArgumentException(String.format(
