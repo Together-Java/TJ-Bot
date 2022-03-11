@@ -364,37 +364,39 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     "previousContent is null even though the subcommand should supply a value.");
         }
 
+        BiConsumer<String, ModAuditLogWriter.Attachment[]> writeLog =
+                (title, attachments) -> modAuditLogWriter.write(title,
+                        String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id),
+                        author, triggeredAt, guild, attachments);
+
         switch (subcommand) {
-            case CREATE -> modAuditLogWriter.write("Tag-Manage Create",
-                    String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    triggeredAt, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
-                            Objects.requireNonNull(newContent)));
+            case CREATE -> writeLog.accept("Tag-Manage Create",
+                    new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
+                            CONTENT_FILE_NAME, Objects.requireNonNull(newContent))});
 
-            case CREATE_WITH_MESSAGE -> modAuditLogWriter.write("Tag-Manage Create with message",
-                    String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    triggeredAt, guild, new ModAuditLogWriter.Attachment(CONTENT_FILE_NAME,
-                            Objects.requireNonNull(newContent)));
+            case CREATE_WITH_MESSAGE -> writeLog.accept("Tag-Manage Create with message",
+                    new ModAuditLogWriter.Attachment[] {new ModAuditLogWriter.Attachment(
+                            CONTENT_FILE_NAME, Objects.requireNonNull(newContent))});
 
-            case EDIT -> modAuditLogWriter.write("Tag-Manage Edit",
-                    String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    triggeredAt, guild,
-                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
-                            Objects.requireNonNull(newContent)),
-                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                            Objects.requireNonNull(previousContent)));
+            case EDIT -> writeLog.accept("Tag-Manage Edit",
+                    new ModAuditLogWriter.Attachment[] {
+                            new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
+                                    Objects.requireNonNull(newContent)),
+                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                                    Objects.requireNonNull(previousContent))});
 
-            case EDIT_WITH_MESSAGE -> modAuditLogWriter.write("Tag-Manage Edit with message",
-                    String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    triggeredAt, guild,
-                    new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
-                            Objects.requireNonNull(newContent)),
-                    new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                            Objects.requireNonNull(previousContent)));
+            case EDIT_WITH_MESSAGE -> writeLog.accept("Tag-Manage Edit with message",
+                    new ModAuditLogWriter.Attachment[] {
+                            new ModAuditLogWriter.Attachment(NEW_CONTENT_FILE_NAME,
+                                    Objects.requireNonNull(newContent)),
+                            new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                                    Objects.requireNonNull(previousContent))});
 
-            case DELETE -> modAuditLogWriter.write("Tag-Manage Delete",
-                    String.format(LOG_EMBED_DESCRIPTION, subcommand.getActionVerb(), id), author,
-                    triggeredAt, guild, new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
-                            Objects.requireNonNull(previousContent)));
+            case DELETE -> writeLog
+                .accept("Tag-Manage Delete",
+                        new ModAuditLogWriter.Attachment[] {
+                                new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME,
+                                        Objects.requireNonNull(previousContent))});
 
             default -> throw new IllegalArgumentException(String.format(
                     "The subcommand '%s' is not intended to be logged to the mod audit channel.",
