@@ -306,7 +306,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param id the id of the tag to get its content
      * @return the content of the tag, or {@code "Unable to retrieve content"} if was unable to
      */
-    private @NotNull String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
+    private @Nullable String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
         if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
             try {
                 return tagSystem.getTag(id).orElseThrow();
@@ -319,7 +319,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             }
         }
 
-        return "Unable to retrieve content";
+        return null;
     }
 
     /**
