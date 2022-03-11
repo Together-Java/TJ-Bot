@@ -445,7 +445,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         @NotNull
         String getActionVerb() {
-            return this.actionVerb;
+            return actionVerb;
         }
     }
 }
