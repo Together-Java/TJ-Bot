@@ -64,9 +64,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String NEW_CONTENT_FILE_NAME = "new_content.md";
     private static final String PREVIOUS_CONTENT_FILE_NAME = "previous_content.md";
 
-    private static final EnumSet<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
-            EnumSet.of(Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE, Subcommand.DELETE);
-
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
@@ -301,11 +298,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * 
      * @param subcommand the subcommand to be executed
      * @param id the id of the tag to get its content
-     * @return the content of the tag, or {@code "Unable to retrieve content"} if was
-     *         unable to
+     * @return the content of the tag, or {@code "Unable to retrieve content"} if was unable to
      */
     private @NotNull String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
-        if (SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
+        if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
             try {
                 return tagSystem.getTag(id).orElseThrow();
             } catch (NoSuchElementException e) {
@@ -351,17 +347,13 @@ public final class TagManageCommand extends SlashCommandAdapter {
             @NotNull User author, @NotNull TemporalAccessor triggeredAt, @NotNull String id,
             @Nullable String newContent, @Nullable String previousContent) {
 
-        EnumSet<Subcommand> subcommandsWithNewContent = EnumSet.of(
-                Subcommand.CREATE, Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT,
-                Subcommand.EDIT_WITH_MESSAGE);
-
-        if (subcommandsWithNewContent
-            .contains(subcommand) && newContent == null) {
+        if (Subcommand.SUBCOMMANDS_WITH_NEW_CONTENT.contains(subcommand) && newContent == null) {
             throw new IllegalArgumentException(
                     "newContent is null even though the subcommand should supply a value.");
         }
 
-        if (SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand) && previousContent == null) {
+        if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)
+                && previousContent == null) {
             throw new IllegalArgumentException(
                     "previousContent is null even though the subcommand should supply a value.");
         }
@@ -421,6 +413,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
         EDIT("edit", "edited"),
         EDIT_WITH_MESSAGE("edit-with-message", "edited"),
         DELETE("delete", "deleted");
+
+        public static final Set<Subcommand> SUBCOMMANDS_WITH_NEW_CONTENT =
+                EnumSet.of(CREATE, CREATE_WITH_MESSAGE, EDIT, EDIT_WITH_MESSAGE);
+        public static final Set<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
+                EnumSet.of(EDIT, EDIT_WITH_MESSAGE, DELETE);
+
 
         private final String name;
         private final String actionVerb;
