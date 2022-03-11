@@ -297,11 +297,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Gets the content of a tag, or {@code "Unable to retrieve previous content"} if was unable to.
+     * Gets the content of a tag, or {@code "Unable to retrieve content"} if was unable to.
      * 
      * @param subcommand the subcommand to be executed
      * @param id the id of the tag to get its content
-     * @return the content of the tag, or {@code "Unable to retrieve previous content"} if was
+     * @return the content of the tag, or {@code "Unable to retrieve content"} if was
      *         unable to
      */
     private @NotNull String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
@@ -312,12 +312,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
                 // NOTE Rare race condition, for example if another thread deleted the tag in the
                 // meantime
                 logger.warn(String.format(
-                        "tried to retrieve previous content of tag '%s', but the content doesn't exist.",
+                        "tried to retrieve content of tag '%s', but the content doesn't exist.",
                         id));
             }
         }
 
-        return "Unable to retrieve previous content";
+        return "Unable to retrieve content";
     }
 
     /**
