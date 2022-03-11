@@ -301,8 +301,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * 
      * @param subcommand the subcommand to be executed
      * @param id the id of the tag to get its content
-     * @return the content of the tag, or {@code "Unable to retrieve content"} if was
-     *         unable to
+     * @return the content of the tag, or {@code "Unable to retrieve content"} if was unable to
      */
     private @NotNull String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
         if (SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
@@ -351,10 +350,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
             @NotNull User author, @NotNull TemporalAccessor triggeredAt, @NotNull String id,
             @Nullable String newContent, @Nullable String previousContent) {
 
-        if (EnumSet
-            .of(Subcommand.CREATE, Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT,
-                    Subcommand.EDIT_WITH_MESSAGE)
-            .contains(subcommand) && newContent == null) {
+        EnumSet<Subcommand> subcommandsWithNewContent = EnumSet.of(Subcommand.CREATE,
+                Subcommand.CREATE_WITH_MESSAGE, Subcommand.EDIT, Subcommand.EDIT_WITH_MESSAGE);
+
+        if (subcommandsWithNewContent.contains(subcommand) && newContent == null) {
             throw new IllegalArgumentException(
                     "newContent is null even though the subcommand should supply a value.");
         }
