@@ -75,17 +75,17 @@ public enum ModAuditLogWriter {
                     Pattern.compile(Config.getInstance().getModAuditLogChannelPattern());
         }
 
-        Optional<TextChannel> channel = guild.getTextChannelCache()
+        Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
             .stream()
-            .filter(c -> auditLogChannelNamePattern.asMatchPredicate().test(c.getName()))
+            .filter(channel -> auditLogChannelNamePattern.asMatchPredicate().test(channel.getName()))
             .findAny();
 
-        if (channel.isEmpty()) {
+        if (auditLogChannel.isEmpty()) {
             logger.warn(
                     "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
                     Config.getInstance().getModAuditLogChannelPattern(), guild.getName());
         }
-        return channel;
+        return auditLogChannel;
     }
 
     /**
