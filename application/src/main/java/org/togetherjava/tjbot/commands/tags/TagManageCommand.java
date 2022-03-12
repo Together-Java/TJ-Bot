@@ -64,6 +64,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String NEW_CONTENT_FILE_NAME = "new_content.md";
     private static final String PREVIOUS_CONTENT_FILE_NAME = "previous_content.md";
 
+    private static final String UNABLE_TO_GET_CONTENT_MESSAGE = "Was unable to retrieve content";
+
     private final TagSystem tagSystem;
     private final Predicate<String> hasRequiredRole;
 
@@ -230,7 +232,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
             return;
         }
 
-        String previousContent = getTagContent(subcommand, id);
+        String previousContent =
+                getTagContent(subcommand, id).orElse(UNABLE_TO_GET_CONTENT_MESSAGE);
 
         idAction.accept(id);
         sendSuccessMessage(event, id, subcommand.getActionVerb());
@@ -271,7 +274,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
-            String previousContent = getTagContent(subcommand, tagId);
+            String previousContent =
+                    getTagContent(subcommand, tagId).orElse(UNABLE_TO_GET_CONTENT_MESSAGE);
 
             idAndContentAction.accept(tagId, message.getContentRaw());
             sendSuccessMessage(event, tagId, subcommand.getActionVerb());
@@ -306,10 +310,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param id the id of the tag to get its content
      * @return the content of the tag, or {@code "Unable to retrieve content"} if was unable to
      */
-    private @Nullable String getTagContent(@NotNull Subcommand subcommand, @NotNull String id) {
+    private @NotNull Optional<String> getTagContent(@NotNull Subcommand subcommand,
+            @NotNull String id) {
         if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
             try {
-                return tagSystem.getTag(id).orElseThrow();
+                return tagSystem.getTag(id);
             } catch (NoSuchElementException e) {
                 // NOTE Rare race condition, for example if another thread deleted the tag in the
                 // meantime
@@ -319,7 +324,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             }
         }
 
-        return null;
+        return Optional.empty();
     }
 
     /**
