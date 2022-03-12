@@ -358,7 +358,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
             @NotNull User author, @NotNull TemporalAccessor triggeredAt, @NotNull String id,
             @Nullable String newContent, @Nullable String previousContent) {
 
-        ArrayList<ModAuditLogWriter.Attachment> attachments = new ArrayList<>();
+        List<ModAuditLogWriter.Attachment> attachments = new ArrayList<>();
 
         if (Subcommand.SUBCOMMANDS_WITH_NEW_CONTENT.contains(subcommand)) {
             if (newContent == null) {
