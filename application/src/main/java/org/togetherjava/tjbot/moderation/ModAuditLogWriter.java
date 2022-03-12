@@ -28,9 +28,9 @@ import java.util.regex.Pattern;
 public final class ModAuditLogWriter {
     private static final Color EMBED_COLOR = Color.decode("#3788AC");
 
-    private final Config config;
+    private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
 
-    private final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
+    private final Config config;
 
     private Pattern auditLogChannelNamePattern = null;
 

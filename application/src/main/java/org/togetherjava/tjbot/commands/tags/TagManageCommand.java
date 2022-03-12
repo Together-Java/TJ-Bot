@@ -74,9 +74,9 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *
      * @param tagSystem the system providing the actual tag data
      * @param config the config to use for this
-     * @param modAuditLogWriter the mod audit log writer to use for this
+     * @param modAuditLogWriter to log tag changes for audition
      */
-    public TagManageCommand(TagSystem tagSystem, @NotNull Config config,
+    public TagManageCommand(@NotNull TagSystem tagSystem, @NotNull Config config,
             @NotNull ModAuditLogWriter modAuditLogWriter) {
         super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
 

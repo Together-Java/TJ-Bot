@@ -58,7 +58,7 @@ public final class ModAuditLogRoutine implements Routine {
      *
      * @param database the database for memorizing audit log dates
      * @param config the config to use for this
-     * @param modAuditLogWriter the mod audit log writer to use for this
+     * @param modAuditLogWriter to log tag changes for audition
      */
     public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config,
             @NotNull ModAuditLogWriter modAuditLogWriter) {
