@@ -304,11 +304,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Gets the content of a tag, or {@code "Unable to retrieve content"} if was unable to.
-     * 
+     * Gets the content of a tag.
+     *
      * @param subcommand the subcommand to be executed
      * @param id the id of the tag to get its content
-     * @return the content of the tag, or {@code "Unable to retrieve content"} if was unable to
+     * @return the content of the tag, if present
      */
     private @NotNull Optional<String> getTagContent(@NotNull Subcommand subcommand,
             @NotNull String id) {
