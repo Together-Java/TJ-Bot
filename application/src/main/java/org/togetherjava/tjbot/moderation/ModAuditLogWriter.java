@@ -32,7 +32,7 @@ public final class ModAuditLogWriter {
 
     private final Config config;
 
-    private Pattern auditLogChannelNamePattern = null;
+    private final Pattern auditLogChannelNamePattern;
 
     /**
      * Creates a new instance.
@@ -41,6 +41,7 @@ public final class ModAuditLogWriter {
      */
     public ModAuditLogWriter(@NotNull Config config) {
         this.config = config;
+        auditLogChannelNamePattern = Pattern.compile(config.getModAuditLogChannelPattern());
     }
 
     /**
@@ -82,10 +83,6 @@ public final class ModAuditLogWriter {
      * @param guild the guild to look for the channel in
      */
     public Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
-        if (auditLogChannelNamePattern == null) {
-            auditLogChannelNamePattern = Pattern.compile(config.getModAuditLogChannelPattern());
-        }
-
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
             .stream()
             .filter(channel -> auditLogChannelNamePattern.asMatchPredicate()
