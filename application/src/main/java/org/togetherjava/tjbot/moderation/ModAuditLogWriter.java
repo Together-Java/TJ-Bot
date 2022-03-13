@@ -16,6 +16,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -32,7 +33,7 @@ public final class ModAuditLogWriter {
 
     private final Config config;
 
-    private final Pattern auditLogChannelNamePattern;
+    private final Predicate<String> auditLogChannelNamePredicate;
 
     /**
      * Creates a new instance.
@@ -41,7 +42,8 @@ public final class ModAuditLogWriter {
      */
     public ModAuditLogWriter(@NotNull Config config) {
         this.config = config;
-        auditLogChannelNamePattern = Pattern.compile(config.getModAuditLogChannelPattern());
+        auditLogChannelNamePredicate =
+                Pattern.compile(config.getModAuditLogChannelPattern()).asMatchPredicate();
     }
 
     /**
@@ -85,8 +87,7 @@ public final class ModAuditLogWriter {
     public Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
             .stream()
-            .filter(channel -> auditLogChannelNamePattern.asMatchPredicate()
-                .test(channel.getName()))
+            .filter(channel -> auditLogChannelNamePredicate.test(channel.getName()))
             .findAny();
 
         if (auditLogChannel.isEmpty()) {
