@@ -21,6 +21,5 @@
        "channelPattern": "tj_suggestions",
        "upVoteEmoteName": "peepo_yes",
        "downVoteEmoteName": "peepo_no"
-   },
-   "quarantinedRolePattern": "Quarantined"
+   }
 }

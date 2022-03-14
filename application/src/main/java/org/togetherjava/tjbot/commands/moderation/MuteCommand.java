@@ -129,7 +129,7 @@ public final class MuteCommand extends SlashCommandAdapter {
             @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         sendDm(target, temporaryData, reason, guild, event)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
-                .map(result -> hasSentDm))
+                .map(banResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))
             .flatMap(event::replyEmbeds)
             .queue();

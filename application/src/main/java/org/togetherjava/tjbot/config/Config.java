@@ -27,7 +27,6 @@ public final class Config {
     private final List<FreeCommandConfig> freeCommand;
     private final String helpChannelPattern;
     private final SuggestionsConfig suggestions;
-    private final String quarantinedRolePattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -42,8 +41,7 @@ public final class Config {
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
             @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
             @JsonProperty("helpChannelPattern") String helpChannelPattern,
-            @JsonProperty("suggestions") SuggestionsConfig suggestions,
-            @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern) {
+            @JsonProperty("suggestions") SuggestionsConfig suggestions) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -56,7 +54,6 @@ public final class Config {
         this.freeCommand = Collections.unmodifiableList(freeCommand);
         this.helpChannelPattern = helpChannelPattern;
         this.suggestions = suggestions;
-        this.quarantinedRolePattern = quarantinedRolePattern;
     }
 
     /**
@@ -183,14 +180,5 @@ public final class Config {
      */
     public SuggestionsConfig getSuggestions() {
         return suggestions;
-    }
-
-    /**
-     * Gets the REGEX pattern used to identify the role assigned to quarantined users.
-     *
-     * @return the role name pattern
-     */
-    public String getQuarantinedRolePattern() {
-        return quarantinedRolePattern;
     }
 }

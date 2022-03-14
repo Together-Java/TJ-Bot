@@ -31,14 +31,6 @@ public enum ModerationAction {
      */
     UNMUTE("unmuted"),
     /**
-     * When a user quarantines another user.
-     */
-    QUARANTINE("quarantined"),
-    /**
-     * When a user unquarantines another user.
-     */
-    UNQUARANTINE("unquarantined"),
-    /**
      * When a user writes a note about another user.
      */
     NOTE("wrote a note about");

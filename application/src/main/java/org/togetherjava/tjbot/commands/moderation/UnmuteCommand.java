@@ -101,8 +101,8 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private void unmuteUserFlow(@NotNull Member target, @NotNull Member author,
             @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
         sendDm(target, reason, guild, event)
-            .flatMap(
-                    hasSentDm -> unmuteUser(target, author, reason, guild).map(result -> hasSentDm))
+            .flatMap(hasSentDm -> unmuteUser(target, author, reason, guild)
+                .map(banResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
             .flatMap(event::replyEmbeds)
             .queue();
