@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +53,18 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
 
     private static void reactWith(@NotNull String emoteName, @NotNull String fallbackUnicodeEmote,
             @NotNull Guild guild, @NotNull Message message) {
-        getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
-            logger.warn(
-                    "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
-                    emoteName);
-            return message.addReaction(fallbackUnicodeEmote);
-        }).queue();
+        try {
+            getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
+                logger.warn(
+                        "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
+                        emoteName);
+                return message.addReaction(fallbackUnicodeEmote);
+            }).complete();
+        } catch (ErrorResponseException exception) {
+            if (exception.getErrorResponse() != ErrorResponse.REACTION_BLOCKED) {
+                throw exception;
+            }
+        }
     }
 
     private static @NotNull Optional<Emote> getEmoteByName(@NotNull String name,
