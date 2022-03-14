@@ -28,6 +28,7 @@ public final class Config {
     private final String helpChannelPattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
+    private final ScamBlockerConfig scamBlocker;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -43,7 +44,8 @@ public final class Config {
             @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
             @JsonProperty("helpChannelPattern") String helpChannelPattern,
             @JsonProperty("suggestions") SuggestionsConfig suggestions,
-            @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern) {
+            @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
+            @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -57,6 +59,7 @@ public final class Config {
         this.helpChannelPattern = helpChannelPattern;
         this.suggestions = suggestions;
         this.quarantinedRolePattern = quarantinedRolePattern;
+        this.scamBlocker = scamBlocker;
     }
 
     /**
@@ -172,7 +175,7 @@ public final class Config {
      *
      * @return the channel name pattern
      */
-    public String getHelpChannelPattern() {
+    public @NotNull String getHelpChannelPattern() {
         return helpChannelPattern;
     }
 
@@ -181,7 +184,7 @@ public final class Config {
      *
      * @return the suggestion system config
      */
-    public SuggestionsConfig getSuggestions() {
+    public @NotNull SuggestionsConfig getSuggestions() {
         return suggestions;
     }
 
@@ -192,5 +195,14 @@ public final class Config {
      */
     public String getQuarantinedRolePattern() {
         return quarantinedRolePattern;
+    }
+
+    /**
+     * Gets the config for the scam blocker system.
+     *
+     * @return the scam blocker system config
+     */
+    public @NotNull ScamBlockerConfig getScamBlocker() {
+        return scamBlocker;
     }
 }

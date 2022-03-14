@@ -22,5 +22,13 @@
        "upVoteEmoteName": "peepo_yes",
        "downVoteEmoteName": "peepo_no"
    },
-   "quarantinedRolePattern": "Quarantined"
+   "quarantinedRolePattern": "Quarantined",
+   "scamBlocker": {
+       "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
+       "reportChannelPattern": "commands",
+       "hostWhitelist": ["discord.com", "discord.gg", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"],
+       "hostBlacklist": ["bit.ly"],
+       "suspiciousHostKeywords": ["discord", "nitro", "premium"],
+       "isHostSimilarToKeywordDistanceThreshold": 2
+   }
 }

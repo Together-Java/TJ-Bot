@@ -2,10 +2,16 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.basic.*;
+import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
+import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
+import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
+import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
+import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
+import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
 import org.togetherjava.tjbot.commands.reminder.RemindCommand;
 import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
@@ -52,6 +58,7 @@ public enum Features {
         TagSystem tagSystem = new TagSystem(database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
+        ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -63,10 +70,12 @@ public enum Features {
         features.add(new TemporaryModerationRoutine(jda, actionsStore, config));
         features.add(new TopHelpersPurgeMessagesRoutine(database));
         features.add(new RemindRoutine(database));
+        features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
         features.add(new SuggestionsUpDownVoter(config));
+        features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
