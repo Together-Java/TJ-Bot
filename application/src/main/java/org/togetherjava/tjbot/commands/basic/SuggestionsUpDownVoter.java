@@ -53,18 +53,20 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
 
     private static void reactWith(@NotNull String emoteName, @NotNull String fallbackUnicodeEmote,
             @NotNull Guild guild, @NotNull Message message) {
-        try {
-            getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
-                logger.warn(
-                        "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
-                        emoteName);
-                return message.addReaction(fallbackUnicodeEmote);
-            }).complete();
-        } catch (ErrorResponseException exception) {
-            if (exception.getErrorResponse() != ErrorResponse.REACTION_BLOCKED) {
-                throw exception;
+        getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
+            logger.warn(
+                    "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
+                    emoteName);
+            return message.addReaction(fallbackUnicodeEmote);
+        }).queue(ignored -> {
+        }, exception -> {
+            if (exception instanceof ErrorResponseException && ((ErrorResponseException) exception)
+                .getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
+                return;
             }
-        }
+
+            logger.error(exception.getMessage(), exception);
+        });
     }
 
     private static @NotNull Optional<Emote> getEmoteByName(@NotNull String name,
