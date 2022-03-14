@@ -9,9 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class ComponentIdTest {
     @Test
-    void getCommandName() {
-        String commandName = "foo";
-        assertEquals(commandName, new ComponentId(commandName, List.of()).commandName());
+    void getUserInteractorName() {
+        String userInteractorName = "foo";
+        assertEquals(userInteractorName,
+                new ComponentId(userInteractorName, List.of()).userInteractorName());
     }
 
     @Test
