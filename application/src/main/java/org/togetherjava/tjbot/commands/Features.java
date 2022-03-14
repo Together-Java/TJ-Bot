@@ -19,6 +19,7 @@ import org.togetherjava.tjbot.commands.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.commands.tophelper.TopHelpersPurgeMessagesRoutine;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
 import java.util.ArrayList;
@@ -50,6 +51,7 @@ public enum Features {
             @NotNull Database database, @NotNull Config config) {
         TagSystem tagSystem = new TagSystem(database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
+        ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -57,7 +59,7 @@ public enum Features {
         Collection<Feature> features = new ArrayList<>();
 
         // Routines
-        features.add(new ModAuditLogRoutine(database, config));
+        features.add(new ModAuditLogRoutine(database, config, modAuditLogWriter));
         features.add(new TemporaryModerationRoutine(jda, actionsStore, config));
         features.add(new TopHelpersPurgeMessagesRoutine(database));
         features.add(new RemindRoutine(database));
@@ -73,7 +75,7 @@ public enum Features {
         features.add(new PingCommand());
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem));
-        features.add(new TagManageCommand(tagSystem, config));
+        features.add(new TagManageCommand(tagSystem, config, modAuditLogWriter));
         features.add(new TagsCommand(tagSystem));
         features.add(new VcActivityCommand());
         features.add(new WarnCommand(actionsStore, config));

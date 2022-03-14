@@ -18,6 +18,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,7 @@ final class TagManageCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
     private Member moderator;
+    private ModAuditLogWriter modAuditLogWriter;
 
     private static @NotNull MessageEmbed getResponse(@NotNull SlashCommandEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
@@ -45,11 +47,12 @@ final class TagManageCommandTest {
         Config config = mock(Config.class);
         String moderatorRoleName = "Moderator";
         when(config.getTagManageRolePattern()).thenReturn(moderatorRoleName);
+        modAuditLogWriter = mock(ModAuditLogWriter.class);
 
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagManageCommand(system, config);
+        command = new TagManageCommand(system, config, modAuditLogWriter);
 
         moderator = jdaTester.createMemberSpy(1);
         Role moderatorRole = mock(Role.class);
@@ -157,6 +160,7 @@ final class TagManageCommandTest {
 
         // THEN the command can not be used since the user lacks roles
         verify(event).reply("Tags can only be managed by users with a corresponding role.");
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -168,6 +172,7 @@ final class TagManageCommandTest {
 
         // THEN the command can not find the tag and responds accordingly
         verify(event).reply(startsWith("Could not find any tag"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -182,6 +187,7 @@ final class TagManageCommandTest {
         // THEN the command responds with its content as an attachment
         verify(jdaTester.getReplyActionMock())
             .addFile(aryEq("bar".getBytes(StandardCharsets.UTF_8)), anyString());
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -197,6 +203,7 @@ final class TagManageCommandTest {
         verify(event).reply("The tag with id 'foo' already exists.");
         assertTrue(system.hasTag("foo"));
         assertEquals("old", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -210,6 +217,9 @@ final class TagManageCommandTest {
         assertEquals("Success", getResponse(event).getTitle());
         assertTrue(system.hasTag("foo"));
         assertEquals("bar", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter).write("Tag-Manage Create", "created tag **foo**", event.getUser(),
+                event.getTimeCreated(), event.getGuild(),
+                new ModAuditLogWriter.Attachment("content.md", "bar"));
     }
 
     @Test
@@ -222,6 +232,7 @@ final class TagManageCommandTest {
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply(startsWith("Could not find any tag with id"));
         assertFalse(system.hasTag("foo"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -236,6 +247,10 @@ final class TagManageCommandTest {
         // THEN the command succeeds and the content of the tag was changed
         assertEquals("Success", getResponse(event).getTitle());
         assertEquals("new", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter).write("Tag-Manage Edit", "edited tag **foo**", event.getUser(),
+                event.getTimeCreated(), event.getGuild(),
+                new ModAuditLogWriter.Attachment("new_content.md", "new"),
+                new ModAuditLogWriter.Attachment("previous_content.md", "old"));
     }
 
     @Test
@@ -247,6 +262,7 @@ final class TagManageCommandTest {
 
         // THEN the command fails and responds accordingly
         verify(event).reply(startsWith("Could not find any tag with id"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -261,6 +277,9 @@ final class TagManageCommandTest {
         // THEN the command succeeds and the tag was deleted
         assertEquals("Success", getResponse(event).getTitle());
         assertFalse(system.hasTag("foo"));
+        verify(modAuditLogWriter).write("Tag-Manage Delete", "deleted tag **foo**", event.getUser(),
+                event.getTimeCreated(), event.getGuild(),
+                new ModAuditLogWriter.Attachment("previous_content.md", "bar"));
     }
 
     @Test
@@ -273,6 +292,7 @@ final class TagManageCommandTest {
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply("The given message id 'bar' is invalid, expected a number.");
         assertFalse(system.hasTag("foo"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -289,6 +309,7 @@ final class TagManageCommandTest {
         verify(event).reply("The tag with id 'foo' already exists.");
         assertTrue(system.hasTag("foo"));
         assertEquals("old", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -304,6 +325,9 @@ final class TagManageCommandTest {
         assertEquals("Success", getResponse(event).getTitle());
         assertTrue(system.hasTag("foo"));
         assertEquals("bar", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter).write("Tag-Manage Create with message", "created tag **foo**",
+                event.getUser(), event.getTimeCreated(), event.getGuild(),
+                new ModAuditLogWriter.Attachment("content.md", "bar"));
     }
 
     @Test
@@ -319,6 +343,7 @@ final class TagManageCommandTest {
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply("The message with id '1' does not exist.");
         assertFalse(system.hasTag("foo"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -333,6 +358,7 @@ final class TagManageCommandTest {
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply(startsWith("Something unexpected went wrong"));
         assertFalse(system.hasTag("foo"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -347,6 +373,7 @@ final class TagManageCommandTest {
         // THEN the command fails and responds accordingly, the tags content was not changed
         verify(event).reply("The given message id 'bar' is invalid, expected a number.");
         assertEquals("old", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -361,6 +388,7 @@ final class TagManageCommandTest {
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply(startsWith("Could not find any tag with id"));
         assertFalse(system.hasTag("foo"));
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -376,6 +404,10 @@ final class TagManageCommandTest {
         // THEN the command succeeds and the content of the tag was changed
         assertEquals("Success", getResponse(event).getTitle());
         assertEquals("new", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter).write("Tag-Manage Edit with message", "edited tag **foo**",
+                event.getUser(), event.getTimeCreated(), event.getGuild(),
+                new ModAuditLogWriter.Attachment("new_content.md", "new"),
+                new ModAuditLogWriter.Attachment("previous_content.md", "old"));
     }
 
     @Test
@@ -393,6 +425,7 @@ final class TagManageCommandTest {
         verify(event).reply("The message with id '1' does not exist.");
         assertTrue(system.hasTag("foo"));
         assertEquals("old", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -409,5 +442,6 @@ final class TagManageCommandTest {
         verify(event).reply(startsWith("Something unexpected went wrong"));
         assertTrue(system.hasTag("foo"));
         assertEquals("old", system.getTag("foo").orElseThrow());
+        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 }

@@ -30,9 +30,9 @@ import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
@@ -49,25 +49,22 @@ public final class ModAuditLogRoutine implements Routine {
     private static final int HOURS_OF_DAY = 24;
     private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
-    private final String modAuditLogChannelPattern;
-    private final Predicate<TextChannel> isAuditLogChannel;
     private final Database database;
     private final Config config;
+    private final ModAuditLogWriter modAuditLogWriter;
 
     /**
      * Creates a new instance.
      *
      * @param database the database for memorizing audit log dates
      * @param config the config to use for this
+     * @param modAuditLogWriter to log tag changes for audition
      */
-    public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config) {
-        modAuditLogChannelPattern = config.getModAuditLogChannelPattern();
-        Predicate<String> isAuditLogChannelName =
-                Pattern.compile(modAuditLogChannelPattern).asMatchPredicate();
-        isAuditLogChannel = channel -> isAuditLogChannelName.test(channel.getName());
-
+    public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config,
+            @NotNull ModAuditLogWriter modAuditLogWriter) {
         this.config = config;
         this.database = database;
+        this.modAuditLogWriter = modAuditLogWriter;
     }
 
     private static @NotNull RestAction<AuditLogMessage> handleAction(@NotNull Action action,
@@ -221,11 +218,9 @@ public final class ModAuditLogRoutine implements Routine {
                 return;
             }
 
-            Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
+            Optional<TextChannel> auditLogChannel =
+                    modAuditLogWriter.getAndHandleModAuditLogChannel(guild);
             if (auditLogChannel.isEmpty()) {
-                logger.warn(
-                        "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
-                        modAuditLogChannelPattern, guild.getName());
                 return;
             }
 
@@ -315,15 +310,6 @@ public final class ModAuditLogRoutine implements Routine {
             .filter(changeEntry -> "name".equals(changeEntry.getKey()))
             .map(Map.Entry::getValue)
             .anyMatch(ModerationUtils.getIsMutedRolePredicate(config));
-    }
-
-    private Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
-        // Check cache first, then get full list
-        return guild.getTextChannelCache()
-            .stream()
-            .filter(isAuditLogChannel)
-            .findAny()
-            .or(() -> guild.getTextChannels().stream().filter(isAuditLogChannel).findAny());
     }
 
     private enum Action {
