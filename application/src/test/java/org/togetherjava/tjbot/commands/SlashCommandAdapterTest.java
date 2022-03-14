@@ -66,7 +66,7 @@ final class SlashCommandAdapterTest {
         // Test that the adapter uses the given generator
         SlashCommandAdapter adapter = createAdapter();
         adapter.acceptComponentIdGenerator((componentId, lifespan) -> "%s;%s;%s"
-            .formatted(componentId.commandName(), componentId.elements().size(), lifespan));
+            .formatted(componentId.userInteractorName(), componentId.elements().size(), lifespan));
 
         // No lifespan given
         String[] elements = {"foo", "bar", "baz"};

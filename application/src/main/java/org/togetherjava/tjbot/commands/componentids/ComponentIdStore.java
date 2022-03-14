@@ -266,8 +266,8 @@ public final class ComponentIdStore implements AutoCloseable {
                     recordToDelete.delete();
                     evictedCounter.getAndIncrement();
                     logger.debug(
-                            "Evicted component id with uuid '{}' from command '{}', last used '{}'",
-                            uuid, componentId.commandName(), lastUsed);
+                            "Evicted component id with uuid '{}' from user interactor '{}', last used '{}'",
+                            uuid, componentId.userInteractorName(), lastUsed);
 
                     // Remove them from the cache if still in there
                     storeCache.invalidate(uuid);

@@ -55,7 +55,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Config config;
-    private final Map<String, SlashCommand> nameToSlashCommands;
+    private final Map<String, UserInteractor> nameToInteractor;
+    private final Map<String, SlashCommand> nameToSlashCommand;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
@@ -104,22 +105,32 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
                 }
             });
 
-        // Slash commands
-        nameToSlashCommands = features.stream()
+        // User Interactors
+        nameToInteractor = features.stream()
+            .filter(UserInteractor.class::isInstance)
+            .map(UserInteractor.class::cast)
+            .collect(Collectors.toMap(UserInteractor::getName, Function.identity()));
+
+        // Slash Commands
+        nameToSlashCommand = features.stream()
             .filter(SlashCommand.class::isInstance)
             .map(SlashCommand.class::cast)
             .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
 
-        if (nameToSlashCommands.containsKey(RELOAD_COMMAND)) {
+        // Reload Command
+        if (nameToInteractor.containsKey(RELOAD_COMMAND)) {
             throw new IllegalStateException(
-                    "The 'reload' command is a special reserved command that must not be used by other commands");
+                    "The 'reload' command is a special reserved command that must not be used by other user interactors");
         }
-        nameToSlashCommands.put(RELOAD_COMMAND, new ReloadCommand(this));
+        SlashCommand reloadCommand = new ReloadCommand(this);
+        nameToInteractor.put(RELOAD_COMMAND, reloadCommand);
+        nameToSlashCommand.put(RELOAD_COMMAND, reloadCommand);
 
+        // Component Id Store
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
-        nameToSlashCommands.values()
+        nameToInteractor.values()
             .forEach(slashCommand -> slashCommand
                 .acceptComponentIdGenerator(((componentId, lifespan) -> {
                     UUID uuid = UUID.randomUUID();
@@ -128,18 +139,18 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
                 })));
 
         if (logger.isInfoEnabled()) {
-            logger.info("Available commands: {}", nameToSlashCommands.keySet());
+            logger.info("Available commands: {}", nameToSlashCommand.keySet());
         }
     }
 
     @Override
     public @NotNull Collection<SlashCommand> getSlashCommands() {
-        return Collections.unmodifiableCollection(nameToSlashCommands.values());
+        return Collections.unmodifiableCollection(nameToSlashCommand.values());
     }
 
     @Override
     public @NotNull Optional<SlashCommand> getSlashCommand(@NotNull String name) {
-        return Optional.ofNullable(nameToSlashCommands.get(name));
+        return Optional.ofNullable(nameToSlashCommand.get(name));
     }
 
     @Override
@@ -192,7 +203,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         logger.debug("Received button click '{}' (#{}) on guild '{}'", event.getComponentId(),
                 event.getId(), event.getGuild());
-        COMMAND_SERVICE.execute(() -> forwardComponentCommand(event, SlashCommand::onButtonClick));
+        COMMAND_SERVICE
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onButtonClick));
     }
 
     @Override
@@ -200,7 +212,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
-            .execute(() -> forwardComponentCommand(event, SlashCommand::onSelectionMenu));
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
     }
 
     private void registerReloadCommand(@NotNull Guild guild) {
@@ -221,32 +233,32 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     /**
-     * Forwards the given component event to the associated slash command.
+     * Forwards the given component event to the associated user interactor.
      * <p>
      * <p>
      * An example call might look like:
      *
      * <pre>
      * {@code
-     * forwardComponentCommand(event, SlashCommand::onSelectionMenu);
+     * forwardComponentCommand(event, UserInteractor::onSelectionMenu);
      * }
      * </pre>
      *
      * @param event the component event that should be forwarded
-     * @param commandArgumentConsumer the action to trigger on the associated slash command,
+     * @param interactorArgumentConsumer the action to trigger on the associated user interactor,
      *        providing the event and list of arguments for consumption
      * @param <T> the type of the component interaction that should be forwarded
      */
     private <T extends ComponentInteraction> void forwardComponentCommand(@NotNull T event,
-            @NotNull TriConsumer<? super SlashCommand, ? super T, ? super List<String>> commandArgumentConsumer) {
+            @NotNull TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
         Optional<ComponentId> componentIdOpt;
         try {
             componentIdOpt = componentIdParser.parse(event.getComponentId());
         } catch (InvalidComponentIdFormatException e) {
             logger
-                .error("Unable to route event (#{}) back to its corresponding slash command. The component ID was in an unexpected format."
+                .error("Unable to route event (#{}) back to its corresponding user interactor. The component ID was in an unexpected format."
                         + " All button and menu events have to use a component ID created in a specific format"
-                        + " (refer to the documentation of SlashCommand). Component ID was: {}",
+                        + " (refer to the documentation of UserInteractor). Component ID was: {}",
                         event.getId(), event.getComponentId(), e);
             // Unable to forward, simply fade out the event
             return;
@@ -261,10 +273,10 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         }
         ComponentId componentId = componentIdOpt.orElseThrow();
 
-        SlashCommand command = requireSlashCommand(componentId.commandName());
-        logger.trace("Routing a component event with id '{}' back to command '{}'",
-                event.getComponentId(), command.getName());
-        commandArgumentConsumer.accept(command, event, componentId.elements());
+        UserInteractor interactor = requireUserInteractor(componentId.userInteractorName());
+        logger.trace("Routing a component event with id '{}' back to user interactor '{}'",
+                event.getComponentId(), interactor.getName());
+        interactorArgumentConsumer.accept(interactor, event, componentId.elements());
     }
 
     /**
@@ -275,7 +287,18 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @throws NullPointerException if the command with the given name was not registered
      */
     private @NotNull SlashCommand requireSlashCommand(@NotNull String name) {
-        return Objects.requireNonNull(nameToSlashCommands.get(name));
+        return Objects.requireNonNull(nameToSlashCommand.get(name));
+    }
+
+    /**
+     * Gets the given user interactor by its name and requires that it exists.
+     *
+     * @param name the name of the user interactor to get
+     * @return the user interactor with the given name
+     * @throws NullPointerException if the user interactor with the given name was not registered
+     */
+    private @NotNull UserInteractor requireUserInteractor(@NotNull String name) {
+        return Objects.requireNonNull(nameToInteractor.get(name));
     }
 
     private void handleRegisterErrors(Throwable ex, Guild guild) {
