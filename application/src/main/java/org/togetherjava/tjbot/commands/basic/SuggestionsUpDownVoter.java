@@ -65,7 +65,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
                 return;
             }
 
-            logger.error(exception.getMessage(), exception);
+            logger.error("Attempted to react to a suggestion, but failed", exception);
         });
     }
 
