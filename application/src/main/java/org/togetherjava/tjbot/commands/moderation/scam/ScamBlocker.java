@@ -250,12 +250,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private Optional<TextChannel> getReportChannel(@NotNull Guild guild) {
-        // Check cache first, then get full list
-        return guild.getTextChannelCache()
-            .stream()
-            .filter(isReportChannel)
-            .findAny()
-            .or(() -> guild.getTextChannels().stream().filter(isReportChannel).findAny());
+        return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
     private Collection<ActionRow> createConfirmDialog(@NotNull GuildMessageReceivedEvent event) {
