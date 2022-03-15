@@ -62,6 +62,8 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         }, exception -> {
             if (exception instanceof ErrorResponseException responseException
                     && responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
+                // User blocked the bot, hence the bot can not add reactions to their messages.
+                // Nothing we can do here.
                 return;
             }
 
