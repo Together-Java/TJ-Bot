@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +58,17 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
                     "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
                     emoteName);
             return message.addReaction(fallbackUnicodeEmote);
-        }).queue();
+        }).queue(ignored -> {
+        }, exception -> {
+            if (exception instanceof ErrorResponseException responseException
+                    && responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
+                // User blocked the bot, hence the bot can not add reactions to their messages.
+                // Nothing we can do here.
+                return;
+            }
+
+            logger.error("Attempted to react to a suggestion, but failed", exception);
+        });
     }
 
     private static @NotNull Optional<Emote> getEmoteByName(@NotNull String name,
