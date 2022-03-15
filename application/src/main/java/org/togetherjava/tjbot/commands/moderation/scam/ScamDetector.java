@@ -33,6 +33,7 @@ public class ScamDetector {
         if ("@everyone".equalsIgnoreCase(token)) {
             results.pingsEveryone = true;
         }
+
         if ("nitro".equalsIgnoreCase(token)) {
             results.containsNitroKeyword = true;
         }
@@ -50,6 +51,7 @@ public class ScamDetector {
             // Invalid urls are not scam
             return;
         }
+
         if (host == null) {
             return;
         }
