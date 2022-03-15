@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -169,7 +170,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         deleteMessage(event);
         quarantineAuthor(event);
         dmUser(event);
-        reportScamMessage(event, "Detected and handled scam", List.of());
+        reportScamMessage(event, "Detected and handled scam", null);
     }
 
     private void addScamToHistory(@NotNull GuildMessageReceivedEvent event) {
@@ -205,7 +206,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void reportScamMessage(@NotNull GuildMessageReceivedEvent event,
-            @NotNull String reportTitle, @NotNull Collection<? extends ActionRow> actionRows) {
+            @NotNull String reportTitle, @Nullable ActionRow confirmDialog) {
         Guild guild = event.getGuild();
         Optional<TextChannel> reportChannel = getReportChannel(guild);
         if (reportChannel.isEmpty()) {
@@ -224,7 +225,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())
                     .build();
-        Message message = new MessageBuilder().setEmbeds(embed).setActionRows(actionRows).build();
+        Message message =
+                new MessageBuilder().setEmbeds(embed).setActionRows(confirmDialog).build();
 
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
@@ -249,19 +251,18 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue();
     }
 
-    private Optional<TextChannel> getReportChannel(@NotNull Guild guild) {
+    private @NotNull Optional<TextChannel> getReportChannel(@NotNull Guild guild) {
         return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
-    private Collection<ActionRow> createConfirmDialog(@NotNull GuildMessageReceivedEvent event) {
+    private @NotNull ActionRow createConfirmDialog(@NotNull GuildMessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
                 event.getAuthor().getIdLong(),
                 ScamHistoryStore.hashMessageContent(event.getMessage()));
 
-        return List
-            .of(ActionRow.of(Button.of(ButtonStyle.SUCCESS, generateComponentId(args), "Yes"),
-                    Button.of(ButtonStyle.DANGER, generateComponentId(args), "No")));
+        return ActionRow.of(Button.of(ButtonStyle.SUCCESS, generateComponentId(args), "Yes"),
+                Button.of(ButtonStyle.DANGER, generateComponentId(args), "No"));
     }
 
     private @NotNull String generateComponentId(@NotNull ComponentIdArguments args) {
@@ -340,9 +341,9 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
 
     private record ComponentIdArguments(@NotNull ScamBlockerConfig.Mode mode, long guildId,
-            long channelId, long messageId, long authorId, String contentHash) {
+            long channelId, long messageId, long authorId, @NotNull String contentHash) {
 
-        static ComponentIdArguments fromList(@NotNull List<String> args) {
+        static @NotNull ComponentIdArguments fromList(@NotNull List<String> args) {
             ScamBlockerConfig.Mode mode = ScamBlockerConfig.Mode.valueOf(args.get(0));
             long guildId = Long.parseLong(args.get(1));
             long channelId = Long.parseLong(args.get(2));
@@ -353,6 +354,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     contentHash);
         }
 
+        @NotNull
         List<String> toList() {
             return List.of(mode.name(), Long.toString(guildId), Long.toString(channelId),
                     Long.toString(messageId), Long.toString(authorId), contentHash);
