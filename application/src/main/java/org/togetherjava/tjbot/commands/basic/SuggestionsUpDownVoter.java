@@ -60,8 +60,8 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
             return message.addReaction(fallbackUnicodeEmote);
         }).queue(ignored -> {
         }, exception -> {
-            if (exception instanceof ErrorResponseException responseException &&
-                responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
+            if (exception instanceof ErrorResponseException responseException
+                    && responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
                 return;
             }
 
