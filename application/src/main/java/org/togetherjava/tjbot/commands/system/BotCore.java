@@ -56,7 +56,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             Executors.newScheduledThreadPool(5);
     private final Config config;
     private final Map<String, UserInteractor> nameToInteractor;
-    private final Map<String, SlashCommand> nameToSlashCommand;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
@@ -105,26 +104,18 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
                 }
             });
 
-        // User Interactors
+        // User Interactors (e.g. slash commands)
         nameToInteractor = features.stream()
             .filter(UserInteractor.class::isInstance)
             .map(UserInteractor.class::cast)
             .collect(Collectors.toMap(UserInteractor::getName, Function.identity()));
-
-        // Slash Commands
-        nameToSlashCommand = features.stream()
-            .filter(SlashCommand.class::isInstance)
-            .map(SlashCommand.class::cast)
-            .collect(Collectors.toMap(SlashCommand::getName, Function.identity()));
 
         // Reload Command
         if (nameToInteractor.containsKey(RELOAD_COMMAND)) {
             throw new IllegalStateException(
                     "The 'reload' command is a special reserved command that must not be used by other user interactors");
         }
-        SlashCommand reloadCommand = new ReloadCommand(this);
-        nameToInteractor.put(RELOAD_COMMAND, reloadCommand);
-        nameToSlashCommand.put(RELOAD_COMMAND, reloadCommand);
+        nameToInteractor.put(RELOAD_COMMAND, new ReloadCommand(this));
 
         // Component Id Store
         componentIdStore = new ComponentIdStore(database);
@@ -139,18 +130,24 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
                 })));
 
         if (logger.isInfoEnabled()) {
-            logger.info("Available commands: {}", nameToSlashCommand.keySet());
+            logger.info("Available user interactors: {}", nameToInteractor.keySet());
         }
     }
 
     @Override
     public @NotNull Collection<SlashCommand> getSlashCommands() {
-        return Collections.unmodifiableCollection(nameToSlashCommand.values());
+        return nameToInteractor.values()
+            .stream()
+            .filter(SlashCommand.class::isInstance)
+            .map(SlashCommand.class::cast)
+            .toList();
     }
 
     @Override
     public @NotNull Optional<SlashCommand> getSlashCommand(@NotNull String name) {
-        return Optional.ofNullable(nameToSlashCommand.get(name));
+        return Optional.ofNullable(nameToInteractor.get(name))
+            .filter(SlashCommand.class::isInstance)
+            .map(SlashCommand.class::cast);
     }
 
     @Override
@@ -287,7 +284,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @throws NullPointerException if the command with the given name was not registered
      */
     private @NotNull SlashCommand requireSlashCommand(@NotNull String name) {
-        return Objects.requireNonNull(nameToSlashCommand.get(name));
+        return getSlashCommand(name).orElseThrow(
+                () -> new NullPointerException("There is no slash command with name " + name));
     }
 
     /**

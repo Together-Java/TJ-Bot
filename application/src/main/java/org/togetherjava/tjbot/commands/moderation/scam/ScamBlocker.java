@@ -258,7 +258,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .or(() -> guild.getTextChannels().stream().filter(isReportChannel).findAny());
     }
 
-    private List<ActionRow> createConfirmDialog(@NotNull GuildMessageReceivedEvent event) {
+    private Collection<ActionRow> createConfirmDialog(@NotNull GuildMessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
                 event.getAuthor().getIdLong(),
@@ -293,6 +293,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     args.messageId, args.contentHash, args.guildId, args.authorId);
             return;
         }
+
         Guild guild = event.getJDA().getGuildById(args.guildId);
         if (guild == null) {
             logger.debug(
@@ -345,6 +346,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     private record ComponentIdArguments(@NotNull ScamBlockerConfig.Mode mode, long guildId,
             long channelId, long messageId, long authorId, String contentHash) {
+
         static ComponentIdArguments fromList(@NotNull List<String> args) {
             ScamBlockerConfig.Mode mode = ScamBlockerConfig.Mode.valueOf(args.get(0));
             long guildId = Long.parseLong(args.get(1));
