@@ -12,21 +12,14 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
  */
 interface RevocableModerationAction {
     /**
-     * Classification of a revocation failure.
+     * The name of the action, that will be logged in case of a failed revocation.
+     *
+     * <p>
+     * Naming convention examples: {@code "ban"}, {@code "mute"}, {@code "quarantine"}
+     * </p>
      */
-    @SuppressWarnings("PublicInnerClass")
-    enum FailureIdentification {
-        /**
-         * Acknowledges that the failure is known and has been handled. Hence, further error
-         * handling should not be continued.
-         */
-        KNOWN,
-        /**
-         * The failure is unknown and has not been handled. Hence, further error handling should be
-         * continued.
-         */
-        UNKNOWN
-    }
+    @NotNull
+    String actionName();
 
     /**
      * The type to apply the temporary action, such as
@@ -57,16 +50,4 @@ interface RevocableModerationAction {
     @NotNull
     RestAction<Void> revokeAction(@NotNull Guild guild, @NotNull User target,
             @NotNull String reason);
-
-    /**
-     * Handle a failure that might occur during revocation, i.e. execution of the action returned by
-     * {@link #revokeAction(Guild, User, String)}.
-     * 
-     * @param failure the failure to handle
-     * @param targetId the id of the user who is targeted by the revocation
-     * @return a classification of the failure, decides whether the surrounding flow will continue
-     *         to handle the error further or not
-     */
-    @NotNull
-    FailureIdentification handleRevokeFailure(@NotNull Throwable failure, long targetId);
 }
