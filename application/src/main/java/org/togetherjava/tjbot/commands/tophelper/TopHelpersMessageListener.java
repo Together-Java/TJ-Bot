@@ -1,6 +1,6 @@
 package org.togetherjava.tjbot.commands.tophelper;
 
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
@@ -29,7 +29,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     }
 
     @Override
-    public void onMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
@@ -37,7 +37,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         addMessageRecord(event);
     }
 
-    private void addMessageRecord(@NotNull GuildMessageReceivedEvent event) {
+    private void addMessageRecord(@NotNull MessageReceivedEvent event) {
         database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
             .setMessageId(event.getMessage().getIdLong())
             .setGuildId(event.getGuild().getIdLong())

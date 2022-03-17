@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.commands.basic;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
@@ -39,8 +39,8 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     @Override
-    public void onMessageReceived(@NotNull GuildMessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        if (event.getAuthor().isBot() || event.isWebhookMessage() || !event.isFromGuild()) {
             return;
         }
 

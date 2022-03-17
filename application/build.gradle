@@ -13,10 +13,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven {
-        name 'm2-dv8tion'
-        url 'https://m2.dv8tion.net/releases'
-    }
 }
 
 var outputImage = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
@@ -45,7 +41,7 @@ shadowJar {
 dependencies {
     implementation project(':database')
 
-    implementation 'net.dv8tion:JDA:4.4.0_352'
+    implementation 'net.dv8tion:JDA:5.0.0-alpha.3'
 
     implementation 'org.apache.logging.log4j:log4j-core:2.16.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.16.0'
