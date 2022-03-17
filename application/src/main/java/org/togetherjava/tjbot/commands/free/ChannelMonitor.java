@@ -215,7 +215,7 @@ final class ChannelMonitor {
                 // pointless ... added to remove warnings
                 continue;
             }
-            Category category = channel.getParent();
+            Category category = channel.getParentCategory();
             if (category != null && !category.getName().equals(categoryName)) {
                 categoryName = category.getName();
                 // append the category name on a new line with markup for underlining
