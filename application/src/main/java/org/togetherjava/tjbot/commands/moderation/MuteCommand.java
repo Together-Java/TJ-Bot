@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -68,7 +68,7 @@ public final class MuteCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleAlreadyMutedTarget(@NotNull Interaction event) {
+    private static void handleAlreadyMutedTarget(@NotNull IReplyCallback event) {
         event.reply("The user is already muted.").setEphemeral(true).queue();
     }
 
@@ -126,7 +126,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     @SuppressWarnings("MethodWithTooManyParameters")
     private void muteUserFlow(@NotNull Member target, @NotNull Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            @NotNull Guild guild, @NotNull SlashCommandInteractionEvent event) {
         sendDm(target, temporaryData, reason, guild, event)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(result -> hasSentDm))
@@ -138,7 +138,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getMutedRole(guild, config).orElse(null), ACTION_VERB, target, bot,
                 author, guild, hasRequiredRole, reason, event)) {
@@ -156,7 +156,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

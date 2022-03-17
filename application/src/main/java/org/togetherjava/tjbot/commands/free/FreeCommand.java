@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
@@ -129,7 +129,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      * @throws IllegalStateException if this method is called for a Global Slash Command
      */
     @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
         logger.debug("/free used by {} on channel {}", event.getUser().getAsTag(),
                 event.getChannel().getName());
         if (!handleShouldBeProcessed(event)) {
@@ -159,7 +159,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
      * @param event the event to test for validity.
      * @return true if the event should be processed false otherwise.
      */
-    private boolean handleShouldBeProcessed(@NotNull final SlashCommandEvent event) {
+    private boolean handleShouldBeProcessed(@NotNull final SlashCommandInteractionEvent event) {
         if (!isReady) {
             logger.debug(
                     "Slash command requested by {} in {}(channel: {}) before command is ready.",
@@ -245,7 +245,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
         return guild;
     }
 
-    private @NotNull Guild requiresGuild(SlashCommandEvent event) {
+    private @NotNull Guild requiresGuild(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
             throw new IllegalStateException(

@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
@@ -59,7 +59,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleAlreadyQuarantinedTarget(@NotNull Interaction event) {
+    private static void handleAlreadyQuarantinedTarget(@NotNull IReplyCallback event) {
         event.reply("The user is already quarantined.").setEphemeral(true).queue();
     }
 
@@ -107,7 +107,8 @@ public final class QuarantineCommand extends SlashCommandAdapter {
     }
 
     private void quarantineUserFlow(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            @NotNull String reason, @NotNull Guild guild,
+            @NotNull SlashCommandInteractionEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(hasSentDm -> quarantineUser(target, author, reason, guild)
                 .map(result -> hasSentDm))
@@ -119,7 +120,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getQuarantinedRole(guild, config).orElse(null), ACTION_VERB, target,
                 bot, author, guild, hasRequiredRole, reason, event)) {
@@ -139,7 +140,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Member target = event.getOption(TARGET_OPTION).getAsMember();
         Member author = event.getMember();
         String reason = event.getOption(REASON_OPTION).getAsString();

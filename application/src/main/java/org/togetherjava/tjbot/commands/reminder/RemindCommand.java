@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
@@ -71,7 +71,7 @@ public final class RemindCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         int timeAmount = Math.toIntExact(event.getOption(TIME_AMOUNT_OPTION).getAsLong());
         String timeUnit = event.getOption(TIME_UNIT_OPTION).getAsString();
         String content = event.getOption(CONTENT_OPTION).getAsString();
@@ -116,7 +116,7 @@ public final class RemindCommand extends SlashCommandAdapter {
     }
 
     private static boolean handleIsRemindAtWithinLimits(@NotNull Instant remindAt,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         ZonedDateTime maxWhen = ZonedDateTime.now(ZoneOffset.UTC).plus(MAX_TIME_PERIOD);
 
         if (remindAt.atZone(ZoneOffset.UTC).isBefore(maxWhen)) {
@@ -133,7 +133,7 @@ public final class RemindCommand extends SlashCommandAdapter {
     }
 
     private boolean handleIsUserBelowMaxPendingReminders(@NotNull ISnowflake author,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         int pendingReminders = database.read(context -> context.fetchCount(PENDING_REMINDERS,
                 PENDING_REMINDERS.AUTHOR_ID.equal(author.getIdLong())));
 

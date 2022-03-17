@@ -5,9 +5,9 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -112,7 +112,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true));
     }
 
-    private static void sendSuccessMessage(@NotNull Interaction event, @NotNull String id,
+    private static void sendSuccessMessage(@NotNull IReplyCallback event, @NotNull String id,
             @NotNull String actionVerb) {
         logger.info("User '{}' {} the tag with id '{}'.", event.getUser().getId(), actionVerb, id);
 
@@ -137,7 +137,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @return the parsed message id, if successful
      */
     private static OptionalLong parseMessageIdAndHandle(@NotNull String messageId,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         try {
             return OptionalLong.of(Long.parseLong(messageId));
         } catch (NumberFormatException e) {
@@ -151,7 +151,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         if (!hasTagManageRole(Objects.requireNonNull(event.getMember()))) {
             event.reply("Tags can only be managed by users with a corresponding role.")
                 .setEphemeral(true)
@@ -171,7 +171,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
     }
 
-    private void rawTag(@NotNull SlashCommandEvent event) {
+    private void rawTag(@NotNull SlashCommandInteractionEvent event) {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
@@ -338,7 +338,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @return whether the status of the given tag is <b>not equal</b> to the required status
      */
     private boolean isWrongTagStatusAndHandle(@NotNull TagStatus requiredTagStatus,
-            @NotNull String id, @NotNull Interaction event) {
+            @NotNull String id, @NotNull IReplyCallback event) {
         if (requiredTagStatus == TagStatus.EXISTS) {
             return tagSystem.handleIsUnknownTag(id, event);
         } else if (requiredTagStatus == TagStatus.NOT_EXISTS) {

@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +12,7 @@ import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
-import org.togetherjava.tjbot.jda.SlashCommandEventBuilder;
+import org.togetherjava.tjbot.jda.SlashCommandInteractionEventBuilder;
 
 import static org.mockito.Mockito.*;
 
@@ -29,15 +29,16 @@ final class TagCommandTest {
         command = new TagCommand(system);
     }
 
-    private @NotNull SlashCommandEvent triggerSlashCommand(@NotNull String id,
+    private @NotNull SlashCommandInteractionEvent triggerSlashCommand(@NotNull String id,
             @Nullable Member userToReplyTo) {
-        SlashCommandEventBuilder builder =
-                jdaTester.createSlashCommandEvent(command).setOption(TagCommand.ID_OPTION, id);
+        SlashCommandInteractionEventBuilder builder =
+                jdaTester.createSlashCommandInteractionEvent(command)
+                    .setOption(TagCommand.ID_OPTION, id);
         if (userToReplyTo != null) {
             builder.setOption(TagCommand.REPLY_TO_USER_OPTION, userToReplyTo);
         }
 
-        SlashCommandEvent event = builder.build();
+        SlashCommandInteractionEvent event = builder.build();
         command.onSlashCommand(event);
         return event;
     }
@@ -47,7 +48,7 @@ final class TagCommandTest {
     void canNotFindTagInEmptySystem() {
         // GIVEN a system without any tags registered
         // WHEN triggering the slash command '/tag id:first'
-        SlashCommandEvent event = triggerSlashCommand("first", null);
+        SlashCommandInteractionEvent event = triggerSlashCommand("first", null);
 
         // THEN responds that the tag could not be found
         verify(event).reply("Could not find any tag with id 'first'.");
@@ -60,7 +61,7 @@ final class TagCommandTest {
         system.putTag("first", "foo");
 
         // WHEN triggering the slash command '/tag id:second'
-        SlashCommandEvent event = triggerSlashCommand("second", null);
+        SlashCommandInteractionEvent event = triggerSlashCommand("second", null);
 
         // THEN responds that the tag could not be found and instead suggests using the other tag
         verify(event)
@@ -74,7 +75,7 @@ final class TagCommandTest {
         system.putTag("first", "foo");
 
         // WHEN triggering the slash command '/tag id:first'
-        SlashCommandEvent event = triggerSlashCommand("first", null);
+        SlashCommandInteractionEvent event = triggerSlashCommand("first", null);
 
         // THEN finds the tag and responds with its content
         verify(event).replyEmbeds(any(MessageEmbed.class));
@@ -88,7 +89,7 @@ final class TagCommandTest {
         Member userToReplyTo = jdaTester.createMemberSpy(1);
 
         // WHEN triggering the slash command '/tag id:first reply-to:...' with that user
-        SlashCommandEvent event = triggerSlashCommand("first", userToReplyTo);
+        SlashCommandInteractionEvent event = triggerSlashCommand("first", userToReplyTo);
 
         // THEN responds with the tags content and replies to the user
         verify(event).replyEmbeds(any(MessageEmbed.class));

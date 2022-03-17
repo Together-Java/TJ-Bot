@@ -1,10 +1,10 @@
 package org.togetherjava.tjbot.commands.mathcommands;
 
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -52,7 +52,7 @@ public class TeXCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
         TeXFormula formula;
@@ -93,7 +93,7 @@ public class TeXCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onButtonClick(@NotNull final ButtonClickEvent event,
+    public void onButtonClick(@NotNull final ButtonInteractionEvent event,
             @NotNull final List<String> args) {
         if (!args.get(0).equals(Objects.requireNonNull(event.getMember()).getId())) {
             event.reply("You are not the person who executed the command, you cannot do that")

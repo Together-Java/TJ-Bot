@@ -6,9 +6,9 @@ import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -182,21 +182,21 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", event.getName(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireSlashCommand(event.getName()).onSlashCommand(event));
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event) {
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         logger.debug("Received button click '{}' (#{}) on guild '{}'", event.getComponentId(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> forwardComponentCommand(event, SlashCommand::onButtonClick));
     }
 
     @Override
-    public void onSelectionMenu(@NotNull SelectionMenuEvent event) {
+    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE

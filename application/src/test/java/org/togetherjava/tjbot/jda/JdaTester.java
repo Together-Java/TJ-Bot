@@ -3,15 +3,15 @@ package org.togetherjava.tjbot.jda;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.Response;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.AttachmentOption;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
@@ -20,7 +20,7 @@ import net.dv8tion.jda.internal.entities.*;
 import net.dv8tion.jda.internal.requests.Requester;
 import net.dv8tion.jda.internal.requests.restaction.AuditableRestActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.MessageActionImpl;
-import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyActionImpl;
+import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,8 +46,8 @@ import static org.mockito.Mockito.*;
  * Utility class for testing {@link SlashCommand}s.
  * <p>
  * Mocks JDA and can create events that can be used to test {@link SlashCommand}s, e.g.
- * {@link #createSlashCommandEvent(SlashCommand)}. The created events are Mockito mocks, which can
- * be exploited for testing.
+ * {@link #createSlashCommandInteractionEvent(SlashCommand)}. The created events are Mockito mocks,
+ * which can be exploited for testing.
  * <p>
  * An example test using this class might look like:
  *
@@ -57,7 +57,8 @@ import static org.mockito.Mockito.*;
  *     SlashCommand command = new PingCommand();
  *     JdaTester jdaTester = new JdaTester();
  *
- *     SlashCommandEvent event = jdaTester.createSlashCommandEvent(command).build();
+ *     SlashCommandInteractionEvent event =
+ *             jdaTester.createSlashCommandInteractionEvent(command).build();
  *     command.onSlashCommand(event);
  *
  *     verify(event).reply("Pong!");
@@ -79,7 +80,7 @@ public final class JdaTester {
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
-    private final ReplyActionImpl replyAction;
+    private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
     private final MessageActionImpl messageAction;
     private final TextChannelImpl textChannel;
@@ -134,10 +135,11 @@ public final class JdaTester {
 
         doReturn(messageAction).when(privateChannel).sendMessage(anyString());
 
-        replyAction = mock(ReplyActionImpl.class);
+        replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
         when(replyAction.addActionRow(anyCollection())).thenReturn(replyAction);
-        when(replyAction.addActionRow(ArgumentMatchers.<Component>any())).thenReturn(replyAction);
+        when(replyAction.addActionRow(ArgumentMatchers.<ItemComponent>any()))
+            .thenReturn(replyAction);
         when(replyAction.setContent(anyString())).thenReturn(replyAction);
         when(replyAction.addFile(any(byte[].class), any(String.class), any(AttachmentOption.class)))
             .thenReturn(replyAction);
@@ -157,7 +159,7 @@ public final class JdaTester {
 
     /**
      * Creates a Mockito mocked slash command event, which can be used for
-     * {@link SlashCommand#onSlashCommand(SlashCommandEvent)}.
+     * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)}.
      * <p>
      * The method creates a builder that can be used to further adjust the event before creation,
      * e.g. provide options.
@@ -165,15 +167,15 @@ public final class JdaTester {
      * @param command the command to create an event for
      * @return a builder used to create a Mockito mocked slash command event
      */
-    public @NotNull SlashCommandEventBuilder createSlashCommandEvent(
+    public @NotNull SlashCommandInteractionEventBuilder createSlashCommandInteractionEvent(
             @NotNull SlashCommand command) {
-        UnaryOperator<SlashCommandEvent> mockOperator = event -> {
-            SlashCommandEvent slashCommandEvent = spy(event);
-            mockInteraction(slashCommandEvent);
-            return slashCommandEvent;
+        UnaryOperator<SlashCommandInteractionEvent> mockOperator = event -> {
+            SlashCommandInteractionEvent SlashCommandInteractionEvent = spy(event);
+            mockInteraction(SlashCommandInteractionEvent);
+            return SlashCommandInteractionEvent;
         };
 
-        return new SlashCommandEventBuilder(jda, mockOperator).setCommand(command)
+        return new SlashCommandInteractionEventBuilder(jda, mockOperator).setCommand(command)
             .setToken(TEST_TOKEN)
             .setChannelId(String.valueOf(TEXT_CHANNEL_ID))
             .setApplicationId(String.valueOf(APPLICATION_ID))
@@ -184,16 +186,16 @@ public final class JdaTester {
 
     /**
      * Creates a Mockito mocked button click event, which can be used for
-     * {@link SlashCommand#onButtonClick(ButtonClickEvent, List)}.
+     * {@link SlashCommand#onButtonClick(ButtonInteractionEvent, List)}.
      * <p>
      * The method creates a builder that can be used to further adjust the event before creation,
      * e.g. provide options.
      *
      * @return a builder used to create a Mockito mocked slash command event
      */
-    public @NotNull ButtonClickEventBuilder createButtonClickEvent() {
-        Supplier<ButtonClickEvent> mockEventSupplier = () -> {
-            ButtonClickEvent event = mock(ButtonClickEvent.class);
+    public @NotNull ButtonClickEventBuilder createButtonInteractionEvent() {
+        Supplier<ButtonInteractionEvent> mockEventSupplier = () -> {
+            ButtonInteractionEvent event = mock(ButtonInteractionEvent.class);
             mockButtonClickEvent(event);
             return event;
         };
@@ -240,12 +242,12 @@ public final class JdaTester {
      * Gets the Mockito mock used as universal reply action by all mocks created by this tester
      * instance.
      * <p>
-     * For example the events created by {@link #createSlashCommandEvent(SlashCommand)} will return
-     * this mock on several of their methods.
+     * For example the events created by {@link #createSlashCommandInteractionEvent(SlashCommand)}
+     * will return this mock on several of their methods.
      *
      * @return the reply action mock used by this tester
      */
-    public @NotNull ReplyAction getReplyActionMock() {
+    public @NotNull ReplyCallbackAction getReplyActionMock() {
         return replyAction;
     }
 
@@ -253,8 +255,8 @@ public final class JdaTester {
      * Gets the text channel spy used as universal text channel by all mocks created by this tester
      * instance.
      * <p>
-     * For example the events created by {@link #createSlashCommandEvent(SlashCommand)} will return
-     * this spy on several of their methods.
+     * For example the events created by {@link #createSlashCommandInteractionEvent(SlashCommand)}
+     * will return this spy on several of their methods.
      *
      * @return the text channel spy used by this tester
      */
@@ -267,7 +269,7 @@ public final class JdaTester {
      * <p>
      * Such an action is useful for testing things involving calls like
      * {@link TextChannel#retrieveMessageById(long)} or similar, example:
-     * 
+     *
      * <pre>
      * {
      *     &#64;code
@@ -279,7 +281,7 @@ public final class JdaTester {
      *     doReturn(action).when(jdaTester.getTextChannelSpy()).retrieveMessageById("1");
      * }
      * </pre>
-     * 
+     *
      * @param t the object to consume on success
      * @param <T> the type of the object to consume
      * @return the mocked action
@@ -307,7 +309,7 @@ public final class JdaTester {
      * <p>
      * Such an action is useful for testing things involving calls like
      * {@link TextChannel#retrieveMessageById(long)} or similar, example:
-     * 
+     *
      * <pre>
      * {
      *     &#64;code
@@ -319,7 +321,7 @@ public final class JdaTester {
      *     doReturn(action).when(jdaTester.getTextChannelSpy()).retrieveMessageById("1");
      * }
      * </pre>
-     * 
+     *
      * @param failureReason the reason to consume on failure
      * @param <T> the type of the object the action would contain if it would succeed
      * @return the mocked action
@@ -347,7 +349,7 @@ public final class JdaTester {
      * <p>
      * The exception merely wraps around the given reason and has no valid error code or message
      * set.
-     * 
+     *
      * @param reason the reason of the error
      * @return the created exception
      */
@@ -356,7 +358,7 @@ public final class JdaTester {
         return ErrorResponseException.create(reason, new Response(null, -1, "", -1, Set.of()));
     }
 
-    private void mockInteraction(@NotNull Interaction interaction) {
+    private void mockInteraction(@NotNull IReplyCallback interaction) {
         doReturn(replyAction).when(interaction).reply(anyString());
         doReturn(replyAction).when(interaction).replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
         doReturn(replyAction).when(interaction).replyEmbeds(anyCollection());
@@ -371,7 +373,7 @@ public final class JdaTester {
         doReturn(privateChannel).when(interaction).getPrivateChannel();
     }
 
-    private void mockButtonClickEvent(@NotNull ButtonClickEvent event) {
+    private void mockButtonClickEvent(@NotNull ButtonInteractionEvent event) {
         mockInteraction(event);
 
         doReturn(replyAction).when(event).editButton(any());

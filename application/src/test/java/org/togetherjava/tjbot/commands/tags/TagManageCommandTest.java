@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ final class TagManageCommandTest {
     private Member moderator;
     private ModAuditLogWriter modAuditLogWriter;
 
-    private static @NotNull MessageEmbed getResponse(@NotNull SlashCommandEvent event) {
+    private static @NotNull MessageEmbed getResponse(@NotNull SlashCommandInteractionEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(event).replyEmbeds(responseCaptor.capture());
         return responseCaptor.getValue();
@@ -61,13 +61,13 @@ final class TagManageCommandTest {
         when(moderatorRole.getName()).thenReturn(moderatorRoleName);
     }
 
-    private @NotNull SlashCommandEvent triggerRawCommand(@NotNull String tagId) {
+    private @NotNull SlashCommandInteractionEvent triggerRawCommand(@NotNull String tagId) {
         return triggerRawCommandWithUser(tagId, moderator);
     }
 
-    private @NotNull SlashCommandEvent triggerRawCommandWithUser(@NotNull String tagId,
+    private @NotNull SlashCommandInteractionEvent triggerRawCommandWithUser(@NotNull String tagId,
             @NotNull Member user) {
-        SlashCommandEvent event = jdaTester.createSlashCommandEvent(command)
+        SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(TagManageCommand.Subcommand.RAW.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
             .setUserWhoTriggered(user)
@@ -77,20 +77,20 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private @NotNull SlashCommandEvent triggerCreateCommand(@NotNull String tagId,
+    private @NotNull SlashCommandInteractionEvent triggerCreateCommand(@NotNull String tagId,
             @NotNull String content) {
         return triggerTagContentCommand(TagManageCommand.Subcommand.CREATE, tagId, content);
     }
 
-    private @NotNull SlashCommandEvent triggerEditCommand(@NotNull String tagId,
+    private @NotNull SlashCommandInteractionEvent triggerEditCommand(@NotNull String tagId,
             @NotNull String content) {
         return triggerTagContentCommand(TagManageCommand.Subcommand.EDIT, tagId, content);
     }
 
-    private @NotNull SlashCommandEvent triggerTagContentCommand(
+    private @NotNull SlashCommandInteractionEvent triggerTagContentCommand(
             @NotNull TagManageCommand.Subcommand subcommand, @NotNull String tagId,
             @NotNull String content) {
-        SlashCommandEvent event = jdaTester.createSlashCommandEvent(command)
+        SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(subcommand.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
             .setOption(TagManageCommand.CONTENT_OPTION, content)
@@ -101,22 +101,22 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private @NotNull SlashCommandEvent triggerCreateWithMessageCommand(@NotNull String tagId,
-            @NotNull String messageId) {
+    private @NotNull SlashCommandInteractionEvent triggerCreateWithMessageCommand(
+            @NotNull String tagId, @NotNull String messageId) {
         return triggerTagMessageCommand(TagManageCommand.Subcommand.CREATE_WITH_MESSAGE, tagId,
                 messageId);
     }
 
-    private @NotNull SlashCommandEvent triggerEditWithMessageCommand(@NotNull String tagId,
-            @NotNull String messageId) {
+    private @NotNull SlashCommandInteractionEvent triggerEditWithMessageCommand(
+            @NotNull String tagId, @NotNull String messageId) {
         return triggerTagMessageCommand(TagManageCommand.Subcommand.EDIT_WITH_MESSAGE, tagId,
                 messageId);
     }
 
-    private @NotNull SlashCommandEvent triggerTagMessageCommand(
+    private @NotNull SlashCommandInteractionEvent triggerTagMessageCommand(
             @NotNull TagManageCommand.Subcommand subcommand, @NotNull String tagId,
             @NotNull String messageId) {
-        SlashCommandEvent event = jdaTester.createSlashCommandEvent(command)
+        SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(subcommand.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
             .setOption(TagManageCommand.MESSAGE_ID_OPTION, messageId)
@@ -127,8 +127,8 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private @NotNull SlashCommandEvent triggerDeleteCommand(@NotNull String tagId) {
-        SlashCommandEvent event = jdaTester.createSlashCommandEvent(command)
+    private @NotNull SlashCommandInteractionEvent triggerDeleteCommand(@NotNull String tagId) {
+        SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(TagManageCommand.Subcommand.DELETE.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
             .setUserWhoTriggered(moderator)
@@ -156,7 +156,7 @@ final class TagManageCommandTest {
         Member regularUser = jdaTester.createMemberSpy(1);
 
         // WHEN the regular user triggers any '/tag-manage' command
-        SlashCommandEvent event = triggerRawCommandWithUser("foo", regularUser);
+        SlashCommandInteractionEvent event = triggerRawCommandWithUser("foo", regularUser);
 
         // THEN the command can not be used since the user lacks roles
         verify(event).reply("Tags can only be managed by users with a corresponding role.");
@@ -168,7 +168,7 @@ final class TagManageCommandTest {
     void rawTagCanNotFindUnknownTag() {
         // GIVEN a tag system without any tags
         // WHEN using '/tag-manage raw id:unknown'
-        SlashCommandEvent event = triggerRawCommand("unknown");
+        SlashCommandInteractionEvent event = triggerRawCommand("unknown");
 
         // THEN the command can not find the tag and responds accordingly
         verify(event).reply(startsWith("Could not find any tag"));
@@ -197,7 +197,7 @@ final class TagManageCommandTest {
         system.putTag("foo", "old");
 
         // WHEN using '/tag-manage create id:foo content:new'
-        SlashCommandEvent event = triggerCreateCommand("foo", "new");
+        SlashCommandInteractionEvent event = triggerCreateCommand("foo", "new");
 
         // THEN the command fails and responds accordingly, the tag is still there and unchanged
         verify(event).reply("The tag with id 'foo' already exists.");
@@ -211,7 +211,7 @@ final class TagManageCommandTest {
     void createNewTagWorks() {
         // GIVEN a tag system without any tags
         // WHEN using '/tag-manage create id:foo content:bar'
-        SlashCommandEvent event = triggerCreateCommand("foo", "bar");
+        SlashCommandInteractionEvent event = triggerCreateCommand("foo", "bar");
 
         // THEN the command succeeds and the system contains the tag
         assertEquals("Success", getResponse(event).getTitle());
@@ -227,7 +227,7 @@ final class TagManageCommandTest {
     void editUnknownTagFails() {
         // GIVEN a tag system without any tags
         // WHEN using '/tag-manage edit id:foo content:new'
-        SlashCommandEvent event = triggerEditCommand("foo", "new");
+        SlashCommandInteractionEvent event = triggerEditCommand("foo", "new");
 
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply(startsWith("Could not find any tag with id"));
@@ -242,7 +242,7 @@ final class TagManageCommandTest {
         system.putTag("foo", "old");
 
         // WHEN using '/tag-manage edit id:foo content:new'
-        SlashCommandEvent event = triggerEditCommand("foo", "new");
+        SlashCommandInteractionEvent event = triggerEditCommand("foo", "new");
 
         // THEN the command succeeds and the content of the tag was changed
         assertEquals("Success", getResponse(event).getTitle());
@@ -258,7 +258,7 @@ final class TagManageCommandTest {
     void deleteUnknownTagFails() {
         // GIVEN a tag system without any tags
         // WHEN using '/tag-manage delete id:foo'
-        SlashCommandEvent event = triggerDeleteCommand("foo");
+        SlashCommandInteractionEvent event = triggerDeleteCommand("foo");
 
         // THEN the command fails and responds accordingly
         verify(event).reply(startsWith("Could not find any tag with id"));
@@ -272,7 +272,7 @@ final class TagManageCommandTest {
         system.putTag("foo", "bar");
 
         // WHEN using '/tag-manage delete id:foo'
-        SlashCommandEvent event = triggerDeleteCommand("foo");
+        SlashCommandInteractionEvent event = triggerDeleteCommand("foo");
 
         // THEN the command succeeds and the tag was deleted
         assertEquals("Success", getResponse(event).getTitle());
@@ -287,7 +287,7 @@ final class TagManageCommandTest {
     void createWithMessageFailsForInvalidMessageId() {
         // GIVEN a tag system without any tags
         // WHEN using '/tag-manage create-with-message id:foo message-id:bar'
-        SlashCommandEvent event = triggerCreateWithMessageCommand("foo", "bar");
+        SlashCommandInteractionEvent event = triggerCreateWithMessageCommand("foo", "bar");
 
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply("The given message id 'bar' is invalid, expected a number.");
@@ -303,7 +303,7 @@ final class TagManageCommandTest {
         postMessage("new", "1");
 
         // WHEN using '/tag-manage create-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerCreateWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerCreateWithMessageCommand("foo", "1");
 
         // THEN the command fails and responds accordingly, the tag is still there and unchanged
         verify(event).reply("The tag with id 'foo' already exists.");
@@ -319,7 +319,7 @@ final class TagManageCommandTest {
         postMessage("bar", "1");
 
         // WHEN using '/tag-manage create-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerCreateWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerCreateWithMessageCommand("foo", "1");
 
         // THEN the command succeeds and the system contains the tag
         assertEquals("Success", getResponse(event).getTitle());
@@ -338,7 +338,7 @@ final class TagManageCommandTest {
                 jdaTester.createErrorResponseException(ErrorResponse.UNKNOWN_MESSAGE));
 
         // WHEN using '/tag-manage create-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerCreateWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerCreateWithMessageCommand("foo", "1");
 
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply("The message with id '1' does not exist.");
@@ -353,7 +353,7 @@ final class TagManageCommandTest {
         failOnRetrieveMessage("1", new IOException("Generic network failure"));
 
         // WHEN using '/tag-manage create-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerCreateWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerCreateWithMessageCommand("foo", "1");
 
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply(startsWith("Something unexpected went wrong"));
@@ -368,7 +368,7 @@ final class TagManageCommandTest {
         system.putTag("foo", "old");
 
         // WHEN using '/tag-manage edit-with-message id:foo message-id:new'
-        SlashCommandEvent event = triggerEditWithMessageCommand("foo", "bar");
+        SlashCommandInteractionEvent event = triggerEditWithMessageCommand("foo", "bar");
 
         // THEN the command fails and responds accordingly, the tags content was not changed
         verify(event).reply("The given message id 'bar' is invalid, expected a number.");
@@ -383,7 +383,7 @@ final class TagManageCommandTest {
         postMessage("bar", "1");
 
         // WHEN using '/tag-manage edit-with-message id:foo message-id:new'
-        SlashCommandEvent event = triggerEditWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerEditWithMessageCommand("foo", "1");
 
         // THEN the command fails and responds accordingly, the tag was not created
         verify(event).reply(startsWith("Could not find any tag with id"));
@@ -399,7 +399,7 @@ final class TagManageCommandTest {
         postMessage("new", "1");
 
         // WHEN using '/tag-manage edit-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerEditWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerEditWithMessageCommand("foo", "1");
 
         // THEN the command succeeds and the content of the tag was changed
         assertEquals("Success", getResponse(event).getTitle());
@@ -419,7 +419,7 @@ final class TagManageCommandTest {
                 jdaTester.createErrorResponseException(ErrorResponse.UNKNOWN_MESSAGE));
 
         // WHEN using '/tag-manage edit-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerEditWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerEditWithMessageCommand("foo", "1");
 
         // THEN the command fails and responds accordingly, the tag has not changed
         verify(event).reply("The message with id '1' does not exist.");
@@ -436,7 +436,7 @@ final class TagManageCommandTest {
         failOnRetrieveMessage("1", new IOException("Generic network failure"));
 
         // WHEN using '/tag-manage edit-with-message id:foo message-id:1'
-        SlashCommandEvent event = triggerEditWithMessageCommand("foo", "1");
+        SlashCommandInteractionEvent event = triggerEditWithMessageCommand("foo", "1");
 
         // THEN the command fails and responds accordingly, the tag has not changed
         verify(event).reply(startsWith("Something unexpected went wrong"));
