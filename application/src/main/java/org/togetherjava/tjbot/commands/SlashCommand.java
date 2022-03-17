@@ -1,12 +1,15 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
@@ -28,9 +31,9 @@ import java.util.List;
  * is then to be returned by {@link #getData()} where the system will then pick it up from.
  * <p>
  * After registration, the system will notify a command whenever one of its corresponding slash
- * commands ({@link #onSlashCommand(SlashCommandEvent)}), buttons
- * ({@link #onButtonClick(ButtonClickEvent, List)}) or menus
- * ({@link #onSelectionMenu(SelectionMenuEvent, List)}) have been triggered.
+ * commands ({@link #onSlashCommand(SlashCommandInteractionEvent)}), buttons
+ * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
+ * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
@@ -40,7 +43,7 @@ public interface SlashCommand extends Feature {
     /**
      * Gets the name of the command.
      * <p>
-     * Requirements for this are documented in {@link CommandData#CommandData(String, String)}.
+     * Requirements for this are documented in {@link Commands#slash(String, String)}.
      * <p>
      * <p>
      * After registration of the command, the name must not change anymore.
@@ -53,7 +56,7 @@ public interface SlashCommand extends Feature {
     /**
      * Gets the description of the command.
      * <p>
-     * Requirements for this are documented in {@link CommandData#CommandData(String, String)}.
+     * Requirements for this are documented in {@link Commands#slash(String, String)}.
      * <p>
      * <p>
      * After registration of the command, the description must not change anymore.
@@ -89,7 +92,7 @@ public interface SlashCommand extends Feature {
      * @return the command data of this command
      */
     @NotNull
-    CommandData getData();
+    SlashCommandData getData();
 
     /**
      * Triggered by the core system when a slash command corresponding to this implementation (based
@@ -104,7 +107,7 @@ public interface SlashCommand extends Feature {
      * <p>
      * Buttons or menus have to be created with a component ID (see
      * {@link ComponentInteraction#getComponentId()},
-     * {@link net.dv8tion.jda.api.interactions.components.Button#of(ButtonStyle, String, Emoji)}) in
+     * {@link Button#of(ButtonStyle, String, Emoji)}}) in
      * a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>
@@ -115,8 +118,8 @@ public interface SlashCommand extends Feature {
      * given to {@link #acceptComponentIdGenerator(ComponentIdGenerator)} during system setup. The
      * required {@link ComponentId} instance accepts optional extra arguments, which, if provided,
      * can be picked up during the corresponding event (see
-     * {@link #onButtonClick(ButtonClickEvent, List)},
-     * {@link #onSelectionMenu(SelectionMenuEvent, List)}).
+     * {@link #onButtonClick(ButtonInteractionEvent, List)},
+     * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)}).
      * <p>
      * Alternatively, if {@link SlashCommandAdapter} has been extended, it also offers a handy
      * {@link SlashCommandAdapter#generateComponentId(String...)} method to ease the flow.
@@ -129,7 +132,7 @@ public interface SlashCommand extends Feature {
      *
      * @param event the event that triggered this
      */
-    void onSlashCommand(@NotNull SlashCommandEvent event);
+    void onSlashCommand(@NotNull SlashCommandInteractionEvent event);
 
     /**
      * Triggered by the core system when a button corresponding to this implementation (based on
@@ -147,9 +150,9 @@ public interface SlashCommand extends Feature {
      *
      * @param event the event that triggered this
      * @param args the arguments transported with the button, see
-     *        {@link #onSlashCommand(SlashCommandEvent)} for details on how these are created
+     *        {@link #onSlashCommand(SlashCommandInteractionEvent)} for details on how these are created
      */
-    void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args);
+    void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args);
 
     /**
      * Triggered by the core system when a selection menu corresponding to this implementation
@@ -167,14 +170,14 @@ public interface SlashCommand extends Feature {
      *
      * @param event the event that triggered this
      * @param args the arguments transported with the selection menu, see
-     *        {@link #onSlashCommand(SlashCommandEvent)} for details on how these are created
+     *        {@link #onSlashCommand(SlashCommandInteractionEvent)} for details on how these are created
      */
-    void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args);
+    void onSelectionMenu(@NotNull SelectMenuInteractionEvent event, @NotNull List<String> args);
 
     /**
      * Triggered by the core system during its setup phase. It will provide the command a component
      * id generator through this method, which can be used to generate component ids, as used for
-     * button or selection menus. See {@link #onSlashCommand(SlashCommandEvent)} for details on how
+     * button or selection menus. See {@link #onSlashCommand(SlashCommandInteractionEvent)} for details on how
      * to use this.
      *
      * @param generator the provided component id generator

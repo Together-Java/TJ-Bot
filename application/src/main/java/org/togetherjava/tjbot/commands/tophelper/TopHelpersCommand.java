@@ -6,8 +6,10 @@ import com.github.freva.asciitable.ColumnData;
 import com.github.freva.asciitable.HorizontalAlign;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Records;
@@ -65,7 +67,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         if (!handleHasAuthorRole(event.getMember(), event)) {
             return;
         }
@@ -91,7 +93,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private boolean handleHasAuthorRole(@NotNull Member author, @NotNull Interaction event) {
+    private boolean handleHasAuthorRole(@NotNull Member author, @NotNull IReplyCallback event) {
         if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
             return true;
         }
@@ -125,14 +127,14 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             .fetch(Records.mapping(TopHelperResult::new)));
     }
 
-    private static void handleError(@NotNull Throwable error, @NotNull Interaction event) {
+    private static void handleError(@NotNull Throwable error, @NotNull IDeferrableCallback event) {
         logger.warn("Failed to compute top-helpers", error);
         event.getHook().editOriginal("Sorry, something went wrong.").queue();
     }
 
     private static void handleTopHelpers(@NotNull Collection<TopHelperResult> topHelpers,
             @NotNull Collection<? extends Member> members, @NotNull TimeRange timeRange,
-            @NotNull Interaction event) {
+            @NotNull IDeferrableCallback event) {
         Map<Long, Member> userIdToMember =
                 members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
 

@@ -4,10 +4,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +54,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Member member = Objects.requireNonNull(event.getMember());
 
         if (!member.hasPermission(Permission.MANAGE_SERVER)) {
@@ -76,7 +76,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
+    public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
         // Ignore if another user clicked the button
         String userId = args.get(0);
         if (!userId.equals(Objects.requireNonNull(event.getMember()).getId())) {

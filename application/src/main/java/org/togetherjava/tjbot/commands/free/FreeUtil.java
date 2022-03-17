@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.free;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ enum FreeUtil {
      * @param interaction The event or hook that this message is responding to
      * @param message The text to be display for the user to read.
      */
-    public static void sendErrorMessage(@NotNull Interaction interaction, @NotNull String message) {
+    public static void sendErrorMessage(@NotNull IReplyCallback interaction, @NotNull String message) {
         interaction.reply(message).setEphemeral(true).queue();
     }
 

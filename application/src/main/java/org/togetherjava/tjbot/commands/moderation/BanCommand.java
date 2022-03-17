@@ -3,10 +3,11 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -76,7 +77,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<InteractionHook> handleAlreadyBanned(@NotNull Guild.Ban ban,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         String reason = ban.getReason();
         String reasonText =
                 reason == null || reason.isBlank() ? "" : " (reason: %s)".formatted(reason);
@@ -120,7 +121,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
-            @NotNull Throwable alreadyBannedFailure, @NotNull Interaction event,
+            @NotNull Throwable alreadyBannedFailure, @NotNull IReplyCallback event,
             @NotNull Guild guild, @NotNull User target) {
         if (alreadyBannedFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
@@ -145,7 +146,7 @@ public final class BanCommand extends SlashCommandAdapter {
     @SuppressWarnings("MethodWithTooManyParameters")
     private RestAction<InteractionHook> banUserFlow(@NotNull User target, @NotNull Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            int deleteHistoryDays, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            int deleteHistoryDays, @NotNull Guild guild, @NotNull SlashCommandInteractionEvent event) {
         return sendDm(target, temporaryData, reason, guild, event)
             .flatMap(hasSentDm -> banUser(target, author, temporaryData, reason, deleteHistoryDays,
                     guild).map(banResult -> hasSentDm))
@@ -174,7 +175,7 @@ public final class BanCommand extends SlashCommandAdapter {
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
@@ -195,7 +196,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null");
         User target = targetOption.getAsUser();

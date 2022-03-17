@@ -2,13 +2,13 @@ package org.togetherjava.tjbot.jda;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
-import net.dv8tion.jda.internal.interactions.CommandInteractionImpl;
+import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommand;
@@ -21,9 +21,9 @@ import java.util.function.UnaryOperator;
 
 /**
  * Builder to create slash command events that can be used for example with
- * {@link SlashCommand#onSlashCommand(SlashCommandEvent)}.
+ * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)}.
  * <p>
- * Create instances of this class by using {@link JdaTester#createSlashCommandEvent(SlashCommand)}.
+ * Create instances of this class by using {@link JdaTester#createSlashCommandInteractionEvent(SlashCommand)}.
  * <p>
  * Among other Discord related things, the builder optionally accepts a subcommand
  * ({@link #subcommand(String)}) and options ({@link #option(String, String)}). An already set
@@ -35,16 +35,16 @@ import java.util.function.UnaryOperator;
  * <pre>
  * {@code
  * // /ping
- * jdaTester.createSlashCommandEvent(command).build();
+ * jdaTester.createSlashCommandInteractionEvent(command).build();
  *
  * // /days start:10.01.2021 end:13.01.2021
- * jdaTester.createSlashCommandEvent(command)
+ * jdaTester.createSlashCommandInteractionEvent(command)
  *   .option("start", "10.01.2021")
  *   .option("end", "13.01.2021")
  *   .build();
  *
  * // /db put key:foo value:bar
- * jdaTester.createSlashCommandEvent(command)
+ * jdaTester.createSlashCommandInteractionEvent(command)
  *   .subcommand("put")
  *   .option("key", "foo")
  *   .option("value", "bar")
@@ -53,10 +53,10 @@ import java.util.function.UnaryOperator;
  * </pre>
  */
 @SuppressWarnings("ClassWithTooManyFields")
-public final class SlashCommandEventBuilder {
+public final class SlashCommandInteractionEventBuilder {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final JDAImpl jda;
-    private final UnaryOperator<SlashCommandEvent> mockOperator;
+    private final UnaryOperator<SlashCommandInteractionEvent> mockOperator;
     private String token;
     private String channelId;
     private String applicationId;
@@ -66,7 +66,7 @@ public final class SlashCommandEventBuilder {
     private final Map<String, Option> nameToOption = new HashMap<>();
     private String subcommand;
 
-    SlashCommandEventBuilder(@NotNull JDAImpl jda, UnaryOperator<SlashCommandEvent> mockOperator) {
+    SlashCommandInteractionEventBuilder(@NotNull JDAImpl jda, UnaryOperator<SlashCommandInteractionEvent> mockOperator) {
         this.jda = jda;
         this.mockOperator = mockOperator;
     }
@@ -85,7 +85,7 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder option(@NotNull String name, @NotNull String value) {
+    public @NotNull SlashCommandInteractionEventBuilder option(@NotNull String name, @NotNull String value) {
         // TODO Also add overloads for other types
         requireOption(name, OptionType.STRING);
         nameToOption.put(name, new Option(name, value, OptionType.STRING));
@@ -97,7 +97,7 @@ public final class SlashCommandEventBuilder {
      *
      * @return this builder instance for chaining
      */
-    public @NotNull SlashCommandEventBuilder clearOptions() {
+    public @NotNull SlashCommandInteractionEventBuilder clearOptions() {
         nameToOption.clear();
         return this;
     }
@@ -113,7 +113,7 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the subcommand does not exist in the corresponding
      *         command, as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder subcommand(@Nullable String subcommand) {
+    public @NotNull SlashCommandInteractionEventBuilder subcommand(@Nullable String subcommand) {
         if (subcommand != null) {
             requireSubcommand(subcommand);
         }
@@ -123,37 +123,37 @@ public final class SlashCommandEventBuilder {
     }
 
     @NotNull
-    SlashCommandEventBuilder command(@NotNull SlashCommand command) {
+    SlashCommandInteractionEventBuilder command(@NotNull SlashCommand command) {
         this.command = command;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder channelId(@NotNull String channelId) {
+    SlashCommandInteractionEventBuilder channelId(@NotNull String channelId) {
         this.channelId = channelId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder token(@NotNull String token) {
+    SlashCommandInteractionEventBuilder token(@NotNull String token) {
         this.token = token;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder applicationId(@NotNull String applicationId) {
+    SlashCommandInteractionEventBuilder applicationId(@NotNull String applicationId) {
         this.applicationId = applicationId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder guildId(@NotNull String guildId) {
+    SlashCommandInteractionEventBuilder guildId(@NotNull String guildId) {
         this.guildId = guildId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder userId(@NotNull String userId) {
+    SlashCommandInteractionEventBuilder userId(@NotNull String userId) {
         this.userId = userId;
         return this;
     }
@@ -164,7 +164,7 @@ public final class SlashCommandEventBuilder {
      *
      * @return the created slash command instance
      */
-    public @NotNull SlashCommandEvent build() {
+    public @NotNull SlashCommandInteractionEvent build() {
         PayloadSlashCommand event = createEvent();
 
         String json;
@@ -174,8 +174,8 @@ public final class SlashCommandEventBuilder {
             throw new IllegalStateException(e);
         }
 
-        return mockOperator.apply(new SlashCommandEvent(jda, 0,
-                new CommandInteractionImpl(jda, DataObject.fromJson(json))));
+        return mockOperator.apply(new SlashCommandInteractionEvent(jda, 0,
+                new SlashCommandInteractionImpl(jda, DataObject.fromJson(json))));
     }
 
     private @NotNull PayloadSlashCommand createEvent() {

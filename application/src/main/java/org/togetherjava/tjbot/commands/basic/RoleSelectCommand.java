@@ -4,17 +4,18 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
+import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.SelectionMenu;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,7 +90,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "Member is null");
         if (!member.hasPermission(Permission.MANAGE_ROLES)) {
             event.reply("You dont have the right permissions to use this command")
@@ -105,8 +106,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             return;
         }
 
-        SelectionMenu.Builder menu =
-                SelectionMenu.create(generateComponentId(Lifespan.PERMANENT, member.getId()));
+        SelectMenu.Builder menu =
+                SelectMenu.create(generateComponentId(Lifespan.PERMANENT, member.getId()));
         boolean isEphemeral = false;
 
         if (CHOOSE_OPTION.equals(event.getSubcommandName())) {
@@ -139,13 +140,13 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      * Adds role options to a selection menu.
      * <p>
      *
-     * @param event the {@link SlashCommandEvent}
-     * @param menu the menu to add options to {@link SelectionMenu.Builder}
+     * @param event the {@link SlashCommandInteractionEvent}
+     * @param menu the menu to add options to {@link SelectMenu.Builder}
      * @param placeHolder the placeholder for the menu {@link String}
      * @param minValues the minimum number of selections. nullable {@link Integer}
      */
     private static void addMenuOptions(@NotNull final Interaction event,
-            @NotNull final SelectionMenu.Builder menu, @NotNull final String placeHolder,
+            @NotNull final SelectMenu.Builder menu, @NotNull final String placeHolder,
             @Nullable final Integer minValues) {
 
         Guild guild = Objects.requireNonNull(event.getGuild(), "The given guild cannot be null");
@@ -188,7 +189,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSelectionMenu(@NotNull final SelectionMenuEvent event,
+    public void onSelectionMenu(@NotNull final SelectMenuInteractionEvent event,
             @NotNull final List<String> args) {
 
         Guild guild = Objects.requireNonNull(event.getGuild(), "The given guild cannot be null");
@@ -211,13 +212,13 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Handles selection of a {@link SelectionMenuEvent}.
+     * Handles selection of a {@link SelectMenuInteractionEvent}.
      *
-     * @param event the <b>unacknowledged</b> {@link SelectionMenuEvent}
+     * @param event the <b>unacknowledged</b> {@link SelectMenuInteractionEvent}
      * @param selectedRoles the {@link Role roles} selected
      * @param guild the {@link Guild}
      */
-    private static void handleRoleSelection(final @NotNull SelectionMenuEvent event,
+    private static void handleRoleSelection(final @NotNull SelectMenuInteractionEvent event,
             final @NotNull Collection<Role> selectedRoles, final Guild guild) {
         Collection<Role> rolesToAdd = new ArrayList<>(selectedRoles.size());
         Collection<Role> rolesToRemove = new ArrayList<>(selectedRoles.size());
@@ -261,8 +262,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      */
     private void handleNewRoleBuilderSelection(@NotNull final ComponentInteraction event,
             final @NotNull Collection<? extends Role> selectedRoles) {
-        SelectionMenu.Builder menu =
-                SelectionMenu.create(generateComponentId(event.getUser().getId()))
+        SelectMenu.Builder menu =
+                SelectMenu.create(generateComponentId(event.getUser().getId()))
                     .setPlaceholder("Select your roles")
                     .setMaxValues(selectedRoles.size())
                     .setMinValues(0);
@@ -297,7 +298,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      * @param additionRoles the roles to add
      * @param removalRoles the roles to remove
      */
-    private static void handleRoleModifications(@NotNull final Interaction event,
+    private static void handleRoleModifications(@NotNull final IReplyCallback event,
             final Member member, final @NotNull Guild guild, final Collection<Role> additionRoles,
             final Collection<Role> removalRoles) {
         guild.modifyMemberRoles(member, additionRoles, removalRoles)

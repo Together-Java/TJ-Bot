@@ -1,10 +1,14 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
@@ -54,14 +58,14 @@ public final class KickCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleAbsentTarget(@NotNull Interaction event) {
+    private static void handleAbsentTarget(@NotNull IReplyCallback event) {
         event.reply("I can not kick the given user since they are not part of the guild anymore.")
             .setEphemeral(true)
             .queue();
     }
 
     private void kickUserFlow(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandInteractionEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
                 .map(kickResult -> hasSentDm))
@@ -110,7 +114,7 @@ public final class KickCommand extends SlashCommandAdapter {
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.
         if (target == null) {
             handleAbsentTarget(event);
@@ -134,7 +138,7 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

@@ -5,13 +5,13 @@ import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Invite;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.VoiceChannel;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,7 +118,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "member is null");
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "Voicestates aren't being cached, check the JDABuilder");
@@ -176,7 +177,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         return Optional.empty();
     }
 
-    private static void handleSubcommand(@NotNull SlashCommandEvent event,
+    private static void handleSubcommand(@NotNull SlashCommandInteractionEvent event,
             @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
             @Nullable Integer maxUses, @Nullable Integer maxAgeDays,
             @NotNull String applicationName) {
@@ -192,8 +193,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     }
 
-    private static @NotNull ReplyAction replyInvite(@NotNull SlashCommandEvent event,
-            @NotNull Invite invite, @NotNull String applicationName) {
+    private static @NotNull ReplyCallbackAction replyInvite(@NotNull SlashCommandInteractionEvent event,
+                                                            @NotNull Invite invite, @NotNull String applicationName) {
         return event.reply("""
                 %s wants to start %s.
                 Feel free to join by clicking %s , enjoy!
@@ -201,7 +202,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                  """.formatted(event.getUser().getAsTag(), applicationName, invite.getUrl()));
     }
 
-    private static void handleErrors(@NotNull SlashCommandEvent event,
+    private static void handleErrors(@NotNull SlashCommandInteractionEvent event,
             @Nullable Throwable throwable) {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
