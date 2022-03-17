@@ -13,7 +13,7 @@ import org.togetherjava.tjbot.config.Config;
  * {@link org.togetherjava.tjbot.commands.moderation.QuarantineCommand} and executed by
  * {@link TemporaryModerationRoutine}.
  */
-final class TemporaryQuarantineAction implements RevocableModerationAction {
+final class TemporaryQuarantineAction extends RevocableRoleBasedAction {
     private final Config config;
 
     /**
@@ -22,12 +22,8 @@ final class TemporaryQuarantineAction implements RevocableModerationAction {
      * @param config the config to use to identify the quarantined role
      */
     TemporaryQuarantineAction(@NotNull Config config) {
+        super("quarantine");
         this.config = config;
-    }
-
-    @Override
-    public @NotNull String actionName() {
-        return "quarantine";
     }
 
     @Override

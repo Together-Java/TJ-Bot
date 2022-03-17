@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.moderation.temp;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
@@ -11,16 +12,6 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
  * {@link TemporaryModerationRoutine} to identify and revoke such actions.
  */
 interface RevocableModerationAction {
-    /**
-     * The name of the action, that will be logged in case of a failed revocation.
-     *
-     * <p>
-     * Naming convention examples: {@code "ban"}, {@code "mute"}, {@code "quarantine"}
-     * </p>
-     */
-    @NotNull
-    String actionName();
-
     /**
      * The type to apply the temporary action, such as
      * {@link net.dv8tion.jda.api.audit.ActionType#BAN}.
@@ -50,4 +41,14 @@ interface RevocableModerationAction {
     @NotNull
     RestAction<Void> revokeAction(@NotNull Guild guild, @NotNull User target,
             @NotNull String reason);
+
+    /**
+     * Handle a failure that might occur during revocation, i.e. execution of the action returned by
+     * {@link #revokeAction(Guild, User, String)}.
+     * 
+     * @param errorResponse the error that occurred
+     * @param targetId the id of the user who is targeted by the revocation
+     * @return whether it should log an unknown failure message or not
+     */
+    boolean handleRevokeFailure(@NotNull ErrorResponse errorResponse, long targetId);
 }

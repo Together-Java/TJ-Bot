@@ -13,7 +13,7 @@ import org.togetherjava.tjbot.config.Config;
  * {@link org.togetherjava.tjbot.commands.moderation.MuteCommand} and executed by
  * {@link TemporaryModerationRoutine}.
  */
-final class TemporaryMuteAction implements RevocableModerationAction {
+final class TemporaryMuteAction extends RevocableRoleBasedAction {
     private final Config config;
 
     /**
@@ -22,12 +22,8 @@ final class TemporaryMuteAction implements RevocableModerationAction {
      * @param config the config to use to identify the muted role
      */
     TemporaryMuteAction(@NotNull Config config) {
+        super("mute");
         this.config = config;
-    }
-
-    @Override
-    public @NotNull String actionName() {
-        return "mute";
     }
 
     @Override

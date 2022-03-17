@@ -123,8 +123,21 @@ public final class TemporaryModerationRoutine implements Routine {
         jda.retrieveUserById(groupIdentifier.targetId)
             .flatMap(target -> executeRevocation(guild, target, groupIdentifier.type))
             .queue(result -> {
-            }, failure -> handleFailure(failure, groupIdentifier.targetId,
-                    getRevocableActionByType(groupIdentifier.type).actionName()));
+            }, failure -> handleFailure(failure, groupIdentifier));
+    }
+
+    private void handleFailure(@NotNull Throwable failure,
+            @NotNull RevocationGroupIdentifier groupIdentifier) {
+        if (failure instanceof ErrorResponseException errorResponseException
+                && !getRevocableActionByType(groupIdentifier.type).handleRevokeFailure(
+                        errorResponseException.getErrorResponse(), groupIdentifier.targetId)) {
+
+            return;
+        }
+
+        logger.warn(
+                "Attempted to revoke a temporary moderation action for user '{}' but something unexpected went wrong.",
+                groupIdentifier.targetId, failure);
     }
 
     private @NotNull RestAction<Void> executeRevocation(@NotNull Guild guild, @NotNull User target,
@@ -138,36 +151,6 @@ public final class TemporaryModerationRoutine implements Routine {
                 action.getRevokeType(), null, reason);
 
         return action.revokeAction(guild, target, reason);
-    }
-
-    private void handleFailure(@NotNull Throwable failure, long targetId,
-            @NotNull String actionName) {
-        Runnable logUnknownFailure = () -> logger.warn(
-                "Attempted to revoke a temporary moderation action for user '{}' but something unexpected went wrong.",
-                targetId, failure);
-
-        if (failure instanceof ErrorResponseException errorResponseException) {
-            switch (errorResponseException.getErrorResponse()) {
-                case UNKNOWN_USER -> logger.debug(
-                        "Attempted to revoke a temporary {} but user '{}' does not exist anymore.",
-                        actionName, targetId);
-                case UNKNOWN_MEMBER -> logger.debug(
-                        "Attempted to revoke a temporary {} but user '{}' is not a member of the guild anymore.",
-                        actionName, targetId);
-                case UNKNOWN_ROLE -> logger.warn(
-                        "Attempted to revoke a temporary {} but the {} role can not be found.",
-                        actionName, actionName);
-                case MISSING_PERMISSIONS -> logger.warn(
-                        "Attempted to revoke a temporary {} but the bot lacks permission.",
-                        actionName);
-                case UNKNOWN_BAN -> logger.debug(
-                        "Attempted to revoke a temporary {} but the user '{}' is not banned anymore.",
-                        actionName, targetId);
-                default -> logUnknownFailure.run();
-            }
-        } else {
-            logUnknownFailure.run();
-        }
     }
 
     private @NotNull RevocableModerationAction getRevocableActionByType(
