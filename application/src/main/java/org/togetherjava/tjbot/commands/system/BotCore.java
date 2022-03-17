@@ -2,15 +2,15 @@ package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.AbstractChannel;
+import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -155,19 +155,23 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
-        getMessageReceiversSubscribedTo(event.getChannel())
-            .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+    public void onMessageReceived(@NotNull final MessageReceivedEvent event) {
+        if (event.isFromGuild()) {
+            getMessageReceiversSubscribedTo(event.getChannel())
+                .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+        }
     }
 
     @Override
-    public void onGuildMessageUpdate(@NotNull GuildMessageUpdateEvent event) {
-        getMessageReceiversSubscribedTo(event.getChannel())
-            .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+    public void onMessageUpdate(@NotNull final MessageUpdateEvent event) {
+        if (event.isFromGuild()) {
+            getMessageReceiversSubscribedTo(event.getChannel())
+                .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+        }
     }
 
     private @NotNull Stream<MessageReceiver> getMessageReceiversSubscribedTo(
-            @NotNull AbstractChannel channel) {
+            @NotNull Channel channel) {
         String channelName = channel.getName();
         return channelNameToMessageReceiver.entrySet()
             .stream()
@@ -282,7 +286,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             Optional<TextChannel> channelToReportTo = guild.getTextChannelCache()
                 .stream()
                 .filter(channel -> guild.getPublicRole()
-                    .hasPermission(channel, Permission.MESSAGE_WRITE))
+                    .hasPermission(channel, Permission.MESSAGE_SEND))
                 .findAny();
 
             // Report the problem to the guild

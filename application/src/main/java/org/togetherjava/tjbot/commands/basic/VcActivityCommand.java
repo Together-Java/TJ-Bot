@@ -122,15 +122,14 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "Voicestates aren't being cached, check the JDABuilder");
 
-        if (!voiceState.inVoiceChannel()) {
+        if (!voiceState.inAudioChannel()
+                || !(voiceState.getChannel() instanceof VoiceChannel voiceChannel)) {
             event.reply("You need to be in a voicechannel to run this command!")
                 .setEphemeral(true)
                 .queue();
 
             return;
         }
-
-        VoiceChannel voiceChannel = Objects.requireNonNull(voiceState.getChannel());
 
         Member selfMember = Objects.requireNonNull(event.getGuild()).getSelfMember();
         if (!selfMember.hasPermission(Permission.CREATE_INSTANT_INVITE)) {
