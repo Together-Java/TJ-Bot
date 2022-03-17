@@ -5,11 +5,23 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * {@link RevocableModerationAction} abstract implementation for a role based moderation action.
+ * <br />
+ * <br />
+ * Implements {@link RevocableModerationAction#handleRevokeFailure(ErrorResponse, long)} to handle
+ * possible errors for a role-based revocation action.
+ */
 abstract class RevocableRoleBasedAction implements RevocableModerationAction {
     private static final Logger logger = LoggerFactory.getLogger(RevocableRoleBasedAction.class);
 
     private final String actionName;
 
+    /**
+     * Creates an instance of {@link RevocableRoleBasedAction} with the given action name.
+     *
+     * @param actionName the name of the moderation action
+     */
     RevocableRoleBasedAction(String actionName) {
         this.actionName = actionName;
     }
