@@ -64,9 +64,7 @@ enum FreeUtil {
      * @return the id of the latest message or empty if it could not be retrieved.
      */
     public static @NotNull OptionalLong getLastMessageId(@NotNull TextChannel channel) {
-        if (channel.hasLatestMessage()) {
-            return OptionalLong.of(channel.getLatestMessageIdLong());
-        }
+
         // black magic to convert Optional<Long> into OptionalLong because Optional does not have
         // .mapToLong
         return getChannelHistory(channel, 1).stream()
