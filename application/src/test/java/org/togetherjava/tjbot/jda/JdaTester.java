@@ -106,7 +106,7 @@ public final class JdaTester {
         Member selfMember = spy(new MemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
-        privateChannel = spy(new PrivateChannelImpl(PRIVATE_CHANNEL_ID, user));
+        privateChannel = spy(new PrivateChannelImpl(jda, PRIVATE_CHANNEL_ID, user));
         messageAction = mock(MessageActionImpl.class);
         EntityBuilder entityBuilder = mock(EntityBuilder.class);
         Role everyoneRole = new RoleImpl(GUILD_ID, guild);
