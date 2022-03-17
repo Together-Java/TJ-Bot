@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
@@ -56,7 +56,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleNotMutedTarget(@NotNull Interaction event) {
+    private static void handleNotMutedTarget(@NotNull IReplyCallback event) {
         event.reply("The user is not muted.").setEphemeral(true).queue();
     }
 
@@ -99,7 +99,8 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     }
 
     private void unmuteUserFlow(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild, @NotNull SlashCommandEvent event) {
+            @NotNull String reason, @NotNull Guild guild,
+            @NotNull SlashCommandInteractionEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(
                     hasSentDm -> unmuteUser(target, author, reason, guild).map(result -> hasSentDm))
@@ -111,7 +112,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull Interaction event) {
+            @NotNull IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getMutedRole(guild, config).orElse(null), ACTION_VERB, target, bot,
                 author, guild, hasRequiredRole, reason, event)) {
@@ -129,7 +130,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

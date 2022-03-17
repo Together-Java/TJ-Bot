@@ -1,6 +1,6 @@
 package org.togetherjava.tjbot.commands.tags;
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.db.Database;
@@ -49,7 +49,8 @@ final class TagSystemTest {
     @Test
     void handleIsUnknownTag() {
         insertTagRaw("known", "foo");
-        SlashCommandEvent event = jdaTester.createSlashCommandEvent(new TagCommand(system)).build();
+        SlashCommandInteractionEvent event =
+                jdaTester.createSlashCommandInteractionEvent(new TagCommand(system)).build();
 
         assertFalse(system.handleIsUnknownTag("known", event));
         verify(event, never()).reply(anyString());

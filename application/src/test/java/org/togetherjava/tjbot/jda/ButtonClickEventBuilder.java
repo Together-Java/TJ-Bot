@@ -6,9 +6,9 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommand;
@@ -23,9 +23,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Builder to create button click events that can be used for example with
- * {@link SlashCommand#onButtonClick(ButtonClickEvent, List)}.
+ * {@link SlashCommand#onButtonClick(ButtonInteractionEvent, List)}.
  * <p>
- * Create instances of this class by using {@link JdaTester#createButtonClickEvent()}.
+ * Create instances of this class by using {@link JdaTester#createButtonInteractionEvent()}.
  * <p>
  * Among other Discord related things, the builder optionally accepts a message
  * ({@link #setMessage(Message)}) and the user who clicked on the button
@@ -69,12 +69,12 @@ import static org.mockito.Mockito.when;
  */
 public final class ButtonClickEventBuilder {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private final @NotNull Supplier<? extends ButtonClickEvent> mockEventSupplier;
+    private final @NotNull Supplier<? extends ButtonInteractionEvent> mockEventSupplier;
     private final UnaryOperator<Message> mockMessageOperator;
     private MessageBuilder messageBuilder;
     private Member userWhoClicked;
 
-    ButtonClickEventBuilder(@NotNull Supplier<? extends ButtonClickEvent> mockEventSupplier,
+    ButtonClickEventBuilder(@NotNull Supplier<? extends ButtonInteractionEvent> mockEventSupplier,
             @NotNull UnaryOperator<Message> mockMessageOperator) {
         this.mockEventSupplier = mockEventSupplier;
         this.mockMessageOperator = mockMessageOperator;
@@ -158,7 +158,7 @@ public final class ButtonClickEventBuilder {
      *
      * @return the created slash command instance
      */
-    public @NotNull ButtonClickEvent buildWithSingleButton() {
+    public @NotNull ButtonInteractionEvent buildWithSingleButton() {
         return createEvent(null);
     }
 
@@ -173,11 +173,11 @@ public final class ButtonClickEventBuilder {
      *        contained in the message.
      * @return the created slash command instance
      */
-    public @NotNull ButtonClickEvent build(@NotNull Button clickedButton) {
+    public @NotNull ButtonInteractionEvent build(@NotNull Button clickedButton) {
         return createEvent(clickedButton);
     }
 
-    private @NotNull ButtonClickEvent createEvent(@Nullable Button maybeClickedButton) {
+    private @NotNull ButtonInteractionEvent createEvent(@Nullable Button maybeClickedButton) {
         Message message = mockMessageOperator.apply(messageBuilder.build());
         Button clickedButton = determineClickedButton(maybeClickedButton, message);
 
@@ -226,9 +226,9 @@ public final class ButtonClickEventBuilder {
         return message.getActionRows().stream().map(ActionRow::getButtons).flatMap(List::stream);
     }
 
-    private @NotNull ButtonClickEvent mockButtonClickEvent(@NotNull Message message,
+    private @NotNull ButtonInteractionEvent mockButtonClickEvent(@NotNull Message message,
             @NotNull Button clickedButton) {
-        ButtonClickEvent event = mockEventSupplier.get();
+        ButtonInteractionEvent event = mockEventSupplier.get();
 
         when(event.getMessage()).thenReturn(message);
         when(event.getButton()).thenReturn(clickedButton);

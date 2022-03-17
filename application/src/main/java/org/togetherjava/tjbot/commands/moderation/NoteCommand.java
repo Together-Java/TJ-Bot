@@ -1,8 +1,8 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +54,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         OptionMapping targetOption = event.getOption(USER_OPTION);
         Member author = event.getMember();
         Guild guild = event.getGuild();
@@ -70,7 +70,7 @@ public final class NoteCommand extends SlashCommandAdapter {
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, CharSequence content, @NotNull Interaction event) {
+            @Nullable Member target, CharSequence content, @NotNull IReplyCallback event) {
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
             return false;
@@ -84,7 +84,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     }
 
     private void sendNote(@NotNull User target, @NotNull Member author, @NotNull String content,
-            @NotNull ISnowflake guild, @NotNull Interaction event) {
+            @NotNull ISnowflake guild, @NotNull IReplyCallback event) {
         storeNote(target, author, content, guild);
         sendFeedback(target, author, content, event);
     }
@@ -100,7 +100,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     }
 
     private static void sendFeedback(@NotNull User target, @NotNull Member author,
-            @NotNull String noteContent, @NotNull Interaction event) {
+            @NotNull String noteContent, @NotNull IReplyCallback event) {
         MessageEmbed feedback = ModerationUtils.createActionResponse(author.getUser(),
                 ModerationAction.NOTE, target, null, noteContent);
 

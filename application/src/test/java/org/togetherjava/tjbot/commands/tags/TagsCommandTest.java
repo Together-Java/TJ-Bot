@@ -3,8 +3,8 @@ package org.togetherjava.tjbot.commands.tags;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,21 +28,23 @@ final class TagsCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
 
-    private static @Nullable String getResponseDescription(@NotNull SlashCommandEvent event) {
+    private static @Nullable String getResponseDescription(
+            @NotNull SlashCommandInteractionEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(event).replyEmbeds(responseCaptor.capture());
         return responseCaptor.getValue().getDescription();
     }
 
-    private @NotNull SlashCommandEvent triggerSlashCommand() {
-        SlashCommandEvent event = jdaTester.createSlashCommandEvent(command).build();
+    private @NotNull SlashCommandInteractionEvent triggerSlashCommand() {
+        SlashCommandInteractionEvent event =
+                jdaTester.createSlashCommandInteractionEvent(command).build();
         command.onSlashCommand(event);
         return event;
     }
 
-    private @NotNull ButtonClickEvent triggerButtonClick(@NotNull Member userWhoClicked,
+    private @NotNull ButtonInteractionEvent triggerButtonClick(@NotNull Member userWhoClicked,
             long idOfAuthor) {
-        ButtonClickEvent event = jdaTester.createButtonClickEvent()
+        ButtonInteractionEvent event = jdaTester.createButtonInteractionEvent()
             .setUserWhoClicked(userWhoClicked)
             .setActionRows(ActionRow.of(TagSystem.createDeleteButton("foo")))
             .buildWithSingleButton();
@@ -62,7 +64,7 @@ final class TagsCommandTest {
     void noResponseForEmptySystem() {
         // GIVEN a tag system without any tags
         // WHEN using '/tags'
-        SlashCommandEvent event = triggerSlashCommand();
+        SlashCommandInteractionEvent event = triggerSlashCommand();
 
         // THEN the response has no description
         assertNull(getResponseDescription(event));
@@ -75,7 +77,7 @@ final class TagsCommandTest {
         system.putTag("first", "foo");
 
         // WHEN using '/tags'
-        SlashCommandEvent event = triggerSlashCommand();
+        SlashCommandInteractionEvent event = triggerSlashCommand();
 
         // THEN the response consists of the single element
         assertEquals("• first", getResponseDescription(event));
@@ -90,7 +92,7 @@ final class TagsCommandTest {
         system.putTag("third", "baz");
 
         // WHEN using '/tags'
-        SlashCommandEvent event = triggerSlashCommand();
+        SlashCommandInteractionEvent event = triggerSlashCommand();
 
         // THEN the response contains all tags
         String expectedDescription = """
@@ -108,7 +110,7 @@ final class TagsCommandTest {
         Member messageAuthor = jdaTester.createMemberSpy(idOfAuthor);
 
         // WHEN the original author clicks the delete button
-        ButtonClickEvent event = triggerButtonClick(messageAuthor, idOfAuthor);
+        ButtonInteractionEvent event = triggerButtonClick(messageAuthor, idOfAuthor);
 
         // THEN the '/tags' message is deleted
         verify(event.getMessage()).delete();
@@ -123,7 +125,7 @@ final class TagsCommandTest {
         doReturn(true).when(moderator).hasPermission(any(Permission.class));
 
         // WHEN the moderator clicks the delete button
-        ButtonClickEvent event = triggerButtonClick(moderator, idOfAuthor);
+        ButtonInteractionEvent event = triggerButtonClick(moderator, idOfAuthor);
 
         // THEN the '/tags' message is deleted
         verify(event.getMessage()).delete();
@@ -138,7 +140,7 @@ final class TagsCommandTest {
         doReturn(false).when(otherUser).hasPermission(any(Permission.class));
 
         // WHEN the other clicks the delete button
-        ButtonClickEvent event = triggerButtonClick(otherUser, idOfAuthor);
+        ButtonInteractionEvent event = triggerButtonClick(otherUser, idOfAuthor);
 
         // THEN the '/tags' message is not deleted
         verify(event.getMessage(), never()).delete();

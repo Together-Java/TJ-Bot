@@ -2,15 +2,15 @@ package org.togetherjava.tjbot.jda;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
-import net.dv8tion.jda.internal.interactions.CommandInteractionImpl;
+import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommand;
@@ -30,9 +30,10 @@ import static org.mockito.Mockito.when;
 
 /**
  * Builder to create slash command events that can be used for example with
- * {@link SlashCommand#onSlashCommand(SlashCommandEvent)}.
+ * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)}.
  * <p>
- * Create instances of this class by using {@link JdaTester#createSlashCommandEvent(SlashCommand)}.
+ * Create instances of this class by using
+ * {@link JdaTester#createSlashCommandInteractionEvent(SlashCommand)}.
  * <p>
  * Among other Discord related things, the builder optionally accepts a subcommand
  * ({@link #setSubcommand(String)}) and options ({@link #setOption(String, String)}). An already set
@@ -44,16 +45,16 @@ import static org.mockito.Mockito.when;
  * <pre>
  * {@code
  * // /ping
- * jdaTester.createSlashCommandEvent(command).build();
+ * jdaTester.createSlashCommandInteractionEvent(command).build();
  *
  * // /days start:10.01.2021 end:13.01.2021
- * jdaTester.createSlashCommandEvent(command)
+ * jdaTester.createSlashCommandInteractionEvent(command)
  *   .setOption("start", "10.01.2021")
  *   .setOption("end", "13.01.2021")
  *   .build();
  *
  * // /db put key:foo value:bar
- * jdaTester.createSlashCommandEvent(command)
+ * jdaTester.createSlashCommandInteractionEvent(command)
  *   .setSubcommand("put")
  *   .setOption("key", "foo")
  *   .setOption("value", "bar")
@@ -62,10 +63,10 @@ import static org.mockito.Mockito.when;
  * </pre>
  */
 @SuppressWarnings("ClassWithTooManyFields")
-public final class SlashCommandEventBuilder {
+public final class SlashCommandInteractionEventBuilder {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final JDAImpl jda;
-    private final UnaryOperator<SlashCommandEvent> mockOperator;
+    private final UnaryOperator<SlashCommandInteractionEvent> mockOperator;
     private String token;
     private String channelId;
     private String applicationId;
@@ -76,7 +77,8 @@ public final class SlashCommandEventBuilder {
     private String subcommand;
     private Member userWhoTriggered;
 
-    SlashCommandEventBuilder(@NotNull JDAImpl jda, UnaryOperator<SlashCommandEvent> mockOperator) {
+    SlashCommandInteractionEventBuilder(@NotNull JDAImpl jda,
+            UnaryOperator<SlashCommandInteractionEvent> mockOperator) {
         this.jda = jda;
         this.mockOperator = mockOperator;
     }
@@ -95,7 +97,7 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder setOption(@NotNull String name,
+    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
             @NotNull String value) {
         putOptionRaw(name, value, OptionType.STRING);
         return this;
@@ -115,7 +117,8 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder setOption(@NotNull String name, @NotNull User value) {
+    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
+            @NotNull User value) {
         putOptionRaw(name, value, OptionType.USER);
         return this;
     }
@@ -134,7 +137,7 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder setOption(@NotNull String name,
+    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
             @NotNull Member value) {
         putOptionRaw(name, value, OptionType.USER);
         return this;
@@ -145,7 +148,7 @@ public final class SlashCommandEventBuilder {
      *
      * @return this builder instance for chaining
      */
-    public @NotNull SlashCommandEventBuilder clearOptions() {
+    public @NotNull SlashCommandInteractionEventBuilder clearOptions() {
         nameToOption.clear();
         return this;
     }
@@ -161,7 +164,7 @@ public final class SlashCommandEventBuilder {
      * @throws IllegalArgumentException if the subcommand does not exist in the corresponding
      *         command, as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandEventBuilder setSubcommand(@Nullable String subcommand) {
+    public @NotNull SlashCommandInteractionEventBuilder setSubcommand(@Nullable String subcommand) {
         if (subcommand != null) {
             requireSubcommand(subcommand);
         }
@@ -177,43 +180,44 @@ public final class SlashCommandEventBuilder {
      * @return this builder instance for chaining
      */
     @NotNull
-    public SlashCommandEventBuilder setUserWhoTriggered(@NotNull Member userWhoTriggered) {
+    public SlashCommandInteractionEventBuilder setUserWhoTriggered(
+            @NotNull Member userWhoTriggered) {
         this.userWhoTriggered = userWhoTriggered;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder setCommand(@NotNull SlashCommand command) {
+    SlashCommandInteractionEventBuilder setCommand(@NotNull SlashCommand command) {
         this.command = command;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder setChannelId(@NotNull String channelId) {
+    SlashCommandInteractionEventBuilder setChannelId(@NotNull String channelId) {
         this.channelId = channelId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder setToken(@NotNull String token) {
+    SlashCommandInteractionEventBuilder setToken(@NotNull String token) {
         this.token = token;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder setApplicationId(@NotNull String applicationId) {
+    SlashCommandInteractionEventBuilder setApplicationId(@NotNull String applicationId) {
         this.applicationId = applicationId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder setGuildId(@NotNull String guildId) {
+    SlashCommandInteractionEventBuilder setGuildId(@NotNull String guildId) {
         this.guildId = guildId;
         return this;
     }
 
     @NotNull
-    SlashCommandEventBuilder setUserId(@NotNull String userId) {
+    SlashCommandInteractionEventBuilder setUserId(@NotNull String userId) {
         this.userId = userId;
         return this;
     }
@@ -224,7 +228,7 @@ public final class SlashCommandEventBuilder {
      *
      * @return the created slash command instance
      */
-    public @NotNull SlashCommandEvent build() {
+    public @NotNull SlashCommandInteractionEvent build() {
         PayloadSlashCommand event = createEvent();
 
         String json;
@@ -237,9 +241,9 @@ public final class SlashCommandEventBuilder {
         return spySlashCommandEvent(json);
     }
 
-    private SlashCommandEvent spySlashCommandEvent(String jsonData) {
-        SlashCommandEvent event = spy(new SlashCommandEvent(jda, 0,
-                new CommandInteractionImpl(jda, DataObject.fromJson(jsonData))));
+    private SlashCommandInteractionEvent spySlashCommandEvent(String jsonData) {
+        SlashCommandInteractionEvent event = spy(new SlashCommandInteractionEvent(jda, 0,
+                new SlashCommandInteractionImpl(jda, DataObject.fromJson(jsonData))));
         event = mockOperator.apply(event);
 
         when(event.getMember()).thenReturn(userWhoTriggered);

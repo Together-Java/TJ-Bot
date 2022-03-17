@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public final class TagsCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         Collection<String> tagIds = tagSystem.getAllIds();
         if (tagIds.size() > MAX_TAGS_THRESHOLD_WARNING) {
             // TODO Implement the edge case
@@ -73,7 +73,7 @@ public final class TagsCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
+    public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
         String userId = args.get(0);
 
         if (!event.getUser().getId().equals(userId) && !Objects.requireNonNull(event.getMember())
