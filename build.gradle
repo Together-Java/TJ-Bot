@@ -21,6 +21,14 @@ sonarqube {
     }
 }
 
+// Install git hooks
+task installLocalGitHook(type: Copy) {
+    from new File(rootProject.rootDir, 'scripts/pre-commit')
+    into new File(rootProject.rootDir, '.git/hooks')
+    fileMode 0775
+}
+build.dependsOn installLocalGitHook
+
 subprojects {
     apply plugin: "java"
     apply plugin: "com.diffplug.spotless"

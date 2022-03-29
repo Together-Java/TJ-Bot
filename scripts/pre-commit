@@ -1,0 +1,17 @@
+#!/bin/sh
+
+echo "****Running pre-commit hooks****"
+git stash -q --keep-index
+
+echo "**Applying spotless**"
+if ! ./gradlew spotlessApply; then
+  exit $?
+fi
+
+echo "**Running unit tests**"
+if ! ./gradlew test; then
+  exit $?
+fi
+
+git stash pop -q
+echo "****Done pre-commit hooks****"
