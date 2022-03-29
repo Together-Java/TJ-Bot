@@ -1,17 +1,28 @@
 #!/bin/sh
 
 echo "****Running pre-commit hooks****"
-git stash -q --keep-index
+# Keep staged changes and put unstaged aside for the hook (bypass hook to avoid recursion)
+git commit --no-verify --message "WIP"
+git stash -u
+git reset --soft HEAD^
 
 echo "**Applying spotless**"
 if ! ./gradlew spotlessApply; then
+  # Restore unstaged changes
+  git stash pop -q
   exit $?
 fi
+# Add Spotless changes
+git add -A
+
 
 echo "**Running unit tests**"
 if ! ./gradlew test; then
+  # Restore unstaged changes
+  git stash pop -q
   exit $?
 fi
 
+# Restore unstaged changes
 git stash pop -q
 echo "****Done pre-commit hooks****"
