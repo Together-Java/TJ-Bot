@@ -8,14 +8,31 @@ import org.togetherjava.tjbot.config.ScamBlockerConfig;
 import java.net.URI;
 import java.util.regex.Pattern;
 
-public class ScamDetector {
+/**
+ * Detects whether a text message classifies as scam or not, using certain heuristics.
+ *
+ * Highly configurable, using {@link ScamBlockerConfig}. Main method to use is
+ * {@link #isScam(CharSequence)}.
+ */
+public final class ScamDetector {
     private static final Pattern TOKENIZER = Pattern.compile("[\\s,]");
     private final ScamBlockerConfig config;
 
+    /**
+     * Creates a new instance with the given configuration
+     * 
+     * @param config the scam blocker config to use
+     */
     public ScamDetector(@NotNull Config config) {
         this.config = config.getScamBlocker();
     }
 
+    /**
+     * Detects whether the given message classifies as scam or not, using certain heuristics.
+     * 
+     * @param message the message to analyze
+     * @return Whether the message classifies as scam
+     */
     public boolean isScam(@NotNull CharSequence message) {
         AnalyseResults results = new AnalyseResults();
         TOKENIZER.splitAsStream(message).forEach(token -> analyzeToken(token, results));
