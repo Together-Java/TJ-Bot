@@ -4,13 +4,13 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,7 +89,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args) {
+    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
+            @NotNull List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
 
@@ -99,7 +100,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public void onMessageReceived(@NotNull GuildMessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
@@ -122,7 +123,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         takeAction(event);
     }
 
-    private void takeActionWasAlreadyReported(@NotNull GuildMessageReceivedEvent event) {
+    private void takeActionWasAlreadyReported(@NotNull MessageReceivedEvent event) {
         // The user recently send the same scam already, and that was already reported and handled
         addScamToHistory(event);
 
@@ -132,7 +133,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
     }
 
-    private void takeAction(@NotNull GuildMessageReceivedEvent event) {
+    private void takeAction(@NotNull MessageReceivedEvent event) {
         switch (mode) {
             case OFF -> throw new AssertionError(
                     "The OFF-mode should be detected earlier already to prevent expensive computation");
@@ -145,26 +146,25 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
     }
 
-    private void takeActionLogOnly(@NotNull GuildMessageReceivedEvent event) {
+    private void takeActionLogOnly(@NotNull MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
     }
 
-    private void takeActionApproveFirst(@NotNull GuildMessageReceivedEvent event) {
+    private void takeActionApproveFirst(@NotNull MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
         reportScamMessage(event, "Is this scam?", createConfirmDialog(event));
     }
 
-    private void takeActionAutoDeleteButApproveQuarantine(
-            @NotNull GuildMessageReceivedEvent event) {
+    private void takeActionAutoDeleteButApproveQuarantine(@NotNull MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
         deleteMessage(event);
         reportScamMessage(event, "Is this scam? (already deleted)", createConfirmDialog(event));
     }
 
-    private void takeActionAutoDeleteAndQuarantine(@NotNull GuildMessageReceivedEvent event) {
+    private void takeActionAutoDeleteAndQuarantine(@NotNull MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
         deleteMessage(event);
@@ -173,21 +173,21 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         reportScamMessage(event, "Detected and handled scam", null);
     }
 
-    private void addScamToHistory(@NotNull GuildMessageReceivedEvent event) {
+    private void addScamToHistory(@NotNull MessageReceivedEvent event) {
         scamHistoryStore.addScam(event.getMessage(), MODES_WITH_IMMEDIATE_DELETION.contains(mode));
     }
 
-    private void logScamMessage(@NotNull GuildMessageReceivedEvent event) {
+    private void logScamMessage(@NotNull MessageReceivedEvent event) {
         logger.warn("Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
                 event.getMessageId(), event.getAuthor().getId(), event.getChannel().getId(),
                 event.getGuild().getId());
     }
 
-    private void deleteMessage(@NotNull GuildMessageReceivedEvent event) {
+    private void deleteMessage(@NotNull MessageReceivedEvent event) {
         event.getMessage().delete().queue();
     }
 
-    private void quarantineAuthor(@NotNull GuildMessageReceivedEvent event) {
+    private void quarantineAuthor(@NotNull MessageReceivedEvent event) {
         quarantineAuthor(event.getGuild(), event.getMember(), event.getJDA().getSelfUser());
     }
 
@@ -205,8 +205,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue();
     }
 
-    private void reportScamMessage(@NotNull GuildMessageReceivedEvent event,
-            @NotNull String reportTitle, @Nullable ActionRow confirmDialog) {
+    private void reportScamMessage(@NotNull MessageReceivedEvent event, @NotNull String reportTitle,
+            @Nullable ActionRow confirmDialog) {
         Guild guild = event.getGuild();
         Optional<TextChannel> reportChannel = getReportChannel(guild);
         if (reportChannel.isEmpty()) {
@@ -231,7 +231,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
 
-    private void dmUser(@NotNull GuildMessageReceivedEvent event) {
+    private void dmUser(@NotNull MessageReceivedEvent event) {
         dmUser(event.getGuild(), event.getAuthor().getIdLong(), event.getJDA());
     }
 
@@ -255,7 +255,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
-    private @NotNull ActionRow createConfirmDialog(@NotNull GuildMessageReceivedEvent event) {
+    private @NotNull ActionRow createConfirmDialog(@NotNull MessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
                 event.getAuthor().getIdLong(),
@@ -271,7 +271,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> argsRaw) {
+    public void onButtonClick(@NotNull ButtonInteractionEvent event,
+            @NotNull List<String> argsRaw) {
         ComponentIdArguments args = ComponentIdArguments.fromList(argsRaw);
         if (event.getMember().getRoles().stream().map(Role::getName).noneMatch(hasRequiredRole)) {
             event.reply(

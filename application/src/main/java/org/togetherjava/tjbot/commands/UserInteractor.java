@@ -1,9 +1,8 @@
 package org.togetherjava.tjbot.commands;
 
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
@@ -20,7 +19,8 @@ public interface UserInteractor extends Feature {
     /**
      * Gets the name of the interactor.
      * <p>
-     * Requirements for this are documented in {@link CommandData#CommandData(String, String)}.
+     * Requirements for this are documented in
+     * {@link net.dv8tion.jda.api.interactions.commands.build.Commands#slash(String, String)}.
      * <p>
      * <p>
      * After registration of the interactor, the name must not change anymore.
@@ -46,10 +46,10 @@ public interface UserInteractor extends Feature {
      *
      * @param event the event that triggered this
      * @param args the arguments transported with the button, see
-     *        {@link SlashCommand#onSlashCommand(SlashCommandEvent)} for details on how these are
-     *        created
+     *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
+     *        these are created
      */
-    void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args);
+    void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args);
 
     /**
      * Triggered by the core system when a selection menu corresponding to this implementation
@@ -67,16 +67,17 @@ public interface UserInteractor extends Feature {
      *
      * @param event the event that triggered this
      * @param args the arguments transported with the selection menu, see
-     *        {@link SlashCommand#onSlashCommand(SlashCommandEvent)} for details on how these are
-     *        created
+     *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
+     *        these are created
      */
-    void onSelectionMenu(@NotNull SelectionMenuEvent event, @NotNull List<String> args);
+    void onSelectionMenu(@NotNull SelectMenuInteractionEvent event, @NotNull List<String> args);
 
     /**
      * Triggered by the core system during its setup phase. It will provide the interactor a
      * component id generator through this method, which can be used to generate component ids, as
      * used for button or selection menus. See
-     * {@link SlashCommand#onSlashCommand(SlashCommandEvent)} for details on how to use this.
+     * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how to use
+     * this.
      *
      * @param generator the provided component id generator
      */
