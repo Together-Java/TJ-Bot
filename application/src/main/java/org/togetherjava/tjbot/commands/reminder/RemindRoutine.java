@@ -71,7 +71,7 @@ public final class RemindRoutine implements Routine {
     private static RestAction<ReminderRoute> computeReminderRoute(@NotNull JDA jda, long channelId,
             long authorId) {
         // If guild channel can still be found, send there
-        TextChannel channel = jda.getTextChannelById(channelId);
+        MessageChannel channel = jda.getChannelById(MessageChannel.class, channelId);
         if (channel != null) {
             return createGuildReminderRoute(jda, authorId, channel);
         }
@@ -81,7 +81,7 @@ public final class RemindRoutine implements Routine {
     }
 
     private static @NotNull RestAction<ReminderRoute> createGuildReminderRoute(@NotNull JDA jda,
-            long authorId, @NotNull TextChannel channel) {
+            long authorId, @NotNull MessageChannel channel) {
         return jda.retrieveUserById(authorId)
             .onErrorMap(error -> null)
             .map(author -> ReminderRoute.toPublic(channel, author));
@@ -128,7 +128,7 @@ public final class RemindRoutine implements Routine {
 
     private record ReminderRoute(@NotNull MessageChannel channel, @Nullable User target,
             @Nullable String description) {
-        static ReminderRoute toPublic(@NotNull TextChannel channel, @Nullable User target) {
+        static ReminderRoute toPublic(@NotNull MessageChannel channel, @Nullable User target) {
             return new ReminderRoute(channel, target,
                     target == null ? null : target.getAsMention());
         }
