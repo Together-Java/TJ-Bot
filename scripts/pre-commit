@@ -15,14 +15,6 @@ fi
 # Add Spotless changes
 git add -A
 
-
-echo "**Running unit tests**"
-if ! ./gradlew test; then
-  # Restore unstaged changes
-  git stash pop -q
-  exit $?
-fi
-
 # Restore unstaged changes
 git stash pop -q
 echo "****Done pre-commit hooks****"
