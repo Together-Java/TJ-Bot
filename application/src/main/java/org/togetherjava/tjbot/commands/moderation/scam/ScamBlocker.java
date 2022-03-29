@@ -261,8 +261,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 event.getAuthor().getIdLong(),
                 ScamHistoryStore.hashMessageContent(event.getMessage()));
 
-        return ActionRow.of(Button.of(ButtonStyle.SUCCESS, generateComponentId(args), "Yes"),
-                Button.of(ButtonStyle.DANGER, generateComponentId(args), "No"));
+        return ActionRow.of(Button.success(generateComponentId(args), "Yes"),
+                Button.danger(generateComponentId(args), "No"));
     }
 
     private @NotNull String generateComponentId(@NotNull ComponentIdArguments args) {

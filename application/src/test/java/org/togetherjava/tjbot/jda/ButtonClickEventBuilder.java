@@ -46,11 +46,11 @@ import static org.mockito.Mockito.when;
  * {@code
  * // Default message with a delete button
  * jdaTester.createButtonClickEvent()
- *   .setActionRows(ActionRow.of(Button.of(ButtonStyle.DANGER, "1", "Delete"))
+ *   .setActionRows(ActionRow.of(Button.danger("1", "Delete"))
  *   .buildWithSingleButton();
  *
  * // More complex message with a user who clicked the button that is not the message author and multiple buttons
- * Button clickedButton = Button.of(ButtonStyle.PRIMARY, "1", "Next");
+ * Button clickedButton = Button.primary("1", "Next");
  * jdaTester.createButtonClickEvent()
  *   .setMessage(new MessageBuilder()
  *     .setContent("See the following entry")
@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
  *     .build())
  *   .setUserWhoClicked(jdaTester.createMemberSpy(5))
  *   .setActionRows(
- *     ActionRow.of(Button.of(ButtonStyle.PRIMARY, "1", "Previous"),
+ *     ActionRow.of(Button.primary("1", "Previous"),
  *     clickedButton)
  *   .build(clickedButton);
  * }
