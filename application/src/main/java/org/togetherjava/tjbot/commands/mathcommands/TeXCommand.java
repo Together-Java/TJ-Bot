@@ -3,8 +3,7 @@ package org.togetherjava.tjbot.commands.mathcommands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -15,7 +14,8 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -88,7 +88,7 @@ public class TeXCommand extends SlashCommandAdapter {
         }
         event.getHook()
             .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
-            .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
+            .setActionRow(Button.danger(generateComponentId(userID), "Delete"))
             .queue();
     }
 

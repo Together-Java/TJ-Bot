@@ -70,8 +70,8 @@ public final class ReloadCommand extends SlashCommandAdapter {
         event.reply(
                 "Are you sure? You can only reload commands a few times each day, so do not overdo this.")
             .addActionRow(
-                    Button.of(ButtonStyle.SUCCESS, generateComponentId(member.getId()), "Yes"),
-                    Button.of(ButtonStyle.DANGER, generateComponentId(member.getId()), "No"))
+                    Button.success(generateComponentId(member.getId()), "Yes"),
+                    Button.danger(generateComponentId(member.getId()), "No"))
             .queue();
     }
 
