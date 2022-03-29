@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
@@ -319,21 +319,14 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             });
         };
 
-        Consumer<Throwable> onRetrieveAuthorFailure = failure -> {
-            if (failure instanceof ErrorResponseException errorResponseException) {
-                if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                    logger.debug("Attempted to handle scam, but user '{}' does not exist anymore.",
-                            args.authorId);
-                    return;
-                }
-
-                if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MEMBER) {
-                    logger.debug(
-                            "Attempted to handle scam, but user '{}' is not a member of the guild anymore.",
-                            args.authorId);
-                }
-            }
-        };
+        Consumer<Throwable> onRetrieveAuthorFailure = new ErrorHandler()
+            .handle(ErrorResponse.UNKNOWN_USER,
+                    failure -> logger.debug(
+                            "Attempted to handle scam, but user '{}' does not exist anymore.",
+                            args.authorId))
+            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(
+                    "Attempted to handle scam, but user '{}' is not a member of the guild anymore.",
+                    args.authorId));
 
         guild.retrieveMemberById(args.authorId)
             .queue(onRetrieveAuthorSuccess, onRetrieveAuthorFailure);
