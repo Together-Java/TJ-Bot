@@ -126,19 +126,6 @@ public final class TemporaryModerationRoutine implements Routine {
             }, failure -> handleFailure(failure, groupIdentifier));
     }
 
-    private @NotNull RestAction<Void> executeRevocation(@NotNull Guild guild, @NotNull User target,
-            @NotNull ModerationAction actionType) {
-        logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
-                target.getAsTag(), target.getId());
-        RevocableModerationAction action = getRevocableActionByType(actionType);
-
-        String reason = "Automatic revocation of temporary action.";
-        actionsStore.addAction(guild.getIdLong(), jda.getSelfUser().getIdLong(), target.getIdLong(),
-                action.getRevokeType(), null, reason);
-
-        return action.revokeAction(guild, target, reason);
-    }
-
     private void handleFailure(@NotNull Throwable failure,
             @NotNull RevocationGroupIdentifier groupIdentifier) {
         if (failure instanceof ErrorResponseException errorResponseException
@@ -151,6 +138,19 @@ public final class TemporaryModerationRoutine implements Routine {
         logger.warn(
                 "Attempted to revoke a temporary moderation action for user '{}' but something unexpected went wrong.",
                 groupIdentifier.targetId, failure);
+    }
+
+    private @NotNull RestAction<Void> executeRevocation(@NotNull Guild guild, @NotNull User target,
+            @NotNull ModerationAction actionType) {
+        logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
+                target.getAsTag(), target.getId());
+        RevocableModerationAction action = getRevocableActionByType(actionType);
+
+        String reason = "Automatic revocation of temporary action.";
+        actionsStore.addAction(guild.getIdLong(), jda.getSelfUser().getIdLong(), target.getIdLong(),
+                action.getRevokeType(), null, reason);
+
+        return action.revokeAction(guild, target, reason);
     }
 
     private @NotNull RevocableModerationAction getRevocableActionByType(
