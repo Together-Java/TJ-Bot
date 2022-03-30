@@ -21,7 +21,7 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
      * @param actionName the action name to be used in logging in case of a failure, e.g.
      *        {@code "mute"}, {@code "quarantine"}
      */
-    public RevocableRoleBasedAction(@NotNull String actionName) {
+    RevocableRoleBasedAction(@NotNull String actionName) {
         this.actionName = actionName;
     }
 
