@@ -9,6 +9,9 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.Records;
@@ -20,15 +23,9 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.TextStyle;
-import java.time.temporal.TemporalAdjusters;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -47,6 +44,7 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 public final class TopHelpersCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(TopHelpersCommand.class);
     private static final String COMMAND_NAME = "top-helpers";
+    private static final String MONTH_OPTION = "at-month";
     private static final int TOP_HELPER_LIMIT = 20;
 
     private final Database database;
@@ -59,8 +57,16 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
      * @param config the config to use for this
      */
     public TopHelpersCommand(@NotNull Database database, @NotNull Config config) {
-        super(COMMAND_NAME, "Lists top helpers for the last month", SlashCommandVisibility.GUILD);
-        // TODO Add options to optionally pick a time range once JDA/Discord offers a date-picker
+        super(COMMAND_NAME, "Lists top helpers for the last month, or a given month",
+                SlashCommandVisibility.GUILD);
+
+        OptionData monthData = new OptionData(OptionType.STRING, MONTH_OPTION,
+                "the month to compute for, by default the last month", false);
+        Arrays.stream(Month.values())
+            .forEach(month -> monthData.addChoice(
+                    month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.US), month.name()));
+        getData().addOptions(monthData);
+
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.database = database;
     }
@@ -70,8 +76,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         if (!handleHasAuthorRole(event.getMember(), event)) {
             return;
         }
+        OptionMapping atMonthData = event.getOption(MONTH_OPTION);
 
-        TimeRange timeRange = computeDefaultTimeRange();
+        TimeRange timeRange = computeTimeRange(computeMonth(atMonthData));
         List<TopHelperResult> topHelpers =
                 computeTopHelpersDescending(event.getGuild().getIdLong(), timeRange);
 
@@ -102,16 +109,31 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private static @NotNull TimeRange computeDefaultTimeRange() {
-        // Last month
-        ZonedDateTime start = Instant.now()
-            .atZone(ZoneOffset.UTC)
-            .minusMonths(1)
-            .with(TemporalAdjusters.firstDayOfMonth());
-        ZonedDateTime end = start.with(TemporalAdjusters.lastDayOfMonth());
-        String description = start.getMonth().getDisplayName(TextStyle.FULL_STANDALONE, Locale.US);
+    private static @NotNull Month computeMonth(@Nullable OptionMapping atMonthData) {
+        if (atMonthData != null) {
+            return Month.valueOf(atMonthData.getAsString());
+        }
 
-        return new TimeRange(start.toInstant(), end.toInstant(), description);
+        // Previous month
+        return Instant.now().atZone(ZoneOffset.UTC).minusMonths(1).getMonth();
+    }
+
+    private static @NotNull TimeRange computeTimeRange(@NotNull Month atMonth) {
+        ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
+
+        int atYear = now.getYear();
+        // E.g. using November, while it is March 2022, should use November 2021
+        if (atMonth.compareTo(now.getMonth()) > 0) {
+            atYear--;
+        }
+        YearMonth atYearMonth = YearMonth.of(atYear, atMonth);
+
+        Instant start = atYearMonth.atDay(1).atTime(LocalTime.MIN).toInstant(ZoneOffset.UTC);
+        Instant end = atYearMonth.atEndOfMonth().atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
+        String description = "%s %d"
+            .formatted(atMonth.getDisplayName(TextStyle.FULL_STANDALONE, Locale.US), atYear);
+
+        return new TimeRange(start, end, description);
     }
 
     private @NotNull List<TopHelperResult> computeTopHelpersDescending(long guildId,
@@ -187,8 +209,10 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     private record TimeRange(Instant start, Instant end, String description) {
     }
 
+
     private record TopHelperResult(long authorId, int messageCount) {
     }
+
 
     private record ColumnSetting(String headerName, HorizontalAlign alignment) {
     }
