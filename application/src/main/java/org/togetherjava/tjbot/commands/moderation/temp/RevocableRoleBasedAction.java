@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation.temp;
 
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,32 +29,34 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
             long targetId) {
 
         if (failure instanceof ErrorResponseException errorResponseException) {
-            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                logger.debug(
-                        "Attempted to revoke a temporary {} but user '{}' does not exist anymore.",
-                        actionName, targetId);
-                return FailureIdentification.KNOWN;
+            switch (errorResponseException.getErrorResponse()) {
+                case UNKNOWN_USER -> {
+                    logger.debug(
+                            "Attempted to revoke a temporary {} but user '{}' does not exist anymore.",
+                            actionName, targetId);
+                }
+                case UNKNOWN_MEMBER -> {
+                    logger.debug(
+                            "Attempted to revoke a temporary {} but user '{}' is not a member of the guild anymore.",
+                            actionName, targetId);
+                }
+                case UNKNOWN_ROLE -> {
+                    logger.warn(
+                            "Attempted to revoke a temporary {} but the {} role can not be found.",
+                            actionName, actionName);
+                }
+                case MISSING_PERMISSIONS -> {
+                    logger.warn("Attempted to revoke a temporary {} but the bot lacks permission.",
+                            actionName);
+                }
+                default -> {
+                    return FailureIdentification.UNKNOWN;
+                }
             }
 
-            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MEMBER) {
-                logger.debug(
-                        "Attempted to revoke a temporary {} but user '{}' is not a member of the guild anymore.",
-                        actionName, targetId);
-                return FailureIdentification.KNOWN;
-            }
-
-            if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_ROLE) {
-                logger.warn("Attempted to revoke a temporary {} but the {} role can not be found.",
-                        actionName, actionName);
-                return FailureIdentification.KNOWN;
-            }
-
-            if (errorResponseException.getErrorResponse() == ErrorResponse.MISSING_PERMISSIONS) {
-                logger.warn("Attempted to revoke a temporary {} but the bot lacks permission.",
-                        actionName);
-                return FailureIdentification.KNOWN;
-            }
+            return FailureIdentification.KNOWN;
         }
+
         return FailureIdentification.UNKNOWN;
     }
 }
