@@ -30,25 +30,18 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
 
         if (failure instanceof ErrorResponseException errorResponseException) {
             switch (errorResponseException.getErrorResponse()) {
-                case UNKNOWN_USER -> {
-                    logger.debug(
-                            "Attempted to revoke a temporary {} but user '{}' does not exist anymore.",
-                            actionName, targetId);
-                }
-                case UNKNOWN_MEMBER -> {
-                    logger.debug(
-                            "Attempted to revoke a temporary {} but user '{}' is not a member of the guild anymore.",
-                            actionName, targetId);
-                }
-                case UNKNOWN_ROLE -> {
-                    logger.warn(
-                            "Attempted to revoke a temporary {} but the {} role can not be found.",
-                            actionName, actionName);
-                }
-                case MISSING_PERMISSIONS -> {
-                    logger.warn("Attempted to revoke a temporary {} but the bot lacks permission.",
-                            actionName);
-                }
+                case UNKNOWN_USER -> logger.debug(
+                        "Attempted to revoke a temporary {} but user '{}' does not exist anymore.",
+                        actionName, targetId);
+                case UNKNOWN_MEMBER -> logger.debug(
+                        "Attempted to revoke a temporary {} but user '{}' is not a member of the guild anymore.",
+                        actionName, targetId);
+                case UNKNOWN_ROLE -> logger.warn(
+                        "Attempted to revoke a temporary {} but the {} role can not be found.",
+                        actionName, actionName);
+                case MISSING_PERMISSIONS -> logger.warn(
+                        "Attempted to revoke a temporary {} but the bot lacks permission.",
+                        actionName);
                 default -> {
                     return FailureIdentification.UNKNOWN;
                 }
