@@ -59,7 +59,7 @@ dependencies {
     implementation 'com.vaadin:vaadin-core:21.0.2'
     implementation('com.vaadin:vaadin-spring:18.0.0')
     implementation 'org.vaadin.artur:a-vaadin-helper:1.7.2'
-    implementation 'org.vaadin.crudui:crudui:4.6.0'
+    implementation 'org.vaadin.crudui:crudui:6.0.0'
     implementation 'com.vaadin.componentfactory:enhanced-dialog:21.0.0'
 
 
