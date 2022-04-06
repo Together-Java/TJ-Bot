@@ -83,6 +83,7 @@ public final class ModAuditLogWriter {
      * this method will return an empty optional, and a warning message will be written.
      *
      * @param guild the guild to look for the channel in
+     * @return the channel used for moderation audit logs, if present
      */
     public Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
