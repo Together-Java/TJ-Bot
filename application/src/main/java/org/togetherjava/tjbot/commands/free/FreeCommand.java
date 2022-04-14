@@ -295,7 +295,7 @@ public final class FreeCommand extends SlashCommandAdapter implements EventRecei
         if (event instanceof ReadyEvent readyEvent) {
             onReady(readyEvent);
         } else if (event instanceof MessageReceivedEvent messageEvent) {
-            if (messageEvent.isFromGuild()) {
+            if (!messageEvent.isFromGuild()) {
                 return;
             }
 
