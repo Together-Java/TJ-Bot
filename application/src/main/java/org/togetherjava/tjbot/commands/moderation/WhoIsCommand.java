@@ -119,11 +119,12 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     private static @NotNull String voiceStateToStringItem(@NotNull final Member member) {
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "The given voiceState cannot be null");
-        if (voiceState.inAudioChannel()) {
-            return "\n**In voicechannel:** " + (voiceState.getChannel().getAsMention());
-        } else {
+
+        if (!voiceState.inAudioChannel()) {
             return "";
         }
+
+        return "\n**In voicechannel:** " + (voiceState.getChannel().getAsMention());
     }
 
 
@@ -161,12 +162,13 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      */
     private static @NotNull String possibleBoosterToStringItem(final @NotNull Member member) {
         OffsetDateTime timeBoosted = member.getTimeBoosted();
-        if (null != timeBoosted) {
-            return "\n**Is booster:** true \n**Boosting since:** "
-                    + DATE_TIME_FORMAT.format(timeBoosted);
-        } else {
+
+        if (null == timeBoosted) {
             return "\n**Is booster:** false";
         }
+
+        return "\n**Is booster:** true \n**Boosting since:** "
+                + DATE_TIME_FORMAT.format(timeBoosted);
     }
 
     /**
