@@ -1,23 +1,20 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 
 import javax.annotation.CheckReturnValue;
-import java.awt.*;
+import java.awt.Color;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +49,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull final SlashCommandEvent event) {
+    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
         OptionMapping userOption = Objects.requireNonNull(event.getOption(USER_OPTION),
                 "The given user option cannot be null");
         OptionMapping showServerSpecificInfoOption = event.getOption(SHOW_SERVER_INFO_OPTION);
@@ -73,63 +70,56 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     }
 
     @CheckReturnValue
-    private static @NotNull ReplyAction handleWhoIsUser(final @NotNull SlashCommandEvent event,
+    private static @NotNull ReplyCallbackAction handleWhoIsUser(final @NotNull IReplyCallback event,
             final @NotNull User user, final @NotNull User.Profile profile) {
-
-        StringBuilder descriptionBuilder =
-                new StringBuilder().append(userIdentificationToStringItem(user))
-                    .append("\n**Is bot:** ")
-                    .append(user.isBot())
-                    .append(userFlagsToStringItem(user.getFlags()))
-                    .append("\n**Registration date:** ")
-                    .append(DATE_TIME_FORMAT.format(user.getTimeCreated()));
+        String description = userIdentificationToStringItem(user) + "\n**Is bot:** " + user.isBot()
+                + userFlagsToStringItem(user.getFlags()) + "\n**Registration date:** "
+                + DATE_TIME_FORMAT.format(user.getTimeCreated());
 
         EmbedBuilder embedBuilder =
                 generateEmbedBuilder(event, user, profile, profile.getAccentColor()).setAuthor(
                         user.getName(), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
-                    .setDescription(descriptionBuilder);
+                    .setDescription(description);
 
-        return event.replyEmbeds(embedBuilder.build())
-            .addActionRow(Button.of(ButtonStyle.LINK, "discord://-/users/" + user.getId(),
-                    "Click to see profile"));
+        return sendEmbedWithProfileAction(event, embedBuilder.build(), user.getId());
     }
 
     @CheckReturnValue
-    private static @NotNull ReplyAction handleWhoIsMember(final @NotNull SlashCommandEvent event,
-            final @NotNull Member member, final @NotNull User.Profile profile) {
+    private static @NotNull ReplyCallbackAction handleWhoIsMember(
+            final @NotNull IReplyCallback event, final @NotNull Member member,
+            final @NotNull User.Profile profile) {
         User user = member.getUser();
 
         Color memberColor = member.getColor();
         Color effectiveColor = (null == memberColor) ? profile.getAccentColor() : memberColor;
 
-        StringBuilder descriptionBuilder =
-                new StringBuilder().append(userIdentificationToStringItem(user))
-                    .append(voiceStateToStringItem(member))
-                    .append("\n**Is bot:** ")
-                    .append(user.isBot())
-                    .append(possibleBoosterToStringItem(member))
-                    .append(userFlagsToStringItem(user.getFlags()))
-                    .append("\n**Join date:** ")
-                    .append(DATE_TIME_FORMAT.format(member.getTimeJoined()))
-                    .append("\n**Registration date:** ")
-                    .append(DATE_TIME_FORMAT.format(user.getTimeCreated()))
-                    .append("\n**Roles:** ")
-                    .append(formatRoles(member));
+        String description = userIdentificationToStringItem(user) + voiceStateToStringItem(member)
+                + "\n**Is bot:** " + user.isBot() + possibleBoosterToStringItem(member)
+                + userFlagsToStringItem(user.getFlags()) + "\n**Join date:** "
+                + DATE_TIME_FORMAT.format(member.getTimeJoined()) + "\n**Registration date:** "
+                + DATE_TIME_FORMAT.format(user.getTimeCreated()) + "\n**Roles:** "
+                + formatRoles(member);
 
         EmbedBuilder embedBuilder = generateEmbedBuilder(event, user, profile, effectiveColor)
             .setAuthor(member.getEffectiveName(), member.getEffectiveAvatarUrl(),
                     member.getEffectiveAvatarUrl())
-            .setDescription(descriptionBuilder);
+            .setDescription(description);
 
-        return event.replyEmbeds(embedBuilder.build())
-            .addActionRow(DiscordClientAction.General.USER.asLinkButton("Click to see profile!",
-                    user.getId()));
+        return sendEmbedWithProfileAction(event, embedBuilder.build(), user.getId());
+    }
+
+    private static @NotNull ReplyCallbackAction sendEmbedWithProfileAction(
+            final @NotNull IReplyCallback event, @NotNull MessageEmbed embed,
+            @NotNull String userId) {
+        return event.replyEmbeds(embed)
+            .addActionRow(
+                    DiscordClientAction.General.USER.asLinkButton("Click to see profile!", userId));
     }
 
     private static @NotNull String voiceStateToStringItem(@NotNull final Member member) {
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "The given voiceState cannot be null");
-        if (voiceState.inVoiceChannel()) {
+        if (voiceState.inAudioChannel()) {
             return "\n**In voicechannel:** " + (voiceState.getChannel().getAsMention());
         } else {
             return "";
@@ -140,15 +130,15 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     /**
      * Generates whois embed based on the given parameters.
      *
-     * @param event the {@link SlashCommandEvent}
+     * @param event the {@link SlashCommandInteractionEvent}
      * @param user the {@link User} getting whois'd
      * @param profile the {@link net.dv8tion.jda.api.entities.User.Profile} of the whois'd user
      * @param effectiveColor the {@link Color} that the embed will become
      * @return the generated {@link EmbedBuilder}
      */
-    private static @NotNull EmbedBuilder generateEmbedBuilder(
-            @NotNull final SlashCommandEvent event, @NotNull final User user,
-            final @NotNull User.Profile profile, final Color effectiveColor) {
+    private static @NotNull EmbedBuilder generateEmbedBuilder(@NotNull final Interaction event,
+            @NotNull final User user, final @NotNull User.Profile profile,
+            final Color effectiveColor) {
 
         EmbedBuilder embedBuilder = new EmbedBuilder().setThumbnail(user.getEffectiveAvatarUrl())
             .setColor(effectiveColor)
@@ -183,14 +173,11 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * Handles the user's identifying properties (such as ID, tag)
      *
      * @param user the {@link User} to take the identifiers from
-     * @return user readable {@link StringBuilder}
+     * @return user readable {@link String}
      */
-    private static @NotNull StringBuilder userIdentificationToStringItem(final @NotNull User user) {
-        return new StringBuilder("**Mention:** ").append(user.getAsMention())
-            .append("\n**Tag:** ")
-            .append(user.getAsTag())
-            .append("\n**ID:** ")
-            .append(user.getId());
+    private static @NotNull String userIdentificationToStringItem(final @NotNull User user) {
+        return "**Mention:** " + user.getAsMention() + "\n**Tag:** " + user.getAsTag()
+                + "\n**ID:** " + user.getId();
     }
 
     /**
@@ -213,13 +200,13 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     private static @NotNull StringBuilder userFlagsToStringItem(
             final @NotNull Collection<User.UserFlag> flags) {
         String formattedFlags = formatUserFlags(flags);
+        StringBuilder result = hypeSquadToStringItem(flags);
 
-        if (formattedFlags.isBlank()) {
-            return hypeSquadToStringItem(flags);
-        } else {
-            return hypeSquadToStringItem(flags).append("\n**Flags:** ")
-                .append(formatUserFlags(flags));
+        if (!formattedFlags.isBlank()) {
+            result.append("\n**Flags:** ").append(formattedFlags);
         }
+
+        return result;
     }
 
     /**
