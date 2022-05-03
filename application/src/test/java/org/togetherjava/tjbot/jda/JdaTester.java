@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.jda;
 
 import net.dv8tion.jda.api.AccountType;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -38,6 +39,7 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -130,6 +132,7 @@ public final class JdaTester {
         doReturn(APPLICATION_ID).when(selfUser).getApplicationIdLong();
         doReturn(selfUser).when(jda).getSelfUser();
         when(jda.getGuildChannelById(anyLong())).thenReturn(textChannel);
+        when(jda.getTextChannelById(anyLong())).thenReturn(textChannel);
         when(jda.getPrivateChannelById(anyLong())).thenReturn(privateChannel);
         when(jda.getGuildById(anyLong())).thenReturn(guild);
         when(jda.getEntityBuilder()).thenReturn(entityBuilder);
@@ -139,8 +142,6 @@ public final class JdaTester {
         when(jda.getSessionController()).thenReturn(new ConcurrentSessionController());
         doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN))).when(jda).getRequester();
         when(jda.getAccountType()).thenReturn(AccountType.BOT);
-
-        doReturn(messageAction).when(privateChannel).sendMessage(anyString());
 
         replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
@@ -155,7 +156,6 @@ public final class JdaTester {
         auditableRestAction = (AuditableRestActionImpl<Void>) mock(AuditableRestActionImpl.class);
         doNothing().when(auditableRestAction).queue();
 
-        doNothing().when(messageAction).queue();
         doNothing().when(webhookMessageUpdateAction).queue();
         doReturn(webhookMessageUpdateAction).when(webhookMessageUpdateAction)
             .setActionRow(any(ItemComponent.class));
@@ -163,6 +163,9 @@ public final class JdaTester {
         doReturn(everyoneRole).when(guild).getPublicRole();
         doReturn(selfMember).when(guild).getMember(selfUser);
         doReturn(member).when(guild).getMember(not(eq(selfUser)));
+
+        RestAction<User> userAction = createSucceededActionMock(member.getUser());
+        when(jda.retrieveUserById(anyLong())).thenReturn(userAction);
 
         doReturn(null).when(textChannel).retrieveMessageById(any());
 
@@ -172,6 +175,20 @@ public final class JdaTester {
             .thenReturn(webhookMessageUpdateAction);
         when(interactionHook.editOriginal(any(byte[].class), any(), any()))
             .thenReturn(webhookMessageUpdateAction);
+
+        doReturn(messageAction).when(textChannel).sendMessageEmbeds(any(), any());
+        doReturn(messageAction).when(textChannel).sendMessageEmbeds(any());
+
+        doNothing().when(messageAction).queue();
+        when(messageAction.content(any())).thenReturn(messageAction);
+
+        RestAction<PrivateChannel> privateChannelAction = createSucceededActionMock(privateChannel);
+        when(jda.openPrivateChannelById(anyLong())).thenReturn(privateChannelAction);
+        when(jda.openPrivateChannelById(anyString())).thenReturn(privateChannelAction);
+        doReturn(null).when(privateChannel).retrieveMessageById(any());
+        doReturn(messageAction).when(privateChannel).sendMessage(anyString());
+        doReturn(messageAction).when(privateChannel).sendMessageEmbeds(any(), any());
+        doReturn(messageAction).when(privateChannel).sendMessageEmbeds(any());
     }
 
     /**
@@ -246,6 +263,8 @@ public final class JdaTester {
 
     /**
      * Creates a Mockito spy for a member with the given user id.
+     * <p>
+     * See {@link #getMemberSpy()} to get the default member used by this tester.
      *
      * @param userId the id of the member to create
      * @return the created spy
@@ -253,6 +272,18 @@ public final class JdaTester {
     public @NotNull Member createMemberSpy(long userId) {
         UserImpl user = spy(new UserImpl(userId, jda));
         return spy(new MemberImpl(guild, user));
+    }
+
+    /**
+     * Creates a Mockito spy for a text channel with the given channel id.
+     * <p>
+     * See {@link #getTextChannelSpy()} to get the default text channel used by this tester.
+     *
+     * @param channelId the id of the text channel to create
+     * @return the created spy
+     */
+    public @NotNull TextChannel createTextChannelSpy(long channelId) {
+        return spy(new TextChannelImpl(channelId, guild));
     }
 
     /**
@@ -295,6 +326,42 @@ public final class JdaTester {
     }
 
     /**
+     * Gets the private channel spy used as universal private channel by all mocks created by this
+     * tester instance.
+     * <p>
+     * For example {@link JDA#openPrivateChannelById(long)} will return this spy if used on the
+     * instance returned by {@link #getJdaMock()}.
+     *
+     * @return the private channel spy used by this tester
+     */
+    public @NotNull PrivateChannel getPrivateChannelSpy() {
+        return privateChannel;
+    }
+
+    /**
+     * Gets the member spy used as universal member by all mocks created by this tester instance.
+     * <p>
+     * For example the events created by {@link #createSlashCommandInteractionEvent(SlashCommand)}
+     * will return this spy on several of their methods.
+     * <p>
+     * See {@link #createMemberSpy(long)} to create other members.
+     *
+     * @return the member spy used by this tester
+     */
+    public @NotNull Member getMemberSpy() {
+        return member;
+    }
+
+    /**
+     * Gets the JDA mock used as universal instance by all mocks created by this tester instance.
+     *
+     * @return the JDA mock used by this tester
+     */
+    public @NotNull JDA getJdaMock() {
+        return jda;
+    }
+
+    /**
      * Creates a mocked action that always succeeds and consumes the given object.
      * <p>
      * Such an action is useful for testing things involving calls like
@@ -325,11 +392,25 @@ public final class JdaTester {
             successConsumer.accept(t);
             return null;
         };
+        Answer<RestAction<?>> mapExecution = invocation -> {
+            Function<? super T, ?> mapFunction = invocation.getArgument(0);
+            Object result = mapFunction.apply(t);
+            return createSucceededActionMock(result);
+        };
+        Answer<RestAction<?>> flatMapExecution = invocation -> {
+            Function<? super T, RestAction<?>> flatMapFunction = invocation.getArgument(0);
+            return flatMapFunction.apply(t);
+        };
 
         doNothing().when(action).queue();
 
         doAnswer(successExecution).when(action).queue(any());
         doAnswer(successExecution).when(action).queue(any(), any());
+        when(action.onErrorMap(any())).thenReturn(action);
+        when(action.onErrorMap(any(), any())).thenReturn(action);
+
+        doAnswer(mapExecution).when(action).map(any());
+        doAnswer(flatMapExecution).when(action).flatMap(any());
 
         return action;
     }
@@ -366,10 +447,26 @@ public final class JdaTester {
             return null;
         };
 
+        Answer<RestAction<?>> errorMapExecution = invocation -> {
+            Function<? super Throwable, ?> mapFunction = invocation.getArgument(0);
+            Object result = mapFunction.apply(failureReason);
+            return createSucceededActionMock(result);
+        };
+
+        Answer<RestAction<?>> mapExecution = invocation -> createFailedActionMock(failureReason);
+        Answer<RestAction<?>> flatMapExecution =
+                invocation -> createFailedActionMock(failureReason);
+
         doNothing().when(action).queue();
         doNothing().when(action).queue(any());
 
+        doAnswer(errorMapExecution).when(action).onErrorMap(any());
+        doAnswer(errorMapExecution).when(action).onErrorMap(any(), any());
+
         doAnswer(failureExecution).when(action).queue(any(), any());
+
+        doAnswer(mapExecution).when(action).map(any());
+        doAnswer(flatMapExecution).when(action).flatMap(any());
 
         return action;
     }

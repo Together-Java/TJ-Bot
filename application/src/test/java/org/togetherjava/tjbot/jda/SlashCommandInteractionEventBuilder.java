@@ -2,9 +2,9 @@ package org.togetherjava.tjbot.jda;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -100,6 +100,26 @@ public final class SlashCommandInteractionEventBuilder {
     public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
             @NotNull String value) {
         putOptionRaw(name, value, OptionType.STRING);
+        return this;
+    }
+
+    /**
+     * Sets the given option, overriding an existing value under the same name.
+     * <p>
+     * If {@link #setSubcommand(String)} is set, this option will be interpreted as option to the
+     * subcommand.
+     * <p>
+     * Use {@link #clearOptions()} to clear any set options.
+     *
+     * @param name the name of the option
+     * @param value the value of the option
+     * @return this builder instance for chaining
+     * @throws IllegalArgumentException if the option does not exist in the corresponding command,
+     *         as specified by its {@link SlashCommand#getData()}
+     */
+    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
+            long value) {
+        putOptionRaw(name, value, OptionType.INTEGER);
         return this;
     }
 
@@ -292,6 +312,14 @@ public final class SlashCommandInteractionEventBuilder {
             @NotNull OptionType type) {
         if (type == OptionType.STRING) {
             return (String) value;
+        } else if (type == OptionType.INTEGER) {
+            if (value instanceof Long asLong) {
+                return value.toString();
+            }
+
+            throw new IllegalArgumentException(
+                    "Expected a long, since the type was set to INTEGER. But got '%s'"
+                        .formatted(value.getClass()));
         } else if (type == OptionType.USER) {
             if (value instanceof User user) {
                 return user.getId();
