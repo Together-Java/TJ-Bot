@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.reminder;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -25,7 +26,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  *
  * <pre>
  * {@code
- * /remind amount: 5 unit: weeks content: Hello World!
+ * /remind time-amount: 5 time-unit: weeks content: Hello World!
  * }
  * </pre>
  * <p>
@@ -33,16 +34,16 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  */
 public final class RemindCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "remind";
-    private static final String TIME_AMOUNT_OPTION = "time-amount";
-    private static final String TIME_UNIT_OPTION = "time-unit";
-    private static final String CONTENT_OPTION = "content";
+    static final String TIME_AMOUNT_OPTION = "time-amount";
+    static final String TIME_UNIT_OPTION = "time-unit";
+    static final String CONTENT_OPTION = "content";
 
     private static final int MIN_TIME_AMOUNT = 1;
     private static final int MAX_TIME_AMOUNT = 1_000;
     private static final List<String> TIME_UNITS =
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
-    private static final int MAX_PENDING_REMINDERS_PER_USER = 100;
+    static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
 
@@ -78,11 +79,12 @@ public final class RemindCommand extends SlashCommandAdapter {
 
         Instant remindAt = parseWhen(timeAmount, timeUnit);
         User author = event.getUser();
+        Guild guild = event.getGuild();
 
         if (!handleIsRemindAtWithinLimits(remindAt, event)) {
             return;
         }
-        if (!handleIsUserBelowMaxPendingReminders(author, event)) {
+        if (!handleIsUserBelowMaxPendingReminders(author, guild, event)) {
             return;
         }
 
@@ -92,7 +94,7 @@ public final class RemindCommand extends SlashCommandAdapter {
 
         database.write(context -> context.newRecord(PENDING_REMINDERS)
             .setCreatedAt(Instant.now())
-            .setGuildId(event.getGuild().getIdLong())
+            .setGuildId(guild.getIdLong())
             .setChannelId(event.getChannel().getIdLong())
             .setAuthorId(author.getIdLong())
             .setRemindAt(remindAt)
@@ -133,9 +135,10 @@ public final class RemindCommand extends SlashCommandAdapter {
     }
 
     private boolean handleIsUserBelowMaxPendingReminders(@NotNull ISnowflake author,
-            @NotNull IReplyCallback event) {
+            @NotNull ISnowflake guild, @NotNull IReplyCallback event) {
         int pendingReminders = database.read(context -> context.fetchCount(PENDING_REMINDERS,
-                PENDING_REMINDERS.AUTHOR_ID.equal(author.getIdLong())));
+                PENDING_REMINDERS.AUTHOR_ID.equal(author.getIdLong())
+                    .and(PENDING_REMINDERS.GUILD_ID.equal(guild.getIdLong()))));
 
         if (pendingReminders < MAX_PENDING_REMINDERS_PER_USER) {
             return true;
