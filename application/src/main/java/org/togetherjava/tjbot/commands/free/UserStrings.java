@@ -18,6 +18,10 @@ enum UserStrings {
     MARK_AS_FREE("""
             This channel is now available for a question to be asked.
             """),
+    AUTO_MARK_AS_FREE(
+            """
+                    This channel seems to be inactive and was now marked available for a question to be asked.
+                    """),
     ALREADY_FREE_ERROR("""
             This channel is already free, no changes made.
             """),

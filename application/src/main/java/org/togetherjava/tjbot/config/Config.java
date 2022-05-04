@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -70,7 +71,8 @@ public final class Config {
      * @throws IOException if the file could not be loaded
      */
     public static Config load(Path path) throws IOException {
-        return new ObjectMapper().readValue(path.toFile(), Config.class);
+        return new ObjectMapper().registerModule(new JavaTimeModule())
+            .readValue(path.toFile(), Config.class);
     }
 
     /**
