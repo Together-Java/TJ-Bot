@@ -3,13 +3,10 @@ package org.togetherjava.tjbot.commands.free;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import net.dv8tion.jda.api.utils.TimeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.config.FreeCommandConfig;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -65,34 +62,11 @@ enum FreeUtil {
      * @return the id of the latest message or empty if it could not be retrieved.
      */
     public static @NotNull OptionalLong getLastMessageId(@NotNull TextChannel channel) {
-
         // black magic to convert Optional<Long> into OptionalLong because Optional does not have
         // .mapToLong
         return getChannelHistory(channel, 1).stream()
             .flatMap(List::stream)
             .mapToLong(Message::getIdLong)
             .findFirst();
-    }
-
-    /**
-     * Method that returns the time data from a discord snowflake.
-     *
-     * @param id the snowflake containing the time desired
-     * @return the creation time of the entity the id represents
-     */
-    public static @NotNull OffsetDateTime timeFromId(long id) {
-        return TimeUtil.getTimeCreated(id);
-    }
-
-    /**
-     * Method that calculates a time value a specific duration before now. The duration is
-     * configured in {@link FreeCommandConfig#INACTIVE_UNIT} and
-     * {@link FreeCommandConfig#INACTIVE_DURATION}.
-     * 
-     * @return the time value a set duration before now.
-     */
-    public static @NotNull OffsetDateTime inactiveTimeLimit() {
-        return OffsetDateTime.now()
-            .minus(FreeCommandConfig.INACTIVE_DURATION, FreeCommandConfig.INACTIVE_UNIT);
     }
 }

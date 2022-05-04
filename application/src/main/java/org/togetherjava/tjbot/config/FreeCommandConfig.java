@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import org.jetbrains.annotations.NotNull;
 
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +19,8 @@ import java.util.List;
  * <pre>
  * "freeCommand": [
  *   {
+ *       "inactiveChannelDuration": duration,
+ *       "messageRetrieveLimit": int_number,
  *       "statusChannel": long_number,
  *       "monitoredChannels": [long_number, long_number]
  *   }]
@@ -31,21 +33,20 @@ import java.util.List;
 @SuppressWarnings("ClassCanBeRecord")
 @JsonRootName("freeCommand")
 public final class FreeCommandConfig {
-    // TODO make constants configurable via config file once config templating (#234) is pushed
-    public static final long INACTIVE_DURATION = 1;
-    public static final ChronoUnit INACTIVE_UNIT = ChronoUnit.HOURS;
-    public static final long INACTIVE_TEST_INTERVAL = 15;
-    public static final ChronoUnit INACTIVE_TEST_UNIT = ChronoUnit.MINUTES;
-    public static final int MESSAGE_RETRIEVE_LIMIT = 10;
-
     private final long statusChannel;
     private final List<Long> monitoredChannels;
+    private final Duration inactiveChannelDuration;
+    private final int messageRetrieveLimit;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private FreeCommandConfig(@JsonProperty("statusChannel") long statusChannel,
-            @JsonProperty("monitoredChannels") List<Long> monitoredChannels) {
+            @JsonProperty("monitoredChannels") List<Long> monitoredChannels,
+            @JsonProperty("inactiveChannelDuration") Duration inactiveChannelDuration,
+            @JsonProperty("messageRetrieveLimit") int messageRetrieveLimit) {
         this.statusChannel = statusChannel;
         this.monitoredChannels = Collections.unmodifiableList(monitoredChannels);
+        this.messageRetrieveLimit = messageRetrieveLimit;
+        this.inactiveChannelDuration = inactiveChannelDuration;
     }
 
     /**
@@ -65,5 +66,23 @@ public final class FreeCommandConfig {
      */
     public @NotNull Collection<Long> getMonitoredChannels() {
         return monitoredChannels; // already unmodifiable
+    }
+
+    /**
+     * Gets the duration of inactivity after which a channel is considered inactive.
+     * 
+     * @return inactivity duration
+     */
+    public @NotNull Duration getInactiveChannelDuration() {
+        return inactiveChannelDuration;
+    }
+
+    /**
+     * Gets the limit of messages to retrieve when searching for previous status messages.
+     * 
+     * @return the message retrieve limit
+     */
+    public int getMessageRetrieveLimit() {
+        return messageRetrieveLimit;
     }
 }

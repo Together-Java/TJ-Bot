@@ -10,6 +10,8 @@
     "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
     "freeCommand": [
         {
+            "inactiveChannelDuration": "PT2H",
+            "messageRetrieveLimit": 10,
             "statusChannel": <put_a_channel_id_here>,
             "monitoredChannels": [
                     <put_a_channel_id_here>
