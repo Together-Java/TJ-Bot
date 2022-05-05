@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,20 +6,32 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
-@JsonRootName("relatedexamples")
+/**
+ * Example Query: bhefjuhkynmbtg
+ *
+ * Response:
+ * 
+ * <pre>
+ * {@code
+ * <tips count='1'>
+ *   <tip text='Check your spelling, and use English' />
+ *  </tips>
+ *  }
+ * </pre>
+ */
+@JsonRootName("tips")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class RelatedExamples {
-
+public final class Tips {
     @JacksonXmlProperty(isAttribute = true)
     private int count;
 
-    @JsonProperty("relatedexample")
+    @JsonProperty("tip")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<RelatedExample> relatedExamples;
+    private List<Tip> tips;
 
     @SuppressWarnings("unused")
     public int getCount() {
@@ -31,12 +43,14 @@ final class RelatedExamples {
         this.count = count;
     }
 
-    public List<RelatedExample> getRelatedExamples() {
-        return Collections.unmodifiableList(relatedExamples);
+    @SuppressWarnings("unused")
+    public List<Tip> getTips() {
+        return Collections.unmodifiableList(tips);
     }
 
     @SuppressWarnings("unused")
-    public void setRelatedExamples(List<RelatedExample> relatedExamples) {
-        this.relatedExamples = new ArrayList<>(relatedExamples);
+    public void setTips(List<Tip> tips) {
+        this.tips = new ArrayList<>(tips);
     }
+
 }

@@ -1,21 +1,24 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 /**
+ * Example Query: ¿donde soy tu?
  *
- * <p>
- * Example Query: ¿donde soy tu?<br>
- * Result: {@code <languagemsg english='Wolfram|Alpha does not yet support Spanish.'
- *      other='Wolfram|Alpha todavía no entiende español.' />}
- * </p>
+ * Response:
+ * 
+ * <pre>
+ * {@code
+ * <languagemsg english='Wolfram|Alpha does not yet support Spanish.'
+ *      other='Wolfram|Alpha todavía no entiende español.' />
+ * }
+ * </pre>
  */
 @JsonRootName("langugemsg")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class LanguageMessage {
-
+public final class LanguageMessage {
     @JacksonXmlProperty(isAttribute = true)
     private String english;
 

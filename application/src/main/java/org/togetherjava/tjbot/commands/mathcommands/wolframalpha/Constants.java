@@ -2,10 +2,9 @@ package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.font.TextAttribute;
 import java.awt.image.ImageObserver;
 import java.net.http.HttpClient;
@@ -14,11 +13,6 @@ import java.util.Map;
 public enum Constants {
     ;
 
-    /**
-     * Starting part of a regular wolframalpha query link.
-     */
-    public static final String USER_ENDPOINT = "https://www.wolframalpha.com/input";
-    static final Logger logger = LoggerFactory.getLogger(WolframAlphaCommand.class);
     /**
      * Maximum Embeds that can be sent in a {@link WebhookMessageUpdateAction}
      */
@@ -38,19 +32,10 @@ public enum Constants {
 
     static final XmlMapper XML = new XmlMapper();
     static final int MAX_IMAGE_HEIGHT_PX = 400;
-    /**
-     * WolframAlpha text Color
-     */
-    static final Color WOLFRAM_ALPHA_TEXT_COLOR = Color.decode("#3C3C3C");
-    /**
-     * WolframAlpha Font
-     */
-    static final Font WOLFRAM_ALPHA_FONT = new Font("Times", Font.PLAIN, 15)
+    static final Color AMBIENT_COLOR = Color.decode("#3C3C3C");
+    static final Font AMBIENT_FONT = new Font("Times", Font.PLAIN, 15)
         .deriveFont(Map.of(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON));
-    /**
-     * Height of the unscaled text displayed in Font {@link #WOLFRAM_ALPHA_FONT}
-     */
-    static final int TEXT_HEIGHT = 20;
+    static final int AMBIENT_TEXT_HEIGHT = 20;
     static final int HTTP_STATUS_CODE_OK = 200;
     static final String QUERY_OPTION = "query";
     /**
@@ -61,5 +46,9 @@ public enum Constants {
      *      Reference</a>.
      */
     static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
-    static final HttpClient client = HttpClient.newHttpClient();
+    /**
+     * WolframAlpha API endpoint for regular users (web frontend).
+     */
+    public static final String USER_API_ENDPOINT = "https://www.wolframalpha.com/input";
+    static final HttpClient CLIENT = HttpClient.newHttpClient();
 }

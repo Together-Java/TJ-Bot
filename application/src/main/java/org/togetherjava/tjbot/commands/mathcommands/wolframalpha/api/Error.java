@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 
 @JsonRootName("error")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class Error {
+public final class Error {
     private int code;
     @JsonProperty("msg")
     private String message;

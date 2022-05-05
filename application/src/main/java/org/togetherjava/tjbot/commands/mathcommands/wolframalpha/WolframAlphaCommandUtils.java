@@ -5,19 +5,23 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.*;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,13 +30,16 @@ import java.util.stream.IntStream;
 enum WolframAlphaCommandUtils {
     ;
 
-    static byte[] imageToBytes(BufferedImage img) throws IOException {
+    private static final Logger LOGGER = LoggerFactory.getLogger(WolframAlphaCommandUtils.class);
+
+    static byte @NotNull [] imageToBytes(@NotNull RenderedImage img) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(img, "png", baos);
         return baos.toByteArray();
     }
 
-    static BufferedImage combineImages(List<BufferedImage> images, int height) {
+    static @NotNull BufferedImage combineImages(@NotNull Collection<? extends BufferedImage> images,
+            int height) {
         int width =
                 images.stream().mapToInt(BufferedImage::getWidth).max().orElse(Integer.MAX_VALUE);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
@@ -47,24 +54,24 @@ enum WolframAlphaCommandUtils {
         return image;
     }
 
-    static boolean compareImages(BufferedImage img1, BufferedImage img2) {
-        int width1 = img1.getWidth();
-        int height1 = img1.getHeight();
-        return width1 == img2.getWidth() && height1 == img2.getHeight()
-                && IntStream.range(0, width1)
-                    .mapToObj(x -> IntStream.range(0, height1)
-                        .anyMatch(y -> img1.getRGB(x, y) != img2.getRGB(x, y)))
+    static boolean compareImages(@NotNull BufferedImage first, @NotNull BufferedImage second) {
+        int firstWidth = first.getWidth();
+        int firstHeight = first.getHeight();
+        return firstWidth == second.getWidth() && firstHeight == second.getHeight()
+                && IntStream.range(0, firstWidth)
+                    .mapToObj(x -> IntStream.range(0, firstHeight)
+                        .anyMatch(y -> first.getRGB(x, y) != second.getRGB(x, y)))
                     .noneMatch(x -> x);
     }
 
-    static int getWidth(String header) {
-        return (int) Constants.WOLFRAM_ALPHA_FONT
+    static int getWidth(@NotNull String header) {
+        return (int) Constants.AMBIENT_FONT
             .getStringBounds(header, new FontRenderContext(new AffineTransform(), true, true))
             .getWidth();
     }
 
-    static String handleMisunderstoodQuery(QueryResult result) {
-        List<String> output = new ArrayList<>();
+    static @NotNull String handleMisunderstoodQuery(@NotNull QueryResult result) {
+        Collection<String> output = new ArrayList<>();
         output
             .add("The Wolfram|Alpha API was unable to produce a successful result. Visit the URI");
         Tips tips = result.getTips();
@@ -91,9 +98,9 @@ enum WolframAlphaCommandUtils {
         }
         DidYouMeans didYouMeans = result.getDidYouMeans();
         if (didYouMeans != null && didYouMeans.getCount() != 0) {
-            if (didYouMeans.getCount() == 1)
+            if (didYouMeans.getCount() == 1) {
                 output.add("Did you mean: " + didYouMeans.getDidYouMeans().get(0).getMessage());
-            else {
+            } else {
                 output.add("Did you mean \n" + didYouMeans.getDidYouMeans()
                     .stream()
                     .map(DidYouMean::getMessage)
@@ -118,9 +125,10 @@ enum WolframAlphaCommandUtils {
         return String.join("\n", output);
     }
 
-    static String handleError(QueryResult result) {
-        Error error = result.getErrorTag();
-        Constants.logger.error(
+    static @NotNull String handleError(@NotNull QueryResult result) {
+        org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error error =
+                result.getErrorTag();
+        LOGGER.error(
                 "Error getting response from Wolfram Alpha API: Error Code: {} Error Message: {}",
                 error.getCode(), error.getMessage());
         return "An error occurred while getting response from the Wolfram|Alpha API. Check the URI";
@@ -128,30 +136,23 @@ enum WolframAlphaCommandUtils {
 
     static @NotNull Optional<QueryResult> parseQuery(@NotNull HttpResponse<String> response,
             @NotNull WebhookMessageUpdateAction<Message> action) {
-        QueryResult result;
         try {
-            Files.writeString(Path
-                .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\responsebody.xml"),
-                    response.body());
-            result = Constants.XML.readValue(response.body(), QueryResult.class);
-
+            return Optional.of(Constants.XML.readValue(response.body(), QueryResult.class));
         } catch (IOException e) {
             action.setContent("Unexpected response from WolframAlpha API").queue();
-            Constants.logger.error("Unable to deserialize the class ", e);
+            LOGGER.error("Unable to deserialize the class ", e);
             return Optional.empty();
         }
-        return Optional.of(result);
     }
 
     static @NotNull String handleSuccessfulResult(@NotNull QueryResult result,
             WebhookMessageUpdateAction<Message> action, MessageEmbed embed) {
-
         int filesAttached = 0;
         int resultHeight = 0;
         EmbedBuilder embedBuilder = new EmbedBuilder();
-        List<MessageEmbed> embeds = new ArrayList<>();
+        Collection<MessageEmbed> embeds = new ArrayList<>();
         embeds.add(embed);
-        List<BufferedImage> images = new ArrayList<>();
+        Collection<BufferedImage> images = new ArrayList<>();
         List<Pod> pods = result.getPods();
         for (Pod pod : pods) {
             List<SubPod> subPods = pod.getSubPods();
@@ -159,26 +160,27 @@ enum WolframAlphaCommandUtils {
             for (SubPod subPod : subPods) {
                 WolframAlphaImage image = subPod.getImage();
                 try {
-
                     String source = image.getSource();
                     String header = pod.getTitle();
                     int width = (firstSubPod ? Math.max(getWidth(header), image.getWidth())
                             : image.getWidth()) + Constants.IMAGE_MARGIN_WIDTH;
                     int height = image.getHeight();
-                    if (firstSubPod)
-                        height += Constants.TEXT_HEIGHT;
+                    if (firstSubPod) {
+                        height += Constants.AMBIENT_TEXT_HEIGHT;
+                    }
                     BufferedImage readImage =
                             new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
                     Graphics graphics = readImage.getGraphics();
                     if (firstSubPod) {
-                        graphics.setFont(Constants.WOLFRAM_ALPHA_FONT);
+                        graphics.setFont(Constants.AMBIENT_FONT);
                         graphics.setColor(Color.WHITE);
-                        graphics.setColor(Constants.WOLFRAM_ALPHA_TEXT_COLOR);
+                        graphics.setColor(Constants.AMBIENT_COLOR);
                         graphics.drawString(header, Constants.IMAGE_MARGIN_WIDTH,
                                 Constants.IMAGE_MARGIN_HEIGHT);
                     }
                     graphics.drawImage(ImageIO.read(new URL(source)), Constants.IMAGE_MARGIN_WIDTH,
-                            firstSubPod ? Constants.TEXT_HEIGHT : 0, Constants.IMAGE_OBSERVER);
+                            firstSubPod ? Constants.AMBIENT_TEXT_HEIGHT : 0,
+                            Constants.IMAGE_OBSERVER);
 
                     if (filesAttached == Constants.MAX_EMBEDS) {
                         // noinspection ResultOfMethodCallIgnored
@@ -186,24 +188,25 @@ enum WolframAlphaCommandUtils {
                         return "Too many images. Visit the URI";
                     }
 
-
                     if (resultHeight + image.getHeight() > Constants.MAX_IMAGE_HEIGHT_PX) {
                         BufferedImage combinedImage =
                                 WolframAlphaCommandUtils.combineImages(images, resultHeight);
                         images.clear();
+                        filesAttached++;
                         action = action.addFile(
                                 WolframAlphaCommandUtils.imageToBytes(combinedImage),
-                                "result%d.png".formatted(++filesAttached));
+                                "result%d.png".formatted(filesAttached));
                         resultHeight = 0;
                         embeds.add(embedBuilder
                             .setImage("attachment://result%d.png".formatted(filesAttached))
                             .build());
                     } else if (pod == pods.get(pods.size() - 1)
                             && subPod == subPods.get(subPods.size() - 1) && !images.isEmpty()) {
+                        filesAttached++;
                         action = action.addFile(
                                 WolframAlphaCommandUtils.imageToBytes(WolframAlphaCommandUtils
                                     .combineImages(images, resultHeight + image.getHeight())),
-                                "result%d.png".formatted(++filesAttached));
+                                "result%d.png".formatted(filesAttached));
                         images.clear();
                         embeds.add(embedBuilder
                             .setImage("attachment://result%d.png".formatted(filesAttached))
@@ -213,13 +216,14 @@ enum WolframAlphaCommandUtils {
                     images.add(readImage);
                     firstSubPod = false;
                 } catch (IOException e) {
-                    Constants.logger.error("Failed to read image {} from the WolframAlpha response",
-                            image, e);
+                    LOGGER.error("Failed to read image {} from the WolframAlpha response", image,
+                            e);
                     return "Unable to generate message based on the WolframAlpha response";
                 }
             }
         }
         // noinspection ResultOfMethodCallIgnored
+        // FIXME This wont work at all if it got reassigned or similar, has to be returned or sth
         action.setEmbeds(embeds);
         return "";
     }

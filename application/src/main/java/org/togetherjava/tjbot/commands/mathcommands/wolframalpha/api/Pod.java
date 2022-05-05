@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +12,7 @@ import java.util.List;
 
 @JsonRootName("pod")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class Pod {
+public final class Pod {
     @JacksonXmlProperty(isAttribute = true)
     private String title;
     @JacksonXmlProperty(isAttribute = true)

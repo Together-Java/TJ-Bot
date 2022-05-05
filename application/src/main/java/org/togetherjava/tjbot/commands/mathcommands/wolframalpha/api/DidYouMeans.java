@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,17 +11,21 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * <p>
- * Example Query: btuyghe <br>
- * Result: {@code <didyoumeans count='1'>
+ * Example Query: btuyghe
+ *
+ * Response:
+ * 
+ * <pre>
+ * {@code
+ * <didyoumeans count='1'>
  *   <didyoumean score='0.415939' level='medium'>tighe</didyoumean>
- *  </didyoumeans> }
- * </p>
+ *  </didyoumeans>
+ * }
+ * </pre>
  */
 @JsonRootName("didyoumeans")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class DidYouMeans {
-
+public final class DidYouMeans {
     @JacksonXmlProperty(isAttribute = true)
     private int count;
 

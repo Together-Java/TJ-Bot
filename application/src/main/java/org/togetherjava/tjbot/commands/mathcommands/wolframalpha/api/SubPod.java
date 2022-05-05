@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,8 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @JsonRootName("subpod")
 @JsonIgnoreProperties(ignoreUnknown = true)
-
-final class SubPod {
+public final class SubPod {
     @JacksonXmlProperty(isAttribute = true)
     private String title;
 

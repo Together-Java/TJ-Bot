@@ -30,7 +30,7 @@ public final class Config {
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
-	private final String wolframAlphaAppId;
+    private final String wolframAlphaAppId;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)

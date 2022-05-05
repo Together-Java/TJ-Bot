@@ -1,20 +1,24 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 /**
- * <p>
- * Example Query: Operating Systems <br>
- * Result: {@code <futuretopic topic='Operating Systems'
- *      msg='Development of this topic is under investigation...' />}
- * </p>
+ * Example Query: Operating Systems
+ *
+ * Response:
+ * 
+ * <pre>
+ * {@code
+ * <futuretopic topic='Operating Systems'
+ *      msg='Development of this topic is under investigation...' />
+ * }
+ * </pre>
  */
 @JsonRootName("futuretopic")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class FutureTopic {
-
+public final class FutureTopic {
     @JacksonXmlProperty(isAttribute = true)
     private String topic;
 

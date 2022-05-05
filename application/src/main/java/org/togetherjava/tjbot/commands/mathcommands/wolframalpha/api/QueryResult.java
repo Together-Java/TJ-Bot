@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 @JsonRootName("queryresult")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class QueryResult {
+public final class QueryResult {
     private static final XmlMapper XML = new XmlMapper();
 
     @JacksonXmlProperty(isAttribute = true)
@@ -51,7 +51,7 @@ final class QueryResult {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<Pod> pods;
     @JsonIgnore
-    private Error errorTag;
+    private org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error errorTag;
 
     public boolean isSuccess() {
         return success;
@@ -213,7 +213,7 @@ final class QueryResult {
     }
 
     @SuppressWarnings("unused")
-    public Error getErrorTag() {
+    public org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error getErrorTag() {
         return errorTag;
     }
 
@@ -233,7 +233,8 @@ final class QueryResult {
             return;
         }
         if (value instanceof Map) {
-            errorTag = XML.convertValue(value, Error.class);
+            errorTag = XML.convertValue(value,
+                    org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error.class);
             return;
         }
         throw new IllegalArgumentException("Unsupported error format");

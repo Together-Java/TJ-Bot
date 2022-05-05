@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -6,8 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlText;
 
 @JsonRootName("didyoumean")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class DidYouMean {
-
+public final class DidYouMean {
     @JacksonXmlText
     private String message;
 

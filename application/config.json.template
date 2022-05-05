@@ -32,5 +32,6 @@
        "hostBlacklist": ["bit.ly"],
        "suspiciousHostKeywords": ["discord", "nitro", "premium"],
        "isHostSimilarToKeywordDistanceThreshold": 2
-   }
+   },
+   "wolframAlphaAppId": "79J52T-6239TVXHR7"
 }
