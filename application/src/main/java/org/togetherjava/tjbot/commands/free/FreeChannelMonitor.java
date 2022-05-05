@@ -269,7 +269,7 @@ public final class FreeChannelMonitor {
      * {@link FreeChannelMonitor#isChannelInactive(TextChannel, Instant)}.
      * <p>
      * This method is run automatically during startup and on a set schedule, as defined in
-     * {@link org.togetherjava.tjbot.config.FreeCommandConfig}.
+     * {@link FreeCommandConfig}.
      *
      * @param guild the guild for which to test the channel statuses of.
      * @return all inactive channels that have been updated
