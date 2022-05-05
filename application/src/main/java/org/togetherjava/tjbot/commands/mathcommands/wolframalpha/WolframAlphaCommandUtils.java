@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -11,8 +12,10 @@ import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.*;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.font.FontRenderContext;
+import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
@@ -20,17 +23,28 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 enum WolframAlphaCommandUtils {
     ;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(WolframAlphaCommandUtils.class);
+
+    /**
+     * Maximum Embeds that can be sent in a {@link WebhookMessageUpdateAction}
+     */
+    private static final int MAX_EMBEDS = 10;
+    private static final int IMAGE_MARGIN_WIDTH_PX = 10;
+    private static final int IMAGE_MARGIN_HEIGHT_PX = 15;
+    private static final int MAX_IMAGE_HEIGHT_PX = 400;
+
+    private static final Color AMBIENT_COLOR = Color.decode("#3C3C3C");
+    private static final Font AMBIENT_FONT = new Font("Times", Font.PLAIN, 15)
+        .deriveFont(Map.of(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON));
+    private static final int AMBIENT_TEXT_HEIGHT = 20;
+
+    private static final XmlMapper XML = new XmlMapper();
 
     static byte @NotNull [] imageToBytes(@NotNull RenderedImage img) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -48,8 +62,8 @@ enum WolframAlphaCommandUtils {
         imgGraphics.fillRect(0, 0, width, height);
         int resultHeight = 0;
         for (BufferedImage img : images) {
-            imgGraphics.drawImage(img, 0, resultHeight, Constants.IMAGE_OBSERVER);
-            resultHeight += img.getHeight(Constants.IMAGE_OBSERVER);
+            imgGraphics.drawImage(img, 0, resultHeight, null);
+            resultHeight += img.getHeight(null);
         }
         return image;
     }
@@ -65,7 +79,7 @@ enum WolframAlphaCommandUtils {
     }
 
     static int getWidth(@NotNull String header) {
-        return (int) Constants.AMBIENT_FONT
+        return (int) AMBIENT_FONT
             .getStringBounds(header, new FontRenderContext(new AffineTransform(), true, true))
             .getWidth();
     }
@@ -137,7 +151,7 @@ enum WolframAlphaCommandUtils {
     static @NotNull Optional<QueryResult> parseQuery(@NotNull HttpResponse<String> response,
             @NotNull WebhookMessageUpdateAction<Message> action) {
         try {
-            return Optional.of(Constants.XML.readValue(response.body(), QueryResult.class));
+            return Optional.of(XML.readValue(response.body(), QueryResult.class));
         } catch (IOException e) {
             action.setContent("Unexpected response from WolframAlpha API").queue();
             LOGGER.error("Unable to deserialize the class ", e);
@@ -163,32 +177,30 @@ enum WolframAlphaCommandUtils {
                     String source = image.getSource();
                     String header = pod.getTitle();
                     int width = (firstSubPod ? Math.max(getWidth(header), image.getWidth())
-                            : image.getWidth()) + Constants.IMAGE_MARGIN_WIDTH;
+                            : image.getWidth()) + IMAGE_MARGIN_WIDTH_PX;
                     int height = image.getHeight();
                     if (firstSubPod) {
-                        height += Constants.AMBIENT_TEXT_HEIGHT;
+                        height += AMBIENT_TEXT_HEIGHT;
                     }
                     BufferedImage readImage =
                             new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
                     Graphics graphics = readImage.getGraphics();
                     if (firstSubPod) {
-                        graphics.setFont(Constants.AMBIENT_FONT);
+                        graphics.setFont(AMBIENT_FONT);
                         graphics.setColor(Color.WHITE);
-                        graphics.setColor(Constants.AMBIENT_COLOR);
-                        graphics.drawString(header, Constants.IMAGE_MARGIN_WIDTH,
-                                Constants.IMAGE_MARGIN_HEIGHT);
+                        graphics.setColor(AMBIENT_COLOR);
+                        graphics.drawString(header, IMAGE_MARGIN_WIDTH_PX, IMAGE_MARGIN_HEIGHT_PX);
                     }
-                    graphics.drawImage(ImageIO.read(new URL(source)), Constants.IMAGE_MARGIN_WIDTH,
-                            firstSubPod ? Constants.AMBIENT_TEXT_HEIGHT : 0,
-                            Constants.IMAGE_OBSERVER);
+                    graphics.drawImage(ImageIO.read(new URL(source)), IMAGE_MARGIN_WIDTH_PX,
+                            firstSubPod ? AMBIENT_TEXT_HEIGHT : 0, null);
 
-                    if (filesAttached == Constants.MAX_EMBEDS) {
+                    if (filesAttached == MAX_EMBEDS) {
                         // noinspection ResultOfMethodCallIgnored
                         action.setEmbeds(embeds);
                         return "Too many images. Visit the URI";
                     }
 
-                    if (resultHeight + image.getHeight() > Constants.MAX_IMAGE_HEIGHT_PX) {
+                    if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
                         BufferedImage combinedImage =
                                 WolframAlphaCommandUtils.combineImages(images, resultHeight);
                         images.clear();

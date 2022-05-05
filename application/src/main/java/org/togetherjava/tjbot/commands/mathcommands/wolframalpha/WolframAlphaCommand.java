@@ -16,9 +16,10 @@ import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.QueryResult
 import org.togetherjava.tjbot.config.Config;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -27,6 +28,20 @@ import java.util.Optional;
  */
 public final class WolframAlphaCommand extends SlashCommandAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(WolframAlphaCommand.class);
+    private static final String QUERY_OPTION = "query";
+    /**
+     * WolframAlpha API endpoint to connect to.
+     *
+     * @see <a href=
+     *      "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
+     *      Reference</a>.
+     */
+    private static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
+    /**
+     * WolframAlpha API endpoint for regular users (web frontend).
+     */
+    private static final String USER_API_ENDPOINT = "https://www.wolframalpha.com/input";
+    private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     private final String appId;
 
@@ -38,8 +53,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     public WolframAlphaCommand(@NotNull Config config) {
         super("wolfram-alpha", "Renders mathematical queries using WolframAlpha",
                 SlashCommandVisibility.GUILD);
-        getData().addOption(OptionType.STRING, Constants.QUERY_OPTION,
-                "the query to send to WolframAlpha", true);
+        getData().addOption(OptionType.STRING, QUERY_OPTION, "the query to send to WolframAlpha",
+                true);
         appId = config.getWolframAlphaAppId();
     }
 
@@ -48,24 +63,20 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         // The API calls take a bit
         event.deferReply().queue();
 
-        String query =
-                Objects.requireNonNull(event.getOption(Constants.QUERY_OPTION)).getAsString();
+        String query = event.getOption(QUERY_OPTION).getAsString();
 
         MessageEmbed uriEmbed = new EmbedBuilder()
             .setTitle(query + "- Wolfram|Alpha",
-                    UrlBuilder.fromString(Constants.USER_API_ENDPOINT)
+                    UrlBuilder.fromString(USER_API_ENDPOINT)
                         .addParameter("i", query)
                         .toUri()
                         .toString())
-            .setDescription(
-                    "Wolfram|Alpha brings expert-level knowledge and capabilities to the broadest possible range of people-spanning all professions and education levels.")
             .build();
 
-        WebhookMessageUpdateAction<Message> action =
-                event.getHook().editOriginal("").setEmbeds(uriEmbed);
+        WebhookMessageUpdateAction<Message> action = event.getHook().editOriginalEmbeds(uriEmbed);
 
         HttpRequest request = HttpRequest
-            .newBuilder(UrlBuilder.fromString(Constants.API_ENDPOINT)
+            .newBuilder(UrlBuilder.fromString(API_ENDPOINT)
                 .addParameter("appid", appId)
                 .addParameter("format", "image,plaintext")
                 .addParameter("input", query)
@@ -73,21 +84,21 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             .GET()
             .build();
 
-        Optional<HttpResponse<String>> optResponse = getResponse(request, action);
-        if (optResponse.isEmpty()) {
+        Optional<HttpResponse<String>> maybeResponse = getResponse(request, action);
+        if (maybeResponse.isEmpty()) {
             return;
         }
-        HttpResponse<String> response = optResponse.get();
-        Optional<QueryResult> optResult = WolframAlphaCommandUtils.parseQuery(response, action);
-        if (optResult.isEmpty()) {
+        HttpResponse<String> response = maybeResponse.orElseThrow();
+        Optional<QueryResult> maybeResult = WolframAlphaCommandUtils.parseQuery(response, action);
+        if (maybeResult.isEmpty()) {
             return;
         }
-        QueryResult result = optResult.get();
+        QueryResult result = maybeResult.orElseThrow();
         action = action.setContent("Computed in:" + result.getTiming());
         action.setContent(switch (ResultStatus.getResultStatus(result)) {
             case ERROR -> WolframAlphaCommandUtils.handleError(result);
             case NOT_SUCCESS -> WolframAlphaCommandUtils.handleMisunderstoodQuery(result);
-            case SUCCESS -> "Here are the results of your query, Check the link for the complete results\n"
+            case SUCCESS -> "Check the above link for the complete results\n"
                     + (result.getTimedOutPods().isEmpty() ? ""
                             : "Some pods have timed out. Visit the URI")
                     + "\n"
@@ -99,7 +110,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             @NotNull WebhookMessageUpdateAction<Message> action) {
         HttpResponse<String> response;
         try {
-            response = Constants.CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
             action.setContent("Unable to get a response from WolframAlpha API").queue();
             LOGGER.warn("Could not get the response from the server", e);
@@ -111,10 +122,10 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             return Optional.empty();
         }
 
-        if (response.statusCode() != Constants.HTTP_STATUS_CODE_OK) {
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
             action.setContent("The response' status code was incorrect").queue();
             LOGGER.warn("Unexpected status code: Expected: {} Actual: {}",
-                    Constants.HTTP_STATUS_CODE_OK, response.statusCode());
+                    HttpURLConnection.HTTP_OK, response.statusCode());
             return Optional.empty();
         }
         return Optional.of(response);
