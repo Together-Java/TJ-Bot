@@ -36,13 +36,16 @@ import java.util.regex.Pattern;
  */
 
 public final class TeXCommand extends SlashCommandAdapter {
-    private static final String LATEX_OPTION = "latex";
+    static final String LATEX_OPTION = "latex";
     // Matches regions between two dollars, like '$foo$'.
     private static final String MATH_REGION = "(\\$[^$]+\\$)";
     private static final String TEXT_REGION = "([^$]+)";
     private static final Pattern INLINE_LATEX_REPLACEMENT =
             Pattern.compile(MATH_REGION + "|" + TEXT_REGION);
     private static final String RENDERING_ERROR = "There was an error generating the image";
+    static final String BAD_LATEX_ERROR_PREFIX = "That is an invalid latex: ";
+    static final String INVALID_INLINE_FORMAT_ERROR_MESSAGE =
+            "The amount of $-symbols must be divisible by two. Did you forget to close an expression?";
     private static final float DEFAULT_IMAGE_SIZE = 40.0F;
     private static final Color BACKGROUND_COLOR = Color.decode("#36393F");
     private static final Color FOREGROUND_COLOR = Color.decode("#FFFFFF");
@@ -70,7 +73,7 @@ public final class TeXCommand extends SlashCommandAdapter {
             }
             formula = new TeXFormula(latex);
         } catch (ParseException e) {
-            event.reply("That is an invalid latex: " + e.getMessage()).setEphemeral(true).queue();
+            event.reply(BAD_LATEX_ERROR_PREFIX + e.getMessage()).setEphemeral(true).queue();
             return;
         }
 
@@ -137,8 +140,7 @@ public final class TeXCommand extends SlashCommandAdapter {
     @NotNull
     private String convertInlineLatexToFull(@NotNull String latex) {
         if (isInvalidInlineFormat(latex)) {
-            throw new ParseException(
-                    "The amount of $-symbols must be divisible by two. Did you forget to close an expression? ");
+            throw new ParseException(INVALID_INLINE_FORMAT_ERROR_MESSAGE);
         }
 
         Matcher matcher = INLINE_LATEX_REPLACEMENT.matcher(latex);
