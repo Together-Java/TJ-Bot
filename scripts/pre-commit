@@ -22,7 +22,11 @@ echo "****Running pre-commit hooks****"
 # Hence, the following pop of the stash must be guarded (see https://stackoverflow.com/a/20480591/2411243).
 
 # Mini commit for staged changes, so that we can stash away unstaged in the next step (bypass hook with "no-verify" to avoid recursion)
-git commit --no-verify --message "WIP"
+if ! git commit --no-verify --message "WIP"; then
+  # Commit failed (for example if there is nothing staged), early-out
+  exit $?
+fi
+
 # Put unstaged away
 create_stash
 # Get back staged changes
