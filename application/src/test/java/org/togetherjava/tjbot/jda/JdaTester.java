@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
@@ -20,6 +21,7 @@ import net.dv8tion.jda.internal.entities.*;
 import net.dv8tion.jda.internal.requests.Requester;
 import net.dv8tion.jda.internal.requests.restaction.AuditableRestActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.MessageActionImpl;
+import net.dv8tion.jda.internal.requests.restaction.WebhookMessageUpdateActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
 import org.jetbrains.annotations.NotNull;
@@ -83,8 +85,11 @@ public final class JdaTester {
     private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
     private final MessageActionImpl messageAction;
+    private final WebhookMessageUpdateActionImpl webhookMessageUpdateAction;
     private final TextChannelImpl textChannel;
     private final PrivateChannelImpl privateChannel;
+    private final InteractionHook interactionHook;
+    private final ReplyCallbackAction replyCallbackAction;
 
     /**
      * Creates a new instance. The instance uses a fresh and isolated mocked JDA setup.
@@ -108,6 +113,8 @@ public final class JdaTester {
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
         privateChannel = spy(new PrivateChannelImpl(jda, PRIVATE_CHANNEL_ID, user));
         messageAction = mock(MessageActionImpl.class);
+        webhookMessageUpdateAction = mock(WebhookMessageUpdateActionImpl.class);
+        replyCallbackAction = mock(ReplyCallbackAction.class);
         EntityBuilder entityBuilder = mock(EntityBuilder.class);
         Role everyoneRole = new RoleImpl(GUILD_ID, guild);
 
@@ -149,12 +156,22 @@ public final class JdaTester {
         doNothing().when(auditableRestAction).queue();
 
         doNothing().when(messageAction).queue();
+        doNothing().when(webhookMessageUpdateAction).queue();
+        doReturn(webhookMessageUpdateAction).when(webhookMessageUpdateAction)
+            .setActionRow(any(ItemComponent.class));
 
         doReturn(everyoneRole).when(guild).getPublicRole();
         doReturn(selfMember).when(guild).getMember(selfUser);
         doReturn(member).when(guild).getMember(not(eq(selfUser)));
 
         doReturn(null).when(textChannel).retrieveMessageById(any());
+
+        interactionHook = mock(InteractionHook.class);
+        when(interactionHook.editOriginal(anyString())).thenReturn(webhookMessageUpdateAction);
+        when(interactionHook.editOriginal(any(Message.class)))
+            .thenReturn(webhookMessageUpdateAction);
+        when(interactionHook.editOriginal(any(byte[].class), any(), any()))
+            .thenReturn(webhookMessageUpdateAction);
     }
 
     /**
@@ -249,6 +266,19 @@ public final class JdaTester {
      */
     public @NotNull ReplyCallbackAction getReplyActionMock() {
         return replyAction;
+    }
+
+    /**
+     * Gets the Mockito mock used as universal interaction hook by all mocks created by this tester
+     * instance.
+     * <p>
+     * For example the events created by {@link #createSlashCommandInteractionEvent(SlashCommand)}
+     * will return this mock on several of their methods.
+     *
+     * @return the interaction hook mock used by this tester
+     */
+    public @NotNull InteractionHook getInteractionHookMock() {
+        return interactionHook;
     }
 
     /**
@@ -371,6 +401,10 @@ public final class JdaTester {
         doReturn(textChannel).when(interaction).getTextChannel();
         doReturn(textChannel).when(interaction).getGuildChannel();
         doReturn(privateChannel).when(interaction).getPrivateChannel();
+
+        doReturn(interactionHook).when(interaction).getHook();
+        doReturn(replyCallbackAction).when(interaction).deferReply();
+        doReturn(replyCallbackAction).when(interaction).deferReply(anyBoolean());
     }
 
     private void mockButtonClickEvent(@NotNull ButtonInteractionEvent event) {
