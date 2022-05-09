@@ -27,7 +27,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  * Reminders can be set by using {@link RemindCommand}.
  */
 public final class RemindRoutine implements Routine {
-    private static final Logger logger = LoggerFactory.getLogger(RemindRoutine.class);
+    static final Logger logger = LoggerFactory.getLogger(RemindRoutine.class);
     private static final Color AMBIENT_COLOR = Color.decode("#F7F492");
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private final Database database;

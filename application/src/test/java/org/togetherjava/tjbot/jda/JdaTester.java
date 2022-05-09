@@ -133,6 +133,8 @@ public final class JdaTester {
         doReturn(selfUser).when(jda).getSelfUser();
         when(jda.getGuildChannelById(anyLong())).thenReturn(textChannel);
         when(jda.getTextChannelById(anyLong())).thenReturn(textChannel);
+        when(jda.getChannelById(ArgumentMatchers.<Class<MessageChannel>>any(), anyLong()))
+            .thenReturn(textChannel);
         when(jda.getPrivateChannelById(anyLong())).thenReturn(privateChannel);
         when(jda.getGuildById(anyLong())).thenReturn(guild);
         when(jda.getEntityBuilder()).thenReturn(entityBuilder);
