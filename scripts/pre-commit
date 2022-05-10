@@ -22,9 +22,11 @@ echo "****Running pre-commit hooks****"
 # Hence, the following pop of the stash must be guarded (see https://stackoverflow.com/a/20480591/2411243).
 
 # Mini commit for staged changes, so that we can stash away unstaged in the next step (bypass hook with "no-verify" to avoid recursion)
-if ! git commit --no-verify --message "WIP"; then
+git commit --no-verify --message "WIP"
+commitExitCode=$?
+if [ "$commitExitCode" -ne 0 ]; then
   # Commit failed (for example if there is nothing staged), early-out
-  exit $?
+  exit "$commitExitCode"
 fi
 
 # Put unstaged away
@@ -34,10 +36,12 @@ git reset --soft HEAD^
 
 # Apply spotless on the staged changes only (rest has been put away)
 echo "**Applying spotless**"
-if ! ./gradlew spotlessApply; then
+./gradlew spotlessApply
+spotlessExitCode=$?
+if [ "$spotlessExitCode" -ne 0 ]; then
   # Spotless failed, restore unstaged
   pop_stash
-  exit $?
+  exit "$spotlessExitCode"
 fi
 
 # Spotless possibly found changes, apply them
