@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * See the Wolfram Alpha API.
+ */
 @JsonRootName("pod")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class Pod {

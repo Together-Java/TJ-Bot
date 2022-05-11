@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+/**
+ * See the Wolfram Alpha API.
+ */
 @JsonRootName("img")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class WolframAlphaImage {

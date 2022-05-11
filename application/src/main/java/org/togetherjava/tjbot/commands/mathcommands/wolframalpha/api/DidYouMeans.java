@@ -31,7 +31,7 @@ public final class DidYouMeans {
 
     @JsonProperty("didyoumean")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<DidYouMean> didYouMeans;
+    private List<DidYouMean> didYouMeanTips;
 
     @SuppressWarnings("unused")
     public int getCount() {
@@ -43,13 +43,13 @@ public final class DidYouMeans {
         this.count = count;
     }
 
-    public List<DidYouMean> getDidYouMeans() {
-        return Collections.unmodifiableList(didYouMeans);
+    public List<DidYouMean> getDidYouMeanTips() {
+        return Collections.unmodifiableList(didYouMeanTips);
     }
 
     @SuppressWarnings("unused")
-    public void setDidYouMeans(List<DidYouMean> didYouMeans) {
-        this.didYouMeans = new ArrayList<>(didYouMeans);
+    public void setDidYouMeanTips(List<DidYouMean> didYouMeanTips) {
+        this.didYouMeanTips = new ArrayList<>(didYouMeanTips);
     }
 
 

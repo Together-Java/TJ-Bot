@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+/**
+ * See the Wolfram Alpha API.
+ */
 @JsonRootName("subpod")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class SubPod {

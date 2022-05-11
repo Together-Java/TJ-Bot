@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
+/**
+ * See the Wolfram Alpha API.
+ */
 @JsonRootName("error")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class Error {

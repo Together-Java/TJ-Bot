@@ -10,6 +10,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * See the Wolfram Alpha API.
+ */
 @JsonRootName("queryresult")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class QueryResult {
@@ -217,6 +220,12 @@ public final class QueryResult {
         return errorTag;
     }
 
+    /**
+     * Sets the two error values.
+     *
+     * @param name must be "error", otherwise ignored
+     * @param value the value to set, either a string for the attribute or a map for the tag
+     */
     @JsonAnySetter
     @SuppressWarnings("ChainOfInstanceofChecks")
     public void setError(String name, Object value) {

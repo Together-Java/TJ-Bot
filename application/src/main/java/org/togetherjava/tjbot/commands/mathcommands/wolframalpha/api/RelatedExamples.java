@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
+/**
+ * See the Wolfram Alpha API.
+ */
 @JsonRootName("relatedexamples")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class RelatedExamples {
@@ -18,7 +21,7 @@ public final class RelatedExamples {
 
     @JsonProperty("relatedexample")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<RelatedExample> relatedExamples;
+    private List<RelatedExample> relatedExampleTips;
 
     @SuppressWarnings("unused")
     public int getCount() {
@@ -30,12 +33,12 @@ public final class RelatedExamples {
         this.count = count;
     }
 
-    public List<RelatedExample> getRelatedExamples() {
-        return Collections.unmodifiableList(relatedExamples);
+    public List<RelatedExample> getRelatedExampleTips() {
+        return Collections.unmodifiableList(relatedExampleTips);
     }
 
     @SuppressWarnings("unused")
-    public void setRelatedExamples(List<RelatedExample> relatedExamples) {
-        this.relatedExamples = new ArrayList<>(relatedExamples);
+    public void setRelatedExampleTips(List<RelatedExample> relatedExampleTips) {
+        this.relatedExampleTips = new ArrayList<>(relatedExampleTips);
     }
 }

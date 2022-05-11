@@ -31,7 +31,7 @@ public final class Tips {
 
     @JsonProperty("tip")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<Tip> tips;
+    private List<Tip> tipList;
 
     @SuppressWarnings("unused")
     public int getCount() {
@@ -44,13 +44,13 @@ public final class Tips {
     }
 
     @SuppressWarnings("unused")
-    public List<Tip> getTips() {
-        return Collections.unmodifiableList(tips);
+    public List<Tip> getTipList() {
+        return Collections.unmodifiableList(tipList);
     }
 
     @SuppressWarnings("unused")
-    public void setTips(List<Tip> tips) {
-        this.tips = new ArrayList<>(tips);
+    public void setTipList(List<Tip> tipList) {
+        this.tipList = new ArrayList<>(tipList);
     }
 
 }
