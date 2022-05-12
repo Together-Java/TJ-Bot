@@ -54,7 +54,7 @@ public final class QueryResult {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<Pod> pods;
     @JsonIgnore
-    private org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error errorTag;
+    private Error errorTag;
 
     public boolean isSuccess() {
         return success;
@@ -242,8 +242,7 @@ public final class QueryResult {
             return;
         }
         if (value instanceof Map) {
-            errorTag = XML.convertValue(value,
-                    org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error.class);
+            errorTag = XML.convertValue(value, Error.class);
             return;
         }
         throw new IllegalArgumentException("Unsupported error format");
