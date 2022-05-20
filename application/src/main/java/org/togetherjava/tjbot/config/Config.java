@@ -30,6 +30,7 @@ public final class Config {
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
+    private final String wolframAlphaAppId;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -46,7 +47,8 @@ public final class Config {
             @JsonProperty("helpChannelPattern") String helpChannelPattern,
             @JsonProperty("suggestions") SuggestionsConfig suggestions,
             @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
-            @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker) {
+            @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
+            @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -61,6 +63,7 @@ public final class Config {
         this.suggestions = suggestions;
         this.quarantinedRolePattern = quarantinedRolePattern;
         this.scamBlocker = scamBlocker;
+        this.wolframAlphaAppId = wolframAlphaAppId;
     }
 
     /**
@@ -206,5 +209,14 @@ public final class Config {
      */
     public @NotNull ScamBlockerConfig getScamBlocker() {
         return scamBlocker;
+    }
+
+    /**
+     * Gets the application ID used to connect to the WolframAlpha API.
+     *
+     * @return the application ID for the WolframAlpha API
+     */
+    public @NotNull String getWolframAlphaAppId() {
+        return wolframAlphaAppId;
     }
 }

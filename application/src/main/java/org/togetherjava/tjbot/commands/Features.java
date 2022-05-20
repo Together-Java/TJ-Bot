@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.commands.free.AutoFreeRoutine;
 import org.togetherjava.tjbot.commands.free.FreeChannelMonitor;
 import org.togetherjava.tjbot.commands.free.FreeCommand;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
@@ -105,6 +106,7 @@ public enum Features {
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
+        features.add(new WolframAlphaCommand(config));
 
         // Mixtures
         features.add(new FreeCommand(config, freeChannelMonitor));
