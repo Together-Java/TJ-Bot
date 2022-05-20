@@ -21,6 +21,14 @@ sonarqube {
     }
 }
 
+// Install git hooks
+task installLocalGitHook(type: Copy) {
+    from new File(rootProject.rootDir, 'scripts/pre-commit')
+    into new File(rootProject.rootDir, '.git/hooks')
+    fileMode 0775
+}
+build.dependsOn installLocalGitHook
+
 subprojects {
     apply plugin: "java"
     apply plugin: "com.diffplug.spotless"
@@ -53,9 +61,6 @@ subprojects {
 
     def compileTasks = {
         options.encoding = 'UTF-8'
-
-        // Makes spotlessApply task run on every compile/build.
-        dependsOn 'spotlessApply'
 
         // Nails the Java-Version of every Subproject
         sourceCompatibility = JavaVersion.VERSION_17
