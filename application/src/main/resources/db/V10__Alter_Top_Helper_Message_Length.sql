@@ -1,0 +1,1 @@
+ALTER TABLE help_channel_messages ADD message_length BIGINT DEFAULT 1 NOT NULL;

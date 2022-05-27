@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
+import java.math.BigDecimal;
 import java.time.*;
 import java.time.format.TextStyle;
 import java.util.*;
@@ -38,7 +39,7 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 /**
  * Command that displays the top helpers of a given time range.
  * <p>
- * Top helpers are measured by their message count in help channels, as set by
+ * Top helpers are measured by their message length in help channels, as set by
  * {@link TopHelpersMessageListener}.
  */
 public final class TopHelpersCommand extends SlashCommandAdapter {
@@ -53,7 +54,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     /**
      * Creates a new instance.
      *
-     * @param database the database containing the message counts of top helpers
+     * @param database the database containing the message records of top helpers
      * @param config the config to use for this
      */
     public TopHelpersCommand(@NotNull Database database, @NotNull Config config) {
@@ -138,12 +139,13 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
 
     private @NotNull List<TopHelperResult> computeTopHelpersDescending(long guildId,
             @NotNull TimeRange timeRange) {
-        return database.read(context -> context.select(HELP_CHANNEL_MESSAGES.AUTHOR_ID, DSL.count())
+        return database.read(context -> context
+            .select(HELP_CHANNEL_MESSAGES.AUTHOR_ID, DSL.sum(HELP_CHANNEL_MESSAGES.MESSAGE_LENGTH))
             .from(HELP_CHANNEL_MESSAGES)
             .where(HELP_CHANNEL_MESSAGES.GUILD_ID.eq(guildId)
                 .and(HELP_CHANNEL_MESSAGES.SENT_AT.between(timeRange.start(), timeRange.end())))
             .groupBy(HELP_CHANNEL_MESSAGES.AUTHOR_ID)
-            .orderBy(DSL.count().desc())
+            .orderBy(DSL.two().desc())
             .limit(TOP_HELPER_LIMIT)
             .fetch(Records.mapping(TopHelperResult::new)));
     }
@@ -174,9 +176,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             @Nullable Member member) {
         String id = Long.toString(topHelper.authorId());
         String name = member == null ? "UNKNOWN_USER" : member.getEffectiveName();
-        String messageCount = Integer.toString(topHelper.messageCount());
+        String messageLengths = Long.toString(topHelper.messageLengths().longValue());
 
-        return List.of(id, name, messageCount);
+        return List.of(id, name, messageLengths);
     }
 
     private static @NotNull String dataTableToString(@NotNull Collection<List<String>> dataTable,
@@ -185,7 +187,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                 List.of(new ColumnSetting("Id", HorizontalAlign.RIGHT),
                         new ColumnSetting("Name", HorizontalAlign.RIGHT),
                         new ColumnSetting(
-                                "Message count (for %s)".formatted(timeRange.description()),
+                                "Message lengths (for %s)".formatted(timeRange.description()),
                                 HorizontalAlign.RIGHT)));
     }
 
@@ -206,14 +208,15 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return AsciiTable.getTable(AsciiTable.BASIC_ASCII_NO_DATA_SEPARATORS, dataTable, columns);
     }
 
-    private record TimeRange(Instant start, Instant end, String description) {
+    private record TimeRange(@NotNull Instant start, @NotNull Instant end,
+            @NotNull String description) {
     }
 
 
-    private record TopHelperResult(long authorId, int messageCount) {
+    private record TopHelperResult(long authorId, @NotNull BigDecimal messageLengths) {
     }
 
 
-    private record ColumnSetting(String headerName, HorizontalAlign alignment) {
+    private record ColumnSetting(@NotNull String headerName, @NotNull HorizontalAlign alignment) {
     }
 }
