@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -15,10 +16,11 @@ import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 /**
  * Adapter implementation of a {@link SlashCommand}. The minimal setup only requires implementation
@@ -164,44 +166,56 @@ public abstract class SlashCommandAdapter implements SlashCommand {
     }
 
     /**
-     * This method copies the given {@link OptionData} for the given amount of times into a
-     * {@link List}. <br>
-     * This makes all the {@link OptionData OptionData's} optional! Everything else gets exactly
-     * copied.
+     * Copies the given option multiple times.
+     * <p>
+     * The generated options are all not required (optional) and have ascending number suffixes on
+     * their name. For example, if the name of the given option is {@code "foo"}, calling this with
+     * an amount of {@code 5} would result in a list of options like:
+     * <ul>
+     * <li>{@code "foo1"}</li>
+     * <li>{@code "foo2"}</li>
+     * <li>{@code "foo3"}</li>
+     * <li>{@code "foo4"}</li>
+     * <li>{@code "foo5"}</li>
+     * </ul>
+     * <p>
+     * This can be useful to offer a variable amount of input options for a user, similar to
+     * <i>varargs</i>.
+     * <p>
+     * After generation, the user input can conveniently be parsed back using
+     * {@link #getMultipleOptionsByNamePrefix(CommandInteractionPayload, String)}.
      *
-     * @param optionData The {@link OptionData} to copy.
-     * @param amount The amount of times to copy
-     *
-     * @return An unmodifiable {@link List} of the copied {@link OptionData OptionData's}
-     *
-     * @see #varArgOptionsToList(Collection, Function)
+     * @param optionData the original option to copy
+     * @param amount how often to copy the option
+     * @return the generated list of options
      */
     @Unmodifiable
-    protected static @NotNull List<OptionData> generateOptionalVarArgList(
-            final @NotNull OptionData optionData, @Range(from = 1, to = 25) final int amount) {
-        // Copy is immutable and explicitly optional, even if the parent option is required
-        OptionData varArgOption = new OptionData(optionData.getType(), optionData.getName(),
-                optionData.getDescription());
+    protected static @NotNull List<OptionData> generateMultipleOptions(
+            @NotNull OptionData optionData, @Range(from = 1, to = 25) int amount) {
+        String baseName = optionData.getName();
 
-        return Stream.generate(() -> varArgOption).limit(amount).toList();
+        Function<String, OptionData> nameToOption =
+                name -> new OptionData(optionData.getType(), name, optionData.getDescription());
+
+        return IntStream.rangeClosed(1, amount)
+            .mapToObj(i -> baseName + i)
+            .map(nameToOption)
+            .toList();
     }
 
     /**
-     * This method takes a {@link Collection} of {@link OptionMapping OptionMapping's}, these get
-     * mapped using the given {@link Function}.
+     * Gets all options from the given event whose name start with the given prefix.
      *
-     * @param options A {@link Collection} of {@link OptionMapping OptionMapping's}.
-     * @param mapper The mapper {@link Function}
-     * @param <T> The type to map it to.
-     *
-     * @return A modifiable {@link List} of the given type
-     *
-     * @see #generateOptionalVarArgList(OptionData, int)
+     * @param event the event to extract options from
+     * @param namePrefix the name prefix to search for
+     * @return all options with the given prefix
      */
-    protected static <T> List<T> varArgOptionsToList(
-            final @NotNull Collection<? extends OptionMapping> options,
-            final @NotNull Function<? super OptionMapping, ? extends T> mapper) {
-
-        return options.stream().map(mapper).collect(Collectors.toCollection(ArrayList::new));
+    @Unmodifiable
+    protected static @NotNull List<OptionMapping> getMultipleOptionsByNamePrefix(
+            @NotNull CommandInteractionPayload event, @NotNull String namePrefix) {
+        return event.getOptions()
+            .stream()
+            .filter(option -> option.getName().startsWith(namePrefix))
+            .toList();
     }
 }

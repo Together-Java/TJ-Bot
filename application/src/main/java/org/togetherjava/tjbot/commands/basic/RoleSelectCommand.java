@@ -73,7 +73,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
         getData().addOptions(messageOptions)
             .addOptions(roleOption)
-            .addOptions(generateOptionalVarArgList(roleOption, ROLE_VAR_ARG_OPTION_AMOUNT));
+            .addOptions(generateMultipleOptions(roleOption, ROLE_VAR_ARG_OPTION_AMOUNT));
     }
 
     /**
@@ -84,7 +84,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      *
      * @param mentionables The {@link Collection} of {@link IMentionable IMentionables} to collect
      *        into a {@link String}
-     *
      * @return The given mentionables their mention collected into a {@link String}
      */
     private static String mentionablesToJoinedString(
@@ -100,7 +99,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      *
      * @param systemRoles A {@link Collection} of the {@link Role roles} the bot cannot interact
      *        with.
-     *
      * @return A modified {@link MessageEmbed} for this error
      */
     private static @NotNull MessageEmbed generateLackingNonSystemRolesEmbed(
@@ -118,7 +116,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      *
      * @param rolesBotCantInteractWith A {@link Collection} of the {@link Role roles} the bot cannot
      *        interact with.
-     *
      * @return A modified {@link MessageEmbed} for this error
      */
     private static @NotNull MessageEmbed generateCannotInteractWithRolesEmbed(
@@ -135,7 +132,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      *
      * @param title The title for {@link EmbedBuilder#setTitle(String)}.
      * @param description The description for {@link EmbedBuilder#setDescription(CharSequence)}
-     *
      * @return The formatted {@link MessageEmbed}.
      */
     private static @NotNull MessageEmbed makeEmbed(@Nullable final String title,
@@ -165,8 +161,9 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             return;
         }
 
-        List<Role> rawRoles =
-                varArgOptionsToList(event.getOptionsByName(ROLE_OPTION), OptionMapping::getAsRole);
+        List<Role> rawRoles = getMultipleOptionsByNamePrefix(event, ROLE_OPTION).stream()
+            .map(OptionMapping::getAsRole)
+            .toList();
         List<Role> roles = filterToBotAccessibleRoles(rawRoles);
 
         if (roles.isEmpty()) {
@@ -188,11 +185,10 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     /**
      * Filters the given {@link Collection} of {@link Role roles} to not contain system roles. <br>
-     *
+     * <p>
      * See {@link #handleIsSystemRole(Role)} for more info on what this exactly filters.
      *
      * @param roles The {@link Collection} of the {@link Role roles} to filter
-     *
      * @return An unmodifiable {@link List} of all filtered roles
      */
     @NotNull
@@ -215,7 +211,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      * </ul>
      *
      * @param role The {@link Role} to test
-     *
      * @return Whenever the given {@link Role} is a system-role
      */
     @Contract(pure = true)
@@ -261,7 +256,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      * emoji, if it has one.
      *
      * @param role The {@link Role} to base the option from.
-     *
      * @return The generated {@link SelectOption}.
      */
     @NotNull
@@ -340,7 +334,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      * {@link Guild}.
      *
      * @param guild The {@link Guild} to grab the roles from.
-     *
      * @return A {@link Function} which maps {@link SelectOption} to the relating {@link Role}.
      */
     @Contract(pure = true)
