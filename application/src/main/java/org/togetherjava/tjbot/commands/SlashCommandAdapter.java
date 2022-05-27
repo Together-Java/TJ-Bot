@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -72,9 +73,9 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * Creates a new adapter with the given data.
      *
      * @param name the name of this command, requirements for this are documented in
-     *        {@link CommandData#CommandData(String, String)}
+     *        {@link SlashCommandData#setName(String)}
      * @param description the description of this command, requirements for this are documented in
-     *        {@link CommandData#CommandData(String, String)}
+     *        {@link SlashCommandData#setDescription(String)}
      * @param visibility the visibility of the command
      */
     protected SlashCommandAdapter(@NotNull String name, @NotNull String description,
@@ -176,9 +177,8 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @see #varArgOptionsToList(Collection, Function)
      */
     @Unmodifiable
-    protected static final @NotNull List<OptionData> generateOptionalVarArgList(
+    protected static @NotNull List<OptionData> generateOptionalVarArgList(
             final @NotNull OptionData optionData, @Range(from = 1, to = 25) final int amount) {
-
         OptionData varArgOption = new OptionData(optionData.getType(), optionData.getName(),
                 optionData.getDescription());
 
@@ -187,7 +187,7 @@ public abstract class SlashCommandAdapter implements SlashCommand {
 
     /**
      * This method takes a {@link Collection} of {@link OptionMapping OptionMapping's}, these get
-     * mapped using the given {@link Function}
+     * mapped using the given {@link Function}.
      *
      * @param options A {@link Collection} of {@link OptionMapping OptionMapping's}.
      * @param mapper The mapper {@link Function}

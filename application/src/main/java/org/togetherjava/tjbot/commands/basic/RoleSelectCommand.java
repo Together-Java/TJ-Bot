@@ -45,14 +45,14 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private static final String TITLE_OPTION = "title";
     private static final String DESCRIPTION_OPTION = "description";
-    private static final String ROLE_OPTION = "Selectable role";
+    private static final String ROLE_OPTION = "selectable-role";
 
     private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
 
     private static final List<OptionData> messageOptions = List.of(
-            new OptionData(OptionType.STRING, TITLE_OPTION, "The title for the message", false),
+            new OptionData(OptionType.STRING, TITLE_OPTION, "The title for the message", true),
             new OptionData(OptionType.STRING, DESCRIPTION_OPTION, "A description for the message",
-                    false));
+                    true));
 
     /**
      * Amount of times the role-option will be copied ({@value})
@@ -151,7 +151,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
-
         if (!event.getMember().hasPermission(Permission.MANAGE_ROLES)) {
             event.reply("You dont have the required manage role permission to use this command")
                 .setEphemeral(true)
@@ -166,7 +165,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             return;
         }
 
-
         List<Role> rawRoles =
                 varArgOptionsToList(event.getOptionsByName(ROLE_OPTION), OptionMapping::getAsRole);
         List<Role> roles = filterToBotAccessibleRoles(rawRoles);
@@ -176,7 +174,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             return;
         }
 
-
         List<Role> rolesBotCantInteractWith =
                 roles.stream().filter(role -> !selfMember.canInteract(role)).toList();
 
@@ -185,7 +182,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
-
 
         handleCommandSuccess(event, roles);
     }
@@ -246,11 +242,10 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     private void handleCommandSuccess(@NotNull final CommandInteraction event,
             @NotNull final Collection<? extends Role> roles) {
 
-        SelectionMenu.Builder menu =
-                SelectionMenu.create(generateComponentId(event.getUser().getId()))
-                    .setPlaceholder("Select your roles")
-                    .setMaxValues(roles.size())
-                    .setMinValues(0);
+        SelectMenu.Builder menu = SelectMenu.create(generateComponentId(event.getUser().getId()))
+            .setPlaceholder("Select your roles")
+            .setMaxValues(roles.size())
+            .setMinValues(0);
 
         roles.forEach(role -> menu.addOptions(mapToSelectOption(role)));
 
