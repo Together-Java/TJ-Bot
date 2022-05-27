@@ -49,15 +49,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
 
-    private static final List<OptionData> messageOptions = List.of(
-            new OptionData(OptionType.STRING, TITLE_OPTION, "The title for the message", true),
-            new OptionData(OptionType.STRING, DESCRIPTION_OPTION, "A description for the message",
-                    true));
-
-    /**
-     * Amount of times the role-option will be copied ({@value})
-     */
-    private static final int ROLE_VAR_ARG_OPTION_AMOUNT = 22;
+    private static final int OPTIONAL_ROLES_AMOUNT = 22;
 
 
     /**
@@ -65,15 +57,99 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      */
     public RoleSelectCommand() {
         super("role-select",
-                "Sends a message where users can select their roles, system roles are ignored when selected.",
+                "Creates a dialog that lets users pick roles, system roles are ignored when selected.",
                 SlashCommandVisibility.GUILD);
 
         OptionData roleOption = new OptionData(OptionType.ROLE, ROLE_OPTION,
-                "The role to add to the selection menu", true);
+                "pick roles that users will then be able to select", true);
 
-        getData().addOptions(messageOptions)
-            .addOptions(roleOption)
-            .addOptions(generateMultipleOptions(roleOption, ROLE_VAR_ARG_OPTION_AMOUNT));
+        getData()
+            .addOptions(
+                    new OptionData(OptionType.STRING, TITLE_OPTION,
+                            "title for the role selection message", true),
+                    new OptionData(OptionType.STRING, DESCRIPTION_OPTION,
+                            "description for the role selection message", true),
+                    roleOption)
+            .addOptions(generateMultipleOptions(roleOption, OPTIONAL_ROLES_AMOUNT));
+    }
+
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+        if (!handleHasPermissions(event)) {
+            return;
+        }
+
+        List<Role> selectedRoles = getMultipleOptionsByNamePrefix(event, ROLE_OPTION).stream()
+            .map(OptionMapping::getAsRole)
+            .filter(RoleSelectCommand::handleIsBotAccessibleRole)
+            .toList();
+
+        if (selectedRoles.isEmpty()) {
+            // TODO Used to use the list of roles without the accessible-filter
+            event.replyEmbeds(generateLackingNonSystemRolesEmbed(rawRoles)).queue();
+            return;
+        }
+
+        List<Role> rolesBotCantInteractWith = selectedRoles.stream()
+            .filter(role -> !event.getGuild().getSelfMember().canInteract(role))
+            .toList();
+
+        if (!rolesBotCantInteractWith.isEmpty()) {
+            event.replyEmbeds(generateCannotInteractWithRolesEmbed(rolesBotCantInteractWith))
+                .queue();
+            return;
+        }
+
+        handleCommandSuccess(event, selectedRoles);
+    }
+
+    private boolean handleHasPermissions(@NotNull SlashCommandInteractionEvent event) {
+        if (!event.getMember().hasPermission(Permission.MANAGE_ROLES)) {
+            event.reply("You do not have the required manage role permission to use this command")
+                .setEphemeral(true)
+                .queue();
+            return false;
+        }
+
+        Member selfMember = event.getGuild().getSelfMember();
+        if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
+            event.reply(
+                    "Sorry, but I was not set up correctly. I need the manage role permissions for this.")
+                .setEphemeral(true)
+                .queue();
+            logger.error("The bot requires the manage role permissions for /role-select.");
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Tests whether the given role is a role accessible to the bot or a system role.
+     *
+     * <p>
+     * A system role is a role where one of the following is true:
+     * <ul>
+     * <li>the {@code @everyone} role</li>
+     * <li>a bot/integration role</li>
+     * <li>the booster role</li>
+     * <li>the Twitch Subscriber role</li>
+     * </ul>
+     *
+     * @param role the role to test
+     * @return Whenever the given role is accessible to the bot, i.e. not a system role
+     */
+    @Contract(pure = true)
+    private static boolean handleIsBotAccessibleRole(@NotNull Role role) {
+        boolean isSystemRole = role.isPublicRole() || role.getTags().isBot()
+                || role.getTags().isBoost() || role.getTags().isIntegration();
+
+        if (isSystemRole) {
+            logger.debug("The {} ({}) role is a system role, and is ignored for /role-select.",
+                    role.getName(), role.getId());
+        }
+
+        return !isSystemRole;
     }
 
     /**
@@ -92,7 +168,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .map(IMentionable::getAsMention)
             .collect(Collectors.joining(", ", "(", ")"));
     }
-
 
     /**
      * Handles the event when all the given roles are system roles.
@@ -142,88 +217,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .setColor(AMBIENT_COLOR)
             .setTimestamp(Instant.now())
             .build();
-    }
-
-
-    @Override
-    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
-        if (!event.getMember().hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("You dont have the required manage role permission to use this command")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
-        Member selfMember = event.getGuild().getSelfMember();
-        if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply("The bot needs the manage role permissions").setEphemeral(true).queue();
-            logger.error("The bot needs the manage role permissions");
-            return;
-        }
-
-        List<Role> rawRoles = getMultipleOptionsByNamePrefix(event, ROLE_OPTION).stream()
-            .map(OptionMapping::getAsRole)
-            .toList();
-        List<Role> roles = filterToBotAccessibleRoles(rawRoles);
-
-        if (roles.isEmpty()) {
-            event.replyEmbeds(generateLackingNonSystemRolesEmbed(rawRoles)).queue();
-            return;
-        }
-
-        List<Role> rolesBotCantInteractWith =
-                roles.stream().filter(role -> !selfMember.canInteract(role)).toList();
-
-        if (!rolesBotCantInteractWith.isEmpty()) {
-            event.replyEmbeds(generateCannotInteractWithRolesEmbed(rolesBotCantInteractWith))
-                .queue();
-            return;
-        }
-
-        handleCommandSuccess(event, roles);
-    }
-
-    /**
-     * Filters the given {@link Collection} of {@link Role roles} to not contain system roles. <br>
-     * <p>
-     * See {@link #handleIsSystemRole(Role)} for more info on what this exactly filters.
-     *
-     * @param roles The {@link Collection} of the {@link Role roles} to filter
-     * @return An unmodifiable {@link List} of all filtered roles
-     */
-    @NotNull
-    private static <T extends Role> List<T> filterToBotAccessibleRoles(
-            @NotNull final Collection<T> roles) {
-
-        return roles.stream().filter(RoleSelectCommand::handleIsSystemRole).toList();
-    }
-
-    /**
-     * Tests the given predicate, if true logs the role as a system role.
-     *
-     * <p>
-     * returns true if one of the following statements is true:
-     * <ul>
-     * <li>The given role is the {@code @everyone} role</li>
-     * <li>The given role is the is a bot/integration role</li>
-     * <li>The given role is the booster role</li>
-     * <li>The given role is the Twitch Subscriber role</li>
-     * </ul>
-     *
-     * @param role The {@link Role} to test
-     * @return Whenever the given {@link Role} is a system-role
-     */
-    @Contract(pure = true)
-    private static boolean handleIsSystemRole(final @NotNull Role role) {
-        boolean isSystemRole = role.isPublicRole() || role.getTags().isBot()
-                || role.getTags().isBoost() || role.getTags().isIntegration();
-
-        if (isSystemRole) {
-            logger.info("The {} ({}) role is a system role, and is ignored", role.getName(),
-                    role.getId());
-        }
-
-        return !isSystemRole;
     }
 
     /**
