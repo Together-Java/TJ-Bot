@@ -103,7 +103,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      *
      * @return A modified {@link MessageEmbed} for this error
      */
-    private static @NotNull MessageEmbed generateLackingNonSystemRoles(
+    private static @NotNull MessageEmbed generateLackingNonSystemRolesEmbed(
             @NotNull final Collection<? extends Role> systemRoles) {
 
         return makeEmbed("Error: The given roles are all system roles!", """
@@ -170,7 +170,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         List<Role> roles = filterToBotAccessibleRoles(rawRoles);
 
         if (roles.isEmpty()) {
-            event.replyEmbeds(generateLackingNonSystemRoles(rawRoles)).queue();
+            event.replyEmbeds(generateLackingNonSystemRolesEmbed(rawRoles)).queue();
             return;
         }
 
@@ -193,15 +193,13 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
      *
      * @param roles The {@link Collection} of the {@link Role roles} to filter
      *
-     * @return A modifiable {@link List} of all filtered roles
+     * @return An unmodifiable {@link List} of all filtered roles
      */
     @NotNull
-    private static List<Role> filterToBotAccessibleRoles(
-            @NotNull final Collection<? extends Role> roles) {
+    private static <T extends Role> List<T> filterToBotAccessibleRoles(
+            @NotNull final Collection<T> roles) {
 
-        return roles.stream()
-            .filter(RoleSelectCommand::handleIsSystemRole)
-            .collect(Collectors.toCollection(ArrayList::new));
+        return roles.stream().filter(RoleSelectCommand::handleIsSystemRole).toList();
     }
 
     /**

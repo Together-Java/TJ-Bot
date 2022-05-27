@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 import org.jetbrains.annotations.Unmodifiable;
@@ -18,7 +18,7 @@ import org.togetherjava.tjbot.commands.componentids.Lifespan;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Adapter implementation of a {@link SlashCommand}. The minimal setup only requires implementation
@@ -179,10 +179,11 @@ public abstract class SlashCommandAdapter implements SlashCommand {
     @Unmodifiable
     protected static @NotNull List<OptionData> generateOptionalVarArgList(
             final @NotNull OptionData optionData, @Range(from = 1, to = 25) final int amount) {
+        // Copy is immutable and explicitly optional, even if the parent option is required
         OptionData varArgOption = new OptionData(optionData.getType(), optionData.getName(),
                 optionData.getDescription());
 
-        return IntStream.range(0, amount).mapToObj(i -> varArgOption).toList();
+        return Stream.generate(() -> varArgOption).limit(amount).toList();
     }
 
     /**
