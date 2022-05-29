@@ -44,6 +44,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
             .setChannelId(event.getChannel().getIdLong())
             .setAuthorId(event.getAuthor().getIdLong())
             .setSentAt(event.getMessage().getTimeCreated().toInstant())
+            .setMessageLength((long) event.getMessage().getContentRaw().length())
             .insert());
     }
 }
