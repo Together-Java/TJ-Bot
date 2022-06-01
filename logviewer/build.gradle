@@ -2,7 +2,7 @@ plugins {
     id "com.google.cloud.tools.jib" version "3.1.4"
     id "org.springframework.boot" version "2.6.1"
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
-    id "com.vaadin" version "21.0.2"
+    id "com.vaadin" version "23.0.10"
     id 'java'
     id 'database-settings'
 }
