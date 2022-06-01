@@ -60,7 +60,7 @@ dependencies {
     implementation('com.vaadin:vaadin-spring:18.0.0')
     implementation 'org.vaadin.artur:a-vaadin-helper:1.7.2'
     implementation 'org.vaadin.crudui:crudui:4.6.0'
-    implementation 'com.vaadin.componentfactory:enhanced-dialog:21.0.0'
+    implementation 'com.vaadin.componentfactory:enhanced-dialog:23.0.0'
 
 
     implementation('org.springframework.boot:spring-boot-starter-web:2.6.1') {
