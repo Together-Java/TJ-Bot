@@ -3,10 +3,15 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
+import org.jetbrains.annotations.Unmodifiable;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
@@ -14,6 +19,8 @@ import org.togetherjava.tjbot.commands.componentids.Lifespan;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
 /**
  * Adapter implementation of a {@link SlashCommand}. The minimal setup only requires implementation
@@ -68,9 +75,9 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * Creates a new adapter with the given data.
      *
      * @param name the name of this command, requirements for this are documented in
-     *        {@link CommandData#CommandData(String, String)}
+     *        {@link SlashCommandData#setName(String)}
      * @param description the description of this command, requirements for this are documented in
-     *        {@link CommandData#CommandData(String, String)}
+     *        {@link SlashCommandData#setDescription(String)}
      * @param visibility the visibility of the command
      */
     protected SlashCommandAdapter(@NotNull String name, @NotNull String description,
@@ -156,5 +163,59 @@ public abstract class SlashCommandAdapter implements SlashCommand {
             @NotNull String... args) {
         return Objects.requireNonNull(componentIdGenerator)
             .generate(new ComponentId(getName(), Arrays.asList(args)), lifespan);
+    }
+
+    /**
+     * Copies the given option multiple times.
+     * <p>
+     * The generated options are all not required (optional) and have ascending number suffixes on
+     * their name. For example, if the name of the given option is {@code "foo"}, calling this with
+     * an amount of {@code 5} would result in a list of options like:
+     * <ul>
+     * <li>{@code "foo1"}</li>
+     * <li>{@code "foo2"}</li>
+     * <li>{@code "foo3"}</li>
+     * <li>{@code "foo4"}</li>
+     * <li>{@code "foo5"}</li>
+     * </ul>
+     * <p>
+     * This can be useful to offer a variable amount of input options for a user, similar to
+     * <i>varargs</i>.
+     * <p>
+     * After generation, the user input can conveniently be parsed back using
+     * {@link #getMultipleOptionsByNamePrefix(CommandInteractionPayload, String)}.
+     *
+     * @param optionData the original option to copy
+     * @param amount how often to copy the option
+     * @return the generated list of options
+     */
+    @Unmodifiable
+    protected static @NotNull List<OptionData> generateMultipleOptions(
+            @NotNull OptionData optionData, @Range(from = 1, to = 25) int amount) {
+        String baseName = optionData.getName();
+
+        Function<String, OptionData> nameToOption =
+                name -> new OptionData(optionData.getType(), name, optionData.getDescription());
+
+        return IntStream.rangeClosed(1, amount)
+            .mapToObj(i -> baseName + i)
+            .map(nameToOption)
+            .toList();
+    }
+
+    /**
+     * Gets all options from the given event whose name start with the given prefix.
+     *
+     * @param event the event to extract options from
+     * @param namePrefix the name prefix to search for
+     * @return all options with the given prefix
+     */
+    @Unmodifiable
+    protected static @NotNull List<OptionMapping> getMultipleOptionsByNamePrefix(
+            @NotNull CommandInteractionPayload event, @NotNull String namePrefix) {
+        return event.getOptions()
+            .stream()
+            .filter(option -> option.getName().startsWith(namePrefix))
+            .toList();
     }
 }
