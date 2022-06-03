@@ -17,13 +17,6 @@ import java.util.concurrent.TimeUnit;
  */
 public interface Routine extends Feature {
     /**
-     * Triggered by the core system on the schedule defined by {@link #createSchedule()}.
-     *
-     * @param jda the JDA instance the bot is operating with
-     */
-    void runRoutine(@NotNull JDA jda);
-
-    /**
      * Retrieves the schedule of this routine. Called by the core system once during the startup in
      * order to execute the routine accordingly.
      * <p>
@@ -33,6 +26,13 @@ public interface Routine extends Feature {
      */
     @NotNull
     Schedule createSchedule();
+
+    /**
+     * Triggered by the core system on the schedule defined by {@link #createSchedule()}.
+     *
+     * @param jda the JDA instance the bot is operating with
+     */
+    void runRoutine(@NotNull JDA jda);
 
     /**
      * The schedule of routines.

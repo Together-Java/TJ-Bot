@@ -8,9 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Configuration of the application. Create instances using {@link #load(Path)}.
@@ -25,12 +22,12 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
-    private final List<FreeCommandConfig> freeCommand;
     private final String helpChannelPattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
     private final String wolframAlphaAppId;
+    private final HelpSystemConfig helpSystem;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -43,12 +40,12 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand,
             @JsonProperty("helpChannelPattern") String helpChannelPattern,
             @JsonProperty("suggestions") SuggestionsConfig suggestions,
             @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
-            @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId) {
+            @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
+            @JsonProperty("helpSystem") HelpSystemConfig helpSystem) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -58,12 +55,12 @@ public final class Config {
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
-        this.freeCommand = Collections.unmodifiableList(freeCommand);
         this.helpChannelPattern = helpChannelPattern;
         this.suggestions = suggestions;
         this.quarantinedRolePattern = quarantinedRolePattern;
         this.scamBlocker = scamBlocker;
         this.wolframAlphaAppId = wolframAlphaAppId;
+        this.helpSystem = helpSystem;
     }
 
     /**
@@ -164,17 +161,6 @@ public final class Config {
     }
 
     /**
-     * Gets a List of channel id's required to configure the free command system see
-     * {@link FreeCommandConfig}
-     *
-     * @return a List of instances of FreeCommandConfig, each of the instances are separated by
-     *         guild.
-     */
-    public @NotNull Collection<FreeCommandConfig> getFreeCommandConfig() {
-        return freeCommand; // already unmodifiable
-    }
-
-    /**
      * Gets the REGEX pattern used to identify channels that are used for helping people with their
      * questions.
      *
@@ -218,5 +204,14 @@ public final class Config {
      */
     public @NotNull String getWolframAlphaAppId() {
         return wolframAlphaAppId;
+    }
+
+    /**
+     * Gets the config for the help system.
+     *
+     * @return the help system config
+     */
+    public @NotNull HelpSystemConfig getHelpSystem() {
+        return helpSystem;
     }
 }

@@ -1,11 +1,14 @@
 package org.togetherjava.tjbot.commands.tophelper;
 
+import net.dv8tion.jda.api.entities.ChannelType;
+import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HELP_CHANNEL_MESSAGES;
@@ -17,6 +20,8 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     private final Database database;
 
+    private final Predicate<String> isStagingChannelName;
+
     /**
      * Creates a new listener to receive all message sent in help channels.
      *
@@ -24,8 +29,12 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
      * @param config the config to use for this
      */
     public TopHelpersMessageListener(@NotNull Database database, @NotNull Config config) {
-        super(Pattern.compile(config.getHelpChannelPattern()));
+        super(Pattern.compile(".*"));
+
         this.database = database;
+
+        isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
+            .asMatchPredicate();
     }
 
     @Override
@@ -34,7 +43,20 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
             return;
         }
 
+        if (!isHelpThread(event)) {
+            return;
+        }
+
         addMessageRecord(event);
+    }
+
+    private boolean isHelpThread(@NotNull MessageReceivedEvent event) {
+        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
+            return false;
+        }
+
+        ThreadChannel thread = event.getThreadChannel();
+        return isStagingChannelName.test(thread.getParentChannel().getName());
     }
 
     private void addMessageRecord(@NotNull MessageReceivedEvent event) {
