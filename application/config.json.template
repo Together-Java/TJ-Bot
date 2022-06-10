@@ -8,16 +8,6 @@
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Staff Assistant",
     "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
-    "freeCommand": [
-        {
-            "inactiveChannelDuration": "PT2H",
-            "messageRetrieveLimit": 10,
-            "statusChannel": <put_a_channel_id_here>,
-            "monitoredChannels": [
-                    <put_a_channel_id_here>
-                  ]
-        }
-   ],
    "helpChannelPattern": "([a-zA-Z_]+_)?help(_\\d+)?",
    "suggestions": {
        "channelPattern": "tj_suggestions",
@@ -33,5 +23,26 @@
        "suspiciousHostKeywords": ["discord", "nitro", "premium"],
        "isHostSimilarToKeywordDistanceThreshold": 2
    },
-   "wolframAlphaAppId": "79J52T-6239TVXHR7"
+   "wolframAlphaAppId": "79J52T-6239TVXHR7",
+   "helpSystem": {
+       "stagingChannelPattern": "ask_here",
+       "overviewChannelPattern": "active_questions",
+       "categories": [
+           "Java",
+           "Frameworks",
+           "JavaFX|Swing",
+           "IDE",
+           "Build Tools",
+           "Database",
+           "Android",
+           "C|C++",
+           "Algorithms",
+           "Math",
+           "Architecture",
+           "Code Review",
+           "Together Java Bot",
+           "Other"
+       ],
+       "categoryRoleSuffix": " - Helper"
+   }
 }

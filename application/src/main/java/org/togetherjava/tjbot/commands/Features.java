@@ -6,9 +6,7 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
-import org.togetherjava.tjbot.commands.free.AutoFreeRoutine;
-import org.togetherjava.tjbot.commands.free.FreeChannelMonitor;
-import org.togetherjava.tjbot.commands.free.FreeCommand;
+import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
@@ -62,7 +60,7 @@ public enum Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        FreeChannelMonitor freeChannelMonitor = new FreeChannelMonitor(config);
+        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -75,12 +73,13 @@ public enum Features {
         features.add(new TopHelpersPurgeMessagesRoutine(database));
         features.add(new RemindRoutine(database));
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
-        features.add(new AutoFreeRoutine(freeChannelMonitor));
+        features.add(new BotMessageCleanup(config));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
         features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
+        features.add(new ImplicitAskListener(config, helpSystemHelper));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
@@ -107,9 +106,12 @@ public enum Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
+        features.add(new AskCommand(config, helpSystemHelper));
+        features.add(new CloseCommand(helpSystemHelper));
+        features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
 
         // Mixtures
-        features.add(new FreeCommand(config, freeChannelMonitor));
+        features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
 
         return features;
     }
