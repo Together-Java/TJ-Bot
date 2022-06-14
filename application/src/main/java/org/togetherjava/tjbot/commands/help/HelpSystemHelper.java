@@ -34,6 +34,10 @@ public final class HelpSystemHelper {
     private static final Pattern EXTRACT_CATEGORY_TITLE_PATTERN =
             Pattern.compile("(?:\\[(?<%s>.+)] )?(?<%s>.+)".formatted(CATEGORY_GROUP, TITLE_GROUP));
 
+    private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
+    static final int TITLE_COMPACT_LENGTH_MIN = 2;
+    static final int TITLE_COMPACT_LENGTH_MAX = 80;
+
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
     private final Predicate<String> isStagingChannelName;
@@ -174,5 +178,12 @@ public final class HelpSystemHelper {
     @NotNull
     String getStagingChannelPattern() {
         return stagingChannelPattern;
+    }
+
+    static boolean isTitleValid(@NotNull CharSequence title) {
+        String titleCompact = TITLE_COMPACT_REMOVAL_PATTERN.matcher(title).replaceAll("");
+
+        return titleCompact.length() >= TITLE_COMPACT_LENGTH_MIN
+                && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
     }
 }

@@ -16,18 +16,21 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
+import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
+
 /**
  * Implements the {@code /ask} command, which is the main way of asking questions. The command can
  * only be used in the staging channel.
- *
+ * <p>
  * Upon use, it will create a new thread for the question and invite all helpers interested in the
  * given category to it. It will also introduce the user to the system and give a quick explanation
  * message.
- *
+ * <p>
  * The other way to ask questions is by {@link ImplicitAskListener}.
- *
+ * <p>
  * Example usage:
- * 
+ *
  * <pre>
  * {@code
  * /ask title: How to send emails? category: Frameworks
@@ -76,6 +79,10 @@ public final class AskCommand extends SlashCommandAdapter {
             return;
         }
 
+        if (!handleIsValidTitle(title, event)) {
+            return;
+        }
+
         TextChannel helpStagingChannel = event.getTextChannel();
         helpStagingChannel.createThreadChannel("[%s] %s".formatted(category, title))
             .flatMap(threadChannel -> handleEvent(event, threadChannel, event.getMember(), title,
@@ -90,6 +97,20 @@ public final class AskCommand extends SlashCommandAdapter {
         }
 
         event.reply("Sorry, but this command can only be used in the help staging channel.")
+            .setEphemeral(true)
+            .queue();
+
+        return false;
+    }
+
+    private boolean handleIsValidTitle(@NotNull CharSequence title, @NotNull IReplyCallback event) {
+        if (HelpSystemHelper.isTitleValid(title)) {
+            return true;
+        }
+
+        event.reply(
+                "Sorry, but the titel length (after removal of special characters) has to be between %d and %d."
+                    .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
             .setEphemeral(true)
             .queue();
 
