@@ -27,11 +27,11 @@ import java.util.regex.Pattern;
  * <p>
  * Listens to plain messages in the staging channel, picks them up and transfers them into a proper
  * question thread.
- *
+ * <p>
  * The system can handle spam appropriately and will not create multiple threads for each message.
- *
+ * <p>
  * For example:
- * 
+ *
  * <pre>
  * {@code
  * John sends: How to send emails?
@@ -128,17 +128,22 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
     }
 
     private static @NotNull String createTitle(@NotNull String message) {
+        String titleCandidate;
         if (message.length() < TITLE_MAX_LENGTH) {
-            return message;
-        }
-        // Attempt to end at the last word before hitting the limit
-        // e.g. "[foo bar] baz" for a limit somewhere in between "baz"
-        int lastWordEnd = message.lastIndexOf(' ', TITLE_MAX_LENGTH);
-        if (lastWordEnd == -1) {
-            lastWordEnd = TITLE_MAX_LENGTH;
+            titleCandidate = message;
+        } else {
+            // Attempt to end at the last word before hitting the limit
+            // e.g. "[foo bar] baz" for a limit somewhere in between "baz"
+            int lastWordEnd = message.lastIndexOf(' ', TITLE_MAX_LENGTH);
+            if (lastWordEnd == -1) {
+                lastWordEnd = TITLE_MAX_LENGTH;
+            }
+
+            titleCandidate = message.substring(0, lastWordEnd);
         }
 
-        return message.substring(0, lastWordEnd);
+        return HelpSystemHelper.isTitleValid(titleCandidate) ? titleCandidate : "Untitled";
+
     }
 
     private @NotNull RestAction<?> handleEvent(@NotNull ThreadChannel threadChannel,
