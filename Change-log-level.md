@@ -6,4 +6,4 @@ The log level can be changed conveniently from within Discord by using the slash
 
 ![changed log level](https://i.imgur.com/x3S6V1m.png)
 
-Only mods can use this command though.
+Only mods can use this command though. The change is not persisted and will reset on the next restart of the bot.
