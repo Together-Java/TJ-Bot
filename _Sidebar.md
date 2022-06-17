@@ -25,6 +25,7 @@
 * [[Access the VPS]]
 * Logging
   * [[View the logs]]
+  * [[Change log level]]
   * [[Setup Log Viewer]]
 * [[Edit the Config]]
 * [[Shutdown or restart the bot]]
