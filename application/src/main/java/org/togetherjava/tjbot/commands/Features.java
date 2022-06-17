@@ -17,6 +17,7 @@ import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutin
 import org.togetherjava.tjbot.commands.reminder.RemindCommand;
 import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
 import org.togetherjava.tjbot.commands.system.BotCore;
+import org.togetherjava.tjbot.commands.system.LogLevelCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
 import org.togetherjava.tjbot.commands.tags.TagSystem;
@@ -85,6 +86,7 @@ public enum Features {
         features.add(new RejoinModerationRoleListener(actionsStore, config));
 
         // Slash commands
+        features.add(new LogLevelCommand());
         features.add(new PingCommand());
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem));
