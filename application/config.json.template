@@ -8,7 +8,6 @@
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Staff Assistant",
     "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
-   "helpChannelPattern": "([a-zA-Z_]+_)?help(_\\d+)?",
    "suggestions": {
        "channelPattern": "tj_suggestions",
        "upVoteEmoteName": "peepo_yes",
