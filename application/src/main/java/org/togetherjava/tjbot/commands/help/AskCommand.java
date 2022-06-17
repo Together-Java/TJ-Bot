@@ -109,7 +109,7 @@ public final class AskCommand extends SlashCommandAdapter {
         }
 
         event.reply(
-                "Sorry, but the titel length (after removal of special characters) has to be between %d and %d."
+                "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
                     .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
             .setEphemeral(true)
             .queue();
