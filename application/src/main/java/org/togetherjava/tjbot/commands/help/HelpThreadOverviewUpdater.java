@@ -32,6 +32,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadOverviewUpdater.class);
 
     private static final String STATUS_TITLE = "Active questions";
+    private static final int OVERVIEW_QUESTION_LIMIT = 150;
 
     private final HelpSystemHelper helper;
     private final List<String> allCategories;
@@ -148,6 +149,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
         return activeThreads.stream()
             .sorted(Comparator.comparing(ThreadChannel::getTimeCreated).reversed())
+            .limit(OVERVIEW_QUESTION_LIMIT)
             .collect(Collectors
                 .groupingBy(thread -> helper.getCategoryOfChannel(thread).orElse("Uncategorized")))
             .entrySet()
