@@ -92,14 +92,19 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .filter(Routine.class::isInstance)
             .map(Routine.class::cast)
             .forEach(routine -> {
+                Runnable command = () -> {
+                    String routineName = routine.getClass().getSimpleName();
+                    logger.debug("Running routine %s...".formatted(routineName));
+                    routine.runRoutine(jda);
+                    logger.debug("Finished routine %s.".formatted(routineName));
+                };
+
                 Routine.Schedule schedule = routine.createSchedule();
                 switch (schedule.mode()) {
-                    case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(
-                            () -> routine.runRoutine(jda), schedule.initialDuration(),
-                            schedule.duration(), schedule.unit());
-                    case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(
-                            () -> routine.runRoutine(jda), schedule.initialDuration(),
-                            schedule.duration(), schedule.unit());
+                    case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
+                            schedule.initialDuration(), schedule.duration(), schedule.unit());
+                    case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
+                            schedule.initialDuration(), schedule.duration(), schedule.unit());
                     default -> throw new AssertionError("Unsupported schedule mode");
                 }
             });

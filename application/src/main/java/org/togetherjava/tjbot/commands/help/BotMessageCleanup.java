@@ -108,10 +108,13 @@ public final class BotMessageCleanup implements Routine {
 
     private static @NotNull RestAction<Void> cleanupBotMessages(
             @NotNull GuildMessageChannel channel, @NotNull Collection<? extends Message> messages) {
+        logger.debug("Cleaning up old bot messages in the staging channel");
         List<String> messageIdsToDelete = messages.stream()
             .filter(BotMessageCleanup::shouldMessageBeCleanedUp)
             .map(Message::getId)
             .toList();
+
+        logger.debug("Found {} messages to delete", messageIdsToDelete.size());
 
         if (messageIdsToDelete.isEmpty()) {
             return new CompletedRestAction<>(channel.getJDA(), null, null);
