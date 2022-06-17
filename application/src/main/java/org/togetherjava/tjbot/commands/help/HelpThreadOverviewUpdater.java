@@ -122,10 +122,14 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
     private void updateOverview(@NotNull IThreadContainer stagingChannel,
             @NotNull MessageChannel overviewChannel) {
+        logger.debug("Updating overview of active questions");
+
         List<ThreadChannel> activeThreads = stagingChannel.getThreadChannels()
             .stream()
             .filter(Predicate.not(ThreadChannel::isArchived))
             .toList();
+
+        logger.debug("Found {} active questions", activeThreads.size());
 
         MessageEmbed embed = new EmbedBuilder().setTitle(STATUS_TITLE)
             .setDescription(createDescription(activeThreads))
@@ -133,6 +137,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             .build();
 
         getStatusMessage(overviewChannel).flatMap(maybeStatusMessage -> {
+            logger.debug("Sending the updated question overview");
             if (maybeStatusMessage.isEmpty()) {
                 return overviewChannel.sendMessageEmbeds(embed);
             }
