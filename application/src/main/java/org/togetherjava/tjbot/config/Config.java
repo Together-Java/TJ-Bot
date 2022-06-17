@@ -22,7 +22,6 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
-    private final String helpChannelPattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
@@ -40,7 +39,6 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("helpChannelPattern") String helpChannelPattern,
             @JsonProperty("suggestions") SuggestionsConfig suggestions,
             @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
@@ -55,7 +53,6 @@ public final class Config {
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
-        this.helpChannelPattern = helpChannelPattern;
         this.suggestions = suggestions;
         this.quarantinedRolePattern = quarantinedRolePattern;
         this.scamBlocker = scamBlocker;
@@ -158,16 +155,6 @@ public final class Config {
      */
     public String getTagManageRolePattern() {
         return tagManageRolePattern;
-    }
-
-    /**
-     * Gets the REGEX pattern used to identify channels that are used for helping people with their
-     * questions.
-     *
-     * @return the channel name pattern
-     */
-    public @NotNull String getHelpChannelPattern() {
-        return helpChannelPattern;
     }
 
     /**
