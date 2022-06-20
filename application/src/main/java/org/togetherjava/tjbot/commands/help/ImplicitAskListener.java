@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 public final class ImplicitAskListener extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ImplicitAskListener.class);
 
-    private static final int TITLE_MAX_LENGTH = 30;
+    private static final int TITLE_MAX_LENGTH = 50;
 
     private static final int COOLDOWN_DURATION_VALUE = 15;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.SECONDS;
