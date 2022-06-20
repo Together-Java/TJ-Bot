@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -22,8 +23,8 @@ import java.util.concurrent.TimeUnit;
  * use. Meant to be used once a question has been resolved.
  */
 public final class CloseCommand extends SlashCommandAdapter {
-    private static final int COOLDOWN_DURATION_VALUE = 1;
-    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.HOURS;
+    private static final int COOLDOWN_DURATION_VALUE = 30;
+    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
 
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> helpThreadIdToLastClose;
@@ -58,8 +59,9 @@ public final class CloseCommand extends SlashCommandAdapter {
 
         if (isHelpThreadOnCooldown(helpThread)) {
             event
-                .reply("Please wait a bit, this command can only be used once per %d %s."
-                    .formatted(COOLDOWN_DURATION_VALUE, COOLDOWN_DURATION_UNIT))
+                .reply("Please wait a bit, this command can only be used once per %d %s.".formatted(
+                        COOLDOWN_DURATION_VALUE,
+                        COOLDOWN_DURATION_UNIT.toString().toLowerCase(Locale.US)))
                 .setEphemeral(true)
                 .queue();
             return;
