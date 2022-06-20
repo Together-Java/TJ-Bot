@@ -31,8 +31,8 @@ public final class HelpSystemHelper {
     private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
     private static final String CATEGORY_GROUP = "category";
     private static final String TITLE_GROUP = "title";
-    private static final Pattern EXTRACT_CATEGORY_TITLE_PATTERN =
-            Pattern.compile("(?:\\[(?<%s>.+)] )?(?<%s>.+)".formatted(CATEGORY_GROUP, TITLE_GROUP));
+    private static final Pattern EXTRACT_CATEGORY_TITLE_PATTERN = Pattern
+        .compile("(?:\\[(?<%s>[^\\[]+)] )?(?<%s>.+)".formatted(CATEGORY_GROUP, TITLE_GROUP));
 
     private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     static final int TITLE_COMPACT_LENGTH_MIN = 2;
