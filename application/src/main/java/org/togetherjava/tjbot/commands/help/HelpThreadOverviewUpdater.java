@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.commands.help;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadOverviewUpdater.class);
 
-    private static final String STATUS_TITLE = "Active questions";
+    private static final String STATUS_TITLE = "## __**Active questions**__ ##";
     private static final int OVERVIEW_QUESTION_LIMIT = 150;
 
     private final HelpSystemHelper helper;
@@ -131,19 +131,18 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
         logger.debug("Found {} active questions", activeThreads.size());
 
-        MessageEmbed embed = new EmbedBuilder().setTitle(STATUS_TITLE)
-            .setDescription(createDescription(activeThreads))
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+        Message message = new MessageBuilder()
+            .setContent(STATUS_TITLE + "\n\n" + createDescription(activeThreads))
             .build();
 
         getStatusMessage(overviewChannel).flatMap(maybeStatusMessage -> {
             logger.debug("Sending the updated question overview");
             if (maybeStatusMessage.isEmpty()) {
-                return overviewChannel.sendMessageEmbeds(embed);
+                return overviewChannel.sendMessage(message);
             }
 
             String statusMessageId = maybeStatusMessage.orElseThrow().getId();
-            return overviewChannel.editMessageEmbedsById(statusMessageId, embed);
+            return overviewChannel.editMessageById(statusMessageId, message);
         }).queue();
     }
 
@@ -186,13 +185,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             return false;
         }
 
-        List<MessageEmbed> embeds = message.getEmbeds();
-        if (embeds.isEmpty()) {
-            return false;
-        }
-
-        MessageEmbed embed = embeds.get(0);
-        return STATUS_TITLE.equals(embed.getTitle());
+        String content = message.getContentRaw();
+        return content.startsWith(STATUS_TITLE);
     }
 
     private enum ChannelType {
