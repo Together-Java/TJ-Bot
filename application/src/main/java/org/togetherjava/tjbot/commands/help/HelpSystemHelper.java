@@ -110,7 +110,7 @@ public final class HelpSystemHelper {
         if (event.getChannelType() == ChannelType.GUILD_PUBLIC_THREAD) {
             ThreadChannel thread = event.getThreadChannel();
 
-            if (isStagingChannelName.test(thread.getParentChannel().getName())) {
+            if (isOverviewChannelName.test(thread.getParentChannel().getName())) {
                 return true;
             }
         }
@@ -179,6 +179,31 @@ public final class HelpSystemHelper {
 
         return titleCompact.length() >= TITLE_COMPACT_LENGTH_MIN
                 && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
+    }
+
+    @NotNull
+    Optional<TextChannel> handleRequireOverviewChannelForAsk(@NotNull Guild guild,
+            @NotNull MessageChannel respondTo) {
+        Predicate<String> isChannelName = this::isOverviewChannelName;
+        String channelPattern = this.getOverviewChannelPattern();
+
+        Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
+            .stream()
+            .filter(channel -> isChannelName.test(channel.getName()))
+            .findAny();
+
+        if (maybeChannel.isEmpty()) {
+            logger.warn(
+                    "Attempted to create a help thread, did not find the overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName());
+
+            respondTo.sendMessage(
+                    "Sorry, I was unable to locate the overview channel. The server seems wrongly configured, please contact a moderator.")
+                .queue();
+            return Optional.empty();
+        }
+
+        return maybeChannel;
     }
 
     private record HelpThreadName(@Nullable String category, @NotNull String title) {

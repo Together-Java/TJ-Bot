@@ -16,6 +16,8 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import java.util.Optional;
+
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
 
@@ -83,8 +85,14 @@ public final class AskCommand extends SlashCommandAdapter {
             return;
         }
 
-        TextChannel helpStagingChannel = event.getTextChannel();
-        helpStagingChannel.createThreadChannel("[%s] %s".formatted(category, title))
+        Optional<TextChannel> maybeOverviewChannel =
+                helper.handleRequireOverviewChannelForAsk(event.getGuild(), event.getChannel());
+        if (maybeOverviewChannel.isEmpty()) {
+            return;
+        }
+        TextChannel overviewChannel = maybeOverviewChannel.orElseThrow();
+
+        overviewChannel.createThreadChannel("[%s] %s".formatted(category, title))
             .flatMap(threadChannel -> handleEvent(event, threadChannel, event.getMember(), title,
                     category))
             .queue(any -> {

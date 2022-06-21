@@ -85,8 +85,14 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
 
         String title = createTitle(message.getContentDisplay());
 
-        TextChannel helpStagingChannel = event.getTextChannel();
-        helpStagingChannel.createThreadChannel(title)
+        Optional<TextChannel> maybeOverviewChannel =
+                helper.handleRequireOverviewChannelForAsk(event.getGuild(), event.getChannel());
+        if (maybeOverviewChannel.isEmpty()) {
+            return;
+        }
+        TextChannel overviewChannel = maybeOverviewChannel.orElseThrow();
+
+        overviewChannel.createThreadChannel(title)
             .flatMap(threadChannel -> handleEvent(threadChannel, message, title))
             .queue(any -> {
             }, ImplicitAskListener::handleFailure);
@@ -143,7 +149,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         }
 
         return HelpSystemHelper.isTitleValid(titleCandidate) ? titleCandidate : "Untitled";
-
     }
 
     private @NotNull RestAction<?> handleEvent(@NotNull ThreadChannel threadChannel,
