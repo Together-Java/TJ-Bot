@@ -47,7 +47,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
      * @param helper the helper to use
      */
     public HelpThreadOverviewUpdater(@NotNull Config config, @NotNull HelpSystemHelper helper) {
-        super(Pattern.compile(config.getHelpSystem().getStagingChannelPattern()));
+        super(Pattern.compile(config.getHelpSystem().getOverviewChannelPattern()));
 
         allCategories = config.getHelpSystem().getCategories();
         this.helper = helper;
@@ -82,28 +82,18 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     private void updateOverviewForGuild(@NotNull Guild guild) {
-        Optional<TextChannel> maybeStagingChannel =
-                handleRequireChannel(ChannelType.STAGING, guild);
-        Optional<TextChannel> maybeOverviewChannel =
-                handleRequireChannel(ChannelType.OVERVIEW, guild);
+        Optional<TextChannel> maybeOverviewChannel = handleRequireOverviewChannel(guild);
 
-        if (maybeStagingChannel.isEmpty() || maybeOverviewChannel.isEmpty()) {
+        if (maybeOverviewChannel.isEmpty()) {
             return;
         }
 
-        updateOverview(maybeStagingChannel.orElseThrow(), maybeOverviewChannel.orElseThrow());
+        updateOverview(maybeOverviewChannel.orElseThrow());
     }
 
-    private @NotNull Optional<TextChannel> handleRequireChannel(@NotNull ChannelType channelType,
-            @NotNull Guild guild) {
-        Predicate<String> isChannelName = switch (channelType) {
-            case OVERVIEW -> helper::isOverviewChannelName;
-            case STAGING -> helper::isStagingChannelName;
-        };
-        String channelPattern = switch (channelType) {
-            case OVERVIEW -> helper.getOverviewChannelPattern();
-            case STAGING -> helper.getStagingChannelPattern();
-        };
+    private @NotNull Optional<TextChannel> handleRequireOverviewChannel(@NotNull Guild guild) {
+        Predicate<String> isChannelName = helper::isOverviewChannelName;
+        String channelPattern = helper.getOverviewChannelPattern();
 
         Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
             .stream()
@@ -113,18 +103,17 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         if (maybeChannel.isEmpty()) {
             logger.warn(
                     "Unable to update help thread overview, did not find a {} channel matching the configured pattern '{}' for guild '{}'",
-                    channelType, channelPattern, guild.getName());
+                    ChannelType.OVERVIEW, channelPattern, guild.getName());
             return Optional.empty();
         }
 
         return maybeChannel;
     }
 
-    private void updateOverview(@NotNull IThreadContainer stagingChannel,
-            @NotNull MessageChannel overviewChannel) {
+    private void updateOverview(@NotNull TextChannel overviewChannel) {
         logger.debug("Updating overview of active questions");
 
-        List<ThreadChannel> activeThreads = stagingChannel.getThreadChannels()
+        List<ThreadChannel> activeThreads = overviewChannel.getThreadChannels()
             .stream()
             .filter(Predicate.not(ThreadChannel::isArchived))
             .toList();
