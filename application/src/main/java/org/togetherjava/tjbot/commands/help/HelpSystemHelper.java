@@ -136,30 +136,24 @@ public final class HelpSystemHelper {
 
     @NotNull
     Optional<String> getCategoryOfChannel(@NotNull Channel channel) {
-        Matcher matcher = EXTRACT_CATEGORY_TITLE_PATTERN.matcher(channel.getName());
-        if (!matcher.find()) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(matcher.group(CATEGORY_GROUP));
+        return Optional.ofNullable(HelpThreadName.ofChannelName(channel.getName()).category);
     }
 
     @NotNull
-    RestAction<Void> renameChannelToCategoryTitle(@NotNull GuildChannel channel,
+    RestAction<Void> renameChannelToCategory(@NotNull GuildChannel channel,
             @NotNull String category) {
-        String currentTitle = channel.getName();
-        Matcher matcher = EXTRACT_CATEGORY_TITLE_PATTERN.matcher(currentTitle);
+        HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
+        HelpThreadName changedName = new HelpThreadName(category, currentName.title);
 
-        if (!matcher.matches()) {
-            throw new AssertionError("Pattern must match any thread name");
-        }
-        boolean hasCategoryInTitle = matcher.group(CATEGORY_GROUP) != null;
-        String titleWithoutCategory =
-                hasCategoryInTitle ? matcher.group(TITLE_GROUP) : currentTitle;
+        return channel.getManager().setName(changedName.toChannelName());
+    }
 
-        String titleWithCategory = "[%s] %s".formatted(category, titleWithoutCategory);
+    @NotNull
+    RestAction<Void> renameChannelToTitle(@NotNull GuildChannel channel, @NotNull String title) {
+        HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
+        HelpThreadName changedName = new HelpThreadName(currentName.category, title);
 
-        return channel.getManager().setName(titleWithCategory);
+        return channel.getManager().setName(changedName.toChannelName());
     }
 
     boolean isOverviewChannelName(@NotNull String channelName) {
@@ -185,5 +179,21 @@ public final class HelpSystemHelper {
 
         return titleCompact.length() >= TITLE_COMPACT_LENGTH_MIN
                 && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
+    }
+
+    private record HelpThreadName(@Nullable String category, @NotNull String title) {
+        static @NotNull HelpThreadName ofChannelName(@NotNull CharSequence channelName) {
+            Matcher matcher = EXTRACT_CATEGORY_TITLE_PATTERN.matcher(channelName);
+
+            if (!matcher.matches()) {
+                throw new AssertionError("Pattern must match any thread name");
+            }
+
+            return new HelpThreadName(matcher.group(CATEGORY_GROUP), matcher.group(TITLE_GROUP));
+        }
+
+        public @NotNull String toChannelName() {
+            return category == null ? title : "[%s] %s".formatted(category, title);
+        }
     }
 }

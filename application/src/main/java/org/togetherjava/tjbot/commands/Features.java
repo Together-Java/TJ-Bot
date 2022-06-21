@@ -111,6 +111,7 @@ public enum Features {
         features.add(new AskCommand(config, helpSystemHelper));
         features.add(new CloseCommand(helpSystemHelper));
         features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
+        features.add(new ChangeHelpTitleCommand(helpSystemHelper));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
