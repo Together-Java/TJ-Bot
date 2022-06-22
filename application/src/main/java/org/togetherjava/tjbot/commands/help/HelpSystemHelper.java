@@ -192,7 +192,8 @@ public final class HelpSystemHelper {
             return new HelpThreadName(matcher.group(CATEGORY_GROUP), matcher.group(TITLE_GROUP));
         }
 
-        public @NotNull String toChannelName() {
+        @NotNull
+        String toChannelName() {
             return category == null ? title : "[%s] %s".formatted(category, title);
         }
     }

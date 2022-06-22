@@ -2,13 +2,9 @@ package org.togetherjava.tjbot.commands.help;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
@@ -79,19 +75,9 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
         }
         helpThreadIdToLastTitleChange.put(helpThread.getIdLong(), Instant.now());
 
-        event.deferReply().queue();
-
         helper.renameChannelToTitle(helpThread, title)
-            .flatMap(any -> sendTitleChangedMessage(helpThread.getGuild(), event.getHook(),
-                    helpThread, title))
+            .flatMap(any -> event.reply("Changed the title to **%s**.".formatted(title)))
             .queue();
-    }
-
-    private @NotNull RestAction<Message> sendTitleChangedMessage(@NotNull Guild guild,
-            @NotNull InteractionHook hook, @NotNull ThreadChannel helpThread,
-            @NotNull String title) {
-        String changedContent = "Changed the title to **%s**.".formatted(title);
-        return hook.editOriginal(changedContent);
     }
 
     private boolean isHelpThreadOnCooldown(@NotNull ThreadChannel helpThread) {
