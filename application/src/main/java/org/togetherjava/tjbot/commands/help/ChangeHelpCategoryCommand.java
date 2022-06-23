@@ -18,6 +18,7 @@ import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -34,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
     private static final String CATEGORY_OPTION = "category";
 
-    private static final int COOLDOWN_DURATION_VALUE = 1;
-    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.HOURS;
+    private static final int COOLDOWN_DURATION_VALUE = 30;
+    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
 
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> helpThreadIdToLastCategoryChange;
@@ -82,8 +83,9 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
 
         if (isHelpThreadOnCooldown(helpThread)) {
             event
-                .reply("Please wait a bit, this command can only be used once per %d %s."
-                    .formatted(COOLDOWN_DURATION_VALUE, COOLDOWN_DURATION_UNIT))
+                .reply("Please wait a bit, this command can only be used once per %d %s.".formatted(
+                        COOLDOWN_DURATION_VALUE,
+                        COOLDOWN_DURATION_UNIT.toString().toLowerCase(Locale.US)))
                 .setEphemeral(true)
                 .queue();
             return;
@@ -92,7 +94,7 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
 
         event.deferReply().queue();
 
-        helper.renameChannelToCategoryTitle(helpThread, category)
+        helper.renameChannelToCategory(helpThread, category)
             .flatMap(any -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
                     helpThread, category))
             .queue();
