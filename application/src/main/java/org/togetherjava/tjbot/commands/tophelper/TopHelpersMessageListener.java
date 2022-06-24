@@ -21,6 +21,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     private final Database database;
 
     private final Predicate<String> isStagingChannelName;
+    private final Predicate<String> isOverviewChannelName;
 
     /**
      * Creates a new listener to receive all message sent in help channels.
@@ -34,6 +35,8 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         this.database = database;
 
         isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
+            .asMatchPredicate();
+        isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
             .asMatchPredicate();
     }
 
@@ -56,7 +59,9 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         }
 
         ThreadChannel thread = event.getThreadChannel();
-        return isStagingChannelName.test(thread.getParentChannel().getName());
+        String rootChannelName = thread.getParentChannel().getName();
+        return isStagingChannelName.test(rootChannelName)
+                || isOverviewChannelName.test(rootChannelName);
     }
 
     private void addMessageRecord(@NotNull MessageReceivedEvent event) {
