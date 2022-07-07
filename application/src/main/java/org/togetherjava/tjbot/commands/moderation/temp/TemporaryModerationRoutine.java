@@ -81,13 +81,14 @@ public final class TemporaryModerationRoutine implements Routine {
 
     private void processGroupedActions(@NotNull RevocationGroupIdentifier groupIdentifier) {
         // Do not revoke an action which was overwritten by a permanent action that was issued
-        // afterwards
+        // afterwards, or if the last action has not even expired yet
         // For example if a user was perm-banned after being temp-banned
         ActionRecord lastApplyAction = actionsStore
             .findLastActionAgainstTargetByType(groupIdentifier.guildId, groupIdentifier.targetId,
                     groupIdentifier.type)
             .orElseThrow();
-        if (lastApplyAction.actionExpiresAt() == null) {
+        if (lastApplyAction.actionExpiresAt() == null
+                || lastApplyAction.actionExpiresAt().isAfter(Instant.now())) {
             return;
         }
 
