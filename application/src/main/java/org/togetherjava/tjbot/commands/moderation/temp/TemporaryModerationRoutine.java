@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.config.Config;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -80,15 +79,14 @@ public final class TemporaryModerationRoutine implements Routine {
     }
 
     private void processGroupedActions(@NotNull RevocationGroupIdentifier groupIdentifier) {
-        // Do not revoke an action which was overwritten by a permanent action that was issued
-        // afterwards, or if the last action has not even expired yet
+        // Do not revoke an action which was overwritten by a still effective action that was issued
+        // afterwards
         // For example if a user was perm-banned after being temp-banned
         ActionRecord lastApplyAction = actionsStore
             .findLastActionAgainstTargetByType(groupIdentifier.guildId, groupIdentifier.targetId,
                     groupIdentifier.type)
             .orElseThrow();
-        if (lastApplyAction.actionExpiresAt() == null
-                || lastApplyAction.actionExpiresAt().isAfter(Instant.now())) {
+        if (lastApplyAction.isEffective()) {
             return;
         }
 
@@ -102,8 +100,7 @@ public final class TemporaryModerationRoutine implements Routine {
         if (lastRevokeActionOpt.isPresent()) {
             ActionRecord lastRevokeAction = lastRevokeActionOpt.orElseThrow();
             if (lastRevokeAction.issuedAt().isAfter(lastApplyAction.issuedAt())
-                    && (lastRevokeAction.actionExpiresAt() == null
-                            || lastRevokeAction.actionExpiresAt().isAfter(Instant.now()))) {
+                    && lastRevokeAction.isEffective()) {
                 return;
             }
         }
