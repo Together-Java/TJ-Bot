@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.config.Config;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -82,21 +81,16 @@ public final class RejoinModerationRoleListener implements EventReceiver {
                 member.getGuild().getIdLong(), member.getIdLong(), moderationRole.revokeAction);
         if (lastRevokeAction.isEmpty()) {
             // User was never e.g. unmuted
-            return isActionEffective(lastApplyAction.orElseThrow());
+            return lastApplyAction.orElseThrow().isEffective();
         }
 
         // The last issued action takes priority
         if (lastApplyAction.orElseThrow()
             .issuedAt()
             .isAfter(lastRevokeAction.orElseThrow().issuedAt())) {
-            return isActionEffective(lastApplyAction.orElseThrow());
+            return lastApplyAction.orElseThrow().isEffective();
         }
         return false;
-    }
-
-    private static boolean isActionEffective(@NotNull ActionRecord action) {
-        // Effective if permanent or expires in the future
-        return action.actionExpiresAt() == null || action.actionExpiresAt().isAfter(Instant.now());
     }
 
     private static void applyModerationRole(@NotNull ModerationRole moderationRole,

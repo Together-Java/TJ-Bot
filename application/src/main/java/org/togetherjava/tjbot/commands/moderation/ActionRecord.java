@@ -26,7 +26,7 @@ public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, 
 
     /**
      * Creates the action record that corresponds to the given action entry from the database table.
-     * 
+     *
      * @param action the action to convert
      * @return the corresponding action record
      */
@@ -36,5 +36,15 @@ public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, 
                 action.getAuthorId(), action.getTargetId(),
                 ModerationAction.valueOf(action.getActionType()), action.getActionExpiresAt(),
                 action.getReason());
+    }
+
+    /**
+     * Whether this action is still effective. That is, it is either a permanent action or temporary
+     * but not expired yet.
+     *
+     * @return True when still effective, false otherwise
+     */
+    public boolean isEffective() {
+        return actionExpiresAt == null || actionExpiresAt.isAfter(Instant.now());
     }
 }
