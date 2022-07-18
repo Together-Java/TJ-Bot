@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -14,6 +15,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
+import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
 
 /**
  * Implements the {@code /change-help-title} command, which is able to change the title of a help
@@ -54,7 +58,7 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         String title = event.getOption(TITLE_OPTION).getAsString();
 
-        if (!helper.handleIsHelpThread(event)) {
+        if (!helper.handleIsHelpThread(event) || !handleIsValidTitle(title, event)) {
             return;
         }
 
@@ -87,5 +91,19 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
                     COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)
             .isPresent();
+    }
+
+    private boolean handleIsValidTitle(@NotNull CharSequence title, @NotNull IReplyCallback event) {
+        if (HelpSystemHelper.isTitleValid(title)) {
+            return true;
+        }
+
+        event.reply(
+                "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
+                    .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
+            .setEphemeral(true)
+            .queue();
+
+        return false;
     }
 }

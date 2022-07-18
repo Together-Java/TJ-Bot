@@ -36,7 +36,7 @@ public final class HelpSystemHelper {
 
     private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     static final int TITLE_COMPACT_LENGTH_MIN = 2;
-    static final int TITLE_COMPACT_LENGTH_MAX = 80;
+    static final int TITLE_COMPACT_LENGTH_MAX = 70;
 
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
