@@ -3,12 +3,12 @@ package org.togetherjava.tjbot.commands.help;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,11 +92,16 @@ public final class AskCommand extends SlashCommandAdapter {
         }
         TextChannel overviewChannel = maybeOverviewChannel.orElseThrow();
 
+        InteractionHook eventHook = event.getHook();
+        Member author = event.getMember();
+        Guild guild = event.getGuild();
+        event.deferReply(true).queue();
+
         overviewChannel.createThreadChannel("[%s] %s".formatted(category, title))
-            .flatMap(threadChannel -> handleEvent(event, threadChannel, event.getMember(), title,
-                    category))
+            .flatMap(threadChannel -> handleEvent(eventHook, threadChannel, author, title, category,
+                    guild))
             .queue(any -> {
-            }, e -> handleFailure(e, event));
+            }, e -> handleFailure(e, eventHook));
     }
 
     private boolean handleIsStagingChannel(@NotNull IReplyCallback event) {
@@ -125,11 +130,11 @@ public final class AskCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private @NotNull RestAction<Message> handleEvent(@NotNull IReplyCallback event,
+    private @NotNull RestAction<Message> handleEvent(@NotNull InteractionHook eventHook,
             @NotNull ThreadChannel threadChannel, @NotNull Member author, @NotNull String title,
-            @NotNull String category) {
-        return sendInitialMessage(event.getGuild(), threadChannel, author, title, category)
-            .flatMap(any -> notifyUser(event, threadChannel))
+            @NotNull String category, @NotNull Guild guild) {
+        return sendInitialMessage(guild, threadChannel, author, title, category)
+            .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
@@ -153,22 +158,21 @@ public final class AskCommand extends SlashCommandAdapter {
             .flatMap(message -> message.editMessage(contentWithRole));
     }
 
-    private static @NotNull ReplyCallbackAction notifyUser(@NotNull IReplyCallback event,
+    private static @NotNull RestAction<Message> notifyUser(@NotNull InteractionHook eventHook,
             @NotNull IMentionable threadChannel) {
-        return event.reply("""
+        return eventHook.editOriginal("""
                 Created a thread for you: %s
-                Please ask your question there, thanks.""".formatted(threadChannel.getAsMention()))
-            .setEphemeral(true);
+                Please ask your question there, thanks.""".formatted(threadChannel.getAsMention()));
     }
 
-    private static void handleFailure(@NotNull Throwable exception, @NotNull IReplyCallback event) {
+    private static void handleFailure(@NotNull Throwable exception,
+            @NotNull InteractionHook eventHook) {
         if (exception instanceof ErrorResponseException responseException) {
             ErrorResponse response = responseException.getErrorResponse();
             if (response == ErrorResponse.MAX_CHANNELS
                     || response == ErrorResponse.MAX_ACTIVE_THREADS) {
-                event.reply(
+                eventHook.editOriginal(
                         "It seems that there are currently too many active questions, please try again in a few minutes.")
-                    .setEphemeral(true)
                     .queue();
                 return;
             }
