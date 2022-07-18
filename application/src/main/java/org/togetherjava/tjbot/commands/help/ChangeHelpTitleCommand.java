@@ -58,10 +58,7 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         String title = event.getOption(TITLE_OPTION).getAsString();
 
-        if (!helper.handleIsHelpThread(event)) {
-            return;
-        }
-        if (!handleIsValidTitle(title, event)) {
+        if (!helper.handleIsHelpThread(event) || !handleIsValidTitle(title, event)) {
             return;
         }
 
