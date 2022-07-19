@@ -53,7 +53,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         reactWith(config.getDownVoteEmoteName(), FALLBACK_DOWN_VOTE, guild, message);
     }
 
-    private static void createThread(Message message) {
+    private static void createThread(@NotNull Message message) {
         message
             .createThreadChannel(
                     "Discussion for " + message.getAuthor().getName() + "'s suggestion")
