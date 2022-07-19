@@ -48,13 +48,16 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         Guild guild = event.getGuild();
         Message message = event.getMessage();
 
+        createThread(message);
+        reactWith(config.getUpVoteEmoteName(), FALLBACK_UP_VOTE, guild, message);
+        reactWith(config.getDownVoteEmoteName(), FALLBACK_DOWN_VOTE, guild, message);
+    }
+
+    private static void createThread(Message message) {
         message
             .createThreadChannel(
                     "Discussion for " + message.getAuthor().getName() + "'s suggestion")
             .queue();
-
-        reactWith(config.getUpVoteEmoteName(), FALLBACK_UP_VOTE, guild, message);
-        reactWith(config.getDownVoteEmoteName(), FALLBACK_DOWN_VOTE, guild, message);
     }
 
     private static void reactWith(@NotNull String emoteName, @NotNull String fallbackUnicodeEmote,
