@@ -54,17 +54,16 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     private static void createThread(@NotNull Message message) {
-        String messageContent = message.getContentRaw();
+        String title = message.getContentRaw();
 
-        String title = messageContent;
-        if (messageContent.length() >= TITLE_MAX_LENGTH) {
-            int lastWordEnd = messageContent.lastIndexOf(' ', TITLE_MAX_LENGTH);
+        if (title.length() >= TITLE_MAX_LENGTH) {
+            int lastWordEnd = title.lastIndexOf(' ', TITLE_MAX_LENGTH);
 
             if (lastWordEnd == -1) {
                 lastWordEnd = TITLE_MAX_LENGTH;
             }
 
-            title = messageContent.substring(0, lastWordEnd);
+            title = title.substring(0, lastWordEnd);
         }
 
         message.createThreadChannel(title).queue();
