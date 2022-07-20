@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
  */
 public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SuggestionsUpDownVoter.class);
+    private static final int TITLE_MAX_LENGTH = 60;
     private static final String FALLBACK_UP_VOTE = "👍";
     private static final String FALLBACK_DOWN_VOTE = "👎";
 
@@ -53,10 +54,20 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     private static void createThread(@NotNull Message message) {
-        message
-            .createThreadChannel(
-                    "Discussion for " + message.getAuthor().getName() + "'s suggestion")
-            .queue();
+        String messageContent = message.getContentRaw();
+
+        String title = messageContent;
+        if (messageContent.length() >= TITLE_MAX_LENGTH) {
+            int lastWordEnd = messageContent.lastIndexOf(' ', TITLE_MAX_LENGTH);
+
+            if (lastWordEnd == -1) {
+                lastWordEnd = TITLE_MAX_LENGTH;
+            }
+
+            title = messageContent.substring(0, lastWordEnd);
+        }
+
+        message.createThreadChannel(title).queue();
     }
 
     private static void reactWith(@NotNull String emoteName, @NotNull String fallbackUnicodeEmote,
