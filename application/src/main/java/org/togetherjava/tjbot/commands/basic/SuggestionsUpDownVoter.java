@@ -40,8 +40,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage() || !event.isFromGuild()
-                || event.getChannel().getType().isThread()) {
+        if (event.getAuthor().isBot() || event.isWebhookMessage() || !event.isFromGuild()) {
             return;
         }
 
