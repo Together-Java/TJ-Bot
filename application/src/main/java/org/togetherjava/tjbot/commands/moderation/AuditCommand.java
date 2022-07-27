@@ -89,8 +89,9 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static @NotNull MessageEmbed.Field actionToField(@NotNull ActionRecord action,
             @NotNull JDA jda) {
         Function<Instant, String> formatTime = instant -> {
-            if (instant == null)
+            if (instant == null) {
                 return "";
+            }
             return TimeUtil.getDateTimeString(instant.atOffset(ZoneOffset.UTC));
         };
 
