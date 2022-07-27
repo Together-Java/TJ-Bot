@@ -7,16 +7,19 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,27 +56,24 @@ public final class AuditCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static @NotNull MessageEmbed createSummaryMessage(@NotNull User user,
-            @NotNull Collection<ActionRecord> actions) {
+    private static @NotNull EmbedBuilder createSummaryEmbed(@NotNull User user,
+                                                            @NotNull Collection<ActionRecord> actions) {
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
             .setAuthor(user.getName(), null, user.getAvatarUrl())
             .setDescription(createSummaryMessageDescription(actions))
-            .setColor(ModerationUtils.AMBIENT_COLOR)
-            .build();
+            .setColor(ModerationUtils.AMBIENT_COLOR);
     }
 
     private static @NotNull String createSummaryMessageDescription(
             @NotNull Collection<ActionRecord> actions) {
         int actionAmount = actions.size();
-        if (actionAmount == 0) {
-            return "There are **no actions** against the user.";
-        }
 
-        String shortSummary = "There are **%d actions** against the user.".formatted(actionAmount);
+        String shortSummary = "There are **%s actions** against the user.".formatted(actionAmount == 0 ? "no" : actionAmount);
 
         // Summary of all actions with their count, like "- Warn: 5", descending
         Map<ModerationAction, Long> actionTypeToCount = actions.stream()
             .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
+
         String typeCountSummary = actionTypeToCount.entrySet()
             .stream()
             .filter(typeAndCount -> typeAndCount.getValue() > 0)
@@ -85,30 +85,19 @@ public final class AuditCommand extends SlashCommandAdapter {
         return shortSummary + "\n" + typeCountSummary;
     }
 
-    private static @NotNull RestAction<MessageEmbed> actionToMessage(@NotNull ActionRecord action,
-            @NotNull JDA jda) {
-        String footer = action.actionExpiresAt() == null ? null
-                : "Temporary action, expires at %s".formatted(TimeUtil
-                    .getDateTimeString(action.actionExpiresAt().atOffset(ZoneOffset.UTC)));
+    private static @NotNull MessageEmbed.Field actionToField(@NotNull ActionRecord action,
+                                                               @NotNull JDA jda) {
+        Function<Instant, String> formatTime = instant -> TimeUtil.getDateTimeString(instant.atOffset(ZoneOffset.UTC));
 
-        return jda.retrieveUserById(action.authorId())
-            .onErrorMap(error -> null)
-            .map(author -> new EmbedBuilder().setTitle(action.actionType().name())
-                .setAuthor(author == null ? "(unknown user)" : author.getAsTag(), null,
-                        author == null ? null : author.getAvatarUrl())
-                .setDescription(action.reason())
-                .setTimestamp(action.issuedAt())
-                .setFooter(footer)
-                .setColor(ModerationUtils.AMBIENT_COLOR)
-                .build());
-    }
+        String expiresAt = action.actionExpiresAt() == null ? "" : "\nTemporary action, Expires at: " + formatTime.apply(action.actionExpiresAt());
 
-    private static <E> @NotNull List<E> prependElement(@NotNull E element,
-            @NotNull Collection<? extends E> elements) {
-        List<E> allElements = new ArrayList<>(elements.size() + 1);
-        allElements.add(element);
-        allElements.addAll(elements);
-        return allElements;
+        User targetUser = jda.getUserById(action.authorId());
+
+        return new MessageEmbed.Field(
+                action.actionType().name() + " by " + (targetUser == null ? "(unknown user)" : targetUser.getAsTag()),
+                action.reason() + "\nIssued at: " + formatTime.apply(action.issuedAt()) + expiresAt,
+                false
+        );
     }
 
     @Override
@@ -121,7 +110,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        if (!handleChecks(bot, author, targetOption.getAsMember(), guild, event)) {
+        if (!handleChecks(bot, author, targetOption.getAsMember(), event)) {
             return;
         }
 
@@ -130,7 +119,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull Guild guild, @NotNull IReplyCallback event) {
+            @Nullable Member target, @NotNull IReplyCallback event) {
         // Member doesn't exist if attempting to audit a user who is not part of the guild.
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
@@ -144,21 +133,9 @@ public final class AuditCommand extends SlashCommandAdapter {
         List<ActionRecord> actions =
                 actionsStore.getActionsByTargetAscending(guild.getIdLong(), user.getIdLong());
 
-        MessageEmbed summary = createSummaryMessage(user, actions);
-        if (actions.isEmpty()) {
-            event.replyEmbeds(summary).queue();
-            return;
-        }
+        EmbedBuilder audit = createSummaryEmbed(user, actions);
+        actions.forEach(action -> audit.addField(actionToField(action, event.getJDA())));
 
-        // Computing messages for actual actions is done deferred and might require asking the
-        // Discord API
-        event.deferReply().queue();
-        JDA jda = event.getJDA();
-
-        RestAction<List<MessageEmbed>> messagesTask = RestAction
-            .allOf(actions.stream().map(action -> actionToMessage(action, jda)).toList());
-        messagesTask.map(messages -> prependElement(summary, messages))
-            .flatMap(messages -> event.getHook().sendMessageEmbeds(messages))
-            .queue();
+        event.replyEmbeds(audit.build()).queue();
     }
 }
