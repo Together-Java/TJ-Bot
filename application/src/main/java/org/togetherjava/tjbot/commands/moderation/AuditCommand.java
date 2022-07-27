@@ -57,7 +57,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private static @NotNull EmbedBuilder createSummaryEmbed(@NotNull User user,
-                                                            @NotNull Collection<ActionRecord> actions) {
+            @NotNull Collection<ActionRecord> actions) {
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
             .setAuthor(user.getName(), null, user.getAvatarUrl())
             .setDescription(createSummaryMessageDescription(actions))
@@ -68,7 +68,8 @@ public final class AuditCommand extends SlashCommandAdapter {
             @NotNull Collection<ActionRecord> actions) {
         int actionAmount = actions.size();
 
-        String shortSummary = "There are **%s actions** against the user.".formatted(actionAmount == 0 ? "no" : actionAmount);
+        String shortSummary = "There are **%s actions** against the user."
+            .formatted(actionAmount == 0 ? "no" : actionAmount);
 
         // Summary of all actions with their count, like "- Warn: 5", descending
         Map<ModerationAction, Long> actionTypeToCount = actions.stream()
@@ -86,18 +87,22 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private static @NotNull MessageEmbed.Field actionToField(@NotNull ActionRecord action,
-                                                               @NotNull JDA jda) {
-        Function<Instant, String> formatTime = instant -> TimeUtil.getDateTimeString(instant.atOffset(ZoneOffset.UTC));
+            @NotNull JDA jda) {
+        Function<Instant, String> formatTime = instant -> {
+            if (instant == null)
+                return "";
+            return TimeUtil.getDateTimeString(instant.atOffset(ZoneOffset.UTC));
+        };
 
-        String expiresAt = action.actionExpiresAt() == null ? "" : "\nTemporary action, Expires at: " + formatTime.apply(action.actionExpiresAt());
-
-        User targetUser = jda.getUserById(action.authorId());
+        User author = jda.getUserById(action.authorId());
 
         return new MessageEmbed.Field(
-                action.actionType().name() + " by " + (targetUser == null ? "(unknown user)" : targetUser.getAsTag()),
-                action.reason() + "\nIssued at: " + formatTime.apply(action.issuedAt()) + expiresAt,
-                false
-        );
+                action.actionType().name() + " by "
+                        + (author == null ? "(unknown user)" : author.getAsTag()),
+                action.reason() + "\nIssued at: " + formatTime.apply(action.issuedAt())
+                        + "\nTemporary action, Expires at: "
+                        + formatTime.apply(action.actionExpiresAt()),
+                false);
     }
 
     @Override
