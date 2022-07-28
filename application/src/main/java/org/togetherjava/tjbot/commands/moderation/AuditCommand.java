@@ -127,7 +127,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        event.reply(auditMessage(guild.getIdLong(), target.getIdLong(), 1, event.getJDA())).queue();
+        event.reply(auditUser(guild.getIdLong(), target.getIdLong(), 1, event.getJDA())).queue();
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
@@ -141,7 +141,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         return ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event);
     }
 
-    private Message auditMessage(long guildId, long targetId, int pageNo, @NotNull JDA jda) {
+    private Message auditUser(long guildId, long targetId, int pageNo, @NotNull JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
 
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
@@ -195,7 +195,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     @Override
     public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
         event
-            .editMessage(auditMessage(Long.parseLong(args.get(0)), Long.parseLong(args.get(1)),
+            .editMessage(auditUser(Long.parseLong(args.get(0)), Long.parseLong(args.get(1)),
                     Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3)), event.getJDA()))
             .queue();
     }
