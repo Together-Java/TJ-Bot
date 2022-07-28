@@ -132,7 +132,10 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        event.reply(auditUser(guild.getIdLong(), target.getIdLong(), 1, event.getJDA())).queue();
+        event
+            .reply(auditUser(guild.getIdLong(), target.getIdLong(), event.getMember().getIdLong(),
+                    1, event.getJDA()))
+            .queue();
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
@@ -159,7 +162,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         return groupedActions;
     }
 
-    private @NotNull Message auditUser(long guildId, long targetId, int pageNumber,
+    private @NotNull Message auditUser(long guildId, long targetId, long callerId, int pageNumber,
             @NotNull JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
         List<List<ActionRecord>> groupedActions = groupActions(actions);
@@ -175,24 +178,25 @@ public final class AuditCommand extends SlashCommandAdapter {
             .forEach(action -> audit.addField(actionToField(action, jda)));
 
         return new MessageBuilder(audit.setFooter("Page: " + pageNumber + "/" + totalPages).build())
-            .setActionRows(makeActionRow(guildId, targetId, pageNumber, totalPages))
+            .setActionRows(makeActionRow(guildId, targetId, callerId, pageNumber, totalPages))
             .build();
     }
 
-    private @NotNull ActionRow makeActionRow(long guildId, long targetId, int pageNumber,
-            int totalPages) {
+    private @NotNull ActionRow makeActionRow(long guildId, long targetId, long callerId,
+            int pageNumber, int totalPages) {
         String stringGuildId = String.valueOf(guildId);
         String stringTargetId = String.valueOf(targetId);
+        String stringCallerId = String.valueOf(callerId);
         String stringPageNumber = String.valueOf(pageNumber);
 
-        Button previousButton = Button.primary(
-                generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "-1"), "⬅");
+        Button previousButton = Button.primary(generateComponentId(stringGuildId, stringTargetId,
+                stringCallerId, stringPageNumber, "-1"), "⬅");
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
-        Button nextButton = Button.primary(
-                generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "1"), "➡");
+        Button nextButton = Button.primary(generateComponentId(stringGuildId, stringTargetId,
+                stringCallerId, stringPageNumber, "1"), "➡");
         if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
         }
@@ -202,10 +206,21 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
-        long guildId = Long.parseLong(args.get(0));
-        long targetId = Long.parseLong(args.get(1));
-        int pageNumber = Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3));
+        long callerId = Long.parseLong(args.get(2));
+        long interactorId = event.getMember().getIdLong();
 
-        event.editMessage(auditUser(guildId, targetId, pageNumber, event.getJDA())).queue();
+        if (callerId == interactorId) {
+            long guildId = Long.parseLong(args.get(0));
+            long targetId = Long.parseLong(args.get(1));
+            int pageNumber = Integer.parseInt(args.get(3)) + Integer.parseInt(args.get(4));
+
+            event
+                .editMessage(auditUser(guildId, targetId, interactorId, pageNumber, event.getJDA()))
+                .queue();
+        } else {
+            event.reply("Only the user who triggered the command can use these buttons.")
+                .setEphemeral(true)
+                .queue();
+        }
     }
 }
