@@ -101,12 +101,15 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         User author = jda.getUserById(action.authorId());
 
+        Instant expiresAt = action.actionExpiresAt();
+        String expiresAtFormatted = expiresAt == null ? ""
+                : "\nTemporary action, expires at: " + formatTime.apply(expiresAt);
+
         return new MessageEmbed.Field(
                 action.actionType().name() + " by "
                         + (author == null ? "(unknown user)" : author.getAsTag()),
                 action.reason() + "\nIssued at: " + formatTime.apply(action.issuedAt())
-                        + "\nTemporary action, Expires at: "
-                        + formatTime.apply(action.actionExpiresAt()),
+                        + expiresAtFormatted,
                 false);
     }
 
