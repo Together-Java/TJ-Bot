@@ -39,6 +39,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "user";
     private static final String COMMAND_NAME = "audit";
     private static final String ACTION_VERB = "audit";
+    private static final int MAX_PAGE_LENGTH = 25;
     private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
@@ -145,19 +146,23 @@ public final class AuditCommand extends SlashCommandAdapter {
         return ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event);
     }
 
-    private Message auditUser(long guildId, long targetId, int pageNo, @NotNull JDA jda) {
-        List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
-
+    private @NotNull List<List<ActionRecord>> groupActions(@NotNull List<ActionRecord> actions) {
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
-            if (i % 25 == 0) {
-                groupedActions.add(new ArrayList<>(25));
+            if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
+                groupedActions.add(new ArrayList<>(AuditCommand.MAX_PAGE_LENGTH));
             }
 
             groupedActions.get(groupedActions.size() - 1).add(actions.get(i));
         }
 
-        int totalPage = groupedActions.size();
+        return groupedActions;
+    }
+
+    private @NotNull Message auditUser(long guildId, long targetId, int pageNumber, @NotNull JDA jda) {
+        List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
+        List<List<ActionRecord>> groupedActions = groupActions(actions);
+        int totalPages = groupedActions.size();
 
         EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions);
 
@@ -165,42 +170,38 @@ public final class AuditCommand extends SlashCommandAdapter {
             return new MessageBuilder(audit.build()).build();
         }
 
-        groupedActions.get(pageNo - 1)
+        groupedActions.get(pageNumber - 1)
             .forEach(action -> audit.addField(actionToField(action, jda)));
 
-        return new MessageBuilder(audit.setFooter("Page: " + pageNo + "/" + totalPage).build())
-            .setActionRows(ActionRow.of(previousButton(guildId, targetId, pageNo),
-                    nextButton(guildId, targetId, pageNo, totalPage)))
+        return new MessageBuilder(audit.setFooter("Page: " + pageNumber + "/" + totalPages).build())
+            .setActionRows(makeActionRow(guildId, targetId, pageNumber, totalPages))
             .build();
     }
 
-    private Button previousButton(long guildId, long targetId, int pageNo) {
-        Button previousButton = Button.primary(generateComponentId(String.valueOf(guildId),
-                String.valueOf(targetId), String.valueOf(pageNo), "-1"), "⬅");
+    private @NotNull ActionRow makeActionRow(long guildId, long targetId, int pageNumber, int totalPages) {
+        String stringGuildId = String.valueOf(guildId);
+        String stringTargetId = String.valueOf(targetId);
+        String stringPageNumber = String.valueOf(pageNumber);
 
-        if (pageNo == 1) {
+        Button previousButton = Button.primary(generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "-1"), "⬅");
+        if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
-        return previousButton;
-    }
-
-    private Button nextButton(long guildId, long targetId, int pageNo, int totalPage) {
-        Button nextButton = Button.primary(generateComponentId(String.valueOf(guildId),
-                String.valueOf(targetId), String.valueOf(pageNo), "1"), "➡");
-
-        if (pageNo == totalPage) {
+        Button nextButton = Button.primary(generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "1"), "➡");
+        if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
         }
 
-        return nextButton;
+        return ActionRow.of(previousButton, nextButton);
     }
 
     @Override
     public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
-        event
-            .editMessage(auditUser(Long.parseLong(args.get(0)), Long.parseLong(args.get(1)),
-                    Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3)), event.getJDA()))
-            .queue();
+        long guildId = Long.parseLong(args.get(0));
+        long targetId = Long.parseLong(args.get(1));
+        int pageNumber = Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3));
+
+        event.editMessage(auditUser(guildId, targetId, pageNumber, event.getJDA())).queue();
     }
 }
