@@ -154,7 +154,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions);
 
-        if (groupedActions.size() == 0) {
+        if (groupedActions.isEmpty()) {
             return new MessageBuilder(audit.build()).build();
         }
 
