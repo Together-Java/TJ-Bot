@@ -1,12 +1,17 @@
 package org.togetherjava.tjbot.commands.moderation;
 
+import io.r2dbc.spi.Parameter;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.TimeUtil;
 
 import org.jetbrains.annotations.NotNull;
@@ -120,7 +125,12 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        auditUser(target, guild, event);
+        event.reply(auditMessage(
+                guild.getIdLong(),
+                target.getIdLong(),
+                1,
+                event.getJDA()
+        )).queue();
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
@@ -134,14 +144,69 @@ public final class AuditCommand extends SlashCommandAdapter {
         return ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event);
     }
 
-    private void auditUser(@NotNull User user, @NotNull ISnowflake guild,
-            @NotNull IReplyCallback event) {
-        List<ActionRecord> actions =
-                actionsStore.getActionsByTargetAscending(guild.getIdLong(), user.getIdLong());
+    private Message auditMessage(long guildId, long targetId, int pageNo, @NotNull JDA jda) {
+        List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
 
-        EmbedBuilder audit = createSummaryEmbed(user, actions);
-        actions.forEach(action -> audit.addField(actionToField(action, event.getJDA())));
+        List<List<ActionRecord>> groupedActions = new ArrayList<>();
+        for (int i = 0; i < actions.size(); i++) {
+            if (i % 25 == 0) {
+                groupedActions.add(new ArrayList<>(25));
+            }
 
-        event.replyEmbeds(audit.build()).queue();
+            groupedActions.get(groupedActions.size() - 1).add(actions.get(i));
+        }
+
+        int totalPage = groupedActions.size();
+
+        EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions)
+                .setFooter("Page: " + pageNo + "/" + totalPage);
+        groupedActions.get(pageNo - 1).forEach(action -> audit.addField(actionToField(action, jda)));
+
+        return new MessageBuilder(audit.build())
+                .setActionRows(ActionRow.of(
+                        previousButton(guildId, targetId, pageNo),
+                        nextButton(guildId, targetId, pageNo, totalPage)
+                ))
+                .build();
+    }
+
+    private Button previousButton(long guildId, long targetId, int pageNo) {
+        Button previousButton = Button.primary(generateComponentId(
+                String.valueOf(guildId),
+                String.valueOf(targetId),
+                String.valueOf(pageNo),
+                "-1"
+        ), "⬅");
+
+        if (pageNo == 1) {
+            previousButton = previousButton.asDisabled();
+        }
+
+        return previousButton;
+    }
+
+    private Button nextButton(long guildId, long targetId, int pageNo, int totalPage) {
+        Button nextButton = Button.primary(generateComponentId(
+                String.valueOf(guildId),
+                String.valueOf(targetId),
+                String.valueOf(pageNo),
+                "1"
+        ), "➡");
+
+        if (pageNo == totalPage) {
+            nextButton = nextButton.asDisabled();
+        }
+
+        return nextButton;
+    }
+
+    @Override
+    public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
+        event.editMessage(auditMessage(
+                Long.parseLong(args.get(0)),
+                Long.parseLong(args.get(1)),
+                Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3)),
+                event.getJDA()
+        )).queue();
     }
 }
