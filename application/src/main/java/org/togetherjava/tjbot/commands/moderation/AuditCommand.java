@@ -159,7 +159,8 @@ public final class AuditCommand extends SlashCommandAdapter {
         return groupedActions;
     }
 
-    private @NotNull Message auditUser(long guildId, long targetId, int pageNumber, @NotNull JDA jda) {
+    private @NotNull Message auditUser(long guildId, long targetId, int pageNumber,
+            @NotNull JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
         List<List<ActionRecord>> groupedActions = groupActions(actions);
         int totalPages = groupedActions.size();
@@ -178,17 +179,20 @@ public final class AuditCommand extends SlashCommandAdapter {
             .build();
     }
 
-    private @NotNull ActionRow makeActionRow(long guildId, long targetId, int pageNumber, int totalPages) {
+    private @NotNull ActionRow makeActionRow(long guildId, long targetId, int pageNumber,
+            int totalPages) {
         String stringGuildId = String.valueOf(guildId);
         String stringTargetId = String.valueOf(targetId);
         String stringPageNumber = String.valueOf(pageNumber);
 
-        Button previousButton = Button.primary(generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "-1"), "⬅");
+        Button previousButton = Button.primary(
+                generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "-1"), "⬅");
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
-        Button nextButton = Button.primary(generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "1"), "➡");
+        Button nextButton = Button.primary(
+                generateComponentId(stringGuildId, stringTargetId, stringPageNumber, "1"), "➡");
         if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
         }
