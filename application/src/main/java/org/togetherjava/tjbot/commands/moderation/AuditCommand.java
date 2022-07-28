@@ -152,12 +152,16 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         int totalPage = groupedActions.size();
 
-        EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions)
-            .setFooter("Page: " + pageNo + "/" + totalPage);
+        EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions);
+
+        if (groupedActions.size() == 0) {
+            return new MessageBuilder(audit.build()).build();
+        }
+
         groupedActions.get(pageNo - 1)
             .forEach(action -> audit.addField(actionToField(action, jda)));
 
-        return new MessageBuilder(audit.build())
+        return new MessageBuilder(audit.setFooter("Page: " + pageNo + "/" + totalPage).build())
             .setActionRows(ActionRow.of(previousButton(guildId, targetId, pageNo),
                     nextButton(guildId, targetId, pageNo, totalPage)))
             .build();
