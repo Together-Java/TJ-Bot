@@ -75,6 +75,10 @@ public final class AuditCommand extends SlashCommandAdapter {
         String shortSummary = "There are **%s actions** against the user."
             .formatted(actionAmount == 0 ? "no" : actionAmount);
 
+        if (actionAmount == 0) {
+            return shortSummary;
+        }
+
         // Summary of all actions with their count, like "- Warn: 5", descending
         Map<ModerationAction, Long> actionTypeToCount = actions.stream()
             .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
