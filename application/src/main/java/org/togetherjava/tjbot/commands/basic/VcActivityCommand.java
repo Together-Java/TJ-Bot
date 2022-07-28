@@ -98,8 +98,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * our best bet.
      */
     private static final Map<String, String> VC_APPLICATION_TO_ID =
-            Map.ofEntries(
-                    Map.entry(WATCH_TOGETHER_NAME, "880218394199220334"),
+            Map.ofEntries(Map.entry(WATCH_TOGETHER_NAME, "880218394199220334"),
                     Map.entry(POKER_NAME, "755827207812677713"),
                     Map.entry(BETRAYAL_IO_NAME, "773336526917861400"),
                     Map.entry(FISHINGTON_IO_NAME, "814288819477020702"),
