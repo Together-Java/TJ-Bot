@@ -125,12 +125,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        event.reply(auditMessage(
-                guild.getIdLong(),
-                target.getIdLong(),
-                1,
-                event.getJDA()
-        )).queue();
+        event.reply(auditMessage(guild.getIdLong(), target.getIdLong(), 1, event.getJDA())).queue();
     }
 
     @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
@@ -159,24 +154,19 @@ public final class AuditCommand extends SlashCommandAdapter {
         int totalPage = groupedActions.size();
 
         EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions)
-                .setFooter("Page: " + pageNo + "/" + totalPage);
-        groupedActions.get(pageNo - 1).forEach(action -> audit.addField(actionToField(action, jda)));
+            .setFooter("Page: " + pageNo + "/" + totalPage);
+        groupedActions.get(pageNo - 1)
+            .forEach(action -> audit.addField(actionToField(action, jda)));
 
         return new MessageBuilder(audit.build())
-                .setActionRows(ActionRow.of(
-                        previousButton(guildId, targetId, pageNo),
-                        nextButton(guildId, targetId, pageNo, totalPage)
-                ))
-                .build();
+            .setActionRows(ActionRow.of(previousButton(guildId, targetId, pageNo),
+                    nextButton(guildId, targetId, pageNo, totalPage)))
+            .build();
     }
 
     private Button previousButton(long guildId, long targetId, int pageNo) {
-        Button previousButton = Button.primary(generateComponentId(
-                String.valueOf(guildId),
-                String.valueOf(targetId),
-                String.valueOf(pageNo),
-                "-1"
-        ), "⬅");
+        Button previousButton = Button.primary(generateComponentId(String.valueOf(guildId),
+                String.valueOf(targetId), String.valueOf(pageNo), "-1"), "⬅");
 
         if (pageNo == 1) {
             previousButton = previousButton.asDisabled();
@@ -186,12 +176,8 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private Button nextButton(long guildId, long targetId, int pageNo, int totalPage) {
-        Button nextButton = Button.primary(generateComponentId(
-                String.valueOf(guildId),
-                String.valueOf(targetId),
-                String.valueOf(pageNo),
-                "1"
-        ), "➡");
+        Button nextButton = Button.primary(generateComponentId(String.valueOf(guildId),
+                String.valueOf(targetId), String.valueOf(pageNo), "1"), "➡");
 
         if (pageNo == totalPage) {
             nextButton = nextButton.asDisabled();
@@ -202,11 +188,9 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
-        event.editMessage(auditMessage(
-                Long.parseLong(args.get(0)),
-                Long.parseLong(args.get(1)),
-                Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3)),
-                event.getJDA()
-        )).queue();
+        event
+            .editMessage(auditMessage(Long.parseLong(args.get(0)), Long.parseLong(args.get(1)),
+                    Integer.parseInt(args.get(2)) + Integer.parseInt(args.get(3)), event.getJDA()))
+            .queue();
     }
 }
