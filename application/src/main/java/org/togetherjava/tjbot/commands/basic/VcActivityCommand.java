@@ -52,15 +52,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     public static final String WATCH_TOGETHER_NAME = "Watch Together";
     public static final String POKER_NAME = "Poker Night";
-    public static final String BETRAYAL_IO_NAME = "Betrayal.io";
-    public static final String FISHINGTON_IO_NAME = "Fishington.io";
     public static final String CHESS_NAME = "Chess In The Park";
-    public static final String AWKWORD_NAME = "Awkword";
     public static final String SPELLCAST_NAME = "SpellCast";
     public static final String DOODLE_CREW_NAME = "Doodle Crew";
     public static final String WORD_SNACKS_NAME = "Word Snacks";
     public static final String LETTER_LEAGUE_NAME = "Letter League";
-    public static final String SKETCHY_ARTIST_NAME = "Sketchy Artist";
     public static final String CHECKERS_NAME = "Checkers In The Park";
     public static final String BLAZING_EIGHTS_NAME = "Blazing 8s";
     public static final String SKETCH_HEADS_NAME = "Sketch Heads";
@@ -70,27 +66,21 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     public static final String ASK_AWAY_NAME = "Ask Away";
     public static final String KNOW_WHAT_I_MEME_NAME = "Know What I Meme";
 
-
-    private static final List<Command.Choice> VC_APPLICATIONS =
-            List.of(new Command.Choice(WATCH_TOGETHER_NAME, WATCH_TOGETHER_NAME),
-                    new Command.Choice(POKER_NAME, POKER_NAME),
-                    new Command.Choice(BETRAYAL_IO_NAME, BETRAYAL_IO_NAME),
-                    new Command.Choice(FISHINGTON_IO_NAME, FISHINGTON_IO_NAME),
-                    new Command.Choice(CHESS_NAME, CHESS_NAME),
-                    new Command.Choice(AWKWORD_NAME, AWKWORD_NAME),
-                    new Command.Choice(SPELLCAST_NAME, SPELLCAST_NAME),
-                    new Command.Choice(DOODLE_CREW_NAME, DOODLE_CREW_NAME),
-                    new Command.Choice(WORD_SNACKS_NAME, WORD_SNACKS_NAME),
-                    new Command.Choice(LETTER_LEAGUE_NAME, LETTER_LEAGUE_NAME),
-                    new Command.Choice(SKETCHY_ARTIST_NAME, SKETCHY_ARTIST_NAME),
-                    new Command.Choice(CHECKERS_NAME, CHECKERS_NAME),
-                    new Command.Choice(BLAZING_EIGHTS_NAME, BLAZING_EIGHTS_NAME),
-                    new Command.Choice(SKETCH_HEADS_NAME, SKETCH_HEADS_NAME),
-                    new Command.Choice(PUTT_PARTY_NAME, PUTT_PARTY_NAME),
-                    new Command.Choice(LAND_IO_NAME, LAND_IO_NAME),
-                    new Command.Choice(BOBBLE_LEAGUE_NAME, BOBBLE_LEAGUE_NAME),
-                    new Command.Choice(ASK_AWAY_NAME, ASK_AWAY_NAME),
-                    new Command.Choice(KNOW_WHAT_I_MEME_NAME, KNOW_WHAT_I_MEME_NAME));
+    private static final List<Command.Choice> VC_APPLICATIONS = List.of(
+            new Command.Choice(WATCH_TOGETHER_NAME, WATCH_TOGETHER_NAME),
+            new Command.Choice(POKER_NAME, POKER_NAME), new Command.Choice(CHESS_NAME, CHESS_NAME),
+            new Command.Choice(SPELLCAST_NAME, SPELLCAST_NAME),
+            new Command.Choice(DOODLE_CREW_NAME, DOODLE_CREW_NAME),
+            new Command.Choice(WORD_SNACKS_NAME, WORD_SNACKS_NAME),
+            new Command.Choice(LETTER_LEAGUE_NAME, LETTER_LEAGUE_NAME),
+            new Command.Choice(CHECKERS_NAME, CHECKERS_NAME),
+            new Command.Choice(BLAZING_EIGHTS_NAME, BLAZING_EIGHTS_NAME),
+            new Command.Choice(SKETCH_HEADS_NAME, SKETCH_HEADS_NAME),
+            new Command.Choice(PUTT_PARTY_NAME, PUTT_PARTY_NAME),
+            new Command.Choice(LAND_IO_NAME, LAND_IO_NAME),
+            new Command.Choice(BOBBLE_LEAGUE_NAME, BOBBLE_LEAGUE_NAME),
+            new Command.Choice(ASK_AWAY_NAME, ASK_AWAY_NAME),
+            new Command.Choice(KNOW_WHAT_I_MEME_NAME, KNOW_WHAT_I_MEME_NAME));
 
     /**
      * List comes from <a href="https://github.com/DV8FromTheWorld/JDA/pull/1628">the "Implement
@@ -100,15 +90,11 @@ public final class VcActivityCommand extends SlashCommandAdapter {
     private static final Map<String, String> VC_APPLICATION_TO_ID =
             Map.ofEntries(Map.entry(WATCH_TOGETHER_NAME, "880218394199220334"),
                     Map.entry(POKER_NAME, "755827207812677713"),
-                    Map.entry(BETRAYAL_IO_NAME, "773336526917861400"),
-                    Map.entry(FISHINGTON_IO_NAME, "814288819477020702"),
                     Map.entry(CHESS_NAME, "832012586023256104"),
-                    Map.entry(AWKWORD_NAME, "879863881349087252"),
                     Map.entry(SPELLCAST_NAME, "852509694341283871"),
                     Map.entry(DOODLE_CREW_NAME, "878067389634314250"),
                     Map.entry(WORD_SNACKS_NAME, "879863976006127627"),
                     Map.entry(LETTER_LEAGUE_NAME, "879863686565621790"),
-                    Map.entry(SKETCHY_ARTIST_NAME, "879864070101172255"),
                     Map.entry(CHECKERS_NAME, "832013003968348200"),
                     Map.entry(BLAZING_EIGHTS_NAME, "832025144389533716"),
                     Map.entry(SKETCH_HEADS_NAME, "902271654783242291"),
