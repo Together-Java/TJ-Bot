@@ -40,6 +40,8 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "audit";
     private static final String ACTION_VERB = "audit";
     private static final int MAX_PAGE_LENGTH = 25;
+    private static final String PREVIOUS_BUTTON = "⬅";
+    private static final String NEXT_BUTTON = "➡";
     private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
@@ -193,25 +195,28 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     private @NotNull ActionRow makeActionRow(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
-        String previousButtonTurnPageBy = "-1";
-        Button previousButton = Button
-            .primary(generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
-                    String.valueOf(callerId), String.valueOf(pageNumber), previousButtonTurnPageBy),
-                    "⬅");
+        int previousButtonTurnPageBy = -1;
+        Button previousButton = createPageTurnButton(PREVIOUS_BUTTON, guildId, targetId, callerId,
+                pageNumber, previousButtonTurnPageBy);
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
-        String nextButtonTurnPageBy = "1";
-        Button nextButton = Button.primary(
-                generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
-                        String.valueOf(callerId), String.valueOf(pageNumber), nextButtonTurnPageBy),
-                "➡");
+        int nextButtonTurnPageBy = +1;
+        Button nextButton = createPageTurnButton(NEXT_BUTTON, guildId, targetId, callerId,
+                pageNumber, nextButtonTurnPageBy);
         if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
         }
 
         return ActionRow.of(previousButton, nextButton);
+    }
+
+    private @NotNull Button createPageTurnButton(@NotNull String label, long guildId, long targetId,
+            long callerId, long pageNumber, int turnPageBy) {
+        return Button.primary(generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                String.valueOf(callerId), String.valueOf(pageNumber), String.valueOf(turnPageBy)),
+                label);
     }
 
     @Override
