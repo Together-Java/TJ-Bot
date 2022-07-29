@@ -45,7 +45,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     /**
      * Constructs an instance.
-     *
+     * 
      * @param actionsStore used to store actions issued by this command
      * @param config the config to use for this
      */
@@ -168,6 +168,10 @@ public final class AuditCommand extends SlashCommandAdapter {
         List<List<ActionRecord>> groupedActions = groupActions(actions);
         int totalPages = groupedActions.size();
 
+        // Handles the case of too low page number and too high page number
+        pageNumber = Math.max(1, pageNumber);
+        pageNumber = Math.min(totalPages, pageNumber);
+
         EmbedBuilder audit = createSummaryEmbed(jda.retrieveUserById(targetId).complete(), actions);
 
         if (groupedActions.isEmpty()) {
@@ -189,14 +193,16 @@ public final class AuditCommand extends SlashCommandAdapter {
         String stringCallerId = String.valueOf(callerId);
         String stringPageNumber = String.valueOf(pageNumber);
 
+        String previousButtonTurnPageBy = "-1";
         Button previousButton = Button.primary(generateComponentId(stringGuildId, stringTargetId,
-                stringCallerId, stringPageNumber, "-1"), "⬅");
+                stringCallerId, stringPageNumber, previousButtonTurnPageBy), "⬅");
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
+        String nextButtonTurnPageBy = "1";
         Button nextButton = Button.primary(generateComponentId(stringGuildId, stringTargetId,
-                stringCallerId, stringPageNumber, "1"), "➡");
+                stringCallerId, stringPageNumber, nextButtonTurnPageBy), "➡");
         if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
         }
@@ -210,12 +216,16 @@ public final class AuditCommand extends SlashCommandAdapter {
         long interactorId = event.getMember().getIdLong();
 
         if (callerId == interactorId) {
+            int currentPage = Integer.parseInt(args.get(3));
+            int turnPageBy = Integer.parseInt(args.get(4));
+
             long guildId = Long.parseLong(args.get(0));
             long targetId = Long.parseLong(args.get(1));
-            int pageNumber = Integer.parseInt(args.get(3)) + Integer.parseInt(args.get(4));
+            int pageToDisplay = currentPage + turnPageBy;
 
             event
-                .editMessage(auditUser(guildId, targetId, interactorId, pageNumber, event.getJDA()))
+                .editMessage(
+                        auditUser(guildId, targetId, interactorId, pageToDisplay, event.getJDA()))
                 .queue();
         } else {
             event.reply("Only the user who triggered the command can use these buttons.")
