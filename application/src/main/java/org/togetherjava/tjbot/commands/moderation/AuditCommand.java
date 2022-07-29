@@ -223,6 +223,8 @@ public final class AuditCommand extends SlashCommandAdapter {
             event.reply("Only the user who triggered the command can use these buttons.")
                 .setEphemeral(true)
                 .queue();
+
+            return;
         }
 
         int currentPage = Integer.parseInt(args.get(3));
