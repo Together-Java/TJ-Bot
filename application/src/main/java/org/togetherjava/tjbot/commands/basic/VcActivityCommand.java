@@ -83,9 +83,10 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             new Command.Choice(KNOW_WHAT_I_MEME_NAME, KNOW_WHAT_I_MEME_NAME));
 
     /**
-     * List comes from <a href="https://github.com/DV8FromTheWorld/JDA/pull/1628">the "Implement
-     * invite targets" PR on JDA</a>. There is no official list from Discord themselves, so this is
-     * our best bet.
+     * List comes from
+     * <a href="https://gist.github.com/GeneralSadaf/42d91a2b6a93a7db7a39208f2d8b53ad">this public
+     * list obtained by GeneralSadaf.</a>. There is no official list from Discord themselves, so
+     * this is our best bet.
      */
     private static final Map<String, String> VC_APPLICATION_TO_ID =
             Map.ofEntries(Map.entry(WATCH_TOGETHER_NAME, "880218394199220334"),
