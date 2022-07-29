@@ -149,7 +149,8 @@ public final class AuditCommand extends SlashCommandAdapter {
         return ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event);
     }
 
-    private @NotNull List<List<ActionRecord>> groupActions(@NotNull List<ActionRecord> actions) {
+    private @NotNull List<List<ActionRecord>> groupActionsByPages(
+            @NotNull List<ActionRecord> actions) {
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
             if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
@@ -162,10 +163,14 @@ public final class AuditCommand extends SlashCommandAdapter {
         return groupedActions;
     }
 
+    /**
+     * @param pageNumber page number to display when actions are divided into pages and each page
+     *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions
+     */
     private @NotNull Message auditUser(long guildId, long targetId, long callerId, int pageNumber,
             @NotNull JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
-        List<List<ActionRecord>> groupedActions = groupActions(actions);
+        List<List<ActionRecord>> groupedActions = groupActionsByPages(actions);
         int totalPages = groupedActions.size();
 
         // Handles the case of too low page number and too high page number
@@ -188,21 +193,20 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     private @NotNull ActionRow makeActionRow(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
-        String stringGuildId = String.valueOf(guildId);
-        String stringTargetId = String.valueOf(targetId);
-        String stringCallerId = String.valueOf(callerId);
-        String stringPageNumber = String.valueOf(pageNumber);
-
         String previousButtonTurnPageBy = "-1";
-        Button previousButton = Button.primary(generateComponentId(stringGuildId, stringTargetId,
-                stringCallerId, stringPageNumber, previousButtonTurnPageBy), "⬅");
+        Button previousButton = Button
+            .primary(generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                    String.valueOf(callerId), String.valueOf(pageNumber), previousButtonTurnPageBy),
+                    "⬅");
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
         String nextButtonTurnPageBy = "1";
-        Button nextButton = Button.primary(generateComponentId(stringGuildId, stringTargetId,
-                stringCallerId, stringPageNumber, nextButtonTurnPageBy), "➡");
+        Button nextButton = Button.primary(
+                generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                        String.valueOf(callerId), String.valueOf(pageNumber), nextButtonTurnPageBy),
+                "➡");
         if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
         }
@@ -215,22 +219,20 @@ public final class AuditCommand extends SlashCommandAdapter {
         long callerId = Long.parseLong(args.get(2));
         long interactorId = event.getMember().getIdLong();
 
-        if (callerId == interactorId) {
-            int currentPage = Integer.parseInt(args.get(3));
-            int turnPageBy = Integer.parseInt(args.get(4));
-
-            long guildId = Long.parseLong(args.get(0));
-            long targetId = Long.parseLong(args.get(1));
-            int pageToDisplay = currentPage + turnPageBy;
-
-            event
-                .editMessage(
-                        auditUser(guildId, targetId, interactorId, pageToDisplay, event.getJDA()))
-                .queue();
-        } else {
+        if (callerId != interactorId) {
             event.reply("Only the user who triggered the command can use these buttons.")
                 .setEphemeral(true)
                 .queue();
         }
+
+        int currentPage = Integer.parseInt(args.get(3));
+        int turnPageBy = Integer.parseInt(args.get(4));
+
+        long guildId = Long.parseLong(args.get(0));
+        long targetId = Long.parseLong(args.get(1));
+        int pageToDisplay = currentPage + turnPageBy;
+
+        event.editMessage(auditUser(guildId, targetId, interactorId, pageToDisplay, event.getJDA()))
+            .queue();
     }
 }
