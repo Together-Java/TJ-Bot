@@ -40,8 +40,8 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "audit";
     private static final String ACTION_VERB = "audit";
     private static final int MAX_PAGE_LENGTH = 25;
-    private static final String PREVIOUS_BUTTON = "⬅";
-    private static final String NEXT_BUTTON = "➡";
+    private static final String PREVIOUS_BUTTON_LABEL = "⬅";
+    private static final String NEXT_BUTTON_LABEL = "➡";
     private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
@@ -196,14 +196,14 @@ public final class AuditCommand extends SlashCommandAdapter {
     private @NotNull ActionRow makeActionRow(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
         int previousButtonTurnPageBy = -1;
-        Button previousButton = createPageTurnButton(PREVIOUS_BUTTON, guildId, targetId, callerId,
+        Button previousButton = createPageTurnButton(PREVIOUS_BUTTON_LABEL, guildId, targetId, callerId,
                 pageNumber, previousButtonTurnPageBy);
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
 
-        int nextButtonTurnPageBy = +1;
-        Button nextButton = createPageTurnButton(NEXT_BUTTON, guildId, targetId, callerId,
+        int nextButtonTurnPageBy = 1;
+        Button nextButton = createPageTurnButton(NEXT_BUTTON_LABEL, guildId, targetId, callerId,
                 pageNumber, nextButtonTurnPageBy);
         if (pageNumber == totalPages) {
             nextButton = nextButton.asDisabled();
