@@ -196,8 +196,8 @@ public final class AuditCommand extends SlashCommandAdapter {
     private @NotNull ActionRow makeActionRow(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
         int previousButtonTurnPageBy = -1;
-        Button previousButton = createPageTurnButton(PREVIOUS_BUTTON_LABEL, guildId, targetId, callerId,
-                pageNumber, previousButtonTurnPageBy);
+        Button previousButton = createPageTurnButton(PREVIOUS_BUTTON_LABEL, guildId, targetId,
+                callerId, pageNumber, previousButtonTurnPageBy);
         if (pageNumber == 1) {
             previousButton = previousButton.asDisabled();
         }
