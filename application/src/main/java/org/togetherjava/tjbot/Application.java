@@ -82,8 +82,14 @@ public enum Application {
             JDA jda = JDABuilder.createDefault(config.getToken())
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .build();
-            jda.addEventListener(new BotCore(jda, database, config));
+
+            BotCore core = new BotCore(jda, database, config);
+            jda.addEventListener(core);
             jda.awaitReady();
+
+            // We fire the event manually, since the core might be added too late to receive the
+            // actual event fired from JDA
+            core.onReady(jda);
             logger.info("Bot is ready");
         } catch (LoginException e) {
             logger.error("Failed to login", e);

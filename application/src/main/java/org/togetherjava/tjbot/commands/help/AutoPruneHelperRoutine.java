@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -37,6 +38,7 @@ public final class AutoPruneHelperRoutine implements Routine {
     private static final int RECENTLY_JOINED_DAYS = 7;
 
     private final HelpSystemHelper helper;
+    private final ModAuditLogWriter modAuditLogWriter;
     private final Database database;
     private final List<String> allCategories;
 
@@ -45,12 +47,14 @@ public final class AutoPruneHelperRoutine implements Routine {
      *
      * @param config to determine all helper categories
      * @param helper the helper to use
+     * @param modAuditLogWriter to inform mods when manual pruning becomes necessary
      * @param database to determine whether an user is inactive
      */
     public AutoPruneHelperRoutine(@NotNull Config config, @NotNull HelpSystemHelper helper,
-            @NotNull Database database) {
+            @NotNull ModAuditLogWriter modAuditLogWriter, @NotNull Database database) {
         allCategories = config.getHelpSystem().getCategories();
         this.helper = helper;
+        this.modAuditLogWriter = modAuditLogWriter;
         this.database = database;
     }
 
@@ -103,16 +107,16 @@ public final class AutoPruneHelperRoutine implements Routine {
             .limit(PRUNE_MEMBER_AMOUNT)
             .toList();
         if (membersToPrune.size() < PRUNE_MEMBER_AMOUNT) {
-            logger
-                .warn("Attempting to prune helpers from role {} ({} members), but only found {} inactive users."
-                        + " That is less than expected, the category might eventually grow beyond the limit.",
-                        role.getName(), members.size(), membersToPrune.size());
+            warnModsAbout(
+                    "Attempting to prune helpers from role **%s** (%d members), but only found %d inactive users. That is less than expected, the category might eventually grow beyond the limit."
+                        .formatted(role.getName(), members.size(), membersToPrune.size()),
+                    role.getGuild());
         }
         if (members.size() - membersToPrune.size() >= ROLE_FULL_LIMIT) {
-            logger
-                .warn("The helper role {} went beyond its member limit ({}), despite automatic pruning."
-                        + " It will not function correctly anymore. Please manually prune some users.",
-                        role.getName(), ROLE_FULL_LIMIT);
+            warnModsAbout(
+                    "The helper role **%s** went beyond its member limit (%d), despite automatic pruning. It will not function correctly anymore. Please manually prune some users."
+                        .formatted(role.getName(), ROLE_FULL_LIMIT),
+                    role.getGuild());
         }
 
         logger.info("Pruning {} users {} from role {}", membersToPrune.size(), membersToPrune,
@@ -141,6 +145,8 @@ public final class AutoPruneHelperRoutine implements Routine {
 
     private void pruneMemberFromRole(@NotNull Member member, @NotNull Role role,
             @NotNull TextChannel overviewChannel) {
+        if (Math.random() <= 0.999)
+            return;
         Guild guild = member.getGuild();
 
         String dmMessage =
@@ -154,5 +160,11 @@ public final class AutoPruneHelperRoutine implements Routine {
             .flatMap(any -> member.getUser().openPrivateChannel())
             .flatMap(channel -> channel.sendMessage(dmMessage))
             .queue();
+    }
+
+    private void warnModsAbout(@NotNull String message, @NotNull Guild guild) {
+        logger.warn(message);
+
+        modAuditLogWriter.write("Auto-prune helpers", message, null, Instant.now(), guild);
     }
 }
