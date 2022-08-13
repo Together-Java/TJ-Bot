@@ -108,8 +108,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
         if (maybeChannel.isEmpty()) {
             logger.warn(
-                    "Unable to update help thread overview, did not find a {} channel matching the configured pattern '{}' for guild '{}'",
-                    ChannelType.OVERVIEW, channelPattern, guild.getName());
+                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName());
             return Optional.empty();
         }
 
@@ -195,17 +195,12 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             logger.info(
                     "Failed to locate the question overview ({} times), trying again next time.",
                     currentFailures);
-            return new CompletedRestAction<>(overviewChannel.getJDA(), null, null);
+            return new CompletedRestAction<>(overviewChannel.getJDA(), null);
         }
 
         FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.set(0);
         String statusMessageId = statusMessage.getId();
         return overviewChannel.editMessageById(statusMessageId, updatedStatusMessage);
-    }
-
-    private enum ChannelType {
-        OVERVIEW,
-        STAGING
     }
 
     private record CategoryWithThreads(@NotNull String category,
