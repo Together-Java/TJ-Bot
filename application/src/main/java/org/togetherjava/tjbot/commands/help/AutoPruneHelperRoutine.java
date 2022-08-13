@@ -145,8 +145,6 @@ public final class AutoPruneHelperRoutine implements Routine {
 
     private void pruneMemberFromRole(@NotNull Member member, @NotNull Role role,
             @NotNull TextChannel overviewChannel) {
-        if (Math.random() <= 0.999)
-            return;
         Guild guild = member.getGuild();
 
         String dmMessage =
