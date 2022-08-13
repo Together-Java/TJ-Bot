@@ -104,7 +104,7 @@ public final class Config {
     }
 
     /**
-     * Gets the API Key of the upload service to upload pastes via the API
+     * Gets the API Key of GitHub to upload pastes via the API.
      *
      * @return the upload services API Key
      */
