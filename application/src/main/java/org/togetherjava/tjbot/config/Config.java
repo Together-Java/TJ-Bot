@@ -14,6 +14,7 @@ import java.nio.file.Path;
  */
 public final class Config {
     private final String token;
+    private final String shareApiKey;
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
@@ -31,6 +32,7 @@ public final class Config {
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
+            @JsonProperty("shareApiKey") String shareApiKey,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
             @JsonProperty("discordGuildInvite") String discordGuildInvite,
@@ -45,6 +47,7 @@ public final class Config {
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
             @JsonProperty("helpSystem") HelpSystemConfig helpSystem) {
         this.token = token;
+        this.shareApiKey = shareApiKey;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
@@ -98,6 +101,15 @@ public final class Config {
      */
     public String getToken() {
         return token;
+    }
+
+    /**
+     * Gets the API Key of the upload service to upload pastes via the API
+     *
+     * @return the upload services API Key
+     */
+    public String getShareApiKey() {
+        return shareApiKey;
     }
 
     /**
