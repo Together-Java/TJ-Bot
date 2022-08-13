@@ -53,7 +53,7 @@ public class ModMailCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Sends a message to the moderators", SlashCommandVisibility.GLOBAL);
         getData().addOption(OptionType.STRING, MESSAGE, "Message to the moderators", true)
             .addOption(OptionType.BOOLEAN, OPTION_MESSAGE_PRIVATE,
-                    "do you wish for" + " your" + " message to stay " + "private", false);
+                    "do you wish for your message to stay private", false);
 
         channelIdToLastCommandInvocation = Caffeine.newBuilder()
             .maximumSize(1_000)
@@ -80,12 +80,10 @@ public class ModMailCommand extends SlashCommandAdapter {
         channelIdToLastCommandInvocation.put(messageChannel.getIdLong(), Instant.now());
 
 
-        // retrieving the appropriate channel
         Optional<TextChannel> auditLogChannel = getChannel(event);
         if (auditLogChannel.isEmpty()) {
             return;
         }
-        // until here
 
         List<ModAuditLogWriter.Attachment> attachments = getAttachments(event);
 
@@ -95,7 +93,6 @@ public class ModMailCommand extends SlashCommandAdapter {
         String user = event.getUser().getAsTag();
         boolean optionalMessage =
                 Objects.requireNonNull(event.getOption(OPTION_MESSAGE_PRIVATE)).getAsBoolean();
-        // String reason = Objects.requireNonNull(event.getOption(REASON)).getAsString();
         if (optionalMessage) {
             user = "Anonymous";
         }
@@ -122,9 +119,7 @@ public class ModMailCommand extends SlashCommandAdapter {
         return new EmbedBuilder().setAuthor("Modmail Command invoked")
             .setColor(Color.BLACK)
             .setTitle("Message from user '%s' who used /modmail command".formatted(user))
-            /*
-             * .addField("Reason", reason, false)
-             */.build();
+            .build();
     }
 
     @NotNull
