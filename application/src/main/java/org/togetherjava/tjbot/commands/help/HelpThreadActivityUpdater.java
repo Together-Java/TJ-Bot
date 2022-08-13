@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
     private static final int SCHEDULE_MINUTES = 30;
-    private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 6;
+    private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
 
     private final HelpSystemHelper helper;
 
