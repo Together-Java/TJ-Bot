@@ -1,5 +1,6 @@
 {
     "token": "<put_your_token_here>",
+    "shareApiKey": "<put_your_key_here>",
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
