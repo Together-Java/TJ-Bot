@@ -12,14 +12,3 @@ import java.util.Map;
  */
 record GistFiles(@NotNull @JsonIgnore @JsonAnyGetter Map<String, GistFile> nameToContent) {
 }
-
-/*
- * final class GistFiles {
- * 
- * @JsonIgnore private Map<String, GistFile> nameToContent;
- * 
- * public GistFiles(@NotNull Map<String, GistFile> nameToContent) { this.nameToContent =
- * nameToContent; }
- * 
- * @JsonAnyGetter public @NotNull Map<String, GistFile> getFiles() { return nameToContent; } }
- */
