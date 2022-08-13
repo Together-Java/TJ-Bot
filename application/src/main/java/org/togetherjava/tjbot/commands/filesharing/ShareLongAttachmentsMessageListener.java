@@ -42,7 +42,7 @@ public final class ShareLongAttachmentsMessageListener extends MessageReceiverAd
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
-    private final String API_KEY;
+    private final String gistApiKey;
     private static final String SHARE_API = "https://api.github.com/gists";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
@@ -52,7 +52,7 @@ public final class ShareLongAttachmentsMessageListener extends MessageReceiverAd
     public ShareLongAttachmentsMessageListener(@NotNull Config config) {
         super(Pattern.compile(".*"));
 
-        API_KEY = config.getShareApiKey();
+        gistApiKey = config.getGistApiKey();
         isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
             .asMatchPredicate();
         isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
@@ -124,7 +124,7 @@ public final class ShareLongAttachmentsMessageListener extends MessageReceiverAd
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(SHARE_API))
             .header("Accept", "application/json")
-            .header("Authorization", "token " + API_KEY)
+            .header("Authorization", "token " + gistApiKey)
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build();
 
