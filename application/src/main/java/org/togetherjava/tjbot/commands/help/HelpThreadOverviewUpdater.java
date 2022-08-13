@@ -81,10 +81,18 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         message.delete().queue();
 
         // Thread creation can sometimes take a bit longer than the actual message, so that
-        // "getThreadChannels()"
-        // would not pick it up, hence we execute the update with some slight delay.
-        UPDATE_SERVICE.schedule(() -> updateOverviewForGuild(event.getGuild()), 2,
-                TimeUnit.SECONDS);
+        // "getThreadChannels()" would not pick it up, hence we execute the update with some slight
+        // delay.
+        Runnable updateOverviewCommand = () -> {
+            try {
+                updateOverviewForGuild(event.getGuild());
+            } catch (Exception e) {
+                logger.error(
+                        "Unknown error while attempting to update the help overview for guild {}.",
+                        event.getGuild().getId(), e);
+            }
+        };
+        UPDATE_SERVICE.schedule(updateOverviewCommand, 2, TimeUnit.SECONDS);
     }
 
     private void updateOverviewForGuild(@NotNull Guild guild) {

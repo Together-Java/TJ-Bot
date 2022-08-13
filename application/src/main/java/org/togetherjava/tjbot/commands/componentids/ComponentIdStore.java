@@ -114,8 +114,16 @@ public final class ComponentIdStore implements AutoCloseable {
             .maximumSize(CACHE_SIZE)
             .expireAfterAccess(EVICT_CACHE_OLDER_THAN, TimeUnit.of(EVICT_CACHE_OLDER_THAN_UNIT))
             .build();
-        evictionTask = evictionService.scheduleWithFixedDelay(this::evictDatabase,
-                evictEveryInitialDelay, evictEveryDelay, TimeUnit.of(evictEveryUnit));
+
+        Runnable evictCommand = () -> {
+            try {
+                evictDatabase();
+            } catch (Exception e) {
+                logger.error("Unknown error while evicting the component ID store database.", e);
+            }
+        };
+        evictionTask = evictionService.scheduleWithFixedDelay(evictCommand, evictEveryInitialDelay,
+                evictEveryDelay, TimeUnit.of(evictEveryUnit));
 
         logDebugSizeStatistics();
     }
