@@ -56,6 +56,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             Executors.newScheduledThreadPool(5);
     private final Config config;
     private final Map<String, UserInteractor> nameToInteractor;
+    private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
@@ -87,31 +88,11 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .map(EventReceiver.class::cast)
             .forEach(jda::addEventListener);
 
-        // Routines
-        features.stream()
+        // Routines (are scheduled once the core is ready)
+        routines = features.stream()
             .filter(Routine.class::isInstance)
             .map(Routine.class::cast)
-            .forEach(routine -> {
-                Runnable command = () -> {
-                    String routineName = routine.getClass().getSimpleName();
-                    try {
-                        logger.debug("Running routine %s...".formatted(routineName));
-                        routine.runRoutine(jda);
-                        logger.debug("Finished routine %s.".formatted(routineName));
-                    } catch (Exception e) {
-                        logger.error("Unknown error in routine {}.", routineName, e);
-                    }
-                };
-
-                Routine.Schedule schedule = routine.createSchedule();
-                switch (schedule.mode()) {
-                    case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
-                            schedule.initialDuration(), schedule.duration(), schedule.unit());
-                    case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
-                            schedule.initialDuration(), schedule.duration(), schedule.unit());
-                    default -> throw new AssertionError("Unsupported schedule mode");
-                }
-            });
+            .toList();
 
         // User Interactors (e.g. slash commands)
         nameToInteractor = features.stream()
@@ -169,6 +150,32 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Bot core is now ready");
+
+        scheduleRoutines(event.getJDA());
+    }
+
+    private void scheduleRoutines(@NotNull JDA jda) {
+        routines.forEach(routine -> {
+            Runnable command = () -> {
+                try {
+                    String routineName = routine.getClass().getSimpleName();
+                    logger.debug("Running routine %s...".formatted(routineName));
+                    routine.runRoutine(jda);
+                    logger.debug("Finished routine %s.".formatted(routineName));
+                } catch (Exception e) {
+                    logger.error("Unknown error in routine {}.", routineName, e);
+                }
+            };
+
+            Routine.Schedule schedule = routine.createSchedule();
+            switch (schedule.mode()) {
+                case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
+                        schedule.initialDuration(), schedule.duration(), schedule.unit());
+                case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
+                        schedule.initialDuration(), schedule.duration(), schedule.unit());
+                default -> throw new AssertionError("Unsupported schedule mode");
+            }
+        });
     }
 
     @Override
