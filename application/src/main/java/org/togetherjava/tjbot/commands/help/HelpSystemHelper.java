@@ -234,7 +234,7 @@ public final class HelpSystemHelper {
         return maybeChannel;
     }
 
-    private record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
+    record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
             @NotNull String title) {
         static @NotNull HelpThreadName ofChannelName(@NotNull CharSequence channelName) {
             Matcher matcher = EXTRACT_HELP_NAME_PATTERN.matcher(channelName);
