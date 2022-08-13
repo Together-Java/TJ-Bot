@@ -84,6 +84,7 @@ public enum Features {
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
+        features.add(new onGuildLeaveCloseThreadListener(database));
 
         // Slash commands
         features.add(new LogLevelCommand());
@@ -108,7 +109,7 @@ public enum Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
-        features.add(new AskCommand(config, helpSystemHelper));
+        features.add(new AskCommand(config, helpSystemHelper, database));
         features.add(new CloseCommand(helpSystemHelper));
         features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
         features.add(new ChangeHelpTitleCommand(helpSystemHelper));

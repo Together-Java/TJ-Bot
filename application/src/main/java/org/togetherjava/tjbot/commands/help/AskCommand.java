@@ -15,6 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.DatabaseException;
+import org.togetherjava.tjbot.db.generated.tables.AddHelpChannel;
+import org.togetherjava.tjbot.db.generated.tables.records.AddHelpChannelRecord;
 
 import java.util.Optional;
 
@@ -46,7 +50,7 @@ public final class AskCommand extends SlashCommandAdapter {
 
     private static final String TITLE_OPTION = "title";
     private static final String CATEGORY_OPTION = "category";
-
+    private final Database database;
     private final HelpSystemHelper helper;
 
     /**
@@ -55,10 +59,10 @@ public final class AskCommand extends SlashCommandAdapter {
      * @param config the config to use
      * @param helper the helper to use
      */
-    public AskCommand(@NotNull Config config, @NotNull HelpSystemHelper helper) {
+    public AskCommand(@NotNull Config config, @NotNull HelpSystemHelper helper, Database database) {
         super("ask", "Ask a question - use this in the staging channel",
                 SlashCommandVisibility.GUILD);
-
+        this.database = database;
         OptionData title =
                 new OptionData(OptionType.STRING, TITLE_OPTION, "short and to the point", true);
         OptionData category = new OptionData(OptionType.STRING, CATEGORY_OPTION,
@@ -133,9 +137,26 @@ public final class AskCommand extends SlashCommandAdapter {
     private @NotNull RestAction<Message> handleEvent(@NotNull InteractionHook eventHook,
             @NotNull ThreadChannel threadChannel, @NotNull Member author, @NotNull String title,
             @NotNull String category, @NotNull Guild guild) {
+        mapUserToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
+    }
+
+    private void mapUserToDatabase(Member author, ThreadChannel threadChannel) {
+        try {
+            database.write(content -> {
+                AddHelpChannelRecord helpChannelRecord =
+                        content.newRecord(AddHelpChannel.ADD_HELP_CHANNEL)
+                            .setUserId(author.getIdLong())
+                            .setChannelId(threadChannel.getIdLong());
+                if (helpChannelRecord.update() == 0) {
+                    helpChannelRecord.insert();
+                }
+            });
+        } catch (DatabaseException e) {
+            logger.error("Attempted to add user and thread channel to database failed", e);
+        }
     }
 
     private RestAction<Message> sendInitialMessage(@NotNull Guild guild,
