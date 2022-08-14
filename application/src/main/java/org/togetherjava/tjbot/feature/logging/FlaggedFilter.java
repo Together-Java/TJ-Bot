@@ -47,7 +47,7 @@ public class FlaggedFilter extends AbstractFilter {
         return isLoggingEnabled() ? Result.NEUTRAL : Result.DENY;
     }
 
-    boolean isLoggingEnabled() {
+    public boolean isLoggingEnabled() {
         return System.getenv().containsKey(LOGGING_FLAG);
     }
 
