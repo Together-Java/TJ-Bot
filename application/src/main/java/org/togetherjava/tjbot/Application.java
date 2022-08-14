@@ -24,10 +24,8 @@ import java.sql.SQLException;
 /**
  * Main class of the application. Use {@link #main(String[])} to start an instance of it.
  * <p>
- * New commands can be created by implementing
- * {@link SlashCommandInteractionEvent} or extending
- * {@link SlashCommandAdapter}. They can then be registered in
- * {@link Features}.
+ * New commands can be created by implementing {@link SlashCommandInteractionEvent} or extending
+ * {@link SlashCommandAdapter}. They can then be registered in {@link Features}.
  */
 public enum Application {
     ;

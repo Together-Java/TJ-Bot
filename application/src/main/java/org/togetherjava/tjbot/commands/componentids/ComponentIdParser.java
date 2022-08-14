@@ -30,8 +30,8 @@ public interface ComponentIdParser {
      * interactions, such as button or selection menus.
      * <p>
      * See {@link ComponentInteraction#getComponentId()} and
-     * {@link Button#of(ButtonStyle, String, Emoji)} for
-     * details on where the ID was originally transported with.
+     * {@link Button#of(ButtonStyle, String, Emoji)} for details on where the ID was originally
+     * transported with.
      *
      * @param uuid the UUID to parse which represents the component ID
      * @return the payload associated to the given UUID, if empty the component ID either never

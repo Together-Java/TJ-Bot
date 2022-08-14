@@ -28,8 +28,7 @@ import java.util.stream.Collectors;
 /**
  * Thread-safe storage for component IDs. Can put, persist and get back component IDs based on
  * UUIDs. Component IDs are used for button and selection menu commands, see
- * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)}
- * for details.
+ * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details.
  * <p>
  * Use {@link #putOrThrow(UUID, ComponentId, Lifespan)} to put and persist a component ID; and
  * {@link #get(UUID)} to get it back. Component IDs are persisted during application runs and can
