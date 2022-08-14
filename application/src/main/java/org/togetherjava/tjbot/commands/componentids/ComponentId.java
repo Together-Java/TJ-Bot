@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.componentids;
 
 import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.util.List;
 
