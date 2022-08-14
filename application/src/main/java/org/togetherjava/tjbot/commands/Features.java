@@ -84,7 +84,7 @@ public enum Features {
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
-        features.add(new onGuildLeaveCloseThreadListener(database));
+        features.add(new OnGuildLeaveCloseThreadListener(database));
 
         // Slash commands
         features.add(new LogLevelCommand());

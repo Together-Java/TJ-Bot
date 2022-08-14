@@ -13,12 +13,12 @@ import org.togetherjava.tjbot.db.generated.tables.AddHelpChannel;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class onGuildLeaveCloseThreadListener implements EventReceiver {
+public class OnGuildLeaveCloseThreadListener implements EventReceiver {
     private static final Logger logger =
-            LoggerFactory.getLogger(onGuildLeaveCloseThreadListener.class);
+            LoggerFactory.getLogger(OnGuildLeaveCloseThreadListener.class);
     private final Database database;
 
-    public onGuildLeaveCloseThreadListener(Database database) {
+    public OnGuildLeaveCloseThreadListener(Database database) {
         this.database = database;
     }
 
@@ -32,14 +32,13 @@ public class onGuildLeaveCloseThreadListener implements EventReceiver {
     private void onGuildMemberRemoved(GuildMemberRemoveEvent leaveEvent) {
         ThreadChannel threadChannel;
         Set<Long> channelId = getThreadsAssociatedToLeaver(leaveEvent);
-        System.out.println(channelId);
         if (channelId.isEmpty()) {
-            logger.error("Failed to get channelID user was associated with");
+            logger.warn("Failed to get channelID user was associated with");
         } else {
             for (Long channel : channelId) {
                 threadChannel = leaveEvent.getGuild().getThreadChannelById(channel);
                 if (threadChannel == null) {
-                    logger.warn("Thread channel ID:" + channel + " is already deleted.");
+                    logger.warn("Thread channel ID: '{}' is already deleted.", channel);
                 } else {
                     threadChannel.delete().queue();
                 }
@@ -48,7 +47,6 @@ public class onGuildLeaveCloseThreadListener implements EventReceiver {
     }
 
     public Set<Long> getThreadsAssociatedToLeaver(GuildMemberRemoveEvent leaveEvent) {
-        ;
         return database
             .readTransaction(context -> context.select(AddHelpChannel.ADD_HELP_CHANNEL.CHANNEL_ID))
             .from(AddHelpChannel.ADD_HELP_CHANNEL)
