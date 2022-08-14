@@ -41,7 +41,7 @@ public class ModMailCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private final Cache<Long, Instant> channelIdToLastCommandInvocation;
-    private static Predicate<String> auditLogChannelNamePredicate;
+    private final Predicate<String> modMailChannelNamePredicate;
 
 
     /**
@@ -60,8 +60,8 @@ public class ModMailCommand extends SlashCommandAdapter {
             .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
             .build();
 
-        auditLogChannelNamePredicate =
-                Pattern.compile(config.getModAuditLogChannelPattern()).asMatchPredicate();
+        modMailChannelNamePredicate =
+                Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
     }
 
     @Override
@@ -90,7 +90,7 @@ public class ModMailCommand extends SlashCommandAdapter {
 
         // this message is creating the embed
 
-        String user = event.getUser().getAsTag();
+        String user = event.getUser().getAsMention();
         boolean optionalMessage =
                 Objects.requireNonNull(event.getOption(OPTION_MESSAGE_PRIVATE)).getAsBoolean();
         if (optionalMessage) {
@@ -118,7 +118,7 @@ public class ModMailCommand extends SlashCommandAdapter {
     private MessageEmbed messageEmbed(String user) {
         return new EmbedBuilder().setAuthor("Modmail Command invoked")
             .setColor(Color.BLACK)
-            .setTitle("Message from user '%s' who used /modmail command".formatted(user))
+            .setTitle("/modmail from user '%s' ".formatted(user))
             .build();
     }
 
@@ -139,7 +139,7 @@ public class ModMailCommand extends SlashCommandAdapter {
         }
         return guild.getTextChannelCache()
             .stream()
-            .filter(channel -> auditLogChannelNamePredicate.test(channel.getName()))
+            .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
             .findAny();
     }
 

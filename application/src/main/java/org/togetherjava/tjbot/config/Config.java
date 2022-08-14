@@ -21,6 +21,7 @@ public final class Config {
     private final String projectWebsite;
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
+    private final String modMailChannelPattern;
     private final String mutedRolePattern;
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
@@ -115,6 +116,16 @@ public final class Config {
      */
     public String getModAuditLogChannelPattern() {
         return modAuditLogChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain all messages
+     * from command modmail
+     *
+     * @return the channel name pattern
+     */
+    public String getModMailChannelPattern() {
+        return modMailChannelPattern;
     }
 
     /**
