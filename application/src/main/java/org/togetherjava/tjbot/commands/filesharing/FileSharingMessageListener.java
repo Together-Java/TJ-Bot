@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
@@ -162,7 +161,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         String replyContent =
                 "I uploaded your file(s) as gist, it is much easier to read for everyone like that, especially for mobile users";
 
-        message.reply(replyContent).setActionRow(Button.of(ButtonStyle.LINK, url, "gist")).queue();
+        message.reply(replyContent).setActionRow(Button.link(url, "gist")).queue();
     }
 
     private boolean isHelpThread(@NotNull MessageReceivedEvent event) {
