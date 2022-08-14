@@ -28,6 +28,11 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/**
+ * Listener that receives all sent help messages and uploads them to a share service if the message
+ * contains a file with the given extension in the
+ * {@link FileSharingMessageListener#extensionFilter}
+ */
 public class FileSharingMessageListener extends MessageReceiverAdapter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
