@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
+import org.togetherjava.tjbot.feature.moderation.ModAuditLogWriter;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated

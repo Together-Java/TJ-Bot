@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.feature.SlashCommandAdapter;
 import org.togetherjava.tjbot.feature.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
+import org.togetherjava.tjbot.feature.moderation.ModAuditLogWriter;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.*;

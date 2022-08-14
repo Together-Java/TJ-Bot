@@ -27,7 +27,7 @@ import org.togetherjava.tjbot.feature.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.feature.tophelper.TopHelpersPurgeMessagesRoutine;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
+import org.togetherjava.tjbot.feature.moderation.ModAuditLogWriter;
 import org.togetherjava.tjbot.feature.routines.ModAuditLogRoutine;
 
 import java.util.ArrayList;

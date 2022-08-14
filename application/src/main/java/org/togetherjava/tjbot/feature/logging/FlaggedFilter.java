@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.logging;
+package org.togetherjava.tjbot.feature.logging;
 
 import org.apache.logging.log4j.core.Core;
 import org.apache.logging.log4j.core.Filter;

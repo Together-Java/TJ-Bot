@@ -18,7 +18,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
+import org.togetherjava.tjbot.feature.moderation.ModAuditLogWriter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

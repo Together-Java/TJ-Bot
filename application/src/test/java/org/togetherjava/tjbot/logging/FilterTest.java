@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.togetherjava.tjbot.feature.logging.FlaggedFilter;
 
 final class FilterTest {
 
