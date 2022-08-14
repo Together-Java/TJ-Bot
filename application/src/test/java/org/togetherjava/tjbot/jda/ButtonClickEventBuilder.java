@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.feature.SlashCommand;
 
 import java.util.List;
 import java.util.function.Function;

@@ -13,7 +13,7 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.feature.SlashCommand;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 import org.togetherjava.tjbot.jda.payloads.slashcommand.*;

@@ -8,11 +8,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.togetherjava.tjbot.commands.Features;
-import org.togetherjava.tjbot.commands.system.BotCore;
+import org.togetherjava.tjbot.feature.Features;
+import org.togetherjava.tjbot.feature.system.BotCore;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.feature.SlashCommandAdapter;
 
 import javax.security.auth.login.LoginException;
 

@@ -29,8 +29,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
-import org.togetherjava.tjbot.commands.SlashCommand;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.feature.SlashCommand;
+import org.togetherjava.tjbot.feature.componentids.ComponentIdGenerator;
 
 import java.util.EnumSet;
 import java.util.List;
