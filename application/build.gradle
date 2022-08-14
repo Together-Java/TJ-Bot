@@ -63,7 +63,7 @@ dependencies {
 
 	implementation 'com.github.freva:ascii-table:1.2.0'
 
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.0.4'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
 
     testImplementation 'org.mockito:mockito-core:4.0.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
