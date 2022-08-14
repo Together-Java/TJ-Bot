@@ -137,7 +137,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("HttpResponse interrupted!", e);
         }
 
         int statusCode = apiResponse.statusCode();
