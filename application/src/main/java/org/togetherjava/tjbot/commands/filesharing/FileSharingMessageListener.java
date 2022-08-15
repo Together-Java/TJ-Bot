@@ -21,17 +21,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
  * Listener that receives all sent help messages and uploads them to a share service if the message
  * contains a file with the given extension in the
- * {@link FileSharingMessageListener#extensionFilter}
+ * {@link FileSharingMessageListener#extensionFilter}.
  */
 public class FileSharingMessageListener extends MessageReceiverAdapter {
 
@@ -69,29 +67,41 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             return;
         }
 
-        List<Message.Attachment> attachments =
-                event.getMessage().getAttachments().stream().filter(attachment -> {
-                    String extension = attachment.getFileExtension();
-                    if (extension == null) {
-                        return false;
-                    }
-                    return extensionFilter.contains(extension);
-                }).toList();
 
-        processAttachments(event, attachments);
+        List<Message.Attachment> attachments = event.getMessage()
+            .getAttachments()
+            .stream()
+            .filter(this::isAttachmentRelevant)
+            .toList();
+
+        CompletableFuture.runAsync(() -> processAttachments(event, attachments));
     }
+
+    private boolean isAttachmentRelevant(@NotNull Message.Attachment attachment) {
+        String extension = attachment.getFileExtension();
+        if (extension == null) {
+            return false;
+        }
+        return extensionFilter.contains(extension);
+    }
+
 
     private void processAttachments(@NotNull MessageReceivedEvent event,
             @NotNull List<Message.Attachment> attachments) {
-        Map<String, GistFile> filesAsJson = new HashMap<>();
 
+        Map<String, GistFile> filesAsJson = Collections.synchronizedMap(new HashMap<>());
+
+        List<CompletableFuture<Void>> tasks = new ArrayList<>();
         for (Message.Attachment attachment : attachments) {
-            attachment.retrieveInputStream()
+            CompletableFuture<Void> task = attachment.retrieveInputStream()
                 .thenApply(this::readAttachment)
-                .thenAccept(content -> filesAsJson.put(createFileName(attachment),
-                        new GistFile(content)))
-                .join();
+                .thenAccept(
+                        content -> filesAsJson.put(getNameOf(attachment), new GistFile(content)));
+
+            tasks.add(task);
         }
+
+        tasks.forEach(CompletableFuture::join);
 
         GistFiles files = new GistFiles(filesAsJson);
         GistRequest request = new GistRequest(event.getAuthor().getName(), false, files);
@@ -107,7 +117,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         }
     }
 
-    private @NotNull String createFileName(@NotNull Message.Attachment attachment) {
+    private @NotNull String getNameOf(@NotNull Message.Attachment attachment) {
         String fileName = attachment.getFileName();
         String fileExtension = attachment.getFileExtension();
 
@@ -126,13 +136,14 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         try {
             body = JSON.writeValueAsString(jsonRequest);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Couldn't parse json request!", e);
+            throw new IllegalStateException(
+                    "Attempting to upload a file to gist, but unable to create the JSON request.",
+                    e);
         }
 
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(SHARE_API))
-            .header("Accept", "application/json")
-            .header("Authorization", "token " + gistApiKey)
+            .headers("Accept", "application/json", "Authorization", "token " + gistApiKey)
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build();
 
@@ -143,7 +154,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             throw new UncheckedIOException(e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("HttpResponse interrupted!", e);
+            throw new IllegalStateException(
+                    "Attempting to upload a file to gist, but the request got interrupted.", e);
         }
 
         int statusCode = apiResponse.statusCode();
@@ -157,17 +169,18 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         try {
             gistResponse = JSON.readValue(apiResponse.body(), GistResponse.class);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Couldn't parse response!", e);
+            throw new IllegalStateException(
+                    "Attempting to upload file to gist, but unable to parse its JSON response.", e);
         }
         return gistResponse.getHtmlUrl();
     }
 
     private void sendResponse(@NotNull MessageReceivedEvent event, @NotNull String url) {
         Message message = event.getMessage();
-        String replyContent =
-                "I uploaded your file(s) as gist, it is much easier to read for everyone like that, especially for mobile users";
+        String messageContent =
+                "I uploaded your attachments as **gist**. That way, they are easier to read for everyone, especially mobile users 👍";
 
-        message.reply(replyContent).setActionRow(Button.link(url, "gist")).queue();
+        message.reply(messageContent).setActionRow(Button.link(url, "gist")).queue();
     }
 
     private boolean isHelpThread(@NotNull MessageReceivedEvent event) {
