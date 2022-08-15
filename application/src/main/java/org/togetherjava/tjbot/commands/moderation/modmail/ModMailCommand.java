@@ -55,18 +55,22 @@ public class ModMailCommand extends SlashCommandAdapter {
             .addOption(OptionType.BOOLEAN, OPTION_MESSAGE_PRIVATE,
                     "do you wish for your message to stay private", false);
 
-        channelIdToLastCommandInvocation = Caffeine.newBuilder()
-            .maximumSize(1_000)
-            .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-            .build();
+        channelIdToLastCommandInvocation = setCooldown();
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
     }
 
+    @NotNull
+    private Cache<Long, Instant> setCooldown() {
+        return Caffeine.newBuilder()
+            .maximumSize(1_000)
+            .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
+            .build();
+    }
+
     @Override
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-        // displays appropriate message, depending on if channel the command has been already called
         MessageChannel messageChannel = event.getChannel();
         if (isChannelOnCooldown(messageChannel)) {
             event
@@ -79,7 +83,6 @@ public class ModMailCommand extends SlashCommandAdapter {
         }
         channelIdToLastCommandInvocation.put(messageChannel.getIdLong(), Instant.now());
 
-
         Optional<TextChannel> auditLogChannel = getChannel(event);
         if (auditLogChannel.isEmpty()) {
             return;
@@ -87,23 +90,25 @@ public class ModMailCommand extends SlashCommandAdapter {
 
         List<ModAuditLogWriter.Attachment> attachments = getAttachments(event);
 
+        String user = getName(event);
+        MessageAction message = auditLogChannel.orElseThrow().sendMessageEmbeds(messageEmbed(user));
 
-        // this message is creating the embed
+        message = buildAttachment(attachments, message);
+        message.queue();
 
-        String user = event.getUser().getAsMention();
+        event.reply("Thank you for contacting the moderators").setEphemeral(true).queue();
+
+    }
+
+    @NotNull
+    private String getName(@NotNull SlashCommandInteractionEvent event) {
+        String user = "@" + event.getUser().getName();
         boolean optionalMessage =
                 Objects.requireNonNull(event.getOption(OPTION_MESSAGE_PRIVATE)).getAsBoolean();
         if (optionalMessage) {
             user = "Anonymous";
         }
-        MessageAction message = auditLogChannel.orElseThrow().sendMessageEmbeds(messageEmbed(user));
-
-        message = buildAttachment(attachments, message);
-        message.queue();
-        // ends here
-
-        event.reply("Thank you for contacting the moderators").setEphemeral(true).queue();
-
+        return user;
     }
 
     private MessageAction buildAttachment(List<ModAuditLogWriter.Attachment> attachments,
@@ -118,7 +123,7 @@ public class ModMailCommand extends SlashCommandAdapter {
     private MessageEmbed messageEmbed(String user) {
         return new EmbedBuilder().setAuthor("Modmail Command invoked")
             .setColor(Color.BLACK)
-            .setTitle("/modmail from user '%s' ".formatted(user))
+            .setTitle("/modmail from '%s' ".formatted(user))
             .build();
     }
 
