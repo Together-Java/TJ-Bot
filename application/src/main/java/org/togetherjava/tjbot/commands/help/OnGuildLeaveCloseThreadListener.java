@@ -12,6 +12,9 @@ import org.togetherjava.tjbot.db.generated.tables.AddHelpChannel;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Remove all thread channels associated to a user when they leave the guild
+ */
 public class OnGuildLeaveCloseThreadListener implements EventReceiver {
     private static final Logger logger =
             LoggerFactory.getLogger(OnGuildLeaveCloseThreadListener.class);

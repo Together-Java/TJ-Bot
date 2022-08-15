@@ -12,6 +12,9 @@ import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Purge Routine to get rid of old thread creations in the database.
+ */
 public class LeaversPurgeDatabaseRoutine implements Routine {
     private final Database database;
     private static final Logger logger = LoggerFactory.getLogger(LeaversPurgeDatabaseRoutine.class);
