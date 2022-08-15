@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
@@ -40,8 +39,6 @@ public final class HelpSystemHelper {
 
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
-    private final Predicate<String> isStagingChannelName;
-    private final String stagingChannelPattern;
     private final String categoryRoleSuffix;
 
 
@@ -55,9 +52,6 @@ public final class HelpSystemHelper {
 
         overviewChannelPattern = helpConfig.getOverviewChannelPattern();
         isOverviewChannelName = Pattern.compile(overviewChannelPattern).asMatchPredicate();
-
-        stagingChannelPattern = helpConfig.getStagingChannelPattern();
-        isStagingChannelName = Pattern.compile(stagingChannelPattern).asMatchPredicate();
 
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
     }
@@ -106,22 +100,6 @@ public final class HelpSystemHelper {
             .build();
     }
 
-    boolean handleIsHelpThread(@NotNull IReplyCallback event) {
-        if (event.getChannelType() == ChannelType.GUILD_PUBLIC_THREAD) {
-            ThreadChannel thread = event.getThreadChannel();
-
-            if (isOverviewChannelName.test(thread.getParentChannel().getName())) {
-                return true;
-            }
-        }
-
-        event.reply("Sorry, but this command can only be used in a help thread.")
-            .setEphemeral(true)
-            .queue();
-
-        return false;
-    }
-
     @NotNull
     Optional<Role> handleFindRoleForCategory(@NotNull String category, @NotNull Guild guild) {
         String roleName = category + categoryRoleSuffix;
@@ -163,15 +141,6 @@ public final class HelpSystemHelper {
     @NotNull
     String getOverviewChannelPattern() {
         return overviewChannelPattern;
-    }
-
-    boolean isStagingChannelName(@NotNull String channelName) {
-        return isStagingChannelName.test(channelName);
-    }
-
-    @NotNull
-    String getStagingChannelPattern() {
-        return stagingChannelPattern;
     }
 
     static boolean isTitleValid(@NotNull CharSequence title) {
