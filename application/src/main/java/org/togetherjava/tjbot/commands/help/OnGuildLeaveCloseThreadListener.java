@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.AddHelpChannel;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,7 +17,7 @@ public class OnGuildLeaveCloseThreadListener implements EventReceiver {
             LoggerFactory.getLogger(OnGuildLeaveCloseThreadListener.class);
     private final Database database;
 
-    public OnGuildLeaveCloseThreadListener(Database database) {
+    public OnGuildLeaveCloseThreadListener(@NotNull Database database) {
         this.database = database;
     }
 

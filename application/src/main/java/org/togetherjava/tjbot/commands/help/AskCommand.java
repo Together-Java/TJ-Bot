@@ -149,7 +149,8 @@ public final class AskCommand extends SlashCommandAdapter {
                 AddHelpChannelRecord helpChannelRecord =
                         content.newRecord(AddHelpChannel.ADD_HELP_CHANNEL)
                             .setUserId(author.getIdLong())
-                            .setChannelId(threadChannel.getIdLong());
+                            .setChannelId(threadChannel.getIdLong())
+                            .setCreatedAt(threadChannel.getTimeCreated().toInstant());
                 if (helpChannelRecord.update() == 0) {
                     helpChannelRecord.insert();
                 }
