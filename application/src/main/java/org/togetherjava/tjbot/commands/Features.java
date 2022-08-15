@@ -109,7 +109,7 @@ public enum Features {
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
         features.add(new AskCommand(config, helpSystemHelper));
-        features.add(new CloseCommand(helpSystemHelper));
+        features.add(new CloseCommand());
         features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
         features.add(new ChangeHelpTitleCommand(helpSystemHelper));
 
