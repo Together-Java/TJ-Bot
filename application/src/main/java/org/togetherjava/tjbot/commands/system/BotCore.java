@@ -94,9 +94,13 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .forEach(routine -> {
                 Runnable command = () -> {
                     String routineName = routine.getClass().getSimpleName();
-                    logger.debug("Running routine %s...".formatted(routineName));
-                    routine.runRoutine(jda);
-                    logger.debug("Finished routine %s.".formatted(routineName));
+                    try {
+                        logger.debug("Running routine %s...".formatted(routineName));
+                        routine.runRoutine(jda);
+                        logger.debug("Finished routine %s.".formatted(routineName));
+                    } catch (Exception e) {
+                        logger.error("Unknown error in routine {}.", routineName, e);
+                    }
                 };
 
                 Routine.Schedule schedule = routine.createSchedule();

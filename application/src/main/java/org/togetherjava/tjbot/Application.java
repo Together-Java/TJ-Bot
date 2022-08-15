@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,11 +56,10 @@ public enum Application {
             return;
         }
 
-        try {
-            runBot(config);
-        } catch (Exception t) {
-            logger.error("Unknown error", t);
-        }
+        Thread.setDefaultUncaughtExceptionHandler(Application::onUncaughtException);
+        Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
+
+        runBot(config);
     }
 
     /**
@@ -86,8 +85,6 @@ public enum Application {
             jda.addEventListener(new BotCore(jda, database, config));
             jda.awaitReady();
             logger.info("Bot is ready");
-
-            Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
         } catch (LoginException e) {
             logger.error("Failed to login", e);
         } catch (InterruptedException e) {
@@ -107,6 +104,11 @@ public enum Application {
         // There is no guarantee that this method can be executed fully - it should run as
         // fast as possible and only do the minimal necessary actions.
         logger.info("Bot has been stopped");
+    }
+
+    private static void onUncaughtException(@NotNull Thread failingThread,
+            @NotNull Throwable failure) {
+        logger.error("Unknown error in thread {}.", failingThread.getName(), failure);
     }
 
 }
