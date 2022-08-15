@@ -18,14 +18,11 @@ import org.jetbrains.annotations.Nullable;
 
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -42,24 +39,20 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final int MAX_PAGE_LENGTH = 25;
     private static final String PREVIOUS_BUTTON_LABEL = "⬅";
     private static final String NEXT_BUTTON_LABEL = "➡";
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
      * 
      * @param actionsStore used to store actions issued by this command
-     * @param config the config to use for this
      */
-    public AuditCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public AuditCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Lists all moderation actions that have been taken against a user",
                 SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who to retrieve actions for",
                 true);
 
-        hasRequiredRole =
-                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -144,11 +137,11 @@ public final class AuditCommand extends SlashCommandAdapter {
     private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
             @Nullable Member target, @NotNull IReplyCallback event) {
         // Member doesn't exist if attempting to audit a user who is not part of the guild.
-        if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
-                target, event)) {
+        if (target == null) {
             return false;
         }
-        return ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event);
+        return ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
+                target, event);
     }
 
     private @NotNull List<List<ActionRecord>> groupActionsByPages(
