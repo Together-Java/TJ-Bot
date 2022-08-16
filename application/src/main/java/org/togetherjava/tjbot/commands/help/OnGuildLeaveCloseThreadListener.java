@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands.help;
 
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
@@ -42,7 +44,15 @@ public class OnGuildLeaveCloseThreadListener implements EventReceiver {
                 if (threadChannel == null) {
                     logger.warn("Thread channel ID: '{}' is already deleted.", channel);
                 } else {
-                    threadChannel.delete().queue();
+                    MessageEmbed embed = new EmbedBuilder().setTitle("Original Thread Creator Left")
+                        .setDescription("Closing ticket...")
+                        .setColor(HelpSystemHelper.AMBIENT_COLOR)
+                        .build();
+                    ThreadChannel finalThreadChannel = threadChannel;
+                    threadChannel.sendMessageEmbeds(embed)
+                        .flatMap(any -> finalThreadChannel.getManager().setArchived(true))
+                        .queue();
+
                 }
             }
         }
