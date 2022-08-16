@@ -96,7 +96,7 @@ public enum Features {
         features.add(new WarnCommand(actionsStore, config));
         features.add(new KickCommand(actionsStore));
         features.add(new BanCommand(actionsStore));
-        features.add(new UnbanCommand(actionsStore, config));
+        features.add(new UnbanCommand(actionsStore));
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore, config));
         features.add(new UnmuteCommand(actionsStore, config));
