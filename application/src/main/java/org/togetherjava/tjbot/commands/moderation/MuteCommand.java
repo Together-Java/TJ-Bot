@@ -21,8 +21,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * This command can mute users. Muting can also be paired with a reason. The command will also try

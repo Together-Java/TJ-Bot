@@ -17,8 +17,6 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * This command can quarantine users. Quarantining can also be paired with a reason. The command

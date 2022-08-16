@@ -140,8 +140,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         if (target == null) {
             return false;
         }
-        return ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
-                target, event);
+        return ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event);
     }
 
     private @NotNull List<List<ActionRecord>> groupActionsByPages(
