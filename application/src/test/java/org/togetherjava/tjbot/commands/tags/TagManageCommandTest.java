@@ -150,20 +150,6 @@ final class TagManageCommandTest {
     }
 
     @Test
-    @DisplayName("Users without the required role can not use '/tag-manage'")
-    void commandCanNotBeUsedWithoutRoles() {
-        // GIVEN a regular user without roles
-        Member regularUser = jdaTester.createMemberSpy(1);
-
-        // WHEN the regular user triggers any '/tag-manage' command
-        SlashCommandInteractionEvent event = triggerRawCommandWithUser("foo", regularUser);
-
-        // THEN the command can not be used since the user lacks roles
-        verify(event).reply("Tags can only be managed by users with a corresponding role.");
-        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
-    }
-
-    @Test
     @DisplayName("'/tag-manage raw' can not be used on unknown tags")
     void rawTagCanNotFindUnknownTag() {
         // GIVEN a tag system without any tags
