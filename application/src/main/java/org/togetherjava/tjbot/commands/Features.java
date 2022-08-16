@@ -102,7 +102,7 @@ public enum Features {
         features.add(new UnmuteCommand(actionsStore, config));
         features.add(new TopHelpersCommand(database, config));
         features.add(new RoleSelectCommand());
-        features.add(new NoteCommand(actionsStore, config));
+        features.add(new NoteCommand(actionsStore));
         features.add(new RemindCommand(database));
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
