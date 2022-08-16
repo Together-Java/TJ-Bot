@@ -185,7 +185,6 @@ public enum ModerationUtils {
      * <li>the target is not member of the guild</li>
      * <li>the bot or author do not have enough permissions to interact with the target</li>
      * <li>the bot or author do not have enough permissions to interact with the role</li>
-     * <li>the author does not have the required role for this interaction</li>
      * <li>the bot does not have the MANAGE_ROLES permission</li>
      * <li>the given reason is too long</li>
      * </ul>
@@ -206,8 +205,7 @@ public enum ModerationUtils {
             "squid:S107"})
     static boolean handleRoleChangeChecks(@Nullable Role role, @NotNull String actionVerb,
             @Nullable Member target, @NotNull Member bot, @NotNull Member author,
-            @NotNull Guild guild, @NotNull Predicate<? super String> hasRequiredRole,
-            @NotNull CharSequence reason, @NotNull IReplyCallback event) {
+            @NotNull Guild guild, @NotNull CharSequence reason, @NotNull IReplyCallback event) {
         if (role == null) {
             event
                 .reply("Can not %s the user, unable to find the corresponding role on this server"
@@ -229,9 +227,6 @@ public enum ModerationUtils {
             return false;
         }
         if (!handleCanInteractWithRole(bot, author, role, event)) {
-            return false;
-        }
-        if (!handleHasAuthorRole(actionVerb, hasRequiredRole, author, event)) {
             return false;
         }
         if (!handleHasBotPermissions(actionVerb, Permission.MANAGE_ROLES, bot, guild, event)) {

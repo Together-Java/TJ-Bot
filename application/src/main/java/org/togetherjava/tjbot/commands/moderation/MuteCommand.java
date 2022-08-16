@@ -41,7 +41,6 @@ public final class MuteCommand extends SlashCommandAdapter {
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of("10 minutes", "30 minutes", "1 hour",
             "3 hours", "1 day", "3 days", "7 days", ModerationUtils.PERMANENT_DURATION);
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -64,7 +63,6 @@ public final class MuteCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be muted", true);
 
         this.config = config;
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -141,7 +139,7 @@ public final class MuteCommand extends SlashCommandAdapter {
             @NotNull IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getMutedRole(guild, config).orElse(null), ACTION_VERB, target, bot,
-                author, guild, hasRequiredRole, reason, event)) {
+                author, guild, reason, event)) {
             return false;
         }
         if (Objects.requireNonNull(target)
