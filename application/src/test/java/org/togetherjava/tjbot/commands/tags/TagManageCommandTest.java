@@ -52,7 +52,7 @@ final class TagManageCommandTest {
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagManageCommand(system, config, modAuditLogWriter);
+        command = new TagManageCommand(system, modAuditLogWriter);
 
         moderator = jdaTester.createMemberSpy(1);
         Role moderatorRole = mock(Role.class);
