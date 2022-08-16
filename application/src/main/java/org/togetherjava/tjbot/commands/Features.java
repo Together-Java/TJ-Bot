@@ -95,7 +95,7 @@ public enum Features {
         features.add(new VcActivityCommand());
         features.add(new WarnCommand(actionsStore, config));
         features.add(new KickCommand(actionsStore, config));
-        features.add(new BanCommand(actionsStore, config));
+        features.add(new BanCommand(actionsStore));
         features.add(new UnbanCommand(actionsStore, config));
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore, config));

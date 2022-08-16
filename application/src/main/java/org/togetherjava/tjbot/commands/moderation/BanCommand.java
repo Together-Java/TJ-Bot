@@ -20,14 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
@@ -48,16 +45,14 @@ public final class BanCommand extends SlashCommandAdapter {
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of(ModerationUtils.PERMANENT_DURATION,
             "1 hour", "3 hours", "1 day", "2 days", "3 days", "7 days", "30 days");
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
-     * @param config the config to use for this
      */
-    public BanCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public BanCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
         OptionData durationData = new OptionData(OptionType.STRING, DURATION_OPTION,
@@ -71,8 +66,6 @@ public final class BanCommand extends SlashCommandAdapter {
                     "the amount of days of the message history to delete, none means no messages are deleted.",
                     true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
 
-        hasRequiredRole =
-                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -180,9 +173,6 @@ public final class BanCommand extends SlashCommandAdapter {
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
         if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
