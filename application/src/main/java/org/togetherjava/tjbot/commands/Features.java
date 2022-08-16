@@ -93,7 +93,7 @@ public enum Features {
         features.add(new TagManageCommand(tagSystem, config, modAuditLogWriter));
         features.add(new TagsCommand(tagSystem));
         features.add(new VcActivityCommand());
-        features.add(new WarnCommand(actionsStore, config));
+        features.add(new WarnCommand(actionsStore));
         features.add(new KickCommand(actionsStore));
         features.add(new BanCommand(actionsStore));
         features.add(new UnbanCommand(actionsStore));
