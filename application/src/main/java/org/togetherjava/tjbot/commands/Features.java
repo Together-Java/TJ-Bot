@@ -100,7 +100,7 @@ public enum Features {
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore, config));
         features.add(new UnmuteCommand(actionsStore, config));
-        features.add(new TopHelpersCommand(database, config));
+        features.add(new TopHelpersCommand(database));
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore));
         features.add(new RemindCommand(database));
