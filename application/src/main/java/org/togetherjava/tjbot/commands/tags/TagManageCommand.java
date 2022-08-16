@@ -2,8 +2,6 @@ package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
@@ -18,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.time.temporal.TemporalAccessor;
@@ -30,8 +27,6 @@ import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * Implements the {@code /tag-manage} command which allows management of tags, such as creating,
@@ -67,7 +62,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static final String UNABLE_TO_GET_CONTENT_MESSAGE = "Was unable to retrieve content";
 
     private final TagSystem tagSystem;
-    private final Predicate<String> hasRequiredRole;
 
     private final ModAuditLogWriter modAuditLogWriter;
 
@@ -75,15 +69,12 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * Creates a new instance, using the given tag system as base.
      *
      * @param tagSystem the system providing the actual tag data
-     * @param config the config to use for this
      * @param modAuditLogWriter to log tag changes for audition
      */
-    public TagManageCommand(@NotNull TagSystem tagSystem, @NotNull Config config,
-            @NotNull ModAuditLogWriter modAuditLogWriter) {
+    public TagManageCommand(@NotNull TagSystem tagSystem,@NotNull ModAuditLogWriter modAuditLogWriter) {
         super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
-        hasRequiredRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
 
         this.modAuditLogWriter = modAuditLogWriter;
 
@@ -152,13 +143,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-        if (!hasTagManageRole(Objects.requireNonNull(event.getMember()))) {
-            event.reply("Tags can only be managed by users with a corresponding role.")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
         switch (Subcommand.fromName(event.getSubcommandName())) {
             case RAW -> rawTag(event);
             case CREATE -> createTag(event);
@@ -397,10 +381,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
         modAuditLogWriter.write(title,
                 LOG_EMBED_DESCRIPTION.formatted(subcommand.getActionVerb(), id), author,
                 triggeredAt, guild, attachments.toArray(ModAuditLogWriter.Attachment[]::new));
-    }
-
-    private boolean hasTagManageRole(@NotNull Member member) {
-        return member.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole);
     }
 
     private enum TagStatus {

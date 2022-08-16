@@ -90,7 +90,7 @@ public enum Features {
         features.add(new PingCommand());
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem));
-        features.add(new TagManageCommand(tagSystem, config, modAuditLogWriter));
+        features.add(new TagManageCommand(tagSystem, modAuditLogWriter));
         features.add(new TagsCommand(tagSystem));
         features.add(new VcActivityCommand());
         features.add(new WarnCommand(actionsStore));
