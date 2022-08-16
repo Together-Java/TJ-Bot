@@ -196,7 +196,6 @@ public enum ModerationUtils {
      * @param bot the bot executing this interaction
      * @param author the author attempting to interact with the target
      * @param guild the guild this interaction is executed on
-     * @param hasRequiredRole a predicate used to identify required roles by their name
      * @param reason the reason for this interaction
      * @param event the event used to respond to the user
      * @return Whether the bot and the author have enough permission
@@ -260,33 +259,6 @@ public enum ModerationUtils {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Checks whether the given bot has enough permission to execute the given action. For example
-     * whether it has enough permissions to ban users.
-     * <p>
-     * If not, it will handle the situation and respond to the user.
-     *
-     * @param actionVerb the interaction as verb, for example {@code "ban"} or {@code "kick"}
-     * @param hasRequiredRole a predicate used to identify required roles by their name
-     * @param author the author attempting to interact with the target
-     * @param event the event used to respond to the user
-     * @return Whether the bot has the required permission
-     */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasAuthorRole(@NotNull String actionVerb,
-            @NotNull Predicate<? super String> hasRequiredRole, @NotNull Member author,
-            @NotNull IReplyCallback event) {
-        if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
-            return true;
-        }
-        event
-            .reply("You can not %s users in this guild since you do not have the required role."
-                .formatted(actionVerb))
-            .setEphemeral(true)
-            .queue();
-        return false;
     }
 
     /**
