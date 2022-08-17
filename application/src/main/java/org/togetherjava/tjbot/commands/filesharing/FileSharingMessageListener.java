@@ -23,6 +23,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -35,10 +36,10 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    private final String gistApiKey;
     private static final String SHARE_API = "https://api.github.com/gists";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
+    private final String gistApiKey;
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
@@ -89,7 +90,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     private void processAttachments(@NotNull MessageReceivedEvent event,
             @NotNull List<Message.Attachment> attachments) {
 
-        Map<String, GistFile> filesAsJson = Collections.synchronizedMap(new HashMap<>());
+        Map<String, GistFile> filesAsJson = new ConcurrentHashMap<>();
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
         for (Message.Attachment attachment : attachments) {
