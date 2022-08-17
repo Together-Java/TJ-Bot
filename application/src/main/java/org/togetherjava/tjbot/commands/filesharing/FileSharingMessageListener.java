@@ -143,7 +143,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(SHARE_API))
-            .headers("Accept", "application/json", "Authorization", "token " + gistApiKey)
+            .header("Accept", "application/json")
+            .header("Authorization", "token " + gistApiKey)
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build();
 
