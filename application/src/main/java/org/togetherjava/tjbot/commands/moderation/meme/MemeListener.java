@@ -1,8 +1,9 @@
 package org.togetherjava.tjbot.commands.moderation.meme;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
@@ -57,8 +58,8 @@ public final class MemeListener extends MessageReceiverAdapter {
         String dmMessage =
                 "Hey there, your were posting a Meme without a Media attached, pls attach some media (URL or other Media) "
                         + "to your message.";
-        jda.openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(dmMessage))
-            .queue();
+        RestAction<Message> messageRestAction = jda.openPrivateChannelById(userId)
+                .flatMap(channel -> channel.sendMessage(dmMessage));
+        messageRestAction.queue();
     }
 }
