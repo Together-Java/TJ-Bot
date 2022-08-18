@@ -43,5 +43,6 @@
            "Other"
        ],
        "categoryRoleSuffix": " - Helper"
-   }
+   },
+    "memeChannelPattern": "memes"
 }

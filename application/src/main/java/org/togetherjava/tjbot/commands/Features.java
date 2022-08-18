@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
+import org.togetherjava.tjbot.commands.moderation.meme.MemeListener;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
@@ -81,6 +82,7 @@ public enum Features {
         features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
         features.add(new ImplicitAskListener(config, helpSystemHelper));
+        features.add(new MemeListener(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

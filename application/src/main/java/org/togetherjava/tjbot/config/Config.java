@@ -28,6 +28,8 @@ public final class Config {
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
 
+    private final String memeChannelPattern;
+
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
@@ -43,7 +45,8 @@ public final class Config {
             @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
-            @JsonProperty("helpSystem") HelpSystemConfig helpSystem) {
+            @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
+            @JsonProperty("memeChannelPattern") String memeChannelPattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -58,6 +61,7 @@ public final class Config {
         this.scamBlocker = scamBlocker;
         this.wolframAlphaAppId = wolframAlphaAppId;
         this.helpSystem = helpSystem;
+        this.memeChannelPattern = memeChannelPattern;
     }
 
     /**
@@ -200,5 +204,14 @@ public final class Config {
      */
     public @NotNull HelpSystemConfig getHelpSystem() {
         return helpSystem;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain memes.
+     *
+     * @return the channel name pattern
+     */
+    public @NotNull String getMemeChannelPattern() {
+        return memeChannelPattern;
     }
 }
