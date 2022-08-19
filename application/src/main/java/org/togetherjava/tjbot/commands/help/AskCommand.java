@@ -17,8 +17,8 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.DatabaseException;
-import org.togetherjava.tjbot.db.generated.tables.AddHelpChannel;
-import org.togetherjava.tjbot.db.generated.tables.records.AddHelpChannelRecord;
+import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
+import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 
 import java.util.Optional;
 
@@ -146,13 +146,12 @@ public final class AskCommand extends SlashCommandAdapter {
     private void mapUserToDatabase(Member author, ThreadChannel threadChannel) {
         try {
             database.write(content -> {
-                AddHelpChannelRecord helpChannelRecord =
-                        content.newRecord(AddHelpChannel.ADD_HELP_CHANNEL)
-                            .setUserId(author.getIdLong())
-                            .setChannelId(threadChannel.getIdLong())
-                            .setCreatedAt(threadChannel.getTimeCreated().toInstant());
-                if (helpChannelRecord.update() == 0) {
-                    helpChannelRecord.insert();
+                HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
+                    .setAuthorId(author.getIdLong())
+                    .setChannelId(threadChannel.getIdLong())
+                    .setCreatedAt(threadChannel.getTimeCreated().toInstant());
+                if (helpThreadsRecord.update() == 0) {
+                    helpThreadsRecord.insert();
                 }
             });
         } catch (DatabaseException e) {

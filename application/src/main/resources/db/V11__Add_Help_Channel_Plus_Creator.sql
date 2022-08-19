@@ -1,6 +1,6 @@
-CREATE TABLE add_help_channel
+CREATE TABLE help_threads
 (
     channel_id BIGINT    NOT NULL PRIMARY KEY,
-    user_id    BIGINT    NOT NULL,
+    author_id  BIGINT    NOT NULL,
     created_at TIMESTAMP NOT NULL
 )
