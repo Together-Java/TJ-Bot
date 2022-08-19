@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
@@ -34,6 +36,7 @@ import java.util.regex.Pattern;
  */
 public class FileSharingMessageListener extends MessageReceiverAdapter {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileSharingMessageListener.class);
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private static final String SHARE_API = "https://api.github.com/gists";
@@ -75,7 +78,13 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             .filter(this::isAttachmentRelevant)
             .toList();
 
-        CompletableFuture.runAsync(() -> processAttachments(event, attachments));
+        CompletableFuture.runAsync(() -> {
+            try {
+                processAttachments(event, attachments);
+            } catch (Exception e) {
+                LOGGER.error("Unknown error while processing attachments", e);
+            }
+        });
     }
 
     private boolean isAttachmentRelevant(@NotNull Message.Attachment attachment) {
@@ -90,21 +99,21 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     private void processAttachments(@NotNull MessageReceivedEvent event,
             @NotNull List<Message.Attachment> attachments) {
 
-        Map<String, GistFile> filesAsJson = new ConcurrentHashMap<>();
+        Map<String, GistFile> nameToFile = new ConcurrentHashMap<>();
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
         for (Message.Attachment attachment : attachments) {
             CompletableFuture<Void> task = attachment.retrieveInputStream()
                 .thenApply(this::readAttachment)
                 .thenAccept(
-                        content -> filesAsJson.put(getNameOf(attachment), new GistFile(content)));
+                        content -> nameToFile.put(getNameOf(attachment), new GistFile(content)));
 
             tasks.add(task);
         }
 
         tasks.forEach(CompletableFuture::join);
 
-        GistFiles files = new GistFiles(filesAsJson);
+        GistFiles files = new GistFiles(nameToFile);
         GistRequest request = new GistRequest(event.getAuthor().getName(), false, files);
         String url = uploadToGist(request);
         sendResponse(event, url);
@@ -128,7 +137,13 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             fileExtension = "xml";
         }
 
-        fileName = fileName.substring(0, fileName.lastIndexOf(".")) + "." + fileExtension;
+        int extensionIndex = fileName.lastIndexOf('.');
+        if (extensionIndex != -1) {
+            fileName = fileName.substring(0, extensionIndex);
+        }
+
+        fileName += "." + fileExtension;
+
         return fileName;
     }
 
