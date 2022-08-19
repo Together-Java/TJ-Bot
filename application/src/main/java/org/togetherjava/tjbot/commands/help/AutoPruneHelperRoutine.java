@@ -74,13 +74,13 @@ public final class AutoPruneHelperRoutine implements Routine {
             .filter(channel -> helper.isOverviewChannelName(channel.getName()))
             .findAny()
             .orElseThrow();
-        Instant when = Instant.now();
+        Instant now = Instant.now();
 
         allCategories.stream()
             .map(category -> helper.handleFindRoleForCategory(category, guild))
             .filter(Optional::isPresent)
             .map(Optional::orElseThrow)
-            .forEach(role -> pruneRoleIfFull(role, overviewChannel, when));
+            .forEach(role -> pruneRoleIfFull(role, overviewChannel, now));
     }
 
     private void pruneRoleIfFull(@NotNull Role role, @NotNull TextChannel overviewChannel,
@@ -93,7 +93,7 @@ public final class AutoPruneHelperRoutine implements Routine {
         });
     }
 
-    private boolean isRoleFull(@NotNull Collection<Member> members) {
+    private boolean isRoleFull(@NotNull Collection<?> members) {
         return members.size() >= ROLE_FULL_THRESHOLD;
     }
 
