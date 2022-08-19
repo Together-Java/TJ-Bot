@@ -54,8 +54,8 @@ public final class MemeListener extends MessageReceiverAdapter {
         return dmUser(event.getMessage(), event.getAuthor().getIdLong(), event.getJDA());
     }
 
-    private RestAction<Message> dmUser(Message sendedMessage, long userId, @NotNull JDA jda) {
-        String contentDisplay = sendedMessage.getContentDisplay();
+    private RestAction<Message> dmUser(Message sentMessage, long userId, @NotNull JDA jda) {
+        String contentDisplay = sentMessage.getContentDisplay();
         String dmMessage =
                 ("Hey there, your were posting a Meme without a Media attached: '%s' please attach some media (URL or other Media) to your message")
                     .formatted(contentDisplay);
