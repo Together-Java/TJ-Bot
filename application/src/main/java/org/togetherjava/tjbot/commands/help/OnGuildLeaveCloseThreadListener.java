@@ -35,14 +35,14 @@ public class OnGuildLeaveCloseThreadListener implements EventReceiver {
 
     private void onGuildMemberRemoved(GuildMemberRemoveEvent leaveEvent) {
         ThreadChannel threadChannel;
-        Set<Long> channelId = getThreadsAssociatedToLeaver(leaveEvent);
-        if (channelId.isEmpty()) {
+        Set<Long> channelIds = getThreadsAssociatedToLeaver(leaveEvent);
+        if (channelIds.isEmpty()) {
             logger.warn("Failed to get channelID user was associated with");
         } else {
-            for (Long channel : channelId) {
-                threadChannel = leaveEvent.getGuild().getThreadChannelById(channel);
+            for (Long channelId : channelIds) {
+                threadChannel = leaveEvent.getGuild().getThreadChannelById(channelId);
                 if (threadChannel == null) {
-                    logger.warn("Thread channel ID: '{}' is already deleted.", channel);
+                    logger.warn("Thread channelId ID: '{}' is already deleted.", channelId);
                 } else {
                     MessageEmbed embed = new EmbedBuilder().setTitle("Original Thread Creator Left")
                         .setDescription("Closing ticket...")
