@@ -97,7 +97,10 @@ public final class AskCommand extends SlashCommandAdapter {
         Guild guild = event.getGuild();
         event.deferReply(true).queue();
 
-        overviewChannel.createThreadChannel("[%s] %s".formatted(category, title))
+        HelpSystemHelper.HelpThreadName name = new HelpSystemHelper.HelpThreadName(
+                HelpSystemHelper.ThreadActivity.NEEDS_HELP, category, title);
+
+        overviewChannel.createThreadChannel(name.toChannelName())
             .flatMap(threadChannel -> handleEvent(eventHook, threadChannel, author, title, category,
                     guild))
             .queue(any -> {
