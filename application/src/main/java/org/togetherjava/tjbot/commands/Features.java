@@ -76,7 +76,8 @@ public enum Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new BotMessageCleanup(config));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
-        features.add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+        features
+            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
