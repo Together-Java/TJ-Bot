@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.moderation.meme;
+package org.togetherjava.tjbot.commands.meme;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
@@ -29,14 +29,12 @@ class MemeListenerTest {
 
     private MemeListener memeListener;
 
-
     @BeforeEach
     void setUp() {
         Config config = mock(Config.class);
-        when(config.getMemeChannelPattern()).thenReturn("memes");
+        when(config.getMediaOnlyChannelPattern()).thenReturn("memes");
         memeListener = new MemeListener(config);
     }
-
 
     @Test
     void validMemePostWithAttachment() {
@@ -48,30 +46,29 @@ class MemeListenerTest {
         when(message.getAttachments()).thenReturn(attachments);
         when(user.isBot()).thenReturn(false);
 
-        MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(api, responseNumber, message);
+        MessageReceivedEvent messageReceivedEvent =
+                new MessageReceivedEvent(api, responseNumber, message);
         memeListener.onMessageReceived(messageReceivedEvent);
     }
 
     @Test
     void validMemePostWithUrlEmbedded() {
-
         MessageEmbed messageEmbed = new MessageEmbed("https://9gag.com/gag/a61A238", "Test", "Test",
-                EmbedType.LINK, null, 1, null, null, null, null,
-                null, null, null);
+                EmbedType.LINK, null, 1, null, null, null, null, null, null, null);
         List<MessageEmbed> messageEmbeds = Collections.singletonList(messageEmbed);
 
         when(message.getAuthor()).thenReturn(user);
         when(message.getEmbeds()).thenReturn(messageEmbeds);
         when(user.isBot()).thenReturn(false);
 
-        MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(api, responseNumber, message);
+        MessageReceivedEvent messageReceivedEvent =
+                new MessageReceivedEvent(api, responseNumber, message);
         memeListener.onMessageReceived(messageReceivedEvent);
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
     void unvalidMemePostWithOnlyText() {
-
         AuditableRestAction<Void> auditableRestAction = mock(AuditableRestAction.class);
         RestAction<PrivateChannel> restActionPrivateChannel = mock(RestAction.class);
         RestAction restActionMessage = mock(RestAction.class);
@@ -82,10 +79,11 @@ class MemeListenerTest {
         when(user.isBot()).thenReturn(false);
         when(api.openPrivateChannelById(0)).thenReturn(restActionPrivateChannel);
         when(restActionPrivateChannel.flatMap(any())).thenReturn(restActionMessage);
+        when(auditableRestAction.flatMap(any())).thenReturn(restActionMessage);
 
-        MessageReceivedEvent messageReceivedEvent = new MessageReceivedEvent(api, responseNumber, message);
+        MessageReceivedEvent messageReceivedEvent =
+                new MessageReceivedEvent(api, responseNumber, message);
         memeListener.onMessageReceived(messageReceivedEvent);
     }
-
 
 }

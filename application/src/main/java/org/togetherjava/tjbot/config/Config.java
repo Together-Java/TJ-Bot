@@ -28,7 +28,7 @@ public final class Config {
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
 
-    private final String memeChannelPattern;
+    private final String mediaOnlyChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -46,7 +46,7 @@ public final class Config {
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
             @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
-            @JsonProperty("memeChannelPattern") String memeChannelPattern) {
+            @JsonProperty("memeChannelPattern") String mediaOnlyChannelPattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
@@ -61,7 +61,7 @@ public final class Config {
         this.scamBlocker = scamBlocker;
         this.wolframAlphaAppId = wolframAlphaAppId;
         this.helpSystem = helpSystem;
-        this.memeChannelPattern = memeChannelPattern;
+        this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
     }
 
     /**
@@ -211,7 +211,7 @@ public final class Config {
      *
      * @return the channel name pattern
      */
-    public @NotNull String getMemeChannelPattern() {
-        return memeChannelPattern;
+    public @NotNull String getMediaOnlyChannelPattern() {
+        return mediaOnlyChannelPattern;
     }
 }

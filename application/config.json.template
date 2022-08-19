@@ -44,5 +44,5 @@
        ],
        "categoryRoleSuffix": " - Helper"
    },
-    "memeChannelPattern": "memes"
+    "mediaOnlyChannelPattern": "memes"
 }
