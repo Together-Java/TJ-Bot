@@ -117,7 +117,7 @@ public final class BotMessageCleanup implements Routine {
         logger.debug("Found {} messages to delete", messageIdsToDelete.size());
 
         if (messageIdsToDelete.isEmpty()) {
-            return new CompletedRestAction<>(channel.getJDA(), null, null);
+            return new CompletedRestAction<>(channel.getJDA(), null);
         }
 
         if (messageIdsToDelete.size() == 1) {
