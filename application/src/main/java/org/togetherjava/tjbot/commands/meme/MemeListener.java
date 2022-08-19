@@ -57,7 +57,7 @@ public final class MemeListener extends MessageReceiverAdapter {
     private RestAction<Message> dmUser(Message sendedMessage, long userId, @NotNull JDA jda) {
         String contentDisplay = sendedMessage.getContentDisplay();
         String dmMessage =
-                ("Hey there, your were posting a Meme without a Media attached: '%s' please attach some media (URL or other Media) to your message \uD83D\uDE00.")
+                ("Hey there, your were posting a Meme without a Media attached: '%s' please attach some media (URL or other Media) to your message")
                     .formatted(contentDisplay);
         return jda.openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(dmMessage));
