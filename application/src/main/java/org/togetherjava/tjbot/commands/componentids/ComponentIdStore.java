@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.togetherjava.tjbot.commands.SlashCommand;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.Result;
 import org.slf4j.Logger;
@@ -26,8 +28,7 @@ import java.util.stream.Collectors;
 /**
  * Thread-safe storage for component IDs. Can put, persist and get back component IDs based on
  * UUIDs. Component IDs are used for button and selection menu commands, see
- * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandInteractionEvent)}
- * for details.
+ * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details.
  * <p>
  * Use {@link #putOrThrow(UUID, ComponentId, Lifespan)} to put and persist a component ID; and
  * {@link #get(UUID)} to get it back. Component IDs are persisted during application runs and can
@@ -113,8 +114,16 @@ public final class ComponentIdStore implements AutoCloseable {
             .maximumSize(CACHE_SIZE)
             .expireAfterAccess(EVICT_CACHE_OLDER_THAN, TimeUnit.of(EVICT_CACHE_OLDER_THAN_UNIT))
             .build();
-        evictionTask = evictionService.scheduleWithFixedDelay(this::evictDatabase,
-                evictEveryInitialDelay, evictEveryDelay, TimeUnit.of(evictEveryUnit));
+
+        Runnable evictCommand = () -> {
+            try {
+                evictDatabase();
+            } catch (Exception e) {
+                logger.error("Unknown error while evicting the component ID store database.", e);
+            }
+        };
+        evictionTask = evictionService.scheduleWithFixedDelay(evictCommand, evictEveryInitialDelay,
+                evictEveryDelay, TimeUnit.of(evictEveryUnit));
 
         logDebugSizeStatistics();
     }

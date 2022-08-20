@@ -5,7 +5,9 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -16,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -33,6 +36,9 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
     private static final String STATUS_TITLE = "## __**Active questions**__ ##";
     private static final int OVERVIEW_QUESTION_LIMIT = 150;
+    private static final AtomicInteger FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES =
+            new AtomicInteger(0);
+    private static final int FIND_STATUS_MESSAGE_FAILURE_THRESHOLD = 3;
 
     private final HelpSystemHelper helper;
     private final List<String> allCategories;
@@ -75,10 +81,18 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         message.delete().queue();
 
         // Thread creation can sometimes take a bit longer than the actual message, so that
-        // "getThreadChannels()"
-        // would not pick it up, hence we execute the update with some slight delay.
-        UPDATE_SERVICE.schedule(() -> updateOverviewForGuild(event.getGuild()), 2,
-                TimeUnit.SECONDS);
+        // "getThreadChannels()" would not pick it up, hence we execute the update with some slight
+        // delay.
+        Runnable updateOverviewCommand = () -> {
+            try {
+                updateOverviewForGuild(event.getGuild());
+            } catch (Exception e) {
+                logger.error(
+                        "Unknown error while attempting to update the help overview for guild {}.",
+                        event.getGuild().getId(), e);
+            }
+        };
+        UPDATE_SERVICE.schedule(updateOverviewCommand, 2, TimeUnit.SECONDS);
     }
 
     private void updateOverviewForGuild(@NotNull Guild guild) {
@@ -102,8 +116,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
         if (maybeChannel.isEmpty()) {
             logger.warn(
-                    "Unable to update help thread overview, did not find a {} channel matching the configured pattern '{}' for guild '{}'",
-                    ChannelType.OVERVIEW, channelPattern, guild.getName());
+                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName());
             return Optional.empty();
         }
 
@@ -124,15 +138,10 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             .setContent(STATUS_TITLE + "\n\n" + createDescription(activeThreads))
             .build();
 
-        getStatusMessage(overviewChannel).flatMap(maybeStatusMessage -> {
-            logger.debug("Sending the updated question overview");
-            if (maybeStatusMessage.isEmpty()) {
-                return overviewChannel.sendMessage(message);
-            }
-
-            String statusMessageId = maybeStatusMessage.orElseThrow().getId();
-            return overviewChannel.editMessageById(statusMessageId, message);
-        }).queue();
+        getStatusMessage(overviewChannel)
+            .flatMap(maybeStatusMessage -> sendUpdatedOverview(maybeStatusMessage.orElse(null),
+                    message, overviewChannel))
+            .queue();
     }
 
     private @NotNull String createDescription(@NotNull Collection<ThreadChannel> activeThreads) {
@@ -178,9 +187,28 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         return content.startsWith(STATUS_TITLE);
     }
 
-    private enum ChannelType {
-        OVERVIEW,
-        STAGING
+    private @NotNull RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
+            @NotNull Message updatedStatusMessage, @NotNull MessageChannel overviewChannel) {
+        logger.debug("Sending the updated question overview");
+        if (statusMessage == null) {
+            int currentFailures = FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.incrementAndGet();
+            if (currentFailures >= FIND_STATUS_MESSAGE_FAILURE_THRESHOLD) {
+                logger.warn(
+                        "Failed to locate the question overview too often ({} times), sending a fresh message instead.",
+                        currentFailures);
+                FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.set(0);
+                return overviewChannel.sendMessage(updatedStatusMessage);
+            }
+
+            logger.info(
+                    "Failed to locate the question overview ({} times), trying again next time.",
+                    currentFailures);
+            return new CompletedRestAction<>(overviewChannel.getJDA(), null);
+        }
+
+        FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.set(0);
+        String statusMessageId = statusMessage.getId();
+        return overviewChannel.editMessageById(statusMessageId, updatedStatusMessage);
     }
 
     private record CategoryWithThreads(@NotNull String category,
