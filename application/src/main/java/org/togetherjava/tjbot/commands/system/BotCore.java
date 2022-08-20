@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -31,6 +30,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,9 +56,11 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             Executors.newScheduledThreadPool(5);
     private final Config config;
     private final Map<String, UserInteractor> nameToInteractor;
+    private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
+    private final AtomicBoolean receivedOnReady = new AtomicBoolean(false);
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -87,31 +89,11 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .map(EventReceiver.class::cast)
             .forEach(jda::addEventListener);
 
-        // Routines
-        features.stream()
+        // Routines (are scheduled once the core is ready)
+        routines = features.stream()
             .filter(Routine.class::isInstance)
             .map(Routine.class::cast)
-            .forEach(routine -> {
-                Runnable command = () -> {
-                    String routineName = routine.getClass().getSimpleName();
-                    try {
-                        logger.debug("Running routine %s...".formatted(routineName));
-                        routine.runRoutine(jda);
-                        logger.debug("Finished routine %s.".formatted(routineName));
-                    } catch (Exception e) {
-                        logger.error("Unknown error in routine {}.", routineName, e);
-                    }
-                };
-
-                Routine.Schedule schedule = routine.createSchedule();
-                switch (schedule.mode()) {
-                    case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
-                            schedule.initialDuration(), schedule.duration(), schedule.unit());
-                    case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
-                            schedule.initialDuration(), schedule.duration(), schedule.unit());
-                    default -> throw new AssertionError("Unsupported schedule mode");
-                }
-            });
+            .toList();
 
         // User Interactors (e.g. slash commands)
         nameToInteractor = features.stream()
@@ -159,16 +141,50 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .map(SlashCommand.class::cast);
     }
 
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
+    /**
+     * Trigger once JDA is ready. Subsequent calls are ignored.
+     * 
+     * @param jda the JDA instance to work with
+     */
+    public void onReady(@NotNull JDA jda) {
+        if (!receivedOnReady.compareAndSet(false, true)) {
+            // Ensures that we only enter the event once
+            return;
+        }
+
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
-        event.getJDA()
-            .getGuildCache()
+        jda.getGuildCache()
             .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Bot core is now ready");
+
+        scheduleRoutines(jda);
+    }
+
+    private void scheduleRoutines(@NotNull JDA jda) {
+        routines.forEach(routine -> {
+            Runnable command = () -> {
+                String routineName = routine.getClass().getSimpleName();
+                try {
+                    logger.debug("Running routine %s...".formatted(routineName));
+                    routine.runRoutine(jda);
+                    logger.debug("Finished routine %s.".formatted(routineName));
+                } catch (Exception e) {
+                    logger.error("Unknown error in routine {}.", routineName, e);
+                }
+            };
+
+            Routine.Schedule schedule = routine.createSchedule();
+            switch (schedule.mode()) {
+                case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
+                        schedule.initialDuration(), schedule.duration(), schedule.unit());
+                case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
+                        schedule.initialDuration(), schedule.duration(), schedule.unit());
+                default -> throw new AssertionError("Unsupported schedule mode");
+            }
+        });
     }
 
     @Override

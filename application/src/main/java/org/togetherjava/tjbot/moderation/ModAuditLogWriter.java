@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.AttachmentOption;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
@@ -51,12 +52,12 @@ public final class ModAuditLogWriter {
      *
      * @param title the title of the log embed
      * @param description the description of the log embed
-     * @param author the author of the log message
+     * @param author the author of the log message, if any
      * @param timestamp the timestamp of the log message
      * @param guild the guild to write this log to
      * @param attachments attachments that will be added to the message. none or many.
      */
-    public void write(@NotNull String title, @NotNull String description, @NotNull User author,
+    public void write(@NotNull String title, @NotNull String description, @Nullable User author,
             @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
             @NotNull Attachment... attachments) {
         Optional<TextChannel> auditLogChannel = getAndHandleModAuditLogChannel(guild);
@@ -64,13 +65,16 @@ public final class ModAuditLogWriter {
             return;
         }
 
-        MessageAction message = auditLogChannel.orElseThrow()
-            .sendMessageEmbeds(new EmbedBuilder().setTitle(title)
-                .setDescription(description)
-                .setAuthor(author.getAsTag(), null, author.getAvatarUrl())
-                .setTimestamp(timestamp)
-                .setColor(EMBED_COLOR)
-                .build());
+        EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(title)
+            .setDescription(description)
+            .setTimestamp(timestamp)
+            .setColor(EMBED_COLOR);
+        if (author != null) {
+            embedBuilder.setAuthor(author.getAsTag(), null, author.getAvatarUrl());
+        }
+
+        MessageAction message =
+                auditLogChannel.orElseThrow().sendMessageEmbeds(embedBuilder.build());
 
         for (Attachment attachment : attachments) {
             message = message.addFile(attachment.getContentRaw(), attachment.name());
@@ -102,14 +106,14 @@ public final class ModAuditLogWriter {
     /**
      * Represents attachment to messages, as for example used by
      * {@link MessageAction#addFile(File, String, AttachmentOption...)}.
-     * 
+     *
      * @param name the name of the attachment, example: {@code "foo.md"}
      * @param content the content of the attachment
      */
     public record Attachment(@NotNull String name, @NotNull String content) {
         /**
          * Gets the content raw, interpreted as UTF-8.
-         * 
+         *
          * @return the raw content of the attachment
          */
         public byte @NotNull [] getContentRaw() {
