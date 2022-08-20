@@ -76,7 +76,6 @@ public class ModMailCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         MessageChannel messageChannel = event.getChannel();
         if (isChannelOnCooldown(messageChannel)) {
-            System.out.println(getTimePassedSinceCommandCalled(messageChannel));
             event
                 .reply("Please wait a bit, this command can only be used once per %d %s.".formatted(
                         getRemainingTime(messageChannel),
@@ -164,15 +163,16 @@ public class ModMailCommand extends SlashCommandAdapter {
             .isPresent();
     }
 
-    private Long getTimePassedSinceCommandCalled(@NotNull MessageChannel channel) {
+    private int getTimePassedSinceCommandCalled(@NotNull MessageChannel channel) {
         return Optional
             .ofNullable(channelIdToLastCommandInvocation.getIfPresent(channel.getIdLong()))
             .map(this::getTime)
-            .get();
+            .orElse(COOLDOWN_DURATION_VALUE);
     }
 
-    private long getTime(Instant sinceCommandInvoked) {
-        return Duration.between(sinceCommandInvoked, Instant.now()).getSeconds() / 60;
+    private int getTime(Instant sinceCommandInvoked) {
+        return Math
+            .toIntExact(Duration.between(sinceCommandInvoked, Instant.now()).getSeconds() / 60);
     }
 
 }
