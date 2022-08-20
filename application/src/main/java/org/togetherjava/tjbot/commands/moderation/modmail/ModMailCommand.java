@@ -17,6 +17,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -75,9 +76,10 @@ public class ModMailCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         MessageChannel messageChannel = event.getChannel();
         if (isChannelOnCooldown(messageChannel)) {
+            System.out.println(getTimePassedSinceCommandCalled(messageChannel));
             event
                 .reply("Please wait a bit, this command can only be used once per %d %s.".formatted(
-                        COOLDOWN_DURATION_VALUE,
+                        getRemainingTime(messageChannel),
                         COOLDOWN_DURATION_UNIT.toString().toLowerCase(Locale.US)))
                 .setEphemeral(true)
                 .queue();
@@ -100,6 +102,10 @@ public class ModMailCommand extends SlashCommandAdapter {
 
         event.reply("Thank you for contacting the moderators").setEphemeral(true).queue();
 
+    }
+
+    private long getRemainingTime(MessageChannel messageChannel) {
+        return COOLDOWN_DURATION_VALUE - getTimePassedSinceCommandCalled(messageChannel);
     }
 
     @NotNull
@@ -156,6 +162,17 @@ public class ModMailCommand extends SlashCommandAdapter {
                     COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)
             .isPresent();
+    }
+
+    private Long getTimePassedSinceCommandCalled(@NotNull MessageChannel channel) {
+        return Optional
+            .ofNullable(channelIdToLastCommandInvocation.getIfPresent(channel.getIdLong()))
+            .map(this::getTime)
+            .get();
+    }
+
+    private long getTime(Instant sinceCommandInvoked) {
+        return Duration.between(sinceCommandInvoked, Instant.now()).getSeconds() / 60;
     }
 
 }
