@@ -171,8 +171,7 @@ public class ModMailCommand extends SlashCommandAdapter {
     }
 
     private int getTime(Instant sinceCommandInvoked) {
-        return Math
-            .toIntExact(Duration.between(sinceCommandInvoked, Instant.now()).getSeconds() / 60);
+        return (int) Duration.between(sinceCommandInvoked, Instant.now()).toMinutes();
     }
 
 }
