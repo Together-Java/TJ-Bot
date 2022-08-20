@@ -19,8 +19,10 @@ import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -55,14 +57,14 @@ public class ModMailCommand extends SlashCommandAdapter {
             .addOption(OptionType.BOOLEAN, OPTION_MESSAGE_PRIVATE,
                     "do you wish for your message to stay private", false);
 
-        channelIdToLastCommandInvocation = setCooldown();
+        channelIdToLastCommandInvocation = createCooldownCache();
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
     }
 
     @NotNull
-    private Cache<Long, Instant> setCooldown() {
+    private Cache<Long, Instant> createCooldownCache() {
         return Caffeine.newBuilder()
             .maximumSize(1_000)
             .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
@@ -102,9 +104,8 @@ public class ModMailCommand extends SlashCommandAdapter {
 
     @NotNull
     private String getName(@NotNull SlashCommandInteractionEvent event) {
-        String user = "@" + event.getUser().getName();
-        boolean optionalMessage =
-                Objects.requireNonNull(event.getOption(OPTION_MESSAGE_PRIVATE)).getAsBoolean();
+        String user = event.getUser().getAsMention();
+        boolean optionalMessage = event.getOption(OPTION_MESSAGE_PRIVATE).getAsBoolean();
         if (optionalMessage) {
             user = "Anonymous";
         }
@@ -130,7 +131,7 @@ public class ModMailCommand extends SlashCommandAdapter {
     @NotNull
     private List<ModAuditLogWriter.Attachment> getAttachments(
             @NotNull SlashCommandInteractionEvent event) {
-        String content = Objects.requireNonNull(event.getOption(MESSAGE)).getAsString();
+        String content = event.getOption(MESSAGE).getAsString();
         List<ModAuditLogWriter.Attachment> attachments = new ArrayList<>();
         attachments.add(new ModAuditLogWriter.Attachment("content.md", content));
         return attachments;
@@ -138,7 +139,7 @@ public class ModMailCommand extends SlashCommandAdapter {
 
     private @NotNull Optional<TextChannel> getChannel(@NotNull SlashCommandInteractionEvent event) {
         long guildId = 1004371840245964851L;
-        Guild guild = event.getChannel().getJDA().getGuildById(guildId);
+        Guild guild = event.getJDA().getGuildById(guildId);
         if (guild == null) {
             return Optional.empty();
         }
