@@ -49,7 +49,11 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     private final Predicate<String> isStagingChannelName;
     private final Predicate<String> isOverviewChannelName;
 
-
+    /**
+     * Creates a new instance.
+     * @param config used to get api key and channel names.
+     * @see org.togetherjava.tjbot.commands.Features
+     */
     public FileSharingMessageListener(@NotNull Config config) {
         super(Pattern.compile(".*"));
 
