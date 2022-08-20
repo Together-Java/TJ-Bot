@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.meme;
+package org.togetherjava.tjbot.commands.mediaonly;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
@@ -16,7 +16,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class MemeListenerTest {
+class MediaOnlyChannelListenerTest {
 
     private final JDA api = mock(JDA.class);
 
@@ -26,17 +26,17 @@ class MemeListenerTest {
     private final long responseNumber = 1L;
     private final User user = mock(User.class);
 
-    private MemeListener memeListener;
+    private MediaOnlyChannelListener mediaOnlyChannelListener;
 
     @BeforeEach
     void setUp() {
         Config config = mock(Config.class);
         when(config.getMediaOnlyChannelPattern()).thenReturn("memes");
-        memeListener = new MemeListener(config);
+        mediaOnlyChannelListener = new MediaOnlyChannelListener(config);
     }
 
     @Test
-    void validMemePostWithAttachment() {
+    void validMessagePostWithAttachment() {
         Message.Attachment attachment = new Message.Attachment(1L, null, null, "TEST",
                 "Test ContentType", null, 1, 1, 1, false, jda);
         List<Message.Attachment> attachments = Collections.singletonList(attachment);
@@ -47,12 +47,12 @@ class MemeListenerTest {
 
         MessageReceivedEvent messageReceivedEvent =
                 new MessageReceivedEvent(api, responseNumber, message);
-        memeListener.onMessageReceived(messageReceivedEvent);
+        mediaOnlyChannelListener.onMessageReceived(messageReceivedEvent);
         verify(message).getAttachments();
     }
 
     @Test
-    void validMemePostWithUrlEmbedded() {
+    void validMessagePostWithUrlEmbedded() {
         MessageEmbed messageEmbed = new MessageEmbed("https://9gag.com/gag/a61A238", "Test", "Test",
                 EmbedType.LINK, null, 1, null, null, null, null, null, null, null);
         List<MessageEmbed> messageEmbeds = Collections.singletonList(messageEmbed);
@@ -63,13 +63,13 @@ class MemeListenerTest {
 
         MessageReceivedEvent messageReceivedEvent =
                 new MessageReceivedEvent(api, responseNumber, message);
-        memeListener.onMessageReceived(messageReceivedEvent);
+        mediaOnlyChannelListener.onMessageReceived(messageReceivedEvent);
         verify(message).getEmbeds();
     }
 
     @Test
     @SuppressWarnings({"unchecked", "rawtypes"})
-    void unvalidMemePostWithOnlyText() {
+    void unvalidMessagePostWithOnlyText() {
         AuditableRestAction<Void> auditableRestAction = mock(AuditableRestAction.class);
         RestAction<PrivateChannel> restActionPrivateChannel = mock(RestAction.class);
         RestAction restActionMessage = mock(RestAction.class);
@@ -84,7 +84,7 @@ class MemeListenerTest {
 
         MessageReceivedEvent messageReceivedEvent =
                 new MessageReceivedEvent(api, responseNumber, message);
-        memeListener.onMessageReceived(messageReceivedEvent);
+        mediaOnlyChannelListener.onMessageReceived(messageReceivedEvent);
         verify(message).getAttachments();
     }
 

@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.meme;
+package org.togetherjava.tjbot.commands.mediaonly;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
@@ -12,20 +12,20 @@ import org.togetherjava.tjbot.config.Config;
 import java.util.regex.Pattern;
 
 /**
- * Listener that receives all sent messages from the Meme channel, checks if the message has media
- * attched.
+ * Listener that receives all sent messages from the Media Only Channels, checks if the message has
+ * media attched.
  * <p>
  * If there was no media attached, delete the messagen and send the User a DM, telling what they did
  * wrong.
  */
-public final class MemeListener extends MessageReceiverAdapter {
+public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     /**
-     * Creates a MemeListener to receive all message sent in Memes channel.
+     * Creates a MediaOnlyChannelListener to receive all message sent in Memes channel.
      *
      * @param config the config to use for this
      */
-    public MemeListener(@NotNull Config config) {
+    public MediaOnlyChannelListener(@NotNull Config config) {
         super(Pattern.compile(config.getMediaOnlyChannelPattern()));
     }
 
@@ -57,7 +57,7 @@ public final class MemeListener extends MessageReceiverAdapter {
     private RestAction<Message> dmUser(Message sentMessage, long userId, @NotNull JDA jda) {
         String contentDisplay = sentMessage.getContentDisplay();
         String dmMessage =
-                ("Hey there, your were posting a Meme without a Media attached: '%s' please attach some media (URL or other Media) to your message")
+                "Hey there, your were posting a Message without a Media attached: '%s' please attach some media (URL or other Media) to your message"
                     .formatted(contentDisplay);
         return jda.openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(dmMessage));
