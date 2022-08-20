@@ -103,7 +103,7 @@ public class ModMailCommand extends SlashCommandAdapter {
 
     }
 
-    private long getRemainingTime(MessageChannel messageChannel) {
+    private int getRemainingTime(MessageChannel messageChannel) {
         return COOLDOWN_DURATION_VALUE - getTimePassedSinceCommandCalled(messageChannel);
     }
 
