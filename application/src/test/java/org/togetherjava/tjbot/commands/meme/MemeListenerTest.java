@@ -14,8 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class MemeListenerTest {
 
@@ -49,6 +48,7 @@ class MemeListenerTest {
         MessageReceivedEvent messageReceivedEvent =
                 new MessageReceivedEvent(api, responseNumber, message);
         memeListener.onMessageReceived(messageReceivedEvent);
+        verify(message).getAttachments();
     }
 
     @Test
@@ -64,6 +64,7 @@ class MemeListenerTest {
         MessageReceivedEvent messageReceivedEvent =
                 new MessageReceivedEvent(api, responseNumber, message);
         memeListener.onMessageReceived(messageReceivedEvent);
+        verify(message).getEmbeds();
     }
 
     @Test
@@ -84,6 +85,7 @@ class MemeListenerTest {
         MessageReceivedEvent messageReceivedEvent =
                 new MessageReceivedEvent(api, responseNumber, message);
         memeListener.onMessageReceived(messageReceivedEvent);
+        verify(message).getAttachments();
     }
 
 }
