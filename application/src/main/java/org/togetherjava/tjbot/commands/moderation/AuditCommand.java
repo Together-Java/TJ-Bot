@@ -106,7 +106,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             return TimeUtil.getDateTimeString(instant.atOffset(ZoneOffset.UTC));
         };
 
-        User author = jda.getUserById(action.authorId());
+        User author = jda.retrieveUserById(action.authorId()).complete();
 
         Instant expiresAt = action.actionExpiresAt();
         String expiresAtFormatted = expiresAt == null ? ""
