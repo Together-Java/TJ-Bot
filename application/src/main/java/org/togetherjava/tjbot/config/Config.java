@@ -48,7 +48,7 @@ public final class Config {
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
             @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
-            @JsonProperty("memeChannelPattern") String mediaOnlyChannelPattern) {
+            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern) {
         this.token = token;
         this.gistApiKey = gistApiKey;
         this.databasePath = databasePath;
@@ -222,7 +222,7 @@ public final class Config {
     }
 
     /**
-     * Gets the REGEX pattern used to identify the channel that is supposed to contain memes.
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain only Media.
      *
      * @return the channel name pattern
      */

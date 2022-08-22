@@ -1,7 +1,10 @@
 package org.togetherjava.tjbot.commands.mediaonly;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
@@ -9,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
+import java.awt.*;
 import java.util.regex.Pattern;
 
 /**
@@ -21,9 +25,9 @@ import java.util.regex.Pattern;
 public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     /**
-     * Creates a MediaOnlyChannelListener to receive all message sent in Memes channel.
+     * Creates a MediaOnlyChannelListener to receive all message sent in MediaOnly channel.
      *
-     * @param config the config to use for this
+     * @param config to find MediaOnly channels
      */
     public MediaOnlyChannelListener(@NotNull Config config) {
         super(Pattern.compile(config.getMediaOnlyChannelPattern()));
@@ -35,8 +39,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
-        boolean messageHasNoMediaAttached = messageHasNoMediaAttached(event);
-        if (messageHasNoMediaAttached) {
+        if (messageHasNoMediaAttached(event)) {
             deleteMessage(event).flatMap(any -> dmUser(event)).queue();
         }
     }
@@ -55,10 +58,14 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
     }
 
     private RestAction<Message> dmUser(Message sentMessage, long userId, @NotNull JDA jda) {
-        String contentDisplay = sentMessage.getContentDisplay();
-        String dmMessage =
-                "Hey there, your were posting a Message without a Media attached: '%s' please attach some media (URL or other Media) to your message"
-                    .formatted(contentDisplay);
+        String sentMessageContent = sentMessage.getContentDisplay();
+        MessageEmbed sendMessageEmbed = new EmbedBuilder().setDescription(sentMessageContent)
+            .setColor(Color.ORANGE)
+            .build();
+        Message dmMessage = new MessageBuilder(
+                "Hey there, your were posting a Message without a Media attached, please attach some media (URL or other Media) to your message 😀.")
+                    .setEmbeds(sendMessageEmbed)
+                    .build();
         return jda.openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(dmMessage));
     }
