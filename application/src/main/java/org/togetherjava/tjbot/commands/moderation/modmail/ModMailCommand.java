@@ -45,6 +45,7 @@ public class ModMailCommand extends SlashCommandAdapter {
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private final Cache<Long, Instant> channelIdToLastCommandInvocation;
     private final Predicate<String> modMailChannelNamePredicate;
+    private final Predicate<String> guildNamePatternPredicate;
 
 
     /**
@@ -62,6 +63,8 @@ public class ModMailCommand extends SlashCommandAdapter {
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
+        guildNamePatternPredicate =
+                Pattern.compile(config.getGuildNamePattern()).asMatchPredicate();
     }
 
     @NotNull
@@ -143,8 +146,12 @@ public class ModMailCommand extends SlashCommandAdapter {
     }
 
     private @NotNull Optional<TextChannel> getChannel(@NotNull SlashCommandInteractionEvent event) {
-        long guildId = 1004371840245964851L;
-        Guild guild = event.getJDA().getGuildById(guildId);
+        Guild guild = event.getJDA()
+            .getGuildCache()
+            .stream()
+            .filter(guildName -> guildNamePatternPredicate.test(guildName.getName()))
+            .toList()
+            .get(0);
         if (guild == null) {
             return Optional.empty();
         }
