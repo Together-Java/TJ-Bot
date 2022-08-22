@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 /**
  * Purge Routine to get rid of old thread creations in the database.
  */
-public class LeaversPurgeDatabaseRoutine implements Routine {
+public class HelpThreadMetadataPurger implements Routine {
     private final Database database;
-    private static final Logger logger = LoggerFactory.getLogger(LeaversPurgeDatabaseRoutine.class);
+    private static final Logger logger = LoggerFactory.getLogger(HelpThreadMetadataPurger.class);
     private static final Period DELETE_MESSAGE_RECORDS_AFTER = Period.ofDays(30);
 
-    public LeaversPurgeDatabaseRoutine(@NotNull Database database) {
+    public HelpThreadMetadataPurger(@NotNull Database database) {
         this.database = database;
     }
 

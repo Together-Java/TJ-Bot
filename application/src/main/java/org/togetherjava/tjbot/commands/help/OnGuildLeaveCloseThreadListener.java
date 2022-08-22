@@ -14,10 +14,9 @@ import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * Remove all thread channels associated to a user when they leave the guild
+ * Remove all thread channels associated to a user when they leave the guild.
  */
 public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements EventReceiver {
     private static final Logger logger =
@@ -30,32 +29,26 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
 
     @Override
     public void onGuildMemberRemove(@Nonnull GuildMemberRemoveEvent leaveEvent) {
-        Set<Long> channelIds = getThreadsAssociatedToLeaver(leaveEvent);
-        if (channelIds.isEmpty()) {
-            return;
-        }
+        Set<Long> channelIds = getThreadsCreatedByLeaver(leaveEvent.getUser().getIdLong());
         for (long channelId : channelIds) {
             closeThread(channelId, leaveEvent);
         }
     }
 
-    public Set<Long> getThreadsAssociatedToLeaver(GuildMemberRemoveEvent leaveEvent) {
-        return database
+    public Set<Long> getThreadsCreatedByLeaver(long threadCreatorId) {
+        return new HashSet<>(database
             .readTransaction(context -> context.select(HelpThreads.HELP_THREADS.CHANNEL_ID))
             .from(HelpThreads.HELP_THREADS)
-            .where(HelpThreads.HELP_THREADS.AUTHOR_ID.eq(leaveEvent.getUser().getIdLong()))
-            .fetch()
-            .stream()
-            .map(databaseId -> databaseId.getValue(HelpThreads.HELP_THREADS.CHANNEL_ID))
-            .collect(Collectors.toSet());
-
+            .where(HelpThreads.HELP_THREADS.AUTHOR_ID.eq(threadCreatorId))
+            .fetch(databaseMapper -> databaseMapper.getValue(HelpThreads.HELP_THREADS.CHANNEL_ID)));
     }
 
     public void closeThread(long channelId, GuildMemberRemoveEvent leaveEvent) {
         ThreadChannel threadChannel = leaveEvent.getGuild().getThreadChannelById(channelId);
         if (threadChannel == null) {
-            logger.warn("Attempted to archive thread id: '{}' but could not find thread in guild.",
-                    channelId);
+            logger.warn(
+                    "Attempted to archive thread id: '{}' but could not find thread in guild: '{}'.",
+                    channelId, leaveEvent.getGuild().getName());
             return;
         }
         MessageEmbed embed = new EmbedBuilder().setTitle("OP left")

@@ -36,7 +36,7 @@ In certain circumstances, you have the following data protection rights:
 
 ## Usage of Data
 
-**TJ-Bot** may use stored data, as defined below, to offer different features and services. No usage of data outside of the aformentioned cases will happen and the data is not shared with any third-party site or service.
+**TJ-Bot** may use stored data, as defined below, to offer different features and services. No usage of data outside of the aforementioned cases will happen and the data is not shared with any third-party site or service.
 
 ### Databases
 
@@ -55,7 +55,10 @@ For example, **TJ-Bot** may associate your `user_id` with a `message_id` and a `
 
 **TJ-Bot** may further store data that you explicitly provided for **TJ-Bot** to offer its services. For example the reason of a moderative action when using its moderation commands.
 
+Furthermore, upon utilization of our help service, `user_id`s and `channel_id`s are stored to track when/how many questions a user asks. The data may be stored for up to **30** days. 
+
 The stored data is not linked to any information that is personally identifiable.
+
 
 No other personal information outside of the above mentioned one will be stored. In particular, **TJ-Bot** does not store the content of sent messages.
 

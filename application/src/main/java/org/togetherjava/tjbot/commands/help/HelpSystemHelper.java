@@ -11,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
+import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 
 import java.awt.Color;
 import java.io.InputStream;
@@ -43,15 +46,16 @@ public final class HelpSystemHelper {
     private final Predicate<String> isStagingChannelName;
     private final String stagingChannelPattern;
     private final String categoryRoleSuffix;
-
+    private final Database database;
 
     /**
      * Creates a new instance.
      *
      * @param config the config to use
      */
-    public HelpSystemHelper(@NotNull Config config) {
+    public HelpSystemHelper(@NotNull Config config, Database database) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
+        this.database = database;
 
         overviewChannelPattern = helpConfig.getOverviewChannelPattern();
         isOverviewChannelName = Pattern.compile(overviewChannelPattern).asMatchPredicate();
@@ -92,6 +96,18 @@ public final class HelpSystemHelper {
             action = action.addFile(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH);
         }
         return action.setEmbeds(embeds);
+    }
+
+    public void writeHelpThreadToDatabase(Member author, ThreadChannel threadChannel) {
+        database.write(content -> {
+            HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
+                .setAuthorId(author.getIdLong())
+                .setChannelId(threadChannel.getIdLong())
+                .setCreatedAt(threadChannel.getTimeCreated().toInstant());
+            if (helpThreadsRecord.update() == 0) {
+                helpThreadsRecord.insert();
+            }
+        });
     }
 
     private static @NotNull MessageEmbed embedWith(@NotNull CharSequence message) {

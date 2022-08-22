@@ -61,7 +61,7 @@ public enum Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config);
+        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -75,7 +75,7 @@ public enum Features {
         features.add(new RemindRoutine(database));
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new BotMessageCleanup(config));
-        features.add(new LeaversPurgeDatabaseRoutine(database));
+        features.add(new HelpThreadMetadataPurger(database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -110,7 +110,7 @@ public enum Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
-        features.add(new AskCommand(config, helpSystemHelper, database));
+        features.add(new AskCommand(config, helpSystemHelper));
         features.add(new CloseCommand(helpSystemHelper));
         features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
         features.add(new ChangeHelpTitleCommand(helpSystemHelper));

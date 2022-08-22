@@ -154,6 +154,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
     private @NotNull RestAction<?> handleEvent(@NotNull ThreadChannel threadChannel,
             @NotNull Message message, @NotNull String title) {
         Member author = message.getMember();
+        helper.writeHelpThreadToDatabase(author, threadChannel);
         userIdToLastHelpThread.put(author.getIdLong(),
                 new HelpThread(threadChannel.getIdLong(), author.getIdLong(), Instant.now()));
 
