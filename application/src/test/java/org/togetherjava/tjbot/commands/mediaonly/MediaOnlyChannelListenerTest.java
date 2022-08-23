@@ -23,11 +23,9 @@ import static org.mockito.Mockito.*;
 class MediaOnlyChannelListenerTest {
 
     private JDA jda;
-
     private final Message message = mock(Message.class);
     private final long responseNumber = 1L;
     private final User user = mock(User.class);
-
     private MediaOnlyChannelListener mediaOnlyChannelListener;
 
     @BeforeEach
