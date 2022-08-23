@@ -90,7 +90,9 @@ public final class HelpSystemHelper {
                                 If nobody is calling back, that usually means that your question was **not well asked** and \
                                     hence nobody feels confident enough answering. Try to use your time to elaborate, \
                                     **provide details**, context, more code, examples and maybe some screenshots. \
-                                    With enough info, someone knows the answer for sure."""));
+                                    With enough info, someone knows the answer for sure."""),
+                HelpSystemHelper.embedWith(
+                        "Don't forget to close your thread using the command **/close** when your question has been answered, thanks."));
 
         MessageAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
