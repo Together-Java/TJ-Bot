@@ -53,7 +53,7 @@ public final class HelpSystemHelper {
      *
      * @param config the config to use
      */
-    public HelpSystemHelper(@NotNull Config config, Database database) {
+    public HelpSystemHelper(@NotNull Config config, @NotNull Database database) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
 

@@ -35,15 +35,15 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
         }
     }
 
-    public Set<Long> getThreadsCreatedByLeaver(long threadCreatorId) {
+    public Set<Long> getThreadsCreatedByLeaver(long leaverId) {
         return new HashSet<>(database
             .readTransaction(context -> context.select(HelpThreads.HELP_THREADS.CHANNEL_ID))
             .from(HelpThreads.HELP_THREADS)
-            .where(HelpThreads.HELP_THREADS.AUTHOR_ID.eq(threadCreatorId))
+            .where(HelpThreads.HELP_THREADS.AUTHOR_ID.eq(leaverId))
             .fetch(databaseMapper -> databaseMapper.getValue(HelpThreads.HELP_THREADS.CHANNEL_ID)));
     }
 
-    public void closeThread(long channelId, GuildMemberRemoveEvent leaveEvent) {
+    public void closeThread(long channelId, @NotNull GuildMemberRemoveEvent leaveEvent) {
         ThreadChannel threadChannel = leaveEvent.getGuild().getThreadChannelById(channelId);
         if (threadChannel == null) {
             logger.warn(
