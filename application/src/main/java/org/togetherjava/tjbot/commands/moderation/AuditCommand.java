@@ -138,7 +138,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             @Nullable Member target, @NotNull IReplyCallback event) {
         // Member doesn't exist if attempting to audit a user who is not part of the guild.
         if (target == null) {
-            return false;
+            return true;
         }
         return ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event);
     }
