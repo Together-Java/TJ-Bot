@@ -21,8 +21,10 @@ import java.util.regex.Pattern;
 /**
  * Utility class offering helpers revolving around user moderation, such as banning or kicking.
  */
-public enum ModerationUtils {
-    ;
+public class ModerationUtils {
+    private ModerationUtils() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(ModerationUtils.class);
     /**

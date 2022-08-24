@@ -11,8 +11,10 @@ import java.util.stream.IntStream;
 /**
  * Utility class for computing string distances, for example the edit distance between two words.
  */
-public enum StringDistances {
-    ;
+public class StringDistances {
+    private StringDistances() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * Computes the candidate that matches the given query string best.

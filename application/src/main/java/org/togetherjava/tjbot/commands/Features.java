@@ -39,8 +39,10 @@ import java.util.Collection;
  * To add a new slash command, extend the commands returned by
  * {@link #createFeatures(JDA, Database, Config)}.
  */
-public enum Features {
-    ;
+public class Features {
+    private Features() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * Creates all features that should be registered with this application.
