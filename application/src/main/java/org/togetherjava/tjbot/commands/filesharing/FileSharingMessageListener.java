@@ -78,11 +78,17 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             .filter(this::isAttachmentRelevant)
             .toList();
 
+        if (attachments.isEmpty()) {
+            return;
+        }
+
         CompletableFuture.runAsync(() -> {
             try {
                 processAttachments(event, attachments);
             } catch (Exception e) {
-                LOGGER.error("Unknown error while processing attachments", e);
+                LOGGER.error(
+                        "Unknown error while processing attachments. Channel: {}, Author: {}, Message ID: {}.",
+                        event.getChannel().getName(), author.getId(), event.getMessageId(), e);
             }
         });
     }
@@ -120,7 +126,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     }
 
     private @NotNull String readAttachment(@NotNull InputStream stream) {
-        try {
+        try (stream) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -179,6 +185,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
         if (statusCode < HttpURLConnection.HTTP_OK
                 || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
+            LOGGER.warn("Request JSON: {}", body);
             throw new IllegalStateException("Gist API unexpected response: " + apiResponse.body());
         }
 
