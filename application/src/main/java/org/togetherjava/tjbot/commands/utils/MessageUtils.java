@@ -14,8 +14,10 @@ import java.util.List;
  * This class is meant to contain all utility methods for {@link Message} that can be used on all
  * other commands to avoid similar methods appearing everywhere.
  */
-public enum MessageUtils {
-    ;
+public class MessageUtils {
+    private MessageUtils() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * Disables all the buttons that a message has. Disabling buttons deems it as not clickable to

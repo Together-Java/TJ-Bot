@@ -25,8 +25,7 @@ import java.util.List;
  * Utility class to work with images returned by the Wolfram Alpha API. For example to render and
  * combine them.
  */
-enum WolframAlphaImages {
-    ;
+class WolframAlphaImages {
     static final String IMAGE_FORMAT = "png";
     private static final Color IMAGE_BACKGROUND = Color.WHITE;
     private static final int IMAGE_MARGIN_PX = 10;
@@ -35,7 +34,10 @@ enum WolframAlphaImages {
             new FontRenderContext(new AffineTransform(), true, true);
     private static final Color TITLE_COLOR = Color.decode("#3C3C3C");
     private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 15);
-    private static final int TITLE_HEIGHT_PX = 20;
+
+    private WolframAlphaImages() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     static @NotNull BufferedImage renderTitle(@NotNull String title) {
         Rectangle2D titleBounds = TITLE_FONT.getStringBounds(title, TITLE_RENDER_CONTEXT);

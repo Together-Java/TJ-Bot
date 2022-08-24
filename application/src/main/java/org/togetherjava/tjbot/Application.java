@@ -27,8 +27,10 @@ import java.sql.SQLException;
  * New commands can be created by implementing {@link SlashCommandInteractionEvent} or extending
  * {@link SlashCommandAdapter}. They can then be registered in {@link Features}.
  */
-public enum Application {
-    ;
+public class Application {
+    private Application() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private static final String DEFAULT_CONFIG_PATH = "config.json";
