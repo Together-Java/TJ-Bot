@@ -39,8 +39,9 @@ public final class HelpSystemHelper {
 
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
+    private final Predicate<String> isStagingChannelName;
+    private final String stagingChannelPattern;
     private final String categoryRoleSuffix;
-
 
     /**
      * Creates a new instance.
@@ -52,6 +53,9 @@ public final class HelpSystemHelper {
 
         overviewChannelPattern = helpConfig.getOverviewChannelPattern();
         isOverviewChannelName = Pattern.compile(overviewChannelPattern).asMatchPredicate();
+
+        stagingChannelPattern = helpConfig.getStagingChannelPattern();
+        isStagingChannelName = Pattern.compile(stagingChannelPattern).asMatchPredicate();
 
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
     }
@@ -141,6 +145,15 @@ public final class HelpSystemHelper {
     @NotNull
     String getOverviewChannelPattern() {
         return overviewChannelPattern;
+    }
+
+    boolean isStagingChannelName(@NotNull String channelName) {
+        return isStagingChannelName.test(channelName);
+    }
+
+    @NotNull
+    String getStagingChannelPattern() {
+        return stagingChannelPattern;
     }
 
     static boolean isTitleValid(@NotNull CharSequence title) {
