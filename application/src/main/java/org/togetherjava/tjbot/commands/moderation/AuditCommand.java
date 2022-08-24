@@ -35,7 +35,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "user";
     private static final String COMMAND_NAME = "audit";
     private static final String ACTION_VERB = "audit";
-    private static final int MAX_PAGE_LENGTH = 25;
+    private static final int MAX_PAGE_LENGTH = 10;
     private static final String PREVIOUS_BUTTON_LABEL = "⬅";
     private static final String NEXT_BUTTON_LABEL = "➡";
     private final ModerationActionsStore actionsStore;
@@ -69,7 +69,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        auditUser(guild.getIdLong(), target.getIdLong(), event.getMember().getIdLong(), 1,
+        auditUser(guild.getIdLong(), target.getIdLong(), event.getMember().getIdLong(), -1,
                 event.getJDA()).flatMap(event::reply).queue();
     }
 
@@ -85,14 +85,21 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     /**
      * @param pageNumber page number to display when actions are divided into pages and each page
-     *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions
+     *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions, {@code -1} encodes the last
+     *        page
      */
     private @NotNull RestAction<Message> auditUser(long guildId, long targetId, long callerId,
             int pageNumber, @NotNull JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
         List<List<ActionRecord>> groupedActions = groupActionsByPages(actions);
         int totalPages = groupedActions.size();
-        int pageNumberInLimits = clamp(1, pageNumber, totalPages);
+
+        int pageNumberInLimits;
+        if (pageNumber == -1) {
+            pageNumberInLimits = totalPages;
+        } else {
+            pageNumberInLimits = clamp(1, pageNumber, totalPages);
+        }
 
         return jda.retrieveUserById(targetId)
             .map(user -> createSummaryEmbed(user, actions))
