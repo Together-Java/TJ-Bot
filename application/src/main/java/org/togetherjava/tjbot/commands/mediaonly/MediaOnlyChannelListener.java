@@ -57,14 +57,15 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         return dmUser(event.getMessage(), event.getAuthor().getIdLong(), event.getJDA());
     }
 
-    private RestAction<Message> dmUser(Message sentMessage, long userId, @NotNull JDA jda) {
-        String sentMessageContent = sentMessage.getContentDisplay();
-        MessageEmbed sentMessageEmbed = new EmbedBuilder().setDescription(sentMessageContent)
-            .setColor(Color.ORANGE)
-            .build();
+    private RestAction<Message> dmUser(Message originalMessage, long userId, @NotNull JDA jda) {
+        String originalMessageContent = originalMessage.getContentDisplay();
+        MessageEmbed originalMessageEmbed =
+                new EmbedBuilder().setDescription(originalMessageContent)
+                    .setColor(Color.ORANGE)
+                    .build();
         Message dmMessage = new MessageBuilder(
-                "Hey there, your were posting a Message without a Media attached, please attach some media (URL or other Media) to your message 😀.")
-                    .setEmbeds(sentMessageEmbed)
+                "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+                    .setEmbeds(originalMessageEmbed)
                     .build();
         return jda.openPrivateChannelById(userId)
             .flatMap(channel -> channel.sendMessage(dmMessage));
