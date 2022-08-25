@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <rect width="500" height="500" style="fill: rgb(15, 15, 35);"/>
+  <path d="M 250 286.741 L 180.55 378.771 L 156.239 361.409 L 218.739 265.917 L 125 225.403 L 134.251 198.768 L 230.906 230.599 L 236.102 121.23 L 263.898 121.23 L 269.094 230.599 L 365.749 198.768 L 375 225.403 L 281.261 265.917 L 343.761 361.409 L 319.449 378.771 L 250 286.741 Z" style="white-space: pre; fill: rgb(255, 255, 102);" bx:origin="0.5 0.523295"/>
+</svg>
