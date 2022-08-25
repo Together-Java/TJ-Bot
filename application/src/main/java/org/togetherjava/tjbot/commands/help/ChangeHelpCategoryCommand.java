@@ -71,10 +71,6 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         String category = event.getOption(CATEGORY_OPTION).getAsString();
 
-        if (!helper.handleIsHelpThread(event)) {
-            return;
-        }
-
         ThreadChannel helpThread = event.getThreadChannel();
         if (helpThread.isArchived()) {
             event.reply("This thread is already closed.").setEphemeral(true).queue();

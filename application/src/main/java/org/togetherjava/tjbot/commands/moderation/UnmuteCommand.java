@@ -17,8 +17,6 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * This command can unmute muted users. Unmuting can also be paired with a reason. The command will
@@ -33,7 +31,6 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "unmute";
     private static final String ACTION_VERB = "unmute";
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -52,7 +49,6 @@ public final class UnmuteCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unmuted", true);
 
         this.config = config;
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -115,7 +111,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
             @NotNull IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getMutedRole(guild, config).orElse(null), ACTION_VERB, target, bot,
-                author, guild, hasRequiredRole, reason, event)) {
+                author, guild, reason, event)) {
             return false;
         }
         if (Objects.requireNonNull(target)

@@ -13,12 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
 
 /**
  * This command can warn users. The command will also try to DM the user to inform them about the
@@ -33,22 +29,18 @@ public final class WarnCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String ACTION_VERB = "warn";
     private final ModerationActionsStore actionsStore;
-    private final Predicate<String> hasRequiredRole;
 
     /**
      * Creates a new instance.
      *
      * @param actionsStore used to store actions issued by this command
-     * @param config the config to use for this
      */
-    public WarnCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public WarnCommand(@NotNull ModerationActionsStore actionsStore) {
         super("warn", "Warns the given user", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to warn", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why you want to warn the user", true);
 
-        hasRequiredRole =
-                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -121,9 +113,6 @@ public final class WarnCommand extends SlashCommandAdapter {
             @Nullable Member target, String reason, @NotNull SlashCommandInteractionEvent event) {
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
         return ModerationUtils.handleReason(reason, event);

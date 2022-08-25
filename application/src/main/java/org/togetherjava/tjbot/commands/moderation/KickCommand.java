@@ -18,12 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
 
 /**
  * This command can kicks users. Kicking can also be paired with a kick reason. The command will
@@ -38,22 +34,19 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "kick";
     private static final String ACTION_VERB = "kick";
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
-     * @param config the config to use for this
      */
-    public KickCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public KickCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);
 
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -121,9 +114,6 @@ public final class KickCommand extends SlashCommandAdapter {
             return false;
         }
         if (!ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event)) {
-            return false;
-        }
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
         if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.KICK_MEMBERS, bot,

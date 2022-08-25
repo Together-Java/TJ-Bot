@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
@@ -48,7 +47,6 @@ public final class HelpSystemHelper {
     private final Predicate<String> isStagingChannelName;
     private final String stagingChannelPattern;
     private final String categoryRoleSuffix;
-
 
     /**
      * Creates a new instance.
@@ -111,22 +109,6 @@ public final class HelpSystemHelper {
             .setDescription(message)
             .setImage(imageUrl)
             .build();
-    }
-
-    boolean handleIsHelpThread(@NotNull IReplyCallback event) {
-        if (event.getChannelType() == ChannelType.GUILD_PUBLIC_THREAD) {
-            ThreadChannel thread = event.getThreadChannel();
-
-            if (isOverviewChannelName.test(thread.getParentChannel().getName())) {
-                return true;
-            }
-        }
-
-        event.reply("Sorry, but this command can only be used in a help thread.")
-            .setEphemeral(true)
-            .queue();
-
-        return false;
     }
 
     @NotNull
