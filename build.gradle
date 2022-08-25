@@ -1,0 +1,27 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.3'
+    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+    id "com.google.cloud.tools.jib" version "3.1.4"
+    id 'java'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+}
+
+var outputImage = 'togetherjava.duckdns.org:5001/togetherjava/website:' + System.getenv('BRANCH_NAME') ?: 'latest'
+
+jib {
+    from.image = 'eclipse-temurin:18'
+    to {
+        image = outputImage
+        auth {
+            username = System.getenv('REGISTRY_USER') ?: ''
+            password = System.getenv('REGISTRY_PASSWORD') ?: ''
+        }
+    }
+    container {
+        setPorts(["5051"].asList())
+        setCreationTime(Instant.now().toString())
+    }
+}
