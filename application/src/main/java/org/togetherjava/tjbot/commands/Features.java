@@ -2,10 +2,8 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.basic.PingCommand;
-import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
-import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
-import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.basic.*;
+import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
@@ -41,8 +39,10 @@ import java.util.Collection;
  * To add a new slash command, extend the commands returned by
  * {@link #createFeatures(JDA, Database, Config)}.
  */
-public enum Features {
-    ;
+public class Features {
+    private Features() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * Creates all features that should be registered with this application.
@@ -76,12 +76,16 @@ public enum Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new BotMessageCleanup(config));
         features.add(new HelpThreadMetadataPurger(database));
+        features.add(new HelpThreadActivityUpdater(helpSystemHelper));
+        features
+            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
         features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
         features.add(new ImplicitAskListener(config, helpSystemHelper));
+        features.add(new FileSharingMessageListener(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
@@ -92,26 +96,26 @@ public enum Features {
         features.add(new PingCommand());
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem));
-        features.add(new TagManageCommand(tagSystem, config, modAuditLogWriter));
+        features.add(new TagManageCommand(tagSystem, modAuditLogWriter));
         features.add(new TagsCommand(tagSystem));
         features.add(new VcActivityCommand());
-        features.add(new WarnCommand(actionsStore, config));
-        features.add(new KickCommand(actionsStore, config));
-        features.add(new BanCommand(actionsStore, config));
-        features.add(new UnbanCommand(actionsStore, config));
-        features.add(new AuditCommand(actionsStore, config));
+        features.add(new WarnCommand(actionsStore));
+        features.add(new KickCommand(actionsStore));
+        features.add(new BanCommand(actionsStore));
+        features.add(new UnbanCommand(actionsStore));
+        features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore, config));
         features.add(new UnmuteCommand(actionsStore, config));
-        features.add(new TopHelpersCommand(database, config));
+        features.add(new TopHelpersCommand(database));
         features.add(new RoleSelectCommand());
-        features.add(new NoteCommand(actionsStore, config));
+        features.add(new NoteCommand(actionsStore));
         features.add(new RemindCommand(database));
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
         features.add(new AskCommand(config, helpSystemHelper));
-        features.add(new CloseCommand(helpSystemHelper));
+        features.add(new CloseCommand());
         features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
         features.add(new ChangeHelpTitleCommand(helpSystemHelper));
 

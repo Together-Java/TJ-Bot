@@ -22,6 +22,10 @@
         </Async>
     </Appenders>
     <Loggers>
+        <!-- Change this level to see more of our logs -->
+        <Logger name="org.togetherjava.tjbot" level="info"/>
+
+        <!-- Change this level to see more logs of everything (including JDA) -->
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>

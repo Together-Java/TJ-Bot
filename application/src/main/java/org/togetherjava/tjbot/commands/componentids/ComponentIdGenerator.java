@@ -3,6 +3,11 @@ package org.togetherjava.tjbot.commands.componentids;
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+
+import org.togetherjava.tjbot.commands.SlashCommand;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -11,9 +16,8 @@ import org.jetbrains.annotations.NotNull;
  * Component IDs are used during button or selection menu events. They can carry arbitrary data and
  * are persisted by the system.
  * <p>
- * See
- * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandInteractionEvent)}
- * for more context on how to use this.
+ * See {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for more context on how to
+ * use this.
  * <p>
  * The interface {@link ComponentIdParser} is the counterpart to this, offering parsing back the
  * payload from the ID.
@@ -25,8 +29,8 @@ public interface ComponentIdGenerator {
      * interactions, such as button or selection menus.
      * <p>
      * See {@link ComponentInteraction#getComponentId()} and
-     * {@link net.dv8tion.jda.api.interactions.components.Button#of(ButtonStyle, String, Emoji)} for
-     * details on where the generated ID can be used.
+     * {@link Button#of(ButtonStyle, String, Emoji)} for details on where the generated ID can be
+     * used.
      *
      * @param componentId the component ID payload to persist and generate a valid ID for
      * @param lifespan the lifespan of the generated and persisted component ID

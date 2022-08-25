@@ -81,10 +81,18 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         message.delete().queue();
 
         // Thread creation can sometimes take a bit longer than the actual message, so that
-        // "getThreadChannels()"
-        // would not pick it up, hence we execute the update with some slight delay.
-        UPDATE_SERVICE.schedule(() -> updateOverviewForGuild(event.getGuild()), 2,
-                TimeUnit.SECONDS);
+        // "getThreadChannels()" would not pick it up, hence we execute the update with some slight
+        // delay.
+        Runnable updateOverviewCommand = () -> {
+            try {
+                updateOverviewForGuild(event.getGuild());
+            } catch (Exception e) {
+                logger.error(
+                        "Unknown error while attempting to update the help overview for guild {}.",
+                        event.getGuild().getId(), e);
+            }
+        };
+        UPDATE_SERVICE.schedule(updateOverviewCommand, 2, TimeUnit.SECONDS);
     }
 
     private void updateOverviewForGuild(@NotNull Guild guild) {
@@ -108,8 +116,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
         if (maybeChannel.isEmpty()) {
             logger.warn(
-                    "Unable to update help thread overview, did not find a {} channel matching the configured pattern '{}' for guild '{}'",
-                    ChannelType.OVERVIEW, channelPattern, guild.getName());
+                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName());
             return Optional.empty();
         }
 
@@ -195,17 +203,12 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             logger.info(
                     "Failed to locate the question overview ({} times), trying again next time.",
                     currentFailures);
-            return new CompletedRestAction<>(overviewChannel.getJDA(), null, null);
+            return new CompletedRestAction<>(overviewChannel.getJDA(), null);
         }
 
         FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.set(0);
         String statusMessageId = statusMessage.getId();
         return overviewChannel.editMessageById(statusMessageId, updatedStatusMessage);
-    }
-
-    private enum ChannelType {
-        OVERVIEW,
-        STAGING
     }
 
     private record CategoryWithThreads(@NotNull String category,

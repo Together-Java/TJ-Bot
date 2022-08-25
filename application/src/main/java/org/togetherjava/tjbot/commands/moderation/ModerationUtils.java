@@ -21,8 +21,10 @@ import java.util.regex.Pattern;
 /**
  * Utility class offering helpers revolving around user moderation, such as banning or kicking.
  */
-public enum ModerationUtils {
-    ;
+public class ModerationUtils {
+    private ModerationUtils() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(ModerationUtils.class);
     /**
@@ -185,7 +187,6 @@ public enum ModerationUtils {
      * <li>the target is not member of the guild</li>
      * <li>the bot or author do not have enough permissions to interact with the target</li>
      * <li>the bot or author do not have enough permissions to interact with the role</li>
-     * <li>the author does not have the required role for this interaction</li>
      * <li>the bot does not have the MANAGE_ROLES permission</li>
      * <li>the given reason is too long</li>
      * </ul>
@@ -197,7 +198,6 @@ public enum ModerationUtils {
      * @param bot the bot executing this interaction
      * @param author the author attempting to interact with the target
      * @param guild the guild this interaction is executed on
-     * @param hasRequiredRole a predicate used to identify required roles by their name
      * @param reason the reason for this interaction
      * @param event the event used to respond to the user
      * @return Whether the bot and the author have enough permission
@@ -206,8 +206,7 @@ public enum ModerationUtils {
             "squid:S107"})
     static boolean handleRoleChangeChecks(@Nullable Role role, @NotNull String actionVerb,
             @Nullable Member target, @NotNull Member bot, @NotNull Member author,
-            @NotNull Guild guild, @NotNull Predicate<? super String> hasRequiredRole,
-            @NotNull CharSequence reason, @NotNull IReplyCallback event) {
+            @NotNull Guild guild, @NotNull CharSequence reason, @NotNull IReplyCallback event) {
         if (role == null) {
             event
                 .reply("Can not %s the user, unable to find the corresponding role on this server"
@@ -229,9 +228,6 @@ public enum ModerationUtils {
             return false;
         }
         if (!handleCanInteractWithRole(bot, author, role, event)) {
-            return false;
-        }
-        if (!handleHasAuthorRole(actionVerb, hasRequiredRole, author, event)) {
             return false;
         }
         if (!handleHasBotPermissions(actionVerb, Permission.MANAGE_ROLES, bot, guild, event)) {
@@ -265,33 +261,6 @@ public enum ModerationUtils {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Checks whether the given bot has enough permission to execute the given action. For example
-     * whether it has enough permissions to ban users.
-     * <p>
-     * If not, it will handle the situation and respond to the user.
-     *
-     * @param actionVerb the interaction as verb, for example {@code "ban"} or {@code "kick"}
-     * @param hasRequiredRole a predicate used to identify required roles by their name
-     * @param author the author attempting to interact with the target
-     * @param event the event used to respond to the user
-     * @return Whether the bot has the required permission
-     */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasAuthorRole(@NotNull String actionVerb,
-            @NotNull Predicate<? super String> hasRequiredRole, @NotNull Member author,
-            @NotNull IReplyCallback event) {
-        if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
-            return true;
-        }
-        event
-            .reply("You can not %s users in this guild since you do not have the required role."
-                .formatted(actionVerb))
-            .setEphemeral(true)
-            .queue();
-        return false;
     }
 
     /**

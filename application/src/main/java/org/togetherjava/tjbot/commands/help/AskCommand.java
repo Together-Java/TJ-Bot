@@ -76,10 +76,6 @@ public final class AskCommand extends SlashCommandAdapter {
         String title = event.getOption(TITLE_OPTION).getAsString();
         String category = event.getOption(CATEGORY_OPTION).getAsString();
 
-        if (!handleIsStagingChannel(event)) {
-            return;
-        }
-
         if (!handleIsValidTitle(title, event)) {
             return;
         }
@@ -96,23 +92,14 @@ public final class AskCommand extends SlashCommandAdapter {
         Guild guild = event.getGuild();
         event.deferReply(true).queue();
 
-        overviewChannel.createThreadChannel("[%s] %s".formatted(category, title))
+        HelpSystemHelper.HelpThreadName name = new HelpSystemHelper.HelpThreadName(
+                HelpSystemHelper.ThreadActivity.NEEDS_HELP, category, title);
+
+        overviewChannel.createThreadChannel(name.toChannelName())
             .flatMap(threadChannel -> handleEvent(eventHook, threadChannel, author, title, category,
                     guild))
             .queue(any -> {
             }, e -> handleFailure(e, eventHook));
-    }
-
-    private boolean handleIsStagingChannel(@NotNull IReplyCallback event) {
-        if (helper.isStagingChannelName(event.getChannel().getName())) {
-            return true;
-        }
-
-        event.reply("Sorry, but this command can only be used in the help staging channel.")
-            .setEphemeral(true)
-            .queue();
-
-        return false;
     }
 
     private boolean handleIsValidTitle(@NotNull CharSequence title, @NotNull IReplyCallback event) {

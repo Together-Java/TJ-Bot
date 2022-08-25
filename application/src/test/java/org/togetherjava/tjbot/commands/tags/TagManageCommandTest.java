@@ -52,7 +52,7 @@ final class TagManageCommandTest {
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagManageCommand(system, config, modAuditLogWriter);
+        command = new TagManageCommand(system, modAuditLogWriter);
 
         moderator = jdaTester.createMemberSpy(1);
         Role moderatorRole = mock(Role.class);
@@ -147,20 +147,6 @@ final class TagManageCommandTest {
     private void failOnRetrieveMessage(@NotNull String messageId, @NotNull Throwable failure) {
         doReturn(jdaTester.createFailedActionMock(failure)).when(jdaTester.getTextChannelSpy())
             .retrieveMessageById(messageId);
-    }
-
-    @Test
-    @DisplayName("Users without the required role can not use '/tag-manage'")
-    void commandCanNotBeUsedWithoutRoles() {
-        // GIVEN a regular user without roles
-        Member regularUser = jdaTester.createMemberSpy(1);
-
-        // WHEN the regular user triggers any '/tag-manage' command
-        SlashCommandInteractionEvent event = triggerRawCommandWithUser("foo", regularUser);
-
-        // THEN the command can not be used since the user lacks roles
-        verify(event).reply("Tags can only be managed by users with a corresponding role.");
-        verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 
     @Test

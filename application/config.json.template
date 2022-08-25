@@ -1,5 +1,6 @@
 {
     "token": "<put_your_token_here>",
+    "gistApiKey": "<your_gist_personal_access_token>",
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",

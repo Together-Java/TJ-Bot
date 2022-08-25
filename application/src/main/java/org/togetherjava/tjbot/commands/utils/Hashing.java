@@ -10,8 +10,10 @@ import java.util.Objects;
 /**
  * Utility for hashing data.
  */
-public enum Hashing {
-    ;
+public class Hashing {
+    private Hashing() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * All characters available in the hexadecimal-system, as UTF-8 encoded array.

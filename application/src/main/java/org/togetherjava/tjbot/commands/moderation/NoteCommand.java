@@ -11,12 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
 
 /**
  * This command allows users to write notes about others. Notes are persisted and can be retrieved
@@ -32,15 +28,13 @@ public final class NoteCommand extends SlashCommandAdapter {
     private static final String CONTENT_OPTION = "content";
     private static final String ACTION_VERB = "write a note about";
     private final ModerationActionsStore actionsStore;
-    private final Predicate<String> hasRequiredRole;
 
     /**
      * Creates a new instance.
      *
      * @param actionsStore used to store actions issued by this command
-     * @param config the config to use for this
      */
-    public NoteCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public NoteCommand(@NotNull ModerationActionsStore actionsStore) {
         super("note", "Writes a note about the given user", SlashCommandVisibility.GUILD);
 
         getData()
@@ -49,7 +43,6 @@ public final class NoteCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, CONTENT_OPTION,
                     "The content of the note you want to write", true);
 
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -73,10 +66,6 @@ public final class NoteCommand extends SlashCommandAdapter {
             @Nullable Member target, CharSequence content, @NotNull IReplyCallback event) {
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
-            return false;
-        }
-
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
             return false;
         }
 

@@ -12,11 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * Unbans a given user. Unbanning can also be paired with a reason. The command fails if the user is
@@ -28,16 +25,14 @@ public final class UnbanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "unban";
     private static final String ACTION_VERB = "unban";
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
 
     /**
      * Constructs an instance.
      *
      * @param actionsStore used to store actions issued by this command
-     * @param config the config to use for this
      */
-    public UnbanCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public UnbanCommand(@NotNull ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Unbans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData()
@@ -45,8 +40,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
                     true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unbanned", true);
 
-        hasRequiredRole =
-                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
@@ -92,9 +85,6 @@ public final class UnbanCommand extends SlashCommandAdapter {
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion"})
     private boolean handleChecks(@NotNull IPermissionHolder bot, @NotNull Member author,
             @NotNull CharSequence reason, @NotNull Guild guild, @NotNull IReplyCallback event) {
-        if (!ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event)) {
-            return false;
-        }
         if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
                 guild, event)) {
             return false;

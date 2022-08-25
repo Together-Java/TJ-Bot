@@ -26,31 +26,22 @@ public final class CloseCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
 
-    private final HelpSystemHelper helper;
     private final Cache<Long, Instant> helpThreadIdToLastClose;
 
     /**
      * Creates a new instance.
-     *
-     * @param helper the helper to use
      */
-    public CloseCommand(@NotNull HelpSystemHelper helper) {
+    public CloseCommand() {
         super("close", "Close this question thread", SlashCommandVisibility.GUILD);
 
         helpThreadIdToLastClose = Caffeine.newBuilder()
             .maximumSize(1_000)
             .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
             .build();
-
-        this.helper = helper;
     }
 
     @Override
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-        if (!helper.handleIsHelpThread(event)) {
-            return;
-        }
-
         ThreadChannel helpThread = event.getThreadChannel();
         if (helpThread.isArchived()) {
             event.reply("This thread is already closed.").setEphemeral(true).queue();

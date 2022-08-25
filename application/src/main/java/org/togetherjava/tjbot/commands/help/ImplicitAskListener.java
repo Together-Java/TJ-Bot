@@ -92,7 +92,10 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         }
         TextChannel overviewChannel = maybeOverviewChannel.orElseThrow();
 
-        overviewChannel.createThreadChannel(title)
+        HelpSystemHelper.HelpThreadName name = new HelpSystemHelper.HelpThreadName(
+                HelpSystemHelper.ThreadActivity.NEEDS_HELP, null, title);
+
+        overviewChannel.createThreadChannel(name.toChannelName())
             .flatMap(threadChannel -> handleEvent(threadChannel, message, title))
             .queue(any -> {
             }, ImplicitAskListener::handleFailure);
