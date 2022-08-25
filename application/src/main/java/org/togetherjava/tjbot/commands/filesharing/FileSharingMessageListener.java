@@ -185,8 +185,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
         if (statusCode < HttpURLConnection.HTTP_OK
                 || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
-            LOGGER.warn("Request JSON: {}", body);
-            throw new IllegalStateException("Gist API unexpected response: " + apiResponse.body());
+            throw new IllegalStateException("Gist API unexpected response: " + apiResponse.body()
+                    + ". Request JSON: " + body);
         }
 
         GistResponse gistResponse;
