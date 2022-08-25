@@ -82,15 +82,12 @@ public final class JdaTester {
     private static final long PRIVATE_CHANNEL_ID = 1;
     private static final long GUILD_ID = 1;
     private static final long TEXT_CHANNEL_ID = 1;
-
     private static final long MESSAGE_RESPONSE_NUMBER = 1;
-
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
     private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
-
     private final RestAction restActionMessage;
     private final MessageActionImpl messageAction;
     private final WebhookMessageUpdateActionImpl webhookMessageUpdateAction;
