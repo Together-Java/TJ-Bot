@@ -19,6 +19,11 @@ public class HelpThreadMetadataPurger implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadMetadataPurger.class);
     private static final Period DELETE_MESSAGE_RECORDS_AFTER = Period.ofDays(30);
 
+    /**
+     * Creates a new instance
+     *
+     * @param database the database to use
+     */
     public HelpThreadMetadataPurger(@NotNull Database database) {
         this.database = database;
     }
