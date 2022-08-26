@@ -61,7 +61,7 @@ public class Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config);
+        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -75,6 +75,7 @@ public class Features {
         features.add(new RemindRoutine(database));
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new BotMessageCleanup(config));
+        features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
@@ -88,6 +89,7 @@ public class Features {
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
+        features.add(new OnGuildLeaveCloseThreadListener(database));
 
         // Slash commands
         features.add(new LogLevelCommand());

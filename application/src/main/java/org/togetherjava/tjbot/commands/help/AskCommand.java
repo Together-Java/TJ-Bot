@@ -46,7 +46,6 @@ public final class AskCommand extends SlashCommandAdapter {
 
     private static final String TITLE_OPTION = "title";
     private static final String CATEGORY_OPTION = "category";
-
     private final HelpSystemHelper helper;
 
     /**
@@ -120,6 +119,7 @@ public final class AskCommand extends SlashCommandAdapter {
     private @NotNull RestAction<Message> handleEvent(@NotNull InteractionHook eventHook,
             @NotNull ThreadChannel threadChannel, @NotNull Member author, @NotNull String title,
             @NotNull String category, @NotNull Guild guild) {
+        helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
