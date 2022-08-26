@@ -33,7 +33,6 @@ import org.mockito.stubbing.Answer;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
-import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -83,6 +82,10 @@ public final class JdaTester {
     private static final long GUILD_ID = 1;
     private static final long TEXT_CHANNEL_ID = 1;
     private static final long MESSAGE_RESPONSE_NUMBER = 1;
+    private static final int ATTACHMENT_ID = 1;
+    private static final int ATTACHMENT_SIZE = 5;
+    private static final int ATTACHMENT_HEIGHT = 10;
+    private static final int ATTACHMENT_WIDTH = 10;
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
@@ -493,14 +496,13 @@ public final class JdaTester {
     }
 
     /**
-     * Creates a MessageReceivedEvent
+     * Creates a MessageReceivedEvent.
      * <p>
-     * The method creates a MessageReceivedEvent from the input message and mock the message author
-     * from the input user.
+     * Creates the event of receiving the given message send by the given author.
      *
-     * @param message the message to create an event for
-     * @param user the author from the message
-     * @return the created MessageReceivedEvent
+     * @param message the message to receive
+     * @param user the author who send the message
+     * @return the event of receiving the message
      */
     public MessageReceivedEvent createMessageReceivedEvent(@NotNull Message message,
             @NotNull User user) {
@@ -518,29 +520,22 @@ public final class JdaTester {
     }
 
     /**
-     * Creates an attachment
+     * Creates an attachment.
      *
-     * @param id id of the attachment
      * @param url url of the attachment
-     * @param proxyUrl proxyUrl of the attachment
      * @param fileName fileName of the attachment
      * @param contentType contentType of the attachment
      * @param description description of the attachment
-     * @param size size of the attachment
-     * @param height height of the attachment
-     * @param width width of the attachment
-     * @param ephemeral is the attachment ephemeral
      * @return the created attachment
      */
-    public Message.Attachment createAttachment(long id, String url, String proxyUrl,
-            String fileName, String contentType, String description, int size, int height,
-            int width, boolean ephemeral) {
-        return new Message.Attachment(id, url, proxyUrl, fileName, contentType, description, size,
-                height, width, ephemeral, jda);
+    public Message.Attachment createAttachment(String url, String fileName, String contentType,
+            String description) {
+        return new Message.Attachment(ATTACHMENT_ID, url, "proxy" + url, fileName, contentType,
+                description, ATTACHMENT_SIZE, ATTACHMENT_HEIGHT, ATTACHMENT_WIDTH, false, jda);
     }
 
     /**
-     * Mocks the attachments from the given message
+     * Mocks the attachments from the given message.
      *
      * @param message the message with the mocked attachments
      * @param attachments the attachments which the mock should return
@@ -550,34 +545,7 @@ public final class JdaTester {
     }
 
     /**
-     * Creates an embedded message
-     *
-     * @param url url of the embedded message
-     * @param title title of the embedded message
-     * @param description description of the embedded message
-     * @param type type of the embedded message
-     * @param timestamp timestamp of the embedded message
-     * @param color color of the embedded message
-     * @param thumbnail thumbnail of the embedded message
-     * @param siteProvider siteProvider of the embedded message
-     * @param author author of the embedded message
-     * @param videoInfo videoInfo of the embedded message
-     * @param footer footer of the embedded message
-     * @param image image of the embedded message
-     * @param fields fields of the embedded message
-     * @return the created embedded message
-     */
-    public MessageEmbed createMessageEmbed(String url, String title, String description,
-            EmbedType type, OffsetDateTime timestamp, int color, MessageEmbed.Thumbnail thumbnail,
-            MessageEmbed.Provider siteProvider, MessageEmbed.AuthorInfo author,
-            MessageEmbed.VideoInfo videoInfo, MessageEmbed.Footer footer,
-            MessageEmbed.ImageInfo image, List<MessageEmbed.Field> fields) {
-        return new MessageEmbed(url, title, description, type, timestamp, color, thumbnail,
-                siteProvider, author, videoInfo, footer, image, fields);
-    }
-
-    /**
-     * Mocks the embeds from the given message
+     * Mocks the embeds from the given message.
      *
      * @param message the message with the mocked embeds
      * @param embeds the embeds which the mock should return
