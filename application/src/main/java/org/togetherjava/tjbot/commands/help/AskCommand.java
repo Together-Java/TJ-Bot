@@ -107,9 +107,12 @@ public final class AskCommand extends SlashCommandAdapter {
             return true;
         }
 
-        event.reply(
-                "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
-                    .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
+        event.reply("""
+                Sorry, but your title is invalid. Please pick a title where:
+                • length is between %d and %d
+                • must not contain the word 'help'
+                Thanks, and sorry for the inconvenience 👍
+                """.formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
             .setEphemeral(true)
             .queue();
 

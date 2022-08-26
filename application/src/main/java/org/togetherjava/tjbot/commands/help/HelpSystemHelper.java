@@ -18,6 +18,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import java.awt.Color;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -207,7 +208,8 @@ public final class HelpSystemHelper {
         String titleCompact = TITLE_COMPACT_REMOVAL_PATTERN.matcher(title).replaceAll("");
 
         return titleCompact.length() >= TITLE_COMPACT_LENGTH_MIN
-                && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
+                && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX
+                && !titleCompact.toLowerCase(Locale.US).contains("help");
     }
 
     @NotNull
