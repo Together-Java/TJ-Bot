@@ -37,9 +37,7 @@ class MediaOnlyChannelListenerTest {
         Message.Attachment attachment = jdaTester.createAttachment("https://test.com", "test",
                 "testContentType", "unitTest");
         jdaTester.mockMessageAttachments(message, List.of(attachment));
-        MessageReceivedEvent messageReceivedEvent =
-                jdaTester.createMessageReceivedEvent(message, user);
-        mediaOnlyChannelListener.onMessageReceived(messageReceivedEvent);
+        sendMessage();
         verify(message).getAttachments();
     }
 
@@ -48,9 +46,7 @@ class MediaOnlyChannelListenerTest {
         MessageEmbed messageEmbed =
                 new EmbedBuilder().setImage("https://9gag.com/gag/a61A238").build();
         jdaTester.mockMessageEmbeds(message, List.of(messageEmbed));
-        MessageReceivedEvent messageReceivedEvent =
-                jdaTester.createMessageReceivedEvent(message, user);
-        mediaOnlyChannelListener.onMessageReceived(messageReceivedEvent);
+        sendMessage();
         verify(message).getEmbeds();
     }
 
@@ -58,9 +54,13 @@ class MediaOnlyChannelListenerTest {
     void unvalidMessagePostWithOnlyText() {
         jdaTester.mockMessageDelete(message);
         jdaTester.mockMessageAttachments(message, Collections.emptyList());
+        sendMessage();
+        verify(message).getAttachments();
+    }
+
+    private void sendMessage() {
         MessageReceivedEvent messageReceivedEvent =
                 jdaTester.createMessageReceivedEvent(message, user);
         mediaOnlyChannelListener.onMessageReceived(messageReceivedEvent);
-        verify(message).getAttachments();
     }
 }
