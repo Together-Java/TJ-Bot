@@ -96,6 +96,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
                 .contains(Objects.requireNonNull(attachment.getFileExtension()).toLowerCase()));
     }
 
+
     private void warnMods(@NotNull Message sentUserMessage) {
         String blacklistedAttachmentsFromMessage =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(sentUserMessage));
