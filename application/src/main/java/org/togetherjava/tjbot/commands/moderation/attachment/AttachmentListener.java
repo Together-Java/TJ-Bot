@@ -47,12 +47,12 @@ public class AttachmentListener extends MessageReceiverAdapter {
             return;
         }
         if (attachmentContainsBlacklistedFileExtension(event.getMessage())) {
-            deleteMessageAndDmUser(event);
+            handleBadMessage(event);
             warnMods(event);
         }
     }
 
-    private void deleteMessageAndDmUser(@NotNull MessageReceivedEvent event) {
+    private void handleBadMessage(@NotNull MessageReceivedEvent event) {
         event.getMessage().delete().flatMap(any -> dmUser(event)).queue();
     }
 

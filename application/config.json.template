@@ -45,8 +45,8 @@
        ],
        "categoryRoleSuffix": " - Helper"
    },
-  "blacklistedFileExtension": [
-    "exe",
-    "tar"
+    "blacklistedFileExtension": [
+        "exe",
+        "tar"
   ]
 }
