@@ -1,12 +1,12 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.Condition;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModerationActions;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +35,7 @@ public final class ModerationActionsStore {
      *
      * @param database the database to write and retrieve actions from
      */
-    public ModerationActionsStore(@NotNull Database database) {
+    public ModerationActionsStore(Database database) {
         this.database = Objects.requireNonNull(database);
     }
 
@@ -45,7 +45,8 @@ public final class ModerationActionsStore {
      * 
      * @return a list of all expired actions, chronologically ascending
      */
-    public @NotNull List<ActionRecord> getExpiredActionsAscending() {
+    @Nonnull
+    public List<ActionRecord> getExpiredActionsAscending() {
         return getActionsAscendingWhere(
                 ModerationActions.MODERATION_ACTIONS.ACTION_EXPIRES_AT.isNotNull()
                     .and(ModerationActions.MODERATION_ACTIONS.ACTION_EXPIRES_AT
@@ -61,8 +62,8 @@ public final class ModerationActionsStore {
      * @param actionType the type of action to filter for
      * @return a list of all actions with the given type, chronologically ascending
      */
-    public @NotNull List<ActionRecord> getActionsByTypeAscending(long guildId,
-            @NotNull ModerationAction actionType) {
+    @Nonnull
+    public List<ActionRecord> getActionsByTypeAscending(long guildId, ModerationAction actionType) {
         Objects.requireNonNull(actionType);
 
         return getActionsFromGuildAscending(guildId,
@@ -78,7 +79,8 @@ public final class ModerationActionsStore {
      * @param targetId the id of the target user to filter for
      * @return a list of all actions executed against the target, chronologically ascending
      */
-    public @NotNull List<ActionRecord> getActionsByTargetAscending(long guildId, long targetId) {
+    @Nonnull
+    public List<ActionRecord> getActionsByTargetAscending(long guildId, long targetId) {
         return getActionsFromGuildAscending(guildId,
                 ModerationActions.MODERATION_ACTIONS.TARGET_ID.eq(targetId));
     }
@@ -92,7 +94,8 @@ public final class ModerationActionsStore {
      * @param authorId the id of the author user to filter for
      * @return a list of all actions executed by the author, chronologically ascending
      */
-    public @NotNull List<ActionRecord> getActionsByAuthorAscending(long guildId, long authorId) {
+    @Nonnull
+    public List<ActionRecord> getActionsByAuthorAscending(long guildId, long authorId) {
         return getActionsFromGuildAscending(guildId,
                 ModerationActions.MODERATION_ACTIONS.AUTHOR_ID.eq(authorId));
     }
@@ -107,8 +110,9 @@ public final class ModerationActionsStore {
      * @param actionType the type of the action
      * @return the last action issued against the given user of the given type, if present
      */
-    public @NotNull Optional<ActionRecord> findLastActionAgainstTargetByType(long guildId,
-            long targetId, @NotNull ModerationAction actionType) {
+    @Nonnull
+    public Optional<ActionRecord> findLastActionAgainstTargetByType(long guildId, long targetId,
+            ModerationAction actionType) {
         return database
             .read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
                 .where(ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId)
@@ -126,7 +130,8 @@ public final class ModerationActionsStore {
      * @param caseId the actions' case id to search for
      * @return the action with the given case id, if present
      */
-    public @NotNull Optional<ActionRecord> findActionByCaseId(int caseId) {
+    @Nonnull
+    public Optional<ActionRecord> findActionByCaseId(int caseId) {
         return database
             .read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
                 .where(ModerationActions.MODERATION_ACTIONS.CASE_ID.eq(caseId))
@@ -152,10 +157,8 @@ public final class ModerationActionsStore {
      * @param reason the reason why this action was executed
      * @return the unique case id associated with the action
      */
-    @SuppressWarnings("MethodWithTooManyParameters")
-    public int addAction(long guildId, long authorId, long targetId,
-            @NotNull ModerationAction actionType, @Nullable Instant actionExpiresAt,
-            @NotNull String reason) {
+    public int addAction(long guildId, long authorId, long targetId, ModerationAction actionType,
+            @Nullable Instant actionExpiresAt, String reason) {
         Objects.requireNonNull(actionType);
         Objects.requireNonNull(reason);
 
@@ -174,15 +177,16 @@ public final class ModerationActionsStore {
         });
     }
 
-    private @NotNull List<ActionRecord> getActionsFromGuildAscending(long guildId,
-            @NotNull Condition condition) {
+    @Nonnull
+    private List<ActionRecord> getActionsFromGuildAscending(long guildId, Condition condition) {
         Objects.requireNonNull(condition);
 
         return getActionsAscendingWhere(
                 ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId).and(condition));
     }
 
-    private @NotNull List<ActionRecord> getActionsAscendingWhere(@NotNull Condition condition) {
+    @Nonnull
+    private List<ActionRecord> getActionsAscendingWhere(Condition condition) {
         Objects.requireNonNull(condition);
 
         return database.read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)

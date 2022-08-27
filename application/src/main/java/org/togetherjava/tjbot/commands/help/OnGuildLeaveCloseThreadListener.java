@@ -5,15 +5,14 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 
-import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Remove all thread channels associated to a user when they leave the guild.
@@ -28,12 +27,12 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
      *
      * @param database database to use
      */
-    public OnGuildLeaveCloseThreadListener(@NotNull Database database) {
+    public OnGuildLeaveCloseThreadListener(Database database) {
         this.database = database;
     }
 
     @Override
-    public void onGuildMemberRemove(@Nonnull GuildMemberRemoveEvent leaveEvent) {
+    public void onGuildMemberRemove(GuildMemberRemoveEvent leaveEvent) {
         Set<Long> channelIds = getThreadsCreatedByLeaver(leaveEvent.getUser().getIdLong());
         for (long channelId : channelIds) {
             closeThread(channelId, leaveEvent);
@@ -48,7 +47,7 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
             .fetch(databaseMapper -> databaseMapper.getValue(HelpThreads.HELP_THREADS.CHANNEL_ID)));
     }
 
-    private void closeThread(long channelId, @NotNull GuildMemberRemoveEvent leaveEvent) {
+    private void closeThread(long channelId, GuildMemberRemoveEvent leaveEvent) {
         ThreadChannel threadChannel = leaveEvent.getGuild().getThreadChannelById(channelId);
         if (threadChannel == null) {
             logger.warn(

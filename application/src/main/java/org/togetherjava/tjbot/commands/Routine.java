@@ -1,8 +1,8 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,7 +24,7 @@ public interface Routine extends Feature {
      *
      * @return the schedule of this routine
      */
-    @NotNull
+    @Nonnull
     Schedule createSchedule();
 
     /**
@@ -32,7 +32,7 @@ public interface Routine extends Feature {
      *
      * @param jda the JDA instance the bot is operating with
      */
-    void runRoutine(@NotNull JDA jda);
+    void runRoutine(JDA jda);
 
     /**
      * The schedule of routines.
@@ -46,8 +46,7 @@ public interface Routine extends Feature {
      * @param unit the time unit for both, {@link #initialDuration} and {@link #duration}, e.g.
      *        seconds
      */
-    record Schedule(@NotNull ScheduleMode mode, long initialDuration, long duration,
-            @NotNull TimeUnit unit) {
+    record Schedule(ScheduleMode mode, long initialDuration, long duration, TimeUnit unit) {
     }
 
 

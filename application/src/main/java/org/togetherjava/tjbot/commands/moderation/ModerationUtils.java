@@ -4,13 +4,13 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
-import java.awt.*;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -51,8 +51,7 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return whether the reason is valid
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleReason(@NotNull CharSequence reason, @NotNull IReplyCallback event) {
+    static boolean handleReason(CharSequence reason, IReplyCallback event) {
         if (reason.length() <= REASON_MAX_LENGTH) {
             return true;
         }
@@ -78,9 +77,8 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author and bot can interact with the target user
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleCanInteractWithTarget(@NotNull String actionVerb, @NotNull Member bot,
-            @NotNull Member author, @NotNull Member target, @NotNull IReplyCallback event) {
+    static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
+            Member target, IReplyCallback event) {
         String targetTag = target.getUser().getAsTag();
         if (!author.canInteract(target)) {
             event
@@ -113,9 +111,8 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author and bot can interact with the role
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleCanInteractWithRole(@NotNull Member bot, @NotNull Member author,
-            @NotNull Role role, @NotNull IReplyCallback event) {
+    static boolean handleCanInteractWithRole(Member bot, Member author, Role role,
+            IReplyCallback event) {
         if (!author.canInteract(role)) {
             event
                 .reply("The role %s is too powerful for you to interact with."
@@ -148,10 +145,8 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the bot has the required permission
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasBotPermissions(@NotNull String actionVerb,
-            @NotNull Permission permission, @NotNull IPermissionHolder bot, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    static boolean handleHasBotPermissions(String actionVerb, Permission permission,
+            IPermissionHolder bot, Guild guild, IReplyCallback event) {
         if (!bot.hasPermission(permission)) {
             event
                 .reply("I can not %s users in this guild since I do not have the %s permission."
@@ -166,8 +161,7 @@ public class ModerationUtils {
         return true;
     }
 
-    private static void handleAbsentTarget(@NotNull String actionVerb,
-            @NotNull IReplyCallback event) {
+    private static void handleAbsentTarget(String actionVerb, IReplyCallback event) {
         event
             .reply("I can not %s the given user since they are not part of the guild anymore."
                 .formatted(actionVerb))
@@ -202,11 +196,9 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the bot and the author have enough permission
      */
-    @SuppressWarnings({"MethodWithTooManyParameters", "BooleanMethodNameMustStartWithQuestion",
-            "squid:S107"})
-    static boolean handleRoleChangeChecks(@Nullable Role role, @NotNull String actionVerb,
-            @Nullable Member target, @NotNull Member bot, @NotNull Member author,
-            @NotNull Guild guild, @NotNull CharSequence reason, @NotNull IReplyCallback event) {
+    static boolean handleRoleChangeChecks(@Nullable Role role, String actionVerb,
+            @Nullable Member target, Member bot, Member author, Guild guild, CharSequence reason,
+            IReplyCallback event) {
         if (role == null) {
             event
                 .reply("Can not %s the user, unable to find the corresponding role on this server"
@@ -248,10 +240,8 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author has the required permission
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasAuthorPermissions(@NotNull String actionVerb,
-            @NotNull Permission permission, @NotNull IPermissionHolder author, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    static boolean handleHasAuthorPermissions(String actionVerb, Permission permission,
+            IPermissionHolder author, Guild guild, IReplyCallback event) {
         if (!author.hasPermission(permission)) {
             event
                 .reply("You can not %s users in this guild since you do not have the %s permission."
@@ -277,9 +267,9 @@ public class ModerationUtils {
      * @param reason an optional reason for why the action is executed, {@code null} if not desired
      * @return the created response
      */
-    static @NotNull MessageEmbed createActionResponse(@NotNull User author,
-            @NotNull ModerationAction action, @NotNull User target, @Nullable String extraMessage,
-            @Nullable String reason) {
+    @Nonnull
+    static MessageEmbed createActionResponse(User author, ModerationAction action, User target,
+            @Nullable String extraMessage, @Nullable String reason) {
         String description = "%s **%s** (id: %s).".formatted(action.getVerb(), target.getAsTag(),
                 target.getId());
         if (extraMessage != null && !extraMessage.isBlank()) {
@@ -301,7 +291,7 @@ public class ModerationUtils {
      * @param config the config used to identify the muted role
      * @return predicate that matches the name of the muted role
      */
-    public static Predicate<String> getIsMutedRolePredicate(@NotNull Config config) {
+    public static Predicate<String> getIsMutedRolePredicate(Config config) {
         return Pattern.compile(config.getMutedRolePattern()).asMatchPredicate();
     }
 
@@ -312,8 +302,8 @@ public class ModerationUtils {
      * @param config the config used to identify the muted role
      * @return the muted role, if found
      */
-    public static @NotNull Optional<Role> getMutedRole(@NotNull Guild guild,
-            @NotNull Config config) {
+    @Nonnull
+    public static Optional<Role> getMutedRole(Guild guild, Config config) {
         Predicate<String> isMutedRole = getIsMutedRolePredicate(config);
         return guild.getRoles().stream().filter(role -> isMutedRole.test(role.getName())).findAny();
     }
@@ -324,7 +314,7 @@ public class ModerationUtils {
      * @param config the config used to identify the quarantined role
      * @return predicate that matches the name of the quarantined role
      */
-    public static Predicate<String> getIsQuarantinedRolePredicate(@NotNull Config config) {
+    public static Predicate<String> getIsQuarantinedRolePredicate(Config config) {
         return Pattern.compile(config.getQuarantinedRolePattern()).asMatchPredicate();
     }
 
@@ -335,8 +325,8 @@ public class ModerationUtils {
      * @param config the config used to identify the quarantined role
      * @return the quarantined role, if found
      */
-    public static @NotNull Optional<Role> getQuarantinedRole(@NotNull Guild guild,
-            @NotNull Config config) {
+    @Nonnull
+    public static Optional<Role> getQuarantinedRole(Guild guild, Config config) {
         Predicate<String> isQuarantinedRole = getIsQuarantinedRolePredicate(config);
         return guild.getRoles()
             .stream()
@@ -353,7 +343,8 @@ public class ModerationUtils {
      * @return the temporary data represented by the given duration or empty if the duration is
      *         {@code "permanent"}
      */
-    static @NotNull Optional<TemporaryData> computeTemporaryData(@NotNull String durationText) {
+    @Nonnull
+    static Optional<TemporaryData> computeTemporaryData(String durationText) {
         if (PERMANENT_DURATION.equals(durationText)) {
             return Optional.empty();
         }
@@ -378,6 +369,6 @@ public class ModerationUtils {
      * @param duration a human-readable text representing the duration of the temporary action, such
      *        as {@code "1 day"}.
      */
-    record TemporaryData(@NotNull Instant expiresAt, @NotNull String duration) {
+    record TemporaryData(Instant expiresAt, String duration) {
     }
 }

@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
@@ -13,6 +12,7 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,8 +43,7 @@ public final class TemporaryModerationRoutine implements Routine {
      * @param actionsStore the store used to retrieve temporary moderation actions
      * @param config the config to use for this
      */
-    public TemporaryModerationRoutine(@NotNull JDA jda,
-            @NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public TemporaryModerationRoutine(JDA jda, ModerationActionsStore actionsStore, Config config) {
         this.actionsStore = actionsStore;
         this.jda = jda;
 
@@ -56,12 +55,13 @@ public final class TemporaryModerationRoutine implements Routine {
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         checkExpiredActions();
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_DELAY, 5, 5, TimeUnit.MINUTES);
     }
 
@@ -78,7 +78,7 @@ public final class TemporaryModerationRoutine implements Routine {
         logger.debug("Finished checking expired temporary moderation actions to revoke.");
     }
 
-    private void processGroupedActions(@NotNull RevocationGroupIdentifier groupIdentifier) {
+    private void processGroupedActions(RevocationGroupIdentifier groupIdentifier) {
         // Do not revoke an action which was overwritten by a still effective action that was issued
         // afterwards
         // For example if a user was perm-banned after being temp-banned
@@ -108,7 +108,7 @@ public final class TemporaryModerationRoutine implements Routine {
         revokeAction(groupIdentifier);
     }
 
-    private void revokeAction(@NotNull RevocationGroupIdentifier groupIdentifier) {
+    private void revokeAction(RevocationGroupIdentifier groupIdentifier) {
         Guild guild = jda.getGuildById(groupIdentifier.guildId);
         if (guild == null) {
             logger.debug(
@@ -123,8 +123,9 @@ public final class TemporaryModerationRoutine implements Routine {
             }, failure -> handleFailure(failure, groupIdentifier));
     }
 
-    private @NotNull RestAction<Void> executeRevocation(@NotNull Guild guild, @NotNull User target,
-            @NotNull ModerationAction actionType) {
+    @Nonnull
+    private RestAction<Void> executeRevocation(Guild guild, User target,
+            ModerationAction actionType) {
         logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
                 target.getAsTag(), target.getId());
         RevocableModerationAction action = getRevocableActionByType(actionType);
@@ -136,8 +137,7 @@ public final class TemporaryModerationRoutine implements Routine {
         return action.revokeAction(guild, target, reason);
     }
 
-    private void handleFailure(@NotNull Throwable failure,
-            @NotNull RevocationGroupIdentifier groupIdentifier) {
+    private void handleFailure(Throwable failure, RevocationGroupIdentifier groupIdentifier) {
         if (getRevocableActionByType(groupIdentifier.type).handleRevokeFailure(failure,
                 groupIdentifier.targetId) == RevocableModerationAction.FailureIdentification.KNOWN) {
             return;
@@ -148,15 +148,14 @@ public final class TemporaryModerationRoutine implements Routine {
                 groupIdentifier.targetId, failure);
     }
 
-    private @NotNull RevocableModerationAction getRevocableActionByType(
-            @NotNull ModerationAction type) {
+    @Nonnull
+    private RevocableModerationAction getRevocableActionByType(ModerationAction type) {
         return Objects.requireNonNull(typeToRevocableAction.get(type),
                 "Action type is not revocable: " + type);
     }
 
-    private record RevocationGroupIdentifier(long guildId, long targetId,
-            @NotNull ModerationAction type) {
-        static RevocationGroupIdentifier of(@NotNull ActionRecord actionRecord) {
+    private record RevocationGroupIdentifier(long guildId, long targetId, ModerationAction type) {
+        static RevocationGroupIdentifier of(ActionRecord actionRecord) {
             return new RevocationGroupIdentifier(actionRecord.guildId(), actionRecord.targetId(),
                     actionRecord.actionType());
         }

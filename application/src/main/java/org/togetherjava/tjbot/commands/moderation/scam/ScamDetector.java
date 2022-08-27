@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.moderation.scam;
 
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
@@ -23,7 +22,7 @@ public final class ScamDetector {
      * 
      * @param config the scam blocker config to use
      */
-    public ScamDetector(@NotNull Config config) {
+    public ScamDetector(Config config) {
         this.config = config.getScamBlocker();
     }
 
@@ -33,20 +32,20 @@ public final class ScamDetector {
      * @param message the message to analyze
      * @return Whether the message classifies as scam
      */
-    public boolean isScam(@NotNull CharSequence message) {
+    public boolean isScam(CharSequence message) {
         AnalyseResults results = new AnalyseResults();
         TOKENIZER.splitAsStream(message).forEach(token -> analyzeToken(token, results));
         return isScam(results);
     }
 
-    private boolean isScam(@NotNull AnalyseResults results) {
+    private boolean isScam(AnalyseResults results) {
         if (results.pingsEveryone && results.containsNitroKeyword && results.hasUrl) {
             return true;
         }
         return results.containsNitroKeyword && results.hasSuspiciousUrl;
     }
 
-    private void analyzeToken(@NotNull String token, @NotNull AnalyseResults results) {
+    private void analyzeToken(String token, AnalyseResults results) {
         if ("@everyone".equalsIgnoreCase(token)) {
             results.pingsEveryone = true;
         }
@@ -60,7 +59,7 @@ public final class ScamDetector {
         }
     }
 
-    private void analyzeUrl(@NotNull String url, @NotNull AnalyseResults results) {
+    private void analyzeUrl(String url, AnalyseResults results) {
         String host;
         try {
             host = URI.create(url).getHost();
@@ -92,7 +91,7 @@ public final class ScamDetector {
         }
     }
 
-    private boolean isHostSimilarToKeyword(@NotNull String host, @NotNull String keyword) {
+    private boolean isHostSimilarToKeyword(String host, String keyword) {
         // NOTE This algorithm is far from optimal.
         // It is good enough for our purpose though and not that complex.
 

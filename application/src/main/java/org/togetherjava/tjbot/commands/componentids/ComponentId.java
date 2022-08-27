@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.componentids;
 
-import org.jetbrains.annotations.NotNull;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import java.util.List;
@@ -14,5 +13,5 @@ import java.util.List;
  *        this component ID, when triggered
  * @param elements the additional elements to carry along this component ID, empty if not desired
  */
-public record ComponentId(@NotNull String userInteractorName, @NotNull List<String> elements) {
+public record ComponentId(String userInteractorName, List<String> elements) {
 }

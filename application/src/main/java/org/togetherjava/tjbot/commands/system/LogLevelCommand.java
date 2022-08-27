@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
@@ -44,7 +43,7 @@ public final class LogLevelCommand extends SlashCommandAdapter {
     // Security warning about changing log configs. We only change the level, that is safe.
     @SuppressWarnings("squid:S4792")
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         String levelText = event.getOption(LOG_LEVEL_OPTION).getAsString();
         Level level = Level.getLevel(levelText);
 

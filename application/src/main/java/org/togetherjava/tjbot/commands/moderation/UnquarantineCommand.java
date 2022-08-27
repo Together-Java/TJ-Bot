@@ -8,14 +8,14 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -41,8 +41,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      * @param config the config to use for this
      */
-    public UnquarantineCommand(@NotNull ModerationActionsStore actionsStore,
-            @NotNull Config config) {
+    public UnquarantineCommand(ModerationActionsStore actionsStore, Config config) {
         super(COMMAND_NAME,
                 "Unquarantines the given already quarantined user so that they can interact again",
                 SlashCommandVisibility.GUILD);
@@ -57,12 +56,13 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleNotQuarantinedTarget(@NotNull IReplyCallback event) {
+    private static void handleNotQuarantinedTarget(IReplyCallback event) {
         event.reply("The user is not quarantined.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
-            @NotNull Guild guild, @NotNull GenericEvent event) {
+    @Nonnull
+    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
+            GenericEvent event) {
         String dmMessage = """
                 Hey there, you have been put out of quarantine in the server %s.
                 This means you can now interact with others in the server again.
@@ -76,8 +76,9 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
-            @NotNull Member author, @NotNull String reason) {
+    @Nonnull
+    private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
+            String reason) {
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
@@ -86,8 +87,9 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
                 target.getUser(), dmNoticeText, reason);
     }
 
-    private AuditableRestAction<Void> unquarantineUser(@NotNull Member target,
-            @NotNull Member author, @NotNull String reason, @NotNull Guild guild) {
+    @Nonnull
+    private AuditableRestAction<Void> unquarantineUser(Member target, Member author, String reason,
+            Guild guild) {
         logger.info("'{}' ({}) unquarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
@@ -101,9 +103,8 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
             .reason(reason);
     }
 
-    private void unquarantineUserFlow(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild,
-            @NotNull SlashCommandInteractionEvent event) {
+    private void unquarantineUserFlow(Member target, Member author, String reason, Guild guild,
+            SlashCommandInteractionEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(hasSentDm -> unquarantineUser(target, author, reason, guild)
                 .map(result -> hasSentDm))
@@ -112,10 +113,8 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            CharSequence reason, Guild guild, IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getQuarantinedRole(guild, config).orElse(null), ACTION_VERB, target,
                 bot, author, guild, reason, event)) {
@@ -135,7 +134,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member target = event.getOption(TARGET_OPTION).getAsMember();
         Member author = event.getMember();
         String reason = event.getOption(REASON_OPTION).getAsString();

@@ -26,14 +26,13 @@ import net.dv8tion.jda.internal.requests.restaction.MessageActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.WebhookMessageUpdateActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.mockito.ArgumentMatchers;
 import org.mockito.stubbing.Answer;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -208,8 +207,9 @@ public final class JdaTester {
      * @param command the command to create an event for
      * @return a builder used to create a Mockito mocked slash command event
      */
-    public @NotNull SlashCommandInteractionEventBuilder createSlashCommandInteractionEvent(
-            @NotNull SlashCommand command) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder createSlashCommandInteractionEvent(
+            SlashCommand command) {
         UnaryOperator<SlashCommandInteractionEvent> mockOperator = event -> {
             SlashCommandInteractionEvent SlashCommandInteractionEvent = spy(event);
             mockInteraction(SlashCommandInteractionEvent);
@@ -234,7 +234,8 @@ public final class JdaTester {
      *
      * @return a builder used to create a Mockito mocked slash command event
      */
-    public @NotNull ButtonClickEventBuilder createButtonInteractionEvent() {
+    @Nonnull
+    public ButtonClickEventBuilder createButtonInteractionEvent() {
         Supplier<ButtonInteractionEvent> mockEventSupplier = () -> {
             ButtonInteractionEvent event = mock(ButtonInteractionEvent.class);
             mockButtonClickEvent(event);
@@ -261,7 +262,8 @@ public final class JdaTester {
      * @param <T> the type of the command to spy on
      * @return the created spy
      */
-    public <T extends SlashCommand> @NotNull T spySlashCommand(@NotNull T command) {
+    @Nonnull
+    public <T extends SlashCommand> T spySlashCommand(T command) {
         T spiedCommand = spy(command);
         spiedCommand
             .acceptComponentIdGenerator((componentId, lifespan) -> UUID.randomUUID().toString());
@@ -276,7 +278,8 @@ public final class JdaTester {
      * @param userId the id of the member to create
      * @return the created spy
      */
-    public @NotNull Member createMemberSpy(long userId) {
+    @Nonnull
+    public Member createMemberSpy(long userId) {
         UserImpl user = spy(new UserImpl(userId, jda));
         return spy(new MemberImpl(guild, user));
     }
@@ -289,7 +292,8 @@ public final class JdaTester {
      * @param channelId the id of the text channel to create
      * @return the created spy
      */
-    public @NotNull TextChannel createTextChannelSpy(long channelId) {
+    @Nonnull
+    public TextChannel createTextChannelSpy(long channelId) {
         return spy(new TextChannelImpl(channelId, guild));
     }
 
@@ -302,7 +306,8 @@ public final class JdaTester {
      *
      * @return the reply action mock used by this tester
      */
-    public @NotNull ReplyCallbackAction getReplyActionMock() {
+    @Nonnull
+    public ReplyCallbackAction getReplyActionMock() {
         return replyAction;
     }
 
@@ -315,7 +320,8 @@ public final class JdaTester {
      *
      * @return the interaction hook mock used by this tester
      */
-    public @NotNull InteractionHook getInteractionHookMock() {
+    @Nonnull
+    public InteractionHook getInteractionHookMock() {
         return interactionHook;
     }
 
@@ -328,7 +334,8 @@ public final class JdaTester {
      *
      * @return the text channel spy used by this tester
      */
-    public @NotNull TextChannel getTextChannelSpy() {
+    @Nonnull
+    public TextChannel getTextChannelSpy() {
         return textChannel;
     }
 
@@ -341,7 +348,8 @@ public final class JdaTester {
      *
      * @return the private channel spy used by this tester
      */
-    public @NotNull PrivateChannel getPrivateChannelSpy() {
+    @Nonnull
+    public PrivateChannel getPrivateChannelSpy() {
         return privateChannel;
     }
 
@@ -355,7 +363,8 @@ public final class JdaTester {
      *
      * @return the member spy used by this tester
      */
-    public @NotNull Member getMemberSpy() {
+    @Nonnull
+    public Member getMemberSpy() {
         return member;
     }
 
@@ -364,7 +373,8 @@ public final class JdaTester {
      *
      * @return the JDA mock used by this tester
      */
-    public @NotNull JDA getJdaMock() {
+    @Nonnull
+    public JDA getJdaMock() {
         return jda;
     }
 
@@ -392,8 +402,9 @@ public final class JdaTester {
      * @param <R> the specific type of the Rest Action to return
      * @return the mocked action
      */
+    @Nonnull
     @SuppressWarnings("unchecked")
-    public <T, R extends RestAction<T>> @NotNull R createSucceededActionMock(@Nullable T t,
+    public <T, R extends RestAction<T>> R createSucceededActionMock(@Nullable T t,
             Class<R> restActionType) {
         R action = mock(restActionType);
 
@@ -435,7 +446,8 @@ public final class JdaTester {
      * @see #createSucceededActionMock(Object, Class)
      */
     @SuppressWarnings("unchecked")
-    public <T> @NotNull RestAction<T> createSucceededActionMock(@Nullable T t) {
+    @Nonnull
+    public <T> RestAction<T> createSucceededActionMock(@Nullable T t) {
         return createSucceededActionMock(t, RestAction.class);
     }
 
@@ -464,8 +476,9 @@ public final class JdaTester {
      * @return the mocked action
      */
     @SuppressWarnings("unchecked")
-    public <T, R extends RestAction<T>> @NotNull R createFailedActionMock(
-            @NotNull Throwable failureReason, Class<R> restActionType) {
+    @Nonnull
+    public <T, R extends RestAction<T>> R createFailedActionMock(
+            Throwable failureReason, Class<R> restActionType) {
         R action = mock(restActionType);
 
         Answer<Void> failureExecution = invocation -> {
@@ -509,7 +522,8 @@ public final class JdaTester {
      * @see #createFailedActionMock(Throwable, Class)
      */
     @SuppressWarnings("unchecked")
-    public <T> @NotNull RestAction<T> createFailedActionMock(@NotNull Throwable failureReason) {
+    @Nonnull
+    public <T> RestAction<T> createFailedActionMock(Throwable failureReason) {
         return createFailedActionMock(failureReason, RestAction.class);
     }
 
@@ -522,8 +536,8 @@ public final class JdaTester {
      * @param reason the reason of the error
      * @return the created exception
      */
-    public @NotNull ErrorResponseException createErrorResponseException(
-            @NotNull ErrorResponse reason) {
+    @Nonnull
+    public ErrorResponseException createErrorResponseException(ErrorResponse reason) {
         return ErrorResponseException.create(reason, new Response(null, -1, "", -1, Set.of()));
     }
 
@@ -545,7 +559,7 @@ public final class JdaTester {
         return new MessageReceivedEvent(jda, responseNumber.getAndIncrement(), spyMessage);
     }
 
-    private void mockInteraction(@NotNull IReplyCallback interaction) {
+    private void mockInteraction(IReplyCallback interaction) {
         doReturn(replyAction).when(interaction).reply(anyString());
         doReturn(replyAction).when(interaction).replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
         doReturn(replyAction).when(interaction).replyEmbeds(anyCollection());
@@ -564,13 +578,13 @@ public final class JdaTester {
         doReturn(replyCallbackAction).when(interaction).deferReply(anyBoolean());
     }
 
-    private void mockButtonClickEvent(@NotNull ButtonInteractionEvent event) {
+    private void mockButtonClickEvent(ButtonInteractionEvent event) {
         mockInteraction(event);
 
         doReturn(replyAction).when(event).editButton(any());
     }
 
-    private void mockMessage(@NotNull Message message) {
+    private void mockMessage(Message message) {
         doReturn(messageAction).when(message).reply(anyString());
         doReturn(messageAction).when(message).replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
         doReturn(messageAction).when(message).replyEmbeds(anyCollection());

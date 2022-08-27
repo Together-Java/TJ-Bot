@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,11 +28,9 @@ public final class PayloadMember {
     private boolean isPending;
     private PayloadUser user;
 
-    @SuppressWarnings("ConstructorWithTooManyParameters")
-    public PayloadMember(@Nullable String premiumSince, @Nullable String nick,
-            @NotNull String joinedAt, @NotNull String permissions, @NotNull List<String> roles,
-            boolean pending, boolean deaf, boolean mute, @Nullable String avatar, boolean isPending,
-            PayloadUser user) {
+    public PayloadMember(@Nullable String premiumSince, @Nullable String nick, String joinedAt,
+            String permissions, List<String> roles, boolean pending, boolean deaf, boolean mute,
+            @Nullable String avatar, boolean isPending, PayloadUser user) {
         this.premiumSince = premiumSince;
         this.nick = nick;
         this.joinedAt = joinedAt;
@@ -46,7 +44,8 @@ public final class PayloadMember {
         this.user = user;
     }
 
-    public static @NotNull PayloadMember of(@NotNull Member member) {
+    @Nonnull
+    public static PayloadMember of(Member member) {
         String permissions = Long
             .toString(Permission.getRaw(member.getPermissions().toArray(Permission[]::new)));
         List<String> roles = member.getRoles().stream().map(Role::getId).toList();
@@ -57,11 +56,12 @@ public final class PayloadMember {
                 member.isPending(), user);
     }
 
-    public @NotNull PayloadUser getUser() {
+    @Nonnull
+    public PayloadUser getUser() {
         return user;
     }
 
-    public void setUser(@NotNull PayloadUser user) {
+    public void setUser(PayloadUser user) {
         this.user = user;
     }
 
@@ -83,30 +83,30 @@ public final class PayloadMember {
         this.nick = nick;
     }
 
-    @NotNull
+    @Nonnull
     public String getJoinedAt() {
         return joinedAt;
     }
 
-    public void setJoinedAt(@NotNull String joinedAt) {
+    public void setJoinedAt(String joinedAt) {
         this.joinedAt = joinedAt;
     }
 
-    @NotNull
+    @Nonnull
     public String getPermissions() {
         return permissions;
     }
 
-    public void setPermissions(@NotNull String permissions) {
+    public void setPermissions(String permissions) {
         this.permissions = permissions;
     }
 
-    @NotNull
+    @Nonnull
     public List<String> getRoles() {
         return Collections.unmodifiableList(roles);
     }
 
-    public void setRoles(@NotNull List<String> roles) {
+    public void setRoles(List<String> roles) {
         this.roles = new ArrayList<>(roles);
     }
 

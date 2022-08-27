@@ -1,9 +1,10 @@
 package org.togetherjava.tjbot.commands.moderation.temp;
 
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 
 /**
  * Role based moderation actions that can be revoked, for example a {@link TemporaryMuteAction} or a
@@ -20,13 +21,13 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
      * @param actionName the action name to be used in logging in case of a failure, e.g.
      *        {@code "mute"}, {@code "quarantine"}
      */
-    RevocableRoleBasedAction(@NotNull String actionName) {
+    RevocableRoleBasedAction(String actionName) {
         this.actionName = actionName;
     }
 
     @Override
-    public @NotNull FailureIdentification handleRevokeFailure(@NotNull Throwable failure,
-            long targetId) {
+    @Nonnull
+    public FailureIdentification handleRevokeFailure(Throwable failure, long targetId) {
 
         if (failure instanceof ErrorResponseException errorResponseException) {
             switch (errorResponseException.getErrorResponse()) {

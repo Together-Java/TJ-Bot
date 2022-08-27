@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public final class PayloadSlashCommandResolved {
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -15,7 +15,8 @@ public final class PayloadSlashCommandResolved {
         this.users = users;
     }
 
-    public @Nullable PayloadSlashCommandMembers getMembers() {
+    @Nullable
+    public PayloadSlashCommandMembers getMembers() {
         return members;
     }
 
@@ -23,7 +24,8 @@ public final class PayloadSlashCommandResolved {
         this.members = members;
     }
 
-    public @Nullable PayloadSlashCommandUsers getUsers() {
+    @Nullable
+    public PayloadSlashCommandUsers getUsers() {
         return users;
     }
 

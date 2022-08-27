@@ -11,13 +11,13 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 import org.togetherjava.tjbot.jda.payloads.slashcommand.*;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +77,7 @@ public final class SlashCommandInteractionEventBuilder {
     private String subcommand;
     private Member userWhoTriggered;
 
-    SlashCommandInteractionEventBuilder(@NotNull JDAImpl jda,
+    SlashCommandInteractionEventBuilder(JDAImpl jda,
             UnaryOperator<SlashCommandInteractionEvent> mockOperator) {
         this.jda = jda;
         this.mockOperator = mockOperator;
@@ -97,8 +97,8 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
-            @NotNull String value) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder setOption(String name, String value) {
         putOptionRaw(name, value, OptionType.STRING);
         return this;
     }
@@ -117,8 +117,8 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
-            long value) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder setOption(String name, long value) {
         putOptionRaw(name, value, OptionType.INTEGER);
         return this;
     }
@@ -137,8 +137,8 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
-            @NotNull User value) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder setOption(String name, User value) {
         putOptionRaw(name, value, OptionType.USER);
         return this;
     }
@@ -157,8 +157,8 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandInteractionEventBuilder setOption(@NotNull String name,
-            @NotNull Member value) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder setOption(String name, Member value) {
         putOptionRaw(name, value, OptionType.USER);
         return this;
     }
@@ -168,7 +168,8 @@ public final class SlashCommandInteractionEventBuilder {
      *
      * @return this builder instance for chaining
      */
-    public @NotNull SlashCommandInteractionEventBuilder clearOptions() {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder clearOptions() {
         nameToOption.clear();
         return this;
     }
@@ -184,7 +185,8 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the subcommand does not exist in the corresponding
      *         command, as specified by its {@link SlashCommand#getData()}
      */
-    public @NotNull SlashCommandInteractionEventBuilder setSubcommand(@Nullable String subcommand) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder setSubcommand(@Nullable String subcommand) {
         if (subcommand != null) {
             requireSubcommand(subcommand);
         }
@@ -199,45 +201,44 @@ public final class SlashCommandInteractionEventBuilder {
      * @param userWhoTriggered the user who triggered the slash command
      * @return this builder instance for chaining
      */
-    @NotNull
-    public SlashCommandInteractionEventBuilder setUserWhoTriggered(
-            @NotNull Member userWhoTriggered) {
+    @Nonnull
+    public SlashCommandInteractionEventBuilder setUserWhoTriggered(Member userWhoTriggered) {
         this.userWhoTriggered = userWhoTriggered;
         return this;
     }
 
-    @NotNull
-    SlashCommandInteractionEventBuilder setCommand(@NotNull SlashCommand command) {
+    @Nonnull
+    SlashCommandInteractionEventBuilder setCommand(SlashCommand command) {
         this.command = command;
         return this;
     }
 
-    @NotNull
-    SlashCommandInteractionEventBuilder setChannelId(@NotNull String channelId) {
+    @Nonnull
+    SlashCommandInteractionEventBuilder setChannelId(String channelId) {
         this.channelId = channelId;
         return this;
     }
 
-    @NotNull
-    SlashCommandInteractionEventBuilder setToken(@NotNull String token) {
+    @Nonnull
+    SlashCommandInteractionEventBuilder setToken(String token) {
         this.token = token;
         return this;
     }
 
-    @NotNull
-    SlashCommandInteractionEventBuilder setApplicationId(@NotNull String applicationId) {
+    @Nonnull
+    SlashCommandInteractionEventBuilder setApplicationId(String applicationId) {
         this.applicationId = applicationId;
         return this;
     }
 
-    @NotNull
-    SlashCommandInteractionEventBuilder setGuildId(@NotNull String guildId) {
+    @Nonnull
+    SlashCommandInteractionEventBuilder setGuildId(String guildId) {
         this.guildId = guildId;
         return this;
     }
 
-    @NotNull
-    SlashCommandInteractionEventBuilder setUserId(@NotNull String userId) {
+    @Nonnull
+    SlashCommandInteractionEventBuilder setUserId(String userId) {
         this.userId = userId;
         return this;
     }
@@ -248,7 +249,8 @@ public final class SlashCommandInteractionEventBuilder {
      *
      * @return the created slash command instance
      */
-    public @NotNull SlashCommandInteractionEvent build() {
+    @Nonnull
+    public SlashCommandInteractionEvent build() {
         PayloadSlashCommand event = createEvent();
 
         String json;
@@ -261,6 +263,7 @@ public final class SlashCommandInteractionEventBuilder {
         return spySlashCommandEvent(json);
     }
 
+    @Nonnull
     private SlashCommandInteractionEvent spySlashCommandEvent(String jsonData) {
         SlashCommandInteractionEvent event = spy(new SlashCommandInteractionEvent(jda, 0,
                 new SlashCommandInteractionImpl(jda, DataObject.fromJson(jsonData))));
@@ -273,7 +276,8 @@ public final class SlashCommandInteractionEventBuilder {
         return event;
     }
 
-    private @NotNull PayloadSlashCommand createEvent() {
+    @Nonnull
+    private PayloadSlashCommand createEvent() {
         // TODO Validate that required options are set, check that subcommand is given if the
         // command has one
         // TODO Make as much of this configurable as needed
@@ -296,8 +300,9 @@ public final class SlashCommandInteractionEventBuilder {
                 applicationId, token, member, data);
     }
 
-    private static @Nullable List<PayloadSlashCommandOption> extractOptionsOrNull(
-            @NotNull Map<String, Option<?>> nameToOption) {
+    @Nullable
+    private static List<PayloadSlashCommandOption> extractOptionsOrNull(
+            Map<String, Option<?>> nameToOption) {
         if (nameToOption.isEmpty()) {
             return null;
         }
@@ -308,8 +313,8 @@ public final class SlashCommandInteractionEventBuilder {
             .toList();
     }
 
-    private static <T> @NotNull String serializeOptionValue(@NotNull T value,
-            @NotNull OptionType type) {
+    @Nonnull
+    private static <T> String serializeOptionValue(T value, OptionType type) {
         if (type == OptionType.STRING) {
             return (String) value;
         } else if (type == OptionType.INTEGER) {
@@ -337,8 +342,9 @@ public final class SlashCommandInteractionEventBuilder {
                     .formatted(type, value.getClass()));
     }
 
-    private static @Nullable PayloadSlashCommandResolved extractResolvedOrNull(
-            @NotNull Map<String, Option<?>> nameToOption) {
+    @Nullable
+    private static PayloadSlashCommandResolved extractResolvedOrNull(
+            Map<String, Option<?>> nameToOption) {
         PayloadSlashCommandUsers users = extractUsersOrNull(nameToOption);
         PayloadSlashCommandMembers members = extractMembersOrNull(nameToOption);
 
@@ -349,8 +355,9 @@ public final class SlashCommandInteractionEventBuilder {
         return new PayloadSlashCommandResolved(members, users);
     }
 
-    private static @Nullable PayloadSlashCommandUsers extractUsersOrNull(
-            @NotNull Map<String, Option<?>> nameToOption) {
+    @Nullable
+    private static PayloadSlashCommandUsers extractUsersOrNull(
+            Map<String, Option<?>> nameToOption) {
         Map<String, PayloadUser> idToUser = nameToOption.values()
             .stream()
             .filter(option -> option.type == OptionType.USER)
@@ -366,8 +373,9 @@ public final class SlashCommandInteractionEventBuilder {
         return idToUser.isEmpty() ? null : new PayloadSlashCommandUsers(idToUser);
     }
 
-    private static @Nullable PayloadSlashCommandMembers extractMembersOrNull(
-            @NotNull Map<String, Option<?>> nameToOption) {
+    @Nullable
+    private static PayloadSlashCommandMembers extractMembersOrNull(
+            Map<String, Option<?>> nameToOption) {
         Map<String, PayloadMember> idToMember = nameToOption.values()
             .stream()
             .filter(option -> option.type == OptionType.USER)
@@ -379,14 +387,14 @@ public final class SlashCommandInteractionEventBuilder {
         return idToMember.isEmpty() ? null : new PayloadSlashCommandMembers(idToMember);
     }
 
-    private <T> void putOptionRaw(@NotNull String name, @NotNull T value,
-            @NotNull OptionType type) {
+    private <T> void putOptionRaw(String name, T value, OptionType type) {
         requireOption(name, type);
         nameToOption.put(name, new Option<>(name, value, type));
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private @NotNull OptionData requireOption(@NotNull String name, @NotNull OptionType type) {
+    @Nonnull
+    private OptionData requireOption(String name, OptionType type) {
         List<OptionData> options = subcommand == null ? command.getData().getOptions()
                 : requireSubcommand(subcommand).getOptions();
 
@@ -405,7 +413,8 @@ public final class SlashCommandInteractionEventBuilder {
             });
     }
 
-    private @NotNull SubcommandData requireSubcommand(@NotNull String name) {
+    @Nonnull
+    private SubcommandData requireSubcommand(String name) {
         return command.getData()
             .getSubcommands()
             .stream()
@@ -418,6 +427,6 @@ public final class SlashCommandInteractionEventBuilder {
             });
     }
 
-    private record Option<T> (@NotNull String name, @NotNull T value, @NotNull OptionType type) {
+    private record Option<T> (String name, T value, OptionType type) {
     }
 }

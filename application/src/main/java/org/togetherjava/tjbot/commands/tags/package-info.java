@@ -4,4 +4,7 @@
  * like {@link org.togetherjava.tjbot.commands.tags.TagCommand} as entry point to the package's
  * offered functionality.
  */
+@ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.tags;
+
+import javax.annotation.ParametersAreNonnullByDefault;

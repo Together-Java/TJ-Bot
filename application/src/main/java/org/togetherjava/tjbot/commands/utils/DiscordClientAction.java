@@ -3,8 +3,8 @@ package org.togetherjava.tjbot.commands.utils;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 /**
@@ -261,7 +261,8 @@ public final class DiscordClientAction {
      * @return The formatted URL as an {@link String}
      * @throws IllegalArgumentException When missing arguments
      */
-    public String formatUrl(final String @NotNull... arguments) {
+    @Nonnull
+    public String formatUrl(final String... arguments) {
         String localUrl = url;
 
         for (final String argument : arguments) {
@@ -284,11 +285,13 @@ public final class DiscordClientAction {
      * @return A {@link Button} of {@link ButtonStyle#LINK} with the given label
      * @throws IllegalArgumentException When missing arguments
      */
-    public Button asLinkButton(@NotNull final String label, final String... arguments) {
+    @Nonnull
+    public Button asLinkButton(final String label, final String... arguments) {
         return Button.link(formatUrl(arguments), label);
     }
 
     @Override
+    @Nonnull
     public String toString() {
         return "DiscordClientAction{" + "url='" + url + '\'' + '}';
     }

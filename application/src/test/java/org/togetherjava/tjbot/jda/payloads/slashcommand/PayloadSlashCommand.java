@@ -1,8 +1,9 @@
 package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
+
+import javax.annotation.Nonnull;
 
 public final class PayloadSlashCommand {
     @JsonProperty("guild_id")
@@ -18,10 +19,9 @@ public final class PayloadSlashCommand {
     private PayloadMember member;
     private PayloadSlashCommandData data;
 
-    @SuppressWarnings("ConstructorWithTooManyParameters")
-    public PayloadSlashCommand(@NotNull String guildId, @NotNull String id, int type, int version,
-            @NotNull String channelId, @NotNull String applicationId, @NotNull String token,
-            @NotNull PayloadMember member, @NotNull PayloadSlashCommandData data) {
+    public PayloadSlashCommand(String guildId, String id, int type, int version, String channelId,
+            String applicationId, String token, PayloadMember member,
+            PayloadSlashCommandData data) {
         this.guildId = guildId;
         this.id = id;
         this.type = type;
@@ -33,21 +33,21 @@ public final class PayloadSlashCommand {
         this.data = data;
     }
 
-    @NotNull
+    @Nonnull
     public String getGuildId() {
         return guildId;
     }
 
-    public void setGuildId(@NotNull String guildId) {
+    public void setGuildId(String guildId) {
         this.guildId = guildId;
     }
 
-    @NotNull
+    @Nonnull
     public String getId() {
         return id;
     }
 
-    public void setId(@NotNull String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -67,48 +67,48 @@ public final class PayloadSlashCommand {
         this.version = version;
     }
 
-    @NotNull
+    @Nonnull
     public String getChannelId() {
         return channelId;
     }
 
-    public void setChannelId(@NotNull String channelId) {
+    public void setChannelId(String channelId) {
         this.channelId = channelId;
     }
 
-    @NotNull
+    @Nonnull
     public String getApplicationId() {
         return applicationId;
     }
 
-    public void setApplicationId(@NotNull String applicationId) {
+    public void setApplicationId(String applicationId) {
         this.applicationId = applicationId;
     }
 
-    @NotNull
+    @Nonnull
     public String getToken() {
         return token;
     }
 
-    public void setToken(@NotNull String token) {
+    public void setToken(String token) {
         this.token = token;
     }
 
-    @NotNull
+    @Nonnull
     public PayloadMember getMember() {
         return member;
     }
 
-    public void setMember(@NotNull PayloadMember member) {
+    public void setMember(PayloadMember member) {
         this.member = member;
     }
 
-    @NotNull
+    @Nonnull
     public PayloadSlashCommandData getData() {
         return data;
     }
 
-    public void setData(@NotNull PayloadSlashCommandData data) {
+    public void setData(PayloadSlashCommandData data) {
         this.data = data;
     }
 }

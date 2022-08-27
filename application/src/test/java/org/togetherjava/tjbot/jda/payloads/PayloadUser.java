@@ -2,8 +2,9 @@ package org.togetherjava.tjbot.jda.payloads;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import net.dv8tion.jda.api.entities.User;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public final class PayloadUser {
     private boolean bot;
@@ -14,8 +15,8 @@ public final class PayloadUser {
     private String username;
     private String discriminator;
 
-    public PayloadUser(boolean bot, long publicFlags, @NotNull String id, @Nullable String avatar,
-            @NotNull String username, @NotNull String discriminator) {
+    public PayloadUser(boolean bot, long publicFlags, String id, @Nullable String avatar,
+            String username, String discriminator) {
         this.publicFlags = publicFlags;
         this.id = id;
         this.avatar = avatar;
@@ -23,7 +24,8 @@ public final class PayloadUser {
         this.discriminator = discriminator;
     }
 
-    public static @NotNull PayloadUser of(@NotNull User user) {
+    @Nonnull
+    public static PayloadUser of(User user) {
         return new PayloadUser(user.isBot(), user.getFlagsRaw(), user.getId(), user.getAvatarId(),
                 user.getName(), user.getDiscriminator());
     }
@@ -44,12 +46,12 @@ public final class PayloadUser {
         this.publicFlags = publicFlags;
     }
 
-    @NotNull
+    @Nonnull
     public String getId() {
         return id;
     }
 
-    public void setId(@NotNull String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -62,21 +64,21 @@ public final class PayloadUser {
         this.avatar = avatar;
     }
 
-    @NotNull
+    @Nonnull
     public String getUsername() {
         return username;
     }
 
-    public void setUsername(@NotNull String username) {
+    public void setUsername(String username) {
         this.username = username;
     }
 
-    @NotNull
+    @Nonnull
     public String getDiscriminator() {
         return discriminator;
     }
 
-    public void setDiscriminator(@NotNull String discriminator) {
+    public void setDiscriminator(String discriminator) {
         this.discriminator = discriminator;
     }
 }

@@ -3,11 +3,11 @@ package org.togetherjava.tjbot.commands.help;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,21 +33,22 @@ public final class HelpThreadActivityUpdater implements Routine {
      *
      * @param helper the helper to use
      */
-    public HelpThreadActivityUpdater(@NotNull HelpSystemHelper helper) {
+    public HelpThreadActivityUpdater(HelpSystemHelper helper) {
         this.helper = helper;
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 1, SCHEDULE_MINUTES, TimeUnit.MINUTES);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         jda.getGuildCache().forEach(this::updateActivityForGuild);
     }
 
-    private void updateActivityForGuild(@NotNull Guild guild) {
+    private void updateActivityForGuild(Guild guild) {
         Optional<TextChannel> maybeOverviewChannel = helper
             .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
                     "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
@@ -66,14 +67,15 @@ public final class HelpThreadActivityUpdater implements Routine {
         activeThreads.forEach(this::updateActivityForThread);
     }
 
-    private void updateActivityForThread(@NotNull ThreadChannel threadChannel) {
+    private void updateActivityForThread(ThreadChannel threadChannel) {
         determineActivity(threadChannel)
             .flatMap(
                     threadActivity -> helper.renameChannelToActivity(threadChannel, threadActivity))
             .queue();
     }
 
-    private static @NotNull RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
+    @Nonnull
+    private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
         return channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT).map(messages -> {
             if (messages.size() >= ACTIVITY_DETERMINE_MESSAGE_LIMIT) {
@@ -94,7 +96,7 @@ public final class HelpThreadActivityUpdater implements Routine {
         });
     }
 
-    private static boolean isBotMessage(@NotNull Message message) {
+    private static boolean isBotMessage(Message message) {
         return message.getAuthor().equals(message.getJDA().getSelfUser());
     }
 }

@@ -4,8 +4,8 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -28,7 +28,7 @@ public class MessageUtils {
      * @param message the message that contains at least one button
      * @throws IllegalArgumentException when the given message does not contain any button
      */
-    public static void disableButtons(@NotNull Message message) {
+    public static void disableButtons(Message message) {
         List<Button> buttons = message.getButtons();
         if (buttons.isEmpty()) {
             throw new IllegalArgumentException("Message must contain at least one button");
@@ -48,7 +48,8 @@ public class MessageUtils {
      * @param text the text to escape
      * @return the escaped text
      */
-    public static @NotNull String escapeMarkdown(@NotNull String text) {
+    @Nonnull
+    public static String escapeMarkdown(String text) {
         // NOTE Unfortunately the utility does not escape backslashes '\', so we have to do it
         // ourselves
         // NOTE It also does not properly escape three backticks '```', it makes it '\```' but we

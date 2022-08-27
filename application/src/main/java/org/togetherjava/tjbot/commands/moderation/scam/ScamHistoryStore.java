@@ -1,12 +1,12 @@
 package org.togetherjava.tjbot.commands.moderation.scam;
 
 import net.dv8tion.jda.api.entities.Message;
-import org.jetbrains.annotations.NotNull;
 import org.jooq.Result;
 import org.togetherjava.tjbot.commands.utils.Hashing;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.ScamHistoryRecord;
 
+import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -39,7 +39,7 @@ public final class ScamHistoryStore {
      *
      * @param database containing the scam history to work with
      */
-    public ScamHistoryStore(@NotNull Database database) {
+    public ScamHistoryStore(Database database) {
         this.database = database;
     }
 
@@ -49,7 +49,7 @@ public final class ScamHistoryStore {
      * @param scam the message to add
      * @param isDeleted whether the message is already, or about to get, deleted
      */
-    public void addScam(@NotNull Message scam, boolean isDeleted) {
+    public void addScam(Message scam, boolean isDeleted) {
         Objects.requireNonNull(scam);
 
         database.write(context -> context.newRecord(SCAM_HISTORY)
@@ -71,8 +71,8 @@ public final class ScamHistoryStore {
      * @return identifications of all scam messages that have just been marked deleted, which
      *         previously have not been marked accordingly yet
      */
-    public @NotNull Collection<ScamIdentification> markScamDuplicatesDeleted(
-            @NotNull Message scam) {
+    @Nonnull
+    public Collection<ScamIdentification> markScamDuplicatesDeleted(Message scam) {
         return markScamDuplicatesDeleted(scam.getGuild().getIdLong(), scam.getAuthor().getIdLong(),
                 hashMessageContent(scam));
     }
@@ -87,8 +87,9 @@ public final class ScamHistoryStore {
      * @return identifications of all scam messages that have just been marked deleted, which
      *         previously have not been marked accordingly yet
      */
-    public @NotNull Collection<ScamIdentification> markScamDuplicatesDeleted(long guildId,
-            long authorId, @NotNull String contentHash) {
+    @Nonnull
+    public Collection<ScamIdentification> markScamDuplicatesDeleted(long guildId, long authorId,
+            String contentHash) {
         return database.writeAndProvide(context -> {
             Result<ScamHistoryRecord> undeletedDuplicates = context.selectFrom(SCAM_HISTORY)
                 .where(SCAM_HISTORY.GUILD_ID.eq(guildId)
@@ -111,7 +112,7 @@ public final class ScamHistoryStore {
      * @param scam the scam message to look for duplicates
      * @return whether there are recent duplicates
      */
-    public boolean hasRecentScamDuplicate(@NotNull Message scam) {
+    public boolean hasRecentScamDuplicate(Message scam) {
         Instant recentScamThreshold = Instant.now().minus(RECENT_SCAM_DURATION);
 
         return database.read(context -> context.fetchCount(SCAM_HISTORY,
@@ -138,7 +139,8 @@ public final class ScamHistoryStore {
      * @param message the message to hash
      * @return a text representation of the hash
      */
-    public static @NotNull String hashMessageContent(@NotNull Message message) {
+    @Nonnull
+    public static String hashMessageContent(Message message) {
         return Hashing.bytesToHex(Hashing.hash(HASH_METHOD,
                 message.getContentRaw().getBytes(StandardCharsets.UTF_8)));
     }
@@ -154,8 +156,8 @@ public final class ScamHistoryStore {
      */
     public record ScamIdentification(long guildId, long channelId, long messageId, long authorId,
             String contentHash) {
-        private static ScamIdentification ofDatabaseRecord(
-                @NotNull ScamHistoryRecord scamHistoryRecord) {
+        @Nonnull
+        private static ScamIdentification ofDatabaseRecord(ScamHistoryRecord scamHistoryRecord) {
             return new ScamIdentification(scamHistoryRecord.getGuildId(),
                     scamHistoryRecord.getChannelId(), scamHistoryRecord.getMessageId(),
                     scamHistoryRecord.getAuthorId(), scamHistoryRecord.getContentHash());

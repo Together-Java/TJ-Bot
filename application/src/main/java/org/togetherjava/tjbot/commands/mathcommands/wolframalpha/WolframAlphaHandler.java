@@ -4,12 +4,12 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.mikael.urlbuilder.UrlBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.*;
 
+import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -58,7 +58,7 @@ final class WolframAlphaHandler {
      *
      * @param query the original query send to the API
      */
-    WolframAlphaHandler(@NotNull String query) {
+    WolframAlphaHandler(String query) {
         this.query = query;
 
         userApiQuery = UrlBuilder.fromString(USER_API_ENDPOINT)
@@ -73,8 +73,8 @@ final class WolframAlphaHandler {
      * @param apiResponse response of the Wolfram Alpha API query
      * @return user-friendly message for display, as list of embeds
      */
-    @NotNull
-    HandlerResponse handleApiResponse(@NotNull HttpResponse<String> apiResponse) {
+    @Nonnull
+    HandlerResponse handleApiResponse(HttpResponse<String> apiResponse) {
         // Check status code
         int statusCode = apiResponse.statusCode();
         if (statusCode != HttpURLConnection.HTTP_OK) {
@@ -111,7 +111,8 @@ final class WolframAlphaHandler {
         return handleSuccessfulResponse(queryResult);
     }
 
-    private @NotNull HandlerResponse handleMisunderstoodQuery(@NotNull QueryResult result) {
+    @Nonnull
+    private HandlerResponse handleMisunderstoodQuery(QueryResult result) {
         StringJoiner output = new StringJoiner("\n");
         output.add("Sorry, I did not understand your query.");
 
@@ -151,7 +152,8 @@ final class WolframAlphaHandler {
         return responseOf(output.toString());
     }
 
-    private static <E> @NotNull String createBulletPointList(Collection<? extends E> elements,
+    @Nonnull
+    private static <E> String createBulletPointList(Collection<? extends E> elements,
             Function<E, String> elementToText) {
         return elements.stream()
             .map(elementToText)
@@ -159,7 +161,8 @@ final class WolframAlphaHandler {
             .collect(Collectors.joining("\n"));
     }
 
-    private @NotNull HandlerResponse handleSuccessfulResponse(@NotNull QueryResult queryResult) {
+    @Nonnull
+    private HandlerResponse handleSuccessfulResponse(QueryResult queryResult) {
         StringJoiner messages = new StringJoiner("\n\n");
         messages.add("Click the link to see full results.");
 
@@ -198,7 +201,8 @@ final class WolframAlphaHandler {
         return responseOf(messages.toString(), tilesToDisplay);
     }
 
-    private @NotNull HandlerResponse responseOf(@NotNull CharSequence text) {
+    @Nonnull
+    private HandlerResponse responseOf(CharSequence text) {
         MessageEmbed embed = new EmbedBuilder().setTitle(buildTitle(), userApiQuery)
             .setDescription(text)
             .setColor(AMBIENT_COLOR)
@@ -207,8 +211,9 @@ final class WolframAlphaHandler {
         return new HandlerResponse(List.of(embed), List.of());
     }
 
-    private @NotNull HandlerResponse responseOf(@NotNull CharSequence text,
-            @NotNull Collection<? extends BufferedImage> tiles) {
+    @Nonnull
+    private HandlerResponse responseOf(CharSequence text,
+            Collection<? extends BufferedImage> tiles) {
         List<MessageEmbed> embeds = new ArrayList<>();
         embeds.add(new EmbedBuilder().setTitle(buildTitle(), userApiQuery)
             .setDescription(text)
@@ -232,16 +237,16 @@ final class WolframAlphaHandler {
         return new HandlerResponse(embeds, attachments);
     }
 
-    private @NotNull String buildTitle() {
+    @Nonnull
+    private String buildTitle() {
         return query + " - " + SERVICE_NAME;
     }
 
-    record HandlerResponse(@NotNull List<MessageEmbed> embeds,
-            @NotNull List<Attachment> attachments) {
+    record HandlerResponse(List<MessageEmbed> embeds, List<Attachment> attachments) {
     }
 
 
-    record Attachment(@NotNull String name, byte @NotNull [] data) {
+    record Attachment(String name, byte[] data) {
         @Override
         public boolean equals(Object o) {
             if (this == o) {

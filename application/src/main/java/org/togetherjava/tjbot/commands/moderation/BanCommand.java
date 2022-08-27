@@ -14,13 +14,13 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -52,7 +52,7 @@ public final class BanCommand extends SlashCommandAdapter {
      *
      * @param actionsStore used to store actions issued by this command
      */
-    public BanCommand(@NotNull ModerationActionsStore actionsStore) {
+    public BanCommand(ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Bans the given user from the server", SlashCommandVisibility.GUILD);
 
         OptionData durationData = new OptionData(OptionType.STRING, DURATION_OPTION,
@@ -69,8 +69,8 @@ public final class BanCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static RestAction<InteractionHook> handleAlreadyBanned(@NotNull Guild.Ban ban,
-            @NotNull IReplyCallback event) {
+    private static RestAction<InteractionHook> handleAlreadyBanned(Guild.Ban ban,
+            IReplyCallback event) {
         String reason = ban.getReason();
         String reasonText =
                 reason == null || reason.isBlank() ? "" : " (reason: %s)".formatted(reason);
@@ -80,9 +80,9 @@ public final class BanCommand extends SlashCommandAdapter {
         return event.reply(message).setEphemeral(true);
     }
 
-    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            @NotNull Guild guild, @NotNull GenericEvent event) {
+    private static RestAction<Boolean> sendDm(ISnowflake target,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
+            GenericEvent event) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         String dmMessage =
@@ -100,9 +100,9 @@ public final class BanCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull User target,
-            @NotNull Member author, @Nullable ModerationUtils.TemporaryData temporaryData,
-            @NotNull String reason) {
+    @Nonnull
+    private static MessageEmbed sendFeedback(boolean hasSentDm, User target, Member author,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The ban duration is: "
                 + (temporaryData == null ? "permanent" : temporaryData.duration());
         String dmNoticeText = "";
@@ -113,9 +113,9 @@ public final class BanCommand extends SlashCommandAdapter {
                 durationText + dmNoticeText, reason);
     }
 
+    @Nonnull
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
-            @NotNull Throwable alreadyBannedFailure, @NotNull IReplyCallback event,
-            @NotNull Guild guild, @NotNull User target) {
+            Throwable alreadyBannedFailure, IReplyCallback event, Guild guild, User target) {
         if (alreadyBannedFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
                 return Optional.empty();
@@ -136,11 +136,10 @@ public final class BanCommand extends SlashCommandAdapter {
             .setEphemeral(true));
     }
 
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private RestAction<InteractionHook> banUserFlow(@NotNull User target, @NotNull Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            int deleteHistoryDays, @NotNull Guild guild,
-            @NotNull SlashCommandInteractionEvent event) {
+    @Nonnull
+    private RestAction<InteractionHook> banUserFlow(User target, Member author,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
+            int deleteHistoryDays, Guild guild, SlashCommandInteractionEvent event) {
         return sendDm(target, temporaryData, reason, guild, event)
             .flatMap(hasSentDm -> banUser(target, author, temporaryData, reason, deleteHistoryDays,
                     guild).map(banResult -> hasSentDm))
@@ -148,10 +147,10 @@ public final class BanCommand extends SlashCommandAdapter {
             .flatMap(event::replyEmbeds);
     }
 
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private AuditableRestAction<Void> banUser(@NotNull User target, @NotNull Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            int deleteHistoryDays, @NotNull Guild guild) {
+    @Nonnull
+    private AuditableRestAction<Void> banUser(User target, Member author,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
+            int deleteHistoryDays, Guild guild) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         logger.info(
@@ -167,9 +166,8 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            CharSequence reason, Guild guild, IReplyCallback event) {
         // Member doesn't exist if attempting to ban a user who is not part of the guild.
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
@@ -187,7 +185,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null");
         User target = targetOption.getAsUser();

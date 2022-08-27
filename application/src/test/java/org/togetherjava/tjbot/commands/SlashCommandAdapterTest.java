@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
@@ -19,7 +18,7 @@ final class SlashCommandAdapterTest {
         // noinspection AnonymousInnerClass
         return new SlashCommandAdapter(NAME, DESCRIPTION, VISIBILITY) {
             @Override
-            public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+            public void onSlashCommand(SlashCommandInteractionEvent event) {
                 // No implementation needed for the test
             }
         };

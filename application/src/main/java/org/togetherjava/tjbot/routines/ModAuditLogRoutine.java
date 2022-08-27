@@ -11,8 +11,6 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.pagination.AuditLogPaginationAction;
 import net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
@@ -20,19 +18,19 @@ import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModAuditLogGuildProcess;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import java.awt.*;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.awt.Color;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.util.List;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
@@ -60,26 +58,25 @@ public final class ModAuditLogRoutine implements Routine {
      * @param config the config to use for this
      * @param modAuditLogWriter to log tag changes for audition
      */
-    public ModAuditLogRoutine(@NotNull Database database, @NotNull Config config,
-            @NotNull ModAuditLogWriter modAuditLogWriter) {
+    public ModAuditLogRoutine(Database database, Config config,
+            ModAuditLogWriter modAuditLogWriter) {
         this.config = config;
         this.database = database;
         this.modAuditLogWriter = modAuditLogWriter;
     }
 
-    private static @NotNull RestAction<AuditLogMessage> handleAction(@NotNull Action action,
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static RestAction<AuditLogMessage> handleAction(Action action, AuditLogEntry entry) {
         User author = Objects.requireNonNull(entry.getUser());
         return getTargetFromEntryOrNull(entry).map(target -> new AuditLogMessage(author, action,
                 target, entry.getReason(), entry.getTimeCreated()));
     }
 
-    private static RestAction<User> getTargetFromEntryOrNull(@NotNull AuditLogEntry entry) {
+    private static RestAction<User> getTargetFromEntryOrNull(AuditLogEntry entry) {
         return entry.getJDA().retrieveUserById(entry.getTargetIdLong()).onErrorMap(error -> null);
     }
 
-    private static boolean isSnowflakeAfter(@NotNull ISnowflake snowflake,
-            @NotNull Instant timestamp) {
+    private static boolean isSnowflakeAfter(ISnowflake snowflake, Instant timestamp) {
         return TimeUtil.getTimeCreated(snowflake.getIdLong()).toInstant().isAfter(timestamp);
     }
 
@@ -102,9 +99,9 @@ public final class ModAuditLogRoutine implements Routine {
      * @param periodHours the scheduling period in hours
      * @return the according schedule representing the planned execution
      */
-    private static @NotNull Schedule scheduleAtFixedRateFromNextFixedTime(
-            @SuppressWarnings("SameParameterValue") int periodStartHour,
-            @SuppressWarnings("SameParameterValue") int periodHours) {
+    @Nonnull
+    private static Schedule scheduleAtFixedRateFromNextFixedTime(int periodStartHour,
+            int periodHours) {
         // NOTE This scheduler could be improved, for example supporting arbitrary periods (not just
         // hour-based). Also, it probably does not correctly handle all date/time-quirks, for
         // example if a schedule would hit a time that does not exist for a specific date due to DST
@@ -132,8 +129,9 @@ public final class ModAuditLogRoutine implements Routine {
                 TimeUnit.HOURS.toSeconds(periodHours), TimeUnit.SECONDS);
     }
 
-    private static @NotNull Instant computeClosestNextScheduleDate(@NotNull Instant instant,
-            @NotNull List<Integer> scheduleHours, int periodHours) {
+    @Nonnull
+    private static Instant computeClosestNextScheduleDate(Instant instant,
+            List<Integer> scheduleHours, int periodHours) {
         OffsetDateTime offsetDateTime = instant.atOffset(ZoneOffset.UTC);
         BiFunction<OffsetDateTime, Integer, Instant> dateAtTime =
                 (date, hour) -> date.with(LocalTime.of(hour, 0)).toInstant();
@@ -153,37 +151,38 @@ public final class ModAuditLogRoutine implements Routine {
             .orElseThrow();
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleBanEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static Optional<RestAction<MessageEmbed>> handleBanEntry(AuditLogEntry entry) {
         // NOTE Temporary bans are realized as permanent bans with automated unban,
         // hence we can not differentiate a permanent or a temporary ban here
         return Optional.of(handleAction(Action.BAN, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleUnbanEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static Optional<RestAction<MessageEmbed>> handleUnbanEntry(AuditLogEntry entry) {
         return Optional.of(handleAction(Action.UNBAN, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleKickEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static Optional<RestAction<MessageEmbed>> handleKickEntry(AuditLogEntry entry) {
         return Optional.of(handleAction(Action.KICK, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleMuteEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static Optional<RestAction<MessageEmbed>> handleMuteEntry(AuditLogEntry entry) {
         // NOTE Temporary mutes are realized as permanent mutes with automated unmute,
         // hence we can not differentiate a permanent or a temporary mute here
         return Optional.of(handleAction(Action.MUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleUnmuteEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static Optional<RestAction<MessageEmbed>> handleUnmuteEntry(AuditLogEntry entry) {
         return Optional.of(handleAction(Action.UNMUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private static Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
+            AuditLogEntry entry) {
         return Optional.of(handleAction(Action.MESSAGE_DELETION, entry).map(message -> {
             if (message.target() != null && message.target().isBot()) {
                 // Message deletions against bots should be skipped. Cancel action.
@@ -194,12 +193,13 @@ public final class ModAuditLogRoutine implements Routine {
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         checkAuditLogsRoutine(jda);
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         Schedule schedule = scheduleAtFixedRateFromNextFixedTime(CHECK_AUDIT_LOG_START_HOUR,
                 CHECK_AUDIT_LOG_EVERY_HOURS);
         logger.info("Checking audit logs is scheduled for {}.",
@@ -207,7 +207,7 @@ public final class ModAuditLogRoutine implements Routine {
         return schedule;
     }
 
-    private void checkAuditLogsRoutine(@NotNull JDA jda) {
+    private void checkAuditLogsRoutine(JDA jda) {
         logger.info("Checking audit logs of all guilds...");
 
         jda.getGuildCache().forEach(guild -> {
@@ -234,8 +234,8 @@ public final class ModAuditLogRoutine implements Routine {
                 CHECK_AUDIT_LOG_EVERY_HOURS);
     }
 
-    private void handleAuditLogs(@NotNull MessageChannel auditLogChannel,
-            @NotNull PaginationAction<? extends AuditLogEntry, AuditLogPaginationAction> auditLogAction,
+    private void handleAuditLogs(MessageChannel auditLogChannel,
+            PaginationAction<? extends AuditLogEntry, AuditLogPaginationAction> auditLogAction,
             long guildId) {
         Instant lastAuditLogEntryTimestamp =
                 database.read(context -> Optional
@@ -270,8 +270,9 @@ public final class ModAuditLogRoutine implements Routine {
         });
     }
 
-    private Optional<RestAction<Message>> handleAuditLog(@NotNull MessageChannel auditLogChannel,
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private Optional<RestAction<Message>> handleAuditLog(MessageChannel auditLogChannel,
+            AuditLogEntry entry) {
         Optional<RestAction<MessageEmbed>> maybeMessage = switch (entry.getType()) {
             case BAN -> handleBanEntry(entry);
             case UNBAN -> handleUnbanEntry(entry);
@@ -289,8 +290,8 @@ public final class ModAuditLogRoutine implements Routine {
             .map(message -> message.flatMap(Objects::nonNull, auditLogChannel::sendMessageEmbeds));
     }
 
-    private @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
-            @NotNull AuditLogEntry entry) {
+    @Nonnull
+    private Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(AuditLogEntry entry) {
         if (containsMutedRole(entry, AuditLogKey.MEMBER_ROLES_ADD)) {
             return handleMuteEntry(entry);
         }
@@ -300,7 +301,7 @@ public final class ModAuditLogRoutine implements Routine {
         return Optional.empty();
     }
 
-    private boolean containsMutedRole(@NotNull AuditLogEntry entry, @NotNull AuditLogKey key) {
+    private boolean containsMutedRole(AuditLogEntry entry, AuditLogKey key) {
         List<Map<String, String>> roleChanges = Optional.ofNullable(entry.getChangeByKey(key))
             .<List<Map<String, String>>>map(AuditLogChange::getNewValue)
             .orElse(List.of());
@@ -323,25 +324,25 @@ public final class ModAuditLogRoutine implements Routine {
         private final String title;
         private final String verb;
 
-        Action(@NotNull String title, @NotNull String verb) {
+        Action(String title, String verb) {
             this.title = title;
             this.verb = verb;
         }
 
-        @NotNull
+        @Nonnull
         String getTitle() {
             return title;
         }
 
-        @NotNull
+        @Nonnull
         String getVerb() {
             return verb;
         }
     }
 
-    private record AuditLogMessage(@NotNull User author, @NotNull Action action,
-            @Nullable User target, @Nullable String reason, @NotNull TemporalAccessor timestamp) {
-        @NotNull
+    private record AuditLogMessage(User author, Action action, @Nullable User target,
+            @Nullable String reason, TemporalAccessor timestamp) {
+        @Nonnull
         MessageEmbed toEmbed() {
             String targetTag = target == null ? "(user unknown)" : target.getAsTag();
             String description = "%s **%s**.".formatted(action.getVerb(), targetTag);

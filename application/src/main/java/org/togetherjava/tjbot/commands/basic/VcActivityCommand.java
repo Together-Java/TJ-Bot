@@ -13,13 +13,13 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -144,7 +144,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member member = Objects.requireNonNull(event.getMember(), "member is null");
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "Voicestates aren't being cached, check the JDABuilder");
@@ -191,9 +191,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAgeDays, applicationName);
     }
 
-
-    private static <K, V> @NotNull Optional<K> getKeyByValue(@NotNull Map<K, V> map,
-            @NotNull V value) {
+    @Nonnull
+    private static <K, V> Optional<K> getKeyByValue(Map<K, V> map, V value) {
         for (Map.Entry<K, V> entry : map.entrySet()) {
             if (value.equals(entry.getKey())) {
                 return Optional.of(entry.getKey());
@@ -203,10 +202,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         return Optional.empty();
     }
 
-    private static void handleSubcommand(@NotNull SlashCommandInteractionEvent event,
-            @NotNull VoiceChannel voiceChannel, @NotNull String applicationId,
-            @Nullable Integer maxUses, @Nullable Integer maxAgeDays,
-            @NotNull String applicationName) {
+    private static void handleSubcommand(SlashCommandInteractionEvent event,
+            VoiceChannel voiceChannel, String applicationId, @Nullable Integer maxUses,
+            @Nullable Integer maxAgeDays, String applicationName) {
 
 
         voiceChannel.createInvite()
@@ -219,9 +217,9 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     }
 
-    private static @NotNull ReplyCallbackAction replyInvite(
-            @NotNull SlashCommandInteractionEvent event, @NotNull Invite invite,
-            @NotNull String applicationName) {
+    @Nonnull
+    private static ReplyCallbackAction replyInvite(SlashCommandInteractionEvent event,
+            Invite invite, String applicationName) {
         return event.reply("""
                 %s wants to start %s.
                 Feel free to join by clicking %s , enjoy!
@@ -229,7 +227,7 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                  """.formatted(event.getUser().getAsTag(), applicationName, invite.getUrl()));
     }
 
-    private static void handleErrors(@NotNull SlashCommandInteractionEvent event,
+    private static void handleErrors(SlashCommandInteractionEvent event,
             @Nullable Throwable throwable) {
         event.reply("Something went wrong :/").queue();
         logger.warn("Something went wrong in the VcActivityCommand", throwable);
@@ -242,7 +240,8 @@ public final class VcActivityCommand extends SlashCommandAdapter {
      * @return the extracted integer if present, null otherwise
      **/
     @Contract("null -> null")
-    private static @Nullable Integer requireIntOptionIfPresent(@Nullable OptionMapping option) {
+    @Nullable
+    private static Integer requireIntOptionIfPresent(@Nullable OptionMapping option) {
 
         return option == null ? null : Math.toIntExact(option.getAsLong());
 

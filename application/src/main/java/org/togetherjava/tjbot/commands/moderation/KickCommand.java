@@ -12,13 +12,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -41,7 +41,7 @@ public final class KickCommand extends SlashCommandAdapter {
      *
      * @param actionsStore used to store actions issued by this command
      */
-    public KickCommand(@NotNull ModerationActionsStore actionsStore) {
+    public KickCommand(ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
@@ -50,15 +50,14 @@ public final class KickCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleAbsentTarget(@NotNull IReplyCallback event) {
+    private static void handleAbsentTarget(IReplyCallback event) {
         event.reply("I can not kick the given user since they are not part of the guild anymore.")
             .setEphemeral(true)
             .queue();
     }
 
-    private void kickUserFlow(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild,
-            @NotNull SlashCommandInteractionEvent event) {
+    private void kickUserFlow(Member target, Member author, String reason, Guild guild,
+            SlashCommandInteractionEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
                 .map(kickResult -> hasSentDm))
@@ -67,8 +66,9 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
-            @NotNull Guild guild, @NotNull GenericEvent event) {
+    @Nonnull
+    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
+            GenericEvent event) {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
@@ -82,8 +82,9 @@ public final class KickCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private AuditableRestAction<Void> kickUser(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild) {
+    @Nonnull
+    private AuditableRestAction<Void> kickUser(Member target, Member author, String reason,
+            Guild guild) {
         logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
@@ -94,8 +95,9 @@ public final class KickCommand extends SlashCommandAdapter {
         return guild.kick(target, reason).reason(reason);
     }
 
-    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
-            @NotNull Member author, @NotNull String reason) {
+    @Nonnull
+    private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
+            String reason) {
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
@@ -104,10 +106,9 @@ public final class KickCommand extends SlashCommandAdapter {
                 target.getUser(), dmNoticeText, reason);
     }
 
-    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    @Nonnull
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            CharSequence reason, Guild guild, IReplyCallback event) {
         // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.
         if (target == null) {
             handleAbsentTarget(event);
@@ -128,7 +129,7 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
@@ -13,6 +12,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
@@ -50,8 +50,8 @@ public final class AutoPruneHelperRoutine implements Routine {
      * @param modAuditLogWriter to inform mods when manual pruning becomes necessary
      * @param database to determine whether an user is inactive
      */
-    public AutoPruneHelperRoutine(@NotNull Config config, @NotNull HelpSystemHelper helper,
-            @NotNull ModAuditLogWriter modAuditLogWriter, @NotNull Database database) {
+    public AutoPruneHelperRoutine(Config config, HelpSystemHelper helper,
+            ModAuditLogWriter modAuditLogWriter, Database database) {
         allCategories = config.getHelpSystem().getCategories();
         this.helper = helper;
         this.modAuditLogWriter = modAuditLogWriter;
@@ -59,16 +59,17 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 1, TimeUnit.HOURS);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         jda.getGuildCache().forEach(this::pruneForGuild);
     }
 
-    private void pruneForGuild(@NotNull Guild guild) {
+    private void pruneForGuild(Guild guild) {
         TextChannel overviewChannel = guild.getTextChannels()
             .stream()
             .filter(channel -> helper.isOverviewChannelName(channel.getName()))
@@ -83,8 +84,7 @@ public final class AutoPruneHelperRoutine implements Routine {
             .forEach(role -> pruneRoleIfFull(role, overviewChannel, now));
     }
 
-    private void pruneRoleIfFull(@NotNull Role role, @NotNull TextChannel overviewChannel,
-            @NotNull Instant when) {
+    private void pruneRoleIfFull(Role role, TextChannel overviewChannel, Instant when) {
         role.getGuild().findMembersWithRoles(role).onSuccess(members -> {
             if (isRoleFull(members)) {
                 logger.debug("Helper role {} is full, starting to prune.", role.getName());
@@ -93,12 +93,12 @@ public final class AutoPruneHelperRoutine implements Routine {
         });
     }
 
-    private boolean isRoleFull(@NotNull Collection<?> members) {
+    private boolean isRoleFull(Collection<?> members) {
         return members.size() >= ROLE_FULL_THRESHOLD;
     }
 
-    private void pruneRole(@NotNull Role role, @NotNull List<? extends Member> members,
-            @NotNull TextChannel overviewChannel, @NotNull Instant when) {
+    private void pruneRole(Role role, List<? extends Member> members, TextChannel overviewChannel,
+            Instant when) {
         List<Member> membersShuffled = new ArrayList<>(members);
         Collections.shuffle(membersShuffled);
 
@@ -124,7 +124,7 @@ public final class AutoPruneHelperRoutine implements Routine {
         membersToPrune.forEach(member -> pruneMemberFromRole(member, role, overviewChannel));
     }
 
-    private boolean isMemberInactive(@NotNull Member member, @NotNull Instant when) {
+    private boolean isMemberInactive(Member member, Instant when) {
         if (member.hasTimeJoined()) {
             Instant memberJoined = member.getTimeJoined().toInstant();
             if (Duration.between(memberJoined, when).toDays() <= RECENTLY_JOINED_DAYS) {
@@ -143,8 +143,7 @@ public final class AutoPruneHelperRoutine implements Routine {
                     .and(HELP_CHANNEL_MESSAGES.SENT_AT.greaterThan(latestActiveMoment)))) == 0;
     }
 
-    private void pruneMemberFromRole(@NotNull Member member, @NotNull Role role,
-            @NotNull TextChannel overviewChannel) {
+    private void pruneMemberFromRole(Member member, Role role, TextChannel overviewChannel) {
         Guild guild = member.getGuild();
 
         String dmMessage =
@@ -160,7 +159,7 @@ public final class AutoPruneHelperRoutine implements Routine {
             .queue();
     }
 
-    private void warnModsAbout(@NotNull String message, @NotNull Guild guild) {
+    private void warnModsAbout(String message, Guild guild) {
         logger.warn(message);
 
         modAuditLogWriter.write("Auto-prune helpers", message, null, Instant.now(), guild);

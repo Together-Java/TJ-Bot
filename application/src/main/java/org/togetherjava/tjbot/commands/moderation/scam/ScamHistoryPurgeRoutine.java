@@ -1,9 +1,9 @@
 package org.togetherjava.tjbot.commands.moderation.scam;
 
 import net.dv8tion.jda.api.JDA;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.Routine;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
@@ -20,17 +20,18 @@ public final class ScamHistoryPurgeRoutine implements Routine {
      * 
      * @param scamHistoryStore containing the scam history to purge
      */
-    public ScamHistoryPurgeRoutine(@NotNull ScamHistoryStore scamHistoryStore) {
+    public ScamHistoryPurgeRoutine(ScamHistoryStore scamHistoryStore) {
         this.scamHistoryStore = scamHistoryStore;
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 1, TimeUnit.DAYS);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         scamHistoryStore.deleteHistoryOlderThan(Instant.now().minus(DELETE_SCAM_RECORDS_AFTER));
     }
 }
