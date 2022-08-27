@@ -56,7 +56,7 @@ public final class HelpSystemHelper {
      * Creates a new instance.
      *
      * @param config the config to use
-     * @param database The database to store help thread metadata in.
+     * @param database the database to store help thread metadata in
      */
     public HelpSystemHelper(@NotNull Config config, @NotNull Database database) {
         HelpSystemConfig helpConfig = config.getHelpSystem();

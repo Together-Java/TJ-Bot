@@ -22,7 +22,7 @@ public class HelpThreadMetadataPurger implements Routine {
     /**
      * Creates a new instance.
      *
-     * @param database The database used to purge help thread metadata.
+     * @param database the database used to purge help thread metadata
      */
     public HelpThreadMetadataPurger(@NotNull Database database) {
         this.database = database;
