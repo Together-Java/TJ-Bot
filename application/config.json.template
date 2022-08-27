@@ -44,5 +44,9 @@
            "Other"
        ],
        "categoryRoleSuffix": " - Helper"
-   }
+   },
+   "blacklistedFileExtension":[
+    "exe",
+    "tar"
+   ]
 }

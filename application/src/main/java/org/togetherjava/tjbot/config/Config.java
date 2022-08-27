@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Configuration of the application. Create instances using {@link #load(Path)}.
@@ -28,6 +30,7 @@ public final class Config {
     private final ScamBlockerConfig scamBlocker;
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
+    private final List<String> blacklistedFileExtension;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -45,7 +48,8 @@ public final class Config {
             @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
-            @JsonProperty("helpSystem") HelpSystemConfig helpSystem) {
+            @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
+            @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension) {
         this.token = token;
         this.gistApiKey = gistApiKey;
         this.databasePath = databasePath;
@@ -61,6 +65,7 @@ public final class Config {
         this.scamBlocker = scamBlocker;
         this.wolframAlphaAppId = wolframAlphaAppId;
         this.helpSystem = helpSystem;
+        this.blacklistedFileExtension = blacklistedFileExtension;
     }
 
     /**
@@ -216,4 +221,14 @@ public final class Config {
     public @NotNull HelpSystemConfig getHelpSystem() {
         return helpSystem;
     }
+
+    /**
+     * Gets a list of all blacklistedFileExtensions.
+     *
+     * @return a list of all blacklistedFileExtensions
+     */
+    public @NotNull List<String> getBlacklistedFileExtensions() {
+        return Collections.unmodifiableList(blacklistedFileExtension);
+    }
+
 }
