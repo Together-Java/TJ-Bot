@@ -24,7 +24,7 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
     private final Database database;
 
     /**
-     * Creates a new instance
+     * Creates a new instance.
      *
      * @param database database to use
      */
