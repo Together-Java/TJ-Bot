@@ -27,9 +27,7 @@ import java.util.regex.Pattern;
  * they did wrong and also inform the mods.
  */
 public class AttachmentListener extends MessageReceiverAdapter {
-
     private final Config config;
-
     private final ModAuditLogWriter modAuditLogWriter;
 
     /**
@@ -50,7 +48,7 @@ public class AttachmentListener extends MessageReceiverAdapter {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
-        if (attachmentContainsBlacklistedFileExtension(event)) {
+        if (attachmentContainsBlacklistedFileExtension(event.getMessage())) {
             deleteMessage(event).flatMap(any -> dmUser(event)).queue();
             warnMods(event);
         }
@@ -102,8 +100,7 @@ public class AttachmentListener extends MessageReceiverAdapter {
         return String.join(", ", blacklistedAttachments);
     }
 
-    private boolean attachmentContainsBlacklistedFileExtension(MessageReceivedEvent event) {
-        Message message = event.getMessage();
+    private boolean attachmentContainsBlacklistedFileExtension(Message message) {
         List<Message.Attachment> attachments = message.getAttachments();
         if (attachments.isEmpty()) {
             return false;
