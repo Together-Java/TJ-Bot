@@ -61,7 +61,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     @Nonnull
     private RestAction<Message> dmUser(Message originalMessage) {
-        String originalMessageContent = originalMessage.getContentDisplay();
+        String originalMessageContent = originalMessage.getContentRaw();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
                     .setColor(Color.ORANGE)
