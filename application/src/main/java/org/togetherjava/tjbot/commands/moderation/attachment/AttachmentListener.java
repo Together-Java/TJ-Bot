@@ -1,13 +1,11 @@
 package org.togetherjava.tjbot.commands.moderation.attachment;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.jetbrains.annotations.NotNull;
 import org.jooq.tools.StringUtils;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -49,22 +47,19 @@ public class AttachmentListener extends MessageReceiverAdapter {
             return;
         }
         if (attachmentContainsBlacklistedFileExtension(event.getMessage())) {
-            deleteMessage(event).flatMap(any -> dmUser(event)).queue();
+            deleteMessageAndDmUser(event);
             warnMods(event);
         }
     }
 
-    private AuditableRestAction<Void> deleteMessage(@NotNull MessageReceivedEvent event) {
-        return event.getMessage().delete();
+    private void deleteMessageAndDmUser(@NotNull MessageReceivedEvent event) {
+        event.getMessage().delete().flatMap(any -> dmUser(event)).queue();
     }
 
     private RestAction<Message> dmUser(@NotNull MessageReceivedEvent event) {
-        return dmUser(event.getMessage(), event.getAuthor().getIdLong(), event.getJDA());
-    }
-
-    private RestAction<Message> dmUser(Message originalMessage, long userId, @NotNull JDA jda) {
-        Message dmMessage = createDmMessage(originalMessage);
-        return jda.openPrivateChannelById(userId)
+        Message dmMessage = createDmMessage(event.getMessage());
+        return event.getJDA()
+            .openPrivateChannelById(event.getAuthor().getIdLong())
             .flatMap(channel -> channel.sendMessage(dmMessage));
     }
 
