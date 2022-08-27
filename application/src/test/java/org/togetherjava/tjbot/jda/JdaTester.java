@@ -33,12 +33,14 @@ import org.mockito.stubbing.Answer;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
+import javax.annotation.Nonnull;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -81,23 +83,18 @@ public final class JdaTester {
     private static final long PRIVATE_CHANNEL_ID = 1;
     private static final long GUILD_ID = 1;
     private static final long TEXT_CHANNEL_ID = 1;
-    private static final long MESSAGE_RESPONSE_NUMBER = 1;
-    private static final int ATTACHMENT_ID = 1;
-    private static final int ATTACHMENT_SIZE = 5;
-    private static final int ATTACHMENT_HEIGHT = 10;
-    private static final int ATTACHMENT_WIDTH = 10;
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
     private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
-    private final RestAction restActionMessage;
     private final MessageActionImpl messageAction;
     private final WebhookMessageUpdateActionImpl webhookMessageUpdateAction;
     private final TextChannelImpl textChannel;
     private final PrivateChannelImpl privateChannel;
     private final InteractionHook interactionHook;
     private final ReplyCallbackAction replyCallbackAction;
+    private final AtomicLong responseNumber = new AtomicLong(0);
 
     /**
      * Creates a new instance. The instance uses a fresh and isolated mocked JDA setup.
@@ -161,10 +158,7 @@ public final class JdaTester {
             .thenReturn(replyAction);
         doNothing().when(replyAction).queue();
 
-        auditableRestAction = (AuditableRestActionImpl<Void>) mock(AuditableRestActionImpl.class);
-        doNothing().when(auditableRestAction).queue();
-
-        restActionMessage = mock(RestAction.class);
+        auditableRestAction = createSucceededActionMock(null, AuditableRestActionImpl.class);
 
         doNothing().when(webhookMessageUpdateAction).queue();
         doReturn(webhookMessageUpdateAction).when(webhookMessageUpdateAction)
@@ -174,7 +168,7 @@ public final class JdaTester {
         doReturn(selfMember).when(guild).getMember(selfUser);
         doReturn(member).when(guild).getMember(not(eq(selfUser)));
 
-        RestAction<User> userAction = createSucceededActionMock(member.getUser());
+        RestAction<User> userAction = createSucceededActionMock(member.getUser(), RestAction.class);
         when(jda.retrieveUserById(anyLong())).thenReturn(userAction);
 
         doReturn(null).when(textChannel).retrieveMessageById(any());
@@ -192,11 +186,14 @@ public final class JdaTester {
         doNothing().when(messageAction).queue();
         when(messageAction.content(any())).thenReturn(messageAction);
 
-        RestAction<PrivateChannel> privateChannelAction = createSucceededActionMock(privateChannel);
+        RestAction<PrivateChannel> privateChannelAction =
+                createSucceededActionMock(privateChannel, RestAction.class);
         when(jda.openPrivateChannelById(anyLong())).thenReturn(privateChannelAction);
         when(jda.openPrivateChannelById(anyString())).thenReturn(privateChannelAction);
+        doReturn(privateChannelAction).when(user).openPrivateChannel();
         doReturn(null).when(privateChannel).retrieveMessageById(any());
         doReturn(messageAction).when(privateChannel).sendMessage(anyString());
+        doReturn(messageAction).when(privateChannel).sendMessage(any(Message.class));
         doReturn(messageAction).when(privateChannel).sendMessageEmbeds(any(), any());
         doReturn(messageAction).when(privateChannel).sendMessageEmbeds(any());
     }
@@ -383,19 +380,22 @@ public final class JdaTester {
      *     var jdaTester = new JdaTester();
      *
      *     var message = new MessageBuilder("Hello World!").build();
-     *     var action = jdaTester.createSucceededActionMock(message);
+     *     var action = jdaTester.createSucceededActionMock(message, RestAction.class);
      *
      *     doReturn(action).when(jdaTester.getTextChannelSpy()).retrieveMessageById("1");
      * }
      * </pre>
      *
      * @param t the object to consume on success
+     * @param restActionType class token of the type of the Rest Action to return
      * @param <T> the type of the object to consume
+     * @param <R> the specific type of the Rest Action to return
      * @return the mocked action
      */
     @SuppressWarnings("unchecked")
-    public <T> @NotNull RestAction<T> createSucceededActionMock(@Nullable T t) {
-        RestAction<T> action = (RestAction<T>) mock(RestAction.class);
+    public <T, R extends RestAction<T>> @NotNull R createSucceededActionMock(@Nullable T t,
+            Class<R> restActionType) {
+        R action = mock(restActionType);
 
         Answer<Void> successExecution = invocation -> {
             Consumer<? super T> successConsumer = invocation.getArgument(0);
@@ -405,7 +405,7 @@ public final class JdaTester {
         Answer<RestAction<?>> mapExecution = invocation -> {
             Function<? super T, ?> mapFunction = invocation.getArgument(0);
             Object result = mapFunction.apply(t);
-            return createSucceededActionMock(result);
+            return createSucceededActionMock(result, RestAction.class);
         };
         Answer<RestAction<?>> flatMapExecution = invocation -> {
             Function<? super T, RestAction<?>> flatMapFunction = invocation.getArgument(0);
@@ -426,6 +426,20 @@ public final class JdaTester {
     }
 
     /**
+     * Variant of {@link #createSucceededActionMock(Object, Class)} returning a plain
+     * {@link RestAction}.
+     *
+     * @param t the object to consume on success
+     * @param <T> the type of the object to consume
+     * @return the mocked action
+     * @see #createSucceededActionMock(Object, Class)
+     */
+    @SuppressWarnings("unchecked")
+    public <T> @NotNull RestAction<T> createSucceededActionMock(@Nullable T t) {
+        return createSucceededActionMock(t, RestAction.class);
+    }
+
+    /**
      * Creates a mocked action that always fails and consumes the given failure reason.
      * <p>
      * Such an action is useful for testing things involving calls like
@@ -437,19 +451,22 @@ public final class JdaTester {
      *     var jdaTester = new JdaTester();
      *
      *     var reason = new FooException();
-     *     var action = jdaTester.createFailedActionMock(reason);
+     *     var action = jdaTester.createFailedActionMock(reason, RestAction.class);
      *
      *     doReturn(action).when(jdaTester.getTextChannelSpy()).retrieveMessageById("1");
      * }
      * </pre>
      *
      * @param failureReason the reason to consume on failure
+     * @param restActionType class token of the type of the Rest Action to return
      * @param <T> the type of the object the action would contain if it would succeed
+     * @param <R> the specific type of the Rest Action to return
      * @return the mocked action
      */
     @SuppressWarnings("unchecked")
-    public <T> @NotNull RestAction<T> createFailedActionMock(@NotNull Throwable failureReason) {
-        RestAction<T> action = (RestAction<T>) mock(RestAction.class);
+    public <T, R extends RestAction<T>> @NotNull R createFailedActionMock(
+            @NotNull Throwable failureReason, Class<R> restActionType) {
+        R action = mock(restActionType);
 
         Answer<Void> failureExecution = invocation -> {
             Consumer<? super Throwable> failureConsumer = invocation.getArgument(1);
@@ -460,12 +477,13 @@ public final class JdaTester {
         Answer<RestAction<?>> errorMapExecution = invocation -> {
             Function<? super Throwable, ?> mapFunction = invocation.getArgument(0);
             Object result = mapFunction.apply(failureReason);
-            return createSucceededActionMock(result);
+            return createSucceededActionMock(result, RestAction.class);
         };
 
-        Answer<RestAction<?>> mapExecution = invocation -> createFailedActionMock(failureReason);
+        Answer<RestAction<?>> mapExecution =
+                invocation -> createFailedActionMock(failureReason, RestAction.class);
         Answer<RestAction<?>> flatMapExecution =
-                invocation -> createFailedActionMock(failureReason);
+                invocation -> createFailedActionMock(failureReason, RestAction.class);
 
         doNothing().when(action).queue();
         doNothing().when(action).queue(any());
@@ -479,6 +497,20 @@ public final class JdaTester {
         doAnswer(flatMapExecution).when(action).flatMap(any());
 
         return action;
+    }
+
+    /**
+     * Variant of {@link #createFailedActionMock(Throwable, Class)} returning a plain
+     * {@link RestAction}.
+     *
+     * @param failureReason the reason to consume on failure
+     * @param <T> the type of the object the action would contain if it would succeed
+     * @return the mocked action
+     * @see #createFailedActionMock(Throwable, Class)
+     */
+    @SuppressWarnings("unchecked")
+    public <T> @NotNull RestAction<T> createFailedActionMock(@NotNull Throwable failureReason) {
+        return createFailedActionMock(failureReason, RestAction.class);
     }
 
     /**
@@ -496,72 +528,21 @@ public final class JdaTester {
     }
 
     /**
-     * Creates a MessageReceivedEvent.
-     * <p>
-     * Creates the event of receiving the given message send by the given author.
+     * Creates a Mockito mocked message receive event, which can be used for
+     * {@link org.togetherjava.tjbot.commands.MessageReceiver#onMessageReceived(MessageReceivedEvent)}.
      *
-     * @param message the message to receive
-     * @param user the author who send the message
-     * @return the event of receiving the message
+     * @param message the message that has been received
+     * @param attachments attachments of the message, empty if none
+     * @return the event of receiving the given message
      */
-    public MessageReceivedEvent createMessageReceivedEvent(@NotNull Message message,
-            @NotNull User user) {
-        doReturn(user).when(message).getAuthor();
-        return new MessageReceivedEvent(jda, MESSAGE_RESPONSE_NUMBER, message);
-    }
+    @Nonnull
+    public MessageReceivedEvent createMessageReceiveEvent(Message message,
+            List<Message.Attachment> attachments) {
+        Message spyMessage = spy(message);
+        mockMessage(spyMessage);
+        doReturn(attachments).when(spyMessage).getAttachments();
 
-    /**
-     * Creates a message spy
-     *
-     * @return the created spy
-     */
-    public @NotNull Message createMessageSpy() {
-        return spy(Message.class);
-    }
-
-    /**
-     * Creates an attachment.
-     *
-     * @param url url of the attachment
-     * @param fileName fileName of the attachment
-     * @param contentType contentType of the attachment
-     * @param description description of the attachment
-     * @return the created attachment
-     */
-    public Message.Attachment createAttachment(String url, String fileName, String contentType,
-            String description) {
-        return new Message.Attachment(ATTACHMENT_ID, url, "proxy" + url, fileName, contentType,
-                description, ATTACHMENT_SIZE, ATTACHMENT_HEIGHT, ATTACHMENT_WIDTH, false, jda);
-    }
-
-    /**
-     * Mocks the attachments from the given message.
-     *
-     * @param message the message with the mocked attachments
-     * @param attachments the attachments which the mock should return
-     */
-    public void mockMessageAttachments(Message message, List<Message.Attachment> attachments) {
-        when(message.getAttachments()).thenReturn(attachments);
-    }
-
-    /**
-     * Mocks the embeds from the given message.
-     *
-     * @param message the message with the mocked embeds
-     * @param embeds the embeds which the mock should return
-     */
-    public void mockMessageEmbeds(Message message, List<MessageEmbed> embeds) {
-        when(message.getEmbeds()).thenReturn(embeds);
-    }
-
-    /**
-     * Mocks delete and flatMap methods from the given message
-     *
-     * @param message the input message
-     */
-    public void mockMessageDelete(Message message) {
-        doReturn(auditableRestAction).when(message).delete();
-        when(auditableRestAction.flatMap(any())).thenReturn(restActionMessage);
+        return new MessageReceivedEvent(jda, responseNumber.getAndIncrement(), spyMessage);
     }
 
     private void mockInteraction(@NotNull IReplyCallback interaction) {
@@ -601,5 +582,12 @@ public final class JdaTester {
 
         doReturn(member).when(message).getMember();
         doReturn(member.getUser()).when(message).getAuthor();
+
+        doReturn(textChannel).when(message).getChannel();
+        doReturn(1L).when(message).getIdLong();
+        doReturn(false).when(message).isWebhookMessage();
+
+        doReturn(message.getContentRaw()).when(message).getContentDisplay();
+        doReturn(message.getContentRaw()).when(message).getContentStripped();
     }
 }

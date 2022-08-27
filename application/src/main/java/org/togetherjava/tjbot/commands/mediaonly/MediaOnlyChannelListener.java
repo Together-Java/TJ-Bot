@@ -1,25 +1,24 @@
 package org.togetherjava.tjbot.commands.mediaonly;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
-import java.awt.*;
+import javax.annotation.Nonnull;
+import java.awt.Color;
 import java.util.regex.Pattern;
 
 /**
  * Listener that receives all sent messages from the Media Only Channels, checks if the message has
- * media attched.
+ * media attached.
  * <p>
- * If there was no media attached, delete the messagen and send the User a DM, telling what they did
+ * If there was no media attached, delete the message and send the user a DM, telling what they did
  * wrong.
  */
 public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
@@ -29,16 +28,17 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
      *
      * @param config to find MediaOnly channels
      */
-    public MediaOnlyChannelListener(@NotNull Config config) {
+    public MediaOnlyChannelListener(Config config) {
         super(Pattern.compile(config.getMediaOnlyChannelPattern()));
     }
 
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
+
         if (messageHasNoMediaAttached(event)) {
             deleteMessage(event).flatMap(any -> dmUser(event)).queue();
         }
@@ -49,25 +49,31 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty();
     }
 
-    private AuditableRestAction<Void> deleteMessage(@NotNull MessageReceivedEvent event) {
+    @Nonnull
+    private AuditableRestAction<Void> deleteMessage(MessageReceivedEvent event) {
         return event.getMessage().delete();
     }
 
-    private RestAction<Message> dmUser(@NotNull MessageReceivedEvent event) {
-        return dmUser(event.getMessage(), event.getAuthor().getIdLong(), event.getJDA());
+    @Nonnull
+    private RestAction<Message> dmUser(MessageReceivedEvent event) {
+        return dmUser(event.getMessage());
     }
 
-    private RestAction<Message> dmUser(Message originalMessage, long userId, @NotNull JDA jda) {
+    @Nonnull
+    private RestAction<Message> dmUser(Message originalMessage) {
         String originalMessageContent = originalMessage.getContentDisplay();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
                     .setColor(Color.ORANGE)
                     .build();
+
         Message dmMessage = new MessageBuilder(
                 "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
                     .setEmbeds(originalMessageEmbed)
                     .build();
-        return jda.openPrivateChannelById(userId)
+
+        return originalMessage.getAuthor()
+            .openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(dmMessage));
     }
 }
