@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
-import org.jooq.tools.StringUtils;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
@@ -42,37 +41,37 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
             return;
         }
         if (doesMessageContainBlacklistedContent(event.getMessage())) {
-            handleBadMessage(event);
-            warnMods(event);
+            handleBadMessage(event.getMessage());
+            warnMods(event.getMessage());
         }
     }
 
-    private void handleBadMessage(@NotNull MessageReceivedEvent event) {
-        event.getMessage().delete().flatMap(any -> dmUser(event)).queue();
+    private void handleBadMessage(@NotNull Message message) {
+        message.delete().flatMap(any -> dmUser(message)).queue();
     }
 
-    private RestAction<Message> dmUser(@NotNull MessageReceivedEvent event) {
-        Message dmMessage = createDmMessage(event.getMessage());
-        return event.getJDA()
-            .openPrivateChannelById(event.getAuthor().getIdLong())
+    private RestAction<Message> dmUser(@NotNull Message message) {
+        Message dmMessage = createDmMessage(message);
+        return message.getJDA()
+            .openPrivateChannelById(message.getAuthor().getIdLong())
             .flatMap(channel -> channel.sendMessage(dmMessage));
     }
 
     private Message createDmMessage(Message originalMessage) {
         String originalMessageContent = originalMessage.getContentDisplay();
-        String blacklistedAttachments = getBlacklistedAttachmentsFromMessage(originalMessage);
+        String blacklistedAttachments =
+                String.join(", ", getBlacklistedAttachmentsFromMessage(originalMessage));
         String dmMessageContent =
                 "Hey there, you posted a message with a blacklisted file attachment: %s. Following file extension are blacklisted: %s ."
                     .formatted(blacklistedAttachments, blacklistedFileExtensions);
         // No embedded needed if there was no message from the user
-        if (StringUtils.isEmpty(originalMessageContent)) {
+        if (originalMessageContent.isEmpty()) {
             return new MessageBuilder(dmMessageContent).build();
         }
-        return createMessageWithOriginalMessageAsEmbedded(originalMessageContent, dmMessageContent);
+        return createBaseResponse(originalMessageContent, dmMessageContent);
     }
 
-    private Message createMessageWithOriginalMessageAsEmbedded(String originalMessageContent,
-            String dmMessageContent) {
+    private Message createBaseResponse(String originalMessageContent, String dmMessageContent) {
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
                     .setColor(Color.ORANGE)
@@ -80,13 +79,12 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         return new MessageBuilder(dmMessageContent).setEmbeds(originalMessageEmbed).build();
     }
 
-    private String getBlacklistedAttachmentsFromMessage(Message originalMessage) {
-        List<String> blacklistedAttachments = originalMessage.getAttachments()
+    private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
+        return originalMessage.getAttachments()
             .stream()
             .filter(attachment -> blacklistedFileExtensions.contains(attachment.getFileExtension()))
             .map(Message.Attachment::getFileName)
             .toList();
-        return String.join(", ", blacklistedAttachments);
     }
 
     private boolean doesMessageContainBlacklistedContent(Message message) {
@@ -96,14 +94,13 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
                 .contains(attachment.getFileExtension()));
     }
 
-    private void warnMods(@NotNull MessageReceivedEvent event) {
-        Message sentUserMessage = event.getMessage();
+    private void warnMods(@NotNull Message sentUserMessage) {
         String blacklistedAttachmentsFromMessage =
-                getBlacklistedAttachmentsFromMessage(sentUserMessage);
+                String.join(", ", getBlacklistedAttachmentsFromMessage(sentUserMessage));
         modAuditLogWriter.write(
-                "Message with blacklisted attachment detected: %s"
+                "Message with blacklisted content detected: %s"
                     .formatted(blacklistedAttachmentsFromMessage),
-                "Sent Message: %s".formatted(sentUserMessage), event.getAuthor(),
-                sentUserMessage.getTimeCreated(), event.getGuild());
+                "Sent Message: %s".formatted(sentUserMessage), sentUserMessage.getAuthor(),
+                sentUserMessage.getTimeCreated(), sentUserMessage.getGuild());
     }
 }
