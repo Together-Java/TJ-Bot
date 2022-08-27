@@ -196,6 +196,9 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the bot and the author have enough permission
      */
+    // Sonar complains about having too many parameters. Not incorrect, but not easy to work around
+    // for now
+    @SuppressWarnings({"MethodWithTooManyParameters", "squid:S107"})
     static boolean handleRoleChangeChecks(@Nullable Role role, String actionVerb,
             @Nullable Member target, Member bot, Member author, Guild guild, CharSequence reason,
             IReplyCallback event) {
@@ -241,7 +244,7 @@ public class ModerationUtils {
      * @return Whether the author has the required permission
      */
     static boolean handleHasAuthorPermissions(String actionVerb, Permission permission,
-            IPermissionHolder author, Guild guild, IReplyCallback event) {
+            IPermissionHolder author, IReplyCallback event) {
         if (!author.hasPermission(permission)) {
             event
                 .reply("You can not %s users in this guild since you do not have the %s permission."

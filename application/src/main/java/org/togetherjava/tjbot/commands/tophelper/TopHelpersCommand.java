@@ -89,7 +89,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     @Nonnull
-    private static Month computeMonth(OptionMapping atMonthData) {
+    private static Month computeMonth(@Nullable OptionMapping atMonthData) {
         if (atMonthData != null) {
             return Month.valueOf(atMonthData.getAsString());
         }

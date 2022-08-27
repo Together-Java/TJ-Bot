@@ -87,7 +87,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
             return false;
         }
         if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.BAN_MEMBERS, author,
-                guild, event)) {
+                event)) {
             return false;
         }
 
