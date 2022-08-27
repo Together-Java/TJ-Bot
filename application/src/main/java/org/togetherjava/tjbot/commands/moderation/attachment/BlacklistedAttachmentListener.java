@@ -13,6 +13,7 @@ import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -82,7 +83,8 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
         return originalMessage.getAttachments()
             .stream()
-            .filter(attachment -> blacklistedFileExtensions.contains(attachment.getFileExtension()))
+            .filter(attachment -> blacklistedFileExtensions
+                .contains(Objects.requireNonNull(attachment.getFileExtension()).toLowerCase()))
             .map(Message.Attachment::getFileName)
             .toList();
     }
@@ -91,7 +93,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         List<Message.Attachment> attachments = message.getAttachments();
         return attachments.stream()
             .anyMatch(attachment -> blacklistedFileExtensions
-                .contains(attachment.getFileExtension()));
+                .contains(Objects.requireNonNull(attachment.getFileExtension()).toLowerCase()));
     }
 
     private void warnMods(@NotNull Message sentUserMessage) {
