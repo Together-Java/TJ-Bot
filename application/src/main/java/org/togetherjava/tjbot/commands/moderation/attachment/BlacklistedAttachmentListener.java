@@ -13,6 +13,7 @@ import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -63,8 +64,13 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         String blacklistedAttachments =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(originalMessage));
         String dmMessageContent =
-                "Hey there, you posted a message with a blacklisted file attachment: %s. Following file extension are blacklisted: %s ."
-                    .formatted(blacklistedAttachments, blacklistedFileExtensions);
+                """
+                        Hey there, you posted a message containing a blacklisted file attachment: %s.
+                        We had to delete your message for security reasons.
+
+                        Feel free to repost your message without, or with a different file instead. Sorry for any inconvenience caused by this 🙇️
+                        """
+                    .formatted(blacklistedAttachments);
         // No embedded needed if there was no message from the user
         if (originalMessageContent.isEmpty()) {
             return new MessageBuilder(dmMessageContent).build();
@@ -83,8 +89,8 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
         return originalMessage.getAttachments()
             .stream()
-            .filter(attachment -> blacklistedFileExtensions
-                .contains(Objects.requireNonNull(attachment.getFileExtension()).toLowerCase()))
+            .filter(attachment -> blacklistedFileExtensions.contains(
+                    Objects.requireNonNull(attachment.getFileExtension()).toLowerCase(Locale.US)))
             .map(Message.Attachment::getFileName)
             .toList();
     }
@@ -92,8 +98,8 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private boolean doesMessageContainBlacklistedContent(Message message) {
         List<Message.Attachment> attachments = message.getAttachments();
         return attachments.stream()
-            .anyMatch(attachment -> blacklistedFileExtensions
-                .contains(Objects.requireNonNull(attachment.getFileExtension()).toLowerCase()));
+            .anyMatch(attachment -> blacklistedFileExtensions.contains(
+                    Objects.requireNonNull(attachment.getFileExtension()).toLowerCase(Locale.US)));
     }
 
 
