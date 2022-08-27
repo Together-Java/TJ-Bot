@@ -223,9 +223,9 @@ public final class Config {
     }
 
     /**
-     * Gets a list of all blacklistedFileExtensions.
+     * Gets a list of all blacklisted file extensions.
      *
-     * @return a list of all blacklistedFileExtensions
+     * @return a list of all blacklisted file extensions
      */
     public @NotNull List<String> getBlacklistedFileExtensions() {
         return Collections.unmodifiableList(blacklistedFileExtension);

@@ -13,20 +13,15 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Listener that receives all sent messages in every channel and checks if the message has any
- * blacklisted file attached.
- * <p>
- * If there was a blacklisted file attached, delete the message and send the user a dm, telling what
- * they did wrong and also inform the mods.
+ * Reacts to blacklisted attachmenents being posted, upon which they are deleted.
  */
-public class AttachmentListener extends MessageReceiverAdapter {
-    private final Config config;
+public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private final ModAuditLogWriter modAuditLogWriter;
+    private final List<String> blacklistedFileExtensions;
 
     /**
      * Creates a AttachmentListener to receive all message sent in any channel.
@@ -34,11 +29,11 @@ public class AttachmentListener extends MessageReceiverAdapter {
      * @param config to find the blacklisted media attachments
      * @param modAuditLogWriter to inform the mods about the suspicious attachment
      */
-    public AttachmentListener(@NotNull Config config,
+    public BlacklistedAttachmentListener(@NotNull Config config,
             @NotNull ModAuditLogWriter modAuditLogWriter) {
         super(Pattern.compile(".*"));
-        this.config = config;
         this.modAuditLogWriter = modAuditLogWriter;
+        this.blacklistedFileExtensions = config.getBlacklistedFileExtensions();
     }
 
     @Override
@@ -46,7 +41,7 @@ public class AttachmentListener extends MessageReceiverAdapter {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
-        if (attachmentContainsBlacklistedFileExtension(event.getMessage())) {
+        if (doesMessageContainBlacklistedContent(event.getMessage())) {
             handleBadMessage(event);
             warnMods(event);
         }
@@ -68,7 +63,7 @@ public class AttachmentListener extends MessageReceiverAdapter {
         String blacklistedAttachments = getBlacklistedAttachmentsFromMessage(originalMessage);
         String dmMessageContent =
                 "Hey there, you posted a message with a blacklisted file attachment: %s. Following file extension are blacklisted: %s ."
-                    .formatted(blacklistedAttachments, config.getBlacklistedFileExtensions());
+                    .formatted(blacklistedAttachments, blacklistedFileExtensions);
         // No embedded needed if there was no message from the user
         if (StringUtils.isEmpty(originalMessageContent)) {
             return new MessageBuilder(dmMessageContent).build();
@@ -86,22 +81,18 @@ public class AttachmentListener extends MessageReceiverAdapter {
     }
 
     private String getBlacklistedAttachmentsFromMessage(Message originalMessage) {
-        List<String> blacklistedAttachments = new ArrayList<>();
-        originalMessage.getAttachments()
+        List<String> blacklistedAttachments = originalMessage.getAttachments()
             .stream()
-            .filter(attachment -> config.getBlacklistedFileExtensions()
-                .contains(attachment.getFileExtension()))
-            .forEach(attachment -> blacklistedAttachments.add(attachment.getFileName()));
+            .filter(attachment -> blacklistedFileExtensions.contains(attachment.getFileExtension()))
+            .map(Message.Attachment::getFileName)
+            .toList();
         return String.join(", ", blacklistedAttachments);
     }
 
-    private boolean attachmentContainsBlacklistedFileExtension(Message message) {
+    private boolean doesMessageContainBlacklistedContent(Message message) {
         List<Message.Attachment> attachments = message.getAttachments();
-        if (attachments.isEmpty()) {
-            return false;
-        }
         return attachments.stream()
-            .anyMatch(attachment -> config.getBlacklistedFileExtensions()
+            .anyMatch(attachment -> blacklistedFileExtensions
                 .contains(attachment.getFileExtension()));
     }
 

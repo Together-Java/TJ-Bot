@@ -11,7 +11,7 @@ import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.commands.moderation.*;
-import org.togetherjava.tjbot.commands.moderation.attachment.AttachmentListener;
+import org.togetherjava.tjbot.commands.moderation.attachment.BlacklistedAttachmentListener;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
@@ -85,7 +85,7 @@ public enum Features {
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
         features.add(new ImplicitAskListener(config, helpSystemHelper));
         features.add(new FileSharingMessageListener(config));
-        features.add(new AttachmentListener(config, modAuditLogWriter));
+        features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
