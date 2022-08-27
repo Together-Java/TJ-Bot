@@ -230,5 +230,4 @@ public final class Config {
     public @NotNull List<String> getBlacklistedFileExtensions() {
         return Collections.unmodifiableList(blacklistedFileExtension);
     }
-
 }
