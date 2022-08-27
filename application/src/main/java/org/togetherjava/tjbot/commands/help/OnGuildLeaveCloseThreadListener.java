@@ -23,6 +23,11 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
             LoggerFactory.getLogger(OnGuildLeaveCloseThreadListener.class);
     private final Database database;
 
+    /**
+     * Creates a new instance.
+     *
+     * @param database database to use
+     */
     public OnGuildLeaveCloseThreadListener(@NotNull Database database) {
         this.database = database;
     }
@@ -35,7 +40,7 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
         }
     }
 
-    public Set<Long> getThreadsCreatedByLeaver(long leaverId) {
+    private Set<Long> getThreadsCreatedByLeaver(long leaverId) {
         return new HashSet<>(database
             .readTransaction(context -> context.select(HelpThreads.HELP_THREADS.CHANNEL_ID))
             .from(HelpThreads.HELP_THREADS)
@@ -43,7 +48,7 @@ public class OnGuildLeaveCloseThreadListener extends ListenerAdapter implements 
             .fetch(databaseMapper -> databaseMapper.getValue(HelpThreads.HELP_THREADS.CHANNEL_ID)));
     }
 
-    public void closeThread(long channelId, @NotNull GuildMemberRemoveEvent leaveEvent) {
+    private void closeThread(long channelId, @NotNull GuildMemberRemoveEvent leaveEvent) {
         ThreadChannel threadChannel = leaveEvent.getGuild().getThreadChannelById(channelId);
         if (threadChannel == null) {
             logger.warn(

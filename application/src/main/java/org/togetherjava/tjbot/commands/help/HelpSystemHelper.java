@@ -56,6 +56,7 @@ public final class HelpSystemHelper {
      * Creates a new instance.
      *
      * @param config the config to use
+     * @param database the database to store help thread metadata in
      */
     public HelpSystemHelper(@NotNull Config config, @NotNull Database database) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
@@ -104,7 +105,7 @@ public final class HelpSystemHelper {
         return action.setEmbeds(embeds);
     }
 
-    public void writeHelpThreadToDatabase(Member author, ThreadChannel threadChannel) {
+    void writeHelpThreadToDatabase(Member author, ThreadChannel threadChannel) {
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
                 .setAuthorId(author.getIdLong())
