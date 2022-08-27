@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -214,8 +215,8 @@ public final class HelpSystemHelper {
     }
 
     @NotNull
-    Optional<TextChannel> handleRequireOverviewChannelForAsk(@NotNull Guild guild,
-            @NotNull MessageChannel respondTo) {
+    Optional<TextChannel> handleRequireOverviewChannel(@NotNull Guild guild,
+            @NotNull Consumer<? super String> consumeChannelPatternIfNotFound) {
         Predicate<String> isChannelName = this::isOverviewChannelName;
         String channelPattern = getOverviewChannelPattern();
 
@@ -225,6 +226,16 @@ public final class HelpSystemHelper {
             .findAny();
 
         if (maybeChannel.isEmpty()) {
+            consumeChannelPatternIfNotFound.accept(channelPattern);
+        }
+
+        return maybeChannel;
+    }
+
+    @NotNull
+    Optional<TextChannel> handleRequireOverviewChannelForAsk(@NotNull Guild guild,
+            @NotNull MessageChannel respondTo) {
+        return handleRequireOverviewChannel(guild, channelPattern -> {
             logger.warn(
                     "Attempted to create a help thread, did not find the overview channel matching the configured pattern '{}' for guild '{}'",
                     channelPattern, guild.getName());
@@ -232,10 +243,15 @@ public final class HelpSystemHelper {
             respondTo.sendMessage(
                     "Sorry, I was unable to locate the overview channel. The server seems wrongly configured, please contact a moderator.")
                 .queue();
-            return Optional.empty();
-        }
+        });
+    }
 
-        return maybeChannel;
+    @NotNull
+    List<ThreadChannel> getActiveThreadsIn(@NotNull TextChannel channel) {
+        return channel.getThreadChannels()
+            .stream()
+            .filter(Predicate.not(ThreadChannel::isArchived))
+            .toList();
     }
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,

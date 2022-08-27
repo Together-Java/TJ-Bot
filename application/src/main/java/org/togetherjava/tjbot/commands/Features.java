@@ -83,6 +83,7 @@ public class Features {
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+        features.add(new HelpThreadAutoArchiver(helpSystemHelper));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));

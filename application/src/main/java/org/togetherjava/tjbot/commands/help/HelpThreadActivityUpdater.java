@@ -48,7 +48,10 @@ public final class HelpThreadActivityUpdater implements Routine {
     }
 
     private void updateActivityForGuild(@NotNull Guild guild) {
-        Optional<TextChannel> maybeOverviewChannel = handleRequireOverviewChannel(guild);
+        Optional<TextChannel> maybeOverviewChannel = helper
+            .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
+                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName()));
 
         if (maybeOverviewChannel.isEmpty()) {
             return;
@@ -56,34 +59,11 @@ public final class HelpThreadActivityUpdater implements Routine {
 
         logger.debug("Updating activities of active questions");
 
-        List<ThreadChannel> activeThreads = maybeOverviewChannel.orElseThrow()
-            .getThreadChannels()
-            .stream()
-            .filter(Predicate.not(ThreadChannel::isArchived))
-            .toList();
-
+        List<ThreadChannel> activeThreads =
+                helper.getActiveThreadsIn(maybeOverviewChannel.orElseThrow());
         logger.debug("Found {} active questions", activeThreads.size());
 
         activeThreads.forEach(this::updateActivityForThread);
-    }
-
-    private @NotNull Optional<TextChannel> handleRequireOverviewChannel(@NotNull Guild guild) {
-        Predicate<String> isChannelName = helper::isOverviewChannelName;
-        String channelPattern = helper.getOverviewChannelPattern();
-
-        Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
-
-        if (maybeChannel.isEmpty()) {
-            logger.warn(
-                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
-                    channelPattern, guild.getName());
-            return Optional.empty();
-        }
-
-        return maybeChannel;
     }
 
     private void updateActivityForThread(@NotNull ThreadChannel threadChannel) {
