@@ -477,8 +477,8 @@ public final class JdaTester {
      */
     @SuppressWarnings("unchecked")
     @Nonnull
-    public <T, R extends RestAction<T>> R createFailedActionMock(
-            Throwable failureReason, Class<R> restActionType) {
+    public <T, R extends RestAction<T>> R createFailedActionMock(Throwable failureReason,
+            Class<R> restActionType) {
         R action = mock(restActionType);
 
         Answer<Void> failureExecution = invocation -> {

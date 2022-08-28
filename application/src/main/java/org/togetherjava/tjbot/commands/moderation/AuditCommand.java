@@ -73,8 +73,8 @@ public final class AuditCommand extends SlashCommandAdapter {
                 event.getJDA()).flatMap(event::reply).queue();
     }
 
-    private boolean handleChecks(Member bot, Member author,
-            @Nullable Member target, IReplyCallback event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            IReplyCallback event) {
         // Member doesn't exist if attempting to audit a user who is not part of the guild.
         if (target == null) {
             return true;
@@ -110,8 +110,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     @Nonnull
-    private List<List<ActionRecord>> groupActionsByPages(
-            List<ActionRecord> actions) {
+    private List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
             if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
@@ -129,8 +128,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     @Nonnull
-    private static EmbedBuilder createSummaryEmbed(User user,
-            Collection<ActionRecord> actions) {
+    private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
             .setAuthor(user.getName(), null, user.getAvatarUrl())
             .setDescription(createSummaryMessageDescription(actions))
@@ -165,8 +163,8 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @Nonnull
     private RestAction<EmbedBuilder> attachEmbedFields(EmbedBuilder auditEmbed,
-            List<? extends List<ActionRecord>> groupedActions, int pageNumber,
-            int totalPages, JDA jda) {
+            List<? extends List<ActionRecord>> groupedActions, int pageNumber, int totalPages,
+            JDA jda) {
         if (groupedActions.isEmpty()) {
             return new CompletedRestAction<>(jda, auditEmbed);
         }
@@ -184,8 +182,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     @Nonnull
-    private static RestAction<MessageEmbed.Field> actionToField(
-            ActionRecord action, JDA jda) {
+    private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
         return jda.retrieveUserById(action.authorId())
             .map(author -> author == null ? "(unknown user)" : author.getAsTag())
             .map(authorText -> {
@@ -209,8 +206,8 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     @Nonnull
-    private Message attachPageTurnButtons(EmbedBuilder auditEmbed, int pageNumber,
-            int totalPages, long guildId, long targetId, long callerId) {
+    private Message attachPageTurnButtons(EmbedBuilder auditEmbed, int pageNumber, int totalPages,
+            long guildId, long targetId, long callerId) {
         var messageBuilder = new MessageBuilder(auditEmbed.build());
 
         if (totalPages <= 1) {
