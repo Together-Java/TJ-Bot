@@ -4,11 +4,11 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.utils.TimeUtil;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -31,21 +31,22 @@ public final class HelpThreadAutoArchiver implements Routine {
      *
      * @param helper the helper to use
      */
-    public HelpThreadAutoArchiver(@NotNull HelpSystemHelper helper) {
+    public HelpThreadAutoArchiver(HelpSystemHelper helper) {
         this.helper = helper;
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_MINUTES, TimeUnit.MINUTES);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         jda.getGuildCache().forEach(this::autoArchiveForGuild);
     }
 
-    private void autoArchiveForGuild(@NotNull Guild guild) {
+    private void autoArchiveForGuild(Guild guild) {
         Optional<TextChannel> maybeOverviewChannel = helper
             .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
                     "Unable to auto archive help threads, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
@@ -66,12 +67,12 @@ public final class HelpThreadAutoArchiver implements Routine {
             .forEach(activeThread -> autoArchiveForThread(activeThread, archiveAfterMoment));
     }
 
-    private @NotNull Instant computeArchiveAfterMoment() {
+    @Nonnull
+    private Instant computeArchiveAfterMoment() {
         return Instant.now().minus(ARCHIVE_AFTER_INACTIVITY_OF);
     }
 
-    private void autoArchiveForThread(@NotNull ThreadChannel threadChannel,
-            @NotNull Instant archiveAfterMoment) {
+    private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment) {
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
             logger.debug("Auto archiving help thread {}", threadChannel.getId());
 
@@ -90,8 +91,7 @@ public final class HelpThreadAutoArchiver implements Routine {
         }
     }
 
-    private static boolean shouldBeArchived(MessageChannel channel,
-            @NotNull Instant archiveAfterMoment) {
+    private static boolean shouldBeArchived(MessageChannel channel, Instant archiveAfterMoment) {
         Instant lastActivity =
                 TimeUtil.getTimeCreated(channel.getLatestMessageIdLong()).toInstant();
 

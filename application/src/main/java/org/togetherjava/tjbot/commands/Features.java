@@ -31,6 +31,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 

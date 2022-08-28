@@ -231,7 +231,8 @@ public final class Config {
      *
      * @return the channel name pattern
      */
-    public @NotNull String getMediaOnlyChannelPattern() {
+    @Nonnull
+    public String getMediaOnlyChannelPattern() {
         return mediaOnlyChannelPattern;
     }
 }
