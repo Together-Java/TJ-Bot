@@ -17,7 +17,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Reacts to blacklisted attachmenents being posted, upon which they are deleted.
+ * Reacts to blacklisted attachments being posted, upon which they are deleted.
  */
 public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private final ModAuditLogWriter modAuditLogWriter;
