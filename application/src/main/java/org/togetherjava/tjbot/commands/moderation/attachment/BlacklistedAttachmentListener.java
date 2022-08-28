@@ -43,12 +43,11 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         }
         if (doesMessageContainBlacklistedContent(event.getMessage())) {
             handleBadMessage(event.getMessage());
-            warnMods(event.getMessage());
         }
     }
 
     private void handleBadMessage(@NotNull Message message) {
-        message.delete().flatMap(any -> dmUser(message)).queue();
+        message.delete().flatMap(any -> dmUser(message)).queue(any -> warnMods(message));
     }
 
     private RestAction<Message> dmUser(@NotNull Message message) {
@@ -56,7 +55,6 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         return message.getAuthor()
             .openPrivateChannel()
             .flatMap(privateChannel -> privateChannel.sendMessage(dmMessage));
-
     }
 
     private Message createDmMessage(Message originalMessage) {
