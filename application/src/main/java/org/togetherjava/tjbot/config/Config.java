@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -32,6 +32,8 @@ public final class Config {
     private final HelpSystemConfig helpSystem;
     private final List<String> blacklistedFileExtension;
 
+    private final String mediaOnlyChannelPattern;
+
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
@@ -49,6 +51,7 @@ public final class Config {
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
             @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
+            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern,
             @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension) {
         this.token = token;
         this.gistApiKey = gistApiKey;
@@ -65,6 +68,7 @@ public final class Config {
         this.scamBlocker = scamBlocker;
         this.wolframAlphaAppId = wolframAlphaAppId;
         this.helpSystem = helpSystem;
+        this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
         this.blacklistedFileExtension = blacklistedFileExtension;
     }
 
@@ -182,7 +186,8 @@ public final class Config {
      *
      * @return the suggestion system config
      */
-    public @NotNull SuggestionsConfig getSuggestions() {
+    @Nonnull
+    public SuggestionsConfig getSuggestions() {
         return suggestions;
     }
 
@@ -191,6 +196,7 @@ public final class Config {
      *
      * @return the role name pattern
      */
+    @Nonnull
     public String getQuarantinedRolePattern() {
         return quarantinedRolePattern;
     }
@@ -200,7 +206,8 @@ public final class Config {
      *
      * @return the scam blocker system config
      */
-    public @NotNull ScamBlockerConfig getScamBlocker() {
+    @Nonnull
+    public ScamBlockerConfig getScamBlocker() {
         return scamBlocker;
     }
 
@@ -209,7 +216,8 @@ public final class Config {
      *
      * @return the application ID for the WolframAlpha API
      */
-    public @NotNull String getWolframAlphaAppId() {
+    @Nonnull
+    public String getWolframAlphaAppId() {
         return wolframAlphaAppId;
     }
 
@@ -218,16 +226,27 @@ public final class Config {
      *
      * @return the help system config
      */
-    public @NotNull HelpSystemConfig getHelpSystem() {
+    @Nonnull
+    public HelpSystemConfig getHelpSystem() {
         return helpSystem;
     }
 
     /**
-     * Gets a list of all blacklisted file extensions.
+
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain only Media.
+     *
+     * @return the channel name pattern
+     */
+     
+    @Nonnull
+    public String getMediaOnlyChannelPattern() {
+        return mediaOnlyChannelPattern;
+    }
+    
+    * Gets a list of all blacklisted file extensions.
      *
      * @return a list of all blacklisted file extensions
      */
     public @NotNull List<String> getBlacklistedFileExtensions() {
         return Collections.unmodifiableList(blacklistedFileExtension);
-    }
 }

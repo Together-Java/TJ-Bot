@@ -9,20 +9,18 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * This command can mute users. Muting can also be paired with a reason. The command will also try
@@ -41,7 +39,6 @@ public final class MuteCommand extends SlashCommandAdapter {
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of("10 minutes", "30 minutes", "1 hour",
             "3 hours", "1 day", "3 days", "7 days", ModerationUtils.PERMANENT_DURATION);
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -51,7 +48,7 @@ public final class MuteCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      * @param config the config to use for this
      */
-    public MuteCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public MuteCommand(ModerationActionsStore actionsStore, Config config) {
         super(COMMAND_NAME, "Mutes the given user so that they can not send messages anymore",
                 SlashCommandVisibility.GUILD);
 
@@ -64,17 +61,17 @@ public final class MuteCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be muted", true);
 
         this.config = config;
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleAlreadyMutedTarget(@NotNull IReplyCallback event) {
+    private static void handleAlreadyMutedTarget(IReplyCallback event) {
         event.reply("The user is already muted.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            @NotNull Guild guild, @NotNull GenericEvent event) {
+    @Nonnull
+    private static RestAction<Boolean> sendDm(ISnowflake target,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
+            GenericEvent event) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         String dmMessage =
@@ -92,9 +89,9 @@ public final class MuteCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
-            @NotNull Member author, @Nullable ModerationUtils.TemporaryData temporaryData,
-            @NotNull String reason) {
+    @Nonnull
+    private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The mute duration is: "
                 + (temporaryData == null ? "permanent" : temporaryData.duration());
         String dmNoticeText = "";
@@ -105,9 +102,9 @@ public final class MuteCommand extends SlashCommandAdapter {
                 target.getUser(), durationText + dmNoticeText, reason);
     }
 
-    private AuditableRestAction<Void> muteUser(@NotNull Member target, @NotNull Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            @NotNull Guild guild) {
+    @Nonnull
+    private AuditableRestAction<Void> muteUser(Member target, Member author,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         logger.info("'{}' ({}) muted the user '{}' ({}) {} in guild '{}' for reason '{}'.",
@@ -123,10 +120,9 @@ public final class MuteCommand extends SlashCommandAdapter {
             .reason(reason);
     }
 
-    @SuppressWarnings("MethodWithTooManyParameters")
-    private void muteUserFlow(@NotNull Member target, @NotNull Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, @NotNull String reason,
-            @NotNull Guild guild, @NotNull SlashCommandInteractionEvent event) {
+    private void muteUserFlow(Member target, Member author,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
+            SlashCommandInteractionEvent event) {
         sendDm(target, temporaryData, reason, guild, event)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(result -> hasSentDm))
@@ -135,13 +131,11 @@ public final class MuteCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            CharSequence reason, Guild guild, IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getMutedRole(guild, config).orElse(null), ACTION_VERB, target, bot,
-                author, guild, hasRequiredRole, reason, event)) {
+                author, guild, reason, event)) {
             return false;
         }
         if (Objects.requireNonNull(target)
@@ -156,7 +150,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

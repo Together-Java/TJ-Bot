@@ -7,13 +7,13 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
 
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -46,7 +46,7 @@ public final class BotMessageCleanup implements Routine {
      *
      * @param config the config to use
      */
-    public BotMessageCleanup(@NotNull Config config) {
+    public BotMessageCleanup(Config config) {
         this.config = config.getHelpSystem();
 
         isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
@@ -54,16 +54,17 @@ public final class BotMessageCleanup implements Routine {
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 1, 1, TimeUnit.MINUTES);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         jda.getGuildCache().forEach(this::cleanupBotMessagesForGuild);
     }
 
-    private void cleanupBotMessagesForGuild(@NotNull Guild guild) {
+    private void cleanupBotMessagesForGuild(Guild guild) {
         Optional<TextChannel> maybeStagingChannel = handleRequireStagingChannel(guild);
 
         if (maybeStagingChannel.isEmpty()) {
@@ -78,7 +79,8 @@ public final class BotMessageCleanup implements Routine {
             .queue();
     }
 
-    private @NotNull Optional<TextChannel> handleRequireStagingChannel(@NotNull Guild guild) {
+    @Nonnull
+    private Optional<TextChannel> handleRequireStagingChannel(Guild guild) {
         Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
             .stream()
             .filter(channel -> isStagingChannelName.test(channel.getName()))
@@ -94,7 +96,7 @@ public final class BotMessageCleanup implements Routine {
         return maybeChannel;
     }
 
-    private static boolean shouldMessageBeCleanedUp(@NotNull Message message) {
+    private static boolean shouldMessageBeCleanedUp(Message message) {
         if (!message.getAuthor().isBot()) {
             return false;
         }
@@ -106,8 +108,9 @@ public final class BotMessageCleanup implements Routine {
         return deleteWhen.isBefore(Instant.now());
     }
 
-    private static @NotNull RestAction<Void> cleanupBotMessages(
-            @NotNull GuildMessageChannel channel, @NotNull Collection<? extends Message> messages) {
+    @Nonnull
+    private static RestAction<Void> cleanupBotMessages(GuildMessageChannel channel,
+            Collection<? extends Message> messages) {
         logger.debug("Cleaning up old bot messages in the staging channel");
         List<String> messageIdsToDelete = messages.stream()
             .filter(BotMessageCleanup::shouldMessageBeCleanedUp)

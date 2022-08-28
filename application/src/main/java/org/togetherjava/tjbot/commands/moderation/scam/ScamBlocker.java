@@ -12,8 +12,6 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -28,6 +26,8 @@ import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Consumer;
@@ -66,8 +66,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
      * @param scamHistoryStore to store and retrieve scam history from
      * @param config the config to use for this
      */
-    public ScamBlocker(@NotNull ModerationActionsStore actionsStore,
-            @NotNull ScamHistoryStore scamHistoryStore, @NotNull Config config) {
+    public ScamBlocker(ModerationActionsStore actionsStore, ScamHistoryStore scamHistoryStore,
+            Config config) {
         super(Pattern.compile(".*"));
 
         this.actionsStore = actionsStore;
@@ -84,23 +84,23 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public @NotNull String getName() {
+    @Nonnull
+    public String getName() {
         return "scam-blocker";
     }
 
     @Override
-    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
-            @NotNull List<String> args) {
+    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
 
     @Override
-    public void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator) {
+    public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
         componentIdGenerator = generator;
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
@@ -123,7 +123,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         takeAction(event);
     }
 
-    private void takeActionWasAlreadyReported(@NotNull MessageReceivedEvent event) {
+    private void takeActionWasAlreadyReported(MessageReceivedEvent event) {
         // The user recently send the same scam already, and that was already reported and handled
         addScamToHistory(event);
 
@@ -133,7 +133,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
     }
 
-    private void takeAction(@NotNull MessageReceivedEvent event) {
+    private void takeAction(MessageReceivedEvent event) {
         switch (mode) {
             case OFF -> throw new AssertionError(
                     "The OFF-mode should be detected earlier already to prevent expensive computation");
@@ -146,25 +146,25 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
     }
 
-    private void takeActionLogOnly(@NotNull MessageReceivedEvent event) {
+    private void takeActionLogOnly(MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
     }
 
-    private void takeActionApproveFirst(@NotNull MessageReceivedEvent event) {
+    private void takeActionApproveFirst(MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
         reportScamMessage(event, "Is this scam?", createConfirmDialog(event));
     }
 
-    private void takeActionAutoDeleteButApproveQuarantine(@NotNull MessageReceivedEvent event) {
+    private void takeActionAutoDeleteButApproveQuarantine(MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
         deleteMessage(event);
         reportScamMessage(event, "Is this scam? (already deleted)", createConfirmDialog(event));
     }
 
-    private void takeActionAutoDeleteAndQuarantine(@NotNull MessageReceivedEvent event) {
+    private void takeActionAutoDeleteAndQuarantine(MessageReceivedEvent event) {
         addScamToHistory(event);
         logScamMessage(event);
         deleteMessage(event);
@@ -173,26 +173,25 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         reportScamMessage(event, "Detected and handled scam", null);
     }
 
-    private void addScamToHistory(@NotNull MessageReceivedEvent event) {
+    private void addScamToHistory(MessageReceivedEvent event) {
         scamHistoryStore.addScam(event.getMessage(), MODES_WITH_IMMEDIATE_DELETION.contains(mode));
     }
 
-    private void logScamMessage(@NotNull MessageReceivedEvent event) {
+    private void logScamMessage(MessageReceivedEvent event) {
         logger.warn("Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
                 event.getMessageId(), event.getAuthor().getId(), event.getChannel().getId(),
                 event.getGuild().getId());
     }
 
-    private void deleteMessage(@NotNull MessageReceivedEvent event) {
+    private void deleteMessage(MessageReceivedEvent event) {
         event.getMessage().delete().queue();
     }
 
-    private void quarantineAuthor(@NotNull MessageReceivedEvent event) {
+    private void quarantineAuthor(MessageReceivedEvent event) {
         quarantineAuthor(event.getGuild(), event.getMember(), event.getJDA().getSelfUser());
     }
 
-    private void quarantineAuthor(@NotNull Guild guild, @NotNull Member author,
-            @NotNull SelfUser bot) {
+    private void quarantineAuthor(Guild guild, Member author, SelfUser bot) {
         String reason = "User posted scam that was automatically detected";
 
         actionsStore.addAction(guild.getIdLong(), bot.getIdLong(), author.getIdLong(),
@@ -205,7 +204,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue();
     }
 
-    private void reportScamMessage(@NotNull MessageReceivedEvent event, @NotNull String reportTitle,
+    private void reportScamMessage(MessageReceivedEvent event, String reportTitle,
             @Nullable ActionRow confirmDialog) {
         Guild guild = event.getGuild();
         Optional<TextChannel> reportChannel = getReportChannel(guild);
@@ -231,11 +230,11 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
 
-    private void dmUser(@NotNull MessageReceivedEvent event) {
+    private void dmUser(MessageReceivedEvent event) {
         dmUser(event.getGuild(), event.getAuthor().getIdLong(), event.getJDA());
     }
 
-    private void dmUser(@NotNull Guild guild, long userId, @NotNull JDA jda) {
+    private void dmUser(Guild guild, long userId, JDA jda) {
         String dmMessage =
                 """
                         Hey there, we detected that you did send scam in the server %s and therefore put you under quarantine.
@@ -251,11 +250,13 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue();
     }
 
-    private @NotNull Optional<TextChannel> getReportChannel(@NotNull Guild guild) {
+    @Nonnull
+    private Optional<TextChannel> getReportChannel(Guild guild) {
         return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
-    private @NotNull ActionRow createConfirmDialog(@NotNull MessageReceivedEvent event) {
+    @Nonnull
+    private ActionRow createConfirmDialog(MessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
                 event.getAuthor().getIdLong(),
@@ -265,14 +266,14 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 Button.danger(generateComponentId(args), "No"));
     }
 
-    private @NotNull String generateComponentId(@NotNull ComponentIdArguments args) {
+    @Nonnull
+    private String generateComponentId(ComponentIdArguments args) {
         return Objects.requireNonNull(componentIdGenerator)
             .generate(new ComponentId(getName(), args.toList()), Lifespan.REGULAR);
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonInteractionEvent event,
-            @NotNull List<String> argsRaw) {
+    public void onButtonClick(ButtonInteractionEvent event, List<String> argsRaw) {
         ComponentIdArguments args = ComponentIdArguments.fromList(argsRaw);
         if (event.getMember().getRoles().stream().map(Role::getName).noneMatch(hasRequiredRole)) {
             event.reply(
@@ -334,10 +335,11 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
 
-    private record ComponentIdArguments(@NotNull ScamBlockerConfig.Mode mode, long guildId,
-            long channelId, long messageId, long authorId, @NotNull String contentHash) {
+    private record ComponentIdArguments(ScamBlockerConfig.Mode mode, long guildId, long channelId,
+            long messageId, long authorId, String contentHash) {
 
-        static @NotNull ComponentIdArguments fromList(@NotNull List<String> args) {
+        @Nonnull
+        static ComponentIdArguments fromList(List<String> args) {
             ScamBlockerConfig.Mode mode = ScamBlockerConfig.Mode.valueOf(args.get(0));
             long guildId = Long.parseLong(args.get(1));
             long channelId = Long.parseLong(args.get(2));
@@ -348,7 +350,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     contentHash);
         }
 
-        @NotNull
+        @Nonnull
         List<String> toList() {
             return List.of(mode.name(), Long.toString(guildId), Long.toString(channelId),
                     Long.toString(messageId), Long.toString(authorId), contentHash);

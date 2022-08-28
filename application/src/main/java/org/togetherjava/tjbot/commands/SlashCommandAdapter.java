@@ -9,13 +9,13 @@ import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 import org.jetbrains.annotations.Unmodifiable;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +55,7 @@ import java.util.stream.IntStream;
  *         }
  *
  *         &#64;Override
- *         public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+ *         public void onSlashCommand(SlashCommandInteractionEvent event) {
  *             event.reply("Pong!").queue();
  *         }
  *     }
@@ -80,7 +80,7 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      *        {@link SlashCommandData#setDescription(String)}
      * @param visibility the visibility of the command
      */
-    protected SlashCommandAdapter(@NotNull String name, @NotNull String description,
+    protected SlashCommandAdapter(String name, String description,
             SlashCommandVisibility visibility) {
         this.name = name;
         this.description = description;
@@ -90,40 +90,43 @@ public abstract class SlashCommandAdapter implements SlashCommand {
     }
 
     @Override
-    public final @NotNull String getName() {
+    @Nonnull
+    public final String getName() {
         return name;
     }
 
     @Override
-    public final @NotNull String getDescription() {
+    @Nonnull
+    public final String getDescription() {
         return description;
     }
 
     @Override
-    public final @NotNull SlashCommandVisibility getVisibility() {
+    @Nonnull
+    public final SlashCommandVisibility getVisibility() {
         return visibility;
     }
 
     @Override
-    public final @NotNull SlashCommandData getData() {
+    @Nonnull
+    public final SlashCommandData getData() {
         return data;
     }
 
     @Override
-    public final void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator) {
+    public final void acceptComponentIdGenerator(ComponentIdGenerator generator) {
         componentIdGenerator = generator;
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
-            @NotNull List<String> args) {
+    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
@@ -142,7 +145,8 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated component ID
      */
     @SuppressWarnings("OverloadedVarargsMethod")
-    protected final @NotNull String generateComponentId(@NotNull String... args) {
+    @Nonnull
+    protected final String generateComponentId(String... args) {
         return generateComponentId(Lifespan.REGULAR, args);
     }
 
@@ -159,8 +163,8 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated component ID
      */
     @SuppressWarnings({"OverloadedVarargsMethod", "WeakerAccess"})
-    protected final @NotNull String generateComponentId(@NotNull Lifespan lifespan,
-            @NotNull String... args) {
+    @Nonnull
+    protected final String generateComponentId(Lifespan lifespan, String... args) {
         return Objects.requireNonNull(componentIdGenerator)
             .generate(new ComponentId(getName(), Arrays.asList(args)), lifespan);
     }
@@ -190,8 +194,9 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated list of options
      */
     @Unmodifiable
-    protected static @NotNull List<OptionData> generateMultipleOptions(
-            @NotNull OptionData optionData, @Range(from = 1, to = 25) int amount) {
+    @Nonnull
+    protected static List<OptionData> generateMultipleOptions(OptionData optionData,
+            @Range(from = 1, to = 25) int amount) {
         String baseName = optionData.getName();
 
         Function<String, OptionData> nameToOption =
@@ -211,8 +216,9 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return all options with the given prefix
      */
     @Unmodifiable
-    protected static @NotNull List<OptionMapping> getMultipleOptionsByNamePrefix(
-            @NotNull CommandInteractionPayload event, @NotNull String namePrefix) {
+    @Nonnull
+    protected static List<OptionMapping> getMultipleOptionsByNamePrefix(
+            CommandInteractionPayload event, String namePrefix) {
         return event.getOptions()
             .stream()
             .filter(option -> option.getName().startsWith(namePrefix))

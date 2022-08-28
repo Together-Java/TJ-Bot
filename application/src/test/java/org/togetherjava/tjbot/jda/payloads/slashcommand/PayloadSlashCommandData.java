@@ -1,9 +1,9 @@
 package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +17,7 @@ public final class PayloadSlashCommandData {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private PayloadSlashCommandResolved resolved;
 
-    public PayloadSlashCommandData(@NotNull String name, @NotNull String id, int type,
+    public PayloadSlashCommandData(String name, String id, int type,
             @Nullable List<PayloadSlashCommandOption> options,
             @Nullable PayloadSlashCommandResolved resolved) {
         this.name = name;
@@ -27,21 +27,21 @@ public final class PayloadSlashCommandData {
         this.resolved = resolved;
     }
 
-    @NotNull
+    @Nonnull
     public String getName() {
         return name;
     }
 
-    public void setName(@NotNull String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
-    @NotNull
+    @Nonnull
     public String getId() {
         return id;
     }
 
-    public void setId(@NotNull String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -53,7 +53,8 @@ public final class PayloadSlashCommandData {
         this.type = type;
     }
 
-    public @Nullable List<PayloadSlashCommandOption> getOptions() {
+    @Nullable
+    public List<PayloadSlashCommandOption> getOptions() {
         return options == null ? null : Collections.unmodifiableList(options);
     }
 
@@ -61,7 +62,8 @@ public final class PayloadSlashCommandData {
         this.options = options == null ? null : new ArrayList<>(options);
     }
 
-    public @Nullable PayloadSlashCommandResolved getResolved() {
+    @Nullable
+    public PayloadSlashCommandResolved getResolved() {
         return resolved;
     }
 

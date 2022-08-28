@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -16,7 +15,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.*;
@@ -27,10 +25,12 @@ import org.togetherjava.tjbot.commands.componentids.InvalidComponentIdFormatExce
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,9 +56,11 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             Executors.newScheduledThreadPool(5);
     private final Config config;
     private final Map<String, UserInteractor> nameToInteractor;
+    private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
+    private final AtomicBoolean receivedOnReady = new AtomicBoolean(false);
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -69,8 +71,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @param database the database that commands may use to persist data
      * @param config the configuration to use for this system
      */
-    @SuppressWarnings("ThisEscapedInObjectConstruction")
-    public BotCore(@NotNull JDA jda, @NotNull Database database, @NotNull Config config) {
+    public BotCore(JDA jda, Database database, Config config) {
         this.config = config;
         Collection<Feature> features = Features.createFeatures(jda, database, config);
 
@@ -87,31 +88,11 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .map(EventReceiver.class::cast)
             .forEach(jda::addEventListener);
 
-        // Routines
-        features.stream()
+        // Routines (are scheduled once the core is ready)
+        routines = features.stream()
             .filter(Routine.class::isInstance)
             .map(Routine.class::cast)
-            .forEach(routine -> {
-                Runnable command = () -> {
-                    String routineName = routine.getClass().getSimpleName();
-                    try {
-                        logger.debug("Running routine %s...".formatted(routineName));
-                        routine.runRoutine(jda);
-                        logger.debug("Finished routine %s.".formatted(routineName));
-                    } catch (Exception e) {
-                        logger.error("Unknown error in routine {}.", routineName, e);
-                    }
-                };
-
-                Routine.Schedule schedule = routine.createSchedule();
-                switch (schedule.mode()) {
-                    case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
-                            schedule.initialDuration(), schedule.duration(), schedule.unit());
-                    case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
-                            schedule.initialDuration(), schedule.duration(), schedule.unit());
-                    default -> throw new AssertionError("Unsupported schedule mode");
-                }
-            });
+            .toList();
 
         // User Interactors (e.g. slash commands)
         nameToInteractor = features.stream()
@@ -144,7 +125,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public @NotNull Collection<SlashCommand> getSlashCommands() {
+    @Nonnull
+    public Collection<SlashCommand> getSlashCommands() {
         return nameToInteractor.values()
             .stream()
             .filter(SlashCommand.class::isInstance)
@@ -153,26 +135,61 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public @NotNull Optional<SlashCommand> getSlashCommand(@NotNull String name) {
+    @Nonnull
+    public Optional<SlashCommand> getSlashCommand(String name) {
         return Optional.ofNullable(nameToInteractor.get(name))
             .filter(SlashCommand.class::isInstance)
             .map(SlashCommand.class::cast);
     }
 
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
+    /**
+     * Trigger once JDA is ready. Subsequent calls are ignored.
+     * 
+     * @param jda the JDA instance to work with
+     */
+    public void onReady(JDA jda) {
+        if (!receivedOnReady.compareAndSet(false, true)) {
+            // Ensures that we only enter the event once
+            return;
+        }
+
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
-        event.getJDA()
-            .getGuildCache()
+        jda.getGuildCache()
             .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Bot core is now ready");
+
+        scheduleRoutines(jda);
+    }
+
+    private void scheduleRoutines(JDA jda) {
+        routines.forEach(routine -> {
+            Runnable command = () -> {
+                String routineName = routine.getClass().getSimpleName();
+                try {
+                    logger.debug("Running routine %s...".formatted(routineName));
+                    routine.runRoutine(jda);
+                    logger.debug("Finished routine %s.".formatted(routineName));
+                } catch (Exception e) {
+                    logger.error("Unknown error in routine {}.", routineName, e);
+                }
+            };
+
+            Routine.Schedule schedule = routine.createSchedule();
+            switch (schedule.mode()) {
+                case FIXED_RATE -> ROUTINE_SERVICE.scheduleAtFixedRate(command,
+                        schedule.initialDuration(), schedule.duration(), schedule.unit());
+                case FIXED_DELAY -> ROUTINE_SERVICE.scheduleWithFixedDelay(command,
+                        schedule.initialDuration(), schedule.duration(), schedule.unit());
+                default -> throw new AssertionError("Unsupported schedule mode");
+            }
+        });
     }
 
     @Override
-    public void onMessageReceived(@NotNull final MessageReceivedEvent event) {
+    public void onMessageReceived(final MessageReceivedEvent event) {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
                 .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
@@ -180,15 +197,15 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public void onMessageUpdate(@NotNull final MessageUpdateEvent event) {
+    public void onMessageUpdate(final MessageUpdateEvent event) {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
                 .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
         }
     }
 
-    private @NotNull Stream<MessageReceiver> getMessageReceiversSubscribedTo(
-            @NotNull Channel channel) {
+    @Nonnull
+    private Stream<MessageReceiver> getMessageReceiversSubscribedTo(Channel channel) {
         String channelName = channel.getName();
         return channelNameToMessageReceiver.entrySet()
             .stream()
@@ -199,14 +216,14 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", event.getName(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireSlashCommand(event.getName()).onSlashCommand(event));
     }
 
     @Override
-    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+    public void onButtonInteraction(ButtonInteractionEvent event) {
         logger.debug("Received button click '{}' (#{}) on guild '{}'", event.getComponentId(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE
@@ -214,14 +231,14 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public void onSelectMenuInteraction(@NotNull SelectMenuInteractionEvent event) {
+    public void onSelectMenuInteraction(SelectMenuInteractionEvent event) {
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
             .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
     }
 
-    private void registerReloadCommand(@NotNull Guild guild) {
+    private void registerReloadCommand(Guild guild) {
         guild.retrieveCommands().queue(commands -> {
             // Has it been registered already?
             if (commands.stream().map(Command::getName).anyMatch(RELOAD_COMMAND::equals)) {
@@ -241,7 +258,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     /**
      * Forwards the given component event to the associated user interactor.
      * <p>
-     * <p>
      * An example call might look like:
      *
      * <pre>
@@ -255,8 +271,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      *        providing the event and list of arguments for consumption
      * @param <T> the type of the component interaction that should be forwarded
      */
-    private <T extends ComponentInteraction> void forwardComponentCommand(@NotNull T event,
-            @NotNull TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
+    private <T extends ComponentInteraction> void forwardComponentCommand(T event,
+            TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
         Optional<ComponentId> componentIdOpt;
         try {
             componentIdOpt = componentIdParser.parse(event.getComponentId());
@@ -292,7 +308,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @return the command with the given name
      * @throws NullPointerException if the command with the given name was not registered
      */
-    private @NotNull SlashCommand requireSlashCommand(@NotNull String name) {
+    @Nonnull
+    private SlashCommand requireSlashCommand(String name) {
         return getSlashCommand(name).orElseThrow(
                 () -> new NullPointerException("There is no slash command with name " + name));
     }
@@ -304,7 +321,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @return the user interactor with the given name
      * @throws NullPointerException if the user interactor with the given name was not registered
      */
-    private @NotNull UserInteractor requireUserInteractor(@NotNull String name) {
+    @Nonnull
+    private UserInteractor requireUserInteractor(String name) {
         return Objects.requireNonNull(nameToInteractor.get(name));
     }
 

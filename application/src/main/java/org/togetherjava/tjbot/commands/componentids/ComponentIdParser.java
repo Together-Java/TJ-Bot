@@ -1,13 +1,12 @@
 package org.togetherjava.tjbot.commands.componentids;
 
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
-import org.jetbrains.annotations.NotNull;
-
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 /**
@@ -39,6 +38,6 @@ public interface ComponentIdParser {
      * @throws InvalidComponentIdFormatException if the component ID associated to the given UUID
      *         was in an unexpected format and could not be deserialized
      */
-    @NotNull
-    Optional<ComponentId> parse(@NotNull String uuid);
+    @Nonnull
+    Optional<ComponentId> parse(String uuid);
 }

@@ -9,4 +9,7 @@
  * {@link org.togetherjava.tjbot.commands.SlashCommand} or using the adapter
  * {@link org.togetherjava.tjbot.commands.SlashCommandAdapter} for convenience.
  */
+@ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands;
+
+import javax.annotation.ParametersAreNonnullByDefault;

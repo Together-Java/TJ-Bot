@@ -1,12 +1,12 @@
 package org.togetherjava.tjbot.commands.tophelper;
 
 import net.dv8tion.jda.api.JDA;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
@@ -28,17 +28,18 @@ public final class TopHelpersPurgeMessagesRoutine implements Routine {
      *
      * @param database the database that contains the messages to purge
      */
-    public TopHelpersPurgeMessagesRoutine(@NotNull Database database) {
+    public TopHelpersPurgeMessagesRoutine(Database database) {
         this.database = database;
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 4, TimeUnit.HOURS);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         int recordsDeleted =
                 database.writeAndProvide(context -> context.deleteFrom(HELP_CHANNEL_MESSAGES)
                     .where(HELP_CHANNEL_MESSAGES.SENT_AT

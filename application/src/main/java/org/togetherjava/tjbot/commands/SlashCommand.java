@@ -9,11 +9,11 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -49,7 +49,7 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the description of the command
      */
-    @NotNull
+    @Nonnull
     String getDescription();
 
     /**
@@ -59,7 +59,7 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the visibility of the command
      */
-    @NotNull
+    @Nonnull
     SlashCommandVisibility getVisibility();
 
     /**
@@ -77,7 +77,7 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the command data of this command
      */
-    @NotNull
+    @Nonnull
     SlashCommandData getData();
 
     /**
@@ -118,5 +118,5 @@ public interface SlashCommand extends UserInteractor {
      *
      * @param event the event that triggered this
      */
-    void onSlashCommand(@NotNull SlashCommandInteractionEvent event);
+    void onSlashCommand(SlashCommandInteractionEvent event);
 }

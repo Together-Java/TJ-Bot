@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
@@ -26,31 +25,22 @@ public final class CloseCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
 
-    private final HelpSystemHelper helper;
     private final Cache<Long, Instant> helpThreadIdToLastClose;
 
     /**
      * Creates a new instance.
-     *
-     * @param helper the helper to use
      */
-    public CloseCommand(@NotNull HelpSystemHelper helper) {
+    public CloseCommand() {
         super("close", "Close this question thread", SlashCommandVisibility.GUILD);
 
         helpThreadIdToLastClose = Caffeine.newBuilder()
             .maximumSize(1_000)
             .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
             .build();
-
-        this.helper = helper;
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-        if (!helper.handleIsHelpThread(event)) {
-            return;
-        }
-
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         ThreadChannel helpThread = event.getThreadChannel();
         if (helpThread.isArchived()) {
             event.reply("This thread is already closed.").setEphemeral(true).queue();
@@ -75,7 +65,7 @@ public final class CloseCommand extends SlashCommandAdapter {
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
-    private boolean isHelpThreadOnCooldown(@NotNull ThreadChannel helpThread) {
+    private boolean isHelpThreadOnCooldown(ThreadChannel helpThread) {
         return Optional.ofNullable(helpThreadIdToLastClose.getIfPresent(helpThread.getIdLong()))
             .map(lastCategoryChange -> lastCategoryChange.plus(COOLDOWN_DURATION_VALUE,
                     COOLDOWN_DURATION_UNIT))

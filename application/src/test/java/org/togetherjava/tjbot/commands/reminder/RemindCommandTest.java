@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +11,7 @@ import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.jda.JdaTester;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -35,13 +35,15 @@ final class RemindCommandTest {
         rawReminders = new RawReminderTestHelper(database, jdaTester);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerSlashCommand(int timeAmount,
-            @NotNull String timeUnit, @NotNull String content) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerSlashCommand(int timeAmount, String timeUnit,
+            String content) {
         return triggerSlashCommand(timeAmount, timeUnit, content, jdaTester.getMemberSpy());
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerSlashCommand(int timeAmount,
-            @NotNull String timeUnit, @NotNull String content, @NotNull Member author) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerSlashCommand(int timeAmount, String timeUnit,
+            String content, Member author) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setOption(RemindCommand.TIME_AMOUNT_OPTION, timeAmount)
             .setOption(RemindCommand.TIME_UNIT_OPTION, timeUnit)

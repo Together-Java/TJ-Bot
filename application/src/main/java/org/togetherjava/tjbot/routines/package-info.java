@@ -5,4 +5,7 @@
  * Routines are actions that are executed periodically on a schedule. They are added to the system
  * in {@link org.togetherjava.tjbot.commands.Features}.
  */
+@ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.routines;
+
+import javax.annotation.ParametersAreNonnullByDefault;

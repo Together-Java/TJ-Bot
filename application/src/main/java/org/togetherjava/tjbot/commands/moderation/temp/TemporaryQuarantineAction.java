@@ -3,10 +3,11 @@ package org.togetherjava.tjbot.commands.moderation.temp;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
+
+import javax.annotation.Nonnull;
 
 /**
  * Action to revoke temporary quarantines, as applied by
@@ -21,25 +22,27 @@ final class TemporaryQuarantineAction extends RevocableRoleBasedAction {
      *
      * @param config the config to use to identify the quarantined role
      */
-    TemporaryQuarantineAction(@NotNull Config config) {
+    TemporaryQuarantineAction(Config config) {
         super("quarantine");
 
         this.config = config;
     }
 
     @Override
-    public @NotNull ModerationAction getApplyType() {
+    @Nonnull
+    public ModerationAction getApplyType() {
         return ModerationAction.QUARANTINE;
     }
 
     @Override
-    public @NotNull ModerationAction getRevokeType() {
+    @Nonnull
+    public ModerationAction getRevokeType() {
         return ModerationAction.UNQUARANTINE;
     }
 
     @Override
-    public @NotNull RestAction<Void> revokeAction(@NotNull Guild guild, @NotNull User target,
-            @NotNull String reason) {
+    @Nonnull
+    public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild
             .removeRoleFromMember(target.getIdLong(),
                     ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())

@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.moderation.scam;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +39,7 @@ final class ScamDetectorTest {
     @ParameterizedTest
     @MethodSource("provideRealScamMessages")
     @DisplayName("Can detect real scam messages")
-    void detectsRealScam(@NotNull String scamMessage) {
+    void detectsRealScam(String scamMessage) {
         // GIVEN a real scam message
         // WHEN analyzing it
         boolean isScamResult = scamDetector.isScam(scamMessage);
@@ -103,7 +103,8 @@ final class ScamDetectorTest {
         assertFalse(isScamResult);
     }
 
-    private static @NotNull List<String> provideRealScamMessages() {
+    @Nonnull
+    private static List<String> provideRealScamMessages() {
         return List.of("""
                 🤩bro steam gived nitro - https://nitro-ds.online/LfgUfMzqYyx12""",
                 """

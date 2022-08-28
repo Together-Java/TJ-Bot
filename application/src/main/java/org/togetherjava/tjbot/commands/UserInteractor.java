@@ -3,9 +3,9 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -27,7 +27,7 @@ public interface UserInteractor extends Feature {
      *
      * @return the name of the interactor
      */
-    @NotNull
+    @Nonnull
     String getName();
 
     /**
@@ -49,7 +49,7 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args);
+    void onButtonClick(ButtonInteractionEvent event, List<String> args);
 
     /**
      * Triggered by the core system when a selection menu corresponding to this implementation
@@ -70,7 +70,7 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onSelectionMenu(@NotNull SelectMenuInteractionEvent event, @NotNull List<String> args);
+    void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args);
 
     /**
      * Triggered by the core system during its setup phase. It will provide the interactor a
@@ -81,5 +81,5 @@ public interface UserInteractor extends Feature {
      *
      * @param generator the provided component id generator
      */
-    void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator);
+    void acceptComponentIdGenerator(ComponentIdGenerator generator);
 }

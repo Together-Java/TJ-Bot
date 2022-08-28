@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommand;
@@ -18,6 +17,7 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,7 +46,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @param commandProvider the provider of slash commands to reload when this command is
      *        triggered
      */
-    public ReloadCommand(@NotNull SlashCommandProvider commandProvider) {
+    public ReloadCommand(SlashCommandProvider commandProvider) {
         super("reload",
                 "Uploads all existing slash-commands to Discord so they are fully up-to-date.",
                 SlashCommandVisibility.GUILD);
@@ -54,7 +54,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member member = Objects.requireNonNull(event.getMember());
 
         if (!member.hasPermission(Permission.MANAGE_SERVER)) {
@@ -75,7 +75,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // Ignore if another user clicked the button
         String userId = args.get(0);
         if (!userId.equals(Objects.requireNonNull(event.getMember()).getId())) {
@@ -102,8 +102,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
 
                 // Reload guild commands (potentially many guilds)
                 // NOTE Storing the guild actions in a list is potentially dangerous since the
-                // bot
-                // might theoretically be part of so many guilds that it exceeds the max size of
+                // bot might theoretically be part of so many guilds that it exceeds the max size of
                 // list. However, correctly reducing RestActions in a stream is not trivial.
                 getGuildUpdateActions(event.getJDA())
                     .map(updateAction -> updateCommandsIf(
@@ -133,9 +132,9 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @param updateAction the upstream to update commands
      * @return the given upstream for chaining
      */
-    private @NotNull CommandListUpdateAction updateCommandsIf(
-            @NotNull Predicate<? super SlashCommand> commandFilter,
-            @NotNull CommandListUpdateAction updateAction) {
+    @Nonnull
+    private CommandListUpdateAction updateCommandsIf(Predicate<? super SlashCommand> commandFilter,
+            CommandListUpdateAction updateAction) {
         return commandProvider.getSlashCommands()
             .stream()
             .filter(commandFilter)
@@ -143,12 +142,13 @@ public final class ReloadCommand extends SlashCommandAdapter {
             .reduce(updateAction, CommandListUpdateAction::addCommands, (x, y) -> x);
     }
 
-    private static @NotNull CommandListUpdateAction getGlobalUpdateAction(@NotNull JDA jda) {
+    @Nonnull
+    private static CommandListUpdateAction getGlobalUpdateAction(JDA jda) {
         return jda.updateCommands();
     }
 
-    private static @NotNull Stream<CommandListUpdateAction> getGuildUpdateActions(
-            @NotNull JDA jda) {
+    @Nonnull
+    private static Stream<CommandListUpdateAction> getGuildUpdateActions(JDA jda) {
         return jda.getGuildCache().stream().map(Guild::updateCommands);
     }
 }

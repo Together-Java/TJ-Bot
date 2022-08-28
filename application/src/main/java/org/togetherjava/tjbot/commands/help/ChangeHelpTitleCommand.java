@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
@@ -40,7 +39,7 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
      *
      * @param helper the helper to use
      */
-    public ChangeHelpTitleCommand(@NotNull HelpSystemHelper helper) {
+    public ChangeHelpTitleCommand(HelpSystemHelper helper) {
         super("change-help-title", "changes the title of a help thread",
                 SlashCommandVisibility.GUILD);
 
@@ -55,10 +54,10 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         String title = event.getOption(TITLE_OPTION).getAsString();
 
-        if (!helper.handleIsHelpThread(event) || !handleIsValidTitle(title, event)) {
+        if (!handleIsValidTitle(title, event)) {
             return;
         }
 
@@ -84,7 +83,7 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private boolean isHelpThreadOnCooldown(@NotNull ThreadChannel helpThread) {
+    private boolean isHelpThreadOnCooldown(ThreadChannel helpThread) {
         return Optional
             .ofNullable(helpThreadIdToLastTitleChange.getIfPresent(helpThread.getIdLong()))
             .map(lastCategoryChange -> lastCategoryChange.plus(COOLDOWN_DURATION_VALUE,
@@ -93,7 +92,7 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
             .isPresent();
     }
 
-    private boolean handleIsValidTitle(@NotNull CharSequence title, @NotNull IReplyCallback event) {
+    private boolean handleIsValidTitle(CharSequence title, IReplyCallback event) {
         if (HelpSystemHelper.isTitleValid(title)) {
             return true;
         }

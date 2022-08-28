@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import org.jetbrains.annotations.NotNull;
-
+import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -10,8 +9,10 @@ import java.util.Objects;
 /**
  * Utility for hashing data.
  */
-public enum Hashing {
-    ;
+public class Hashing {
+    private Hashing() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * All characters available in the hexadecimal-system, as UTF-8 encoded array.
@@ -24,9 +25,8 @@ public enum Hashing {
      * @param bytes the binary data to convert
      * @return a hexadecimal representation
      */
-    @SuppressWarnings("MagicNumber")
-    @NotNull
-    public static String bytesToHex(byte @NotNull [] bytes) {
+    @Nonnull
+    public static String bytesToHex(byte[] bytes) {
         Objects.requireNonNull(bytes);
         // See https://stackoverflow.com/a/9855338/2411243
         // noinspection MultiplyOrDivideByPowerOfTwo
@@ -50,7 +50,8 @@ public enum Hashing {
      * @param data the data to hash
      * @return the computed hash
      */
-    public static byte @NotNull [] hash(@NotNull String method, byte @NotNull [] data) {
+    @Nonnull
+    public static byte[] hash(String method, byte[] data) {
         Objects.requireNonNull(method);
         Objects.requireNonNull(data);
         try {

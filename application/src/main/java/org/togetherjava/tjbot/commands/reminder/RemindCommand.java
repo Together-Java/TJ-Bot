@@ -7,11 +7,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 
+import javax.annotation.Nonnull;
 import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -52,7 +52,7 @@ public final class RemindCommand extends SlashCommandAdapter {
      *
      * @param database to store and fetch the reminders from
      */
-    public RemindCommand(@NotNull Database database) {
+    public RemindCommand(Database database) {
         super(COMMAND_NAME, "Reminds you after a given time period has passed (e.g. in 5 weeks)",
                 SlashCommandVisibility.GUILD);
 
@@ -72,7 +72,7 @@ public final class RemindCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         int timeAmount = Math.toIntExact(event.getOption(TIME_AMOUNT_OPTION).getAsLong());
         String timeUnit = event.getOption(TIME_UNIT_OPTION).getAsString();
         String content = event.getOption(CONTENT_OPTION).getAsString();
@@ -102,7 +102,8 @@ public final class RemindCommand extends SlashCommandAdapter {
             .insert());
     }
 
-    private static @NotNull Instant parseWhen(int whenAmount, @NotNull String whenUnit) {
+    @Nonnull
+    private static Instant parseWhen(int whenAmount, String whenUnit) {
         TemporalAmount period = switch (whenUnit) {
             case "second", "seconds" -> Duration.ofSeconds(whenAmount);
             case "minute", "minutes" -> Duration.ofMinutes(whenAmount);
@@ -117,8 +118,7 @@ public final class RemindCommand extends SlashCommandAdapter {
         return ZonedDateTime.now(ZoneOffset.UTC).plus(period).toInstant();
     }
 
-    private static boolean handleIsRemindAtWithinLimits(@NotNull Instant remindAt,
-            @NotNull IReplyCallback event) {
+    private static boolean handleIsRemindAtWithinLimits(Instant remindAt, IReplyCallback event) {
         ZonedDateTime maxWhen = ZonedDateTime.now(ZoneOffset.UTC).plus(MAX_TIME_PERIOD);
 
         if (remindAt.atZone(ZoneOffset.UTC).isBefore(maxWhen)) {
@@ -134,8 +134,8 @@ public final class RemindCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private boolean handleIsUserBelowMaxPendingReminders(@NotNull ISnowflake author,
-            @NotNull ISnowflake guild, @NotNull IReplyCallback event) {
+    private boolean handleIsUserBelowMaxPendingReminders(ISnowflake author, ISnowflake guild,
+            IReplyCallback event) {
         int pendingReminders = database.read(context -> context.fetchCount(PENDING_REMINDERS,
                 PENDING_REMINDERS.AUTHOR_ID.equal(author.getIdLong())
                     .and(PENDING_REMINDERS.GUILD_ID.equal(guild.getIdLong()))));

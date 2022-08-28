@@ -6,29 +6,28 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
  * Provides and updates an overview of all active questions in an overview channel.
- *
+ * <p>
  * The process runs on a schedule, but is also triggered whenever a new question has been asked in
  * the staging channel.
- *
+ * <p>
  * Active questions are automatically picked up and grouped by categories.
  */
 public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter implements Routine {
@@ -52,7 +51,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
      * @param config the config to use
      * @param helper the helper to use
      */
-    public HelpThreadOverviewUpdater(@NotNull Config config, @NotNull HelpSystemHelper helper) {
+    public HelpThreadOverviewUpdater(Config config, HelpSystemHelper helper) {
         super(Pattern.compile(config.getHelpSystem().getOverviewChannelPattern()));
 
         allCategories = config.getHelpSystem().getCategories();
@@ -60,17 +59,18 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 1, 1, TimeUnit.MINUTES);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         jda.getGuildCache().forEach(this::updateOverviewForGuild);
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         // Update whenever a thread was created
         Message message = event.getMessage();
         if (message.getType() != MessageType.THREAD_CREATED) {
@@ -95,8 +95,11 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         UPDATE_SERVICE.schedule(updateOverviewCommand, 2, TimeUnit.SECONDS);
     }
 
-    private void updateOverviewForGuild(@NotNull Guild guild) {
-        Optional<TextChannel> maybeOverviewChannel = handleRequireOverviewChannel(guild);
+    private void updateOverviewForGuild(Guild guild) {
+        Optional<TextChannel> maybeOverviewChannel = helper
+            .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
+                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName()));
 
         if (maybeOverviewChannel.isEmpty()) {
             return;
@@ -105,33 +108,10 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         updateOverview(maybeOverviewChannel.orElseThrow());
     }
 
-    private @NotNull Optional<TextChannel> handleRequireOverviewChannel(@NotNull Guild guild) {
-        Predicate<String> isChannelName = helper::isOverviewChannelName;
-        String channelPattern = helper.getOverviewChannelPattern();
-
-        Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
-
-        if (maybeChannel.isEmpty()) {
-            logger.warn(
-                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
-                    channelPattern, guild.getName());
-            return Optional.empty();
-        }
-
-        return maybeChannel;
-    }
-
-    private void updateOverview(@NotNull TextChannel overviewChannel) {
+    private void updateOverview(TextChannel overviewChannel) {
         logger.debug("Updating overview of active questions");
 
-        List<ThreadChannel> activeThreads = overviewChannel.getThreadChannels()
-            .stream()
-            .filter(Predicate.not(ThreadChannel::isArchived))
-            .toList();
-
+        List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(overviewChannel);
         logger.debug("Found {} active questions", activeThreads.size());
 
         Message message = new MessageBuilder()
@@ -144,7 +124,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             .queue();
     }
 
-    private @NotNull String createDescription(@NotNull Collection<ThreadChannel> activeThreads) {
+    @Nonnull
+    private String createDescription(Collection<ThreadChannel> activeThreads) {
         if (activeThreads.isEmpty()) {
             return "Currently none.";
         }
@@ -169,8 +150,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             .collect(Collectors.joining("\n\n"));
     }
 
-    private static @NotNull RestAction<Optional<Message>> getStatusMessage(
-            @NotNull MessageChannel channel) {
+    @Nonnull
+    private static RestAction<Optional<Message>> getStatusMessage(MessageChannel channel) {
         return channel.getHistory()
             .retrievePast(1)
             .map(messages -> messages.stream()
@@ -178,7 +159,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
                 .filter(HelpThreadOverviewUpdater::isStatusMessage));
     }
 
-    private static boolean isStatusMessage(@NotNull Message message) {
+    private static boolean isStatusMessage(Message message) {
         if (!message.getAuthor().equals(message.getJDA().getSelfUser())) {
             return false;
         }
@@ -187,8 +168,9 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         return content.startsWith(STATUS_TITLE);
     }
 
-    private @NotNull RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
-            @NotNull Message updatedStatusMessage, @NotNull MessageChannel overviewChannel) {
+    @Nonnull
+    private RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
+            Message updatedStatusMessage, MessageChannel overviewChannel) {
         logger.debug("Sending the updated question overview");
         if (statusMessage == null) {
             int currentFailures = FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.incrementAndGet();
@@ -211,8 +193,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         return overviewChannel.editMessageById(statusMessageId, updatedStatusMessage);
     }
 
-    private record CategoryWithThreads(@NotNull String category,
-            @NotNull List<ThreadChannel> threads) {
+    private record CategoryWithThreads(String category, List<ThreadChannel> threads) {
 
         String toDiscordString() {
             String threadListText = threads.stream()
@@ -222,8 +203,9 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             return "**%s**:%n%s".formatted(category, threadListText);
         }
 
-        static @NotNull CategoryWithThreads ofEntry(
-                Map.@NotNull Entry<String, ? extends List<ThreadChannel>> categoryAndThreads) {
+        @Nonnull
+        static CategoryWithThreads ofEntry(
+                Map.Entry<String, ? extends List<ThreadChannel>> categoryAndThreads) {
             return new CategoryWithThreads(categoryAndThreads.getKey(),
                     categoryAndThreads.getValue());
         }

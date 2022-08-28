@@ -8,17 +8,15 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * This command can unmute muted users. Unmuting can also be paired with a reason. The command will
@@ -33,7 +31,6 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "unmute";
     private static final String ACTION_VERB = "unmute";
-    private final Predicate<String> hasRequiredRole;
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -43,7 +40,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      * @param config the config to use for this
      */
-    public UnmuteCommand(@NotNull ModerationActionsStore actionsStore, @NotNull Config config) {
+    public UnmuteCommand(ModerationActionsStore actionsStore, Config config) {
         super(COMMAND_NAME,
                 "Unmutes the given already muted user so that they can send messages again",
                 SlashCommandVisibility.GUILD);
@@ -52,16 +49,16 @@ public final class UnmuteCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unmuted", true);
 
         this.config = config;
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static void handleNotMutedTarget(@NotNull IReplyCallback event) {
+    private static void handleNotMutedTarget(IReplyCallback event) {
         event.reply("The user is not muted.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(@NotNull ISnowflake target, @NotNull String reason,
-            @NotNull Guild guild, @NotNull GenericEvent event) {
+    @Nonnull
+    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
+            GenericEvent event) {
         String dmMessage = """
                 Hey there, you have been unmuted in the server %s.
                 This means you can now send messages in the server again.
@@ -74,8 +71,9 @@ public final class UnmuteCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    private static @NotNull MessageEmbed sendFeedback(boolean hasSentDm, @NotNull Member target,
-            @NotNull Member author, @NotNull String reason) {
+    @Nonnull
+    private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
+            String reason) {
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";
@@ -84,8 +82,9 @@ public final class UnmuteCommand extends SlashCommandAdapter {
                 target.getUser(), dmNoticeText, reason);
     }
 
-    private AuditableRestAction<Void> unmuteUser(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild) {
+    @Nonnull
+    private AuditableRestAction<Void> unmuteUser(Member target, Member author, String reason,
+            Guild guild) {
         logger.info("'{}' ({}) unmuted the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
@@ -98,9 +97,8 @@ public final class UnmuteCommand extends SlashCommandAdapter {
             .reason(reason);
     }
 
-    private void unmuteUserFlow(@NotNull Member target, @NotNull Member author,
-            @NotNull String reason, @NotNull Guild guild,
-            @NotNull SlashCommandInteractionEvent event) {
+    private void unmuteUserFlow(Member target, Member author, String reason, Guild guild,
+            SlashCommandInteractionEvent event) {
         sendDm(target, reason, guild, event)
             .flatMap(
                     hasSentDm -> unmuteUser(target, author, reason, guild).map(result -> hasSentDm))
@@ -109,13 +107,11 @@ public final class UnmuteCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull CharSequence reason, @NotNull Guild guild,
-            @NotNull IReplyCallback event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            CharSequence reason, Guild guild, IReplyCallback event) {
         if (!ModerationUtils.handleRoleChangeChecks(
                 ModerationUtils.getMutedRole(guild, config).orElse(null), ACTION_VERB, target, bot,
-                author, guild, hasRequiredRole, reason, event)) {
+                author, guild, reason, event)) {
             return false;
         }
         if (Objects.requireNonNull(target)
@@ -130,7 +126,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsMember();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

@@ -6,8 +6,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,6 +15,8 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,22 +28,23 @@ final class TagsCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
 
-    private static @Nullable String getResponseDescription(
-            @NotNull SlashCommandInteractionEvent event) {
+    @Nullable
+    private static String getResponseDescription(SlashCommandInteractionEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(event).replyEmbeds(responseCaptor.capture());
         return responseCaptor.getValue().getDescription();
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerSlashCommand() {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerSlashCommand() {
         SlashCommandInteractionEvent event =
                 jdaTester.createSlashCommandInteractionEvent(command).build();
         command.onSlashCommand(event);
         return event;
     }
 
-    private @NotNull ButtonInteractionEvent triggerButtonClick(@NotNull Member userWhoClicked,
-            long idOfAuthor) {
+    @Nonnull
+    private ButtonInteractionEvent triggerButtonClick(Member userWhoClicked, long idOfAuthor) {
         ButtonInteractionEvent event = jdaTester.createButtonInteractionEvent()
             .setUserWhoClicked(userWhoClicked)
             .setActionRows(ActionRow.of(TagSystem.createDeleteButton("foo")))

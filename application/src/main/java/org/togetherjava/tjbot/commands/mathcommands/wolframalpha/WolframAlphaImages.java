@@ -1,9 +1,9 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.SubPod;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.WolframAlphaImage;
 
+import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Font;
@@ -25,8 +25,7 @@ import java.util.List;
  * Utility class to work with images returned by the Wolfram Alpha API. For example to render and
  * combine them.
  */
-enum WolframAlphaImages {
-    ;
+class WolframAlphaImages {
     static final String IMAGE_FORMAT = "png";
     private static final Color IMAGE_BACKGROUND = Color.WHITE;
     private static final int IMAGE_MARGIN_PX = 10;
@@ -35,9 +34,13 @@ enum WolframAlphaImages {
             new FontRenderContext(new AffineTransform(), true, true);
     private static final Color TITLE_COLOR = Color.decode("#3C3C3C");
     private static final Font TITLE_FONT = new Font("Arial", Font.BOLD, 15);
-    private static final int TITLE_HEIGHT_PX = 20;
 
-    static @NotNull BufferedImage renderTitle(@NotNull String title) {
+    private WolframAlphaImages() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
+
+    @Nonnull
+    static BufferedImage renderTitle(String title) {
         Rectangle2D titleBounds = TITLE_FONT.getStringBounds(title, TITLE_RENDER_CONTEXT);
         int widthPx = (int) Math.ceil(titleBounds.getWidth()) + 2 * IMAGE_MARGIN_PX;
         int heightPx = (int) Math.ceil(titleBounds.getHeight()) + IMAGE_MARGIN_PX;
@@ -53,7 +56,8 @@ enum WolframAlphaImages {
         return image;
     }
 
-    static @NotNull BufferedImage renderSubPod(@NotNull SubPod subPod) {
+    @Nonnull
+    static BufferedImage renderSubPod(SubPod subPod) {
         WolframAlphaImage sourceImage = subPod.getImage();
 
         int widthPx = sourceImage.getWidth() + 2 * IMAGE_MARGIN_PX;
@@ -73,12 +77,14 @@ enum WolframAlphaImages {
         return destinationImage;
     }
 
-    static @NotNull BufferedImage renderFooter() {
+    @Nonnull
+    static BufferedImage renderFooter() {
         return new BufferedImage(1, IMAGE_MARGIN_PX, BufferedImage.TYPE_4BYTE_ABGR);
     }
 
-    static @NotNull List<BufferedImage> combineImagesIntoTiles(
-            @NotNull Collection<? extends BufferedImage> images, int maxTileHeight) {
+    @Nonnull
+    static List<BufferedImage> combineImagesIntoTiles(Collection<? extends BufferedImage> images,
+            int maxTileHeight) {
         if (images.isEmpty()) {
             throw new IllegalArgumentException("Images must not be empty");
         }
@@ -118,8 +124,9 @@ enum WolframAlphaImages {
         return tileHeight != 0 && tileHeight + heightOfImageToAdd > maxTileHeight;
     }
 
-    private static @NotNull BufferedImage combineImages(
-            @NotNull Collection<? extends BufferedImage> images, int widthPx) {
+    @Nonnull
+    private static BufferedImage combineImages(Collection<? extends BufferedImage> images,
+            int widthPx) {
         if (images.isEmpty()) {
             throw new IllegalArgumentException("Images must not be empty");
         }
@@ -144,7 +151,8 @@ enum WolframAlphaImages {
         return destinationImage;
     }
 
-    static byte @NotNull [] imageToBytes(@NotNull RenderedImage img) {
+    @Nonnull
+    static byte[] imageToBytes(RenderedImage img) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             ImageIO.write(img, IMAGE_FORMAT, outputStream);
             return outputStream.toByteArray();

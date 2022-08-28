@@ -45,6 +45,7 @@
        ],
        "categoryRoleSuffix": " - Helper"
    },
+    "mediaOnlyChannelPattern": "memes",
     "blacklistedFileExtension": [
         "application",
         "bat",
