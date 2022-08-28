@@ -19,16 +19,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
  * Provides and updates an overview of all active questions in an overview channel.
- *
+ * <p>
  * The process runs on a schedule, but is also triggered whenever a new question has been asked in
  * the staging channel.
- *
+ * <p>
  * Active questions are automatically picked up and grouped by categories.
  */
 public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter implements Routine {
@@ -96,7 +95,10 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     private void updateOverviewForGuild(@NotNull Guild guild) {
-        Optional<TextChannel> maybeOverviewChannel = handleRequireOverviewChannel(guild);
+        Optional<TextChannel> maybeOverviewChannel = helper
+            .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
+                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+                    channelPattern, guild.getName()));
 
         if (maybeOverviewChannel.isEmpty()) {
             return;
@@ -105,33 +107,10 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         updateOverview(maybeOverviewChannel.orElseThrow());
     }
 
-    private @NotNull Optional<TextChannel> handleRequireOverviewChannel(@NotNull Guild guild) {
-        Predicate<String> isChannelName = helper::isOverviewChannelName;
-        String channelPattern = helper.getOverviewChannelPattern();
-
-        Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
-
-        if (maybeChannel.isEmpty()) {
-            logger.warn(
-                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
-                    channelPattern, guild.getName());
-            return Optional.empty();
-        }
-
-        return maybeChannel;
-    }
-
     private void updateOverview(@NotNull TextChannel overviewChannel) {
         logger.debug("Updating overview of active questions");
 
-        List<ThreadChannel> activeThreads = overviewChannel.getThreadChannels()
-            .stream()
-            .filter(Predicate.not(ThreadChannel::isArchived))
-            .toList();
-
+        List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(overviewChannel);
         logger.debug("Found {} active questions", activeThreads.size());
 
         Message message = new MessageBuilder()
