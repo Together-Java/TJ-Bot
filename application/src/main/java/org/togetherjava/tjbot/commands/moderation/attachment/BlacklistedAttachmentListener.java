@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
@@ -29,15 +28,14 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
      * @param config to find the blacklisted media attachments
      * @param modAuditLogWriter to inform the mods about the suspicious attachment
      */
-    public BlacklistedAttachmentListener(@NotNull Config config,
-            @NotNull ModAuditLogWriter modAuditLogWriter) {
+    public BlacklistedAttachmentListener(Config config, ModAuditLogWriter modAuditLogWriter) {
         super(Pattern.compile(".*"));
         this.modAuditLogWriter = modAuditLogWriter;
         this.blacklistedFileExtensions = config.getBlacklistedFileExtensions();
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
@@ -46,11 +44,11 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         }
     }
 
-    private void handleBadMessage(@NotNull Message message) {
+    private void handleBadMessage(Message message) {
         message.delete().flatMap(any -> dmUser(message)).queue(any -> warnMods(message));
     }
 
-    private RestAction<Message> dmUser(@NotNull Message message) {
+    private RestAction<Message> dmUser(Message message) {
         Message dmMessage = createDmMessage(message);
         return message.getAuthor()
             .openPrivateChannel()
@@ -100,8 +98,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
                 .contains(attachment.getFileExtension().toLowerCase(Locale.US)));
     }
 
-
-    private void warnMods(@NotNull Message sentUserMessage) {
+    private void warnMods(Message sentUserMessage) {
         String blacklistedAttachmentsFromMessage =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(sentUserMessage));
         modAuditLogWriter.write(
