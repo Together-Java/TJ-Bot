@@ -5,10 +5,11 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
+
+import javax.annotation.Nonnull;
 
 /**
  * Action to revoke temporary bans, as applied by
@@ -19,24 +20,26 @@ final class TemporaryBanAction implements RevocableModerationAction {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryBanAction.class);
 
     @Override
-    public @NotNull ModerationAction getApplyType() {
+    @Nonnull
+    public ModerationAction getApplyType() {
         return ModerationAction.BAN;
     }
 
     @Override
-    public @NotNull ModerationAction getRevokeType() {
+    @Nonnull
+    public ModerationAction getRevokeType() {
         return ModerationAction.UNBAN;
     }
 
     @Override
-    public @NotNull RestAction<Void> revokeAction(@NotNull Guild guild, @NotNull User target,
-            @NotNull String reason) {
+    @Nonnull
+    public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild.unban(target).reason(reason);
     }
 
     @Override
-    public @NotNull FailureIdentification handleRevokeFailure(@NotNull Throwable failure,
-            long targetId) {
+    @Nonnull
+    public FailureIdentification handleRevokeFailure(Throwable failure, long targetId) {
         if (failure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
                 logger.debug(

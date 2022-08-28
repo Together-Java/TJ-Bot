@@ -6,13 +6,13 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.SuggestionsConfig;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -33,14 +33,14 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
      *
      * @param config the config to use for this
      */
-    public SuggestionsUpDownVoter(@NotNull Config config) {
+    public SuggestionsUpDownVoter(Config config) {
         super(Pattern.compile(config.getSuggestions().getChannelPattern()));
 
         this.config = config.getSuggestions();
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage() || !event.isFromGuild()) {
             return;
         }
@@ -53,7 +53,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         reactWith(config.getDownVoteEmoteName(), FALLBACK_DOWN_VOTE, guild, message);
     }
 
-    private static void createThread(@NotNull Message message) {
+    private static void createThread(Message message) {
         String title = message.getContentRaw();
 
         if (title.length() >= TITLE_MAX_LENGTH) {
@@ -69,8 +69,8 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         message.createThreadChannel(title).queue();
     }
 
-    private static void reactWith(@NotNull String emoteName, @NotNull String fallbackUnicodeEmote,
-            @NotNull Guild guild, @NotNull Message message) {
+    private static void reactWith(String emoteName, String fallbackUnicodeEmote, Guild guild,
+            Message message) {
         getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
             logger.warn(
                     "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
@@ -89,8 +89,8 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         });
     }
 
-    private static @NotNull Optional<Emote> getEmoteByName(@NotNull String name,
-            @NotNull Guild guild) {
+    @Nonnull
+    private static Optional<Emote> getEmoteByName(String name, Guild guild) {
         return guild.getEmotesByName(name, false).stream().findAny();
     }
 }

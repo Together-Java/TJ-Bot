@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -181,7 +181,8 @@ public final class Config {
      *
      * @return the suggestion system config
      */
-    public @NotNull SuggestionsConfig getSuggestions() {
+    @Nonnull
+    public SuggestionsConfig getSuggestions() {
         return suggestions;
     }
 
@@ -190,6 +191,7 @@ public final class Config {
      *
      * @return the role name pattern
      */
+    @Nonnull
     public String getQuarantinedRolePattern() {
         return quarantinedRolePattern;
     }
@@ -199,7 +201,8 @@ public final class Config {
      *
      * @return the scam blocker system config
      */
-    public @NotNull ScamBlockerConfig getScamBlocker() {
+    @Nonnull
+    public ScamBlockerConfig getScamBlocker() {
         return scamBlocker;
     }
 
@@ -208,7 +211,8 @@ public final class Config {
      *
      * @return the application ID for the WolframAlpha API
      */
-    public @NotNull String getWolframAlphaAppId() {
+    @Nonnull
+    public String getWolframAlphaAppId() {
         return wolframAlphaAppId;
     }
 
@@ -217,7 +221,8 @@ public final class Config {
      *
      * @return the help system config
      */
-    public @NotNull HelpSystemConfig getHelpSystem() {
+    @Nonnull
+    public HelpSystemConfig getHelpSystem() {
         return helpSystem;
     }
 
@@ -226,7 +231,8 @@ public final class Config {
      *
      * @return the channel name pattern
      */
-    public @NotNull String getMediaOnlyChannelPattern() {
+    @Nonnull
+    public String getMediaOnlyChannelPattern() {
         return mediaOnlyChannelPattern;
     }
 }

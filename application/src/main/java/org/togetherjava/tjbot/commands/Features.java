@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
@@ -32,6 +31,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -59,8 +59,8 @@ public class Features {
      * @param config the configuration features should use
      * @return a collection of all features
      */
-    public static @NotNull Collection<Feature> createFeatures(@NotNull JDA jda,
-            @NotNull Database database, @NotNull Config config) {
+    @Nonnull
+    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
         TagSystem tagSystem = new TagSystem(database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);

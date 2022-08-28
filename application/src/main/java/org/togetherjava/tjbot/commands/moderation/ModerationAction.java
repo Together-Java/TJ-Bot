@@ -1,6 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nonnull;
 
 /**
  * All available moderation actions.
@@ -51,7 +51,7 @@ public enum ModerationAction {
      * @param verb the verb of the action, as it would be used in a sentence, such as "banned" or
      *        "kicked"
      */
-    ModerationAction(@NotNull String verb) {
+    ModerationAction(String verb) {
         this.verb = verb;
     }
 
@@ -62,7 +62,8 @@ public enum ModerationAction {
      *
      * @return the verb of this action
      */
-    public @NotNull String getVerb() {
+    @Nonnull
+    public String getVerb() {
         return verb;
     }
 }

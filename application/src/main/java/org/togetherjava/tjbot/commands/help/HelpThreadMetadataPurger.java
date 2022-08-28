@@ -1,12 +1,13 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.JDA;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
+
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
@@ -24,17 +25,18 @@ public class HelpThreadMetadataPurger implements Routine {
      *
      * @param database the database used to purge help thread metadata
      */
-    public HelpThreadMetadataPurger(@NotNull Database database) {
+    public HelpThreadMetadataPurger(Database database) {
         this.database = database;
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 4, TimeUnit.HOURS);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         int recordsDeleted =
                 database.writeAndProvide(content -> content.deleteFrom(HelpThreads.HELP_THREADS))
                     .where(HelpThreads.HELP_THREADS.CREATED_AT

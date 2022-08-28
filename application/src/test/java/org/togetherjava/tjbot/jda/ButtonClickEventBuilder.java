@@ -9,10 +9,10 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.SlashCommand;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -69,13 +69,13 @@ import static org.mockito.Mockito.when;
  */
 public final class ButtonClickEventBuilder {
     private static final ObjectMapper JSON = new ObjectMapper();
-    private final @NotNull Supplier<? extends ButtonInteractionEvent> mockEventSupplier;
+    private final Supplier<? extends ButtonInteractionEvent> mockEventSupplier;
     private final UnaryOperator<Message> mockMessageOperator;
     private MessageBuilder messageBuilder;
     private Member userWhoClicked;
 
-    ButtonClickEventBuilder(@NotNull Supplier<? extends ButtonInteractionEvent> mockEventSupplier,
-            @NotNull UnaryOperator<Message> mockMessageOperator) {
+    ButtonClickEventBuilder(Supplier<? extends ButtonInteractionEvent> mockEventSupplier,
+            UnaryOperator<Message> mockMessageOperator) {
         this.mockEventSupplier = mockEventSupplier;
         this.mockMessageOperator = mockMessageOperator;
 
@@ -94,7 +94,8 @@ public final class ButtonClickEventBuilder {
      * @param message the message to set
      * @return this builder instance for chaining
      */
-    public @NotNull ButtonClickEventBuilder setMessage(@NotNull Message message) {
+    @Nonnull
+    public ButtonClickEventBuilder setMessage(Message message) {
         messageBuilder = new MessageBuilder(message);
         return this;
     }
@@ -106,7 +107,8 @@ public final class ButtonClickEventBuilder {
      * @param content the content of the message
      * @return this builder instance for chaining
      */
-    public @NotNull ButtonClickEventBuilder setContent(@NotNull String content) {
+    @Nonnull
+    public ButtonClickEventBuilder setContent(String content) {
         messageBuilder.setContent(content);
         return this;
     }
@@ -118,7 +120,8 @@ public final class ButtonClickEventBuilder {
      * @param embeds the embeds of the message
      * @return this builder instance for chaining
      */
-    public @NotNull ButtonClickEventBuilder setEmbeds(@NotNull MessageEmbed... embeds) {
+    @Nonnull
+    public ButtonClickEventBuilder setEmbeds(MessageEmbed... embeds) {
         messageBuilder.setEmbeds(embeds);
         return this;
     }
@@ -132,7 +135,8 @@ public final class ButtonClickEventBuilder {
      * @param rows the action rows of the message
      * @return this builder instance for chaining
      */
-    public @NotNull ButtonClickEventBuilder setActionRows(@NotNull ActionRow... rows) {
+    @Nonnull
+    public ButtonClickEventBuilder setActionRows(ActionRow... rows) {
         messageBuilder.setActionRows(rows);
         return this;
     }
@@ -143,8 +147,8 @@ public final class ButtonClickEventBuilder {
      * @param userWhoClicked the user who clicked the button
      * @return this builder instance for chaining
      */
-    @NotNull
-    public ButtonClickEventBuilder setUserWhoClicked(@NotNull Member userWhoClicked) {
+    @Nonnull
+    public ButtonClickEventBuilder setUserWhoClicked(Member userWhoClicked) {
         this.userWhoClicked = userWhoClicked;
         return this;
     }
@@ -158,7 +162,8 @@ public final class ButtonClickEventBuilder {
      *
      * @return the created slash command instance
      */
-    public @NotNull ButtonInteractionEvent buildWithSingleButton() {
+    @Nonnull
+    public ButtonInteractionEvent buildWithSingleButton() {
         return createEvent(null);
     }
 
@@ -173,19 +178,22 @@ public final class ButtonClickEventBuilder {
      *        contained in the message.
      * @return the created slash command instance
      */
-    public @NotNull ButtonInteractionEvent build(@NotNull Button clickedButton) {
+    @Nonnull
+    public ButtonInteractionEvent build(Button clickedButton) {
         return createEvent(clickedButton);
     }
 
-    private @NotNull ButtonInteractionEvent createEvent(@Nullable Button maybeClickedButton) {
+    @Nonnull
+    private ButtonInteractionEvent createEvent(@Nullable Button maybeClickedButton) {
         Message message = mockMessageOperator.apply(messageBuilder.build());
         Button clickedButton = determineClickedButton(maybeClickedButton, message);
 
         return mockButtonClickEvent(message, clickedButton);
     }
 
-    private static @NotNull Button determineClickedButton(@Nullable Button maybeClickedButton,
-            @NotNull Message message) {
+    @Nonnull
+    private static Button determineClickedButton(@Nullable Button maybeClickedButton,
+            Message message) {
         if (maybeClickedButton != null) {
             return requireButtonInMessage(maybeClickedButton, message);
         }
@@ -195,8 +203,8 @@ public final class ButtonClickEventBuilder {
         return requireSingleButton(getMessageButtons(message));
     }
 
-    private static @NotNull Button requireButtonInMessage(@NotNull Button clickedButton,
-            @NotNull Message message) {
+    @Nonnull
+    private static Button requireButtonInMessage(Button clickedButton, Message message) {
         boolean isClickedButtonUnknown =
                 getMessageButtons(message).noneMatch(clickedButton::equals);
 
@@ -208,7 +216,8 @@ public final class ButtonClickEventBuilder {
         return clickedButton;
     }
 
-    private static @NotNull Button requireSingleButton(@NotNull Stream<? extends Button> stream) {
+    @Nonnull
+    private static Button requireSingleButton(Stream<? extends Button> stream) {
         Function<String, ? extends RuntimeException> descriptionToException =
                 IllegalArgumentException::new;
 
@@ -222,12 +231,13 @@ public final class ButtonClickEventBuilder {
                             + " Add the button to the message first."));
     }
 
-    private static @NotNull Stream<Button> getMessageButtons(@NotNull Message message) {
+    @Nonnull
+    private static Stream<Button> getMessageButtons(Message message) {
         return message.getActionRows().stream().map(ActionRow::getButtons).flatMap(List::stream);
     }
 
-    private @NotNull ButtonInteractionEvent mockButtonClickEvent(@NotNull Message message,
-            @NotNull Button clickedButton) {
+    @Nonnull
+    private ButtonInteractionEvent mockButtonClickEvent(Message message, Button clickedButton) {
         ButtonInteractionEvent event = mockEventSupplier.get();
 
         when(event.getMessage()).thenReturn(message);

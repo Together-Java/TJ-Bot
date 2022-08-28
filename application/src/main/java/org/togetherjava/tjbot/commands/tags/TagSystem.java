@@ -4,13 +4,13 @@ import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
-import java.awt.*;
+import javax.annotation.Nonnull;
+import java.awt.Color;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,8 +58,7 @@ public final class TagSystem {
      * @param event the event to send messages with
      * @return whether the given tag is unknown to the system
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    boolean handleIsUnknownTag(@NotNull String id, @NotNull IReplyCallback event) {
+    boolean handleIsUnknownTag(String id, IReplyCallback event) {
         if (hasTag(id)) {
             return false;
         }
@@ -123,6 +122,7 @@ public final class TagSystem {
      * @param id the id of the tag to get
      * @return the content of the tag, if the tag is known to the system
      */
+    @Nonnull
     Optional<String> getTag(String id) {
         return database.readTransaction(context -> Optional
             .ofNullable(context.selectFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).fetchOne())
@@ -134,6 +134,7 @@ public final class TagSystem {
      *
      * @return a set of all ids known to the system, not backed
      */
+    @Nonnull
     Set<String> getAllIds() {
         return database.readTransaction(context -> context.select(Tags.TAGS.ID)
             .from(Tags.TAGS)

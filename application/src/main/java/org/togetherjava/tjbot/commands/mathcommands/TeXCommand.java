@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
-import org.jetbrains.annotations.NotNull;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -15,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Image;
@@ -62,7 +62,7 @@ public final class TeXCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull final SlashCommandInteractionEvent event) {
+    public void onSlashCommand(final SlashCommandInteractionEvent event) {
         String latex = Objects.requireNonNull(event.getOption(LATEX_OPTION)).getAsString();
         String userID = (Objects.requireNonNull(event.getMember()).getId());
         TeXFormula formula;
@@ -97,7 +97,8 @@ public final class TeXCommand extends SlashCommandAdapter {
         }
     }
 
-    private @NotNull Image renderImage(@NotNull TeXFormula formula) {
+    @Nonnull
+    private Image renderImage(TeXFormula formula) {
         Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
 
@@ -107,8 +108,8 @@ public final class TeXCommand extends SlashCommandAdapter {
         return image;
     }
 
-    private void sendImage(@NotNull IDeferrableCallback event, @NotNull String userID,
-            @NotNull Image image) throws IOException {
+    private void sendImage(IDeferrableCallback event, String userID, Image image)
+            throws IOException {
         ByteArrayOutputStream renderedTextImageStream = getRenderedTextImageStream(image);
         event.getHook()
             .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
@@ -116,9 +117,8 @@ public final class TeXCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @NotNull
-    private ByteArrayOutputStream getRenderedTextImageStream(@NotNull Image image)
-            throws IOException {
+    @Nonnull
+    private ByteArrayOutputStream getRenderedTextImageStream(Image image) throws IOException {
         BufferedImage renderedTextImage = new BufferedImage(image.getWidth(null),
                 image.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
 
@@ -137,8 +137,8 @@ public final class TeXCommand extends SlashCommandAdapter {
      * @param latex the latex to convert
      * @return the converted latex
      */
-    @NotNull
-    private String convertInlineLatexToFull(@NotNull String latex) {
+    @Nonnull
+    private String convertInlineLatexToFull(String latex) {
         if (isInvalidInlineFormat(latex)) {
             throw new ParseException(INVALID_INLINE_FORMAT_ERROR_MESSAGE);
         }
@@ -158,13 +158,12 @@ public final class TeXCommand extends SlashCommandAdapter {
         return sb.toString();
     }
 
-    private boolean isInvalidInlineFormat(@NotNull String latex) {
+    private boolean isInvalidInlineFormat(String latex) {
         return latex.chars().filter(charAsInt -> charAsInt == '$').count() % 2 == 1;
     }
 
     @Override
-    public void onButtonClick(@NotNull final ButtonInteractionEvent event,
-            @NotNull final List<String> args) {
+    public void onButtonClick(final ButtonInteractionEvent event, final List<String> args) {
         if (!args.get(0).equals(Objects.requireNonNull(event.getMember()).getId())) {
             event.reply("You are not the person who executed the command, you cannot do that")
                 .setEphemeral(true)

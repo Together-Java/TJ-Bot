@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.EventReceiver;
@@ -39,8 +38,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
      *        user should be e.g. muted
      * @param config the config to use for this
      */
-    public RejoinModerationRoleListener(@NotNull ModerationActionsStore actionsStore,
-            @NotNull Config config) {
+    public RejoinModerationRoleListener(ModerationActionsStore actionsStore, Config config) {
         this.actionsStore = actionsStore;
 
         moderationRoles = List.of(
@@ -52,13 +50,13 @@ public final class RejoinModerationRoleListener implements EventReceiver {
     }
 
     @Override
-    public void onEvent(@NotNull GenericEvent event) {
+    public void onEvent(GenericEvent event) {
         if (event instanceof GuildMemberJoinEvent joinEvent) {
             onGuildMemberJoin(joinEvent);
         }
     }
 
-    private void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
+    private void onGuildMemberJoin(GuildMemberJoinEvent event) {
         Member member = event.getMember();
 
         for (ModerationRole moderationRole : moderationRoles) {
@@ -68,8 +66,8 @@ public final class RejoinModerationRoleListener implements EventReceiver {
         }
     }
 
-    private boolean shouldApplyModerationRole(@NotNull ModerationRole moderationRole,
-            @NotNull IPermissionHolder member) {
+    private boolean shouldApplyModerationRole(ModerationRole moderationRole,
+            IPermissionHolder member) {
         Optional<ActionRecord> lastApplyAction = actionsStore.findLastActionAgainstTargetByType(
                 member.getGuild().getIdLong(), member.getIdLong(), moderationRole.applyAction);
         if (lastApplyAction.isEmpty()) {
@@ -93,8 +91,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
         return false;
     }
 
-    private static void applyModerationRole(@NotNull ModerationRole moderationRole,
-            @NotNull Member member) {
+    private static void applyModerationRole(ModerationRole moderationRole, Member member) {
         Guild guild = member.getGuild();
         logger.info("Reapplied existing {} to user '{}' ({}) in guild '{}' after rejoining.",
                 moderationRole.actionName, member.getUser().getAsTag(), member.getId(),
@@ -106,7 +103,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
             .queue();
     }
 
-    private record ModerationRole(@NotNull String actionName, @NotNull ModerationAction applyAction,
-            @NotNull ModerationAction revokeAction, @NotNull Function<Guild, Role> guildToRole) {
+    private record ModerationRole(String actionName, ModerationAction applyAction,
+            ModerationAction revokeAction, Function<Guild, Role> guildToRole) {
     }
 }

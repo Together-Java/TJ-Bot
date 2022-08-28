@@ -3,8 +3,9 @@ package org.togetherjava.tjbot.commands.moderation.temp;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
+
+import javax.annotation.Nonnull;
 
 /**
  * Represents revocable moderation actions, such as temporary bans. Primarily used by
@@ -34,7 +35,7 @@ interface RevocableModerationAction {
      * 
      * @return the type to apply the temporary action
      */
-    @NotNull
+    @Nonnull
     ModerationAction getApplyType();
 
     /**
@@ -43,7 +44,7 @@ interface RevocableModerationAction {
      * 
      * @return the type to revoke the temporary action
      */
-    @NotNull
+    @Nonnull
     ModerationAction getRevokeType();
 
     /**
@@ -54,9 +55,8 @@ interface RevocableModerationAction {
      * @param reason why the action is revoked
      * @return the unsubmitted revocation action
      */
-    @NotNull
-    RestAction<Void> revokeAction(@NotNull Guild guild, @NotNull User target,
-            @NotNull String reason);
+    @Nonnull
+    RestAction<Void> revokeAction(Guild guild, User target, String reason);
 
     /**
      * Handle a failure that might occur during revocation, i.e. execution of the action returned by
@@ -67,6 +67,6 @@ interface RevocableModerationAction {
      * @return a classification of the failure, decides whether the surrounding flow will continue
      *         to handle the error further or not
      */
-    @NotNull
-    FailureIdentification handleRevokeFailure(@NotNull Throwable failure, long targetId);
+    @Nonnull
+    FailureIdentification handleRevokeFailure(Throwable failure, long targetId);
 }

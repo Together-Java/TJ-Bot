@@ -6,13 +6,13 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.AttachmentOption;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
-import java.awt.*;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.awt.Color;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
@@ -41,7 +41,7 @@ public final class ModAuditLogWriter {
      *
      * @param config the config to use for this
      */
-    public ModAuditLogWriter(@NotNull Config config) {
+    public ModAuditLogWriter(Config config) {
         this.config = config;
         auditLogChannelNamePredicate =
                 Pattern.compile(config.getModAuditLogChannelPattern()).asMatchPredicate();
@@ -57,9 +57,8 @@ public final class ModAuditLogWriter {
      * @param guild the guild to write this log to
      * @param attachments attachments that will be added to the message. none or many.
      */
-    public void write(@NotNull String title, @NotNull String description, @Nullable User author,
-            @NotNull TemporalAccessor timestamp, @NotNull Guild guild,
-            @NotNull Attachment... attachments) {
+    public void write(String title, String description, @Nullable User author,
+            TemporalAccessor timestamp, Guild guild, Attachment... attachments) {
         Optional<TextChannel> auditLogChannel = getAndHandleModAuditLogChannel(guild);
         if (auditLogChannel.isEmpty()) {
             return;
@@ -89,7 +88,8 @@ public final class ModAuditLogWriter {
      * @param guild the guild to look for the channel in
      * @return the channel used for moderation audit logs, if present
      */
-    public Optional<TextChannel> getAndHandleModAuditLogChannel(@NotNull Guild guild) {
+    @Nonnull
+    public Optional<TextChannel> getAndHandleModAuditLogChannel(Guild guild) {
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
             .stream()
             .filter(channel -> auditLogChannelNamePredicate.test(channel.getName()))
@@ -110,13 +110,14 @@ public final class ModAuditLogWriter {
      * @param name the name of the attachment, example: {@code "foo.md"}
      * @param content the content of the attachment
      */
-    public record Attachment(@NotNull String name, @NotNull String content) {
+    public record Attachment(String name, String content) {
         /**
          * Gets the content raw, interpreted as UTF-8.
          *
          * @return the raw content of the attachment
          */
-        public byte @NotNull [] getContentRaw() {
+        @Nonnull
+        public byte[] getContentRaw() {
             return content.getBytes(StandardCharsets.UTF_8);
         }
     }

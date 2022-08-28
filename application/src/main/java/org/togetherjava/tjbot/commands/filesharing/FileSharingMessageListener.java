@@ -8,12 +8,12 @@ import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -23,7 +23,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -55,7 +58,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
      * @param config used to get api key and channel names.
      * @see org.togetherjava.tjbot.commands.Features
      */
-    public FileSharingMessageListener(@NotNull Config config) {
+    public FileSharingMessageListener(Config config) {
         super(Pattern.compile(".*"));
 
         gistApiKey = config.getGistApiKey();
@@ -66,7 +69,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         User author = event.getAuthor();
         if (author.isBot() || event.isWebhookMessage()) {
             return;
@@ -98,7 +101,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         });
     }
 
-    private boolean isAttachmentRelevant(@NotNull Message.Attachment attachment) {
+    private boolean isAttachmentRelevant(Message.Attachment attachment) {
         String extension = attachment.getFileExtension();
         if (extension == null) {
             return false;
@@ -107,8 +110,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     }
 
 
-    private void processAttachments(@NotNull MessageReceivedEvent event,
-            @NotNull List<Message.Attachment> attachments) {
+    private void processAttachments(MessageReceivedEvent event,
+            List<Message.Attachment> attachments) {
 
         Map<String, GistFile> nameToFile = new ConcurrentHashMap<>();
 
@@ -130,7 +133,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         sendResponse(event, url);
     }
 
-    private @NotNull String readAttachment(@NotNull InputStream stream) {
+    @Nonnull
+    private String readAttachment(InputStream stream) {
         try (stream) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -138,7 +142,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         }
     }
 
-    private @NotNull String getNameOf(@NotNull Message.Attachment attachment) {
+    @Nonnull
+    private String getNameOf(Message.Attachment attachment) {
         String fileName = attachment.getFileName();
         String fileExtension = attachment.getFileExtension();
 
@@ -158,7 +163,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         return fileName;
     }
 
-    private @NotNull String uploadToGist(@NotNull GistRequest jsonRequest) {
+    @Nonnull
+    private String uploadToGist(GistRequest jsonRequest) {
         String body;
         try {
             body = JSON.writeValueAsString(jsonRequest);
@@ -204,7 +210,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         return gistResponse.getHtmlUrl();
     }
 
-    private void sendResponse(@NotNull MessageReceivedEvent event, @NotNull String url) {
+    private void sendResponse(MessageReceivedEvent event, String url) {
         Message message = event.getMessage();
         String messageContent =
                 "I uploaded your attachments as **gist**. That way, they are easier to read for everyone, especially mobile users 👍";
@@ -212,7 +218,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         message.reply(messageContent).setActionRow(Button.link(url, "gist")).queue();
     }
 
-    private boolean isHelpThread(@NotNull MessageReceivedEvent event) {
+    private boolean isHelpThread(MessageReceivedEvent event) {
         if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
             return false;
         }

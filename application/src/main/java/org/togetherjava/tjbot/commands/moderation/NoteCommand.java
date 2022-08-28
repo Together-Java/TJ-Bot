@@ -5,13 +5,12 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -34,7 +33,7 @@ public final class NoteCommand extends SlashCommandAdapter {
      *
      * @param actionsStore used to store actions issued by this command
      */
-    public NoteCommand(@NotNull ModerationActionsStore actionsStore) {
+    public NoteCommand(ModerationActionsStore actionsStore) {
         super("note", "Writes a note about the given user", SlashCommandVisibility.GUILD);
 
         getData()
@@ -47,7 +46,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         OptionMapping targetOption = event.getOption(USER_OPTION);
         Member author = event.getMember();
         Guild guild = event.getGuild();
@@ -61,9 +60,8 @@ public final class NoteCommand extends SlashCommandAdapter {
         sendNote(targetOption.getAsUser(), author, content, guild, event);
     }
 
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, CharSequence content, @NotNull IReplyCallback event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            CharSequence content, IReplyCallback event) {
         if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
                 target, event)) {
             return false;
@@ -72,14 +70,13 @@ public final class NoteCommand extends SlashCommandAdapter {
         return ModerationUtils.handleReason(content, event);
     }
 
-    private void sendNote(@NotNull User target, @NotNull Member author, @NotNull String content,
-            @NotNull ISnowflake guild, @NotNull IReplyCallback event) {
+    private void sendNote(User target, Member author, String content, ISnowflake guild,
+            IReplyCallback event) {
         storeNote(target, author, content, guild);
         sendFeedback(target, author, content, event);
     }
 
-    private void storeNote(@NotNull User target, @NotNull Member author, @NotNull String content,
-            @NotNull ISnowflake guild) {
+    private void storeNote(User target, Member author, String content, ISnowflake guild) {
         logger.info("'{}' ({}) wrote a note about the user '{}' ({}) with content '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                 content);
@@ -88,8 +85,8 @@ public final class NoteCommand extends SlashCommandAdapter {
                 ModerationAction.NOTE, null, content);
     }
 
-    private static void sendFeedback(@NotNull User target, @NotNull Member author,
-            @NotNull String noteContent, @NotNull IReplyCallback event) {
+    private static void sendFeedback(User target, Member author, String noteContent,
+            IReplyCallback event) {
         MessageEmbed feedback = ModerationUtils.createActionResponse(author.getUser(),
                 ModerationAction.NOTE, target, null, noteContent);
 

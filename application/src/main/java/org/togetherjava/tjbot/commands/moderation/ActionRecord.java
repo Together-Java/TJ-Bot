@@ -1,9 +1,9 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.Instant;
 
 /**
@@ -20,9 +20,8 @@ import java.time.Instant;
  *        {@code null}
  * @param reason the reason why this action was executed
  */
-public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, long authorId,
-        long targetId, @NotNull ModerationAction actionType, @Nullable Instant actionExpiresAt,
-        @NotNull String reason) {
+public record ActionRecord(int caseId, Instant issuedAt, long guildId, long authorId, long targetId,
+        ModerationAction actionType, @Nullable Instant actionExpiresAt, String reason) {
 
     /**
      * Creates the action record that corresponds to the given action entry from the database table.
@@ -30,8 +29,8 @@ public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, 
      * @param action the action to convert
      * @return the corresponding action record
      */
-    @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-    static @NotNull ActionRecord of(@NotNull ModerationActionsRecord action) {
+    @Nonnull
+    static ActionRecord of(ModerationActionsRecord action) {
         return new ActionRecord(action.getCaseId(), action.getIssuedAt(), action.getGuildId(),
                 action.getAuthorId(), action.getTargetId(),
                 ModerationAction.valueOf(action.getActionType()), action.getActionExpiresAt(),

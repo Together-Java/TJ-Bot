@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 /**
@@ -28,7 +28,7 @@ public interface MessageReceiver extends Feature {
      *
      * @return the pattern matching the names of relevant channels
      */
-    @NotNull
+    @Nonnull
     Pattern getChannelNamePattern();
 
     /**
@@ -38,7 +38,7 @@ public interface MessageReceiver extends Feature {
      * @param event the event that triggered this, containing information about the corresponding
      *        message that was sent and received
      */
-    void onMessageReceived(@NotNull MessageReceivedEvent event);
+    void onMessageReceived(MessageReceivedEvent event);
 
     /**
      * Triggered by the core system whenever an existing message was edited in a text channel of a
@@ -47,5 +47,5 @@ public interface MessageReceiver extends Feature {
      * @param event the event that triggered this, containing information about the corresponding
      *        message that was edited
      */
-    void onMessageUpdated(@NotNull MessageUpdateEvent event);
+    void onMessageUpdated(MessageUpdateEvent event);
 }

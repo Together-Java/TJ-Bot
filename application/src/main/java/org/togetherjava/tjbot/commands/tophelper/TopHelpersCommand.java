@@ -10,8 +10,6 @@ import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jooq.Records;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -20,6 +18,8 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.*;
 import java.time.format.TextStyle;
@@ -50,7 +50,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
      *
      * @param database the database containing the message records of top helpers
      */
-    public TopHelpersCommand(@NotNull Database database) {
+    public TopHelpersCommand(Database database) {
         super(COMMAND_NAME, "Lists top helpers for the last month, or a given month",
                 SlashCommandVisibility.GUILD);
 
@@ -65,7 +65,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         OptionMapping atMonthData = event.getOption(MONTH_OPTION);
 
         TimeRange timeRange = computeTimeRange(computeMonth(atMonthData));
@@ -88,7 +88,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             .onSuccess(members -> handleTopHelpers(topHelpers, members, timeRange, event));
     }
 
-    private static @NotNull Month computeMonth(@Nullable OptionMapping atMonthData) {
+    @Nonnull
+    private static Month computeMonth(@Nullable OptionMapping atMonthData) {
         if (atMonthData != null) {
             return Month.valueOf(atMonthData.getAsString());
         }
@@ -97,7 +98,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return Instant.now().atZone(ZoneOffset.UTC).minusMonths(1).getMonth();
     }
 
-    private static @NotNull TimeRange computeTimeRange(@NotNull Month atMonth) {
+    @Nonnull
+    private static TimeRange computeTimeRange(Month atMonth) {
         ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
 
         int atYear = now.getYear();
@@ -115,8 +117,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return new TimeRange(start, end, description);
     }
 
-    private @NotNull List<TopHelperResult> computeTopHelpersDescending(long guildId,
-            @NotNull TimeRange timeRange) {
+    @Nonnull
+    private List<TopHelperResult> computeTopHelpersDescending(long guildId, TimeRange timeRange) {
         return database.read(context -> context
             .select(HELP_CHANNEL_MESSAGES.AUTHOR_ID, DSL.sum(HELP_CHANNEL_MESSAGES.MESSAGE_LENGTH))
             .from(HELP_CHANNEL_MESSAGES)
@@ -128,14 +130,13 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             .fetch(Records.mapping(TopHelperResult::new)));
     }
 
-    private static void handleError(@NotNull Throwable error, @NotNull IDeferrableCallback event) {
+    private static void handleError(Throwable error, IDeferrableCallback event) {
         logger.warn("Failed to compute top-helpers", error);
         event.getHook().editOriginal("Sorry, something went wrong.").queue();
     }
 
-    private static void handleTopHelpers(@NotNull Collection<TopHelperResult> topHelpers,
-            @NotNull Collection<? extends Member> members, @NotNull TimeRange timeRange,
-            @NotNull IDeferrableCallback event) {
+    private static void handleTopHelpers(Collection<TopHelperResult> topHelpers,
+            Collection<? extends Member> members, TimeRange timeRange, IDeferrableCallback event) {
         Map<Long, Member> userIdToMember =
                 members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
 
@@ -150,7 +151,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         event.getHook().editOriginal(message).queue();
     }
 
-    private static @NotNull List<String> topHelperToDataRow(@NotNull TopHelperResult topHelper,
+    @Nonnull
+    private static List<String> topHelperToDataRow(TopHelperResult topHelper,
             @Nullable Member member) {
         String id = Long.toString(topHelper.authorId());
         String name = member == null ? "UNKNOWN_USER" : member.getEffectiveName();
@@ -159,8 +161,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return List.of(id, name, messageLengths);
     }
 
-    private static @NotNull String dataTableToString(@NotNull Collection<List<String>> dataTable,
-            @NotNull TimeRange timeRange) {
+    @Nonnull
+    private static String dataTableToString(Collection<List<String>> dataTable,
+            TimeRange timeRange) {
         return dataTableToAsciiTable(dataTable,
                 List.of(new ColumnSetting("Id", HorizontalAlign.RIGHT),
                         new ColumnSetting("Name", HorizontalAlign.RIGHT),
@@ -169,9 +172,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                                 HorizontalAlign.RIGHT)));
     }
 
-    private static @NotNull String dataTableToAsciiTable(
-            @NotNull Collection<List<String>> dataTable,
-            @NotNull List<ColumnSetting> columnSettings) {
+    @Nonnull
+    private static String dataTableToAsciiTable(Collection<List<String>> dataTable,
+            List<ColumnSetting> columnSettings) {
         IntFunction<String> headerToAlignment = i -> columnSettings.get(i).headerName();
         IntFunction<HorizontalAlign> indexToAlignment = i -> columnSettings.get(i).alignment();
 
@@ -186,15 +189,14 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return AsciiTable.getTable(AsciiTable.BASIC_ASCII_NO_DATA_SEPARATORS, dataTable, columns);
     }
 
-    private record TimeRange(@NotNull Instant start, @NotNull Instant end,
-            @NotNull String description) {
+    private record TimeRange(Instant start, Instant end, String description) {
     }
 
 
-    private record TopHelperResult(long authorId, @NotNull BigDecimal messageLengths) {
+    private record TopHelperResult(long authorId, BigDecimal messageLengths) {
     }
 
 
-    private record ColumnSetting(@NotNull String headerName, @NotNull HorizontalAlign alignment) {
+    private record ColumnSetting(String headerName, HorizontalAlign alignment) {
     }
 }

@@ -10,12 +10,12 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -58,7 +58,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
      * @param config the config to use
      * @param helper the helper to use
      */
-    public ImplicitAskListener(@NotNull Config config, @NotNull HelpSystemHelper helper) {
+    public ImplicitAskListener(Config config, HelpSystemHelper helper) {
         super(Pattern.compile(config.getHelpSystem().getStagingChannelPattern()));
 
         userIdToLastHelpThread = Caffeine.newBuilder()
@@ -70,7 +70,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         // Only listen to regular messages from users
         if (event.isWebhookMessage() || event.getMessage().getType() != MessageType.DEFAULT
                 || event.getAuthor().isBot()) {
@@ -101,7 +101,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             }, ImplicitAskListener::handleFailure);
     }
 
-    private boolean handleIsNotOnCooldown(@NotNull Message message) {
+    private boolean handleIsNotOnCooldown(Message message) {
         Member author = message.getMember();
 
         Optional<HelpThread> maybeLastHelpThread =
@@ -125,6 +125,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return false;
     }
 
+    @Nonnull
     private Optional<HelpThread> getLastHelpThreadIfOnCooldown(long userId) {
         return Optional.ofNullable(userIdToLastHelpThread.getIfPresent(userId))
             .filter(lastHelpThread -> {
@@ -136,7 +137,8 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             });
     }
 
-    private static @NotNull String createTitle(@NotNull String message) {
+    @Nonnull
+    private static String createTitle(String message) {
         String titleCandidate;
         if (message.length() < TITLE_MAX_LENGTH) {
             titleCandidate = message;
@@ -154,8 +156,8 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return HelpSystemHelper.isTitleValid(titleCandidate) ? titleCandidate : "Untitled";
     }
 
-    private @NotNull RestAction<?> handleEvent(@NotNull ThreadChannel threadChannel,
-            @NotNull Message message, @NotNull String title) {
+    @Nonnull
+    private RestAction<?> handleEvent(ThreadChannel threadChannel, Message message, String title) {
         Member author = message.getMember();
         helper.writeHelpThreadToDatabase(author, threadChannel);
         userIdToLastHelpThread.put(author.getIdLong(),
@@ -167,13 +169,15 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
-    private static @NotNull RestAction<Void> inviteUsersToThread(
-            @NotNull ThreadChannel threadChannel, @NotNull Member author) {
+    @Nonnull
+    private static RestAction<Void> inviteUsersToThread(ThreadChannel threadChannel,
+            Member author) {
         return threadChannel.addThreadMember(author);
     }
 
-    private static @NotNull MessageAction sendInitialMessage(@NotNull ThreadChannel threadChannel,
-            @NotNull Message originalMessage, @NotNull String title) {
+    @Nonnull
+    private static MessageAction sendInitialMessage(ThreadChannel threadChannel,
+            Message originalMessage, String title) {
         String content = originalMessage.getContentRaw();
         Member author = originalMessage.getMember();
 
@@ -194,8 +198,8 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return threadChannel.sendMessage(threadMessage);
     }
 
-    private static @NotNull MessageAction notifyUser(@NotNull IMentionable threadChannel,
-            @NotNull Message message) {
+    @Nonnull
+    private static MessageAction notifyUser(IMentionable threadChannel, Message message) {
         return message.getChannel()
             .sendMessage(
                     """
@@ -205,7 +209,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
                                 threadChannel.getAsMention()));
     }
 
-    private static void handleFailure(@NotNull Throwable exception) {
+    private static void handleFailure(Throwable exception) {
         if (exception instanceof ErrorResponseException responseException) {
             ErrorResponse response = responseException.getErrorResponse();
             if (response == ErrorResponse.MAX_CHANNELS
@@ -217,6 +221,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         logger.error("Attempted to create a help thread, but failed", exception);
     }
 
-    private record HelpThread(long channelId, long authorId, @NotNull Instant creationTime) {
+    private record HelpThread(long channelId, long authorId, Instant creationTime) {
     }
 }

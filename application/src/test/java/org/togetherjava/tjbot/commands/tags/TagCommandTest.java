@@ -3,8 +3,6 @@ package org.togetherjava.tjbot.commands.tags;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +11,9 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 import org.togetherjava.tjbot.jda.SlashCommandInteractionEventBuilder;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static org.mockito.Mockito.*;
 
@@ -29,7 +30,8 @@ final class TagCommandTest {
         command = new TagCommand(system);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerSlashCommand(@NotNull String id,
+    @Nonnull
+    private SlashCommandInteractionEvent triggerSlashCommand(String id,
             @Nullable Member userToReplyTo) {
         SlashCommandInteractionEventBuilder builder =
                 jdaTester.createSlashCommandInteractionEvent(command)

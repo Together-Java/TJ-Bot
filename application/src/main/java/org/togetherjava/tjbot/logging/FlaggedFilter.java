@@ -7,7 +7,8 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
 
 
 /**
@@ -30,7 +31,7 @@ public class FlaggedFilter extends AbstractFilter {
      * @param onMatch The action to take on a match.
      * @param onMismatch The action to take on a mismatch.
      */
-    public FlaggedFilter(@NotNull Result onMatch, @NotNull Result onMismatch) {
+    public FlaggedFilter(Result onMatch, Result onMismatch) {
         super(onMatch, onMismatch);
     }
 
@@ -43,6 +44,7 @@ public class FlaggedFilter extends AbstractFilter {
      * @return {@link Result#DENY} if the Flag is not set, else {@link Result#NEUTRAL}
      */
     @Override
+    @Nonnull
     public Result filter(LogEvent event) {
         return isLoggingEnabled() ? Result.NEUTRAL : Result.DENY;
     }
@@ -59,9 +61,10 @@ public class FlaggedFilter extends AbstractFilter {
      * @return The created FlaggedFilter.
      */
     @PluginFactory
+    @Nonnull
     public static FlaggedFilter createFilter(
-            @NotNull @PluginAttribute(value = "onMatch", defaultString = "NEUTRAL") Result onMatch,
-            @NotNull
+            @PluginAttribute(value = "onMatch", defaultString = "NEUTRAL") Result onMatch,
+
             @PluginAttribute(value = "onMismatch", defaultString = "DENY") Result onMismatch) {
         return new FlaggedFilter(onMatch, onMismatch);
     }

@@ -2,7 +2,7 @@
  * This package provides utilities to generate, persist and parse component IDs.
  * <p>
  * See
- * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(net.dv8tion.jda.api.events.interaction.SlashCommandInteractionEvent)}
+ * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent)}
  * for details on component IDs.
  * <p>
  * The class {@link org.togetherjava.tjbot.commands.componentids.ComponentIdStore} is the central
@@ -10,4 +10,7 @@
  * {@link org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator} and
  * {@link org.togetherjava.tjbot.commands.componentids.ComponentIdParser}.
  */
+@ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.componentids;
+
+import javax.annotation.ParametersAreNonnullByDefault;

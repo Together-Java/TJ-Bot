@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.mathcommands;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +26,8 @@ final class TeXCommandTest {
         command = jdaTester.spySlashCommand(new TeXCommand());
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerSlashCommand(@NotNull String latex) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerSlashCommand(String latex) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setOption(TeXCommand.LATEX_OPTION, latex)
             .build();
@@ -35,8 +36,7 @@ final class TeXCommandTest {
         return event;
     }
 
-    private void verifySuccessfulResponse(@NotNull SlashCommandInteractionEvent event,
-            @NotNull String query) {
+    private void verifySuccessfulResponse(SlashCommandInteractionEvent event, String query) {
         verify(jdaTester.getInteractionHookMock(), description("Testing query: " + query))
             .editOriginal(any(byte[].class), eq("tex.png"));
     }
@@ -61,7 +61,7 @@ final class TeXCommandTest {
     @ParameterizedTest
     @MethodSource("provideSupportedQueries")
     @DisplayName("The command supports and renders all supported latex queries")
-    void canRenderSupportedQuery(@NotNull String supportedQuery) {
+    void canRenderSupportedQuery(String supportedQuery) {
         // GIVEN a supported latex query
 
         // WHEN triggering the command
@@ -78,7 +78,7 @@ final class TeXCommandTest {
     @ParameterizedTest
     @MethodSource("provideBadInlineQueries")
     @DisplayName("The command does not support bad inline latex queries, for example with missing dollars")
-    void failsOnBadInlineQuery(@NotNull String badInlineQuery) {
+    void failsOnBadInlineQuery(String badInlineQuery) {
         // GIVEN a bad inline latex query
 
         // WHEN triggering the command
@@ -96,7 +96,7 @@ final class TeXCommandTest {
     @ParameterizedTest
     @MethodSource("provideBadQueries")
     @DisplayName("The command does not support bad latex queries, for example with unknown symbols or incomplete braces")
-    void failsOnBadQuery(@NotNull String badQuery) {
+    void failsOnBadQuery(String badQuery) {
         // GIVEN a bad inline latex query
 
         // WHEN triggering the command

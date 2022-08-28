@@ -2,7 +2,8 @@ package org.togetherjava.tjbot.commands.filesharing;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.jetbrains.annotations.NotNull;
+
+import javax.annotation.Nonnull;
 
 /**
  * @see <a href="https://docs.github.com/en/rest/gists/gists#create-a-gist">Create a Gist via
@@ -13,11 +14,12 @@ final class GistResponse {
     @JsonProperty("html_url")
     private String htmlUrl;
 
-    public @NotNull String getHtmlUrl() {
-        return this.htmlUrl;
+    @Nonnull
+    public String getHtmlUrl() {
+        return htmlUrl;
     }
 
-    public void setHtmlUrl(@NotNull String htmlUrl) {
+    public void setHtmlUrl(String htmlUrl) {
         this.htmlUrl = htmlUrl;
     }
 }

@@ -11,11 +11,11 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -47,7 +47,7 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
      * @param config the config to use
      * @param helper the helper to use
      */
-    public ChangeHelpCategoryCommand(@NotNull Config config, @NotNull HelpSystemHelper helper) {
+    public ChangeHelpCategoryCommand(Config config, HelpSystemHelper helper) {
         super("change-help-category", "changes the category of a help thread",
                 SlashCommandVisibility.GUILD);
 
@@ -68,7 +68,7 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         String category = event.getOption(CATEGORY_OPTION).getAsString();
 
         ThreadChannel helpThread = event.getThreadChannel();
@@ -96,9 +96,9 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private @NotNull RestAction<Message> sendCategoryChangedMessage(@NotNull Guild guild,
-            @NotNull InteractionHook hook, @NotNull ThreadChannel helpThread,
-            @NotNull String category) {
+    @Nonnull
+    private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
+            ThreadChannel helpThread, String category) {
         String changedContent = "Changed the category to **%s**.".formatted(category);
         var action = hook.editOriginal(changedContent);
 
@@ -119,7 +119,7 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
             .flatMap(message -> message.editMessage(headsUpWithRole)));
     }
 
-    private boolean isHelpThreadOnCooldown(@NotNull ThreadChannel helpThread) {
+    private boolean isHelpThreadOnCooldown(ThreadChannel helpThread) {
         return Optional
             .ofNullable(helpThreadIdToLastCategoryChange.getIfPresent(helpThread.getIdLong()))
             .map(lastCategoryChange -> lastCategoryChange.plus(COOLDOWN_DURATION_VALUE,

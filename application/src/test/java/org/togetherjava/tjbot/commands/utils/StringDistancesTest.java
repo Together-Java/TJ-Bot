@@ -1,18 +1,16 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class StringDistancesTest {
 
     @Test
     void editDistance() {
-        record TestCase(@NotNull String name, int expectedDistance, @NotNull String source,
-                @NotNull String destination) {
+        record TestCase(String name, int expectedDistance, String source, String destination) {
         }
         List<TestCase> tests = List.of(new TestCase("identity", 0, "-", "-"),
                 new TestCase("empty_identity", 0, "", ""), new TestCase("empty_remove", 1, "a", ""),
@@ -31,8 +29,7 @@ final class StringDistancesTest {
 
     @Test
     void prefixEditDistance() {
-        record TestCase(@NotNull String name, int expectedDistance, @NotNull String source,
-                @NotNull String destination) {
+        record TestCase(String name, int expectedDistance, String source, String destination) {
         }
         List<TestCase> tests = List.of(new TestCase("identity", 0, "-", "-"),
                 new TestCase("empty_identity", 0, "", ""), new TestCase("empty_remove", 1, "a", ""),

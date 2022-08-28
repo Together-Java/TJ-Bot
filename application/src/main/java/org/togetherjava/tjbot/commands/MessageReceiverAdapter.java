@@ -2,8 +2,8 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 /**
@@ -24,24 +24,25 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
      * @param channelNamePattern the pattern matching names of channels interested in, only messages
      *        from matching channels will be received
      */
-    protected MessageReceiverAdapter(@NotNull Pattern channelNamePattern) {
+    protected MessageReceiverAdapter(Pattern channelNamePattern) {
         this.channelNamePattern = channelNamePattern;
     }
 
     @Override
-    public final @NotNull Pattern getChannelNamePattern() {
+    @Nonnull
+    public final Pattern getChannelNamePattern() {
         return channelNamePattern;
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onMessageUpdated(@NotNull MessageUpdateEvent event) {
+    public void onMessageUpdated(MessageUpdateEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 }

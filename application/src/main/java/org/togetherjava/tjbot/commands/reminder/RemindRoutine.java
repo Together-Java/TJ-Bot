@@ -2,17 +2,20 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.PrivateChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
-import java.awt.*;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.TimeUnit;
@@ -37,18 +40,19 @@ public final class RemindRoutine implements Routine {
      *
      * @param database the database that contains the pending reminders to send.
      */
-    public RemindRoutine(@NotNull Database database) {
+    public RemindRoutine(Database database) {
         this.database = database;
     }
 
     @Override
-    public @NotNull Schedule createSchedule() {
+    @Nonnull
+    public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_INTERVAL_SECONDS,
                 TimeUnit.SECONDS);
     }
 
     @Override
-    public void runRoutine(@NotNull JDA jda) {
+    public void runRoutine(JDA jda) {
         Instant now = Instant.now();
         database.write(context -> context.selectFrom(PENDING_REMINDERS)
             .where(PENDING_REMINDERS.REMIND_AT.lessOrEqual(now))
@@ -62,13 +66,13 @@ public final class RemindRoutine implements Routine {
             }));
     }
 
-    private static void sendReminder(@NotNull JDA jda, long id, long channelId, long authorId,
-            @NotNull CharSequence content, @NotNull TemporalAccessor createdAt) {
+    private static void sendReminder(JDA jda, long id, long channelId, long authorId,
+            CharSequence content, TemporalAccessor createdAt) {
         RestAction<ReminderRoute> route = computeReminderRoute(jda, channelId, authorId);
         sendReminderViaRoute(route, id, content, createdAt);
     }
 
-    private static RestAction<ReminderRoute> computeReminderRoute(@NotNull JDA jda, long channelId,
+    private static RestAction<ReminderRoute> computeReminderRoute(JDA jda, long channelId,
             long authorId) {
         // If guild channel can still be found, send there
         MessageChannel channel = jda.getChannelById(MessageChannel.class, channelId);
@@ -80,20 +84,21 @@ public final class RemindRoutine implements Routine {
         return createDmReminderRoute(jda, authorId);
     }
 
-    private static @NotNull RestAction<ReminderRoute> createGuildReminderRoute(@NotNull JDA jda,
-            long authorId, @NotNull MessageChannel channel) {
+    @Nonnull
+    private static RestAction<ReminderRoute> createGuildReminderRoute(JDA jda, long authorId,
+            MessageChannel channel) {
         return jda.retrieveUserById(authorId)
             .onErrorMap(error -> null)
             .map(author -> ReminderRoute.toPublic(channel, author));
     }
 
-    private static @NotNull RestAction<ReminderRoute> createDmReminderRoute(@NotNull JDA jda,
-            long authorId) {
+    @Nonnull
+    private static RestAction<ReminderRoute> createDmReminderRoute(JDA jda, long authorId) {
         return jda.openPrivateChannelById(authorId).map(ReminderRoute::toPrivate);
     }
 
-    private static void sendReminderViaRoute(@NotNull RestAction<ReminderRoute> routeAction,
-            long id, @NotNull CharSequence content, @NotNull TemporalAccessor createdAt) {
+    private static void sendReminderViaRoute(RestAction<ReminderRoute> routeAction, long id,
+            CharSequence content, TemporalAccessor createdAt) {
         Function<ReminderRoute, MessageAction> sendMessage = route -> route.channel
             .sendMessageEmbeds(createReminderEmbed(content, createdAt, route.target()))
             .content(route.description());
@@ -108,8 +113,9 @@ public final class RemindRoutine implements Routine {
         routeAction.flatMap(sendMessage).queue(doNothing(), logFailure);
     }
 
-    private static @NotNull MessageEmbed createReminderEmbed(@NotNull CharSequence content,
-            @NotNull TemporalAccessor createdAt, @Nullable User author) {
+    @Nonnull
+    private static MessageEmbed createReminderEmbed(CharSequence content,
+            TemporalAccessor createdAt, @Nullable User author) {
         String authorName = author == null ? "Unknown user" : author.getAsTag();
         String authorIconUrl = author == null ? null : author.getAvatarUrl();
 
@@ -121,19 +127,22 @@ public final class RemindRoutine implements Routine {
             .build();
     }
 
-    private static <T> @NotNull Consumer<T> doNothing() {
+    @Nonnull
+    private static <T> Consumer<T> doNothing() {
         return a -> {
         };
     }
 
-    private record ReminderRoute(@NotNull MessageChannel channel, @Nullable User target,
+    private record ReminderRoute(MessageChannel channel, @Nullable User target,
             @Nullable String description) {
-        static ReminderRoute toPublic(@NotNull MessageChannel channel, @Nullable User target) {
+        @Nonnull
+        static ReminderRoute toPublic(MessageChannel channel, @Nullable User target) {
             return new ReminderRoute(channel, target,
                     target == null ? null : target.getAsMention());
         }
 
-        static ReminderRoute toPrivate(@NotNull PrivateChannel channel) {
+        @Nonnull
+        static ReminderRoute toPrivate(PrivateChannel channel) {
             return new ReminderRoute(channel, channel.getUser(),
                     "(Sending your reminder directly, because I was unable to locate"
                             + " the original channel you wanted it to be send to)");

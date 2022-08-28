@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
@@ -39,7 +38,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
      *
      * @param config the config to use
      */
-    public WolframAlphaCommand(@NotNull Config config) {
+    public WolframAlphaCommand(Config config) {
         super("wolfram-alpha", "Renders mathematical queries using WolframAlpha",
                 SlashCommandVisibility.GUILD);
         getData().addOption(OptionType.STRING, QUERY_OPTION, "the query to send to WolframAlpha",
@@ -48,7 +47,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         String query = event.getOption(QUERY_OPTION).getAsString();
         WolframAlphaHandler handler = new WolframAlphaHandler(query);
 
@@ -73,8 +72,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             .thenAccept(response -> sendResponse(response, event));
     }
 
-    private static void sendResponse(@NotNull WolframAlphaHandler.HandlerResponse response,
-            @NotNull IDeferrableCallback event) {
+    private static void sendResponse(WolframAlphaHandler.HandlerResponse response,
+            IDeferrableCallback event) {
         WebhookMessageUpdateAction<Message> action =
                 event.getHook().editOriginalEmbeds(response.embeds());
 

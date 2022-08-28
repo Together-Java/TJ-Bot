@@ -1,12 +1,13 @@
 package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
+
+import javax.annotation.Nonnull;
 
 import static org.mockito.Mockito.verify;
 
@@ -14,7 +15,8 @@ final class PingCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
 
-    private @NotNull SlashCommandInteractionEvent triggerSlashCommand() {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerSlashCommand() {
         SlashCommandInteractionEvent event =
                 jdaTester.createSlashCommandInteractionEvent(command).build();
         command.onSlashCommand(event);

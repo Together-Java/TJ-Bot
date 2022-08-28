@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.tophelper;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
@@ -29,7 +28,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
      * @param database to store message meta-data in
      * @param config the config to use for this
      */
-    public TopHelpersMessageListener(@NotNull Database database, @NotNull Config config) {
+    public TopHelpersMessageListener(Database database, Config config) {
         super(Pattern.compile(".*"));
 
         this.database = database;
@@ -41,7 +40,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
             return;
         }
@@ -53,7 +52,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         addMessageRecord(event);
     }
 
-    private boolean isHelpThread(@NotNull MessageReceivedEvent event) {
+    private boolean isHelpThread(MessageReceivedEvent event) {
         if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
             return false;
         }
@@ -64,7 +63,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
                 || isOverviewChannelName.test(rootChannelName);
     }
 
-    private void addMessageRecord(@NotNull MessageReceivedEvent event) {
+    private void addMessageRecord(MessageReceivedEvent event) {
         database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
             .setMessageId(event.getMessage().getIdLong())
             .setGuildId(event.getGuild().getIdLong())

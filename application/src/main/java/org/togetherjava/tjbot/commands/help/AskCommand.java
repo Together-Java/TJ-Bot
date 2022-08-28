@@ -9,13 +9,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
@@ -54,7 +54,7 @@ public final class AskCommand extends SlashCommandAdapter {
      * @param config the config to use
      * @param helper the helper to use
      */
-    public AskCommand(@NotNull Config config, @NotNull HelpSystemHelper helper) {
+    public AskCommand(Config config, HelpSystemHelper helper) {
         super("ask", "Ask a question - use this in the staging channel",
                 SlashCommandVisibility.GUILD);
 
@@ -72,7 +72,7 @@ public final class AskCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         String title = event.getOption(TITLE_OPTION).getAsString();
         String category = event.getOption(CATEGORY_OPTION).getAsString();
 
@@ -102,7 +102,7 @@ public final class AskCommand extends SlashCommandAdapter {
             }, e -> handleFailure(e, eventHook));
     }
 
-    private boolean handleIsValidTitle(@NotNull CharSequence title, @NotNull IReplyCallback event) {
+    private boolean handleIsValidTitle(CharSequence title, IReplyCallback event) {
         if (HelpSystemHelper.isTitleValid(title)) {
             return true;
         }
@@ -119,18 +119,18 @@ public final class AskCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private @NotNull RestAction<Message> handleEvent(@NotNull InteractionHook eventHook,
-            @NotNull ThreadChannel threadChannel, @NotNull Member author, @NotNull String title,
-            @NotNull String category, @NotNull Guild guild) {
+    @Nonnull
+    private RestAction<Message> handleEvent(InteractionHook eventHook, ThreadChannel threadChannel,
+            Member author, String title, String category, Guild guild) {
         helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
-    private RestAction<Message> sendInitialMessage(@NotNull Guild guild,
-            @NotNull ThreadChannel threadChannel, @NotNull Member author, @NotNull String title,
-            @NotNull String category) {
+    @Nonnull
+    private RestAction<Message> sendInitialMessage(Guild guild, ThreadChannel threadChannel,
+            Member author, String title, String category) {
         String roleMentionDescription = helper.handleFindRoleForCategory(category, guild)
             .map(role -> " (%s)".formatted(role.getAsMention()))
             .orElse("");
@@ -148,15 +148,15 @@ public final class AskCommand extends SlashCommandAdapter {
             .flatMap(message -> message.editMessage(contentWithRole));
     }
 
-    private static @NotNull RestAction<Message> notifyUser(@NotNull InteractionHook eventHook,
-            @NotNull IMentionable threadChannel) {
+    @Nonnull
+    private static RestAction<Message> notifyUser(InteractionHook eventHook,
+            IMentionable threadChannel) {
         return eventHook.editOriginal("""
                 Created a thread for you: %s
                 Please ask your question there, thanks.""".formatted(threadChannel.getAsMention()));
     }
 
-    private static void handleFailure(@NotNull Throwable exception,
-            @NotNull InteractionHook eventHook) {
+    private static void handleFailure(Throwable exception, InteractionHook eventHook) {
         if (exception instanceof ErrorResponseException responseException) {
             ErrorResponse response = responseException.getErrorResponse();
             if (response == ErrorResponse.MAX_CHANNELS

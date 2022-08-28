@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -32,7 +31,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
      *
      * @param actionsStore used to store actions issued by this command
      */
-    public UnbanCommand(@NotNull ModerationActionsStore actionsStore) {
+    public UnbanCommand(ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Unbans the given user from the server", SlashCommandVisibility.GUILD);
 
         getData()
@@ -43,8 +42,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private void unban(@NotNull User target, @NotNull Member author, @NotNull String reason,
-            @NotNull Guild guild, @NotNull IReplyCallback event) {
+    private void unban(User target, Member author, String reason, Guild guild,
+            IReplyCallback event) {
         guild.unban(target).reason(reason).queue(result -> {
             MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
                     ModerationAction.UNBAN, target, null, reason);
@@ -59,8 +58,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
         }, unbanFailure -> handleFailure(unbanFailure, target, event));
     }
 
-    private static void handleFailure(@NotNull Throwable unbanFailure, @NotNull User target,
-            @NotNull IReplyCallback event) {
+    private static void handleFailure(Throwable unbanFailure, User target, IReplyCallback event) {
         String targetTag = target.getAsTag();
         if (unbanFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
@@ -82,15 +80,14 @@ public final class UnbanCommand extends SlashCommandAdapter {
                 targetTag, unbanFailure);
     }
 
-    @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion"})
-    private boolean handleChecks(@NotNull IPermissionHolder bot, @NotNull Member author,
-            @NotNull CharSequence reason, @NotNull Guild guild, @NotNull IReplyCallback event) {
+    private boolean handleChecks(IPermissionHolder bot, Member author, CharSequence reason,
+            Guild guild, IReplyCallback event) {
         if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
                 guild, event)) {
             return false;
         }
         if (!ModerationUtils.handleHasAuthorPermissions(ACTION_VERB, Permission.BAN_MEMBERS, author,
-                guild, event)) {
+                event)) {
             return false;
         }
 
@@ -98,7 +95,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         User target = Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null")
             .getAsUser();
         Member author = Objects.requireNonNull(event.getMember(), "The author is null");

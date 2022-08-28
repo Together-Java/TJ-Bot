@@ -13,13 +13,13 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
+import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Function;
@@ -80,7 +80,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         if (!handleHasPermissions(event)) {
             return;
         }
@@ -101,7 +101,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         sendRoleSelectionMenu(event, selectedRoles);
     }
 
-    private boolean handleHasPermissions(@NotNull SlashCommandInteractionEvent event) {
+    private boolean handleHasPermissions(SlashCommandInteractionEvent event) {
         if (!event.getMember().hasPermission(Permission.MANAGE_ROLES)) {
             event.reply("You do not have the required manage role permission to use this command")
                 .setEphemeral(true)
@@ -123,7 +123,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     @Contract(pure = true)
-    private static boolean handleIsBotAccessibleRole(@NotNull Role role) {
+    private static boolean handleIsBotAccessibleRole(Role role) {
         boolean isSystemRole = role.isPublicRole() || role.getTags().isBot()
                 || role.getTags().isBoost() || role.getTags().isIntegration();
 
@@ -135,8 +135,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         return !isSystemRole;
     }
 
-    private static boolean handleAccessibleRolesSelected(@NotNull IReplyCallback event,
-            @NotNull Collection<Role> selectedRoles) {
+    private static boolean handleAccessibleRolesSelected(IReplyCallback event,
+            Collection<Role> selectedRoles) {
         if (!selectedRoles.isEmpty()) {
             return true;
         }
@@ -151,8 +151,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private static boolean handleInteractableRolesSelected(@NotNull IReplyCallback event,
-            @NotNull Collection<Role> selectedRoles) {
+    private static boolean handleInteractableRolesSelected(IReplyCallback event,
+            Collection<Role> selectedRoles) {
         List<Role> nonInteractableRoles = selectedRoles.stream()
             .filter(role -> !event.getGuild().getSelfMember().canInteract(role))
             .toList();
@@ -173,8 +173,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private void sendRoleSelectionMenu(@NotNull final CommandInteraction event,
-            @NotNull final Collection<? extends Role> selectableRoles) {
+    private void sendRoleSelectionMenu(final CommandInteraction event,
+            final Collection<? extends Role> selectableRoles) {
         SelectMenu.Builder menu =
                 SelectMenu.create(generateComponentId(Lifespan.PERMANENT, event.getUser().getId()))
                     .setPlaceholder("Select your roles")
@@ -193,8 +193,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         event.replyEmbeds(embed).addActionRow(menu.build()).queue();
     }
 
-    @NotNull
-    private static SelectOption mapToSelectOption(@NotNull Role role) {
+    @Nonnull
+    private static SelectOption mapToSelectOption(Role role) {
         RoleIcon roleIcon = role.getIcon();
 
         SelectOption option = SelectOption.of(role.getName(), role.getId());
@@ -206,8 +206,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
-            @NotNull List<String> args) {
+    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
         Guild guild = event.getGuild();
         List<Role> selectedRoles = event.getSelectedOptions()
             .stream()
@@ -223,8 +222,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         handleRoleSelection(event, guild, selectedRoles);
     }
 
-    private static void handleRoleSelection(@NotNull SelectMenuInteractionEvent event,
-            @NotNull Guild guild, @NotNull Collection<Role> selectedRoles) {
+    private static void handleRoleSelection(SelectMenuInteractionEvent event, Guild guild,
+            Collection<Role> selectedRoles) {
         Collection<Role> rolesToAdd = new ArrayList<>(selectedRoles.size());
         Collection<Role> rolesToRemove = new ArrayList<>(selectedRoles.size());
 
@@ -244,8 +243,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         modifyRoles(event, event.getMember(), guild, rolesToAdd, rolesToRemove);
     }
 
-    @NotNull
-    private static Function<SelectOption, Optional<Role>> optionToRole(@NotNull Guild guild) {
+    @Nonnull
+    private static Function<SelectOption, Optional<Role>> optionToRole(Guild guild) {
         return option -> {
             Role role = guild.getRoleById(option.getValue());
 
@@ -259,16 +258,15 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         };
     }
 
-    private static void modifyRoles(@NotNull IReplyCallback event, @NotNull Member target,
-            @NotNull Guild guild, @NotNull Collection<Role> rolesToAdd,
-            @NotNull Collection<Role> rolesToRemove) {
+    private static void modifyRoles(IReplyCallback event, Member target, Guild guild,
+            Collection<Role> rolesToAdd, Collection<Role> rolesToRemove) {
         guild.modifyMemberRoles(target, rolesToAdd, rolesToRemove)
             .flatMap(empty -> event.reply("Your roles have been updated.").setEphemeral(true))
             .queue();
     }
 
-    private static @NotNull MessageEmbed createEmbed(@NotNull String title,
-            @NotNull CharSequence description) {
+    @Nonnull
+    private static MessageEmbed createEmbed(String title, CharSequence description) {
         return new EmbedBuilder().setTitle(title)
             .setDescription(description)
             .setColor(AMBIENT_COLOR)

@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +19,7 @@ import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -36,7 +36,8 @@ final class TagManageCommandTest {
     private Member moderator;
     private ModAuditLogWriter modAuditLogWriter;
 
-    private static @NotNull MessageEmbed getResponse(@NotNull SlashCommandInteractionEvent event) {
+    @Nonnull
+    private static MessageEmbed getResponse(SlashCommandInteractionEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(event).replyEmbeds(responseCaptor.capture());
         return responseCaptor.getValue();
@@ -61,12 +62,13 @@ final class TagManageCommandTest {
         when(moderatorRole.getName()).thenReturn(moderatorRoleName);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerRawCommand(@NotNull String tagId) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerRawCommand(String tagId) {
         return triggerRawCommandWithUser(tagId, moderator);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerRawCommandWithUser(@NotNull String tagId,
-            @NotNull Member user) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerRawCommandWithUser(String tagId, Member user) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(TagManageCommand.Subcommand.RAW.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
@@ -77,19 +79,19 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerCreateCommand(@NotNull String tagId,
-            @NotNull String content) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerCreateCommand(String tagId, String content) {
         return triggerTagContentCommand(TagManageCommand.Subcommand.CREATE, tagId, content);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerEditCommand(@NotNull String tagId,
-            @NotNull String content) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerEditCommand(String tagId, String content) {
         return triggerTagContentCommand(TagManageCommand.Subcommand.EDIT, tagId, content);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerTagContentCommand(
-            @NotNull TagManageCommand.Subcommand subcommand, @NotNull String tagId,
-            @NotNull String content) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerTagContentCommand(
+            TagManageCommand.Subcommand subcommand, String tagId, String content) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(subcommand.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
@@ -101,21 +103,23 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerCreateWithMessageCommand(
-            @NotNull String tagId, @NotNull String messageId) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerCreateWithMessageCommand(String tagId,
+            String messageId) {
         return triggerTagMessageCommand(TagManageCommand.Subcommand.CREATE_WITH_MESSAGE, tagId,
                 messageId);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerEditWithMessageCommand(
-            @NotNull String tagId, @NotNull String messageId) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerEditWithMessageCommand(String tagId,
+            String messageId) {
         return triggerTagMessageCommand(TagManageCommand.Subcommand.EDIT_WITH_MESSAGE, tagId,
                 messageId);
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerTagMessageCommand(
-            @NotNull TagManageCommand.Subcommand subcommand, @NotNull String tagId,
-            @NotNull String messageId) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerTagMessageCommand(
+            TagManageCommand.Subcommand subcommand, String tagId, String messageId) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(subcommand.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
@@ -127,7 +131,8 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private @NotNull SlashCommandInteractionEvent triggerDeleteCommand(@NotNull String tagId) {
+    @Nonnull
+    private SlashCommandInteractionEvent triggerDeleteCommand(String tagId) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(TagManageCommand.Subcommand.DELETE.getName())
             .setOption(TagManageCommand.ID_OPTION, tagId)
@@ -138,13 +143,13 @@ final class TagManageCommandTest {
         return event;
     }
 
-    private void postMessage(@NotNull String content, @NotNull String id) {
+    private void postMessage(String content, String id) {
         Message message = new MessageBuilder(content).build();
         doReturn(jdaTester.createSucceededActionMock(message)).when(jdaTester.getTextChannelSpy())
             .retrieveMessageById(id);
     }
 
-    private void failOnRetrieveMessage(@NotNull String messageId, @NotNull Throwable failure) {
+    private void failOnRetrieveMessage(String messageId, Throwable failure) {
         doReturn(jdaTester.createFailedActionMock(failure)).when(jdaTester.getTextChannelSpy())
             .retrieveMessageById(messageId);
     }

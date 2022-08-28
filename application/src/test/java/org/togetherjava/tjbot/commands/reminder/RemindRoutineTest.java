@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.reminder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,7 @@ import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.jda.JdaTester;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -39,13 +39,15 @@ final class RemindRoutineTest {
         routine.runRoutine(jdaTester.getJdaMock());
     }
 
-    private static @NotNull MessageEmbed getLastMessageFrom(@NotNull MessageChannel channel) {
+    @Nonnull
+    private static MessageEmbed getLastMessageFrom(MessageChannel channel) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(channel).sendMessageEmbeds(responseCaptor.capture());
         return responseCaptor.getValue();
     }
 
-    private @NotNull Member createAndSetupUnknownMember() {
+    @Nonnull
+    private Member createAndSetupUnknownMember() {
         int unknownMemberId = 2;
 
         Member member = jdaTester.createMemberSpy(unknownMemberId);
@@ -65,7 +67,8 @@ final class RemindRoutineTest {
         return member;
     }
 
-    private @NotNull TextChannel createAndSetupUnknownChannel() {
+    @Nonnull
+    private TextChannel createAndSetupUnknownChannel() {
         long unknownChannelId = 2;
 
         TextChannel channel = jdaTester.createTextChannelSpy(unknownChannelId);
@@ -173,7 +176,7 @@ final class RemindRoutineTest {
         verify(jdaTester.getTextChannelSpy(), never()).sendMessageEmbeds(any(MessageEmbed.class));
     }
 
-    private static void assertSimilar(@NotNull Instant expected, @NotNull Instant actual) {
+    private static void assertSimilar(Instant expected, Instant actual) {
         // NOTE For some reason, the instant ends up in the database slightly wrong already (about
         // half a second), seems to be an issue with jOOQ
         assertEquals(expected.toEpochMilli(), actual.toEpochMilli(), TimeUnit.SECONDS.toMillis(1));
