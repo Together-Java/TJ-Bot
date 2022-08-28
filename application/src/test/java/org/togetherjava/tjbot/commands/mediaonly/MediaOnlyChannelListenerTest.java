@@ -66,7 +66,20 @@ final class MediaOnlyChannelListenerTest {
 
         // THEN it does not get deleted
         verify(event.getMessage(), never()).delete();
+    }
 
+    @Test
+    void keepsMessageWithLinkedMedia() {
+        // GIVEN a message with media linked in the message
+        Message message = new MessageBuilder()
+            .setContent("Check out this cute cat https://i.imgur.com/HLFByUJ.png")
+            .build();
+
+        // WHEN sending the message
+        MessageReceivedEvent event = sendMessage(message);
+
+        // THEN it does not get deleted
+        verify(event.getMessage(), never()).delete();
     }
 
     @Test

@@ -46,7 +46,8 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     private static boolean messageHasNoMediaAttached(MessageReceivedEvent event) {
         Message message = event.getMessage();
-        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty();
+        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
+                && !message.getContentRaw().contains("http");
     }
 
     @Nonnull
