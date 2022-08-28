@@ -232,21 +232,27 @@ public final class Config {
     }
 
     /**
-
+     * 
      * Gets the REGEX pattern used to identify the channel that is supposed to contain only Media.
      *
      * @return the channel name pattern
      */
-     
+
     @Nonnull
     public String getMediaOnlyChannelPattern() {
         return mediaOnlyChannelPattern;
     }
-    
-    * Gets a list of all blacklisted file extensions.
-     *
-     * @return a list of all blacklisted file extensions
-     */
+
+    *
+
+    Gets a
+    list of
+    all blacklisted
+    file extensions.**@return
+    a list
+    of all
+    blacklisted file extensions*/
+
     public @NotNull List<String> getBlacklistedFileExtensions() {
         return Collections.unmodifiableList(blacklistedFileExtension);
 }

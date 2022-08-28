@@ -14,7 +14,6 @@ import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 import java.awt.*;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -54,13 +53,14 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
 
     private RestAction<Message> dmUser(@NotNull Message message) {
         Message dmMessage = createDmMessage(message);
-        return message.getJDA()
-            .openPrivateChannelById(message.getAuthor().getIdLong())
-            .flatMap(channel -> channel.sendMessage(dmMessage));
+        return message.getAuthor()
+            .openPrivateChannel()
+            .flatMap(privateChannel -> privateChannel.sendMessage(dmMessage));
+
     }
 
     private Message createDmMessage(Message originalMessage) {
-        String originalMessageContent = originalMessage.getContentDisplay();
+        String contentRaw = originalMessage.getContentRaw();
         String blacklistedAttachments =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(originalMessage));
         String dmMessageContent =
@@ -71,11 +71,11 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
                         Feel free to repost your message without, or with a different file instead. Sorry for any inconvenience caused by this 🙇️
                         """
                     .formatted(blacklistedAttachments);
-        // No embedded needed if there was no message from the user
-        if (originalMessageContent.isEmpty()) {
+        // No embed needed if there was no message from the user
+        if (contentRaw.isEmpty()) {
             return new MessageBuilder(dmMessageContent).build();
         }
-        return createBaseResponse(originalMessageContent, dmMessageContent);
+        return createBaseResponse(contentRaw, dmMessageContent);
     }
 
     private Message createBaseResponse(String originalMessageContent, String dmMessageContent) {
@@ -89,17 +89,17 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
         return originalMessage.getAttachments()
             .stream()
-            .filter(attachment -> blacklistedFileExtensions.contains(
-                    Objects.requireNonNull(attachment.getFileExtension()).toLowerCase(Locale.US)))
+            .filter(attachment -> blacklistedFileExtensions
+                .contains(attachment.getFileExtension().toLowerCase(Locale.US)))
             .map(Message.Attachment::getFileName)
             .toList();
     }
 
     private boolean doesMessageContainBlacklistedContent(Message message) {
-        List<Message.Attachment> attachments = message.getAttachments();
-        return attachments.stream()
-            .anyMatch(attachment -> blacklistedFileExtensions.contains(
-                    Objects.requireNonNull(attachment.getFileExtension()).toLowerCase(Locale.US)));
+        return message.getAttachments()
+            .stream()
+            .anyMatch(attachment -> blacklistedFileExtensions
+                .contains(attachment.getFileExtension().toLowerCase(Locale.US)));
     }
 
 
