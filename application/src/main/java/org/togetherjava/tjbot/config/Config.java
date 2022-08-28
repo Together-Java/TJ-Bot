@@ -29,6 +29,8 @@ public final class Config {
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
 
+    private final String mediaOnlyChannelPattern;
+
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
@@ -45,7 +47,8 @@ public final class Config {
             @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
-            @JsonProperty("helpSystem") HelpSystemConfig helpSystem) {
+            @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
+            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern) {
         this.token = token;
         this.gistApiKey = gistApiKey;
         this.databasePath = databasePath;
@@ -61,6 +64,7 @@ public final class Config {
         this.scamBlocker = scamBlocker;
         this.wolframAlphaAppId = wolframAlphaAppId;
         this.helpSystem = helpSystem;
+        this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
     }
 
     /**
@@ -215,5 +219,14 @@ public final class Config {
      */
     public @NotNull HelpSystemConfig getHelpSystem() {
         return helpSystem;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain only Media.
+     *
+     * @return the channel name pattern
+     */
+    public @NotNull String getMediaOnlyChannelPattern() {
+        return mediaOnlyChannelPattern;
     }
 }

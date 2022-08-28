@@ -2,11 +2,15 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.basic.*;
+import org.togetherjava.tjbot.commands.basic.PingCommand;
+import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
+import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
+import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
+import org.togetherjava.tjbot.commands.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
@@ -85,6 +89,7 @@ public class Features {
         features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
         features.add(new ImplicitAskListener(config, helpSystemHelper));
+        features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
 
         // Event receivers

@@ -44,5 +44,6 @@
            "Other"
        ],
        "categoryRoleSuffix": " - Helper"
-   }
+   },
+    "mediaOnlyChannelPattern": "memes"
 }
