@@ -5,6 +5,6 @@
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.utils;
 
-import org.togetherjava.tjbot.misc.MethodsReturnNonnullByDefault;
+import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

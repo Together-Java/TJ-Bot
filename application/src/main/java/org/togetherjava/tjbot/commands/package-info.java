@@ -13,6 +13,6 @@
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands;
 
-import org.togetherjava.tjbot.misc.MethodsReturnNonnullByDefault;
+import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;
