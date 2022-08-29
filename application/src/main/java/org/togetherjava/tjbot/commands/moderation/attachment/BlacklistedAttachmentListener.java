@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
 /**
  * Reacts to blacklisted attachments being posted, upon which they are deleted.
  */
-public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
+public final class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private final ModAuditLogWriter modAuditLogWriter;
     private final List<String> blacklistedFileExtensions;
 
@@ -48,6 +49,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         message.delete().flatMap(any -> dmUser(message)).queue(any -> warnMods(message));
     }
 
+    @Nonnull
     private RestAction<Message> dmUser(Message message) {
         Message dmMessage = createDmMessage(message);
         return message.getAuthor()
@@ -55,10 +57,12 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
             .flatMap(privateChannel -> privateChannel.sendMessage(dmMessage));
     }
 
+    @Nonnull
     private Message createDmMessage(Message originalMessage) {
         String contentRaw = originalMessage.getContentRaw();
         String blacklistedAttachments =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(originalMessage));
+
         String dmMessageContent =
                 """
                         Hey there, you posted a message containing a blacklisted file attachment: %s.
@@ -67,6 +71,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
                         Feel free to repost your message without, or with a different file instead. Sorry for any inconvenience caused by this 🙇️
                         """
                     .formatted(blacklistedAttachments);
+
         // No embed needed if there was no message from the user
         if (contentRaw.isEmpty()) {
             return new MessageBuilder(dmMessageContent).build();
@@ -74,6 +79,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         return createBaseResponse(contentRaw, dmMessageContent);
     }
 
+    @Nonnull
     private Message createBaseResponse(String originalMessageContent, String dmMessageContent) {
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
@@ -82,6 +88,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
         return new MessageBuilder(dmMessageContent).setEmbeds(originalMessageEmbed).build();
     }
 
+    @Nonnull
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
         return originalMessage.getAttachments()
             .stream()
@@ -101,6 +108,7 @@ public class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private void warnMods(Message sentUserMessage) {
         String blacklistedAttachmentsFromMessage =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(sentUserMessage));
+
         modAuditLogWriter.write(
                 "Message with blacklisted content detected: %s"
                     .formatted(blacklistedAttachmentsFromMessage),

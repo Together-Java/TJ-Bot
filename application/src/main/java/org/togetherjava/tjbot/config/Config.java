@@ -236,17 +236,16 @@ public final class Config {
      *
      * @return the channel name pattern
      */
-
     @Nonnull
     public String getMediaOnlyChannelPattern() {
         return mediaOnlyChannelPattern;
     }
 
     /**
-     * Gets a list of all blacklisted file extensions.**@return a list of all blacklisted file
-     * extensions
+     * Gets a list of all blacklisted file extensions.
+     *
+     * @return a list of all blacklisted file extensions
      */
-
     @Nonnull
     public List<String> getBlacklistedFileExtensions() {
         return Collections.unmodifiableList(blacklistedFileExtension);
