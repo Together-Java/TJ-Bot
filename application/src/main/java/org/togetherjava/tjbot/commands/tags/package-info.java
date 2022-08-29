@@ -4,7 +4,10 @@
  * like {@link org.togetherjava.tjbot.commands.tags.TagCommand} as entry point to the package's
  * offered functionality.
  */
+@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.tags;
+
+import org.togetherjava.tjbot.misc.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

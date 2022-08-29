@@ -2,7 +2,10 @@
  * This packages offers all the functionality for the wolfram-alpha command. Sending queries to
  * their official API, rendering results and displaying them.
  */
+@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
+
+import org.togetherjava.tjbot.misc.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;
