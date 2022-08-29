@@ -8,6 +8,6 @@
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.tags;
 
-import org.togetherjava.tjbot.misc.MethodsReturnNonnullByDefault;
+import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

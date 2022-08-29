@@ -1,8 +1,8 @@
 /**
- * Package for all miscellaneous topics, such as general purpose utilities.
+ * Package for custom annotations.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package org.togetherjava.tjbot.misc;
+package org.togetherjava.tjbot.annotations;
 
 import javax.annotation.ParametersAreNonnullByDefault;

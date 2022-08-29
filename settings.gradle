@@ -3,6 +3,7 @@ rootProject.name = 'TJ-Bot'
 include 'application'
 include 'database'
 include 'formatter'
+include 'utils'
 // NOTE The logviewer does not properly work as of today.
 //  But it is causing major build slowdowns, so we exclude it for the time being.
 // include 'logviewer'
