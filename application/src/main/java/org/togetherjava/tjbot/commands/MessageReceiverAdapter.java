@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 
-import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 /**
@@ -29,7 +28,6 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
     }
 
     @Override
-    @Nonnull
     public final Pattern getChannelNamePattern() {
         return channelNamePattern;
     }

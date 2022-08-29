@@ -31,7 +31,6 @@ import org.mockito.stubbing.Answer;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.List;
@@ -207,7 +206,6 @@ public final class JdaTester {
      * @param command the command to create an event for
      * @return a builder used to create a Mockito mocked slash command event
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder createSlashCommandInteractionEvent(
             SlashCommand command) {
         UnaryOperator<SlashCommandInteractionEvent> mockOperator = event -> {
@@ -234,7 +232,6 @@ public final class JdaTester {
      *
      * @return a builder used to create a Mockito mocked slash command event
      */
-    @Nonnull
     public ButtonClickEventBuilder createButtonInteractionEvent() {
         Supplier<ButtonInteractionEvent> mockEventSupplier = () -> {
             ButtonInteractionEvent event = mock(ButtonInteractionEvent.class);
@@ -262,7 +259,6 @@ public final class JdaTester {
      * @param <T> the type of the command to spy on
      * @return the created spy
      */
-    @Nonnull
     public <T extends SlashCommand> T spySlashCommand(T command) {
         T spiedCommand = spy(command);
         spiedCommand
@@ -278,7 +274,6 @@ public final class JdaTester {
      * @param userId the id of the member to create
      * @return the created spy
      */
-    @Nonnull
     public Member createMemberSpy(long userId) {
         UserImpl user = spy(new UserImpl(userId, jda));
         return spy(new MemberImpl(guild, user));
@@ -292,7 +287,6 @@ public final class JdaTester {
      * @param channelId the id of the text channel to create
      * @return the created spy
      */
-    @Nonnull
     public TextChannel createTextChannelSpy(long channelId) {
         return spy(new TextChannelImpl(channelId, guild));
     }
@@ -306,7 +300,6 @@ public final class JdaTester {
      *
      * @return the reply action mock used by this tester
      */
-    @Nonnull
     public ReplyCallbackAction getReplyActionMock() {
         return replyAction;
     }
@@ -320,7 +313,6 @@ public final class JdaTester {
      *
      * @return the interaction hook mock used by this tester
      */
-    @Nonnull
     public InteractionHook getInteractionHookMock() {
         return interactionHook;
     }
@@ -334,7 +326,6 @@ public final class JdaTester {
      *
      * @return the text channel spy used by this tester
      */
-    @Nonnull
     public TextChannel getTextChannelSpy() {
         return textChannel;
     }
@@ -348,7 +339,6 @@ public final class JdaTester {
      *
      * @return the private channel spy used by this tester
      */
-    @Nonnull
     public PrivateChannel getPrivateChannelSpy() {
         return privateChannel;
     }
@@ -363,7 +353,6 @@ public final class JdaTester {
      *
      * @return the member spy used by this tester
      */
-    @Nonnull
     public Member getMemberSpy() {
         return member;
     }
@@ -373,7 +362,6 @@ public final class JdaTester {
      *
      * @return the JDA mock used by this tester
      */
-    @Nonnull
     public JDA getJdaMock() {
         return jda;
     }
@@ -402,7 +390,6 @@ public final class JdaTester {
      * @param <R> the specific type of the Rest Action to return
      * @return the mocked action
      */
-    @Nonnull
     @SuppressWarnings("unchecked")
     public <T, R extends RestAction<T>> R createSucceededActionMock(@Nullable T t,
             Class<R> restActionType) {
@@ -446,7 +433,6 @@ public final class JdaTester {
      * @see #createSucceededActionMock(Object, Class)
      */
     @SuppressWarnings("unchecked")
-    @Nonnull
     public <T> RestAction<T> createSucceededActionMock(@Nullable T t) {
         return createSucceededActionMock(t, RestAction.class);
     }
@@ -476,7 +462,6 @@ public final class JdaTester {
      * @return the mocked action
      */
     @SuppressWarnings("unchecked")
-    @Nonnull
     public <T, R extends RestAction<T>> R createFailedActionMock(Throwable failureReason,
             Class<R> restActionType) {
         R action = mock(restActionType);
@@ -522,7 +507,6 @@ public final class JdaTester {
      * @see #createFailedActionMock(Throwable, Class)
      */
     @SuppressWarnings("unchecked")
-    @Nonnull
     public <T> RestAction<T> createFailedActionMock(Throwable failureReason) {
         return createFailedActionMock(failureReason, RestAction.class);
     }
@@ -536,7 +520,6 @@ public final class JdaTester {
      * @param reason the reason of the error
      * @return the created exception
      */
-    @Nonnull
     public ErrorResponseException createErrorResponseException(ErrorResponse reason) {
         return ErrorResponseException.create(reason, new Response(null, -1, "", -1, Set.of()));
     }
@@ -549,7 +532,6 @@ public final class JdaTester {
      * @param attachments attachments of the message, empty if none
      * @return the event of receiving the given message
      */
-    @Nonnull
     public MessageReceivedEvent createMessageReceiveEvent(Message message,
             List<Message.Attachment> attachments) {
         Message spyMessage = spy(message);

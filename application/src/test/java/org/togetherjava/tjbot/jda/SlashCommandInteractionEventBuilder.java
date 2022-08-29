@@ -16,7 +16,6 @@ import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 import org.togetherjava.tjbot.jda.payloads.slashcommand.*;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
@@ -97,7 +96,6 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder setOption(String name, String value) {
         putOptionRaw(name, value, OptionType.STRING);
         return this;
@@ -117,7 +115,6 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder setOption(String name, long value) {
         putOptionRaw(name, value, OptionType.INTEGER);
         return this;
@@ -137,7 +134,6 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder setOption(String name, User value) {
         putOptionRaw(name, value, OptionType.USER);
         return this;
@@ -157,7 +153,6 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the option does not exist in the corresponding command,
      *         as specified by its {@link SlashCommand#getData()}
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder setOption(String name, Member value) {
         putOptionRaw(name, value, OptionType.USER);
         return this;
@@ -168,7 +163,6 @@ public final class SlashCommandInteractionEventBuilder {
      *
      * @return this builder instance for chaining
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder clearOptions() {
         nameToOption.clear();
         return this;
@@ -185,7 +179,6 @@ public final class SlashCommandInteractionEventBuilder {
      * @throws IllegalArgumentException if the subcommand does not exist in the corresponding
      *         command, as specified by its {@link SlashCommand#getData()}
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder setSubcommand(@Nullable String subcommand) {
         if (subcommand != null) {
             requireSubcommand(subcommand);
@@ -201,43 +194,36 @@ public final class SlashCommandInteractionEventBuilder {
      * @param userWhoTriggered the user who triggered the slash command
      * @return this builder instance for chaining
      */
-    @Nonnull
     public SlashCommandInteractionEventBuilder setUserWhoTriggered(Member userWhoTriggered) {
         this.userWhoTriggered = userWhoTriggered;
         return this;
     }
 
-    @Nonnull
     SlashCommandInteractionEventBuilder setCommand(SlashCommand command) {
         this.command = command;
         return this;
     }
 
-    @Nonnull
     SlashCommandInteractionEventBuilder setChannelId(String channelId) {
         this.channelId = channelId;
         return this;
     }
 
-    @Nonnull
     SlashCommandInteractionEventBuilder setToken(String token) {
         this.token = token;
         return this;
     }
 
-    @Nonnull
     SlashCommandInteractionEventBuilder setApplicationId(String applicationId) {
         this.applicationId = applicationId;
         return this;
     }
 
-    @Nonnull
     SlashCommandInteractionEventBuilder setGuildId(String guildId) {
         this.guildId = guildId;
         return this;
     }
 
-    @Nonnull
     SlashCommandInteractionEventBuilder setUserId(String userId) {
         this.userId = userId;
         return this;
@@ -249,7 +235,6 @@ public final class SlashCommandInteractionEventBuilder {
      *
      * @return the created slash command instance
      */
-    @Nonnull
     public SlashCommandInteractionEvent build() {
         PayloadSlashCommand event = createEvent();
 
@@ -263,7 +248,6 @@ public final class SlashCommandInteractionEventBuilder {
         return spySlashCommandEvent(json);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent spySlashCommandEvent(String jsonData) {
         SlashCommandInteractionEvent event = spy(new SlashCommandInteractionEvent(jda, 0,
                 new SlashCommandInteractionImpl(jda, DataObject.fromJson(jsonData))));
@@ -276,7 +260,6 @@ public final class SlashCommandInteractionEventBuilder {
         return event;
     }
 
-    @Nonnull
     private PayloadSlashCommand createEvent() {
         // TODO Validate that required options are set, check that subcommand is given if the
         // command has one
@@ -313,7 +296,6 @@ public final class SlashCommandInteractionEventBuilder {
             .toList();
     }
 
-    @Nonnull
     private static <T> String serializeOptionValue(T value, OptionType type) {
         if (type == OptionType.STRING) {
             return (String) value;
@@ -393,7 +375,6 @@ public final class SlashCommandInteractionEventBuilder {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    @Nonnull
     private OptionData requireOption(String name, OptionType type) {
         List<OptionData> options = subcommand == null ? command.getData().getOptions()
                 : requireSubcommand(subcommand).getOptions();
@@ -413,7 +394,6 @@ public final class SlashCommandInteractionEventBuilder {
             });
     }
 
-    @Nonnull
     private SubcommandData requireSubcommand(String name) {
         return command.getData()
             .getSubcommands()

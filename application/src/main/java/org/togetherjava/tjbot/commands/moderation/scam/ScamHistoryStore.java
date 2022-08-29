@@ -6,7 +6,6 @@ import org.togetherjava.tjbot.commands.utils.Hashing;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.ScamHistoryRecord;
 
-import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
@@ -71,7 +70,6 @@ public final class ScamHistoryStore {
      * @return identifications of all scam messages that have just been marked deleted, which
      *         previously have not been marked accordingly yet
      */
-    @Nonnull
     public Collection<ScamIdentification> markScamDuplicatesDeleted(Message scam) {
         return markScamDuplicatesDeleted(scam.getGuild().getIdLong(), scam.getAuthor().getIdLong(),
                 hashMessageContent(scam));
@@ -87,7 +85,6 @@ public final class ScamHistoryStore {
      * @return identifications of all scam messages that have just been marked deleted, which
      *         previously have not been marked accordingly yet
      */
-    @Nonnull
     public Collection<ScamIdentification> markScamDuplicatesDeleted(long guildId, long authorId,
             String contentHash) {
         return database.writeAndProvide(context -> {
@@ -139,7 +136,6 @@ public final class ScamHistoryStore {
      * @param message the message to hash
      * @return a text representation of the hash
      */
-    @Nonnull
     public static String hashMessageContent(Message message) {
         return Hashing.bytesToHex(Hashing.hash(HASH_METHOD,
                 message.getContentRaw().getBytes(StandardCharsets.UTF_8)));
@@ -156,7 +152,6 @@ public final class ScamHistoryStore {
      */
     public record ScamIdentification(long guildId, long channelId, long messageId, long authorId,
             String contentHash) {
-        @Nonnull
         private static ScamIdentification ofDatabaseRecord(ScamHistoryRecord scamHistoryRecord) {
             return new ScamIdentification(scamHistoryRecord.getGuildId(),
                     scamHistoryRecord.getChannelId(), scamHistoryRecord.getMessageId(),

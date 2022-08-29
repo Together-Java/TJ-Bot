@@ -32,7 +32,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -60,7 +59,6 @@ public class Features {
      * @param config the configuration features should use
      * @return a collection of all features
      */
-    @Nonnull
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
         TagSystem tagSystem = new TagSystem(database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);

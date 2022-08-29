@@ -17,7 +17,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -132,7 +131,6 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @param updateAction the upstream to update commands
      * @return the given upstream for chaining
      */
-    @Nonnull
     private CommandListUpdateAction updateCommandsIf(Predicate<? super SlashCommand> commandFilter,
             CommandListUpdateAction updateAction) {
         return commandProvider.getSlashCommands()
@@ -142,12 +140,10 @@ public final class ReloadCommand extends SlashCommandAdapter {
             .reduce(updateAction, CommandListUpdateAction::addCommands, (x, y) -> x);
     }
 
-    @Nonnull
     private static CommandListUpdateAction getGlobalUpdateAction(JDA jda) {
         return jda.updateCommands();
     }
 
-    @Nonnull
     private static Stream<CommandListUpdateAction> getGuildUpdateActions(JDA jda) {
         return jda.getGuildCache().stream().map(Guild::updateCommands);
     }

@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
@@ -59,7 +58,6 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 1, TimeUnit.HOURS);
     }

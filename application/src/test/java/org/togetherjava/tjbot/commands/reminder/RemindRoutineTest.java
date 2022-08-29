@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -39,14 +38,12 @@ final class RemindRoutineTest {
         routine.runRoutine(jdaTester.getJdaMock());
     }
 
-    @Nonnull
     private static MessageEmbed getLastMessageFrom(MessageChannel channel) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(channel).sendMessageEmbeds(responseCaptor.capture());
         return responseCaptor.getValue();
     }
 
-    @Nonnull
     private Member createAndSetupUnknownMember() {
         int unknownMemberId = 2;
 
@@ -67,7 +64,6 @@ final class RemindRoutineTest {
         return member;
     }
 
-    @Nonnull
     private TextChannel createAndSetupUnknownChannel() {
         long unknownChannelId = 2;
 

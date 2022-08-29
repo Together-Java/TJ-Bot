@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -27,7 +26,6 @@ public interface UserInteractor extends Feature {
      *
      * @return the name of the interactor
      */
-    @Nonnull
     String getName();
 
     /**

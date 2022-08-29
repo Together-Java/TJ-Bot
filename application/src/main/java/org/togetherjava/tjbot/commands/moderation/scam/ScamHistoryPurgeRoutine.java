@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.moderation.scam;
 import net.dv8tion.jda.api.JDA;
 import org.togetherjava.tjbot.commands.Routine;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,6 @@ public final class ScamHistoryPurgeRoutine implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 1, TimeUnit.DAYS);
     }

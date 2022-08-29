@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +32,6 @@ public final class TopHelpersPurgeMessagesRoutine implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 4, TimeUnit.HOURS);
     }

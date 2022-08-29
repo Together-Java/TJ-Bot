@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Color;
 import java.io.File;
@@ -88,7 +87,6 @@ public final class ModAuditLogWriter {
      * @param guild the guild to look for the channel in
      * @return the channel used for moderation audit logs, if present
      */
-    @Nonnull
     public Optional<TextChannel> getAndHandleModAuditLogChannel(Guild guild) {
         Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
             .stream()
@@ -116,7 +114,6 @@ public final class ModAuditLogWriter {
          *
          * @return the raw content of the attachment
          */
-        @Nonnull
         public byte[] getContentRaw() {
             return content.getBytes(StandardCharsets.UTF_8);
         }

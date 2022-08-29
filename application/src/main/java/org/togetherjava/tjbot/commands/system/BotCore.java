@@ -25,7 +25,6 @@ import org.togetherjava.tjbot.commands.componentids.InvalidComponentIdFormatExce
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -125,7 +124,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    @Nonnull
     public Collection<SlashCommand> getSlashCommands() {
         return nameToInteractor.values()
             .stream()
@@ -135,7 +133,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    @Nonnull
     public Optional<SlashCommand> getSlashCommand(String name) {
         return Optional.ofNullable(nameToInteractor.get(name))
             .filter(SlashCommand.class::isInstance)
@@ -204,7 +201,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         }
     }
 
-    @Nonnull
     private Stream<MessageReceiver> getMessageReceiversSubscribedTo(Channel channel) {
         String channelName = channel.getName();
         return channelNameToMessageReceiver.entrySet()
@@ -308,7 +304,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @return the command with the given name
      * @throws NullPointerException if the command with the given name was not registered
      */
-    @Nonnull
     private SlashCommand requireSlashCommand(String name) {
         return getSlashCommand(name).orElseThrow(
                 () -> new NullPointerException("There is no slash command with name " + name));
@@ -321,7 +316,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @return the user interactor with the given name
      * @throws NullPointerException if the user interactor with the given name was not registered
      */
-    @Nonnull
     private UserInteractor requireUserInteractor(String name) {
         return Objects.requireNonNull(nameToInteractor.get(name));
     }

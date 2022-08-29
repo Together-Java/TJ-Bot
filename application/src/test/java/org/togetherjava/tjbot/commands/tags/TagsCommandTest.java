@@ -15,7 +15,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -35,7 +34,6 @@ final class TagsCommandTest {
         return responseCaptor.getValue().getDescription();
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerSlashCommand() {
         SlashCommandInteractionEvent event =
                 jdaTester.createSlashCommandInteractionEvent(command).build();
@@ -43,7 +41,6 @@ final class TagsCommandTest {
         return event;
     }
 
-    @Nonnull
     private ButtonInteractionEvent triggerButtonClick(Member userWhoClicked, long idOfAuthor) {
         ButtonInteractionEvent event = jdaTester.createButtonInteractionEvent()
             .setUserWhoClicked(userWhoClicked)

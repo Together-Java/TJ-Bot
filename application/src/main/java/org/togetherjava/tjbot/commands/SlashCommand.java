@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -49,7 +48,6 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the description of the command
      */
-    @Nonnull
     String getDescription();
 
     /**
@@ -59,7 +57,6 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the visibility of the command
      */
-    @Nonnull
     SlashCommandVisibility getVisibility();
 
     /**
@@ -77,7 +74,6 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the command data of this command
      */
-    @Nonnull
     SlashCommandData getData();
 
     /**

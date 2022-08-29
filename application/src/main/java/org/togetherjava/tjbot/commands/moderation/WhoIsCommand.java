@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 
 import javax.annotation.CheckReturnValue;
-import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -70,7 +69,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     }
 
     @CheckReturnValue
-    @Nonnull
     private static ReplyCallbackAction handleWhoIsUser(final IReplyCallback event, final User user,
             final User.Profile profile) {
         String description = userIdentificationToStringItem(user) + "\n**Is bot:** " + user.isBot()
@@ -86,7 +84,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     }
 
     @CheckReturnValue
-    @Nonnull
     private static ReplyCallbackAction handleWhoIsMember(final IReplyCallback event,
             final Member member, final User.Profile profile) {
         User user = member.getUser();
@@ -109,7 +106,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
         return sendEmbedWithProfileAction(event, embedBuilder.build(), user.getId());
     }
 
-    @Nonnull
     private static ReplyCallbackAction sendEmbedWithProfileAction(final IReplyCallback event,
             MessageEmbed embed, String userId) {
         return event.replyEmbeds(embed)
@@ -117,7 +113,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
                     DiscordClientAction.General.USER.asLinkButton("Click to see profile!", userId));
     }
 
-    @Nonnull
     private static String voiceStateToStringItem(final Member member) {
         GuildVoiceState voiceState = Objects.requireNonNull(member.getVoiceState(),
                 "The given voiceState cannot be null");
@@ -129,7 +124,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
         return "\n**In voicechannel:** " + (voiceState.getChannel().getAsMention());
     }
 
-
     /**
      * Generates whois embed based on the given parameters.
      *
@@ -139,7 +133,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * @param effectiveColor the {@link Color} that the embed will become
      * @return the generated {@link EmbedBuilder}
      */
-    @Nonnull
     private static EmbedBuilder generateEmbedBuilder(final Interaction event, final User user,
             final User.Profile profile, final Color effectiveColor) {
 
@@ -162,7 +155,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * @param member the {@link Member} to take the booster properties from
      * @return user readable {@link String}
      */
-    @Nonnull
     private static String possibleBoosterToStringItem(final Member member) {
         OffsetDateTime timeBoosted = member.getTimeBoosted();
 
@@ -180,7 +172,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * @param user the {@link User} to take the identifiers from
      * @return user readable {@link String}
      */
-    @Nonnull
     private static String userIdentificationToStringItem(final User user) {
         return "**Mention:** " + user.getAsMention() + "\n**Tag:** " + user.getAsTag()
                 + "\n**ID:** " + user.getId();
@@ -192,7 +183,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * @param member member to take the Roles from
      * @return user readable {@link String} of the roles
      */
-    @Nonnull
     private static String formatRoles(final Member member) {
         return member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
     }
@@ -204,7 +194,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      *        (recommend {@link java.util.EnumSet}
      * @return user readable {@link StringBuilder}
      */
-    @Nonnull
     private static StringBuilder userFlagsToStringItem(final Collection<User.UserFlag> flags) {
         String formattedFlags = formatUserFlags(flags);
         StringBuilder result = hypeSquadToStringItem(flags);
@@ -223,7 +212,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      *        (recommend {@link java.util.EnumSet}
      * @return user readable {@link StringBuilder}
      */
-    @Nonnull
     private static StringBuilder hypeSquadToStringItem(final Collection<User.UserFlag> flags) {
         StringBuilder stringBuilder = new StringBuilder("**\nHypesquad:** ");
 
@@ -247,7 +235,6 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      *        (recommend {@link java.util.EnumSet}
      * @return the user readable string
      */
-    @Nonnull
     private static String formatUserFlags(final Collection<User.UserFlag> flags) {
         return flags.stream()
             .map(User.UserFlag::getName)

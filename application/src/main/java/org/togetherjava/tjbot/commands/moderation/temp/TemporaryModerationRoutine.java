@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,7 +59,6 @@ public final class TemporaryModerationRoutine implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_DELAY, 5, 5, TimeUnit.MINUTES);
     }
@@ -123,7 +121,6 @@ public final class TemporaryModerationRoutine implements Routine {
             }, failure -> handleFailure(failure, groupIdentifier));
     }
 
-    @Nonnull
     private RestAction<Void> executeRevocation(Guild guild, User target,
             ModerationAction actionType) {
         logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
@@ -148,7 +145,6 @@ public final class TemporaryModerationRoutine implements Routine {
                 groupIdentifier.targetId, failure);
     }
 
-    @Nonnull
     private RevocableModerationAction getRevocableActionByType(ModerationAction type) {
         return Objects.requireNonNull(typeToRevocableAction.get(type),
                 "Action type is not revocable: " + type);

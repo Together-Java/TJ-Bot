@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.util.regex.Pattern;
 
@@ -32,7 +31,6 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         super(Pattern.compile(config.getMediaOnlyChannelPattern()));
     }
 
-
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
@@ -50,17 +48,14 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                 && !message.getContentRaw().contains("http");
     }
 
-    @Nonnull
     private AuditableRestAction<Void> deleteMessage(MessageReceivedEvent event) {
         return event.getMessage().delete();
     }
 
-    @Nonnull
     private RestAction<Message> dmUser(MessageReceivedEvent event) {
         return dmUser(event.getMessage());
     }
 
-    @Nonnull
     private RestAction<Message> dmUser(Message originalMessage) {
         String originalMessageContent = originalMessage.getContentRaw();
         MessageEmbed originalMessageEmbed =

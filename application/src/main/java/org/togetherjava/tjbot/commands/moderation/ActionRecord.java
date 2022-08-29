@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 
@@ -29,7 +28,6 @@ public record ActionRecord(int caseId, Instant issuedAt, long guildId, long auth
      * @param action the action to convert
      * @return the corresponding action record
      */
-    @Nonnull
     static ActionRecord of(ModerationActionsRecord action) {
         return new ActionRecord(action.getCaseId(), action.getIssuedAt(), action.getGuildId(),
                 action.getAuthorId(), action.getTargetId(),

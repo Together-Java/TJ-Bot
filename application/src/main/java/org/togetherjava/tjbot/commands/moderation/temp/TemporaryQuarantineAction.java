@@ -7,8 +7,6 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
-
 /**
  * Action to revoke temporary quarantines, as applied by
  * {@link org.togetherjava.tjbot.commands.moderation.QuarantineCommand} and executed by
@@ -29,19 +27,16 @@ final class TemporaryQuarantineAction extends RevocableRoleBasedAction {
     }
 
     @Override
-    @Nonnull
     public ModerationAction getApplyType() {
         return ModerationAction.QUARANTINE;
     }
 
     @Override
-    @Nonnull
     public ModerationAction getRevokeType() {
         return ModerationAction.UNQUARANTINE;
     }
 
     @Override
-    @Nonnull
     public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild
             .removeRoleFromMember(target.getIdLong(),

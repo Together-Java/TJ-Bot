@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +22,6 @@ public final class PayloadSlashCommandOption {
         this.options = options == null ? null : new ArrayList<>(options);
     }
 
-    @Nonnull
     public String getName() {
         return name;
     }

@@ -11,7 +11,6 @@ import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -35,13 +34,11 @@ final class RemindCommandTest {
         rawReminders = new RawReminderTestHelper(database, jdaTester);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerSlashCommand(int timeAmount, String timeUnit,
             String content) {
         return triggerSlashCommand(timeAmount, timeUnit, content, jdaTester.getMemberSpy());
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerSlashCommand(int timeAmount, String timeUnit,
             String content, Member author) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)

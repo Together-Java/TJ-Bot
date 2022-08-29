@@ -3,8 +3,6 @@ package org.togetherjava.tjbot.jda.payloads.slashcommand;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 
-import javax.annotation.Nonnull;
-
 public final class PayloadSlashCommand {
     @JsonProperty("guild_id")
     private String guildId;
@@ -33,7 +31,6 @@ public final class PayloadSlashCommand {
         this.data = data;
     }
 
-    @Nonnull
     public String getGuildId() {
         return guildId;
     }
@@ -42,7 +39,6 @@ public final class PayloadSlashCommand {
         this.guildId = guildId;
     }
 
-    @Nonnull
     public String getId() {
         return id;
     }
@@ -67,7 +63,6 @@ public final class PayloadSlashCommand {
         this.version = version;
     }
 
-    @Nonnull
     public String getChannelId() {
         return channelId;
     }
@@ -76,7 +71,6 @@ public final class PayloadSlashCommand {
         this.channelId = channelId;
     }
 
-    @Nonnull
     public String getApplicationId() {
         return applicationId;
     }
@@ -85,7 +79,6 @@ public final class PayloadSlashCommand {
         this.applicationId = applicationId;
     }
 
-    @Nonnull
     public String getToken() {
         return token;
     }
@@ -94,7 +87,6 @@ public final class PayloadSlashCommand {
         this.token = token;
     }
 
-    @Nonnull
     public PayloadMember getMember() {
         return member;
     }
@@ -103,7 +95,6 @@ public final class PayloadSlashCommand {
         this.member = member;
     }
 
-    @Nonnull
     public PayloadSlashCommandData getData() {
         return data;
     }

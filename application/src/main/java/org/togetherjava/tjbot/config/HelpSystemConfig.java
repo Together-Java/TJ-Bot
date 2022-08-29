@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +36,6 @@ public final class HelpSystemConfig {
      *
      * @return the channel name pattern
      */
-    @Nonnull
     public String getStagingChannelPattern() {
         return stagingChannelPattern;
     }
@@ -48,7 +46,6 @@ public final class HelpSystemConfig {
      *
      * @return the channel name pattern
      */
-    @Nonnull
     public String getOverviewChannelPattern() {
         return overviewChannelPattern;
     }
@@ -58,7 +55,6 @@ public final class HelpSystemConfig {
      *
      * @return a list of all categories
      */
-    @Nonnull
     public List<String> getCategories() {
         return Collections.unmodifiableList(categories);
     }
@@ -73,7 +69,6 @@ public final class HelpSystemConfig {
      *
      * @return the suffix
      */
-    @Nonnull
     public String getCategoryRoleSuffix() {
         return categoryRoleSuffix;
     }

@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 import org.togetherjava.tjbot.jda.SlashCommandInteractionEventBuilder;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import static org.mockito.Mockito.*;
@@ -30,7 +29,6 @@ final class TagCommandTest {
         command = new TagCommand(system);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerSlashCommand(String id,
             @Nullable Member userToReplyTo) {
         SlashCommandInteractionEventBuilder builder =

@@ -32,5 +32,4 @@ public final class Error {
         this.message = message;
     }
 
-
 }

@@ -8,9 +8,6 @@ import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.filter.AbstractFilter;
 
-import javax.annotation.Nonnull;
-
-
 /**
  * A custom Filter for Log4j2, which only lets an event pass through if a Logging Flag is set in the
  * environment. Intended to be used for local development for devs do not want to also run the
@@ -44,7 +41,6 @@ public class FlaggedFilter extends AbstractFilter {
      * @return {@link Result#DENY} if the Flag is not set, else {@link Result#NEUTRAL}
      */
     @Override
-    @Nonnull
     public Result filter(LogEvent event) {
         return isLoggingEnabled() ? Result.NEUTRAL : Result.DENY;
     }
@@ -61,7 +57,6 @@ public class FlaggedFilter extends AbstractFilter {
      * @return The created FlaggedFilter.
      */
     @PluginFactory
-    @Nonnull
     public static FlaggedFilter createFilter(
             @PluginAttribute(value = "onMatch", defaultString = "NEUTRAL") Result onMatch,
 

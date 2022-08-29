@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 
 /**
@@ -38,6 +37,5 @@ public interface ComponentIdParser {
      * @throws InvalidComponentIdFormatException if the component ID associated to the given UUID
      *         was in an unexpected format and could not be deserialized
      */
-    @Nonnull
     Optional<ComponentId> parse(String uuid);
 }

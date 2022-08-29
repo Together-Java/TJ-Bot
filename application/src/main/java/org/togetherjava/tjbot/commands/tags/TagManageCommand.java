@@ -16,7 +16,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -123,7 +122,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param event the event to send messages with
      * @return the parsed message id, if successful
      */
-    @Nonnull
     private static OptionalLong parseMessageIdAndHandle(String messageId, IReplyCallback event) {
         try {
             return OptionalLong.of(Long.parseLong(messageId));
@@ -289,7 +287,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param id the id of the tag to get its content
      * @return the content of the tag, if present
      */
-    @Nonnull
     private Optional<String> getTagContent(Subcommand subcommand, String id) {
         if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
             try {
@@ -383,7 +380,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
         NOT_EXISTS
     }
 
-
     enum Subcommand {
         RAW("raw", ""),
         CREATE("create", "created"),
@@ -397,7 +393,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
         private static final Set<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
                 EnumSet.of(EDIT, EDIT_WITH_MESSAGE, DELETE);
 
-
         private final String name;
         private final String actionVerb;
 
@@ -406,12 +401,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
             this.actionVerb = actionVerb;
         }
 
-        @Nonnull
         String getName() {
             return name;
         }
 
-        @Nonnull
         static Subcommand fromName(String name) {
             for (Subcommand subcommand : Subcommand.values()) {
                 if (subcommand.name.equals(name)) {
@@ -422,7 +415,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     "Subcommand with name '%s' is unknown".formatted(name));
         }
 
-        @Nonnull
         String getActionVerb() {
             return actionVerb;
         }

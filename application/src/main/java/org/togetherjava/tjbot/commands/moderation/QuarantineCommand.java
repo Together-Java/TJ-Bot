@@ -14,7 +14,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
@@ -59,7 +58,6 @@ public final class QuarantineCommand extends SlashCommandAdapter {
         event.reply("The user is already quarantined.").setEphemeral(true).queue();
     }
 
-    @Nonnull
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
         String dmMessage =
@@ -78,7 +76,6 @@ public final class QuarantineCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    @Nonnull
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
             String reason) {
         String dmNoticeText = "";
@@ -89,7 +86,6 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                 target.getUser(), dmNoticeText, reason);
     }
 
-    @Nonnull
     private AuditableRestAction<Void> quarantineUser(Member target, Member author, String reason,
             Guild guild) {
         logger.info("'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
