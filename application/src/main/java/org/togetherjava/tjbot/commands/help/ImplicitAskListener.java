@@ -165,11 +165,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
-    private static RestAction<Void> inviteUsersToThread(ThreadChannel threadChannel,
-            Member author) {
-        return threadChannel.addThreadMember(author);
-    }
-
     private static MessageAction sendInitialMessage(ThreadChannel threadChannel,
             Message originalMessage, String title) {
         String content = originalMessage.getContentRaw();
