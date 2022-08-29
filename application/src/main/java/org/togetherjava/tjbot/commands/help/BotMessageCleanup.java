@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -54,7 +53,6 @@ public final class BotMessageCleanup implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 1, 1, TimeUnit.MINUTES);
     }
@@ -79,7 +77,6 @@ public final class BotMessageCleanup implements Routine {
             .queue();
     }
 
-    @Nonnull
     private Optional<TextChannel> handleRequireStagingChannel(Guild guild) {
         Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
             .stream()
@@ -108,7 +105,6 @@ public final class BotMessageCleanup implements Routine {
         return deleteWhen.isBefore(Instant.now());
     }
 
-    @Nonnull
     private static RestAction<Void> cleanupBotMessages(GuildMessageChannel channel,
             Collection<? extends Message> messages) {
         logger.debug("Cleaning up old bot messages in the staging channel");

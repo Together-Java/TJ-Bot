@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
@@ -39,7 +38,6 @@ public class MessageUtils {
             .queue();
     }
 
-
     /**
      * Escapes every markdown content in the given string.
      *
@@ -48,7 +46,6 @@ public class MessageUtils {
      * @param text the text to escape
      * @return the escaped text
      */
-    @Nonnull
     public static String escapeMarkdown(String text) {
         // NOTE Unfortunately the utility does not escape backslashes '\', so we have to do it
         // ourselves

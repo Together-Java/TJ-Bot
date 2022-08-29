@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Color;
 import java.time.Instant;
@@ -270,7 +269,6 @@ public class ModerationUtils {
      * @param reason an optional reason for why the action is executed, {@code null} if not desired
      * @return the created response
      */
-    @Nonnull
     static MessageEmbed createActionResponse(User author, ModerationAction action, User target,
             @Nullable String extraMessage, @Nullable String reason) {
         String description = "%s **%s** (id: %s).".formatted(action.getVerb(), target.getAsTag(),
@@ -305,7 +303,6 @@ public class ModerationUtils {
      * @param config the config used to identify the muted role
      * @return the muted role, if found
      */
-    @Nonnull
     public static Optional<Role> getMutedRole(Guild guild, Config config) {
         Predicate<String> isMutedRole = getIsMutedRolePredicate(config);
         return guild.getRoles().stream().filter(role -> isMutedRole.test(role.getName())).findAny();
@@ -328,7 +325,6 @@ public class ModerationUtils {
      * @param config the config used to identify the quarantined role
      * @return the quarantined role, if found
      */
-    @Nonnull
     public static Optional<Role> getQuarantinedRole(Guild guild, Config config) {
         Predicate<String> isQuarantinedRole = getIsQuarantinedRolePredicate(config);
         return guild.getRoles()
@@ -346,7 +342,6 @@ public class ModerationUtils {
      * @return the temporary data represented by the given duration or empty if the duration is
      *         {@code "permanent"}
      */
-    @Nonnull
     static Optional<TemporaryData> computeTemporaryData(String durationText) {
         if (PERMANENT_DURATION.equals(durationText)) {
             return Optional.empty();

@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Color;
 import java.io.InputStream;
@@ -73,7 +72,6 @@ public final class HelpSystemHelper {
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
     }
 
-    @Nonnull
     RestAction<Message> sendExplanationMessage(MessageChannel threadChannel) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
@@ -120,12 +118,10 @@ public final class HelpSystemHelper {
         });
     }
 
-    @Nonnull
     private static MessageEmbed embedWith(CharSequence message) {
         return embedWith(message, null);
     }
 
-    @Nonnull
     private static MessageEmbed embedWith(CharSequence message, @Nullable String imageUrl) {
         return new EmbedBuilder().setColor(AMBIENT_COLOR)
             .setDescription(message)
@@ -133,7 +129,6 @@ public final class HelpSystemHelper {
             .build();
     }
 
-    @Nonnull
     Optional<Role> handleFindRoleForCategory(String category, Guild guild) {
         String roleName = category + categoryRoleSuffix;
         Optional<Role> maybeHelperRole = guild.getRolesByName(roleName, true).stream().findAny();
@@ -145,12 +140,10 @@ public final class HelpSystemHelper {
         return maybeHelperRole;
     }
 
-    @Nonnull
     Optional<String> getCategoryOfChannel(Channel channel) {
         return Optional.ofNullable(HelpThreadName.ofChannelName(channel.getName()).category);
     }
 
-    @Nonnull
     RestAction<Void> renameChannelToCategory(GuildChannel channel, String category) {
         HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
         HelpThreadName nextName =
@@ -159,7 +152,6 @@ public final class HelpSystemHelper {
         return renameChannel(channel, currentName, nextName);
     }
 
-    @Nonnull
     RestAction<Void> renameChannelToTitle(GuildChannel channel, String title) {
         HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
         HelpThreadName nextName =
@@ -168,7 +160,6 @@ public final class HelpSystemHelper {
         return renameChannel(channel, currentName, nextName);
     }
 
-    @Nonnull
     RestAction<Void> renameChannelToActivity(GuildChannel channel, ThreadActivity activity) {
         HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
         HelpThreadName nextName =
@@ -177,7 +168,6 @@ public final class HelpSystemHelper {
         return renameChannel(channel, currentName, nextName);
     }
 
-    @Nonnull
     private RestAction<Void> renameChannel(GuildChannel channel, HelpThreadName currentName,
             HelpThreadName nextName) {
         if (currentName.equals(nextName)) {
@@ -192,7 +182,6 @@ public final class HelpSystemHelper {
         return isOverviewChannelName.test(channelName);
     }
 
-    @Nonnull
     String getOverviewChannelPattern() {
         return overviewChannelPattern;
     }
@@ -201,7 +190,6 @@ public final class HelpSystemHelper {
         return isStagingChannelName.test(channelName);
     }
 
-    @Nonnull
     String getStagingChannelPattern() {
         return stagingChannelPattern;
     }
@@ -214,7 +202,6 @@ public final class HelpSystemHelper {
                 && !titleCompact.toLowerCase(Locale.US).contains("help");
     }
 
-    @Nonnull
     Optional<TextChannel> handleRequireOverviewChannel(Guild guild,
             Consumer<? super String> consumeChannelPatternIfNotFound) {
         Predicate<String> isChannelName = this::isOverviewChannelName;
@@ -232,7 +219,6 @@ public final class HelpSystemHelper {
         return maybeChannel;
     }
 
-    @Nonnull
     Optional<TextChannel> handleRequireOverviewChannelForAsk(Guild guild,
             MessageChannel respondTo) {
         return handleRequireOverviewChannel(guild, channelPattern -> {
@@ -246,7 +232,6 @@ public final class HelpSystemHelper {
         });
     }
 
-    @Nonnull
     List<ThreadChannel> getActiveThreadsIn(TextChannel channel) {
         return channel.getThreadChannels()
             .stream()
@@ -256,7 +241,6 @@ public final class HelpSystemHelper {
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
             String title) {
-        @Nonnull
         static HelpThreadName ofChannelName(CharSequence channelName) {
             Matcher matcher = EXTRACT_HELP_NAME_PATTERN.matcher(channelName);
 
@@ -274,7 +258,6 @@ public final class HelpSystemHelper {
             return new HelpThreadName(activity, category, title);
         }
 
-        @Nonnull
         String toChannelName() {
             String activityText = activity == null ? "" : activity.getSymbol() + " ";
             String categoryText = category == null ? "" : "[%s] ".formatted(category);
@@ -294,12 +277,10 @@ public final class HelpSystemHelper {
             this.symbol = symbol;
         }
 
-        @Nonnull
         public String getSymbol() {
             return symbol;
         }
 
-        @Nonnull
         static ThreadActivity ofSymbol(String symbol) {
             return Stream.of(values())
                 .filter(activity -> activity.getSymbol().equals(symbol))

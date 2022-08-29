@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,7 +23,6 @@ public interface Routine extends Feature {
      *
      * @return the schedule of this routine
      */
-    @Nonnull
     Schedule createSchedule();
 
     /**
@@ -48,7 +46,6 @@ public interface Routine extends Feature {
      */
     record Schedule(ScheduleMode mode, long initialDuration, long duration, TimeUnit unit) {
     }
-
 
     /**
      * Whether subsequent executions of a routine are executed at a fixed rate or are delayed.

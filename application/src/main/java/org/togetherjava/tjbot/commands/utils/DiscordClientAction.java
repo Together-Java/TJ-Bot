@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.jetbrains.annotations.Contract;
 
-import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 /**
@@ -81,7 +80,6 @@ public final class DiscordClientAction {
                 new DiscordClientAction("discord://-/guild-discovery");
         public static final DiscordClientAction GUILDS_CREATE =
                 new DiscordClientAction("discord://-/guilds/create");
-
 
         public static final DiscordClientAction GUILD_EVENT =
                 new DiscordClientAction("discord://-/events/{GUILD-ID}/{EVENT-ID}");
@@ -261,7 +259,6 @@ public final class DiscordClientAction {
      * @return The formatted URL as an {@link String}
      * @throws IllegalArgumentException When missing arguments
      */
-    @Nonnull
     public String formatUrl(final String... arguments) {
         String localUrl = url;
 
@@ -285,13 +282,11 @@ public final class DiscordClientAction {
      * @return A {@link Button} of {@link ButtonStyle#LINK} with the given label
      * @throws IllegalArgumentException When missing arguments
      */
-    @Nonnull
     public Button asLinkButton(final String label, final String... arguments) {
         return Button.link(formatUrl(arguments), label);
     }
 
     @Override
-    @Nonnull
     public String toString() {
         return "DiscordClientAction{" + "url='" + url + '\'' + '}';
     }

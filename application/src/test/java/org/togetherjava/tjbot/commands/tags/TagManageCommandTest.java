@@ -19,7 +19,6 @@ import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -36,7 +35,6 @@ final class TagManageCommandTest {
     private Member moderator;
     private ModAuditLogWriter modAuditLogWriter;
 
-    @Nonnull
     private static MessageEmbed getResponse(SlashCommandInteractionEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
         verify(event).replyEmbeds(responseCaptor.capture());
@@ -62,12 +60,10 @@ final class TagManageCommandTest {
         when(moderatorRole.getName()).thenReturn(moderatorRoleName);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerRawCommand(String tagId) {
         return triggerRawCommandWithUser(tagId, moderator);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerRawCommandWithUser(String tagId, Member user) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(TagManageCommand.Subcommand.RAW.getName())
@@ -79,17 +75,14 @@ final class TagManageCommandTest {
         return event;
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerCreateCommand(String tagId, String content) {
         return triggerTagContentCommand(TagManageCommand.Subcommand.CREATE, tagId, content);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerEditCommand(String tagId, String content) {
         return triggerTagContentCommand(TagManageCommand.Subcommand.EDIT, tagId, content);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerTagContentCommand(
             TagManageCommand.Subcommand subcommand, String tagId, String content) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
@@ -103,21 +96,18 @@ final class TagManageCommandTest {
         return event;
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerCreateWithMessageCommand(String tagId,
             String messageId) {
         return triggerTagMessageCommand(TagManageCommand.Subcommand.CREATE_WITH_MESSAGE, tagId,
                 messageId);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerEditWithMessageCommand(String tagId,
             String messageId) {
         return triggerTagMessageCommand(TagManageCommand.Subcommand.EDIT_WITH_MESSAGE, tagId,
                 messageId);
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerTagMessageCommand(
             TagManageCommand.Subcommand subcommand, String tagId, String messageId) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
@@ -131,7 +121,6 @@ final class TagManageCommandTest {
         return event;
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerDeleteCommand(String tagId) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setSubcommand(TagManageCommand.Subcommand.DELETE.getName())

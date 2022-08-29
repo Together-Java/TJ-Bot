@@ -13,7 +13,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ComponentIds;
 import org.togetherjava.tjbot.db.generated.tables.records.ComponentIdsRecord;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -155,7 +154,6 @@ public final class ComponentIdStore implements AutoCloseable {
      *         format and could not be serialized
      */
     @SuppressWarnings("WeakerAccess")
-    @Nonnull
     public Optional<ComponentId> get(UUID uuid) {
         synchronized (storeLock) {
             // Get it from the cache or, if not found, the database
@@ -217,7 +215,6 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    @Nonnull
     private Optional<ComponentId> getFromDatabase(UUID uuid) {
         return database.read(context -> Optional
             .ofNullable(context.selectFrom(ComponentIds.COMPONENT_IDS)
@@ -294,7 +291,6 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    @Nonnull
     private static String serializeComponentId(ComponentId componentId) {
         try {
             return CSV.writerFor(ComponentId.class)
@@ -305,7 +301,6 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    @Nonnull
     private static ComponentId deserializeComponentId(String componentId) {
         try {
             return CSV.readerFor(ComponentId.class)

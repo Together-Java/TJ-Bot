@@ -26,7 +26,6 @@ import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Color;
 import java.util.*;
@@ -84,7 +83,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    @Nonnull
     public String getName() {
         return "scam-blocker";
     }
@@ -250,12 +248,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue();
     }
 
-    @Nonnull
     private Optional<TextChannel> getReportChannel(Guild guild) {
         return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
-    @Nonnull
     private ActionRow createConfirmDialog(MessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
@@ -266,7 +262,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 Button.danger(generateComponentId(args), "No"));
     }
 
-    @Nonnull
     private String generateComponentId(ComponentIdArguments args) {
         return Objects.requireNonNull(componentIdGenerator)
             .generate(new ComponentId(getName(), args.toList()), Lifespan.REGULAR);
@@ -334,11 +329,9 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue(onRetrieveAuthorSuccess, onRetrieveAuthorFailure);
     }
 
-
     private record ComponentIdArguments(ScamBlockerConfig.Mode mode, long guildId, long channelId,
             long messageId, long authorId, String contentHash) {
 
-        @Nonnull
         static ComponentIdArguments fromList(List<String> args) {
             ScamBlockerConfig.Mode mode = ScamBlockerConfig.Mode.valueOf(args.get(0));
             long guildId = Long.parseLong(args.get(1));
@@ -350,7 +343,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     contentHash);
         }
 
-        @Nonnull
         List<String> toList() {
             return List.of(mode.name(), Long.toString(guildId), Long.toString(channelId),
                     Long.toString(messageId), Long.toString(authorId), contentHash);

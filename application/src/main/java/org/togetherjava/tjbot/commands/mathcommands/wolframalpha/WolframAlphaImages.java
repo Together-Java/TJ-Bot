@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.SubPod;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.WolframAlphaImage;
 
-import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Font;
@@ -39,7 +38,6 @@ class WolframAlphaImages {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
 
-    @Nonnull
     static BufferedImage renderTitle(String title) {
         Rectangle2D titleBounds = TITLE_FONT.getStringBounds(title, TITLE_RENDER_CONTEXT);
         int widthPx = (int) Math.ceil(titleBounds.getWidth()) + 2 * IMAGE_MARGIN_PX;
@@ -56,7 +54,6 @@ class WolframAlphaImages {
         return image;
     }
 
-    @Nonnull
     static BufferedImage renderSubPod(SubPod subPod) {
         WolframAlphaImage sourceImage = subPod.getImage();
 
@@ -77,12 +74,10 @@ class WolframAlphaImages {
         return destinationImage;
     }
 
-    @Nonnull
     static BufferedImage renderFooter() {
         return new BufferedImage(1, IMAGE_MARGIN_PX, BufferedImage.TYPE_4BYTE_ABGR);
     }
 
-    @Nonnull
     static List<BufferedImage> combineImagesIntoTiles(Collection<? extends BufferedImage> images,
             int maxTileHeight) {
         if (images.isEmpty()) {
@@ -124,7 +119,6 @@ class WolframAlphaImages {
         return tileHeight != 0 && tileHeight + heightOfImageToAdd > maxTileHeight;
     }
 
-    @Nonnull
     private static BufferedImage combineImages(Collection<? extends BufferedImage> images,
             int widthPx) {
         if (images.isEmpty()) {
@@ -151,7 +145,6 @@ class WolframAlphaImages {
         return destinationImage;
     }
 
-    @Nonnull
     static byte[] imageToBytes(RenderedImage img) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             ImageIO.write(img, IMAGE_FORMAT, outputStream);

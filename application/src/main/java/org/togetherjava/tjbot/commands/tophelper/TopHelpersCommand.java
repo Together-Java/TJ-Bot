@@ -18,7 +18,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.*;
@@ -88,7 +87,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             .onSuccess(members -> handleTopHelpers(topHelpers, members, timeRange, event));
     }
 
-    @Nonnull
     private static Month computeMonth(@Nullable OptionMapping atMonthData) {
         if (atMonthData != null) {
             return Month.valueOf(atMonthData.getAsString());
@@ -98,7 +96,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return Instant.now().atZone(ZoneOffset.UTC).minusMonths(1).getMonth();
     }
 
-    @Nonnull
     private static TimeRange computeTimeRange(Month atMonth) {
         ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
 
@@ -117,7 +114,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return new TimeRange(start, end, description);
     }
 
-    @Nonnull
     private List<TopHelperResult> computeTopHelpersDescending(long guildId, TimeRange timeRange) {
         return database.read(context -> context
             .select(HELP_CHANNEL_MESSAGES.AUTHOR_ID, DSL.sum(HELP_CHANNEL_MESSAGES.MESSAGE_LENGTH))
@@ -151,7 +147,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         event.getHook().editOriginal(message).queue();
     }
 
-    @Nonnull
     private static List<String> topHelperToDataRow(TopHelperResult topHelper,
             @Nullable Member member) {
         String id = Long.toString(topHelper.authorId());
@@ -161,7 +156,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return List.of(id, name, messageLengths);
     }
 
-    @Nonnull
     private static String dataTableToString(Collection<List<String>> dataTable,
             TimeRange timeRange) {
         return dataTableToAsciiTable(dataTable,
@@ -172,7 +166,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                                 HorizontalAlign.RIGHT)));
     }
 
-    @Nonnull
     private static String dataTableToAsciiTable(Collection<List<String>> dataTable,
             List<ColumnSetting> columnSettings) {
         IntFunction<String> headerToAlignment = i -> columnSettings.get(i).headerName();
@@ -192,10 +185,8 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     private record TimeRange(Instant start, Instant end, String description) {
     }
 
-
     private record TopHelperResult(long authorId, BigDecimal messageLengths) {
     }
-
 
     private record ColumnSetting(String headerName, HorizontalAlign alignment) {
     }

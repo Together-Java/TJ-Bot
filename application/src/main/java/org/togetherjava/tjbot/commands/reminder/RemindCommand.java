@@ -11,7 +11,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.annotation.Nonnull;
 import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -102,7 +101,6 @@ public final class RemindCommand extends SlashCommandAdapter {
             .insert());
     }
 
-    @Nonnull
     private static Instant parseWhen(int whenAmount, String whenUnit) {
         TemporalAmount period = switch (whenUnit) {
             case "second", "seconds" -> Duration.ofSeconds(whenAmount);

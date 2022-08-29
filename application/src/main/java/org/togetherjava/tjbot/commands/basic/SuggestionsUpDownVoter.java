@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.SuggestionsConfig;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -89,7 +88,6 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         });
     }
 
-    @Nonnull
     private static Optional<Emote> getEmoteByName(String name, Guild guild) {
         return guild.getEmotesByName(name, false).stream().findAny();
     }

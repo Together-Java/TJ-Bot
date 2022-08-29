@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -27,7 +26,6 @@ public class StringDistances {
      * @param <S> the type of the candidates
      * @return the best matching candidate, or empty iff the candidates are empty
      */
-    @Nonnull
     public static <S extends CharSequence> Optional<S> closestMatch(CharSequence query,
             Collection<S> candidates) {
         return candidates.stream()
@@ -47,7 +45,6 @@ public class StringDistances {
      * @param <S> the type of the candidates
      * @return the best matching candidate, or empty iff the candidates are empty
      */
-    @Nonnull
     public static <S extends CharSequence> Optional<S> autocomplete(CharSequence prefix,
             Collection<S> candidates) {
         return candidates.stream()
@@ -110,7 +107,6 @@ public class StringDistances {
      * @param destination the destination string to receive by editing the source
      * @return the levenshtein distance table
      */
-    @Nonnull
     private static int[][] computeLevenshteinDistanceTable(CharSequence source,
             CharSequence destination) {
         int rows = source.length() + 1;

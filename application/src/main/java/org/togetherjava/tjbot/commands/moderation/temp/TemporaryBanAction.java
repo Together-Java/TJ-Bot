@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 
-import javax.annotation.Nonnull;
-
 /**
  * Action to revoke temporary bans, as applied by
  * {@link org.togetherjava.tjbot.commands.moderation.BanCommand} and executed by
@@ -20,25 +18,21 @@ final class TemporaryBanAction implements RevocableModerationAction {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryBanAction.class);
 
     @Override
-    @Nonnull
     public ModerationAction getApplyType() {
         return ModerationAction.BAN;
     }
 
     @Override
-    @Nonnull
     public ModerationAction getRevokeType() {
         return ModerationAction.UNBAN;
     }
 
     @Override
-    @Nonnull
     public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild.unban(target).reason(reason);
     }
 
     @Override
-    @Nonnull
     public FailureIdentification handleRevokeFailure(Throwable failure, long targetId) {
         if (failure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {

@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import javax.annotation.Nonnull;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -25,7 +24,6 @@ public class Hashing {
      * @param bytes the binary data to convert
      * @return a hexadecimal representation
      */
-    @Nonnull
     public static String bytesToHex(byte[] bytes) {
         Objects.requireNonNull(bytes);
         // See https://stackoverflow.com/a/9855338/2411243
@@ -50,7 +48,6 @@ public class Hashing {
      * @param data the data to hash
      * @return the computed hash
      */
-    @Nonnull
     public static byte[] hash(String method, byte[] data) {
         Objects.requireNonNull(method);
         Objects.requireNonNull(data);

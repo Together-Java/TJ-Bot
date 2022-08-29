@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +26,6 @@ public final class PayloadSlashCommandData {
         this.resolved = resolved;
     }
 
-    @Nonnull
     public String getName() {
         return name;
     }
@@ -36,7 +34,6 @@ public final class PayloadSlashCommandData {
         this.name = name;
     }
 
-    @Nonnull
     public String getId() {
         return id;
     }

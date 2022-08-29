@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Set;
 
@@ -103,7 +102,6 @@ final class ScamDetectorTest {
         assertFalse(isScamResult);
     }
 
-    @Nonnull
     private static List<String> provideRealScamMessages() {
         return List.of("""
                 🤩bro steam gived nitro - https://nitro-ds.online/LfgUfMzqYyx12""",

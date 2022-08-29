@@ -17,7 +17,6 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -87,7 +86,6 @@ public final class AuditCommand extends SlashCommandAdapter {
      *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions, {@code -1} encodes the last
      *        page
      */
-    @Nonnull
     private RestAction<Message> auditUser(long guildId, long targetId, long callerId,
             int pageNumber, JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
@@ -109,7 +107,6 @@ public final class AuditCommand extends SlashCommandAdapter {
                     guildId, targetId, callerId));
     }
 
-    @Nonnull
     private List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
@@ -127,7 +124,6 @@ public final class AuditCommand extends SlashCommandAdapter {
         return Math.min(Math.max(minInclusive, value), maxInclusive);
     }
 
-    @Nonnull
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
             .setAuthor(user.getName(), null, user.getAvatarUrl())
@@ -135,7 +131,6 @@ public final class AuditCommand extends SlashCommandAdapter {
             .setColor(ModerationUtils.AMBIENT_COLOR);
     }
 
-    @Nonnull
     private static String createSummaryMessageDescription(Collection<ActionRecord> actions) {
         int actionAmount = actions.size();
 
@@ -161,7 +156,6 @@ public final class AuditCommand extends SlashCommandAdapter {
         return shortSummary + "\n" + typeCountSummary;
     }
 
-    @Nonnull
     private RestAction<EmbedBuilder> attachEmbedFields(EmbedBuilder auditEmbed,
             List<? extends List<ActionRecord>> groupedActions, int pageNumber, int totalPages,
             JDA jda) {
@@ -181,7 +175,6 @@ public final class AuditCommand extends SlashCommandAdapter {
         });
     }
 
-    @Nonnull
     private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
         return jda.retrieveUserById(action.authorId())
             .map(author -> author == null ? "(unknown user)" : author.getAsTag())
@@ -200,12 +193,10 @@ public final class AuditCommand extends SlashCommandAdapter {
             });
     }
 
-    @Nonnull
     private static String formatTime(Instant when) {
         return TimeUtil.getDateTimeString(when.atOffset(ZoneOffset.UTC));
     }
 
-    @Nonnull
     private Message attachPageTurnButtons(EmbedBuilder auditEmbed, int pageNumber, int totalPages,
             long guildId, long targetId, long callerId) {
         var messageBuilder = new MessageBuilder(auditEmbed.build());
@@ -219,7 +210,6 @@ public final class AuditCommand extends SlashCommandAdapter {
         return messageBuilder.setActionRows(pageTurnButtons).build();
     }
 
-    @Nonnull
     private ActionRow createPageTurnButtons(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
         int previousButtonTurnPageBy = -1;
@@ -239,7 +229,6 @@ public final class AuditCommand extends SlashCommandAdapter {
         return ActionRow.of(previousButton, nextButton);
     }
 
-    @Nonnull
     private Button createPageTurnButton(String label, long guildId, long targetId, long callerId,
             long pageNumber, int turnPageBy) {
         return Button.primary(generateComponentId(String.valueOf(guildId), String.valueOf(targetId),

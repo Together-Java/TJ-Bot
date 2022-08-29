@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.*;
 
-import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -73,7 +72,6 @@ final class WolframAlphaHandler {
      * @param apiResponse response of the Wolfram Alpha API query
      * @return user-friendly message for display, as list of embeds
      */
-    @Nonnull
     HandlerResponse handleApiResponse(HttpResponse<String> apiResponse) {
         // Check status code
         int statusCode = apiResponse.statusCode();
@@ -111,7 +109,6 @@ final class WolframAlphaHandler {
         return handleSuccessfulResponse(queryResult);
     }
 
-    @Nonnull
     private HandlerResponse handleMisunderstoodQuery(QueryResult result) {
         StringJoiner output = new StringJoiner("\n");
         output.add("Sorry, I did not understand your query.");
@@ -152,7 +149,6 @@ final class WolframAlphaHandler {
         return responseOf(output.toString());
     }
 
-    @Nonnull
     private static <E> String createBulletPointList(Collection<? extends E> elements,
             Function<E, String> elementToText) {
         return elements.stream()
@@ -161,7 +157,6 @@ final class WolframAlphaHandler {
             .collect(Collectors.joining("\n"));
     }
 
-    @Nonnull
     private HandlerResponse handleSuccessfulResponse(QueryResult queryResult) {
         StringJoiner messages = new StringJoiner("\n\n");
         messages.add("Click the link to see full results.");
@@ -201,7 +196,6 @@ final class WolframAlphaHandler {
         return responseOf(messages.toString(), tilesToDisplay);
     }
 
-    @Nonnull
     private HandlerResponse responseOf(CharSequence text) {
         MessageEmbed embed = new EmbedBuilder().setTitle(buildTitle(), userApiQuery)
             .setDescription(text)
@@ -211,7 +205,6 @@ final class WolframAlphaHandler {
         return new HandlerResponse(List.of(embed), List.of());
     }
 
-    @Nonnull
     private HandlerResponse responseOf(CharSequence text,
             Collection<? extends BufferedImage> tiles) {
         List<MessageEmbed> embeds = new ArrayList<>();
@@ -237,14 +230,12 @@ final class WolframAlphaHandler {
         return new HandlerResponse(embeds, attachments);
     }
 
-    @Nonnull
     private String buildTitle() {
         return query + " - " + SERVICE_NAME;
     }
 
     record HandlerResponse(List<MessageEmbed> embeds, List<Attachment> attachments) {
     }
-
 
     record Attachment(String name, byte[] data) {
         @Override

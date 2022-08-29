@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
@@ -66,7 +65,6 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @Nonnull
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
         return event.getJDA()
@@ -82,7 +80,6 @@ public final class KickCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    @Nonnull
     private AuditableRestAction<Void> kickUser(Member target, Member author, String reason,
             Guild guild) {
         logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
@@ -95,7 +92,6 @@ public final class KickCommand extends SlashCommandAdapter {
         return guild.kick(target, reason).reason(reason);
     }
 
-    @Nonnull
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
             String reason) {
         String dmNoticeText = "";
@@ -106,7 +102,6 @@ public final class KickCommand extends SlashCommandAdapter {
                 target.getUser(), dmNoticeText, reason);
     }
 
-    @Nonnull
     private boolean handleChecks(Member bot, Member author, @Nullable Member target,
             CharSequence reason, Guild guild, IReplyCallback event) {
         // Member doesn't exist if attempting to kick a user who is not part of the guild anymore.

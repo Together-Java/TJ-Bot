@@ -52,6 +52,4 @@ public final class DidYouMeans {
         this.didYouMeanTips = new ArrayList<>(didYouMeanTips);
     }
 
-
-
 }
