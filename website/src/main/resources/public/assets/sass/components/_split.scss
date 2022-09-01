@@ -61,8 +61,8 @@
 
 			> * {
 				border-top: solid 1px _palette(border);
-				margin: 4em 0 0 0;
-				padding: 4em 0 0 0;
+				margin: 4em 0 0;
+				padding: 4em 0 0;
 				width: 100% !important;
 			}
 
@@ -84,8 +84,8 @@
 
 		@include breakpoint('<=small') {
 			> * {
-				margin: 3em 0 0 0;
-				padding: 3em 0 0 0;
+				margin: 3em 0 0;
+				padding: 3em 0 0;
 			}
 		}
 	}

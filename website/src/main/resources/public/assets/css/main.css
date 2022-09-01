@@ -175,14 +175,14 @@ input, select, textarea {
 	}
 
 	p {
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 	}
 
 	h1, h2, h3, h4, h5, h6 {
 		color: #ffffff;
 		font-weight: bold;
 		line-height: 1.5;
-		margin: 0 0 0.5em 0;
+		margin: 0 0 0.5em;
 	}
 
 		h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
@@ -195,7 +195,7 @@ input, select, textarea {
 	}
 
 		h1.major {
-			margin: 0 0 1.3em 0;
+			margin: 0 0 1.3em;
 			position: relative;
 			padding-bottom: 0.35em;
 		}
@@ -281,7 +281,7 @@ input, select, textarea {
 	blockquote {
 		border-left: solid 4px rgba(255, 255, 255, 0.15);
 		font-style: italic;
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 		padding: 0.5em 0 0.5em 2em;
 	}
 
@@ -299,7 +299,7 @@ input, select, textarea {
 		-webkit-overflow-scrolling: touch;
 		font-family: "Courier New", monospace;
 		font-size: 0.9em;
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 	}
 
 		pre code {
@@ -1994,7 +1994,7 @@ input, select, textarea {
 		border-radius: 0.25em;
 		border: solid 1px rgba(255, 255, 255, 0.15);
 		background: rgba(255, 255, 255, 0.05);
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 	}
 
 		.features section {
@@ -2213,7 +2213,7 @@ input, select, textarea {
 		@media screen and (max-width: 480px) {
 
 			.features section {
-				padding: 2em 1.5em 0.1em 1.5em ;
+				padding: 2em 1.5em 0.1em;
 			}
 
 				.features section .icon {
@@ -2227,7 +2227,7 @@ input, select, textarea {
 /* Form */
 
 	form {
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 	}
 
 		form > :last-child {
@@ -2302,7 +2302,7 @@ input, select, textarea {
 		color: #ffffff;
 		font-weight: bold;
 		line-height: 1.5;
-		margin: 0 0 0.7em 0;
+		margin: 0 0 0.7em;
 		display: block;
 		font-size: 1.1em;
 	}
@@ -2532,7 +2532,7 @@ input, select, textarea {
 			color: #30426D;
 			text-align: center;
 			line-height: 2.5em;
-			margin: 0 0 1.3em 0;
+			margin: 0 0 1.3em;
 		}
 
 			.icon.major:before {
@@ -2599,7 +2599,7 @@ input, select, textarea {
 
 		.image.fit {
 			display: block;
-			margin: 0 0 2em 0;
+			margin: 0 0 2em;
 			width: 100%;
 		}
 
@@ -2609,7 +2609,7 @@ input, select, textarea {
 
 		.image.main {
 			display: block;
-			margin: 0 0 3em 0;
+			margin: 0 0 3em;
 			width: 100%;
 		}
 
@@ -2621,7 +2621,7 @@ input, select, textarea {
 
 	ol {
 		list-style: decimal;
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 		padding-left: 1.25em;
 	}
 
@@ -2631,7 +2631,7 @@ input, select, textarea {
 
 	ul {
 		list-style: disc;
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 		padding-left: 1em;
 	}
 
@@ -2655,13 +2655,13 @@ input, select, textarea {
 				}
 
 	dl {
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 	}
 
 		dl dt {
 			display: block;
 			font-weight: bold;
-			margin: 0 0 1em 0;
+			margin: 0 0 1em;
 		}
 
 		dl dd {
@@ -2708,7 +2708,7 @@ input, select, textarea {
 		}
 
 			ul.actions.stacked li {
-				padding: 1.3em 0 0 0;
+				padding: 1.3em 0 0;
 			}
 
 				ul.actions.stacked li:first-child {
@@ -2759,7 +2759,7 @@ input, select, textarea {
 					-webkit-flex-shrink: 1;
 					-ms-flex-shrink: 1;
 					flex-shrink: 1;
-					padding: 1em 0 0 0;
+					padding: 1em 0 0;
 					text-align: center;
 					width: 100%;
 				}
@@ -2799,7 +2799,7 @@ input, select, textarea {
 
 		ul.contact > li {
 			padding: 0;
-			margin: 1.5em 0 0 0;
+			margin: 1.5em 0 0;
 		}
 
 			ul.contact > li:first-child {
@@ -2858,7 +2858,7 @@ input, select, textarea {
 				border-left: 0;
 				display: block;
 				line-height: inherit;
-				margin: 0.5em 0 0 0;
+				margin: 0.5em 0 0;
 				padding-left: 0;
 			}
 
@@ -2873,7 +2873,7 @@ input, select, textarea {
 	header p {
 		color: rgba(255, 255, 255, 0.35);
 		position: relative;
-		margin: 0 0 1.5em 0;
+		margin: 0 0 1.5em;
 	}
 
 	header h2 + p {
@@ -2958,8 +2958,8 @@ input, select, textarea {
 
 				.split > * {
 					border-top: solid 1px rgba(255, 255, 255, 0.15);
-					margin: 4em 0 0 0;
-					padding: 4em 0 0 0;
+					margin: 4em 0 0;
+					padding: 4em 0 0;
 					width: 100% !important;
 				}
 
@@ -2983,8 +2983,8 @@ input, select, textarea {
 		@media screen and (max-width: 736px) {
 
 			.split > * {
-				margin: 3em 0 0 0;
-				padding: 3em 0 0 0;
+				margin: 3em 0 0;
+				padding: 3em 0 0;
 			}
 
 		}
@@ -3038,7 +3038,7 @@ input, select, textarea {
 			}
 
 		.spotlights > section > .content {
-			padding: 4em 5em 2em 5em ;
+			padding: 4em 5em 2em;
 			display: -moz-flex;
 			display: -webkit-flex;
 			display: -ms-flex;
@@ -3092,7 +3092,7 @@ input, select, textarea {
 		@media screen and (max-width: 1680px) {
 
 			.spotlights > section > .content {
-				padding: 4em 4em 2em 4em ;
+				padding: 4em 4em 2em;
 			}
 
 		}
@@ -3130,7 +3130,7 @@ input, select, textarea {
 			}
 
 			.spotlights > section > .content {
-				padding: 3em 2em 1em 2em ;
+				padding: 3em 2em 1em;
 			}
 
 		}
@@ -3143,7 +3143,7 @@ input, select, textarea {
 	}
 
 	table {
-		margin: 0 0 2em 0;
+		margin: 0 0 2em;
 		width: 100%;
 	}
 
@@ -3158,14 +3158,14 @@ input, select, textarea {
 			}
 
 		table td {
-			padding: 0.75em 0.75em;
+			padding: 0.75em;
 		}
 
 		table th {
 			color: #ffffff;
 			font-size: 1em;
 			font-weight: bold;
-			padding: 0 0.75em 0.75em 0.75em;
+			padding: 0 0.75em 0.75em;
 			text-align: left;
 		}
 
@@ -3210,7 +3210,7 @@ input, select, textarea {
 	}
 
 		.wrapper > .inner {
-			padding: 5em 5em 3em 5em ;
+			padding: 5em 5em 3em;
 			max-width: 100%;
 			width: 75em;
 		}
@@ -3218,7 +3218,7 @@ input, select, textarea {
 			@media screen and (max-width: 1680px) {
 
 				.wrapper > .inner {
-					padding: 4em 4em 2em 4em ;
+					padding: 4em 4em 2em;
 				}
 
 			}
@@ -3234,7 +3234,7 @@ input, select, textarea {
 			@media screen and (max-width: 736px) {
 
 				.wrapper > .inner {
-					padding: 3em 2em 1em 2em ;
+					padding: 3em 2em 1em;
 				}
 
 			}
@@ -3527,7 +3527,7 @@ input, select, textarea {
 /* Sidebar */
 
 	#sidebar {
-		padding: 2.5em 2.5em 0.5em 2.5em ;
+		padding: 2.5em 2.5em 0.5em;
 		background: #30426D;
 		cursor: default;
 		height: 100vh;
@@ -3585,7 +3585,7 @@ input, select, textarea {
 				-webkit-transition: opacity 0.15s ease, -webkit-transform 0.75s ease;
 				-ms-transition: opacity 0.15s ease, -ms-transform 0.75s ease;
 				transition: opacity 0.15s ease, transform 0.75s ease;
-				margin: 1.5em 0 0 0;
+				margin: 1.5em 0 0;
 				opacity: 1;
 				padding: 0;
 				position: relative;
