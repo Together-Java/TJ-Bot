@@ -10,8 +10,7 @@ import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import javax.annotation.Nonnull;
-import java.awt.*;
+import java.awt.Color;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -32,7 +31,7 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
     public BlacklistedAttachmentListener(Config config, ModAuditLogWriter modAuditLogWriter) {
         super(Pattern.compile(".*"));
         this.modAuditLogWriter = modAuditLogWriter;
-        this.blacklistedFileExtensions = config.getBlacklistedFileExtensions();
+        blacklistedFileExtensions = config.getBlacklistedFileExtensions();
     }
 
     @Override
@@ -49,7 +48,6 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
         message.delete().flatMap(any -> dmUser(message)).queue(any -> warnMods(message));
     }
 
-    @Nonnull
     private RestAction<Message> dmUser(Message message) {
         Message dmMessage = createDmMessage(message);
         return message.getAuthor()
@@ -57,7 +55,6 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
             .flatMap(privateChannel -> privateChannel.sendMessage(dmMessage));
     }
 
-    @Nonnull
     private Message createDmMessage(Message originalMessage) {
         String contentRaw = originalMessage.getContentRaw();
         String blacklistedAttachments =
@@ -79,7 +76,6 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
         return createBaseResponse(contentRaw, dmMessageContent);
     }
 
-    @Nonnull
     private Message createBaseResponse(String originalMessageContent, String dmMessageContent) {
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
@@ -88,7 +84,6 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
         return new MessageBuilder(dmMessageContent).setEmbeds(originalMessageEmbed).build();
     }
 
-    @Nonnull
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
         return originalMessage.getAttachments()
             .stream()
@@ -110,7 +105,7 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
                 String.join(", ", getBlacklistedAttachmentsFromMessage(sentUserMessage));
 
         modAuditLogWriter.write(
-                "Message with blacklisted content detected: %s"
+                "Message with blacklisted content prevented: %s"
                     .formatted(blacklistedAttachmentsFromMessage),
                 "Sent Message: %s".formatted(sentUserMessage), sentUserMessage.getAuthor(),
                 sentUserMessage.getTimeCreated(), sentUserMessage.getGuild());
