@@ -7,15 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
-
 import static org.mockito.Mockito.verify;
 
 final class PingCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerSlashCommand() {
         SlashCommandInteractionEvent event =
                 jdaTester.createSlashCommandInteractionEvent(command).build();

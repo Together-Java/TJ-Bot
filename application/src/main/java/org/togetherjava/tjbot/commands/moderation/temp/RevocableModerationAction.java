@@ -5,8 +5,6 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 
-import javax.annotation.Nonnull;
-
 /**
  * Represents revocable moderation actions, such as temporary bans. Primarily used by
  * {@link TemporaryModerationRoutine} to identify and revoke such actions.
@@ -35,7 +33,6 @@ interface RevocableModerationAction {
      * 
      * @return the type to apply the temporary action
      */
-    @Nonnull
     ModerationAction getApplyType();
 
     /**
@@ -44,7 +41,6 @@ interface RevocableModerationAction {
      * 
      * @return the type to revoke the temporary action
      */
-    @Nonnull
     ModerationAction getRevokeType();
 
     /**
@@ -55,7 +51,6 @@ interface RevocableModerationAction {
      * @param reason why the action is revoked
      * @return the unsubmitted revocation action
      */
-    @Nonnull
     RestAction<Void> revokeAction(Guild guild, User target, String reason);
 
     /**
@@ -67,6 +62,5 @@ interface RevocableModerationAction {
      * @return a classification of the failure, decides whether the surrounding flow will continue
      *         to handle the error further or not
      */
-    @Nonnull
     FailureIdentification handleRevokeFailure(Throwable failure, long targetId);
 }

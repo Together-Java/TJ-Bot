@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Color;
 import java.time.Instant;
@@ -45,7 +44,6 @@ public final class RemindRoutine implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_INTERVAL_SECONDS,
                 TimeUnit.SECONDS);
@@ -84,7 +82,6 @@ public final class RemindRoutine implements Routine {
         return createDmReminderRoute(jda, authorId);
     }
 
-    @Nonnull
     private static RestAction<ReminderRoute> createGuildReminderRoute(JDA jda, long authorId,
             MessageChannel channel) {
         return jda.retrieveUserById(authorId)
@@ -92,7 +89,6 @@ public final class RemindRoutine implements Routine {
             .map(author -> ReminderRoute.toPublic(channel, author));
     }
 
-    @Nonnull
     private static RestAction<ReminderRoute> createDmReminderRoute(JDA jda, long authorId) {
         return jda.openPrivateChannelById(authorId).map(ReminderRoute::toPrivate);
     }
@@ -113,7 +109,6 @@ public final class RemindRoutine implements Routine {
         routeAction.flatMap(sendMessage).queue(doNothing(), logFailure);
     }
 
-    @Nonnull
     private static MessageEmbed createReminderEmbed(CharSequence content,
             TemporalAccessor createdAt, @Nullable User author) {
         String authorName = author == null ? "Unknown user" : author.getAsTag();
@@ -127,7 +122,6 @@ public final class RemindRoutine implements Routine {
             .build();
     }
 
-    @Nonnull
     private static <T> Consumer<T> doNothing() {
         return a -> {
         };
@@ -135,13 +129,11 @@ public final class RemindRoutine implements Routine {
 
     private record ReminderRoute(MessageChannel channel, @Nullable User target,
             @Nullable String description) {
-        @Nonnull
         static ReminderRoute toPublic(MessageChannel channel, @Nullable User target) {
             return new ReminderRoute(channel, target,
                     target == null ? null : target.getAsMention());
         }
 
-        @Nonnull
         static ReminderRoute toPrivate(PrivateChannel channel) {
             return new ReminderRoute(channel, channel.getUser(),
                     "(Sending your reminder directly, because I was unable to locate"

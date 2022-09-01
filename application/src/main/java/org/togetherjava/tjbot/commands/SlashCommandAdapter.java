@@ -15,7 +15,6 @@ import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -90,25 +89,21 @@ public abstract class SlashCommandAdapter implements SlashCommand {
     }
 
     @Override
-    @Nonnull
     public final String getName() {
         return name;
     }
 
     @Override
-    @Nonnull
     public final String getDescription() {
         return description;
     }
 
     @Override
-    @Nonnull
     public final SlashCommandVisibility getVisibility() {
         return visibility;
     }
 
     @Override
-    @Nonnull
     public final SlashCommandData getData() {
         return data;
     }
@@ -145,7 +140,6 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated component ID
      */
     @SuppressWarnings("OverloadedVarargsMethod")
-    @Nonnull
     protected final String generateComponentId(String... args) {
         return generateComponentId(Lifespan.REGULAR, args);
     }
@@ -163,7 +157,6 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated component ID
      */
     @SuppressWarnings({"OverloadedVarargsMethod", "WeakerAccess"})
-    @Nonnull
     protected final String generateComponentId(Lifespan lifespan, String... args) {
         return Objects.requireNonNull(componentIdGenerator)
             .generate(new ComponentId(getName(), Arrays.asList(args)), lifespan);
@@ -194,7 +187,6 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return the generated list of options
      */
     @Unmodifiable
-    @Nonnull
     protected static List<OptionData> generateMultipleOptions(OptionData optionData,
             @Range(from = 1, to = 25) int amount) {
         String baseName = optionData.getName();
@@ -216,7 +208,6 @@ public abstract class SlashCommandAdapter implements SlashCommand {
      * @return all options with the given prefix
      */
     @Unmodifiable
-    @Nonnull
     protected static List<OptionMapping> getMultipleOptionsByNamePrefix(
             CommandInteractionPayload event, String namePrefix) {
         return event.getOptions()

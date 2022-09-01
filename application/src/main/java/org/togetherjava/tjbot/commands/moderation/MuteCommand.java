@@ -15,7 +15,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
@@ -68,7 +67,6 @@ public final class MuteCommand extends SlashCommandAdapter {
         event.reply("The user is already muted.").setEphemeral(true).queue();
     }
 
-    @Nonnull
     private static RestAction<Boolean> sendDm(ISnowflake target,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
             GenericEvent event) {
@@ -89,7 +87,6 @@ public final class MuteCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    @Nonnull
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The mute duration is: "
@@ -102,7 +99,6 @@ public final class MuteCommand extends SlashCommandAdapter {
                 target.getUser(), durationText + dmNoticeText, reason);
     }
 
-    @Nonnull
     private AuditableRestAction<Void> muteUser(Member target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage =

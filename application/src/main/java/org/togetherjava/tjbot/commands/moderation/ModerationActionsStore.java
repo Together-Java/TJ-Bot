@@ -5,7 +5,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModerationActions;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
@@ -45,7 +44,6 @@ public final class ModerationActionsStore {
      * 
      * @return a list of all expired actions, chronologically ascending
      */
-    @Nonnull
     public List<ActionRecord> getExpiredActionsAscending() {
         return getActionsAscendingWhere(
                 ModerationActions.MODERATION_ACTIONS.ACTION_EXPIRES_AT.isNotNull()
@@ -62,7 +60,6 @@ public final class ModerationActionsStore {
      * @param actionType the type of action to filter for
      * @return a list of all actions with the given type, chronologically ascending
      */
-    @Nonnull
     public List<ActionRecord> getActionsByTypeAscending(long guildId, ModerationAction actionType) {
         Objects.requireNonNull(actionType);
 
@@ -79,7 +76,6 @@ public final class ModerationActionsStore {
      * @param targetId the id of the target user to filter for
      * @return a list of all actions executed against the target, chronologically ascending
      */
-    @Nonnull
     public List<ActionRecord> getActionsByTargetAscending(long guildId, long targetId) {
         return getActionsFromGuildAscending(guildId,
                 ModerationActions.MODERATION_ACTIONS.TARGET_ID.eq(targetId));
@@ -94,7 +90,6 @@ public final class ModerationActionsStore {
      * @param authorId the id of the author user to filter for
      * @return a list of all actions executed by the author, chronologically ascending
      */
-    @Nonnull
     public List<ActionRecord> getActionsByAuthorAscending(long guildId, long authorId) {
         return getActionsFromGuildAscending(guildId,
                 ModerationActions.MODERATION_ACTIONS.AUTHOR_ID.eq(authorId));
@@ -110,7 +105,6 @@ public final class ModerationActionsStore {
      * @param actionType the type of the action
      * @return the last action issued against the given user of the given type, if present
      */
-    @Nonnull
     public Optional<ActionRecord> findLastActionAgainstTargetByType(long guildId, long targetId,
             ModerationAction actionType) {
         return database
@@ -130,7 +124,6 @@ public final class ModerationActionsStore {
      * @param caseId the actions' case id to search for
      * @return the action with the given case id, if present
      */
-    @Nonnull
     public Optional<ActionRecord> findActionByCaseId(int caseId) {
         return database
             .read(context -> context.selectFrom(ModerationActions.MODERATION_ACTIONS)
@@ -177,7 +170,6 @@ public final class ModerationActionsStore {
         });
     }
 
-    @Nonnull
     private List<ActionRecord> getActionsFromGuildAscending(long guildId, Condition condition) {
         Objects.requireNonNull(condition);
 
@@ -185,7 +177,6 @@ public final class ModerationActionsStore {
                 ModerationActions.MODERATION_ACTIONS.GUILD_ID.eq(guildId).and(condition));
     }
 
-    @Nonnull
     private List<ActionRecord> getActionsAscendingWhere(Condition condition) {
         Objects.requireNonNull(condition);
 

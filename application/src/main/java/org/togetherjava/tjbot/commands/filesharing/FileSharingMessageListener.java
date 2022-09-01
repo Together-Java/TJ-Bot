@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -79,7 +78,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             return;
         }
 
-
         List<Message.Attachment> attachments = event.getMessage()
             .getAttachments()
             .stream()
@@ -109,7 +107,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         return extensionFilter.contains(extension);
     }
 
-
     private void processAttachments(MessageReceivedEvent event,
             List<Message.Attachment> attachments) {
 
@@ -133,7 +130,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         sendResponse(event, url);
     }
 
-    @Nonnull
     private String readAttachment(InputStream stream) {
         try (stream) {
             return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
@@ -142,7 +138,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         }
     }
 
-    @Nonnull
     private String getNameOf(Message.Attachment attachment) {
         String fileName = attachment.getFileName();
         String fileExtension = attachment.getFileExtension();
@@ -163,7 +158,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         return fileName;
     }
 
-    @Nonnull
     private String uploadToGist(GistRequest jsonRequest) {
         String body;
         try {

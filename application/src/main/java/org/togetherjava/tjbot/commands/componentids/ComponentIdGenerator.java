@@ -7,8 +7,6 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.togetherjava.tjbot.commands.SlashCommand;
 
-import javax.annotation.Nonnull;
-
 /**
  * Provides component ID generation.
  * <p>
@@ -37,6 +35,5 @@ public interface ComponentIdGenerator {
      * @throws InvalidComponentIdFormatException if the given component ID was in an unexpected
      *         format and could not be serialized
      */
-    @Nonnull
     String generate(ComponentId componentId, Lifespan lifespan);
 }

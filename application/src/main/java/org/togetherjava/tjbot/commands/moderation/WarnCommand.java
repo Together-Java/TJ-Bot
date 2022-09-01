@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
@@ -44,7 +43,6 @@ public final class WarnCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    @Nonnull
     private RestAction<InteractionHook> warnUserFlow(User target, Member author, String reason,
             Guild guild, SlashCommandInteractionEvent event) {
         return dmUser(target, reason, guild, event).map(hasSentDm -> {
@@ -55,7 +53,6 @@ public final class WarnCommand extends SlashCommandAdapter {
             .flatMap(event::replyEmbeds);
     }
 
-    @Nonnull
     private static RestAction<Boolean> dmUser(ISnowflake target, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
         return event.getJDA()
@@ -80,7 +77,6 @@ public final class WarnCommand extends SlashCommandAdapter {
                 ModerationAction.WARN, null, reason);
     }
 
-    @Nonnull
     private static MessageEmbed sendFeedback(boolean hasSentDm, User target, Member author,
             String reason) {
         String dmNoticeText = "";

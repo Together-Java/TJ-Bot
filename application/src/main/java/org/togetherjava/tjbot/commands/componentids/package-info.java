@@ -10,7 +10,10 @@
  * {@link org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator} and
  * {@link org.togetherjava.tjbot.commands.componentids.ComponentIdParser}.
  */
+@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.componentids;
+
+import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

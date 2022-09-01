@@ -19,12 +19,10 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 
 /**
  * Implements the {@code /role-select} command.
@@ -56,7 +54,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
 
     private static final int OPTIONAL_ROLES_AMOUNT = 22;
-
 
     /**
      * Construct an instance.
@@ -193,7 +190,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         event.replyEmbeds(embed).addActionRow(menu.build()).queue();
     }
 
-    @Nonnull
     private static SelectOption mapToSelectOption(Role role) {
         RoleIcon roleIcon = role.getIcon();
 
@@ -243,7 +239,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         modifyRoles(event, event.getMember(), guild, rolesToAdd, rolesToRemove);
     }
 
-    @Nonnull
     private static Function<SelectOption, Optional<Role>> optionToRole(Guild guild) {
         return option -> {
             Role role = guild.getRoleById(option.getValue());
@@ -265,7 +260,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @Nonnull
     private static MessageEmbed createEmbed(String title, CharSequence description) {
         return new EmbedBuilder().setTitle(title)
             .setDescription(description)

@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.jda.payloads;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import net.dv8tion.jda.api.entities.User;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class PayloadUser {
@@ -24,7 +23,6 @@ public final class PayloadUser {
         this.discriminator = discriminator;
     }
 
-    @Nonnull
     public static PayloadUser of(User user) {
         return new PayloadUser(user.isBot(), user.getFlagsRaw(), user.getId(), user.getAvatarId(),
                 user.getName(), user.getDiscriminator());
@@ -46,7 +44,6 @@ public final class PayloadUser {
         this.publicFlags = publicFlags;
     }
 
-    @Nonnull
     public String getId() {
         return id;
     }
@@ -64,7 +61,6 @@ public final class PayloadUser {
         this.avatar = avatar;
     }
 
-    @Nonnull
     public String getUsername() {
         return username;
     }
@@ -73,7 +69,6 @@ public final class PayloadUser {
         this.username = username;
     }
 
-    @Nonnull
     public String getDiscriminator() {
         return discriminator;
     }

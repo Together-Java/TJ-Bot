@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
@@ -100,7 +99,6 @@ public final class BanCommand extends SlashCommandAdapter {
             .map(Result::isSuccess);
     }
 
-    @Nonnull
     private static MessageEmbed sendFeedback(boolean hasSentDm, User target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The ban duration is: "
@@ -113,7 +111,6 @@ public final class BanCommand extends SlashCommandAdapter {
                 durationText + dmNoticeText, reason);
     }
 
-    @Nonnull
     private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
             Throwable alreadyBannedFailure, IReplyCallback event, Guild guild, User target) {
         if (alreadyBannedFailure instanceof ErrorResponseException errorResponseException) {
@@ -136,7 +133,6 @@ public final class BanCommand extends SlashCommandAdapter {
             .setEphemeral(true));
     }
 
-    @Nonnull
     private RestAction<InteractionHook> banUserFlow(User target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
             int deleteHistoryDays, Guild guild, SlashCommandInteractionEvent event) {
@@ -147,7 +143,6 @@ public final class BanCommand extends SlashCommandAdapter {
             .flatMap(event::replyEmbeds);
     }
 
-    @Nonnull
     private AuditableRestAction<Void> banUser(User target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
             int deleteHistoryDays, Guild guild) {

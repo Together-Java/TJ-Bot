@@ -7,7 +7,6 @@ import org.togetherjava.tjbot.db.generated.Tables;
 import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.List;
 
@@ -45,12 +44,10 @@ final class RawReminderTestHelper {
             .insert());
     }
 
-    @Nonnull
     List<String> readReminders() {
         return readReminders(jdaTester.getMemberSpy());
     }
 
-    @Nonnull
     List<String> readReminders(Member author) {
         long guildId = jdaTester.getTextChannelSpy().getGuild().getIdLong();
         long authorId = author.getIdLong();

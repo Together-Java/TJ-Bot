@@ -20,7 +20,6 @@ public class BootstrapLauncher {
         Application.main(args);
     }
 
-
     /**
      * Sets any system-properties before anything else is touched.
      */

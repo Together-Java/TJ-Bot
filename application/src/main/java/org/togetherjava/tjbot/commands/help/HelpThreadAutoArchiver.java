@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -36,7 +35,6 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_MINUTES, TimeUnit.MINUTES);
     }
@@ -67,7 +65,6 @@ public final class HelpThreadAutoArchiver implements Routine {
             .forEach(activeThread -> autoArchiveForThread(activeThread, archiveAfterMoment));
     }
 
-    @Nonnull
     private Instant computeArchiveAfterMoment() {
         return Instant.now().minus(ARCHIVE_AFTER_INACTIVITY_OF);
     }

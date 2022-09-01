@@ -4,8 +4,6 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-
 /**
  * Role based moderation actions that can be revoked, for example a {@link TemporaryMuteAction} or a
  * {@link TemporaryBanAction}, which are applied implicitly purely by the presence of a role.
@@ -26,7 +24,6 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
     }
 
     @Override
-    @Nonnull
     public FailureIdentification handleRevokeFailure(Throwable failure, long targetId) {
 
         if (failure instanceof ErrorResponseException errorResponseException) {

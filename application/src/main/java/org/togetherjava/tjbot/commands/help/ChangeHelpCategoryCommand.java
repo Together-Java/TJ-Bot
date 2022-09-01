@@ -15,7 +15,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
@@ -96,7 +95,6 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @Nonnull
     private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
             ThreadChannel helpThread, String category) {
         String changedContent = "Changed the category to **%s**.".formatted(category);

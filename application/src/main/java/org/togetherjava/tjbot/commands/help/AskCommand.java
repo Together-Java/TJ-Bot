@@ -15,7 +15,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
@@ -119,7 +118,6 @@ public final class AskCommand extends SlashCommandAdapter {
         return false;
     }
 
-    @Nonnull
     private RestAction<Message> handleEvent(InteractionHook eventHook, ThreadChannel threadChannel,
             Member author, String title, String category, Guild guild) {
         helper.writeHelpThreadToDatabase(author, threadChannel);
@@ -128,7 +126,6 @@ public final class AskCommand extends SlashCommandAdapter {
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
-    @Nonnull
     private RestAction<Message> sendInitialMessage(Guild guild, ThreadChannel threadChannel,
             Member author, String title, String category) {
         String roleMentionDescription = helper.handleFindRoleForCategory(category, guild)
@@ -148,7 +145,6 @@ public final class AskCommand extends SlashCommandAdapter {
             .flatMap(message -> message.editMessage(contentWithRole));
     }
 
-    @Nonnull
     private static RestAction<Message> notifyUser(InteractionHook eventHook,
             IMentionable threadChannel) {
         return eventHook.editOriginal("""

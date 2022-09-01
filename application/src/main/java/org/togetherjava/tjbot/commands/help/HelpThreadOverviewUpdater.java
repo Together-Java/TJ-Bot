@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -59,7 +58,6 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 1, 1, TimeUnit.MINUTES);
     }
@@ -124,7 +122,6 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             .queue();
     }
 
-    @Nonnull
     private String createDescription(Collection<ThreadChannel> activeThreads) {
         if (activeThreads.isEmpty()) {
             return "Currently none.";
@@ -150,7 +147,6 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             .collect(Collectors.joining("\n\n"));
     }
 
-    @Nonnull
     private static RestAction<Optional<Message>> getStatusMessage(MessageChannel channel) {
         return channel.getHistory()
             .retrievePast(1)
@@ -168,7 +164,6 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         return content.startsWith(STATUS_TITLE);
     }
 
-    @Nonnull
     private RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
             Message updatedStatusMessage, MessageChannel overviewChannel) {
         logger.debug("Sending the updated question overview");
@@ -203,7 +198,6 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
             return "**%s**:%n%s".formatted(category, threadListText);
         }
 
-        @Nonnull
         static CategoryWithThreads ofEntry(
                 Map.Entry<String, ? extends List<ThreadChannel>> categoryAndThreads) {
             return new CategoryWithThreads(categoryAndThreads.getKey(),

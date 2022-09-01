@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -125,7 +124,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return false;
     }
 
-    @Nonnull
     private Optional<HelpThread> getLastHelpThreadIfOnCooldown(long userId) {
         return Optional.ofNullable(userIdToLastHelpThread.getIfPresent(userId))
             .filter(lastHelpThread -> {
@@ -137,7 +135,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             });
     }
 
-    @Nonnull
     private static String createTitle(String message) {
         String titleCandidate;
         if (message.length() < TITLE_MAX_LENGTH) {
@@ -156,7 +153,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return HelpSystemHelper.isTitleValid(titleCandidate) ? titleCandidate : "Untitled";
     }
 
-    @Nonnull
     private RestAction<?> handleEvent(ThreadChannel threadChannel, Message message, String title) {
         Member author = message.getMember();
         helper.writeHelpThreadToDatabase(author, threadChannel);
@@ -169,13 +165,6 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
-    @Nonnull
-    private static RestAction<Void> inviteUsersToThread(ThreadChannel threadChannel,
-            Member author) {
-        return threadChannel.addThreadMember(author);
-    }
-
-    @Nonnull
     private static MessageAction sendInitialMessage(ThreadChannel threadChannel,
             Message originalMessage, String title) {
         String content = originalMessage.getContentRaw();
@@ -194,11 +183,9 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
                         Please use `/change-help-category` to greatly increase the visibility of the question."""
                     .formatted(author, title)).setEmbeds(embed).build();
 
-
         return threadChannel.sendMessage(threadMessage);
     }
 
-    @Nonnull
     private static MessageAction notifyUser(IMentionable threadChannel, Message message) {
         return message.getChannel()
             .sendMessage(

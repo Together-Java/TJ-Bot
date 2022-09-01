@@ -9,7 +9,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
-import javax.annotation.Nonnull;
 import java.awt.Color;
 import java.util.Optional;
 import java.util.Set;
@@ -122,7 +121,6 @@ public final class TagSystem {
      * @param id the id of the tag to get
      * @return the content of the tag, if the tag is known to the system
      */
-    @Nonnull
     Optional<String> getTag(String id) {
         return database.readTransaction(context -> Optional
             .ofNullable(context.selectFrom(Tags.TAGS).where(Tags.TAGS.ID.eq(id)).fetchOne())
@@ -134,7 +132,6 @@ public final class TagSystem {
      *
      * @return a set of all ids known to the system, not backed
      */
-    @Nonnull
     Set<String> getAllIds() {
         return database.readTransaction(context -> context.select(Tags.TAGS.ID)
             .from(Tags.TAGS)

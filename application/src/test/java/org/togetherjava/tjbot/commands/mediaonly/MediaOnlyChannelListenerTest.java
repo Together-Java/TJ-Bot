@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -94,12 +93,10 @@ final class MediaOnlyChannelListenerTest {
         verify(jdaTester.getPrivateChannelSpy()).sendMessage(any(Message.class));
     }
 
-    @Nonnull
     private MessageReceivedEvent sendMessage(Message message) {
         return sendMessage(message, List.of());
     }
 
-    @Nonnull
     private MessageReceivedEvent sendMessage(Message message,
             List<Message.Attachment> attachments) {
         MessageReceivedEvent event = jdaTester.createMessageReceiveEvent(message, attachments);

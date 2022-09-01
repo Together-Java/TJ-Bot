@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +16,6 @@ public final class PayloadSlashCommandUsers {
     }
 
     @JsonAnyGetter
-    @Nonnull
     public Map<String, PayloadUser> getIdToUser() {
         return Collections.unmodifiableMap(idToUser);
     }

@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Image;
@@ -97,7 +96,6 @@ public final class TeXCommand extends SlashCommandAdapter {
         }
     }
 
-    @Nonnull
     private Image renderImage(TeXFormula formula) {
         Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
                 FOREGROUND_COLOR, BACKGROUND_COLOR);
@@ -117,7 +115,6 @@ public final class TeXCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    @Nonnull
     private ByteArrayOutputStream getRenderedTextImageStream(Image image) throws IOException {
         BufferedImage renderedTextImage = new BufferedImage(image.getWidth(null),
                 image.getHeight(null), BufferedImage.TYPE_4BYTE_ABGR);
@@ -137,7 +134,6 @@ public final class TeXCommand extends SlashCommandAdapter {
      * @param latex the latex to convert
      * @return the converted latex
      */
-    @Nonnull
     private String convertInlineLatexToFull(String latex) {
         if (isInvalidInlineFormat(latex)) {
             throw new ParseException(INVALID_INLINE_FORMAT_ERROR_MESSAGE);

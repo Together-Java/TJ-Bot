@@ -26,7 +26,6 @@ final class FilterTest {
         Assertions.assertEquals(Filter.Result.NEUTRAL, spy.filter(this.event));
     }
 
-
     @Test
     void shouldNotPassFilter() {
         FlaggedFilter spy = Mockito.spy(this.filter);

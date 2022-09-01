@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import javax.annotation.Nonnull;
-
 /**
  * All available moderation actions.
  */
@@ -62,7 +60,6 @@ public enum ModerationAction {
      *
      * @return the verb of this action
      */
-    @Nonnull
     public String getVerb() {
         return verb;
     }

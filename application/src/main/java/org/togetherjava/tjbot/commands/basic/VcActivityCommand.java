@@ -18,14 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 
 /**
  * Implements the {@code vc-activity} command. Creates VC activities.
@@ -125,23 +123,19 @@ public final class VcActivityCommand extends SlashCommandAdapter {
                 "Starts a VC activity (you need to be in an voice channel to run this command)",
                 SlashCommandVisibility.GUILD);
 
-
         SubcommandData applicationSubCommand =
                 new SubcommandData(APPLICATION_SUBCOMMAND, "Choose an application from our list")
                     .addOptions(new OptionData(OptionType.STRING, APPLICATION_OPTION,
                             "the application", true).addChoices(VC_APPLICATIONS))
                     .addOptions(inviteOptions);
 
-
         SubcommandData idSubCommand =
                 new SubcommandData("id", "specify the ID for the application manually")
                     .addOption(OptionType.STRING, ID_OPTION, "the ID of the application", true)
                     .addOptions(inviteOptions);
 
-
         getData().addSubcommands(applicationSubCommand, idSubCommand);
     }
-
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
@@ -191,7 +185,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
         handleSubcommand(event, voiceChannel, applicationId, maxUses, maxAgeDays, applicationName);
     }
 
-    @Nonnull
     private static <K, V> Optional<K> getKeyByValue(Map<K, V> map, V value) {
         for (Map.Entry<K, V> entry : map.entrySet()) {
             if (value.equals(entry.getKey())) {
@@ -206,7 +199,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
             VoiceChannel voiceChannel, String applicationId, @Nullable Integer maxUses,
             @Nullable Integer maxAgeDays, String applicationName) {
 
-
         voiceChannel.createInvite()
             .setTargetApplication(applicationId)
             .setMaxUses(maxUses)
@@ -217,7 +209,6 @@ public final class VcActivityCommand extends SlashCommandAdapter {
 
     }
 
-    @Nonnull
     private static ReplyCallbackAction replyInvite(SlashCommandInteractionEvent event,
             Invite invite, String applicationName) {
         return event.reply("""

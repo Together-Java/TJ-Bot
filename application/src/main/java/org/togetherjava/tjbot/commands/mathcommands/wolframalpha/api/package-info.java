@@ -3,7 +3,10 @@
  * <a href="https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha
  * API</a>.
  */
+@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api;
+
+import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
 import javax.annotation.ParametersAreNonnullByDefault;

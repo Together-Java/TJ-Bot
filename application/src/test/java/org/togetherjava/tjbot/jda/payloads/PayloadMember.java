@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,7 +43,6 @@ public final class PayloadMember {
         this.user = user;
     }
 
-    @Nonnull
     public static PayloadMember of(Member member) {
         String permissions = Long
             .toString(Permission.getRaw(member.getPermissions().toArray(Permission[]::new)));
@@ -56,7 +54,6 @@ public final class PayloadMember {
                 member.isPending(), user);
     }
 
-    @Nonnull
     public PayloadUser getUser() {
         return user;
     }
@@ -83,7 +80,6 @@ public final class PayloadMember {
         this.nick = nick;
     }
 
-    @Nonnull
     public String getJoinedAt() {
         return joinedAt;
     }
@@ -92,7 +88,6 @@ public final class PayloadMember {
         this.joinedAt = joinedAt;
     }
 
-    @Nonnull
     public String getPermissions() {
         return permissions;
     }
@@ -101,7 +96,6 @@ public final class PayloadMember {
         this.permissions = permissions;
     }
 
-    @Nonnull
     public List<String> getRoles() {
         return Collections.unmodifiableList(roles);
     }

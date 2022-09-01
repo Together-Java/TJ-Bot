@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +25,6 @@ final class TeXCommandTest {
         command = jdaTester.spySlashCommand(new TeXCommand());
     }
 
-    @Nonnull
     private SlashCommandInteractionEvent triggerSlashCommand(String latex) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
             .setOption(TeXCommand.LATEX_OPTION, latex)

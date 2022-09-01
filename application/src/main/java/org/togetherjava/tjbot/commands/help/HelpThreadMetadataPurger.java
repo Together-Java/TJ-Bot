@@ -7,7 +7,6 @@ import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.time.Period;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +29,6 @@ public class HelpThreadMetadataPurger implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_RATE, 0, 4, TimeUnit.HOURS);
     }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -53,7 +52,6 @@ public final class ScamBlockerConfig {
      *
      * @return the channel name pattern
      */
-    @Nonnull
     public String getReportChannelPattern() {
         return reportChannelPattern;
     }
@@ -63,7 +61,6 @@ public final class ScamBlockerConfig {
      *
      * @return the whitelist of hosts
      */
-    @Nonnull
     public Set<String> getHostWhitelist() {
         return Collections.unmodifiableSet(hostWhitelist);
     }
@@ -73,7 +70,6 @@ public final class ScamBlockerConfig {
      *
      * @return the blacklist of hosts
      */
-    @Nonnull
     public Set<String> getHostBlacklist() {
         return Collections.unmodifiableSet(hostBlacklist);
     }
@@ -84,7 +80,6 @@ public final class ScamBlockerConfig {
      *
      * @return the set of suspicious host keywords
      */
-    @Nonnull
     public Set<String> getSuspiciousHostKeywords() {
         return Collections.unmodifiableSet(suspiciousHostKeywords);
     }

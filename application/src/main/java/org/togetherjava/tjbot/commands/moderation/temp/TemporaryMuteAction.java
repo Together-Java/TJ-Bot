@@ -7,8 +7,6 @@ import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.Nonnull;
-
 /**
  * Action to revoke temporary mutes, as applied by
  * {@link org.togetherjava.tjbot.commands.moderation.MuteCommand} and executed by
@@ -29,19 +27,16 @@ final class TemporaryMuteAction extends RevocableRoleBasedAction {
     }
 
     @Override
-    @Nonnull
     public ModerationAction getApplyType() {
         return ModerationAction.MUTE;
     }
 
     @Override
-    @Nonnull
     public ModerationAction getRevokeType() {
         return ModerationAction.UNMUTE;
     }
 
     @Override
-    @Nonnull
     public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild
             .removeRoleFromMember(target.getIdLong(),

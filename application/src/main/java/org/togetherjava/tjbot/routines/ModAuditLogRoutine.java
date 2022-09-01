@@ -20,7 +20,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModAuditLogGuildProcess;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.Color;
 import java.time.*;
@@ -65,7 +64,6 @@ public final class ModAuditLogRoutine implements Routine {
         this.modAuditLogWriter = modAuditLogWriter;
     }
 
-    @Nonnull
     private static RestAction<AuditLogMessage> handleAction(Action action, AuditLogEntry entry) {
         User author = Objects.requireNonNull(entry.getUser());
         return getTargetFromEntryOrNull(entry).map(target -> new AuditLogMessage(author, action,
@@ -99,7 +97,6 @@ public final class ModAuditLogRoutine implements Routine {
      * @param periodHours the scheduling period in hours
      * @return the according schedule representing the planned execution
      */
-    @Nonnull
     private static Schedule scheduleAtFixedRateFromNextFixedTime(int periodStartHour,
             int periodHours) {
         // NOTE This scheduler could be improved, for example supporting arbitrary periods (not just
@@ -129,7 +126,6 @@ public final class ModAuditLogRoutine implements Routine {
                 TimeUnit.HOURS.toSeconds(periodHours), TimeUnit.SECONDS);
     }
 
-    @Nonnull
     private static Instant computeClosestNextScheduleDate(Instant instant,
             List<Integer> scheduleHours, int periodHours) {
         OffsetDateTime offsetDateTime = instant.atOffset(ZoneOffset.UTC);
@@ -151,36 +147,30 @@ public final class ModAuditLogRoutine implements Routine {
             .orElseThrow();
     }
 
-    @Nonnull
     private static Optional<RestAction<MessageEmbed>> handleBanEntry(AuditLogEntry entry) {
         // NOTE Temporary bans are realized as permanent bans with automated unban,
         // hence we can not differentiate a permanent or a temporary ban here
         return Optional.of(handleAction(Action.BAN, entry).map(AuditLogMessage::toEmbed));
     }
 
-    @Nonnull
     private static Optional<RestAction<MessageEmbed>> handleUnbanEntry(AuditLogEntry entry) {
         return Optional.of(handleAction(Action.UNBAN, entry).map(AuditLogMessage::toEmbed));
     }
 
-    @Nonnull
     private static Optional<RestAction<MessageEmbed>> handleKickEntry(AuditLogEntry entry) {
         return Optional.of(handleAction(Action.KICK, entry).map(AuditLogMessage::toEmbed));
     }
 
-    @Nonnull
     private static Optional<RestAction<MessageEmbed>> handleMuteEntry(AuditLogEntry entry) {
         // NOTE Temporary mutes are realized as permanent mutes with automated unmute,
         // hence we can not differentiate a permanent or a temporary mute here
         return Optional.of(handleAction(Action.MUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
-    @Nonnull
     private static Optional<RestAction<MessageEmbed>> handleUnmuteEntry(AuditLogEntry entry) {
         return Optional.of(handleAction(Action.UNMUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
-    @Nonnull
     private static Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
             AuditLogEntry entry) {
         return Optional.of(handleAction(Action.MESSAGE_DELETION, entry).map(message -> {
@@ -198,7 +188,6 @@ public final class ModAuditLogRoutine implements Routine {
     }
 
     @Override
-    @Nonnull
     public Schedule createSchedule() {
         Schedule schedule = scheduleAtFixedRateFromNextFixedTime(CHECK_AUDIT_LOG_START_HOUR,
                 CHECK_AUDIT_LOG_EVERY_HOURS);
@@ -270,7 +259,6 @@ public final class ModAuditLogRoutine implements Routine {
         });
     }
 
-    @Nonnull
     private Optional<RestAction<Message>> handleAuditLog(MessageChannel auditLogChannel,
             AuditLogEntry entry) {
         Optional<RestAction<MessageEmbed>> maybeMessage = switch (entry.getType()) {
@@ -290,7 +278,6 @@ public final class ModAuditLogRoutine implements Routine {
             .map(message -> message.flatMap(Objects::nonNull, auditLogChannel::sendMessageEmbeds));
     }
 
-    @Nonnull
     private Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(AuditLogEntry entry) {
         if (containsMutedRole(entry, AuditLogKey.MEMBER_ROLES_ADD)) {
             return handleMuteEntry(entry);
@@ -329,12 +316,10 @@ public final class ModAuditLogRoutine implements Routine {
             this.verb = verb;
         }
 
-        @Nonnull
         String getTitle() {
             return title;
         }
 
-        @Nonnull
         String getVerb() {
             return verb;
         }
@@ -342,7 +327,6 @@ public final class ModAuditLogRoutine implements Routine {
 
     private record AuditLogMessage(User author, Action action, @Nullable User target,
             @Nullable String reason, TemporalAccessor timestamp) {
-        @Nonnull
         MessageEmbed toEmbed() {
             String targetTag = target == null ? "(user unknown)" : target.getAsTag();
             String description = "%s **%s**.".formatted(action.getVerb(), targetTag);

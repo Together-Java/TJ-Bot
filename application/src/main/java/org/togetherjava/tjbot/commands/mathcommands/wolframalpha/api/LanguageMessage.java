@@ -43,5 +43,4 @@ public final class LanguageMessage {
         this.other = other;
     }
 
-
 }
