@@ -8,6 +8,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Configuration of the application. Create instances using {@link #load(Path)}.
@@ -28,6 +30,7 @@ public final class Config {
     private final ScamBlockerConfig scamBlocker;
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
+    private final List<String> blacklistedFileExtension;
 
     private final String mediaOnlyChannelPattern;
 
@@ -48,7 +51,8 @@ public final class Config {
             @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
             @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
-            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern) {
+            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern,
+            @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension) {
         this.token = token;
         this.gistApiKey = gistApiKey;
         this.databasePath = databasePath;
@@ -65,6 +69,7 @@ public final class Config {
         this.wolframAlphaAppId = wolframAlphaAppId;
         this.helpSystem = helpSystem;
         this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
+        this.blacklistedFileExtension = blacklistedFileExtension;
     }
 
     /**
@@ -234,5 +239,15 @@ public final class Config {
     @Nonnull
     public String getMediaOnlyChannelPattern() {
         return mediaOnlyChannelPattern;
+    }
+
+    /**
+     * Gets a list of all blacklisted file extensions.
+     *
+     * @return a list of all blacklisted file extensions
+     */
+    @Nonnull
+    public List<String> getBlacklistedFileExtensions() {
+        return Collections.unmodifiableList(blacklistedFileExtension);
     }
 }
