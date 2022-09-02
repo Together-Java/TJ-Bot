@@ -5,8 +5,6 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
@@ -37,39 +35,29 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
             return;
         }
 
-        if (messageHasNoMediaAttached(event)) {
-            deleteMessage(event).flatMap(any -> dmUser(event)).queue();
-        }
-    }
-
-    private static boolean messageHasNoMediaAttached(MessageReceivedEvent event) {
         Message message = event.getMessage();
-        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
-                && !message.getContentRaw().contains("http");
-    }
+        if (message.toString().contains("THREAD_CREATED")) {
+            return;
+        }
 
-    private AuditableRestAction<Void> deleteMessage(MessageReceivedEvent event) {
-        return event.getMessage().delete();
-    }
+        if (message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
+                && !message.getContentRaw().contains("http")) {
+            message.delete().flatMap(any -> {
+                String originalMessageContent = message.getContentRaw();
+                MessageEmbed originalMessageEmbed =
+                        new EmbedBuilder().setDescription(originalMessageContent)
+                            .setColor(Color.ORANGE)
+                            .build();
 
-    private RestAction<Message> dmUser(MessageReceivedEvent event) {
-        return dmUser(event.getMessage());
-    }
+                Message dmMessage = new MessageBuilder(
+                        "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+                            .setEmbeds(originalMessageEmbed)
+                            .build();
 
-    private RestAction<Message> dmUser(Message originalMessage) {
-        String originalMessageContent = originalMessage.getContentRaw();
-        MessageEmbed originalMessageEmbed =
-                new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
-                    .build();
-
-        Message dmMessage = new MessageBuilder(
-                "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-                    .setEmbeds(originalMessageEmbed)
-                    .build();
-
-        return originalMessage.getAuthor()
-            .openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(dmMessage));
+                return message.getAuthor()
+                    .openPrivateChannel()
+                    .flatMap(channel -> channel.sendMessage(dmMessage));
+            }).queue();
+        }
     }
 }
