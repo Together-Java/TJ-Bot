@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.features.SlashCommand;
 
 import javax.annotation.Nullable;
 import java.util.List;

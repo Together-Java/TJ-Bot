@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 
 /**
  * Configuration for the suggestion system, see
- * {@link org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter}.
+ * {@link org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter}.
  */
 @SuppressWarnings("ClassCanBeRecord")
 @JsonRootName("suggestions")

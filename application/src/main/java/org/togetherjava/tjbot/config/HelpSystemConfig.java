@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Configuration for the help system, see {@link org.togetherjava.tjbot.commands.help.AskCommand}.
+ * Configuration for the help system, see {@link org.togetherjava.tjbot.features.help.AskCommand}.
  */
 @SuppressWarnings("ClassCanBeRecord")
 @JsonRootName("helpSystem")
