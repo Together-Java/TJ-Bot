@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -41,7 +41,7 @@ public final class ChangeHelpTitleCommand extends SlashCommandAdapter {
      */
     public ChangeHelpTitleCommand(HelpSystemHelper helper) {
         super("change-help-title", "changes the title of a help thread",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         getData().addOption(OptionType.STRING, TITLE_OPTION, "short and to the point", true);
 

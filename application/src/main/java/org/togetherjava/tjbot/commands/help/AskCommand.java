@@ -12,7 +12,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.util.Optional;
@@ -55,7 +55,7 @@ public final class AskCommand extends SlashCommandAdapter {
      */
     public AskCommand(Config config, HelpSystemHelper helper) {
         super("ask", "Ask a question - use this in the staging channel",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         OptionData title =
                 new OptionData(OptionType.STRING, TITLE_OPTION, "short and to the point", true);

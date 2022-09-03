@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -42,7 +42,7 @@ public final class TagsCommand extends SlashCommandAdapter {
      * @param tagSystem the system providing the actual tag data
      */
     public TagsCommand(TagSystem tagSystem) {
-        super("tags", "Displays all available tags", SlashCommandVisibility.GUILD);
+        super("tags", "Displays all available tags", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
     }

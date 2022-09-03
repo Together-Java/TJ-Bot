@@ -1,14 +1,17 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
@@ -16,6 +19,12 @@ import org.togetherjava.tjbot.commands.componentids.Lifespan;
 import java.util.List;
 
 /**
+ * A slash-command is a command in Discord, with slash (/) as the prefix. These commands offer
+ * enhanced functionality and superior UX over text-commands. An example slash-command is the
+ * `/thread` command, this allows you to create threads using your keyboard. Try it out yourself!
+ *
+ * <p>
+ * <p>
  * Represents a Discord slash-command. Mostly decorating
  * {@link net.dv8tion.jda.api.interactions.commands.Command}.
  * <p>
@@ -36,7 +45,7 @@ import java.util.List;
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
-public interface SlashCommand extends UserInteractor {
+public interface SlashCommand extends BotCommand {
 
     /**
      * Gets the description of the command.
@@ -49,15 +58,6 @@ public interface SlashCommand extends UserInteractor {
      * @return the description of the command
      */
     String getDescription();
-
-    /**
-     * Gets the visibility of this command.
-     * <p>
-     * After registration of the command, the visibility must not change anymore.
-     *
-     * @return the visibility of the command
-     */
-    SlashCommandVisibility getVisibility();
 
     /**
      * Gets the command data belonging to this command.
@@ -74,13 +74,13 @@ public interface SlashCommand extends UserInteractor {
      *
      * @return the command data of this command
      */
-    SlashCommandData getData();
+    @NotNull SlashCommandData getData();
 
     /**
      * Triggered by the core system when a slash command corresponding to this implementation (based
      * on {@link #getData()}) has been triggered.
      * <p>
-     * This method may be called multi-threaded. In particular, there are no guarantees that it will
+     * This method may be called multithreaded. In particular, there are no guarantees that it will
      * be executed on the same thread repeatedly or on the same thread that other event methods have
      * been called on.
      * <p>
@@ -93,26 +93,34 @@ public interface SlashCommand extends UserInteractor {
      * in a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>
-     * The component ID has to be a UUID-string (see {@link java.util.UUID}), which is associated to
-     * a specific database entry, containing meta information about the command being executed. Such
-     * a database entry can be created and a UUID be obtained by using
-     * {@link ComponentIdGenerator#generate(ComponentId, Lifespan)}, as provided by the instance
-     * given to {@link #acceptComponentIdGenerator(ComponentIdGenerator)} during system setup. The
-     * required {@link ComponentId} instance accepts optional extra arguments, which, if provided,
-     * can be picked up during the corresponding event (see
-     * {@link #onButtonClick(ButtonInteractionEvent, List)},
-     * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)}).
-     * <p>
-     * Alternatively, if {@link SlashCommandAdapter} has been extended, it also offers a handy
-     * {@link SlashCommandAdapter#generateComponentId(String...)} method to ease the flow.
-     * <p>
-     * See <a href="https://github.com/Together-Java/TJ-Bot/wiki/Component-IDs">Component-IDs</a> on
-     * our Wiki for more details and examples of how to use component IDs.
-     * <p>
-     * This method will be called in a multi-threaded context and the event may not be hold valid
-     * forever.
+     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's.
      *
      * @param event the event that triggered this
      */
     void onSlashCommand(SlashCommandInteractionEvent event);
+
+    /**
+     * Autocompletion is comparable, but not the same as slash-command choices. Choices allow you to
+     * set a static list of {@value OptionData#MAX_CHOICES} possible "choices" to the commmand.
+     * Autocomplete allows you to dynamically give the user a list of
+     * {@value OptionData#MAX_CHOICES} possible choices. These choices can be generated based on the
+     * input of the user, the functionality is comparable to Google's autocompletion when searching
+     * for something. The given choices are **not** enforced by Discord, the user can **ignore**
+     * auto-completion and send whatever they want.
+     * <p/>
+     * Triggered by the core system when a slash command's autocomplete corresponding to this
+     * implementation (based on {@link #getData()}) has been triggered. Don't forget to enable
+     * autocomplete using {@link OptionData#setAutoComplete(boolean)}!
+     * <p/>
+     * This method may be called multithreaded. In particular, there are no guarantees that it will
+     * be executed on the same thread repeatedly or on the same thread that other event methods have
+     * been called on.
+     * <p/>
+     * Details are available in the given event and the event also enables implementations to
+     * respond to it. <br>
+     * See {@link #acceptComponentIdGenerator(ComponentIdGenerator)} for more info on the ID's.
+     *
+     * @param event the event that triggered this
+     */
+    void onAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event);
 }

@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import javax.annotation.Nullable;
@@ -68,7 +68,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param modAuditLogWriter to log tag changes for audition
      */
     public TagManageCommand(TagSystem tagSystem, ModAuditLogWriter modAuditLogWriter) {
-        super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
+        super("tag-manage", "Provides commands to manage all tags", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
 

@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 
 import javax.annotation.CheckReturnValue;
@@ -39,7 +39,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * Creates an instance.
      */
     public WhoIsCommand() {
-        super("whois", "Provides info about the given user", SlashCommandVisibility.GUILD);
+        super("whois", "Provides info about the given user", CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "the user to look up", true)
             .addOption(OptionType.BOOLEAN, SHOW_SERVER_INFO_OPTION,

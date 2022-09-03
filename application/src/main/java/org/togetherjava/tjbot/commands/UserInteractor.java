@@ -3,7 +3,9 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import java.util.List;
 
@@ -53,14 +55,14 @@ public interface UserInteractor extends Feature {
      * Triggered by the core system when a selection menu corresponding to this implementation
      * (based on {@link #getName()}) has been clicked.
      * <p>
-     * This method may be called multi-threaded. In particular, there are no guarantees that it will
+     * This method may be called multithreaded. In particular, there are no guarantees that it will
      * be executed on the same thread repeatedly or on the same thread that other event methods have
      * been called on.
      * <p>
      * Details are available in the given event and the event also enables implementations to
      * respond to it.
      * <p>
-     * This method will be called in a multi-threaded context and the event may not be hold valid
+     * This method will be called in a multithreaded context and the event may not be hold valid
      * forever.
      *
      * @param event the event that triggered this
@@ -71,11 +73,26 @@ public interface UserInteractor extends Feature {
     void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args);
 
     /**
-     * Triggered by the core system during its setup phase. It will provide the interactor a
-     * component id generator through this method, which can be used to generate component ids, as
-     * used for button or selection menus. See
-     * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how to use
-     * this.
+     * Triggered by the core system during its setup phase. It will provide the command a component
+     * id generator through this method, which can be used to generate component ids, as used for
+     * button or selection menus.
+     *
+     * <p>
+     * The component ID has to be a UUID-string (see {@link java.util.UUID}), which is associated to
+     * a specific database entry, containing meta information about the command being executed. Such
+     * a database entry can be created and a UUID be obtained by using
+     * {@link ComponentIdGenerator#generate(ComponentId, Lifespan)}, as provided by the instance
+     * given to this method during system setup. The required {@link ComponentId} instance accepts
+     * optional extra arguments, which, if provided, can be picked up during the corresponding event
+     * (see {@link #onButtonClick(ButtonInteractionEvent, List)},
+     * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)}).
+     * <p>
+     * Alternatively, if {@link BotCommandAdapter} has been extended, it also offers a handy
+     * {@link BotCommandAdapter#generateComponentId(String...)} method to ease the flow.
+     * <p>
+     * See <a href="https://github.com/Together-Java/TJ-Bot/wiki/Component-IDs">Component-IDs</a> on
+     * our Wiki for more details and examples of how to use component IDs.
+     *
      *
      * @param generator the provided component id generator
      */

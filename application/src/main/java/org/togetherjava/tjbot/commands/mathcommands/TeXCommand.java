@@ -12,7 +12,7 @@ import org.scilab.forge.jlatexmath.TeXFormula;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -55,7 +55,7 @@ public final class TeXCommand extends SlashCommandAdapter {
      */
     public TeXCommand() {
         super("tex", "Renders LaTeX, also supports inline $-regions like 'see this $\frac{x}{2}$'.",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
         getData().addOption(OptionType.STRING, LATEX_OPTION,
                 "The latex which is rendered as an image", true);
     }

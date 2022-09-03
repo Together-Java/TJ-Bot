@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
     public ReloadCommand(SlashCommandProvider commandProvider) {
         super("reload",
                 "Uploads all existing slash-commands to Discord so they are fully up-to-date.",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
         this.commandProvider = commandProvider;
     }
 
@@ -96,7 +96,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
 
                 // Reload global commands
                 actions.add(updateCommandsIf(
-                        command -> command.getVisibility() == SlashCommandVisibility.GLOBAL,
+                        command -> command.getVisibility() == CommandVisibility.GLOBAL,
                         getGlobalUpdateAction(event.getJDA())));
 
                 // Reload guild commands (potentially many guilds)
@@ -105,7 +105,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
                 // list. However, correctly reducing RestActions in a stream is not trivial.
                 getGuildUpdateActions(event.getJDA())
                     .map(updateAction -> updateCommandsIf(
-                            command -> command.getVisibility() == SlashCommandVisibility.GUILD,
+                            command -> command.getVisibility() == CommandVisibility.GUILD,
                             updateAction))
                     .forEach(actions::add);
                 logger.debug("Reloading commands over {} action-upstreams", actions.size());

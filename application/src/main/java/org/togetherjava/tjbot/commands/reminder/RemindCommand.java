@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 
 import java.time.*;
@@ -53,7 +53,7 @@ public final class RemindCommand extends SlashCommandAdapter {
      */
     public RemindCommand(Database database) {
         super(COMMAND_NAME, "Reminds you after a given time period has passed (e.g. in 5 weeks)",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         // TODO As soon as JDA offers date/time selector input, this should also offer
         // "/remind at" next to "/remind in" and use subcommands then

@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
@@ -43,7 +43,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
     public UnquarantineCommand(ModerationActionsStore actionsStore, Config config) {
         super(COMMAND_NAME,
                 "Unquarantines the given already quarantined user so that they can interact again",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         getData()
             .addOption(OptionType.USER, TARGET_OPTION, "The user who you want to unquarantine",

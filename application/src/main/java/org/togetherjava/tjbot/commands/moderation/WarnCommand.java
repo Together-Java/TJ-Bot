@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -35,7 +35,7 @@ public final class WarnCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public WarnCommand(ModerationActionsStore actionsStore) {
-        super("warn", "Warns the given user", SlashCommandVisibility.GUILD);
+        super("warn", "Warns the given user", CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, USER_OPTION, "The user who you want to warn", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why you want to warn the user", true);

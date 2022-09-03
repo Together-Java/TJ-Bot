@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -30,7 +30,7 @@ public final class TagCommand extends SlashCommandAdapter {
      * @param tagSystem the system providing the actual tag data
      */
     public TagCommand(TagSystem tagSystem) {
-        super("tag", "Display a tags content", SlashCommandVisibility.GUILD);
+        super("tag", "Display a tags content", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
 

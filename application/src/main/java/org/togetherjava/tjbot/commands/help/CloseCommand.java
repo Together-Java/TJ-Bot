@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -31,7 +31,7 @@ public final class CloseCommand extends SlashCommandAdapter {
      * Creates a new instance.
      */
     public CloseCommand() {
-        super("close", "Close this question thread", SlashCommandVisibility.GUILD);
+        super("close", "Close this question thread", CommandVisibility.GUILD);
 
         helpThreadIdToLastClose = Caffeine.newBuilder()
             .maximumSize(1_000)
