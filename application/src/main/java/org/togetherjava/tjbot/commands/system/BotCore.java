@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.*;
@@ -47,7 +48,7 @@ import java.util.stream.Stream;
  * event listener, using {@link net.dv8tion.jda.api.JDA#addEventListener(Object...)}. Afterwards,
  * the system is ready and will correctly forward events to all commands.
  */
-public final class BotCore extends ListenerAdapter implements SlashCommandProvider {
+public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
     private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
@@ -66,9 +67,9 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * <p>
      * Commands are fetched from {@link Features}.
      *
-     * @param jda the JDA instance that this command system will be used with
+     * @param jda      the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
-     * @param config the configuration to use for this system
+     * @param config   the configuration to use for this system
      */
     public BotCore(JDA jda, Database database, Config config) {
         this.config = config;
@@ -76,28 +77,28 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
 
         // Message receivers
         features.stream()
-            .filter(MessageReceiver.class::isInstance)
-            .map(MessageReceiver.class::cast)
-            .forEach(messageReceiver -> channelNameToMessageReceiver
-                .put(messageReceiver.getChannelNamePattern(), messageReceiver));
+                .filter(MessageReceiver.class::isInstance)
+                .map(MessageReceiver.class::cast)
+                .forEach(messageReceiver -> channelNameToMessageReceiver
+                        .put(messageReceiver.getChannelNamePattern(), messageReceiver));
 
         // Event receivers
         features.stream()
-            .filter(EventReceiver.class::isInstance)
-            .map(EventReceiver.class::cast)
-            .forEach(jda::addEventListener);
+                .filter(EventReceiver.class::isInstance)
+                .map(EventReceiver.class::cast)
+                .forEach(jda::addEventListener);
 
         // Routines (are scheduled once the core is ready)
         routines = features.stream()
-            .filter(Routine.class::isInstance)
-            .map(Routine.class::cast)
-            .toList();
+                .filter(Routine.class::isInstance)
+                .map(Routine.class::cast)
+                .toList();
 
         // User Interactors (e.g. slash commands)
         nameToInteractor = features.stream()
-            .filter(UserInteractor.class::isInstance)
-            .map(UserInteractor.class::cast)
-            .collect(Collectors.toMap(UserInteractor::getName, Function.identity()));
+                .filter(UserInteractor.class::isInstance)
+                .map(UserInteractor.class::cast)
+                .collect(Collectors.toMap(UserInteractor::getName, Function.identity()));
 
         // Reload Command
         if (nameToInteractor.containsKey(RELOAD_COMMAND)) {
@@ -111,12 +112,12 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
         nameToInteractor.values()
-            .forEach(slashCommand -> slashCommand
-                .acceptComponentIdGenerator(((componentId, lifespan) -> {
-                    UUID uuid = UUID.randomUUID();
-                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                    return uuid.toString();
-                })));
+                .forEach(slashCommand -> slashCommand
+                        .acceptComponentIdGenerator(((componentId, lifespan) -> {
+                            UUID uuid = UUID.randomUUID();
+                            componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                            return uuid.toString();
+                        })));
 
         if (logger.isInfoEnabled()) {
             logger.info("Available user interactors: {}", nameToInteractor.keySet());
@@ -124,24 +125,40 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     }
 
     @Override
-    public Collection<SlashCommand> getSlashCommands() {
+    public Collection<BotCommand> getBotCommands() {
         return nameToInteractor.values()
-            .stream()
-            .filter(SlashCommand.class::isInstance)
-            .map(SlashCommand.class::cast)
-            .toList();
+                .stream()
+                .filter(BotCommand.class::isInstance)
+                .map(BotCommand.class::cast)
+                .toList();
     }
 
     @Override
-    public Optional<SlashCommand> getSlashCommand(String name) {
+    public <T extends BotCommand, C extends Class<T>> Optional<T> getCommand(String name, C type) {
+
         return Optional.ofNullable(nameToInteractor.get(name))
-            .filter(SlashCommand.class::isInstance)
-            .map(SlashCommand.class::cast);
+                .filter(type::isInstance)
+                .map(type::cast);
+    }
+
+    private static Class<? extends BotCommand> commandTypeToClass(Command.Type type) {
+        if (type == null) return BotCommand.class;
+
+        return switch (type) {
+            case MESSAGE -> MessageContextCommand.class;
+            case USER -> UserContextCommand.class;
+            case SLASH -> SlashCommand.class;
+            case UNKNOWN -> BotCommand.class;
+            /*
+            preparing for the future be like:
+                case null -> BotCommand.class;
+             */
+        };
     }
 
     /**
      * Trigger once JDA is ready. Subsequent calls are ignored.
-     * 
+     *
      * @param jda the JDA instance to work with
      */
     public void onReady(JDA jda) {
@@ -153,7 +170,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
         jda.getGuildCache()
-            .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
+                .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Bot core is now ready");
@@ -189,7 +206,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     public void onMessageReceived(final MessageReceivedEvent event) {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
-                .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+                    .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
         }
     }
 
@@ -197,18 +214,18 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
     public void onMessageUpdate(final MessageUpdateEvent event) {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
-                .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+                    .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
         }
     }
 
     private Stream<MessageReceiver> getMessageReceiversSubscribedTo(Channel channel) {
         String channelName = channel.getName();
         return channelNameToMessageReceiver.entrySet()
-            .stream()
-            .filter(patternAndReceiver -> patternAndReceiver.getKey()
-                .matcher(channelName)
-                .matches())
-            .map(Map.Entry::getValue);
+                .stream()
+                .filter(patternAndReceiver -> patternAndReceiver.getKey()
+                        .matcher(channelName)
+                        .matches())
+                .map(Map.Entry::getValue);
     }
 
     @Override
@@ -223,7 +240,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         logger.debug("Received button click '{}' (#{}) on guild '{}'", event.getComponentId(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE
-            .execute(() -> forwardComponentCommand(event, UserInteractor::onButtonClick));
+                .execute(() -> forwardComponentCommand(event, UserInteractor::onButtonClick));
     }
 
     @Override
@@ -231,7 +248,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
-            .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
+                .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
     }
 
     private void registerReloadCommand(Guild guild) {
@@ -246,8 +263,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             logger.debug("Register '{}' for guild '{}'", RELOAD_COMMAND, guild.getName());
             SlashCommand reloadCommand = requireSlashCommand(RELOAD_COMMAND);
             guild.upsertCommand(reloadCommand.getData())
-                .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
-                        guild.getName()));
+                    .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
+                            guild.getName()));
         }, ex -> handleRegisterErrors(ex, guild));
     }
 
@@ -262,22 +279,22 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * }
      * </pre>
      *
-     * @param event the component event that should be forwarded
+     * @param event                      the component event that should be forwarded
      * @param interactorArgumentConsumer the action to trigger on the associated user interactor,
-     *        providing the event and list of arguments for consumption
-     * @param <T> the type of the component interaction that should be forwarded
+     *                                   providing the event and list of arguments for consumption
+     * @param <T>                        the type of the component interaction that should be forwarded
      */
     private <T extends ComponentInteraction> void forwardComponentCommand(T event,
-            TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
+                                                                          TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
         Optional<ComponentId> componentIdOpt;
         try {
             componentIdOpt = componentIdParser.parse(event.getComponentId());
         } catch (InvalidComponentIdFormatException e) {
             logger
-                .error("Unable to route event (#{}) back to its corresponding user interactor. The component ID was in an unexpected format."
-                        + " All button and menu events have to use a component ID created in a specific format"
-                        + " (refer to the documentation of UserInteractor). Component ID was: {}",
-                        event.getId(), event.getComponentId(), e);
+                    .error("Unable to route event (#{}) back to its corresponding user interactor. The component ID was in an unexpected format."
+                                    + " All button and menu events have to use a component ID created in a specific format"
+                                    + " (refer to the documentation of UserInteractor). Component ID was: {}",
+                            event.getId(), event.getComponentId(), e);
             // Unable to forward, simply fade out the event
             return;
         }
@@ -285,8 +302,8 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             logger.warn("The event (#{}) has an expired component ID, which was: {}.",
                     event.getId(), event.getComponentId());
             event.reply("Sorry, but this event has expired. You can not use it anymore.")
-                .setEphemeral(true)
-                .queue();
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
         ComponentId componentId = componentIdOpt.orElseThrow();
@@ -326,17 +343,17 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             // NOTE Unfortunately, there is no better accurate way to find a proper channel
             // where we can report the setup problems other than simply iterating all of them.
             Optional<TextChannel> channelToReportTo = guild.getTextChannelCache()
-                .stream()
-                .filter(channel -> guild.getPublicRole()
-                    .hasPermission(channel, Permission.MESSAGE_SEND))
-                .findAny();
+                    .stream()
+                    .filter(channel -> guild.getPublicRole()
+                            .hasPermission(channel, Permission.MESSAGE_SEND))
+                    .findAny();
 
             // Report the problem to the guild
             channelToReportTo.ifPresent(textChannel -> textChannel
-                .sendMessage("I need the commands scope, please invite me correctly."
-                        + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
+                    .sendMessage("I need the commands scope, please invite me correctly."
+                            + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
                             .formatted(config.getDiscordGuildInvite(), config.getProjectWebsite()))
-                .queue());
+                    .queue());
 
             guild.leave().queue();
 
@@ -370,9 +387,9 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
         /**
          * Performs this operation on the given arguments.
          *
-         * @param first the first input argument
+         * @param first  the first input argument
          * @param second the second input argument
-         * @param third the third input argument
+         * @param third  the third input argument
          */
         void accept(A first, B second, C third);
     }
