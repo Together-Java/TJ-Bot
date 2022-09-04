@@ -1,16 +1,15 @@
 package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,8 +57,7 @@ public final class TagSystem {
      * @param event the event to send messages with
      * @return whether the given tag is unknown to the system
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    boolean handleIsUnknownTag(@NotNull String id, @NotNull Interaction event) {
+    boolean handleIsUnknownTag(String id, IReplyCallback event) {
         if (hasTag(id)) {
             return false;
         }

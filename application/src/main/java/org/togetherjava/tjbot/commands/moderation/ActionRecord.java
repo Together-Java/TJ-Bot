@@ -1,9 +1,8 @@
 package org.togetherjava.tjbot.commands.moderation;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
 
 /**
@@ -20,21 +19,29 @@ import java.time.Instant;
  *        {@code null}
  * @param reason the reason why this action was executed
  */
-public record ActionRecord(int caseId, @NotNull Instant issuedAt, long guildId, long authorId,
-        long targetId, @NotNull ModerationUtils.Action actionType,
-        @Nullable Instant actionExpiresAt, @NotNull String reason) {
+public record ActionRecord(int caseId, Instant issuedAt, long guildId, long authorId, long targetId,
+        ModerationAction actionType, @Nullable Instant actionExpiresAt, String reason) {
 
     /**
      * Creates the action record that corresponds to the given action entry from the database table.
-     * 
+     *
      * @param action the action to convert
      * @return the corresponding action record
      */
-    @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-    static @NotNull ActionRecord of(@NotNull ModerationActionsRecord action) {
+    static ActionRecord of(ModerationActionsRecord action) {
         return new ActionRecord(action.getCaseId(), action.getIssuedAt(), action.getGuildId(),
                 action.getAuthorId(), action.getTargetId(),
-                ModerationUtils.Action.valueOf(action.getActionType()), action.getActionExpiresAt(),
+                ModerationAction.valueOf(action.getActionType()), action.getActionExpiresAt(),
                 action.getReason());
+    }
+
+    /**
+     * Whether this action is still effective. That is, it is either a permanent action or temporary
+     * but not expired yet.
+     *
+     * @return True when still effective, false otherwise
+     */
+    public boolean isEffective() {
+        return actionExpiresAt == null || actionExpiresAt.isAfter(Instant.now());
     }
 }

@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.system;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.commands.SlashCommand;
 
@@ -17,12 +16,12 @@ final class ReloadCommandTest {
                 "AnonymousInnerClassMayBeStatic"})
         SlashCommandProvider slashCommandProvider = new SlashCommandProvider() {
             @Override
-            public @NotNull Collection<SlashCommand> getSlashCommands() {
+            public Collection<SlashCommand> getSlashCommands() {
                 return List.of();
             }
 
             @Override
-            public @NotNull Optional<SlashCommand> getSlashCommand(@NotNull String name) {
+            public Optional<SlashCommand> getSlashCommand(String name) {
                 return Optional.empty();
             }
         };

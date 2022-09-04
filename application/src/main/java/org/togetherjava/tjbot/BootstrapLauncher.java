@@ -4,8 +4,10 @@ package org.togetherjava.tjbot;
  * A bootstrap launcher with minimal dependencies that sets up needed parts and workarounds for the
  * main logic to take over.
  */
-public enum BootstrapLauncher {
-    ;
+public class BootstrapLauncher {
+    private BootstrapLauncher() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * Starts the main application.
@@ -17,7 +19,6 @@ public enum BootstrapLauncher {
 
         Application.main(args);
     }
-
 
     /**
      * Sets any system-properties before anything else is touched.

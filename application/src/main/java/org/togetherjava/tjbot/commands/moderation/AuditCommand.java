@@ -2,23 +2,25 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nullable;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +34,9 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "user";
     private static final String COMMAND_NAME = "audit";
     private static final String ACTION_VERB = "audit";
-    private final Predicate<String> hasRequiredRole;
+    private static final int MAX_PAGE_LENGTH = 10;
+    private static final String PREVIOUS_BUTTON_LABEL = "⬅";
+    private static final String NEXT_BUTTON_LABEL = "➡";
     private final ModerationActionsStore actionsStore;
 
     /**
@@ -40,77 +44,18 @@ public final class AuditCommand extends SlashCommandAdapter {
      *
      * @param actionsStore used to store actions issued by this command
      */
-    public AuditCommand(@NotNull ModerationActionsStore actionsStore) {
+    public AuditCommand(ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Lists all moderation actions that have been taken against a user",
                 SlashCommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who to retrieve actions for",
                 true);
 
-        hasRequiredRole = Pattern.compile(Config.getInstance().getHeavyModerationRolePattern())
-            .asMatchPredicate();
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static @NotNull MessageEmbed createSummaryMessage(@NotNull User user,
-            @NotNull Collection<ActionRecord> actions) {
-        return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
-            .setAuthor(user.getName(), null, user.getAvatarUrl())
-            .setDescription(createSummaryMessageDescription(actions))
-            .setColor(ModerationUtils.AMBIENT_COLOR)
-            .build();
-    }
-
-    private static @NotNull String createSummaryMessageDescription(
-            @NotNull Collection<ActionRecord> actions) {
-        int actionAmount = actions.size();
-        if (actionAmount == 0) {
-            return "There are **no actions** against the user.";
-        }
-
-        String shortSummary = "There are **%d actions** against the user.".formatted(actionAmount);
-
-        // Summary of all actions with their count, like "- Warn: 5", descending
-        Map<ModerationUtils.Action, Long> actionTypeToCount = actions.stream()
-            .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
-        String typeCountSummary = actionTypeToCount.entrySet()
-            .stream()
-            .filter(typeAndCount -> typeAndCount.getValue() > 0)
-            .sorted(Map.Entry.<ModerationUtils.Action, Long>comparingByValue().reversed())
-            .map(typeAndCount -> "- **%s**: %d".formatted(typeAndCount.getKey(),
-                    typeAndCount.getValue()))
-            .collect(Collectors.joining("\n"));
-
-        return shortSummary + "\n" + typeCountSummary;
-    }
-
-    private static @NotNull RestAction<MessageEmbed> actionToMessage(@NotNull ActionRecord action,
-            @NotNull JDA jda) {
-        String footer = action.actionExpiresAt() == null ? null
-                : "Temporary action, expires at %s".formatted(TimeUtil
-                    .getDateTimeString(action.actionExpiresAt().atOffset(ZoneOffset.UTC)));
-
-        return jda.retrieveUserById(action.authorId())
-            .map(author -> new EmbedBuilder().setTitle(action.actionType().name())
-                .setAuthor(author == null ? "(unknown user)" : author.getAsTag(), null,
-                        author == null ? null : author.getAvatarUrl())
-                .setDescription(action.reason())
-                .setTimestamp(action.issuedAt())
-                .setFooter(footer)
-                .setColor(ModerationUtils.AMBIENT_COLOR)
-                .build());
-    }
-
-    private static <E> @NotNull List<E> prependElement(@NotNull E element,
-            @NotNull Collection<? extends E> elements) {
-        List<E> allElements = new ArrayList<>(elements.size() + 1);
-        allElements.add(element);
-        allElements.addAll(elements);
-        return allElements;
-    }
-
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(TARGET_OPTION), "The target is null");
         User target = targetOption.getAsUser();
@@ -119,44 +64,200 @@ public final class AuditCommand extends SlashCommandAdapter {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Member bot = guild.getSelfMember();
 
-        if (!handleChecks(bot, author, targetOption.getAsMember(), guild, event)) {
+        if (!handleChecks(bot, author, targetOption.getAsMember(), event)) {
             return;
         }
 
-        auditUser(target, guild, event);
+        auditUser(guild.getIdLong(), target.getIdLong(), event.getMember().getIdLong(), -1,
+                event.getJDA()).flatMap(event::reply).queue();
     }
 
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    private boolean handleChecks(@NotNull Member bot, @NotNull Member author,
-            @Nullable Member target, @NotNull Guild guild, @NotNull Interaction event) {
+    private boolean handleChecks(Member bot, Member author, @Nullable Member target,
+            IReplyCallback event) {
         // Member doesn't exist if attempting to audit a user who is not part of the guild.
-        if (target != null && !ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author,
-                target, event)) {
-            return false;
+        if (target == null) {
+            return true;
         }
-        return ModerationUtils.handleHasAuthorRole(ACTION_VERB, hasRequiredRole, author, event);
+        return ModerationUtils.handleCanInteractWithTarget(ACTION_VERB, bot, author, target, event);
     }
 
-    private void auditUser(@NotNull User user, @NotNull ISnowflake guild,
-            @NotNull Interaction event) {
-        List<ActionRecord> actions =
-                actionsStore.getActionsByTargetAscending(guild.getIdLong(), user.getIdLong());
+    /**
+     * @param pageNumber page number to display when actions are divided into pages and each page
+     *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions, {@code -1} encodes the last
+     *        page
+     */
+    private RestAction<Message> auditUser(long guildId, long targetId, long callerId,
+            int pageNumber, JDA jda) {
+        List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
+        List<List<ActionRecord>> groupedActions = groupActionsByPages(actions);
+        int totalPages = groupedActions.size();
 
-        MessageEmbed summary = createSummaryMessage(user, actions);
-        if (actions.isEmpty()) {
-            event.replyEmbeds(summary).queue();
+        int pageNumberInLimits;
+        if (pageNumber == -1) {
+            pageNumberInLimits = totalPages;
+        } else {
+            pageNumberInLimits = clamp(1, pageNumber, totalPages);
+        }
+
+        return jda.retrieveUserById(targetId)
+            .map(user -> createSummaryEmbed(user, actions))
+            .flatMap(auditEmbed -> attachEmbedFields(auditEmbed, groupedActions, pageNumberInLimits,
+                    totalPages, jda))
+            .map(auditEmbed -> attachPageTurnButtons(auditEmbed, pageNumberInLimits, totalPages,
+                    guildId, targetId, callerId));
+    }
+
+    private List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
+        List<List<ActionRecord>> groupedActions = new ArrayList<>();
+        for (int i = 0; i < actions.size(); i++) {
+            if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
+                groupedActions.add(new ArrayList<>(AuditCommand.MAX_PAGE_LENGTH));
+            }
+
+            groupedActions.get(groupedActions.size() - 1).add(actions.get(i));
+        }
+
+        return groupedActions;
+    }
+
+    private static int clamp(int minInclusive, int value, int maxInclusive) {
+        return Math.min(Math.max(minInclusive, value), maxInclusive);
+    }
+
+    private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
+        return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
+            .setAuthor(user.getName(), null, user.getAvatarUrl())
+            .setDescription(createSummaryMessageDescription(actions))
+            .setColor(ModerationUtils.AMBIENT_COLOR);
+    }
+
+    private static String createSummaryMessageDescription(Collection<ActionRecord> actions) {
+        int actionAmount = actions.size();
+
+        String shortSummary = "There are **%s actions** against the user."
+            .formatted(actionAmount == 0 ? "no" : actionAmount);
+
+        if (actionAmount == 0) {
+            return shortSummary;
+        }
+
+        // Summary of all actions with their count, like "- Warn: 5", descending
+        Map<ModerationAction, Long> actionTypeToCount = actions.stream()
+            .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
+
+        String typeCountSummary = actionTypeToCount.entrySet()
+            .stream()
+            .filter(typeAndCount -> typeAndCount.getValue() > 0)
+            .sorted(Map.Entry.<ModerationAction, Long>comparingByValue().reversed())
+            .map(typeAndCount -> "- **%s**: %d".formatted(typeAndCount.getKey(),
+                    typeAndCount.getValue()))
+            .collect(Collectors.joining("\n"));
+
+        return shortSummary + "\n" + typeCountSummary;
+    }
+
+    private RestAction<EmbedBuilder> attachEmbedFields(EmbedBuilder auditEmbed,
+            List<? extends List<ActionRecord>> groupedActions, int pageNumber, int totalPages,
+            JDA jda) {
+        if (groupedActions.isEmpty()) {
+            return new CompletedRestAction<>(jda, auditEmbed);
+        }
+
+        List<RestAction<MessageEmbed.Field>> embedFieldTasks = new ArrayList<>();
+        groupedActions.get(pageNumber - 1)
+            .forEach(action -> embedFieldTasks.add(actionToField(action, jda)));
+
+        return RestAction.allOf(embedFieldTasks).map(embedFields -> {
+            embedFields.forEach(auditEmbed::addField);
+
+            auditEmbed.setFooter("Page: " + pageNumber + "/" + totalPages);
+            return auditEmbed;
+        });
+    }
+
+    private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
+        return jda.retrieveUserById(action.authorId())
+            .map(author -> author == null ? "(unknown user)" : author.getAsTag())
+            .map(authorText -> {
+                String expiresAtFormatted = action.actionExpiresAt() == null ? ""
+                        : "\nTemporary action, expires at: " + formatTime(action.actionExpiresAt());
+
+                String fieldName = "%s by %s".formatted(action.actionType().name(), authorText);
+                String fieldDescription = """
+                        %s
+                        Issued at: %s%s
+                        """.formatted(action.reason(), formatTime(action.issuedAt()),
+                        expiresAtFormatted);
+
+                return new MessageEmbed.Field(fieldName, fieldDescription, false);
+            });
+    }
+
+    private static String formatTime(Instant when) {
+        return TimeUtil.getDateTimeString(when.atOffset(ZoneOffset.UTC));
+    }
+
+    private Message attachPageTurnButtons(EmbedBuilder auditEmbed, int pageNumber, int totalPages,
+            long guildId, long targetId, long callerId) {
+        var messageBuilder = new MessageBuilder(auditEmbed.build());
+
+        if (totalPages <= 1) {
+            return messageBuilder.build();
+        }
+        ActionRow pageTurnButtons =
+                createPageTurnButtons(guildId, targetId, callerId, pageNumber, totalPages);
+
+        return messageBuilder.setActionRows(pageTurnButtons).build();
+    }
+
+    private ActionRow createPageTurnButtons(long guildId, long targetId, long callerId,
+            int pageNumber, int totalPages) {
+        int previousButtonTurnPageBy = -1;
+        Button previousButton = createPageTurnButton(PREVIOUS_BUTTON_LABEL, guildId, targetId,
+                callerId, pageNumber, previousButtonTurnPageBy);
+        if (pageNumber <= 1) {
+            previousButton = previousButton.asDisabled();
+        }
+
+        int nextButtonTurnPageBy = 1;
+        Button nextButton = createPageTurnButton(NEXT_BUTTON_LABEL, guildId, targetId, callerId,
+                pageNumber, nextButtonTurnPageBy);
+        if (pageNumber >= totalPages) {
+            nextButton = nextButton.asDisabled();
+        }
+
+        return ActionRow.of(previousButton, nextButton);
+    }
+
+    private Button createPageTurnButton(String label, long guildId, long targetId, long callerId,
+            long pageNumber, int turnPageBy) {
+        return Button.primary(generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                String.valueOf(callerId), String.valueOf(pageNumber), String.valueOf(turnPageBy)),
+                label);
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        long commandUserId = Long.parseLong(args.get(2));
+        long buttonUserId = event.getMember().getIdLong();
+
+        if (commandUserId != buttonUserId) {
+            event.reply("Only the user who triggered the command can turn pages.")
+                .setEphemeral(true)
+                .queue();
+
             return;
         }
 
-        // Computing messages for actual actions is done deferred and might require asking the
-        // Discord API
-        event.deferReply().queue();
-        JDA jda = event.getJDA();
+        int currentPage = Integer.parseInt(args.get(3));
+        int turnPageBy = Integer.parseInt(args.get(4));
 
-        RestAction<List<MessageEmbed>> messagesTask = RestAction
-            .allOf(actions.stream().map(action -> actionToMessage(action, jda)).toList());
-        messagesTask.map(messages -> prependElement(summary, messages))
-            .flatMap(messages -> event.getHook().sendMessageEmbeds(messages))
+        long guildId = Long.parseLong(args.get(0));
+        long targetId = Long.parseLong(args.get(1));
+        int pageToDisplay = currentPage + turnPageBy;
+
+        auditUser(guildId, targetId, buttonUserId, pageToDisplay, event.getJDA())
+            .flatMap(event::editMessage)
             .queue();
     }
 }

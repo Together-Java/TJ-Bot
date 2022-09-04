@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.jooq.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ComponentIds;
 import org.togetherjava.tjbot.db.generated.tables.records.ComponentIdsRecord;
@@ -27,8 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Thread-safe storage for component IDs. Can put, persist and get back component IDs based on
  * UUIDs. Component IDs are used for button and selection menu commands, see
- * {@link org.togetherjava.tjbot.commands.SlashCommand#onSlashCommand(SlashCommandEvent)} for
- * details.
+ * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details.
  * <p>
  * Use {@link #putOrThrow(UUID, ComponentId, Lifespan)} to put and persist a component ID; and
  * {@link #get(UUID)} to get it back. Component IDs are persisted during application runs and can
@@ -84,7 +83,7 @@ public final class ComponentIdStore implements AutoCloseable {
      *
      * @param database the database to use to persist component IDs in
      */
-    public ComponentIdStore(@NotNull Database database) {
+    public ComponentIdStore(Database database) {
         this(database, EVICT_DATABASE_EVERY_INITIAL_DELAY, EVICT_DATABASE_EVERY_DELAY,
                 EVICT_DATABASE_EVERY_UNIT, EVICT_DATABASE_OLDER_THAN,
                 EVICT_DATABASE_OLDER_THAN_UNIT);
@@ -103,9 +102,8 @@ public final class ComponentIdStore implements AutoCloseable {
      * @param evictOlderThanUnit the unit of the 'evictOlderThan' value
      */
     @SuppressWarnings({"WeakerAccess", "ConstructorWithTooManyParameters"})
-    public ComponentIdStore(@NotNull Database database, long evictEveryInitialDelay,
-            long evictEveryDelay, ChronoUnit evictEveryUnit, long evictOlderThan,
-            @SuppressWarnings("TypeMayBeWeakened") ChronoUnit evictOlderThanUnit) {
+    public ComponentIdStore(Database database, long evictEveryInitialDelay, long evictEveryDelay,
+            ChronoUnit evictEveryUnit, long evictOlderThan, ChronoUnit evictOlderThanUnit) {
         this.database = database;
         evictDatabaseOlderThan = evictOlderThan;
         evictDatabaseOlderThanUnit = evictOlderThanUnit;
@@ -114,8 +112,16 @@ public final class ComponentIdStore implements AutoCloseable {
             .maximumSize(CACHE_SIZE)
             .expireAfterAccess(EVICT_CACHE_OLDER_THAN, TimeUnit.of(EVICT_CACHE_OLDER_THAN_UNIT))
             .build();
-        evictionTask = evictionService.scheduleWithFixedDelay(this::evictDatabase,
-                evictEveryInitialDelay, evictEveryDelay, TimeUnit.of(evictEveryUnit));
+
+        Runnable evictCommand = () -> {
+            try {
+                evictDatabase();
+            } catch (Exception e) {
+                logger.error("Unknown error while evicting the component ID store database.", e);
+            }
+        };
+        evictionTask = evictionService.scheduleWithFixedDelay(evictCommand, evictEveryInitialDelay,
+                evictEveryDelay, TimeUnit.of(evictEveryUnit));
 
         logDebugSizeStatistics();
     }
@@ -129,7 +135,7 @@ public final class ComponentIdStore implements AutoCloseable {
      *
      * @param listener the listener to add
      */
-    public void addComponentIdRemovedListener(@NotNull Consumer<ComponentId> listener) {
+    public void addComponentIdRemovedListener(Consumer<ComponentId> listener) {
         componentIdRemovedListeners.add(listener);
     }
 
@@ -148,7 +154,7 @@ public final class ComponentIdStore implements AutoCloseable {
      *         format and could not be serialized
      */
     @SuppressWarnings("WeakerAccess")
-    public @NotNull Optional<ComponentId> get(@NotNull UUID uuid) {
+    public Optional<ComponentId> get(UUID uuid) {
         synchronized (storeLock) {
             // Get it from the cache or, if not found, the database
             return Optional.ofNullable(storeCache.getIfPresent(uuid)).or(() -> {
@@ -180,8 +186,7 @@ public final class ComponentIdStore implements AutoCloseable {
      *         was in an unexpected format and could not be deserialized
      */
     @SuppressWarnings("WeakerAccess")
-    public void putOrThrow(@NotNull UUID uuid, @NotNull ComponentId componentId,
-            @NotNull Lifespan lifespan) {
+    public void putOrThrow(UUID uuid, ComponentId componentId, Lifespan lifespan) {
         Supplier<String> alreadyExistsMessageSupplier =
                 () -> "The UUID '%s' already exists and is associated to a component id."
                     .formatted(uuid);
@@ -210,7 +215,7 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    private @NotNull Optional<ComponentId> getFromDatabase(@NotNull UUID uuid) {
+    private Optional<ComponentId> getFromDatabase(UUID uuid) {
         return database.read(context -> Optional
             .ofNullable(context.selectFrom(ComponentIds.COMPONENT_IDS)
                 .where(ComponentIds.COMPONENT_IDS.UUID.eq(uuid.toString()))
@@ -227,7 +232,7 @@ public final class ComponentIdStore implements AutoCloseable {
      * @param uuid the uuid to heat
      * @throws IllegalArgumentException if there is no, or multiple, records associated to that UUID
      */
-    private void heatRecord(@NotNull UUID uuid) {
+    private void heatRecord(UUID uuid) {
         int updatedRecords;
         synchronized (storeLock) {
             updatedRecords =
@@ -267,8 +272,8 @@ public final class ComponentIdStore implements AutoCloseable {
                     recordToDelete.delete();
                     evictedCounter.getAndIncrement();
                     logger.debug(
-                            "Evicted component id with uuid '{}' from command '{}', last used '{}'",
-                            uuid, componentId.commandName(), lastUsed);
+                            "Evicted component id with uuid '{}' from user interactor '{}', last used '{}'",
+                            uuid, componentId.userInteractorName(), lastUsed);
 
                     // Remove them from the cache if still in there
                     storeCache.invalidate(uuid);
@@ -286,7 +291,7 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    private static @NotNull String serializeComponentId(@NotNull ComponentId componentId) {
+    private static String serializeComponentId(ComponentId componentId) {
         try {
             return CSV.writerFor(ComponentId.class)
                 .with(CSV.schemaFor(ComponentId.class))
@@ -296,7 +301,7 @@ public final class ComponentIdStore implements AutoCloseable {
         }
     }
 
-    private static @NotNull ComponentId deserializeComponentId(@NotNull String componentId) {
+    private static ComponentId deserializeComponentId(String componentId) {
         try {
             return CSV.readerFor(ComponentId.class)
                 .with(CSV.schemaFor(ComponentId.class))

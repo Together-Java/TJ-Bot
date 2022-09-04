@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id "com.diffplug.spotless" version "6.0.0"
-    id "org.sonarqube" version "3.3"
+    id "com.diffplug.spotless" version "6.10.0"
+    id "org.sonarqube" version "3.4.0.2513"
     id "name.remal.sonarlint" version "1.5.0"
 }
 
@@ -20,6 +20,14 @@ sonarqube {
         property "sonar.host.url", "https://sonarcloud.io"
     }
 }
+
+// Install git hooks
+task installLocalGitHook(type: Copy) {
+    from new File(rootProject.rootDir, 'scripts/pre-commit')
+    into new File(rootProject.rootDir, '.git/hooks')
+    fileMode 0775
+}
+build.dependsOn installLocalGitHook
 
 subprojects {
     apply plugin: "java"
@@ -41,7 +49,7 @@ subprojects {
     // sonarlint configuration, not to be confused with sonarqube/sonarcloud.
     sonarlint {
         excludes {
-            // Disables "Track uses of "TODO" tags" rule.
+            // Disables "Track uses of "TO-DO" tags" rule.
             message 'java:S1135'
 
             // Disables "Regular expressions should not overflow the stack" rule.
@@ -51,17 +59,16 @@ subprojects {
         }
     }
 
-
-    compileJava {
+    def compileTasks = {
         options.encoding = 'UTF-8'
 
-        // Makes spotlessApply task run on every compile/build.
-        dependsOn 'spotlessApply'
-
         // Nails the Java-Version of every Subproject
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_18
+        targetCompatibility = JavaVersion.VERSION_18
     }
+
+    compileJava(compileTasks)
+    compileTestJava(compileTasks)
 
     spotless {
         java {
@@ -72,7 +79,6 @@ subprojects {
     }
 
     test {
-        systemProperty 'file.encoding', 'UTF-8'
         useJUnitPlatform()
     }
 }

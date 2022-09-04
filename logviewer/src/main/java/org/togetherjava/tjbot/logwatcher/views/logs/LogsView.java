@@ -13,6 +13,7 @@ import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.AllowedRoles;
 import org.togetherjava.tjbot.logwatcher.accesscontrol.Role;
@@ -42,6 +43,8 @@ import java.util.regex.Pattern;
 @AllowedRoles(roles = {Role.USER})
 @PermitAll
 public class LogsView extends VerticalLayout {
+
+    private static final Logger logger = LoggerFactory.getLogger(LogsView.class);
 
     private static final Pattern LOGLEVEL_MATCHER =
             Pattern.compile("(%s)".formatted(String.join("|", LogUtils.LogLevel.getAllNames())));
@@ -156,7 +159,7 @@ public class LogsView extends VerticalLayout {
         try {
             return this.watcher.getLogs();
         } catch (final UncheckedIOException e) {
-            LoggerFactory.getLogger(LogsView.class).error("Exception while gathering LogFiles", e);
+            logger.error("Exception while gathering LogFiles", e);
             NotificationUtils.getNotificationForError(e).open();
             return Collections.emptyList();
         }
@@ -172,7 +175,7 @@ public class LogsView extends VerticalLayout {
         try {
             return this.watcher.readLog(logFile);
         } catch (final UncheckedIOException e) {
-            LoggerFactory.getLogger(LogsView.class).error("Exception while gathering LogFiles", e);
+            logger.error("Exception while gathering LogFiles", e);
             NotificationUtils.getNotificationForError(e).open();
             return Collections.emptyList();
         }

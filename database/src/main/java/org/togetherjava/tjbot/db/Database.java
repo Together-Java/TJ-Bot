@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.db;
 import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.Table;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.sqlite.SQLiteConfig;
@@ -51,6 +52,22 @@ public final class Database {
         flyway.migrate();
 
         dslContext = DSL.using(dataSource.getConnection(), SQLDialect.SQLITE);
+    }
+
+    /**
+     * Creates a new empty database that is hold in memory.
+     *
+     * @param tables the tables the database will hold if desired, otherwise null
+     * @return the created database
+     */
+    public static Database createMemoryDatabase(Table<?>... tables) {
+        try {
+            Database database = new Database("jdbc:sqlite:");
+            database.write(context -> context.ddl(tables).executeBatch());
+            return database;
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
     }
 
     /**

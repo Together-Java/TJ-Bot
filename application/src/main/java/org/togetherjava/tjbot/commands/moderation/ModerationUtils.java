@@ -3,15 +3,16 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.interactions.Interaction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
-import java.awt.*;
+import javax.annotation.Nullable;
+import java.awt.Color;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -19,8 +20,10 @@ import java.util.regex.Pattern;
 /**
  * Utility class offering helpers revolving around user moderation, such as banning or kicking.
  */
-public enum ModerationUtils {
-    ;
+public class ModerationUtils {
+    private ModerationUtils() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(ModerationUtils.class);
     /**
@@ -28,9 +31,16 @@ public enum ModerationUtils {
      * {@link Guild#ban(User, int, String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
+    /**
+     * Human-readable text representing the duration of a permanent action, will be shown to the
+     * user as option for selection.
+     */
+    static final String PERMANENT_DURATION = "permanent";
+    /**
+     * The ambient color used by moderation actions, often used to streamline the color theme of
+     * embeds.
+     */
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
-    public static final Predicate<String> isMuteRole =
-            Pattern.compile(Config.getInstance().getMutedRolePattern()).asMatchPredicate();
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -40,8 +50,7 @@ public enum ModerationUtils {
      * @param event the event used to respond to the user
      * @return whether the reason is valid
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleReason(@NotNull CharSequence reason, @NotNull Interaction event) {
+    static boolean handleReason(CharSequence reason, IReplyCallback event) {
         if (reason.length() <= REASON_MAX_LENGTH) {
             return true;
         }
@@ -67,9 +76,8 @@ public enum ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author and bot can interact with the target user
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleCanInteractWithTarget(@NotNull String actionVerb, @NotNull Member bot,
-            @NotNull Member author, @NotNull Member target, @NotNull Interaction event) {
+    static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
+            Member target, IReplyCallback event) {
         String targetTag = target.getUser().getAsTag();
         if (!author.canInteract(target)) {
             event
@@ -102,9 +110,8 @@ public enum ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author and bot can interact with the role
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleCanInteractWithRole(@NotNull Member bot, @NotNull Member author,
-            @NotNull Role role, @NotNull Interaction event) {
+    static boolean handleCanInteractWithRole(Member bot, Member author, Role role,
+            IReplyCallback event) {
         if (!author.canInteract(role)) {
             event
                 .reply("The role %s is too powerful for you to interact with."
@@ -137,10 +144,8 @@ public enum ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the bot has the required permission
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasBotPermissions(@NotNull String actionVerb,
-            @NotNull Permission permission, @NotNull IPermissionHolder bot, @NotNull Guild guild,
-            @NotNull Interaction event) {
+    static boolean handleHasBotPermissions(String actionVerb, Permission permission,
+            IPermissionHolder bot, Guild guild, IReplyCallback event) {
         if (!bot.hasPermission(permission)) {
             event
                 .reply("I can not %s users in this guild since I do not have the %s permission."
@@ -155,7 +160,7 @@ public enum ModerationUtils {
         return true;
     }
 
-    private static void handleAbsentTarget(@NotNull String actionVerb, @NotNull Interaction event) {
+    private static void handleAbsentTarget(String actionVerb, IReplyCallback event) {
         event
             .reply("I can not %s the given user since they are not part of the guild anymore."
                 .formatted(actionVerb))
@@ -175,7 +180,6 @@ public enum ModerationUtils {
      * <li>the target is not member of the guild</li>
      * <li>the bot or author do not have enough permissions to interact with the target</li>
      * <li>the bot or author do not have enough permissions to interact with the role</li>
-     * <li>the author does not have the required role for this interaction</li>
      * <li>the bot does not have the MANAGE_ROLES permission</li>
      * <li>the given reason is too long</li>
      * </ul>
@@ -187,17 +191,16 @@ public enum ModerationUtils {
      * @param bot the bot executing this interaction
      * @param author the author attempting to interact with the target
      * @param guild the guild this interaction is executed on
-     * @param hasRequiredRole a predicate used to identify required roles by their name
      * @param reason the reason for this interaction
      * @param event the event used to respond to the user
      * @return Whether the bot and the author have enough permission
      */
-    @SuppressWarnings({"MethodWithTooManyParameters", "BooleanMethodNameMustStartWithQuestion",
-            "squid:S107"})
-    static boolean handleRoleChangeChecks(@Nullable Role role, @NotNull String actionVerb,
-            @Nullable Member target, @NotNull Member bot, @NotNull Member author,
-            @NotNull Guild guild, @NotNull Predicate<? super String> hasRequiredRole,
-            @NotNull CharSequence reason, @NotNull Interaction event) {
+    // Sonar complains about having too many parameters. Not incorrect, but not easy to work around
+    // for now
+    @SuppressWarnings({"MethodWithTooManyParameters", "squid:S107"})
+    static boolean handleRoleChangeChecks(@Nullable Role role, String actionVerb,
+            @Nullable Member target, Member bot, Member author, Guild guild, CharSequence reason,
+            IReplyCallback event) {
         if (role == null) {
             event
                 .reply("Can not %s the user, unable to find the corresponding role on this server"
@@ -221,9 +224,6 @@ public enum ModerationUtils {
         if (!handleCanInteractWithRole(bot, author, role, event)) {
             return false;
         }
-        if (!handleHasAuthorRole(actionVerb, hasRequiredRole, author, event)) {
-            return false;
-        }
         if (!handleHasBotPermissions(actionVerb, Permission.MANAGE_ROLES, bot, guild, event)) {
             return false;
         }
@@ -242,10 +242,8 @@ public enum ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author has the required permission
      */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasAuthorPermissions(@NotNull String actionVerb,
-            @NotNull Permission permission, @NotNull IPermissionHolder author, @NotNull Guild guild,
-            @NotNull Interaction event) {
+    static boolean handleHasAuthorPermissions(String actionVerb, Permission permission,
+            IPermissionHolder author, IReplyCallback event) {
         if (!author.hasPermission(permission)) {
             event
                 .reply("You can not %s users in this guild since you do not have the %s permission."
@@ -255,33 +253,6 @@ public enum ModerationUtils {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Checks whether the given bot has enough permission to execute the given action. For example
-     * whether it has enough permissions to ban users.
-     * <p>
-     * If not, it will handle the situation and respond to the user.
-     *
-     * @param actionVerb the interaction as verb, for example {@code "ban"} or {@code "kick"}
-     * @param hasRequiredRole a predicate used to identify required roles by their name
-     * @param author the author attempting to interact with the target
-     * @param event the event used to respond to the user
-     * @return Whether the bot has the required permission
-     */
-    @SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-    static boolean handleHasAuthorRole(@NotNull String actionVerb,
-            @NotNull Predicate<? super String> hasRequiredRole, @NotNull Member author,
-            @NotNull Interaction event) {
-        if (author.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole)) {
-            return true;
-        }
-        event
-            .reply("You can not %s users in this guild since you do not have the required role."
-                .formatted(actionVerb))
-            .setEphemeral(true)
-            .queue();
-        return false;
     }
 
     /**
@@ -298,8 +269,8 @@ public enum ModerationUtils {
      * @param reason an optional reason for why the action is executed, {@code null} if not desired
      * @return the created response
      */
-    static @NotNull MessageEmbed createActionResponse(@NotNull User author, @NotNull Action action,
-            @NotNull User target, @Nullable String extraMessage, @Nullable String reason) {
+    static MessageEmbed createActionResponse(User author, ModerationAction action, User target,
+            @Nullable String extraMessage, @Nullable String reason) {
         String description = "%s **%s** (id: %s).".formatted(action.getVerb(), target.getAsTag(),
                 target.getId());
         if (extraMessage != null && !extraMessage.isBlank()) {
@@ -316,62 +287,86 @@ public enum ModerationUtils {
     }
 
     /**
-     * Gets the role used to mute a member in a guild.
+     * Gets a predicate that identifies the role used to mute a member in a guild.
      *
-     * @param guild the guild to get the muted role from
-     * @return the muted role, if found
+     * @param config the config used to identify the muted role
+     * @return predicate that matches the name of the muted role
      */
-    public static @NotNull Optional<Role> getMutedRole(@NotNull Guild guild) {
-        return guild.getRoles().stream().filter(role -> isMuteRole.test(role.getName())).findAny();
+    public static Predicate<String> getIsMutedRolePredicate(Config config) {
+        return Pattern.compile(config.getMutedRolePattern()).asMatchPredicate();
     }
 
     /**
-     * All available moderation actions.
+     * Gets the role used to mute a member in a guild.
+     *
+     * @param guild the guild to get the muted role from
+     * @param config the config used to identify the muted role
+     * @return the muted role, if found
      */
-    enum Action {
-        /**
-         * When a user bans another user.
-         */
-        BAN("banned"),
-        /**
-         * When a user unbans another user.
-         */
-        UNBAN("unbanned"),
-        /**
-         * When a user kicks another user.
-         */
-        KICK("kicked"),
-        /**
-         * When a user mutes another user.
-         */
-        MUTE("muted"),
-        /**
-         * When a user unmutes another user.
-         */
-        UNMUTE("unmuted");
+    public static Optional<Role> getMutedRole(Guild guild, Config config) {
+        Predicate<String> isMutedRole = getIsMutedRolePredicate(config);
+        return guild.getRoles().stream().filter(role -> isMutedRole.test(role.getName())).findAny();
+    }
 
-        private final String verb;
+    /**
+     * Gets a predicate that identifies the role used to quarantine a member in a guild.
+     *
+     * @param config the config used to identify the quarantined role
+     * @return predicate that matches the name of the quarantined role
+     */
+    public static Predicate<String> getIsQuarantinedRolePredicate(Config config) {
+        return Pattern.compile(config.getQuarantinedRolePattern()).asMatchPredicate();
+    }
 
-        /**
-         * Creates an instance with the given verb
-         *
-         * @param verb the verb of the action, as it would be used in a sentence, such as "banned"
-         *        or "kicked"
-         */
-        Action(@NotNull String verb) {
-            this.verb = verb;
+    /**
+     * Gets the role used to quarantine a member in a guild.
+     *
+     * @param guild the guild to get the quarantined role from
+     * @param config the config used to identify the quarantined role
+     * @return the quarantined role, if found
+     */
+    public static Optional<Role> getQuarantinedRole(Guild guild, Config config) {
+        Predicate<String> isQuarantinedRole = getIsQuarantinedRolePredicate(config);
+        return guild.getRoles()
+            .stream()
+            .filter(role -> isQuarantinedRole.test(role.getName()))
+            .findAny();
+    }
+
+    /**
+     * Computes a temporary data wrapper representing the action with the given duration.
+     *
+     * @param durationText the duration of the action, either {@code "permanent"} or a time window
+     *        such as {@code 1 day} or {@code 2 minutes}. Supports all units supported by
+     *        {@link Instant#plus(long, TemporalUnit)}.
+     * @return the temporary data represented by the given duration or empty if the duration is
+     *         {@code "permanent"}
+     */
+    static Optional<TemporaryData> computeTemporaryData(String durationText) {
+        if (PERMANENT_DURATION.equals(durationText)) {
+            return Optional.empty();
         }
 
-        /**
-         * Gets the verb of the action, as it would be used in a sentence.
-         * <p>
-         * Such as "banned" or "kicked"
-         *
-         * @return the verb of this action
-         */
-        @NotNull
-        String getVerb() {
-            return verb;
-        }
+        // 1 minute, 1 day, 2 days, ...
+        String[] data = durationText.split(" ", 2);
+        int duration = Integer.parseInt(data[0]);
+        ChronoUnit unit = switch (data[1]) {
+            case "minute", "minutes" -> ChronoUnit.MINUTES;
+            case "hour", "hours" -> ChronoUnit.HOURS;
+            case "day", "days" -> ChronoUnit.DAYS;
+            default -> throw new IllegalArgumentException("Unsupported duration: " + durationText);
+        };
+
+        return Optional.of(new TemporaryData(Instant.now().plus(duration, unit), durationText));
+    }
+
+    /**
+     * Wrapper to hold data relevant to temporary actions, for example the time it expires.
+     *
+     * @param expiresAt the time the temporary action expires
+     * @param duration a human-readable text representing the duration of the temporary action, such
+     *        as {@code "1 day"}.
+     */
+    record TemporaryData(Instant expiresAt, String duration) {
     }
 }

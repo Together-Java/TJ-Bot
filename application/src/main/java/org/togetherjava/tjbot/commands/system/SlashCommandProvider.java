@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.system;
 
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommand;
 
 import java.util.Collection;
@@ -15,7 +14,6 @@ public interface SlashCommandProvider {
      *
      * @return all slash commands
      */
-    @NotNull
     Collection<SlashCommand> getSlashCommands();
 
     /**
@@ -24,6 +22,5 @@ public interface SlashCommandProvider {
      * @param name the name of the command
      * @return the command registered under this name, if any
      */
-    @NotNull
-    Optional<SlashCommand> getSlashCommand(@NotNull String name);
+    Optional<SlashCommand> getSlashCommand(String name);
 }

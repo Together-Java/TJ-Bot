@@ -1,28 +1,28 @@
 package org.togetherjava.tjbot.commands.tags;
 
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.interactions.Interaction;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
-import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import java.util.Objects;
-import java.util.OptionalLong;
+import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * Implements the {@code /tag-manage} command which allows management of tags, such as creating,
@@ -41,26 +41,38 @@ import java.util.regex.Pattern;
  */
 public final class TagManageCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(TagManageCommand.class);
-    private static final String ID_OPTION = "id";
+    static final String ID_OPTION = "id";
     private static final String ID_DESCRIPTION = "the id of the tag";
-    private static final String CONTENT_OPTION = "content";
+    static final String CONTENT_OPTION = "content";
     private static final String CONTENT_DESCRIPTION = "the content of the tag";
-    private static final String MESSAGE_ID_OPTION = "message-id";
+    static final String MESSAGE_ID_OPTION = "message-id";
     private static final String MESSAGE_ID_DESCRIPTION = "the id of the message to refer to";
+
+    // "Edited tag **ask**"
+    private static final String LOG_EMBED_DESCRIPTION = "%s tag **%s**";
+
+    private static final String CONTENT_FILE_NAME = "content.md";
+    private static final String NEW_CONTENT_FILE_NAME = "new_content.md";
+    private static final String PREVIOUS_CONTENT_FILE_NAME = "previous_content.md";
+
+    private static final String UNABLE_TO_GET_CONTENT_MESSAGE = "Was unable to retrieve content";
+
     private final TagSystem tagSystem;
-    private final Predicate<String> hasRequiredRole;
+
+    private final ModAuditLogWriter modAuditLogWriter;
 
     /**
      * Creates a new instance, using the given tag system as base.
      *
      * @param tagSystem the system providing the actual tag data
+     * @param modAuditLogWriter to log tag changes for audition
      */
-    public TagManageCommand(TagSystem tagSystem) {
+    public TagManageCommand(TagSystem tagSystem, ModAuditLogWriter modAuditLogWriter) {
         super("tag-manage", "Provides commands to manage all tags", SlashCommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
-        hasRequiredRole =
-                Pattern.compile(Config.getInstance().getTagManageRolePattern()).asMatchPredicate();
+
+        this.modAuditLogWriter = modAuditLogWriter;
 
         // TODO Think about adding a "Are you sure"-dialog to 'edit', 'edit-with-message' and
         // 'delete'
@@ -87,12 +99,16 @@ public final class TagManageCommand extends SlashCommandAdapter {
                     .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true));
     }
 
-    private static void sendSuccessMessage(@NotNull Interaction event, @NotNull String id,
-            @NotNull String actionVerb) {
+    private static void sendSuccessMessage(IReplyCallback event, String id, String actionVerb) {
         logger.info("User '{}' {} the tag with id '{}'.", event.getUser().getId(), actionVerb, id);
-        event.replyEmbeds(MessageUtils.generateEmbed("Success",
-                "Successfully %s tag '%s'.".formatted(actionVerb, id), event.getUser(),
-                TagSystem.AMBIENT_COLOR))
+
+        event
+            .replyEmbeds(new EmbedBuilder().setTitle("Success")
+                .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
+                .setFooter(event.getUser().getName())
+                .setTimestamp(Instant.now())
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
             .queue();
     }
 
@@ -106,8 +122,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param event the event to send messages with
      * @return the parsed message id, if successful
      */
-    private static OptionalLong parseMessageIdAndHandle(@NotNull String messageId,
-            @NotNull Interaction event) {
+    private static OptionalLong parseMessageIdAndHandle(String messageId, IReplyCallback event) {
         try {
             return OptionalLong.of(Long.parseLong(messageId));
         } catch (NumberFormatException e) {
@@ -121,14 +136,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
-        if (!hasTagManageRole(Objects.requireNonNull(event.getMember()))) {
-            event.reply("Tags can only be managed by users with a corresponding role.")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         switch (Subcommand.fromName(event.getSubcommandName())) {
             case RAW -> rawTag(event);
             case CREATE -> createTag(event);
@@ -141,40 +149,44 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
     }
 
-    private void rawTag(@NotNull SlashCommandEvent event) {
+    private void rawTag(SlashCommandInteractionEvent event) {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
 
-        event.replyEmbeds(MessageUtils.generateEmbed(null,
-                MessageUtils.escapeMarkdown(tagSystem.getTag(id).orElseThrow()), event.getUser(),
-                TagSystem.AMBIENT_COLOR))
+        String content = tagSystem.getTag(id).orElseThrow();
+        event.reply("")
+            .addFile(content.getBytes(StandardCharsets.UTF_8), CONTENT_FILE_NAME)
             .queue();
     }
 
-    private void createTag(@NotNull CommandInteraction event) {
+    private void createTag(CommandInteraction event) {
         String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString();
 
-        handleAction(TagStatus.NOT_EXISTS, id -> tagSystem.putTag(id, content), "created", event);
+        handleAction(TagStatus.NOT_EXISTS, id -> tagSystem.putTag(id, content), event,
+                Subcommand.CREATE, content);
     }
 
-    private void createTagWithMessage(@NotNull CommandInteraction event) {
-        handleActionWithMessage(TagStatus.NOT_EXISTS, tagSystem::putTag, "created", event);
+    private void createTagWithMessage(CommandInteraction event) {
+        handleActionWithMessage(TagStatus.NOT_EXISTS, tagSystem::putTag, event,
+                Subcommand.CREATE_WITH_MESSAGE);
     }
 
-    private void editTag(@NotNull CommandInteraction event) {
+    private void editTag(CommandInteraction event) {
         String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION)).getAsString();
 
-        handleAction(TagStatus.EXISTS, id -> tagSystem.putTag(id, content), "edited", event);
+        handleAction(TagStatus.EXISTS, id -> tagSystem.putTag(id, content), event, Subcommand.EDIT,
+                content);
     }
 
-    private void editTagWithMessage(@NotNull CommandInteraction event) {
-        handleActionWithMessage(TagStatus.EXISTS, tagSystem::putTag, "edited", event);
+    private void editTagWithMessage(CommandInteraction event) {
+        handleActionWithMessage(TagStatus.EXISTS, tagSystem::putTag, event,
+                Subcommand.EDIT_WITH_MESSAGE);
     }
 
-    private void deleteTag(@NotNull CommandInteraction event) {
-        handleAction(TagStatus.EXISTS, tagSystem::deleteTag, "deleted", event);
+    private void deleteTag(CommandInteraction event) {
+        handleAction(TagStatus.EXISTS, tagSystem::deleteTag, event, Subcommand.DELETE, null);
     }
 
     /**
@@ -185,20 +197,27 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *
      * @param requiredTagStatus the required status of the tag
      * @param idAction the action to perform on the id
-     * @param actionVerb the verb describing the executed action, i.e. <i>edited</i> or
-     *        <i>created</i>, will be displayed in the message send to the user
      * @param event the event to send messages with, it must have an {@code id} option set
+     * @param subcommand the subcommand to be executed
+     * @param newContent the new content of the tag, or null if content is unchanged
      */
-    private void handleAction(@NotNull TagStatus requiredTagStatus,
-            @NotNull Consumer<? super String> idAction, @NotNull String actionVerb,
-            @NotNull CommandInteraction event) {
+    private void handleAction(TagStatus requiredTagStatus, Consumer<? super String> idAction,
+            CommandInteraction event, Subcommand subcommand, @Nullable String newContent) {
+
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         if (isWrongTagStatusAndHandle(requiredTagStatus, id, event)) {
             return;
         }
 
+        String previousContent =
+                getTagContent(subcommand, id).orElse(UNABLE_TO_GET_CONTENT_MESSAGE);
+
         idAction.accept(id);
-        sendSuccessMessage(event, id, actionVerb);
+        sendSuccessMessage(event, id, subcommand.getActionVerb());
+
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        logAction(subcommand, guild, event.getUser(), event.getTimeCreated(), id, newContent,
+                previousContent);
     }
 
     /**
@@ -212,14 +231,14 @@ public final class TagManageCommand extends SlashCommandAdapter {
      *
      * @param requiredTagStatus the required status of the tag
      * @param idAndContentAction the action to perform on the id and content
-     * @param actionVerb the verb describing the executed action, i.e. <i>edited</i> or
-     *        <i>created</i>, will be displayed in the message send to the user
      * @param event the event to send messages with, it must have an {@code id} and
      *        {@code message-id} option set
+     * @param subcommand the subcommand to be executed
      */
-    private void handleActionWithMessage(@NotNull TagStatus requiredTagStatus,
-            @NotNull BiConsumer<? super String, ? super String> idAndContentAction,
-            @NotNull String actionVerb, @NotNull CommandInteraction event) {
+    private void handleActionWithMessage(TagStatus requiredTagStatus,
+            BiConsumer<? super String, ? super String> idAndContentAction, CommandInteraction event,
+            Subcommand subcommand) {
+
         String tagId = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionalLong messageIdOpt = parseMessageIdAndHandle(
                 Objects.requireNonNull(event.getOption(MESSAGE_ID_OPTION)).getAsString(), event);
@@ -232,8 +251,16 @@ public final class TagManageCommand extends SlashCommandAdapter {
         }
 
         event.getMessageChannel().retrieveMessageById(messageId).queue(message -> {
+            String previousContent =
+                    getTagContent(subcommand, tagId).orElse(UNABLE_TO_GET_CONTENT_MESSAGE);
+
             idAndContentAction.accept(tagId, message.getContentRaw());
-            sendSuccessMessage(event, tagId, actionVerb);
+            sendSuccessMessage(event, tagId, subcommand.getActionVerb());
+
+            Guild guild = Objects.requireNonNull(event.getGuild());
+            logAction(subcommand, guild, event.getUser(), event.getTimeCreated(), tagId,
+                    message.getContentRaw(), previousContent);
+
         }, failure -> {
             if (failure instanceof ErrorResponseException ex
                     && ex.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
@@ -254,6 +281,29 @@ public final class TagManageCommand extends SlashCommandAdapter {
     }
 
     /**
+     * Gets the content of a tag.
+     *
+     * @param subcommand the subcommand to be executed
+     * @param id the id of the tag to get its content
+     * @return the content of the tag, if present
+     */
+    private Optional<String> getTagContent(Subcommand subcommand, String id) {
+        if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
+            try {
+                return tagSystem.getTag(id);
+            } catch (NoSuchElementException e) {
+                // NOTE Rare race condition, for example if another thread deleted the tag in the
+                // meantime
+                logger.warn(String.format(
+                        "tried to retrieve content of tag '%s', but the content doesn't exist.",
+                        id));
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /**
      * Returns whether the status of the given tag is <b>not equal</b> to the required status.
      * <p>
      * If not, it sends an error message to the user.
@@ -263,8 +313,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param event the event to send messages with
      * @return whether the status of the given tag is <b>not equal</b> to the required status
      */
-    private boolean isWrongTagStatusAndHandle(@NotNull TagStatus requiredTagStatus,
-            @NotNull String id, @NotNull Interaction event) {
+    private boolean isWrongTagStatusAndHandle(TagStatus requiredTagStatus, String id,
+            IReplyCallback event) {
         if (requiredTagStatus == TagStatus.EXISTS) {
             return tagSystem.handleIsUnknownTag(id, event);
         } else if (requiredTagStatus == TagStatus.NOT_EXISTS) {
@@ -280,8 +330,49 @@ public final class TagManageCommand extends SlashCommandAdapter {
         return false;
     }
 
-    private boolean hasTagManageRole(@NotNull Member member) {
-        return member.getRoles().stream().map(Role::getName).anyMatch(hasRequiredRole);
+    private void logAction(Subcommand subcommand, Guild guild, User author,
+            TemporalAccessor triggeredAt, String id, @Nullable String newContent,
+            @Nullable String previousContent) {
+
+        List<ModAuditLogWriter.Attachment> attachments = new ArrayList<>();
+
+        if (Subcommand.SUBCOMMANDS_WITH_NEW_CONTENT.contains(subcommand)) {
+            if (newContent == null) {
+                throw new IllegalArgumentException(
+                        "newContent is null even though the subcommand should supply a value.");
+            }
+
+            String fileName = (subcommand == Subcommand.CREATE
+                    || subcommand == Subcommand.CREATE_WITH_MESSAGE) ? CONTENT_FILE_NAME
+                            : NEW_CONTENT_FILE_NAME;
+
+            attachments.add(new ModAuditLogWriter.Attachment(fileName, newContent));
+
+        }
+
+        if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
+            if (previousContent == null) {
+                throw new IllegalArgumentException(
+                        "previousContent is null even though the subcommand should supply a value.");
+            }
+
+            attachments
+                .add(new ModAuditLogWriter.Attachment(PREVIOUS_CONTENT_FILE_NAME, previousContent));
+        }
+
+        String title = switch (subcommand) {
+            case CREATE -> "Tag-Manage Create";
+            case CREATE_WITH_MESSAGE -> "Tag-Manage Create with message";
+            case EDIT -> "Tag-Manage Edit";
+            case EDIT_WITH_MESSAGE -> "Tag-Manage Edit with message";
+            case DELETE -> "Tag-Manage Delete";
+            default -> throw new IllegalArgumentException(
+                    "The subcommand '%s' is not intended to be logged to the mod audit channel.");
+        };
+
+        modAuditLogWriter.write(title,
+                LOG_EMBED_DESCRIPTION.formatted(subcommand.getActionVerb(), id), author,
+                triggeredAt, guild, attachments.toArray(ModAuditLogWriter.Attachment[]::new));
     }
 
     private enum TagStatus {
@@ -289,19 +380,29 @@ public final class TagManageCommand extends SlashCommandAdapter {
         NOT_EXISTS
     }
 
+    enum Subcommand {
+        RAW("raw", ""),
+        CREATE("create", "created"),
+        CREATE_WITH_MESSAGE("create-with-message", "created"),
+        EDIT("edit", "edited"),
+        EDIT_WITH_MESSAGE("edit-with-message", "edited"),
+        DELETE("delete", "deleted");
 
-    private enum Subcommand {
-        RAW("raw"),
-        CREATE("create"),
-        CREATE_WITH_MESSAGE("create-with-message"),
-        EDIT("edit"),
-        EDIT_WITH_MESSAGE("edit-with-message"),
-        DELETE("delete");
+        private static final Set<Subcommand> SUBCOMMANDS_WITH_NEW_CONTENT =
+                EnumSet.of(CREATE, CREATE_WITH_MESSAGE, EDIT, EDIT_WITH_MESSAGE);
+        private static final Set<Subcommand> SUBCOMMANDS_WITH_PREVIOUS_CONTENT =
+                EnumSet.of(EDIT, EDIT_WITH_MESSAGE, DELETE);
 
         private final String name;
+        private final String actionVerb;
 
-        Subcommand(String name) {
+        Subcommand(String name, String actionVerb) {
             this.name = name;
+            this.actionVerb = actionVerb;
+        }
+
+        String getName() {
+            return name;
         }
 
         static Subcommand fromName(String name) {
@@ -312,6 +413,10 @@ public final class TagManageCommand extends SlashCommandAdapter {
             }
             throw new IllegalArgumentException(
                     "Subcommand with name '%s' is unknown".formatted(name));
+        }
+
+        String getActionVerb() {
+            return actionVerb;
         }
     }
 }

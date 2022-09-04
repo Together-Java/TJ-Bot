@@ -3,27 +3,19 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jetbrains.annotations.NotNull;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * Configuration of the application, as singleton.
- * <p>
- * Create instances using {@link #load(Path)} and then access them with {@link #getInstance()}.
+ * Configuration of the application. Create instances using {@link #load(Path)}.
  */
-@SuppressWarnings({"Singleton", "ClassCanBeRecord"})
 public final class Config {
-
-    @SuppressWarnings("RedundantFieldInitialization")
-    private static Config config = null;
-
     private final String token;
+    private final String gistApiKey;
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
@@ -32,12 +24,19 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
+    private final SuggestionsConfig suggestions;
+    private final String quarantinedRolePattern;
+    private final ScamBlockerConfig scamBlocker;
+    private final String wolframAlphaAppId;
+    private final HelpSystemConfig helpSystem;
+    private final List<String> blacklistedFileExtension;
 
-    private final List<FreeCommandConfig> freeCommand;
+    private final String mediaOnlyChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
+            @JsonProperty("gistApiKey") String gistApiKey,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
             @JsonProperty("discordGuildInvite") String discordGuildInvite,
@@ -46,8 +45,15 @@ public final class Config {
             @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
             @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
             @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("freeCommand") List<FreeCommandConfig> freeCommand) {
+            @JsonProperty("suggestions") SuggestionsConfig suggestions,
+            @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
+            @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
+            @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
+            @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
+            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern,
+            @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension) {
         this.token = token;
+        this.gistApiKey = gistApiKey;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
@@ -56,31 +62,25 @@ public final class Config {
         this.heavyModerationRolePattern = heavyModerationRolePattern;
         this.softModerationRolePattern = softModerationRolePattern;
         this.tagManageRolePattern = tagManageRolePattern;
-        this.freeCommand = Collections.unmodifiableList(freeCommand);
+        this.suggestions = suggestions;
+        this.quarantinedRolePattern = quarantinedRolePattern;
+        this.scamBlocker = scamBlocker;
+        this.wolframAlphaAppId = wolframAlphaAppId;
+        this.helpSystem = helpSystem;
+        this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
+        this.blacklistedFileExtension = blacklistedFileExtension;
     }
 
     /**
-     * Loads the configuration from the given file. Will override any previously loaded data.
-     * <p>
-     * Access the instance using {@link #getInstance()}.
+     * Loads the configuration from the given file.
      *
      * @param path the configuration file, as JSON object
+     * @return the loaded configuration
      * @throws IOException if the file could not be loaded
      */
-    public static void load(Path path) throws IOException {
-        config = new ObjectMapper().readValue(path.toFile(), Config.class);
-    }
-
-    /**
-     * Gets the singleton instance of the configuration.
-     * <p>
-     * Must be loaded beforehand using {@link #load(Path)}.
-     *
-     * @return the previously loaded configuration
-     */
-    public static Config getInstance() {
-        return Objects.requireNonNull(config,
-                "can not get the configuration before it has been loaded");
+    public static Config load(Path path) throws IOException {
+        return new ObjectMapper().registerModule(new JavaTimeModule())
+            .readValue(path.toFile(), Config.class);
     }
 
     /**
@@ -109,6 +109,18 @@ public final class Config {
      */
     public String getToken() {
         return token;
+    }
+
+    /**
+     * Gets the API Key of GitHub to upload pastes via the API.
+     *
+     * @return the upload services API Key
+     * @see <a href=
+     *      "https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">Create
+     *      a GitHub key</a>
+     */
+    public String getGistApiKey() {
+        return gistApiKey;
     }
 
     /**
@@ -169,13 +181,65 @@ public final class Config {
     }
 
     /**
-     * Gets a List of channel id's required to configure the free command system see
-     * {@link FreeCommandConfig}
+     * Gets the config for the suggestion system.
      *
-     * @return a List of instances of FreeCommandConfig, each of the instances are separated by
-     *         guild.
+     * @return the suggestion system config
      */
-    public @NotNull Collection<FreeCommandConfig> getFreeCommandConfig() {
-        return freeCommand; // already unmodifiable
+    public SuggestionsConfig getSuggestions() {
+        return suggestions;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the role assigned to quarantined users.
+     *
+     * @return the role name pattern
+     */
+    public String getQuarantinedRolePattern() {
+        return quarantinedRolePattern;
+    }
+
+    /**
+     * Gets the config for the scam blocker system.
+     *
+     * @return the scam blocker system config
+     */
+    public ScamBlockerConfig getScamBlocker() {
+        return scamBlocker;
+    }
+
+    /**
+     * Gets the application ID used to connect to the WolframAlpha API.
+     *
+     * @return the application ID for the WolframAlpha API
+     */
+    public String getWolframAlphaAppId() {
+        return wolframAlphaAppId;
+    }
+
+    /**
+     * Gets the config for the help system.
+     *
+     * @return the help system config
+     */
+    public HelpSystemConfig getHelpSystem() {
+        return helpSystem;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain only Media.
+     *
+     * @return the channel name pattern
+     */
+    public String getMediaOnlyChannelPattern() {
+        return mediaOnlyChannelPattern;
+    }
+
+    /**
+     * Gets a list of all blacklisted file extensions.
+     *
+     * @return a list of all blacklisted file extensions
+     */
+    public List<String> getBlacklistedFileExtensions() {
+        return Collections.unmodifiableList(blacklistedFileExtension);
     }
 }

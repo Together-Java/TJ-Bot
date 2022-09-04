@@ -11,102 +11,75 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.pagination.AuditLogPaginationAction;
 import net.dv8tion.jda.api.requests.restaction.pagination.PaginationAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModAuditLogGuildProcess;
+import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import java.awt.*;
+import javax.annotation.Nullable;
+import java.awt.Color;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
-import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
- * channels. Use {@link #start()} to trigger automatic execution of the routine.
+ * channels.
  * <p>
  * The routine is executed periodically, for example three times per day. When it runs, it checks
  * all moderator actions, such as user bans, kicks, muting or message deletion. Actions are then
  * logged to a dedicated channel, given by {@link Config#getModAuditLogChannelPattern()}.
  */
-public final class ModAuditLogRoutine {
+public final class ModAuditLogRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogRoutine.class);
     private static final int CHECK_AUDIT_LOG_START_HOUR = 4;
     private static final int CHECK_AUDIT_LOG_EVERY_HOURS = 8;
     private static final int HOURS_OF_DAY = 24;
     private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
-    private final Predicate<TextChannel> isAuditLogChannel;
     private final Database database;
-    private final JDA jda;
-    private final ScheduledExecutorService checkAuditLogService =
-            Executors.newSingleThreadScheduledExecutor();
+    private final Config config;
+    private final ModAuditLogWriter modAuditLogWriter;
 
     /**
      * Creates a new instance.
      *
-     * @param jda the JDA instance to use to send messages and retrieve information
      * @param database the database for memorizing audit log dates
+     * @param config the config to use for this
+     * @param modAuditLogWriter to log tag changes for audition
      */
-    public ModAuditLogRoutine(@NotNull JDA jda, @NotNull Database database) {
-        Predicate<String> isAuditLogChannelName =
-                Pattern.compile(Config.getInstance().getModAuditLogChannelPattern())
-                    .asMatchPredicate();
-        isAuditLogChannel = channel -> isAuditLogChannelName.test(channel.getName());
-
+    public ModAuditLogRoutine(Database database, Config config,
+            ModAuditLogWriter modAuditLogWriter) {
+        this.config = config;
         this.database = database;
-        this.jda = jda;
+        this.modAuditLogWriter = modAuditLogWriter;
     }
 
-    private static @NotNull RestAction<MessageEmbed> handleAction(@NotNull Action action,
-            @NotNull AuditLogEntry entry) {
+    private static RestAction<AuditLogMessage> handleAction(Action action, AuditLogEntry entry) {
         User author = Objects.requireNonNull(entry.getUser());
-        return getTargetTagFromEntry(entry).map(targetTag -> createMessage(author, action,
-                targetTag, entry.getReason(), entry.getTimeCreated()));
+        return getTargetFromEntryOrNull(entry).map(target -> new AuditLogMessage(author, action,
+                target, entry.getReason(), entry.getTimeCreated()));
     }
 
-    private static @NotNull MessageEmbed createMessage(@NotNull User author, @NotNull Action action,
-            @NotNull String targetTag, @Nullable String reason,
-            @NotNull TemporalAccessor timestamp) {
-        String description = "%s **%s**.".formatted(action.getVerb(), targetTag);
-        if (reason != null && !reason.isBlank()) {
-            description += "\n\nReason: " + reason;
-        }
-        return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
-            .setTitle(action.getTitle())
-            .setDescription(description)
-            .setTimestamp(timestamp)
-            .setColor(AMBIENT_COLOR)
-            .build();
+    private static RestAction<User> getTargetFromEntryOrNull(AuditLogEntry entry) {
+        return entry.getJDA().retrieveUserById(entry.getTargetIdLong()).onErrorMap(error -> null);
     }
 
-    private static RestAction<String> getTargetTagFromEntry(@NotNull AuditLogEntry entry) {
-        // If the target is null, the user got deleted in the meantime
-        return entry.getJDA()
-            .retrieveUserById(entry.getTargetIdLong())
-            .map(target -> target == null ? "(user unknown)" : target.getAsTag());
-    }
-
-    private static boolean isSnowflakeAfter(@NotNull ISnowflake snowflake,
-            @NotNull Instant timestamp) {
+    private static boolean isSnowflakeAfter(ISnowflake snowflake, Instant timestamp) {
         return TimeUtil.getTimeCreated(snowflake.getIdLong()).toInstant().isAfter(timestamp);
     }
 
     /**
-     * Schedules the given task for execution at a fixed rate (see
+     * Creates a schedule for execution at a fixed rate (see
      * {@link ScheduledExecutorService#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}). The
      * initial first execution will be delayed to the next fixed time that matches the given period,
      * effectively making execution stable at fixed times of a day - regardless of when this method
@@ -120,16 +93,12 @@ public final class ModAuditLogRoutine {
      * Execution will also correctly roll over to the next day, for example if the method is
      * triggered at 21:30, the next execution will be at 4:00 the following day.
      *
-     * @param service the scheduler to use
-     * @param command the command to schedule
      * @param periodStartHour the hour of the day that marks the start of this period
      * @param periodHours the scheduling period in hours
-     * @return the instant when the command will be executed the first time
+     * @return the according schedule representing the planned execution
      */
-    private static @NotNull Instant scheduleAtFixedRateFromNextFixedTime(
-            @NotNull ScheduledExecutorService service, @NotNull Runnable command,
-            @SuppressWarnings("SameParameterValue") int periodStartHour,
-            @SuppressWarnings("SameParameterValue") int periodHours) {
+    private static Schedule scheduleAtFixedRateFromNextFixedTime(int periodStartHour,
+            int periodHours) {
         // NOTE This scheduler could be improved, for example supporting arbitrary periods (not just
         // hour-based). Also, it probably does not correctly handle all date/time-quirks, for
         // example if a schedule would hit a time that does not exist for a specific date due to DST
@@ -153,13 +122,12 @@ public final class ModAuditLogRoutine {
         Instant now = Instant.now();
         Instant nextFixedTime =
                 computeClosestNextScheduleDate(now, fixedScheduleHours, periodHours);
-        service.scheduleAtFixedRate(command, ChronoUnit.SECONDS.between(now, nextFixedTime),
+        return new Schedule(ScheduleMode.FIXED_RATE, ChronoUnit.SECONDS.between(now, nextFixedTime),
                 TimeUnit.HOURS.toSeconds(periodHours), TimeUnit.SECONDS);
-        return nextFixedTime;
     }
 
-    private static @NotNull Instant computeClosestNextScheduleDate(@NotNull Instant instant,
-            @NotNull List<Integer> scheduleHours, int periodHours) {
+    private static Instant computeClosestNextScheduleDate(Instant instant,
+            List<Integer> scheduleHours, int periodHours) {
         OffsetDateTime offsetDateTime = instant.atOffset(ZoneOffset.UTC);
         BiFunction<OffsetDateTime, Integer, Instant> dateAtTime =
                 (date, hour) -> date.with(LocalTime.of(hour, 0)).toInstant();
@@ -179,53 +147,56 @@ public final class ModAuditLogRoutine {
             .orElseThrow();
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleBanEntry(
-            @NotNull AuditLogEntry entry) {
+    private static Optional<RestAction<MessageEmbed>> handleBanEntry(AuditLogEntry entry) {
         // NOTE Temporary bans are realized as permanent bans with automated unban,
         // hence we can not differentiate a permanent or a temporary ban here
-        return Optional.of(handleAction(Action.BAN, entry));
+        return Optional.of(handleAction(Action.BAN, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleUnbanEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.UNBAN, entry));
+    private static Optional<RestAction<MessageEmbed>> handleUnbanEntry(AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.UNBAN, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleKickEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.KICK, entry));
+    private static Optional<RestAction<MessageEmbed>> handleKickEntry(AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.KICK, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleMuteEntry(
-            @NotNull AuditLogEntry entry) {
+    private static Optional<RestAction<MessageEmbed>> handleMuteEntry(AuditLogEntry entry) {
         // NOTE Temporary mutes are realized as permanent mutes with automated unmute,
         // hence we can not differentiate a permanent or a temporary mute here
-        return Optional.of(handleAction(Action.MUTE, entry));
+        return Optional.of(handleAction(Action.MUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleUnmuteEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.UNMUTE, entry));
+    private static Optional<RestAction<MessageEmbed>> handleUnmuteEntry(AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.UNMUTE, entry).map(AuditLogMessage::toEmbed));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
-            @NotNull AuditLogEntry entry) {
-        return Optional.of(handleAction(Action.MESSAGE_DELETION, entry));
+    private static Optional<RestAction<MessageEmbed>> handleMessageDeleteEntry(
+            AuditLogEntry entry) {
+        return Optional.of(handleAction(Action.MESSAGE_DELETION, entry).map(message -> {
+            if (message.target() != null && message.target().isBot()) {
+                // Message deletions against bots should be skipped. Cancel action.
+                return null;
+            }
+            return message.toEmbed();
+        }));
     }
 
-    /**
-     * Starts the routine, automatically checking the audit logs on a schedule.
-     */
-    public void start() {
-        // TODO This should be registered at some sort of routine system instead (see GH issue #235
-        // which adds support for routines)
-        Instant startInstant = scheduleAtFixedRateFromNextFixedTime(checkAuditLogService,
-                this::checkAuditLogsRoutine, CHECK_AUDIT_LOG_START_HOUR,
+    @Override
+    public void runRoutine(JDA jda) {
+        checkAuditLogsRoutine(jda);
+    }
+
+    @Override
+    public Schedule createSchedule() {
+        Schedule schedule = scheduleAtFixedRateFromNextFixedTime(CHECK_AUDIT_LOG_START_HOUR,
                 CHECK_AUDIT_LOG_EVERY_HOURS);
-        logger.info("Checking audit logs is scheduled for {}.", startInstant);
+        logger.info("Checking audit logs is scheduled for {}.",
+                Instant.now().plus(schedule.initialDuration(), schedule.unit().toChronoUnit()));
+        return schedule;
     }
 
-    private void checkAuditLogsRoutine() {
+    private void checkAuditLogsRoutine(JDA jda) {
         logger.info("Checking audit logs of all guilds...");
 
         jda.getGuildCache().forEach(guild -> {
@@ -236,11 +207,9 @@ public final class ModAuditLogRoutine {
                 return;
             }
 
-            Optional<TextChannel> auditLogChannel = getModAuditLogChannel(guild);
+            Optional<TextChannel> auditLogChannel =
+                    modAuditLogWriter.getAndHandleModAuditLogChannel(guild);
             if (auditLogChannel.isEmpty()) {
-                logger.warn(
-                        "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",
-                        Config.getInstance().getModAuditLogChannelPattern(), guild.getName());
                 return;
             }
 
@@ -254,8 +223,8 @@ public final class ModAuditLogRoutine {
                 CHECK_AUDIT_LOG_EVERY_HOURS);
     }
 
-    private void handleAuditLogs(@NotNull MessageChannel auditLogChannel,
-            @NotNull PaginationAction<? extends AuditLogEntry, AuditLogPaginationAction> auditLogAction,
+    private void handleAuditLogs(MessageChannel auditLogChannel,
+            PaginationAction<? extends AuditLogEntry, AuditLogPaginationAction> auditLogAction,
             long guildId) {
         Instant lastAuditLogEntryTimestamp =
                 database.read(context -> Optional
@@ -277,8 +246,7 @@ public final class ModAuditLogRoutine {
             .sorted(Comparator.comparing(TimeUtil::getTimeCreated))
             .map(entry -> handleAuditLog(auditLogChannel, entry))
             .flatMap(Optional::stream)
-            .reduce((firstMessage, secondMessage) -> firstMessage.flatMap(result -> secondMessage))
-            .ifPresent(RestAction::queue);
+            .forEach(RestAction::queue);
 
         database.write(context -> {
             var entry = context.newRecord(ModAuditLogGuildProcess.MOD_AUDIT_LOG_GUILD_PROCESS);
@@ -291,8 +259,8 @@ public final class ModAuditLogRoutine {
         });
     }
 
-    private static Optional<RestAction<Message>> handleAuditLog(
-            @NotNull MessageChannel auditLogChannel, @NotNull AuditLogEntry entry) {
+    private Optional<RestAction<Message>> handleAuditLog(MessageChannel auditLogChannel,
+            AuditLogEntry entry) {
         Optional<RestAction<MessageEmbed>> maybeMessage = switch (entry.getType()) {
             case BAN -> handleBanEntry(entry);
             case UNBAN -> handleUnbanEntry(entry);
@@ -301,11 +269,16 @@ public final class ModAuditLogRoutine {
             case MESSAGE_DELETE -> handleMessageDeleteEntry(entry);
             default -> Optional.empty();
         };
-        return maybeMessage.map(message -> message.flatMap(auditLogChannel::sendMessageEmbeds));
+        // It can have 3 states:
+        // * empty optional - entry is irrelevant and should not be logged
+        // * has RestAction but that will contain null - entry was relevant at first, but at
+        // query-time we found out that it is irrelevant
+        // * has RestAction but will contain a message - entry is relevant, log the message
+        return maybeMessage
+            .map(message -> message.flatMap(Objects::nonNull, auditLogChannel::sendMessageEmbeds));
     }
 
-    private static @NotNull Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(
-            @NotNull AuditLogEntry entry) {
+    private Optional<RestAction<MessageEmbed>> handleRoleUpdateEntry(AuditLogEntry entry) {
         if (containsMutedRole(entry, AuditLogKey.MEMBER_ROLES_ADD)) {
             return handleMuteEntry(entry);
         }
@@ -315,8 +288,7 @@ public final class ModAuditLogRoutine {
         return Optional.empty();
     }
 
-    private static boolean containsMutedRole(@NotNull AuditLogEntry entry,
-            @NotNull AuditLogKey key) {
+    private boolean containsMutedRole(AuditLogEntry entry, AuditLogKey key) {
         List<Map<String, String>> roleChanges = Optional.ofNullable(entry.getChangeByKey(key))
             .<List<Map<String, String>>>map(AuditLogChange::getNewValue)
             .orElse(List.of());
@@ -325,16 +297,7 @@ public final class ModAuditLogRoutine {
             .flatMap(Collection::stream)
             .filter(changeEntry -> "name".equals(changeEntry.getKey()))
             .map(Map.Entry::getValue)
-            .anyMatch(ModerationUtils.isMuteRole);
-    }
-
-    private Optional<TextChannel> getModAuditLogChannel(@NotNull Guild guild) {
-        // Check cache first, then get full list
-        return guild.getTextChannelCache()
-            .stream()
-            .filter(isAuditLogChannel)
-            .findAny()
-            .or(() -> guild.getTextChannels().stream().filter(isAuditLogChannel).findAny());
+            .anyMatch(ModerationUtils.getIsMutedRolePredicate(config));
     }
 
     private enum Action {
@@ -348,19 +311,35 @@ public final class ModAuditLogRoutine {
         private final String title;
         private final String verb;
 
-        Action(@NotNull String title, @NotNull String verb) {
+        Action(String title, String verb) {
             this.title = title;
             this.verb = verb;
         }
 
-        @NotNull
         String getTitle() {
             return title;
         }
 
-        @NotNull
         String getVerb() {
             return verb;
+        }
+    }
+
+    private record AuditLogMessage(User author, Action action, @Nullable User target,
+            @Nullable String reason, TemporalAccessor timestamp) {
+        MessageEmbed toEmbed() {
+            String targetTag = target == null ? "(user unknown)" : target.getAsTag();
+            String description = "%s **%s**.".formatted(action.getVerb(), targetTag);
+
+            if (reason != null && !reason.isBlank()) {
+                description += "\n\nReason: " + reason;
+            }
+
+            return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
+                .setDescription(description)
+                .setTimestamp(timestamp)
+                .setColor(AMBIENT_COLOR)
+                .build();
         }
     }
 }

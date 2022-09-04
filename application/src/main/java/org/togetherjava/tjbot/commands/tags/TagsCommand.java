@@ -1,15 +1,15 @@
 package org.togetherjava.tjbot.commands.tags;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
-import org.slf4j.Logger;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -48,7 +48,7 @@ public final class TagsCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Collection<String> tagIds = tagSystem.getAllIds();
         if (tagIds.size() > MAX_TAGS_THRESHOLD_WARNING) {
             // TODO Implement the edge case
@@ -60,15 +60,19 @@ public final class TagsCommand extends SlashCommandAdapter {
                 tagIds.stream().sorted().map(tag -> "• " + tag).collect(Collectors.joining("\n"));
 
         event
-            .replyEmbeds(MessageUtils.generateEmbed("All available tags", tagListText,
-                    event.getUser(), TagSystem.AMBIENT_COLOR))
+            .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
+                .setDescription(tagListText)
+                .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
+                .setTimestamp(Instant.now())
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
             .queue();
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         String userId = args.get(0);
 
         if (!event.getUser().getId().equals(userId) && !Objects.requireNonNull(event.getMember())
@@ -79,7 +83,6 @@ public final class TagsCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
-
         event.getMessage().delete().queue();
     }
 }

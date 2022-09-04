@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -11,23 +9,25 @@ import java.util.stream.IntStream;
 /**
  * Utility class for computing string distances, for example the edit distance between two words.
  */
-public enum StringDistances {
-    ;
+public class StringDistances {
+    private StringDistances() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
     /**
      * Computes the candidate that matches the given query string best.
-     *
+     * <p>
      * It is given that, if the candidates contain the query literally, the query will also be the
      * returned match. If the candidates do not contain the query literally, the best match will be
      * determined. The measures for this are unspecified.
-     * 
+     *
      * @param query the query string to find a match for
      * @param candidates the set of candidates to select a match from
      * @param <S> the type of the candidates
      * @return the best matching candidate, or empty iff the candidates are empty
      */
-    public static <S extends CharSequence> Optional<S> closestMatch(@NotNull CharSequence query,
-            @NotNull Collection<S> candidates) {
+    public static <S extends CharSequence> Optional<S> closestMatch(CharSequence query,
+            Collection<S> candidates) {
         return candidates.stream()
             .min(Comparator.comparingInt(candidate -> editDistance(query, candidate)));
     }
@@ -35,33 +35,32 @@ public enum StringDistances {
     /**
      * Attempts to autocomplete the given prefix string by selecting the candidate that matches the
      * prefix best.
-     *
+     * <p>
      * It is given that, if the candidates contain the query literally, the query will also be the
      * returned match. If the candidates do not contain the query literally, the best match will be
      * determined. The measures for this are unspecified.
-     * 
+     *
      * @param prefix the prefix string to find a match for
      * @param candidates the set of candidates to select a match from
      * @param <S> the type of the candidates
      * @return the best matching candidate, or empty iff the candidates are empty
      */
-    public static <S extends CharSequence> Optional<S> autocomplete(@NotNull CharSequence prefix,
-            @NotNull Collection<S> candidates) {
+    public static <S extends CharSequence> Optional<S> autocomplete(CharSequence prefix,
+            Collection<S> candidates) {
         return candidates.stream()
             .min(Comparator.comparingInt(candidate -> prefixEditDistance(prefix, candidate)));
     }
 
     /**
      * Distance to receive {@code destination} from {@code source} by editing.
-     *
+     * <p>
      * For example {@code editDistance("hello", "hallo")} is {@code 1}.
      *
      * @param source the source string to start with
      * @param destination the destination string to receive by editing the source
      * @return the edit distance
      */
-    public static int editDistance(@NotNull CharSequence source,
-            @NotNull CharSequence destination) {
+    public static int editDistance(CharSequence source, CharSequence destination) {
         // Given by the value in the last row and column
         int[][] table = computeLevenshteinDistanceTable(source, destination);
         int rows = table.length;
@@ -73,15 +72,14 @@ public enum StringDistances {
     /**
      * Distance to receive a prefix of {@code destination} from {@code source} by editing that
      * minimizes the distance.
-     *
+     * <p>
      * For example {@code prefixEditDistance("foa", "foobar")} is {@code 1}.
      *
      * @param source the source string to start with
      * @param destination the destination string to receive a prefix of by editing the source
      * @return the prefix edit distance
      */
-    public static int prefixEditDistance(@NotNull CharSequence source,
-            @NotNull CharSequence destination) {
+    public static int prefixEditDistance(CharSequence source, CharSequence destination) {
         // Given by the smallest value in the last row
         int[][] table = computeLevenshteinDistanceTable(source, destination);
         int lastRowIndex = table.length - 1;
@@ -93,9 +91,9 @@ public enum StringDistances {
      * Computes the Levenshtein distance table for the given strings. See
      * <a href="https://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> for
      * details.
-     *
+     * <p>
      * An example for {@code "abc"} to {@code "abcdefg"} would be:
-     * 
+     *
      * <pre>
      *   | 0 a b c d e f g
      * -------------------
@@ -104,13 +102,13 @@ public enum StringDistances {
      * b | 2 1 0 1 2 3 4 5
      * c | 3 2 1 0 1 2 3 4
      * </pre>
-     * 
+     *
      * @param source the source string to start with
      * @param destination the destination string to receive by editing the source
      * @return the levenshtein distance table
      */
-    private static int @NotNull [][] computeLevenshteinDistanceTable(@NotNull CharSequence source,
-            @NotNull CharSequence destination) {
+    private static int[][] computeLevenshteinDistanceTable(CharSequence source,
+            CharSequence destination) {
         int rows = source.length() + 1;
         int columns = destination.length() + 1;
         int[][] table = new int[rows][columns];

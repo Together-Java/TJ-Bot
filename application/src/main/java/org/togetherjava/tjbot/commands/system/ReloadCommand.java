@@ -4,13 +4,12 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.ButtonStyle;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommand;
@@ -46,7 +45,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @param commandProvider the provider of slash commands to reload when this command is
      *        triggered
      */
-    public ReloadCommand(@NotNull SlashCommandProvider commandProvider) {
+    public ReloadCommand(SlashCommandProvider commandProvider) {
         super("reload",
                 "Uploads all existing slash-commands to Discord so they are fully up-to-date.",
                 SlashCommandVisibility.GUILD);
@@ -54,7 +53,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         Member member = Objects.requireNonNull(event.getMember());
 
         if (!member.hasPermission(Permission.MANAGE_SERVER)) {
@@ -69,14 +68,13 @@ public final class ReloadCommand extends SlashCommandAdapter {
 
         event.reply(
                 "Are you sure? You can only reload commands a few times each day, so do not overdo this.")
-            .addActionRow(
-                    Button.of(ButtonStyle.SUCCESS, generateComponentId(member.getId()), "Yes"),
-                    Button.of(ButtonStyle.DANGER, generateComponentId(member.getId()), "No"))
+            .addActionRow(Button.success(generateComponentId(member.getId()), "Yes"),
+                    Button.danger(generateComponentId(member.getId()), "No"))
             .queue();
     }
 
     @Override
-    public void onButtonClick(@NotNull ButtonClickEvent event, @NotNull List<String> args) {
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // Ignore if another user clicked the button
         String userId = args.get(0);
         if (!userId.equals(Objects.requireNonNull(event.getMember()).getId())) {
@@ -103,8 +101,7 @@ public final class ReloadCommand extends SlashCommandAdapter {
 
                 // Reload guild commands (potentially many guilds)
                 // NOTE Storing the guild actions in a list is potentially dangerous since the
-                // bot
-                // might theoretically be part of so many guilds that it exceeds the max size of
+                // bot might theoretically be part of so many guilds that it exceeds the max size of
                 // list. However, correctly reducing RestActions in a stream is not trivial.
                 getGuildUpdateActions(event.getJDA())
                     .map(updateAction -> updateCommandsIf(
@@ -134,9 +131,8 @@ public final class ReloadCommand extends SlashCommandAdapter {
      * @param updateAction the upstream to update commands
      * @return the given upstream for chaining
      */
-    private @NotNull CommandListUpdateAction updateCommandsIf(
-            @NotNull Predicate<? super SlashCommand> commandFilter,
-            @NotNull CommandListUpdateAction updateAction) {
+    private CommandListUpdateAction updateCommandsIf(Predicate<? super SlashCommand> commandFilter,
+            CommandListUpdateAction updateAction) {
         return commandProvider.getSlashCommands()
             .stream()
             .filter(commandFilter)
@@ -144,12 +140,11 @@ public final class ReloadCommand extends SlashCommandAdapter {
             .reduce(updateAction, CommandListUpdateAction::addCommands, (x, y) -> x);
     }
 
-    private static @NotNull CommandListUpdateAction getGlobalUpdateAction(@NotNull JDA jda) {
+    private static CommandListUpdateAction getGlobalUpdateAction(JDA jda) {
         return jda.updateCommands();
     }
 
-    private static @NotNull Stream<CommandListUpdateAction> getGuildUpdateActions(
-            @NotNull JDA jda) {
+    private static Stream<CommandListUpdateAction> getGuildUpdateActions(JDA jda) {
         return jda.getGuildCache().stream().map(Guild::updateCommands);
     }
 }

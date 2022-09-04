@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.basic;
 
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
@@ -24,7 +23,7 @@ public final class PingCommand extends SlashCommandAdapter {
      * @param event the corresponding event
      */
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         event.reply("Pong!").queue();
     }
 }
