@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -38,7 +39,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
         Message message = event.getMessage();
         // Checks if it's a thread creation message. No need to do anything in that case then
-        if (message.toString().contains("THREAD_CREATED")) {
+        if (message.getType().equals(MessageType.THREAD_CREATED)) {
             return;
         }
 
