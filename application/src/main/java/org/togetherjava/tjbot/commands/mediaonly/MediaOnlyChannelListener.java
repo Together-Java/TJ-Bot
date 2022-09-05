@@ -38,7 +38,6 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         Message message = event.getMessage();
-        // Checks if it's a thread creation message. No need to do anything in that case then
         if (message.getType() == MessageType.THREAD_CREATED) {
             return;
         }
