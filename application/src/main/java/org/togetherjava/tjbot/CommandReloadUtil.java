@@ -19,6 +19,10 @@ import java.util.stream.Stream;
 public class CommandReloadUtil {
     private static final Logger logger = LoggerFactory.getLogger(CommandReloadUtil.class);
 
+    private CommandReloadUtil() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static void reloadCommands(JDA jda, CommandProvider commandProvider) {
         logger.info("Reloading commands...");
         List<CommandListUpdateAction> actions = Collections.synchronizedList(new ArrayList<>());

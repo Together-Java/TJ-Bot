@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 import org.jetbrains.annotations.Unmodifiable;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import java.util.List;
 import java.util.function.Function;
@@ -64,7 +63,6 @@ import java.util.stream.IntStream;
 public abstract class SlashCommandAdapter extends BotCommandAdapter implements SlashCommand {
     private final String description;
     private final SlashCommandData data;
-    private ComponentIdGenerator componentIdGenerator;
 
     /**
      * Creates a new adapter with the given data.
