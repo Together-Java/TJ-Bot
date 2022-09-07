@@ -359,8 +359,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * @return the user interactor with the given name
      * @throws NoSuchElementException if the user interactor with the given name was not registered
      */
-    private UserInteractor requireUserInteractor(
-            final String name) {
+    private UserInteractor requireUserInteractor(final String name) {
         return getInteractor(name).orElseThrow();
     }
 

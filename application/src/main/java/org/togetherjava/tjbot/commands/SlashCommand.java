@@ -104,8 +104,8 @@ public interface SlashCommand extends BotCommand {
      * Autocomplete allows you to dynamically give the user a list of
      * {@value OptionData#MAX_CHOICES} possible choices. These choices can be generated based on the
      * input of the user, the functionality is comparable to Google's autocompletion when searching
-     * for something. The given choices are <b>not</b> enforced by Discord, the user can <b>ignore</b>
-     * auto-completion and send whatever they want.
+     * for something. The given choices are <b>not</b> enforced by Discord, the user can
+     * <b>ignore</b> auto-completion and send whatever they want.
      * <p>
      * Triggered by the core system when a slash command's autocomplete corresponding to this
      * implementation (based on {@link #getData()}) has been triggered. Don't forget to enable
