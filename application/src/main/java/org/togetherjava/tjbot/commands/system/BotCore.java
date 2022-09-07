@@ -334,7 +334,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         }
         ComponentId componentId = componentIdOpt.orElseThrow();
 
-        UserInteractor interactor = requireUserInteractor(componentId.userInteractorName(), null);
+        UserInteractor interactor = requireUserInteractor(componentId.userInteractorName());
         logger.trace("Routing a component event with id '{}' back to user interactor '{}'",
                 event.getComponentId(), interactor.getName());
         interactorArgumentConsumer.accept(interactor, event, componentId.elements());
@@ -361,19 +361,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      */
     private UserInteractor requireUserInteractor(final String name) {
         return getInteractor(name).orElseThrow();
-    }
-
-    /**
-     * Gets the given user interactor by its name and requires that it exists.
-     *
-     * @param name the name of the user interactor to get
-     * @param type an {@link Class} instance of the required type
-     * @return the user interactor with the given name
-     * @throws NoSuchElementException if the user interactor with the given name was not registered
-     */
-    private <T extends UserInteractor, C extends Class<T>> T requireUserInteractor(
-            final String name, @Nullable final C type) {
-        return getInteractor(name, type).orElseThrow();
     }
 
     private void handleRegisterErrors(Throwable ex, Guild guild) {
