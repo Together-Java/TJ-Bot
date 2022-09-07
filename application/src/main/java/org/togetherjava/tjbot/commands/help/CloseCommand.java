@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

@@ -7,8 +7,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import javax.annotation.Nullable;
 import java.util.Objects;

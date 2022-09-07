@@ -7,8 +7,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.db.Database;
 
 import java.time.*;

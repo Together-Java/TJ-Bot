@@ -14,8 +14,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import javax.annotation.Nullable;
 import java.time.Instant;

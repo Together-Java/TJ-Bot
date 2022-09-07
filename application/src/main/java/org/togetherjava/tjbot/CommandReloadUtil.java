@@ -21,12 +21,10 @@ public class CommandReloadUtil {
 
     public static void reloadCommands(JDA jda, CommandProvider commandProvider) {
         logger.info("Reloading commands...");
-        List<CommandListUpdateAction> actions =
-                Collections.synchronizedList(new ArrayList<>());
+        List<CommandListUpdateAction> actions = Collections.synchronizedList(new ArrayList<>());
 
         // Reload global commands
-        actions.add(updateCommandsIf(
-                command -> command.getVisibility() == CommandVisibility.GLOBAL,
+        actions.add(updateCommandsIf(command -> command.getVisibility() == CommandVisibility.GLOBAL,
                 getGlobalUpdateAction(jda), commandProvider));
 
         // Reload guild commands (potentially many guilds)
@@ -35,14 +33,13 @@ public class CommandReloadUtil {
         // list. However, correctly reducing RestActions in a stream is not trivial.
         getGuildUpdateActions(jda)
                 .map(updateAction -> updateCommandsIf(
-                        command -> command.getVisibility() == CommandVisibility.GUILD,
-                        updateAction, commandProvider))
+                        command -> command.getVisibility() == CommandVisibility.GUILD, updateAction,
+                        commandProvider))
                 .forEach(actions::add);
         logger.debug("Reloading commands over {} action-upstreams", actions.size());
 
         // Send message when all are done
-        RestAction.allOf(actions)
-                .queue(a -> logger.debug("Commands successfully reloaded!"));
+        RestAction.allOf(actions).queue(a -> logger.debug("Commands successfully reloaded!"));
     }
 
     /**
@@ -50,13 +47,16 @@ public class CommandReloadUtil {
      * through the given action upstream.
      *
      * @param commandFilter filter that matches commands that should be uploaded
-     * @param updateAction the upstream to update commands
+     * @param updateAction  the upstream to update commands
      * @return the given upstream for chaining
      */
-    private static CommandListUpdateAction updateCommandsIf(Predicate<? super BotCommand> commandFilter,
-                                                            CommandListUpdateAction updateAction, CommandProvider commandProvider) {
-        return commandProvider.getBotCommands()
+    private static CommandListUpdateAction updateCommandsIf(
+            Predicate<? super BotCommand> commandFilter, CommandListUpdateAction updateAction,
+            CommandProvider commandProvider) {
+        return commandProvider.getInteractors()
                 .stream()
+                .filter(BotCommand.class::isInstance)
+                .map(BotCommand.class::cast)
                 .filter(commandFilter)
                 .map(BotCommand::getData)
                 .reduce(updateAction, CommandListUpdateAction::addCommands, (x, y) -> x);

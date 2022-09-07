@@ -1,8 +1,8 @@
 package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 /**
  * Implementation of an example command to illustrate how to respond to a user.

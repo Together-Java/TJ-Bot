@@ -5,9 +5,6 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.NotNull;
-import org.togetherjava.tjbot.commands.componentids.ComponentId;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
-import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import java.util.List;
 
@@ -56,8 +53,8 @@ public interface BotCommand extends UserInteractor {
     /**
      * Gets the command data belonging to this command.
      * <p>
-     * See {@link net.dv8tion.jda.api.interactions.commands.build.Commands Commands} for details on how to
-     * create and configure instances of it.
+     * See {@link net.dv8tion.jda.api.interactions.commands.build.Commands Commands} for details on
+     * how to create and configure instances of it.
      * <p>
      * <p>
      * This method may be called multiple times, implementations must not create new data each time

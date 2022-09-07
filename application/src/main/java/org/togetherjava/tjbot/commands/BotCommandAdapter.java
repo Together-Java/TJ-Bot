@@ -96,7 +96,7 @@ public abstract class BotCommandAdapter implements BotCommand {
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
     public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
-                                @NotNull List<String> args) {
+            @NotNull List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
@@ -133,7 +133,7 @@ public abstract class BotCommandAdapter implements BotCommand {
      */
     @SuppressWarnings({"OverloadedVarargsMethod", "WeakerAccess"})
     protected final @NotNull String generateComponentId(@NotNull Lifespan lifespan,
-                                                        @NotNull String... args) {
+            @NotNull String... args) {
         return componentIdGenerator.generate(new ComponentId(getName(), Arrays.asList(args)),
                 lifespan);
     }

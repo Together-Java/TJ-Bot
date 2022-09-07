@@ -13,13 +13,9 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 import org.jetbrains.annotations.Unmodifiable;
-import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
-import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -34,9 +30,9 @@ import java.util.stream.IntStream;
  * <p>
  * <p>
  * The adapter manages all command related data itself, which can be provided during construction
- * (see {@link #SlashCommandAdapter(String, String, CommandVisibility)}). In order to add
- * options, subcommands or similar command configurations, use {@link #getData()} and mutate the
- * returned data object (see {@link CommandData} for details on how to work with this class).
+ * (see {@link #SlashCommandAdapter(String, String, CommandVisibility)}). In order to add options,
+ * subcommands or similar command configurations, use {@link #getData()} and mutate the returned
+ * data object (see {@link CommandData} for details on how to work with this class).
  * <p>
  * <p>
  * If implementations want to add buttons or selection menus, it is highly advised to use component
@@ -79,8 +75,7 @@ public abstract class SlashCommandAdapter extends BotCommandAdapter implements S
      *        {@link SlashCommandData#setDescription(String)}
      * @param visibility the visibility of the command
      */
-    protected SlashCommandAdapter(String name, String description,
-            CommandVisibility visibility) {
+    protected SlashCommandAdapter(String name, String description, CommandVisibility visibility) {
         super(Commands.slash(name, description), visibility);
         this.description = description;
 

@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.checkerframework.checker.units.qual.C;
+import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.*;
@@ -26,6 +26,7 @@ import org.togetherjava.tjbot.commands.componentids.InvalidComponentIdFormatExce
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -55,6 +56,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Config config;
+    private final List<UserInteractor> interactors;
     private final Map<String, UserInteractor> nameToInteractor;
     private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
@@ -67,9 +69,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * <p>
      * Commands are fetched from {@link Features}.
      *
-     * @param jda      the JDA instance that this command system will be used with
+     * @param jda the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
-     * @param config   the configuration to use for this system
+     * @param config the configuration to use for this system
      */
     public BotCore(JDA jda, Database database, Config config) {
         this.config = config;
@@ -77,84 +79,108 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         // Message receivers
         features.stream()
-                .filter(MessageReceiver.class::isInstance)
-                .map(MessageReceiver.class::cast)
-                .forEach(messageReceiver -> channelNameToMessageReceiver
-                        .put(messageReceiver.getChannelNamePattern(), messageReceiver));
+            .filter(MessageReceiver.class::isInstance)
+            .map(MessageReceiver.class::cast)
+            .forEach(messageReceiver -> channelNameToMessageReceiver
+                .put(messageReceiver.getChannelNamePattern(), messageReceiver));
 
         // Event receivers
         features.stream()
-                .filter(EventReceiver.class::isInstance)
-                .map(EventReceiver.class::cast)
-                .forEach(jda::addEventListener);
+            .filter(EventReceiver.class::isInstance)
+            .map(EventReceiver.class::cast)
+            .forEach(jda::addEventListener);
 
         // Routines (are scheduled once the core is ready)
         routines = features.stream()
-                .filter(Routine.class::isInstance)
-                .map(Routine.class::cast)
-                .toList();
+            .filter(Routine.class::isInstance)
+            .map(Routine.class::cast)
+            .toList();
 
         // User Interactors (e.g. slash commands)
-        nameToInteractor = features.stream()
-                .filter(UserInteractor.class::isInstance)
-                .map(UserInteractor.class::cast)
-                .collect(Collectors.toMap(UserInteractor::getName, Function.identity()));
+        interactors = features.stream()
+            .filter(UserInteractor.class::isInstance)
+            .map(UserInteractor.class::cast)
+            .toList();
 
-        // Reload Command
-        if (nameToInteractor.containsKey(RELOAD_COMMAND)) {
-            throw new IllegalStateException(
-                    "The 'reload' command is a special reserved command that must not be used by other user interactors");
-        }
-        nameToInteractor.put(RELOAD_COMMAND, new ReloadCommand(this));
+        nameToInteractor = interactors.stream().collect(Collectors.toMap(interactor -> {
+            if (interactor instanceof SlashCommand) {
+                return "s-" + interactor.getName();
+            } else if (interactor instanceof MessageContextCommand) {
+                return "mc-" + interactor.getName();
+            } else if (interactor instanceof UserContextCommand) {
+                return "uc-" + interactor.getName();
+            }
+
+            return interactor.getName();
+        }, Function.identity()));
+
 
         // Component Id Store
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
-        nameToInteractor.values()
-                .forEach(slashCommand -> slashCommand
-                        .acceptComponentIdGenerator(((componentId, lifespan) -> {
-                            UUID uuid = UUID.randomUUID();
-                            componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                            return uuid.toString();
-                        })));
+        interactors.forEach(slashCommand -> slashCommand
+            .acceptComponentIdGenerator(((componentId, lifespan) -> {
+                UUID uuid = UUID.randomUUID();
+                componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                return uuid.toString();
+            })));
 
         if (logger.isInfoEnabled()) {
-            logger.info("Available user interactors: {}", nameToInteractor.keySet());
+            logger.info("Available user interactors: {}", interactors);
         }
     }
 
     @Override
-    public Collection<BotCommand> getBotCommands() {
-        return nameToInteractor.values()
-                .stream()
-                .filter(BotCommand.class::isInstance)
-                .map(BotCommand.class::cast)
-                .toList();
+    @Unmodifiable
+    public Collection<UserInteractor> getInteractors() {
+        return interactors;
     }
 
     @Override
-    public <T extends BotCommand, C extends Class<T>> Optional<T> getCommand(String name, C type) {
+    public Optional<UserInteractor> getInteractor(final String name) {
 
-        return Optional.ofNullable(nameToInteractor.get(name))
-                .filter(type::isInstance)
-                .map(type::cast);
+        return Optional.ofNullable(nameToInteractor.get(name));
     }
 
-    private static Class<? extends BotCommand> commandTypeToClass(Command.Type type) {
-        if (type == null) return BotCommand.class;
+    @Override
+    public <T extends UserInteractor, C extends Class<T>> Optional<T> getInteractor(
+            final String name, @Nullable final C type) {
+        String prefix = "";
 
-        return switch (type) {
-            case MESSAGE -> MessageContextCommand.class;
-            case USER -> UserContextCommand.class;
-            case SLASH -> SlashCommand.class;
-            case UNKNOWN -> BotCommand.class;
-            /*
-            preparing for the future be like:
-                case null -> BotCommand.class;
-             */
-        };
+        if (null == type) {
+            List<UserInteractor> anyInteractors = getAnyInteractors(name);
+            if (anyInteractors.isEmpty()) {
+                return Optional.empty();
+            } else {
+                return Optional.ofNullable((T) anyInteractors.get(0));
+            }
+        } else if (SlashCommand.class.isAssignableFrom(type)) {
+            prefix = "s-";
+        } else if (MessageContextCommand.class.isAssignableFrom(type)) {
+            prefix = "mc-";
+        } else if (UserContextCommand.class.isAssignableFrom(type)) {
+            prefix = "uc-";
+        }
+
+        return Optional.ofNullable(nameToInteractor.get(prefix + name))
+            .filter(type::isInstance)
+            .map(type::cast);
     }
+
+    public List<UserInteractor> getAnyInteractors(final String name) {
+
+        List<UserInteractor> localInteractors = new ArrayList<>(4);
+
+        getInteractor(name, SlashCommand.class).ifPresent(localInteractors::add);
+        getInteractor(name, MessageContextCommand.class).ifPresent(localInteractors::add);
+        getInteractor(name, UserContextCommand.class).ifPresent(localInteractors::add);
+        getInteractor(name, UserInteractor.class).ifPresent(localInteractors::add);
+
+
+        return localInteractors;
+    }
+
 
     /**
      * Trigger once JDA is ready. Subsequent calls are ignored.
@@ -170,7 +196,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         // Register reload on all guilds
         logger.debug("JDA is ready, registering reload command");
         jda.getGuildCache()
-                .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
+            .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
         // NOTE We do not have to wait for reload to complete for the command system to be ready
         // itself
         logger.debug("Bot core is now ready");
@@ -206,7 +232,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     public void onMessageReceived(final MessageReceivedEvent event) {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
-                    .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
+                .forEach(messageReceiver -> messageReceiver.onMessageReceived(event));
         }
     }
 
@@ -214,18 +240,18 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     public void onMessageUpdate(final MessageUpdateEvent event) {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
-                    .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+                .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
         }
     }
 
     private Stream<MessageReceiver> getMessageReceiversSubscribedTo(Channel channel) {
         String channelName = channel.getName();
         return channelNameToMessageReceiver.entrySet()
-                .stream()
-                .filter(patternAndReceiver -> patternAndReceiver.getKey()
-                        .matcher(channelName)
-                        .matches())
-                .map(Map.Entry::getValue);
+            .stream()
+            .filter(patternAndReceiver -> patternAndReceiver.getKey()
+                .matcher(channelName)
+                .matches())
+            .map(Map.Entry::getValue);
     }
 
     @Override
@@ -240,7 +266,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received button click '{}' (#{}) on guild '{}'", event.getComponentId(),
                 event.getId(), event.getGuild());
         COMMAND_SERVICE
-                .execute(() -> forwardComponentCommand(event, UserInteractor::onButtonClick));
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onButtonClick));
     }
 
     @Override
@@ -248,7 +274,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
-                .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
     }
 
     private void registerReloadCommand(Guild guild) {
@@ -263,8 +289,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             logger.debug("Register '{}' for guild '{}'", RELOAD_COMMAND, guild.getName());
             SlashCommand reloadCommand = requireSlashCommand(RELOAD_COMMAND);
             guild.upsertCommand(reloadCommand.getData())
-                    .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
-                            guild.getName()));
+                .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
+                        guild.getName()));
         }, ex -> handleRegisterErrors(ex, guild));
     }
 
@@ -279,22 +305,22 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * }
      * </pre>
      *
-     * @param event                      the component event that should be forwarded
+     * @param event the component event that should be forwarded
      * @param interactorArgumentConsumer the action to trigger on the associated user interactor,
-     *                                   providing the event and list of arguments for consumption
-     * @param <T>                        the type of the component interaction that should be forwarded
+     *        providing the event and list of arguments for consumption
+     * @param <T> the type of the component interaction that should be forwarded
      */
     private <T extends ComponentInteraction> void forwardComponentCommand(T event,
-                                                                          TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
+            TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
         Optional<ComponentId> componentIdOpt;
         try {
             componentIdOpt = componentIdParser.parse(event.getComponentId());
         } catch (InvalidComponentIdFormatException e) {
             logger
-                    .error("Unable to route event (#{}) back to its corresponding user interactor. The component ID was in an unexpected format."
-                                    + " All button and menu events have to use a component ID created in a specific format"
-                                    + " (refer to the documentation of UserInteractor). Component ID was: {}",
-                            event.getId(), event.getComponentId(), e);
+                .error("Unable to route event (#{}) back to its corresponding user interactor. The component ID was in an unexpected format."
+                        + " All button and menu events have to use a component ID created in a specific format"
+                        + " (refer to the documentation of UserInteractor). Component ID was: {}",
+                        event.getId(), event.getComponentId(), e);
             // Unable to forward, simply fade out the event
             return;
         }
@@ -302,13 +328,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             logger.warn("The event (#{}) has an expired component ID, which was: {}.",
                     event.getId(), event.getComponentId());
             event.reply("Sorry, but this event has expired. You can not use it anymore.")
-                    .setEphemeral(true)
-                    .queue();
+                .setEphemeral(true)
+                .queue();
             return;
         }
         ComponentId componentId = componentIdOpt.orElseThrow();
 
-        UserInteractor interactor = requireUserInteractor(componentId.userInteractorName());
+        UserInteractor interactor = requireUserInteractor(componentId.userInteractorName(), null);
         logger.trace("Routing a component event with id '{}' back to user interactor '{}'",
                 event.getComponentId(), interactor.getName());
         interactorArgumentConsumer.accept(interactor, event, componentId.elements());
@@ -322,7 +348,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * @throws NullPointerException if the command with the given name was not registered
      */
     private SlashCommand requireSlashCommand(String name) {
-        return getSlashCommand(name).orElseThrow(
+        return getInteractor(name, SlashCommand.class).orElseThrow(
                 () -> new NullPointerException("There is no slash command with name " + name));
     }
 
@@ -331,10 +357,24 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      *
      * @param name the name of the user interactor to get
      * @return the user interactor with the given name
-     * @throws NullPointerException if the user interactor with the given name was not registered
+     * @throws NoSuchElementException if the user interactor with the given name was not registered
      */
-    private UserInteractor requireUserInteractor(String name) {
-        return Objects.requireNonNull(nameToInteractor.get(name));
+    private UserInteractor requireUserInteractor(
+            final String name) {
+        return getInteractor(name).orElseThrow();
+    }
+
+    /**
+     * Gets the given user interactor by its name and requires that it exists.
+     *
+     * @param name the name of the user interactor to get
+     * @param type an {@link Class} instance of the required type
+     * @return the user interactor with the given name
+     * @throws NoSuchElementException if the user interactor with the given name was not registered
+     */
+    private <T extends UserInteractor, C extends Class<T>> T requireUserInteractor(
+            final String name, @Nullable final C type) {
+        return getInteractor(name, type).orElseThrow();
     }
 
     private void handleRegisterErrors(Throwable ex, Guild guild) {
@@ -343,17 +383,17 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             // NOTE Unfortunately, there is no better accurate way to find a proper channel
             // where we can report the setup problems other than simply iterating all of them.
             Optional<TextChannel> channelToReportTo = guild.getTextChannelCache()
-                    .stream()
-                    .filter(channel -> guild.getPublicRole()
-                            .hasPermission(channel, Permission.MESSAGE_SEND))
-                    .findAny();
+                .stream()
+                .filter(channel -> guild.getPublicRole()
+                    .hasPermission(channel, Permission.MESSAGE_SEND))
+                .findAny();
 
             // Report the problem to the guild
             channelToReportTo.ifPresent(textChannel -> textChannel
-                    .sendMessage("I need the commands scope, please invite me correctly."
-                            + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
+                .sendMessage("I need the commands scope, please invite me correctly."
+                        + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
                             .formatted(config.getDiscordGuildInvite(), config.getProjectWebsite()))
-                    .queue());
+                .queue());
 
             guild.leave().queue();
 
@@ -387,9 +427,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         /**
          * Performs this operation on the given arguments.
          *
-         * @param first  the first input argument
+         * @param first the first input argument
          * @param second the second input argument
-         * @param third  the third input argument
+         * @param third the third input argument
          */
         void accept(A first, B second, C third);
     }
