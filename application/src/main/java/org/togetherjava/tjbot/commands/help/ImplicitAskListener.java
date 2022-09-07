@@ -162,7 +162,12 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return sendInitialMessage(threadChannel, message, title)
             .flatMap(any -> notifyUser(threadChannel, message))
             .flatMap(any -> message.delete())
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel));
+            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
+            .<Void>map(any -> {
+                helper.scheduleUncategorizedAdviceCheck(threadChannel.getIdLong(),
+                        author.getIdLong());
+                return null;
+            });
     }
 
     private static MessageAction sendInitialMessage(ThreadChannel threadChannel,
