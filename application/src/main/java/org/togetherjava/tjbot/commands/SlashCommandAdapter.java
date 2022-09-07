@@ -77,7 +77,7 @@ public abstract class SlashCommandAdapter extends BotCommandAdapter implements S
         super(Commands.slash(name, description), visibility);
         this.description = description;
 
-        this.data = getData();
+        this.data = (SlashCommandData) super.getData();
     }
 
     @Override
