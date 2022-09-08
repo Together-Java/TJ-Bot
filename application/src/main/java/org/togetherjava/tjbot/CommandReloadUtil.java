@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+/**
+ * Offers utility functions for reloading all commands.
+ */
 public class CommandReloadUtil {
     private static final Logger logger = LoggerFactory.getLogger(CommandReloadUtil.class);
 
@@ -23,6 +26,11 @@ public class CommandReloadUtil {
         throw new IllegalStateException("Utility class");
     }
 
+    /**
+     * Reloads all commands based on the given {@link CommandProvider}
+     * @param jda the JDA to update commands on
+     * @param commandProvider the {@link CommandProvider} to grab commands from
+     */
     public static void reloadCommands(JDA jda, CommandProvider commandProvider) {
         logger.info("Reloading commands...");
         List<CommandListUpdateAction> actions = Collections.synchronizedList(new ArrayList<>());
