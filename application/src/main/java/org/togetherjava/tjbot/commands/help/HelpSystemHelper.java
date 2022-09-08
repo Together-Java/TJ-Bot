@@ -16,7 +16,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
@@ -92,7 +92,7 @@ public final class HelpSystemHelper {
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
     }
 
-    RestAction<Message> sendExplanationMessage(MessageChannel threadChannel) {
+    RestAction<Message> sendExplanationMessage(Guild guild, MessageChannel threadChannel) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
@@ -117,7 +117,8 @@ public final class HelpSystemHelper {
                                     **provide details**, context, more code, examples and maybe some screenshots. \
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command **/help-thread close** when your question has been answered, thanks."));
+                        "Don't forget to close your thread using the command **%s close** when your question has been answered, thanks."
+                            .formatted(MessageUtils.mentionSlashCommand(guild, "help-thread"))));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {

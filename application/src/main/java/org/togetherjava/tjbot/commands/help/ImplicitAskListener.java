@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
@@ -121,8 +122,8 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         message.getChannel()
             .sendMessage("""
                     %s Please use %s to follow up on your question, \
-                    or use `/ask` to ask a new questions, thanks."""
-                .formatted(author.getAsMention(), threadDescription))
+                    or use %s to ask a new questions, thanks.""".formatted(author.getAsMention(),
+                    threadDescription, MessageUtils.mentionSlashCommand(message.getGuild(), "ask")))
             .flatMap(any -> message.delete())
             .queue();
         return false;
@@ -166,7 +167,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return sendInitialMessage(threadChannel, message, title)
             .flatMap(any -> notifyUser(threadChannel, message))
             .flatMap(any -> message.delete())
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
+            .flatMap(any -> helper.sendExplanationMessage(message.getGuild(), threadChannel))
             .onSuccess(any -> helper.scheduleUncategorizedAdviceCheck(threadChannel.getIdLong(),
                     author.getIdLong()));
     }
@@ -183,26 +184,23 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .build();
 
         MessageCreateData threadMessage = new MessageCreateBuilder()
-            .setContent(
-                    """
-                            %s has a question about '**%s**' and will send the details now.
+            .setContent("""
+                    %s has a question about '**%s**' and will send the details now.
 
-                            Please use `/help-thread change category` to greatly increase the visibility of the question."""
-                        .formatted(author, title))
-            .setEmbeds(embed)
-            .build();
+                Please use **%s change category** to greatly increase the visibility of the question."""
+            .formatted(author, title, MessageUtils.mentionSlashCommand(originalMessage.getGuild(),
+                    "help-thread"))).setEmbeds(embed).build();
 
         return threadChannel.sendMessage(threadMessage);
     }
 
     private static MessageCreateAction notifyUser(IMentionable threadChannel, Message message) {
         return message.getChannel()
-            .sendMessage(
-                    """
-                            %s Please use `/ask` to ask questions. Don't worry though, I created %s for you. \
-                            Please continue there, thanks."""
-                        .formatted(message.getAuthor().getAsMention(),
-                                threadChannel.getAsMention()));
+            .sendMessage("""
+                    %s Please use %s to ask questions. Don't worry though, I created %s for you. \
+                    Please continue there, thanks.""".formatted(message.getAuthor().getAsMention(),
+                    MessageUtils.mentionSlashCommand(message.getGuild(), "ask"),
+                    threadChannel.getAsMention()));
     }
 
     private static void handleFailure(Throwable exception) {

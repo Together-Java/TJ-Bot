@@ -128,7 +128,7 @@ public final class AskCommand extends SlashCommandAdapter {
         helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel));
+            .flatMap(any -> helper.sendExplanationMessage(guild, threadChannel));
     }
 
     private RestAction<Message> sendInitialMessage(Guild guild, ThreadChannel threadChannel,
