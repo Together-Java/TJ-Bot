@@ -25,11 +25,10 @@ public interface CommandProvider {
      * @return all interactors
      */
     default Collection<BotCommand> getCommands() {
-        return getInteractors()
-                .stream()
-                .filter(BotCommand.class::isInstance)
-                .map(BotCommand.class::cast)
-                .toList();
+        return getInteractors().stream()
+            .filter(BotCommand.class::isInstance)
+            .map(BotCommand.class::cast)
+            .toList();
     }
 
     /**
@@ -48,12 +47,12 @@ public interface CommandProvider {
      * @return the command registered under this name, if any
      */
     <T extends UserInteractor> Optional<T> getInteractor(String name,
-                                                                @Nullable Class<? extends T> type);
+            @Nullable Class<? extends T> type);
 
     /**
-     * Gets any interactors with the given name.
-     * The name you give should be without prefix, these methods checks all prefixes themselves.
-     * If your name is with prefix, use {@link #getInteractor(String)}
+     * Gets any interactors with the given name. The name you give should be without prefix, these
+     * methods checks all prefixes themselves. If your name is with prefix, use
+     * {@link #getInteractor(String)}
      *
      * @param name the name of the command
      * @return a list of commands with that name

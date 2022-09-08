@@ -28,6 +28,7 @@ public class CommandReloadUtil {
 
     /**
      * Reloads all commands based on the given {@link CommandProvider}
+     * 
      * @param jda the JDA to update commands on
      * @param commandProvider the {@link CommandProvider} to grab commands from
      */

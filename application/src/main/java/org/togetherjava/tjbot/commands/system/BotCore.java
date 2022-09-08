@@ -143,8 +143,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         return Optional.ofNullable(nameToInteractor.get(name));
     }
 
-    public <T extends UserInteractor> Optional<T> getInteractor(
-            final String name, @Nullable final Class<? extends T> type) {
+    public <T extends UserInteractor> Optional<T> getInteractor(final String name,
+            @Nullable final Class<? extends T> type) {
         String prefix = "";
 
         if (null == type) {
