@@ -51,7 +51,7 @@ public abstract class BotCommandAdapter implements BotCommand {
      * @param data the data for this command
      * @param visibility the visibility of the command
      */
-    protected BotCommandAdapter(@NotNull CommandData data, @NotNull CommandVisibility visibility) {
+    protected BotCommandAdapter(CommandData data, CommandVisibility visibility) {
         this.data = Objects.requireNonNull(data, "The data shouldn't be null");
         this.visibility = Objects.requireNonNull(visibility, "The visibility shouldn't be null");
 
@@ -60,43 +60,41 @@ public abstract class BotCommandAdapter implements BotCommand {
     }
 
     @Override
-    public final @NotNull String getName() {
+    public final String getName() {
         return name;
     }
 
-    @NotNull
     @Override
     public Command.Type getType() {
         return type;
     }
 
     @Override
-    public final @NotNull CommandVisibility getVisibility() {
+    public final CommandVisibility getVisibility() {
         return visibility;
     }
 
     @Override
-    public @NotNull CommandData getData() {
+    public CommandData getData() {
         return data;
     }
 
     @Override
     @Contract(mutates = "this")
-    public final void acceptComponentIdGenerator(@NotNull ComponentIdGenerator generator) {
+    public final void acceptComponentIdGenerator(ComponentIdGenerator generator) {
         componentIdGenerator =
                 Objects.requireNonNull(generator, "The given generator cannot be null");
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onButtonClick(@NotNull ButtonInteractionEvent event, @NotNull List<String> args) {
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onSelectionMenu(@NotNull SelectMenuInteractionEvent event,
-            @NotNull List<String> args) {
+    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
@@ -115,7 +113,7 @@ public abstract class BotCommandAdapter implements BotCommand {
      * @return the generated component ID
      */
     @SuppressWarnings("OverloadedVarargsMethod")
-    protected final @NotNull String generateComponentId(@NotNull String... args) {
+    protected final String generateComponentId(String... args) {
         return generateComponentId(Lifespan.REGULAR, args);
     }
 
@@ -132,8 +130,7 @@ public abstract class BotCommandAdapter implements BotCommand {
      * @return the generated component ID
      */
     @SuppressWarnings({"OverloadedVarargsMethod", "WeakerAccess"})
-    protected final @NotNull String generateComponentId(@NotNull Lifespan lifespan,
-            @NotNull String... args) {
+    protected final String generateComponentId(Lifespan lifespan, String... args) {
         return componentIdGenerator.generate(new ComponentId(getName(), Arrays.asList(args)),
                 lifespan);
     }

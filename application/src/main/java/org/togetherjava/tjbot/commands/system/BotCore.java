@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -100,18 +102,21 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         interactors = features.stream()
             .filter(UserInteractor.class::isInstance)
             .map(UserInteractor.class::cast)
+            .filter(validateInteractor())
             .toList();
 
         nameToInteractor = interactors.stream().collect(Collectors.toMap(interactor -> {
+            String name = interactor.getName();
+
             if (interactor instanceof SlashCommand) {
-                return "s-" + interactor.getName();
+                return "s-" + name;
             } else if (interactor instanceof MessageContextCommand) {
-                return "mc-" + interactor.getName();
+                return "mc-" + name;
             } else if (interactor instanceof UserContextCommand) {
-                return "uc-" + interactor.getName();
+                return "uc-" + name;
             }
 
-            return interactor.getName();
+            return name;
         }, Function.identity()));
 
 
@@ -129,6 +134,31 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         if (logger.isInfoEnabled()) {
             logger.info("Available user interactors: {}", interactors);
         }
+    }
+
+    /**
+     * Validates the given interactor
+     *
+     * @return whenever the command should be checked
+     */
+    @NotNull
+    private static Predicate<UserInteractor> validateInteractor() {
+        return interactor -> {
+            String name = interactor.getName();
+
+            if (name == null) {
+                logger.error("An interactor's name shouldn't be null! {}", interactor);
+                return false;
+            }
+
+            if (name.startsWith("s-") || name.startsWith("mc-") || name.startsWith("uc-")) {
+                logger.warn(
+                        "Names that starts with s-, mc- or uc- aren't recommended and might break other commands. (name: {})",
+                        name);
+            }
+
+            return true;
+        };
     }
 
     @Override

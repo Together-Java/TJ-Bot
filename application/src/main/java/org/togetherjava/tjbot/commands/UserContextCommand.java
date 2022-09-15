@@ -60,5 +60,5 @@ public interface UserContextCommand extends BotCommand {
      *
      * @param event the event that triggered this
      */
-    void onUserContext(@NotNull UserContextInteractionEvent event);
+    void onUserContext(UserContextInteractionEvent event);
 }

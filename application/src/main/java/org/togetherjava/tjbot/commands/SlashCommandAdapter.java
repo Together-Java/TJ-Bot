@@ -86,13 +86,13 @@ public abstract class SlashCommandAdapter extends BotCommandAdapter implements S
     }
 
     @Override
-    public final @NotNull SlashCommandData getData() {
+    public final SlashCommandData getData() {
         return data;
     }
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event) {
+    public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 

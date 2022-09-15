@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -30,13 +31,30 @@ import java.util.List;
 public interface BotCommand extends UserInteractor {
 
     /**
+     * Gets the name of the interactor.
+     * <p>
+     * Requirements for this are documented in
+     * {@link net.dv8tion.jda.api.interactions.commands.build.Commands Commands}. If your command is
+     * a slash-command, take a look at
+     * {@link net.dv8tion.jda.api.interactions.commands.build.Commands#slash(String, String)
+     * Commands#slash(String, String)}. For context commands, use
+     * {@link Commands#context(Command.Type, String) Commands#context(Command.Type, String)}.
+     * <p>
+     * It is advised to not start the name with {@code s-}, {@code mc-} or {@code uc-}
+     * <p>
+     * After registration of the interactor, the name must not change anymore.
+     *
+     * @return the name of the interactor
+     */
+    String getName();
+
+    /**
      * Gets the type of this command.
      * <p>
      * After registration of the command, the type must not change anymore.
      *
      * @return the type of the command
      */
-    @NotNull
     Command.Type getType();
 
 
@@ -47,7 +65,6 @@ public interface BotCommand extends UserInteractor {
      *
      * @return the visibility of the command
      */
-    @NotNull
     CommandVisibility getVisibility();
 
     /**
@@ -63,6 +80,5 @@ public interface BotCommand extends UserInteractor {
      *
      * @return the command data of this command
      */
-    @NotNull
     CommandData getData();
 }

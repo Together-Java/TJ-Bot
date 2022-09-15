@@ -59,5 +59,5 @@ public interface MessageContextCommand extends BotCommand {
      *
      * @param event the event that triggered this
      */
-    void onMessageContext(@NotNull MessageContextInteractionEvent event);
+    void onMessageContext(MessageContextInteractionEvent event);
 }

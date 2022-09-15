@@ -72,7 +72,6 @@ public interface SlashCommand extends BotCommand {
      *
      * @return the command data of this command
      */
-    @NotNull
     SlashCommandData getData();
 
     /**
@@ -121,5 +120,5 @@ public interface SlashCommand extends BotCommand {
      *
      * @param event the event that triggered this
      */
-    void onAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event);
+    void onAutoComplete(CommandAutoCompleteInteractionEvent event);
 }
