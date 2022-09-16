@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
@@ -53,7 +52,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
      *
      * @param config the config to use for this
      */
-    public ModMailCommand(@NotNull Config config) {
+    public ModMailCommand(Config config) {
         super(COMMAND_NAME, "Sends a message to the moderators", SlashCommandVisibility.GLOBAL);
         getData().addOption(OptionType.STRING, MESSAGE, "Message to the moderators", true)
             .addOption(OptionType.BOOLEAN, OPTION_MESSAGE_PRIVATE,
@@ -67,7 +66,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
                 Pattern.compile(config.getGuildNamePattern()).asMatchPredicate();
     }
 
-    @NotNull
     private Cache<Long, Instant> createCooldownCache() {
         return Caffeine.newBuilder()
             .maximumSize(1_000)
@@ -76,7 +74,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommand(SlashCommandInteractionEvent event) {
         MessageChannel messageChannel = event.getChannel();
         if (isChannelOnCooldown(messageChannel)) {
             event
@@ -110,8 +108,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         return COOLDOWN_DURATION_VALUE - getTimePassedSinceCommandCalled(messageChannel);
     }
 
-    @NotNull
-    private String getName(@NotNull SlashCommandInteractionEvent event) {
+    private String getName(SlashCommandInteractionEvent event) {
         String user = event.getUser().getAsMention();
         boolean optionalMessage = event.getOption(OPTION_MESSAGE_PRIVATE).getAsBoolean();
         if (optionalMessage) {
@@ -128,7 +125,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
         return message;
     }
 
-    @NotNull
     private MessageEmbed messageEmbed(String user) {
         return new EmbedBuilder().setAuthor("Modmail Command invoked")
             .setColor(Color.BLACK)
@@ -136,16 +132,14 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .build();
     }
 
-    @NotNull
-    private List<ModAuditLogWriter.Attachment> getAttachments(
-            @NotNull SlashCommandInteractionEvent event) {
+    private List<ModAuditLogWriter.Attachment> getAttachments(SlashCommandInteractionEvent event) {
         String content = event.getOption(MESSAGE).getAsString();
         List<ModAuditLogWriter.Attachment> attachments = new ArrayList<>();
         attachments.add(new ModAuditLogWriter.Attachment("content.md", content));
         return attachments;
     }
 
-    private @NotNull Optional<TextChannel> getChannel(@NotNull SlashCommandInteractionEvent event) {
+    private Optional<TextChannel> getChannel(SlashCommandInteractionEvent event) {
         Guild guild = event.getJDA()
             .getGuildCache()
             .stream()
@@ -161,7 +155,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .findAny();
     }
 
-    private boolean isChannelOnCooldown(@NotNull MessageChannel channel) {
+    private boolean isChannelOnCooldown(MessageChannel channel) {
         return Optional
             .ofNullable(channelIdToLastCommandInvocation.getIfPresent(channel.getIdLong()))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,
@@ -170,7 +164,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .isPresent();
     }
 
-    private int getTimePassedSinceCommandCalled(@NotNull MessageChannel channel) {
+    private int getTimePassedSinceCommandCalled(MessageChannel channel) {
         return Optional
             .ofNullable(channelIdToLastCommandInvocation.getIfPresent(channel.getIdLong()))
             .map(this::getTime)
