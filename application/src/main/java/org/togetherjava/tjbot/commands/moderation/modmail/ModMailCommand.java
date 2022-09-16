@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * {@link Config#getModAuditLogChannelPattern()}.
  */
 
-public class ModMailCommand extends SlashCommandAdapter {
+public final class ModMailCommand extends SlashCommandAdapter {
 
     private static final String COMMAND_NAME = "modmail";
     private static final String MESSAGE = "message";
