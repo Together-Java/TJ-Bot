@@ -32,6 +32,9 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
 public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
+    private static final String CATEGORY = "category";
+    private static final String TITLE = "title";
+    private static final String CLOSE = "close";
 
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> helpThreadIdToLastCategoryChange = Caffeine.newBuilder()
@@ -56,7 +59,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     public HelpThreadCommand(Config config, HelpSystemHelper helper) {
         super("help-thread", "Help thread specific commands", SlashCommandVisibility.GUILD);
 
-        OptionData category = new OptionData(OptionType.STRING, "category", "new category", true);
+        OptionData category = new OptionData(OptionType.STRING, CATEGORY, "new category", true);
         config.getHelpSystem()
             .getCategories()
             .forEach(categoryText -> category.addChoice(categoryText, categoryText));
@@ -64,12 +67,12 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         getData().addSubcommandGroups(
                 new SubcommandGroupData("change", "Change the details of this help thread")
                     .addSubcommands(
-                            new SubcommandData("category",
-                                    "Change the category of this help thread").addOptions(category),
-                            new SubcommandData("title", "Change the title of this help thread")
+                            new SubcommandData(CATEGORY, "Change the category of this help thread")
+                                .addOptions(category),
+                            new SubcommandData(TITLE, "Change the title of this help thread")
                                 .addOption(OptionType.STRING, "title", "new title", true)));
 
-        getData().addSubcommands(new SubcommandData("close", "Close this help thread"));
+        getData().addSubcommands(new SubcommandData(CLOSE, "Close this help thread"));
 
         this.helper = helper;
     }
@@ -85,14 +88,14 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         boolean isOnCooldown = false;
 
         switch (event.getSubcommandName()) {
-            case "category" -> {
+            case CATEGORY -> {
                 if (isHelpThreadOnCooldown(helpThreadIdToLastCategoryChange, helpThread)) {
                     isOnCooldown = true;
                     break;
                 }
                 changeCategory(event, helpThread);
             }
-            case "title" -> {
+            case TITLE -> {
                 if (isHelpThreadOnCooldown(helpThreadIdToLastTitleChange, helpThread)) {
                     isOnCooldown = true;
                     break;
@@ -109,12 +112,14 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
 
                 changeTitle(event, helpThread);
             }
-            case "close" -> {
+            case CLOSE -> {
                 if (isHelpThreadOnCooldown(helpThreadIdToLastClose, helpThread)) {
                     isOnCooldown = true;
                     break;
                 }
                 close(event, helpThread);
+            }
+            default -> {
             }
         }
 
@@ -137,7 +142,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     }
 
     private void changeCategory(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        String category = event.getOption("category").getAsString();
+        String category = event.getOption(CATEGORY).getAsString();
 
         helpThreadIdToLastCategoryChange.put(helpThread.getIdLong(), Instant.now());
 
@@ -150,7 +155,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     }
 
     private void changeTitle(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        String title = event.getOption("title").getAsString();
+        String title = event.getOption(TITLE).getAsString();
 
         helpThreadIdToLastTitleChange.put(helpThread.getIdLong(), Instant.now());
 
