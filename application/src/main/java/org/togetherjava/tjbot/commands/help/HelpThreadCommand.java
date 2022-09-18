@@ -70,7 +70,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                             new SubcommandData(CATEGORY, "Change the category of this help thread")
                                 .addOptions(category),
                             new SubcommandData(TITLE, "Change the title of this help thread")
-                                .addOption(OptionType.STRING, "title", "new title", true)));
+                                .addOption(OptionType.STRING, TITLE, "new title", true)));
 
         getData().addSubcommands(new SubcommandData(CLOSE, "Close this help thread"));
 
@@ -100,7 +100,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                     isOnCooldown = true;
                     break;
                 }
-                String title = event.getOption("title").getAsString();
+                String title = event.getOption(TITLE).getAsString();
 
                 if (!HelpSystemHelper.isTitleValid(title)) {
                     event.reply(
@@ -120,6 +120,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                 close(event, helpThread);
             }
             default -> {
+                // This can never be the case
             }
         }
 
