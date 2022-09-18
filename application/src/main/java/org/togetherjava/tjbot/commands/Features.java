@@ -13,6 +13,7 @@ import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCom
 import org.togetherjava.tjbot.commands.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.commands.moderation.attachment.BlacklistedAttachmentListener;
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
