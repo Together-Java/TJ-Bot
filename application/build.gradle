@@ -47,7 +47,7 @@ dependencies {
 
     implementation 'net.dv8tion:JDA:5.0.0-alpha.9'
 
-    implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
 
     implementation 'org.jooq:jooq:3.17.2'
