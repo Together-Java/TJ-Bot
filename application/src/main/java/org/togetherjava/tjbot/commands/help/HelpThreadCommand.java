@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
@@ -36,19 +37,15 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final String TITLE = "title";
     private static final String CLOSE = "close";
 
+    private static final Supplier<Cache<Long, Instant>> newCaffeine = () -> Caffeine.newBuilder()
+            .maximumSize(1_000)
+            .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
+            .build();
+
     private final HelpSystemHelper helper;
-    private final Cache<Long, Instant> helpThreadIdToLastCategoryChange = Caffeine.newBuilder()
-        .maximumSize(1_000)
-        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-        .build();
-    private final Cache<Long, Instant> helpThreadIdToLastTitleChange = Caffeine.newBuilder()
-        .maximumSize(1_000)
-        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-        .build();
-    private final Cache<Long, Instant> helpThreadIdToLastClose = Caffeine.newBuilder()
-        .maximumSize(1_000)
-        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-        .build();
+    private final Cache<Long, Instant> helpThreadIdToLastCategoryChange = newCaffeine.get();
+    private final Cache<Long, Instant> helpThreadIdToLastTitleChange = newCaffeine.get();
+    private final Cache<Long, Instant> helpThreadIdToLastClose = newCaffeine.get();
 
     /**
      * Creates a new instance.
