@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.logging.discord.DiscordLogging;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -57,6 +58,7 @@ public class Application {
 
         Thread.setDefaultUncaughtExceptionHandler(Application::onUncaughtException);
         Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
+        DiscordLogging.appendDiscordLogAppender(config.getLogChannelWebhook());
 
         runBot(config);
     }
