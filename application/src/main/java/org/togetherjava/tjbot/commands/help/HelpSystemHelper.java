@@ -93,6 +93,12 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
+        return MessageUtils.mentionSlashCommand(threadChannel.getGuild(), CloseCommand.COMMAND_NAME)
+            .flatMap(command -> sendExplanationMessage(threadChannel, command));
+    }
+
+    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
+            String command) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
@@ -118,10 +124,7 @@ public final class HelpSystemHelper {
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
                         "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(MessageUtils
-                                .mentionSlashCommand(threadChannel.getGuild(),
-                                        CloseCommand.COMMAND_NAME)
-                                .complete())));
+                            .formatted(command)));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {

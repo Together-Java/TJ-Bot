@@ -119,15 +119,15 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         String threadDescription = lastHelpThread == null ? "your previously created help thread"
                 : lastHelpThread.getAsMention();
 
-        message.getChannel()
-            .sendMessage("""
-                    %s Please use %s to follow up on your question, \
-                    or use %s to ask a new questions, thanks.""".formatted(author.getAsMention(),
-                    threadDescription,
-                    MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
-                        .complete()))
-            .flatMap(any -> message.delete())
+        MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+            .map(command -> message.getChannel()
+                .sendMessage("""
+                        %s Please use %s to follow up on your question, \
+                        or use %s to ask a new questions, thanks."""
+                    .formatted(author.getAsMention(), threadDescription, command))
+                .flatMap(any -> message.delete()))
             .queue();
+
         return false;
     }
 
@@ -174,7 +174,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
                     author.getIdLong()));
     }
 
-    private static MessageCreateAction sendInitialMessage(ThreadChannel threadChannel,
+    private static RestAction<Message> sendInitialMessage(ThreadChannel threadChannel,
             Message originalMessage, String title) {
         String content = originalMessage.getContentRaw();
         Member author = originalMessage.getMember();
@@ -185,28 +185,30 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        MessageCreateData threadMessage = new MessageCreateBuilder()
-            .setContent("""
-                    %s has a question about '**%s**' and will send the details now.
+        return MessageUtils
+            .mentionSlashCommand(originalMessage.getGuild(), ChangeHelpCategoryCommand.COMMAND_NAME)
+            .flatMap(command -> {
+                MessageCreateData threadMessage = new MessageCreateBuilder()
+                        .setContent("""
+                        %s has a question about '**%s**' and will send the details now.
 
-                Please use %s to greatly increase the visibility of the question.""".formatted(
-                author, title,
-                MessageUtils
-                    .mentionSlashCommand(originalMessage.getGuild(),
-                            ChangeHelpCategoryCommand.COMMAND_NAME)
-                    .complete())).setEmbeds(embed).build();
+                        Please use %s to greatly increase the visibility of the question."""
+                    .formatted(author, title, command)).setEmbeds(embed).build();
 
-        return threadChannel.sendMessage(threadMessage);
+                return threadChannel.sendMessage(threadMessage);
+            });
+
     }
 
-    private static MessageCreateAction notifyUser(IMentionable threadChannel, Message message) {
-        return message.getChannel()
-            .sendMessage("""
-                    %s Please use %s to ask questions. Don't worry though, I created %s for you. \
-                    Please continue there, thanks.""".formatted(message.getAuthor().getAsMention(),
-                    MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
-                        .complete(),
-                    threadChannel.getAsMention()));
+    private static RestAction<Message> notifyUser(IMentionable threadChannel, Message message) {
+        return MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+            .flatMap(command -> message.getChannel()
+                .sendMessage(
+                        """
+                                %s Please use %s to ask questions. Don't worry though, I created %s for you. \
+                                Please continue there, thanks."""
+                            .formatted(message.getAuthor().getAsMention(), command,
+                                    threadChannel.getAsMention())));
     }
 
     private static void handleFailure(Throwable exception) {
