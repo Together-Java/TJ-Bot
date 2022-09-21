@@ -38,9 +38,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final String CLOSE = "close";
 
     private static final Supplier<Cache<Long, Instant>> newCaffeine = () -> Caffeine.newBuilder()
-            .maximumSize(1_000)
-            .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-            .build();
+        .maximumSize(1_000)
+        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
+        .build();
 
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> helpThreadIdToLastCategoryChange = newCaffeine.get();
