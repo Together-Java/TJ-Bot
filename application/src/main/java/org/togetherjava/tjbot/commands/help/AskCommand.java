@@ -48,7 +48,7 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
  */
 public final class AskCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(AskCommand.class);
-
+    public static final String COMMAND_NAME = "ask";
     private static final String TITLE_OPTION = "title";
     private static final String CATEGORY_OPTION = "category";
     private final HelpSystemHelper helper;
@@ -128,7 +128,7 @@ public final class AskCommand extends SlashCommandAdapter {
         helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
-            .flatMap(any -> helper.sendExplanationMessage(guild, threadChannel));
+            .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
     private RestAction<Message> sendInitialMessage(Guild guild, ThreadChannel threadChannel,

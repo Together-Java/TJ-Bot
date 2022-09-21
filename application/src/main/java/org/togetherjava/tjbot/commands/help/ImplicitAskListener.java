@@ -123,7 +123,9 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .sendMessage("""
                     %s Please use %s to follow up on your question, \
                     or use %s to ask a new questions, thanks.""".formatted(author.getAsMention(),
-                    threadDescription, MessageUtils.mentionSlashCommand(message.getGuild(), "ask")))
+                    threadDescription,
+                    MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+                        .complete()))
             .flatMap(any -> message.delete())
             .queue();
         return false;
@@ -167,7 +169,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return sendInitialMessage(threadChannel, message, title)
             .flatMap(any -> notifyUser(threadChannel, message))
             .flatMap(any -> message.delete())
-            .flatMap(any -> helper.sendExplanationMessage(message.getGuild(), threadChannel))
+            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
             .onSuccess(any -> helper.scheduleUncategorizedAdviceCheck(threadChannel.getIdLong(),
                     author.getIdLong()));
     }
@@ -187,9 +189,12 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .setContent("""
                     %s has a question about '**%s**' and will send the details now.
 
-                Please use **%s change category** to greatly increase the visibility of the question."""
-            .formatted(author, title, MessageUtils.mentionSlashCommand(originalMessage.getGuild(),
-                    "help-thread"))).setEmbeds(embed).build();
+                Please use %s to greatly increase the visibility of the question.""".formatted(
+                author, title,
+                MessageUtils
+                    .mentionSlashCommand(originalMessage.getGuild(),
+                            ChangeHelpCategoryCommand.COMMAND_NAME)
+                    .complete())).setEmbeds(embed).build();
 
         return threadChannel.sendMessage(threadMessage);
     }
@@ -199,7 +204,8 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .sendMessage("""
                     %s Please use %s to ask questions. Don't worry though, I created %s for you. \
                     Please continue there, thanks.""".formatted(message.getAuthor().getAsMention(),
-                    MessageUtils.mentionSlashCommand(message.getGuild(), "ask"),
+                    MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+                        .complete(),
                     threadChannel.getAsMention()));
     }
 

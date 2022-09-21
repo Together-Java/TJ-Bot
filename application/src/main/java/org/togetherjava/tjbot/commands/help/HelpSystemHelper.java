@@ -92,7 +92,7 @@ public final class HelpSystemHelper {
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
     }
 
-    RestAction<Message> sendExplanationMessage(Guild guild, MessageChannel threadChannel) {
+    RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
@@ -117,8 +117,11 @@ public final class HelpSystemHelper {
                                     **provide details**, context, more code, examples and maybe some screenshots. \
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command **%s close** when your question has been answered, thanks."
-                            .formatted(MessageUtils.mentionSlashCommand(guild, "help-thread"))));
+                        "Don't forget to close your thread using the command %s when your question has been answered, thanks."
+                            .formatted(MessageUtils
+                                .mentionSlashCommand(threadChannel.getGuild(),
+                                        CloseCommand.COMMAND_NAME)
+                                .complete())));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
