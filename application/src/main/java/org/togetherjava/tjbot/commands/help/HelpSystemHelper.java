@@ -274,6 +274,10 @@ public final class HelpSystemHelper {
                 return new CompletedRestAction<>(jda, null);
             }
 
+            if (threadChannel.isArchived()) {
+                return null;
+            }
+
             Optional<String> category = getCategoryOfChannel(threadChannel);
             if (category.isPresent()) {
                 logger.debug(
