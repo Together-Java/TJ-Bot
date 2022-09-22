@@ -275,7 +275,7 @@ public final class HelpSystemHelper {
             }
 
             if (threadChannel.isArchived()) {
-                return null;
+                return new CompletedRestAction<>(jda, null);
             }
 
             Optional<String> category = getCategoryOfChannel(threadChannel);
