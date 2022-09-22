@@ -275,6 +275,9 @@ public final class HelpSystemHelper {
             }
 
             if (threadChannel.isArchived()) {
+                logger.debug(
+                        "Channel for uncategorized advice check is archived already (thread {} by author {}).",
+                        threadChannelId, authorId);
                 return new CompletedRestAction<>(jda, null);
             }
 
