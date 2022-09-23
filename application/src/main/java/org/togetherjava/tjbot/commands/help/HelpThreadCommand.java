@@ -36,6 +36,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final String CATEGORY = "category";
     private static final String TITLE = "title";
     private static final String CLOSE = "close";
+    private static final String BOOKMARK = "bookmark";
 
     private static final Supplier<Cache<Long, Instant>> newCaffeine = () -> Caffeine.newBuilder()
         .maximumSize(1_000)
@@ -69,7 +70,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                             new SubcommandData(TITLE, "Change the title of this help thread")
                                 .addOption(OptionType.STRING, TITLE, "new title", true)));
 
-        getData().addSubcommands(new SubcommandData(CLOSE, "Close this help thread"));
+        getData().addSubcommands(new SubcommandData(CLOSE, "Close this help thread"),
+                new SubcommandData(BOOKMARK, "Sends a dm linking thins help thread"));
 
         this.helper = helper;
     }
@@ -115,6 +117,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                     break;
                 }
                 close(event, helpThread);
+            }
+            case BOOKMARK -> {
+                bookmark(event, helpThread);
             }
             default -> {
                 // This can never be the case
@@ -170,6 +175,18 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .build();
 
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
+    }
+
+    private void bookmark(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        event.getUser()
+            .openPrivateChannel()
+            .flatMap(channel -> channel.sendMessage(String.format("<#%s>", helpThread.getIdLong())))
+            .queue();
+
+        event.reply(
+                "An attempt has made to send a link of this help thread to your DMs. Check your inbox")
+            .setEphemeral(true)
+            .queue();
     }
 
     private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
