@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.logging.discord;
+package org.togetherjava.tjbot.logging.discord.api;
 
 /**
  * The Jackson representation of Discords Webhook embeds author: <a href=
