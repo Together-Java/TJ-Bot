@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public final class HelpThreadAutoArchiver implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
     private static final int SCHEDULE_MINUTES = 60;
-    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(24);
+    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
 
     private final HelpSystemHelper helper;
 
