@@ -84,7 +84,7 @@ public class Application {
 
             BotCore core = new BotCore(jda, database, config);
             jda.addEventListener(core);
-            CommandReloadUtil.reloadCommands(jda, core);
+            CommandReloading.reloadCommands(jda, core);
             jda.awaitReady();
 
             // We fire the event manually, since the core might be added too late to receive the

@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import java.util.List;
@@ -19,17 +18,15 @@ import java.util.List;
 /**
  * A slash-command is a command in Discord, with slash (/) as the prefix. These commands offer
  * enhanced functionality and superior UX over text-commands. An example slash-command is the
- * `/thread` command, this allows you to create threads using your keyboard. Try it out yourself!
+ * `/thread` command, this allows you to create threads using your keyboard.
  *
  * <p>
- * <p>
  * Represents a Discord slash-command. Mostly decorating
- * {@link net.dv8tion.jda.api.interactions.commands.Command}.
+ * {@link net.dv8tion.jda.api.interactions.commands.Command Command}.
  * <p>
  * All slash commands have to implement this interface. For convenience, there is a
  * {@link SlashCommandAdapter} available that implemented most methods already. A new command can
  * then be registered by adding it to {@link Features}.
- * <p>
  * <p>
  * Slash commands can either be visible globally in Discord or just to specific guilds. They can
  * have subcommands, options, menus and more. This can be configured via {@link CommandData}, which
@@ -40,7 +37,6 @@ import java.util.List;
  * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
  * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
- * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
 public interface SlashCommand extends BotCommand {
@@ -49,7 +45,6 @@ public interface SlashCommand extends BotCommand {
      * Gets the description of the command.
      * <p>
      * Requirements for this are documented in {@link Commands#slash(String, String)}.
-     * <p>
      * <p>
      * After registration of the command, the description must not change anymore.
      *
@@ -64,7 +59,6 @@ public interface SlashCommand extends BotCommand {
      * subcommands, menus and more.
      * <p>
      * See {@link CommandData} for details on how to create and configure instances of it.
-     * <p>
      * <p>
      * This method may be called multiple times, implementations must not create new data each time
      * but instead configure it once beforehand. The core system will automatically call this method

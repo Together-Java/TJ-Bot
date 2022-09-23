@@ -20,8 +20,7 @@ public interface UserInteractor extends Feature {
     /**
      * Gets the name of the interactor.
      * <p>
-     * It is not advised to start the name with {@code s-}, {@code mc-} or {@code uc-}
-     *
+     * You cannot start the name with any of the prefixes found in {@link UserInteractorPrefix}
      * <p>
      * After registration of the interactor, the name must not change anymore.
      *

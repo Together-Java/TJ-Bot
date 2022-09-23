@@ -105,19 +105,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             .filter(validateInteractor())
             .toList();
 
-        nameToInteractor = interactors.stream().collect(Collectors.toMap(interactor -> {
-            String name = interactor.getName();
-
-            if (interactor instanceof SlashCommand) {
-                return "s-" + name;
-            } else if (interactor instanceof MessageContextCommand) {
-                return "mc-" + name;
-            } else if (interactor instanceof UserContextCommand) {
-                return "uc-" + name;
-            }
-
-            return name;
-        }, Function.identity()));
+        nameToInteractor = interactors.stream()
+            .collect(Collectors.toMap(UserInteractorPrefix::getPrefixFromInstance,
+                    Function.identity()));
 
 
         // Component Id Store

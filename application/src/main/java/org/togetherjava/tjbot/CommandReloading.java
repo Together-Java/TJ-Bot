@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.BotCommand;
@@ -19,16 +20,16 @@ import java.util.stream.Stream;
 /**
  * Offers utility functions for reloading all commands.
  */
-public class CommandReloadUtil {
-    private static final Logger logger = LoggerFactory.getLogger(CommandReloadUtil.class);
+public class CommandReloading {
+    private static final Logger logger = LoggerFactory.getLogger(CommandReloading.class);
 
-    private CommandReloadUtil() {
-        throw new IllegalStateException("Utility class");
+    private CommandReloading() {
+        throw new UnsupportedOperationException("Utility class");
     }
 
     /**
-     * Reloads all commands based on the given {@link CommandProvider}
-     * 
+     * Reloads all commands based on the given {@link CommandProvider}.
+     *
      * @param jda the JDA to update commands on
      * @param commandProvider the {@link CommandProvider} to grab commands from
      */
@@ -63,16 +64,19 @@ public class CommandReloadUtil {
      * @param updateAction the upstream to update commands
      * @return the given upstream for chaining
      */
+    @Contract("_, _, _ -> param2")
     private static CommandListUpdateAction updateCommandsIf(
             Predicate<? super BotCommand> commandFilter, CommandListUpdateAction updateAction,
             CommandProvider commandProvider) {
-        return commandProvider.getInteractors()
+        commandProvider.getInteractors()
             .stream()
             .filter(BotCommand.class::isInstance)
             .map(BotCommand.class::cast)
             .filter(commandFilter)
             .map(BotCommand::getData)
-            .reduce(updateAction, CommandListUpdateAction::addCommands, (x, y) -> x);
+            .forEach(updateAction::addCommands);
+
+        return updateAction;
     }
 
     private static CommandListUpdateAction getGlobalUpdateAction(JDA jda) {
