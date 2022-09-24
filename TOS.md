@@ -13,7 +13,7 @@ By inviting **TJ-Bot** and using its features (accessible via [Discord](https://
 
 You acknowledge that you must only invite the **bot** to a Server owned by **Together Java**, and only with their explicit approval.
 
-Further, you have the priviledge to build and host the **bot** based on the [source](https://github.com/Together-Java/TJ-Bot) yourself. You may use such a self-hosted **bot** freely on any Discord Server (Server) you share with it, you can invite it to any Server that you have "Manage Server" rights for and you acknowledge that this priviledge might get revoked for you, if you're subject of breaking the terms and/or policy of this **bot**, or the Terms of Service, Privacy Policy and/or Community Guidelines of Discord Inc.
+Further, you have the priviledge to build and host the **bot** based on the [source](https://github.com/Together-Java/TJ-Bot) yourself. You may use such a self-hosted **bot** freely on any Discord Server (Server) you share with it, you can invite it to any Server that you have "Manage Server" rights for, and you acknowledge that this priviledge might get revoked for you, if you're subject of breaking the terms and/or policy of this **bot**, or the Terms of Service, Privacy Policy and/or Community Guidelines of Discord Inc.
 
 Through Inviting, the **bot** may collect specific data as described in its [Privacy Policy](#your-privacy).
 The intended usage of this data is for core functionalities of the **bot** such as command handling.
