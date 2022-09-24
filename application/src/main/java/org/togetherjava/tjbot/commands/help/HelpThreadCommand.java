@@ -33,10 +33,9 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
 public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private static final String CATEGORY = "category";
-    private static final String TITLE = "title";
-    private static final String CLOSE = "close";
-    private static final String BOOKMARK = "bookmark";
+    private static final String CATEGORY_SUBCOMMAND = "category";
+    private static final String TITLE_SUBCOMMAND = "title";
+    private static final String CLOSE_SUBCOMMAND = "close";
 
     private static final Supplier<Cache<Long, Instant>> newCaffeine = () -> Caffeine.newBuilder()
         .maximumSize(1_000)
@@ -57,21 +56,20 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     public HelpThreadCommand(Config config, HelpSystemHelper helper) {
         super("help-thread", "Help thread specific commands", SlashCommandVisibility.GUILD);
 
-        OptionData category = new OptionData(OptionType.STRING, CATEGORY, "new category", true);
+        OptionData category =
+                new OptionData(OptionType.STRING, CATEGORY_SUBCOMMAND, "new category", true);
         config.getHelpSystem()
             .getCategories()
             .forEach(categoryText -> category.addChoice(categoryText, categoryText));
 
-        getData().addSubcommandGroups(
-                new SubcommandGroupData("change", "Change the details of this help thread")
-                    .addSubcommands(
-                            new SubcommandData(CATEGORY, "Change the category of this help thread")
-                                .addOptions(category),
-                            new SubcommandData(TITLE, "Change the title of this help thread")
-                                .addOption(OptionType.STRING, TITLE, "new title", true)));
+        getData().addSubcommandGroups(new SubcommandGroupData("change",
+                "Change the details of this help thread").addSubcommands(
+                        new SubcommandData(CATEGORY_SUBCOMMAND,
+                                "Change the category of this help thread").addOptions(category),
+                        new SubcommandData(TITLE_SUBCOMMAND, "Change the title of this help thread")
+                            .addOption(OptionType.STRING, TITLE_SUBCOMMAND, "new title", true)));
 
-        getData().addSubcommands(new SubcommandData(CLOSE, "Close this help thread"),
-                new SubcommandData(BOOKMARK, "Sends a dm linking thins help thread"));
+        getData().addSubcommands(new SubcommandData(CLOSE_SUBCOMMAND, "Close this help thread"));
 
         this.helper = helper;
     }
@@ -79,60 +77,14 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         ThreadChannel helpThread = event.getThreadChannel();
-        if (helpThread.isArchived()) {
-            event.reply("This thread is already closed.").setEphemeral(true).queue();
-            return;
-        }
-
-        boolean isOnCooldown = false;
 
         switch (event.getSubcommandName()) {
-            case CATEGORY -> {
-                if (isHelpThreadOnCooldown(helpThreadIdToLastCategoryChange, helpThread)) {
-                    isOnCooldown = true;
-                    break;
-                }
-                changeCategory(event, helpThread);
-            }
-            case TITLE -> {
-                if (isHelpThreadOnCooldown(helpThreadIdToLastTitleChange, helpThread)) {
-                    isOnCooldown = true;
-                    break;
-                }
-                String title = event.getOption(TITLE).getAsString();
-
-                if (!HelpSystemHelper.isTitleValid(title)) {
-                    event.reply(
-                            "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
-                                .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
-                        .setEphemeral(true)
-                        .queue();
-                }
-
-                changeTitle(event, helpThread);
-            }
-            case CLOSE -> {
-                if (isHelpThreadOnCooldown(helpThreadIdToLastClose, helpThread)) {
-                    isOnCooldown = true;
-                    break;
-                }
-                close(event, helpThread);
-            }
-            case BOOKMARK -> {
-                bookmark(event, helpThread);
-            }
+            case CATEGORY_SUBCOMMAND -> changeCategory(event, helpThread);
+            case TITLE_SUBCOMMAND -> changeTitle(event, helpThread);
+            case CLOSE_SUBCOMMAND -> close(event, helpThread);
             default -> {
                 // This can never be the case
             }
-        }
-
-        if (isOnCooldown) {
-            event
-                .reply("Please wait a bit, this command can only be used once per %d %s.".formatted(
-                        COOLDOWN_DURATION_VALUE,
-                        COOLDOWN_DURATION_UNIT.toString().toLowerCase(Locale.US)))
-                .setEphemeral(true)
-                .queue();
         }
     }
 
@@ -144,8 +96,22 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .isPresent();
     }
 
+    private void sendCooldownMessage(SlashCommandInteractionEvent event) {
+        event
+            .reply("Please wait a bit, this command can only be used once per %d %s.".formatted(
+                    COOLDOWN_DURATION_VALUE,
+                    COOLDOWN_DURATION_UNIT.toString().toLowerCase(Locale.US)))
+            .setEphemeral(true)
+            .queue();
+    }
+
     private void changeCategory(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        String category = event.getOption(CATEGORY).getAsString();
+        if (isHelpThreadOnCooldown(helpThreadIdToLastCategoryChange, helpThread)) {
+            sendCooldownMessage(event);
+            return;
+        }
+
+        String category = event.getOption(CATEGORY_SUBCOMMAND).getAsString();
 
         helpThreadIdToLastCategoryChange.put(helpThread.getIdLong(), Instant.now());
 
@@ -158,7 +124,21 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     }
 
     private void changeTitle(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        String title = event.getOption(TITLE).getAsString();
+        if (isHelpThreadOnCooldown(helpThreadIdToLastTitleChange, helpThread)) {
+            sendCooldownMessage(event);
+            return;
+        }
+
+        String title = event.getOption(TITLE_SUBCOMMAND).getAsString();
+
+        if (!HelpSystemHelper.isTitleValid(title)) {
+            event.reply(
+                    "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
+                        .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
 
         helpThreadIdToLastTitleChange.put(helpThread.getIdLong(), Instant.now());
 
@@ -168,6 +148,11 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     }
 
     private void close(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        if (isHelpThreadOnCooldown(helpThreadIdToLastClose, helpThread)) {
+            sendCooldownMessage(event);
+            return;
+        }
+
         helpThreadIdToLastClose.put(helpThread.getIdLong(), Instant.now());
 
         MessageEmbed embed = new EmbedBuilder().setDescription("Closed the thread.")
@@ -175,18 +160,6 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .build();
 
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
-    }
-
-    private void bookmark(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        event.getUser()
-            .openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(String.format("<#%s>", helpThread.getIdLong())))
-            .queue();
-
-        event.reply(
-                "An attempt has made to send a link of this help thread to your DMs. Check your inbox")
-            .setEphemeral(true)
-            .queue();
     }
 
     private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
