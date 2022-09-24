@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.core.LogEvent;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.logging.LogMarkers;
 import org.togetherjava.tjbot.logging.discord.api.DiscordLogBatch;
 import org.togetherjava.tjbot.logging.discord.api.DiscordLogMessageEmbed;
 
@@ -23,10 +26,14 @@ import java.util.stream.Stream;
 
 // FIXME This class needs some javadoc here and there
 final class DiscordLogForwarder {
+    private static final Logger logger = LoggerFactory.getLogger(DiscordLogForwarder.class);
+
     private static final int MAX_PENDING_LOGS = 10_000;
     private static final int MAX_BATCH_SIZE = 10;
-    private static final int HTTP_STATUS_TOO_MANY_REQUESTS = 429;
     private static final int MAX_RETRIES_UNTIL_DISCARD = 3;
+    private static final int HTTP_STATUS_TOO_MANY_REQUESTS = 429;
+    private static final int HTTP_STATUS_OK_START = 200;
+    private static final int HTTP_STATUS_OK_END = 300;
 
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -47,7 +54,10 @@ final class DiscordLogForwarder {
 
     void forwardLogEvent(LogEvent event) {
         if (pendingLogs.size() >= MAX_PENDING_LOGS) {
-            // FIXME Discard log, some error reporting
+            logger.warn(LogMarkers.NO_DISCORD,
+                    """
+                            Exceeded the max amount of logs that can be buffered. \
+                            Logs are forwarded to Discord slower than they pile up. Discarding the latest log...""");
             return;
         }
 
@@ -81,7 +91,9 @@ final class DiscordLogForwarder {
             DiscordLogBatch logBatch = new DiscordLogBatch(embeds);
 
             LogSendResult result = sendLogBatch(logBatch);
-            if (result != LogSendResult.SUCCESS) {
+            if (result == LogSendResult.SUCCESS) {
+                currentRetries = 0;
+            } else {
                 currentRetries++;
                 if (currentRetries <= MAX_RETRIES_UNTIL_DISCARD) {
                     synchronized (pendingLogsLock) {
@@ -89,14 +101,14 @@ final class DiscordLogForwarder {
                         pendingLogs.addAll(logsToProcess);
                     }
                 } else {
-                    // Discarding problematic batch
-                    // FIXME some error reporting
+                    logger.warn(LogMarkers.NO_DISCORD, """
+                            A log batch keeps failing forwarding to Discord. \
+                            Discarding the problematic batch.""");
                 }
-            } else {
-                currentRetries = 0;
             }
         } catch (Exception e) {
-            // FIXME some error reporting
+            logger.warn(LogMarkers.NO_DISCORD,
+                    "Unknown error when forwarding pending logs to Discord.", e);
         }
     }
 
@@ -112,8 +124,7 @@ final class DiscordLogForwarder {
         try {
             rawPayload = JSON.writeValueAsString(logBatch);
         } catch (JsonProcessingException e) {
-            // FIXME Some error reporting
-            throw new IllegalArgumentException(e);
+            throw new IllegalArgumentException("Unable to write JSON for log batch.", e);
         }
 
         HttpRequest request = HttpRequest.newBuilder(webhook)
@@ -130,17 +141,24 @@ final class DiscordLogForwarder {
                     .firstValueAsLong("Retry-After")
                     .ifPresent(retryAfterSeconds -> rateLimitExpiresAt =
                             Instant.now().plusSeconds(retryAfterSeconds));
-                // FIXME Some logging
+                logger.debug(LogMarkers.NO_DISCORD,
+                        "Hit rate limits when trying to forward log batch to Discord.");
                 return LogSendResult.RATE_LIMIT;
             }
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                // FIXME Some logging
+            if (response.statusCode() < HTTP_STATUS_OK_START
+                    || response.statusCode() >= HTTP_STATUS_OK_END) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn(LogMarkers.NO_DISCORD,
+                            "Discord webhook API responded with {} when forwarding log batch. Body: {}",
+                            response.statusCode(), response.body());
+                }
                 return LogSendResult.ERROR;
             }
 
             return LogSendResult.SUCCESS;
         } catch (IOException e) {
-            // FIXME Some logging
+            logger.warn(LogMarkers.NO_DISCORD, "Unknown error when sending log batch to Discord.",
+                    e);
             return LogSendResult.ERROR;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

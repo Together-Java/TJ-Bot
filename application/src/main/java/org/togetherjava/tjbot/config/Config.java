@@ -32,7 +32,8 @@ public final class Config {
     private final HelpSystemConfig helpSystem;
     private final List<String> blacklistedFileExtension;
     private final String mediaOnlyChannelPattern;
-    private final String logChannelWebhook;
+    private final String logInfoChannelWebhook;
+    private final String logErrorChannelWebhook;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -60,7 +61,8 @@ public final class Config {
                     required = true) String mediaOnlyChannelPattern,
             @JsonProperty(value = "blacklistedFileExtension",
                     required = true) List<String> blacklistedFileExtension,
-            @JsonProperty(value = "logChannelWebhook", required = true) String logChannelWebhook) {
+            @JsonProperty(value = "logInfoChannelWebhook", required = true) String logInfoChannelWebhook,
+            @JsonProperty(value = "logErrorChannelWebhook", required = true) String logErrorChannelWebhook) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -78,7 +80,8 @@ public final class Config {
         this.helpSystem = Objects.requireNonNull(helpSystem);
         this.mediaOnlyChannelPattern = Objects.requireNonNull(mediaOnlyChannelPattern);
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
-        this.logChannelWebhook = Objects.requireNonNull(logChannelWebhook);
+        this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
+        this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
     }
 
     /**
@@ -254,11 +257,20 @@ public final class Config {
     }
 
     /**
-     * The Discord channel webhook for posting log messages.
+     * The Discord channel webhook for posting log messages with levels INFO, DEBUG and TRACE.
      *
      * @return the webhook URL
      */
-    public String getLogChannelWebhook() {
-        return logChannelWebhook;
+    public String getLogInfoChannelWebhook() {
+        return logInfoChannelWebhook;
+    }
+
+    /**
+     * The Discord channel webhook for posting log messages with levels FATAL, ERROR and WARNING.
+     *
+     * @return the webhook URL
+     */
+    public String getLogErrorChannelWebhook() {
+        return logErrorChannelWebhook;
     }
 }

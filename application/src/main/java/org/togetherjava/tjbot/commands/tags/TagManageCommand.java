@@ -296,9 +296,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
             } catch (NoSuchElementException e) {
                 // NOTE Rare race condition, for example if another thread deleted the tag in the
                 // meantime
-                logger.warn(String.format(
-                        "tried to retrieve content of tag '%s', but the content doesn't exist.",
-                        id));
+                logger.warn("Tried to retrieve content of tag '{}', but the content doesn't exist.",
+                        id);
             }
         }
 

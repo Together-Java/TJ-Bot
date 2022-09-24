@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation.temp;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 /**
  * Role based moderation actions that can be revoked, for example a {@link TemporaryMuteAction} or a
@@ -28,10 +29,10 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
 
         if (failure instanceof ErrorResponseException errorResponseException) {
             switch (errorResponseException.getErrorResponse()) {
-                case UNKNOWN_USER -> logger.debug(
+                case UNKNOWN_USER -> logger.debug(LogMarkers.SENSITIVE,
                         "Attempted to revoke a temporary {} but user '{}' does not exist anymore.",
                         actionName, targetId);
-                case UNKNOWN_MEMBER -> logger.debug(
+                case UNKNOWN_MEMBER -> logger.debug(LogMarkers.SENSITIVE,
                         "Attempted to revoke a temporary {} but user '{}' is not a member of the guild anymore.",
                         actionName, targetId);
                 case UNKNOWN_ROLE -> logger.warn(

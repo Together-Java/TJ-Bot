@@ -84,5 +84,6 @@
         "wsf",
         "wsh"
   ],
-  "logChannelWebhook": "<put_your_webhook_here>"
+  "logInfoChannelWebhook": "<put_your_webhook_here>",
+  "logErrorChannelWebhook": "<put_your_webhook_here>"
 }

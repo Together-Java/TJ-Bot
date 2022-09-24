@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -88,7 +89,8 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private AuditableRestAction<Void> quarantineUser(Member target, Member author, String reason,
             Guild guild) {
-        logger.info("'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
 
