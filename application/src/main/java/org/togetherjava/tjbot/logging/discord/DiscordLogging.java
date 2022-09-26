@@ -64,6 +64,11 @@ public final class DiscordLogging {
         }
     }
 
+    // Security warning about configuring logs. It is safe in this case, the only user input are the
+    // webhook URIs, which cannot inject anything malicious.
+    // The only risk is changing the target to an attackers' server, but therefore they need access
+    // to the config.
+    @SuppressWarnings("squid:S4792")
     private static void addDiscordLogAppender(String name, Filter filter, URI webhookUri,
             Configuration logConfig) {
         // NOTE The whole setup is done programmatically in order to allow the webhooks
