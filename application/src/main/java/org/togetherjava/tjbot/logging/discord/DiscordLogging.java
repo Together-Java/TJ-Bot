@@ -17,7 +17,9 @@ import org.togetherjava.tjbot.logging.LogMarkers;
 import java.net.URI;
 import java.util.Optional;
 
-// FIXME Javadoc
+/**
+ * Provides solutions for forwarding logs to Discord. See {@link #startDiscordLogging(Config)}.
+ */
 public final class DiscordLogging {
     private static final Logger logger = LoggerFactory.getLogger(DiscordLogging.class);
 
@@ -25,7 +27,13 @@ public final class DiscordLogging {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    // FIXME Javadoc
+    /**
+     * Sets up and starts the log forwarding to Discord.
+     * <p>
+     * Disables the feature if the config is set up incorrectly.
+     *
+     * @param botConfig to get the logging details from, such as the Discord webhook urls
+     */
     public static void startDiscordLogging(Config botConfig) {
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         Configuration logConfig = context.getConfiguration();
@@ -58,6 +66,8 @@ public final class DiscordLogging {
 
     private static void addDiscordLogAppender(String name, Filter filter, URI webhookUri,
             Configuration logConfig) {
+        // NOTE The whole setup is done programmatically in order to allow the webhooks
+        // to be read from the config file
         Filter[] filters = {filter, createDenyMarkerFilter(LogMarkers.NO_DISCORD.getName()),
                 createDenyMarkerFilter(LogMarkers.SENSITIVE.getName())};
 

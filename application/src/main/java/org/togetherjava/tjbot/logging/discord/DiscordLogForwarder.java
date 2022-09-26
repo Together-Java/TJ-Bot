@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.logging.LogMarkers;
 import org.togetherjava.tjbot.logging.discord.api.DiscordLogBatch;
 import org.togetherjava.tjbot.logging.discord.api.DiscordLogMessageEmbed;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -24,7 +25,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-// FIXME This class needs some javadoc here and there
+/**
+ * Forwards log events to a Discord channel via a webhook. See {@link #forwardLogEvent(LogEvent)}.
+ * <p>
+ * Logs are forwarded in correct order, based on their timestamp. They are not forwarded
+ * immediately, but at a fixed schedule in batches of {@value MAX_BATCH_SIZE} logs.
+ * <p>
+ * Failed logs are repeated {@value MAX_RETRIES_UNTIL_DISCARD} times until eventually discarded.
+ * <p>
+ * Although unlikely to hit, the class maximally buffers {@value MAX_PENDING_LOGS} logs until
+ * discarding further logs. Under normal circumstances, the class can easily handle high loads of
+ * logs.
+ */
 final class DiscordLogForwarder {
     private static final Logger logger = LoggerFactory.getLogger(DiscordLogForwarder.class);
 
@@ -40,11 +52,29 @@ final class DiscordLogForwarder {
     private static final ScheduledExecutorService SERVICE =
             Executors.newSingleThreadScheduledExecutor();
 
+    /**
+     * The Discord webhook to send logs to.
+     */
     private final URI webhook;
+    /**
+     * Internal buffer of logs that still have to be forwarded to Discord. Actions are synchronized
+     * using {@link #pendingLogsLock} to ensure thread safety.
+     */
     private final Queue<LogMessage> pendingLogs = new PriorityQueue<>();
     private final Object pendingLogsLock = new Object();
+
+    /**
+     * If present, a rate limit has been hit and further requests must be made only after this
+     * moment.
+     */
+    @Nullable
     private Instant rateLimitExpiresAt;
-    private int currentRetries = 0;
+    /**
+     * The amount of subsequent failed requests. Requests are tried
+     * {@value MAX_RETRIES_UNTIL_DISCARD} times until discarded. Resets to 0 once a request was
+     * successful.
+     */
+    private int currentRetries;
 
     DiscordLogForwarder(URI webhook) {
         this.webhook = webhook;
@@ -52,6 +82,14 @@ final class DiscordLogForwarder {
         SERVICE.scheduleWithFixedDelay(this::processPendingLogs, 5, 5, TimeUnit.SECONDS);
     }
 
+    /**
+     * Forwards the given log message to Discord.
+     * <p>
+     * Logs are not immediately forwarded, but on a schedule. If the maximal buffer size of
+     * {@value MAX_PENDING_LOGS} is exceeded, logs are discarded.
+     *
+     * @param event the log to forward
+     */
     void forwardLogEvent(LogEvent event) {
         if (pendingLogs.size() >= MAX_PENDING_LOGS) {
             logger.warn(LogMarkers.NO_DISCORD,
