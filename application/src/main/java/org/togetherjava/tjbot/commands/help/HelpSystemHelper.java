@@ -274,6 +274,13 @@ public final class HelpSystemHelper {
                 return new CompletedRestAction<>(jda, null);
             }
 
+            if (threadChannel.isArchived()) {
+                logger.debug(
+                        "Channel for uncategorized advice check is archived already (thread {} by author {}).",
+                        threadChannelId, authorId);
+                return new CompletedRestAction<>(jda, null);
+            }
+
             Optional<String> category = getCategoryOfChannel(threadChannel);
             if (category.isPresent()) {
                 logger.debug(
