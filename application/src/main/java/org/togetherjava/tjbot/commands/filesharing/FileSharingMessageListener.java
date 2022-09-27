@@ -114,7 +114,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
         for (Message.Attachment attachment : attachments) {
-            CompletableFuture<Void> task = attachment.retrieveInputStream()
+            CompletableFuture<Void> task = attachment.getProxy()
+                .download()
                 .thenApply(this::readAttachment)
                 .thenAccept(
                         content -> nameToFile.put(getNameOf(attachment), new GistFile(content)));
