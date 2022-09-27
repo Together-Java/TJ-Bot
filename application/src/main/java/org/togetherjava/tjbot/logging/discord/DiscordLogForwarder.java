@@ -108,14 +108,9 @@ final class DiscordLogForwarder {
 
     private void processPendingLogs() {
         try {
-            if (rateLimitExpiresAt != null) {
-                if (Instant.now().isBefore(rateLimitExpiresAt)) {
-                    // Still rate limited, try again later
-                    return;
-                }
-
-                // Rate limit has expired, try again
-                rateLimitExpiresAt = null;
+            if (handleIsRateLimitActive()) {
+                // Try again later
+                return;
             }
 
             // Process batch
@@ -148,6 +143,19 @@ final class DiscordLogForwarder {
             logger.warn(LogMarkers.NO_DISCORD,
                     "Unknown error when forwarding pending logs to Discord.", e);
         }
+    }
+
+    private boolean handleIsRateLimitActive() {
+        if (rateLimitExpiresAt == null) {
+            return false;
+        }
+
+        if (Instant.now().isAfter(rateLimitExpiresAt)) {
+            // Rate limit has expired, reset
+            rateLimitExpiresAt = null;
+        }
+
+        return true;
     }
 
     private List<LogMessage> pollLogsToProcessBatch() {
