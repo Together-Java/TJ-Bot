@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.system;
 import org.togetherjava.tjbot.commands.BotCommand;
 import org.togetherjava.tjbot.commands.UserInteractor;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
