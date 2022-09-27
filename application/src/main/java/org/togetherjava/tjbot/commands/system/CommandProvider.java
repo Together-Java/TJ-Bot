@@ -57,8 +57,7 @@ public interface CommandProvider {
      * @param type the type of the command
      * @return the interactor registered under this name, if any
      */
-    <T extends UserInteractor> Optional<T> getInteractor(String name,
-            @Nullable Class<? extends T> type);
+    <T extends UserInteractor> Optional<T> getInteractor(String name, Class<? extends T> type);
 
     /**
      * Gets any interactors with the given name. The name you give should be without prefix, these
