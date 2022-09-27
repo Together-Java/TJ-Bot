@@ -20,9 +20,9 @@ public interface CommandProvider {
     Collection<UserInteractor> getInteractors();
 
     /**
-     * Gets a list of all currently available and registered interactors.
+     * Gets a list of all currently available and registered bot commands.
      *
-     * @return all interactors
+     * @return all bot commands
      */
     default Collection<BotCommand> getCommands() {
         return getInteractors().stream()
@@ -32,19 +32,30 @@ public interface CommandProvider {
     }
 
     /**
-     * Gets the slash command registered under the given name, if any.
+     * Gets the interactor registered under the given name, if any.
+     * <p>
+     * This command excepts the name with the prefix of the command, if you prefer using a
+     * {@link Class} instance of the command/type instead, use {@link #getInteractor(String, Class)}
+     * instead.-
      *
-     * @param name the name of the command (including its prefix)
-     * @return the command registered under this name, if any
+     * @param name the name of the command (including its prefix, see
+     *        {@link org.togetherjava.tjbot.commands.UserInteractorPrefix UserInteractorPrefix}
+     * @return the interactor registered under this name, if any
      */
     Optional<UserInteractor> getInteractor(String name);
 
     /**
-     * Gets the slash command registered under the given name, if any.
+     * Gets the interactor registered under the given name, if any.
+     * <p>
+     * Unlike {@link #getInteractor(String)}, this command expects the name, without the prefix (see
+     * {@link org.togetherjava.tjbot.commands.UserInteractorPrefix UserInteractorPrefix}). Instead,
+     * this command excepts a {@link Class} instance of the commands class. This can be
+     * {@link org.togetherjava.tjbot.commands.SlashCommand SlashCommand}, or even as specific as
+     * {@link org.togetherjava.tjbot.commands.basic.PingCommand PingCommand}.
      *
-     * @param name the name of the command
+     * @param name the name of the command without prefix
      * @param type the type of the command
-     * @return the command registered under this name, if any
+     * @return the interactor registered under this name, if any
      */
     <T extends UserInteractor> Optional<T> getInteractor(String name,
             @Nullable Class<? extends T> type);
@@ -55,7 +66,7 @@ public interface CommandProvider {
      * {@link #getInteractor(String)}
      *
      * @param name the name of the command
-     * @return a list of commands with that name
+     * @return a list of commands with that name, can be empty if none match
      */
-    List<UserInteractor> getAnyInteractors(final String name);
+    List<UserInteractor> getInteractorsWithName(final String name);
 }

@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ import org.togetherjava.tjbot.commands.componentids.InvalidComponentIdFormatExce
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,7 +56,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Config config;
-    private final List<UserInteractor> interactors;
     private final Map<String, UserInteractor> nameToInteractor;
     private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
@@ -99,14 +96,11 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             .toList();
 
         // User Interactors (e.g. slash commands)
-        interactors = features.stream()
+        nameToInteractor = features.stream()
             .filter(UserInteractor.class::isInstance)
             .map(UserInteractor.class::cast)
-            .filter(validateInteractor())
-            .toList();
-
-        nameToInteractor = interactors.stream()
-            .collect(Collectors.toMap(UserInteractorPrefix::getPrefixFromInstance,
+            .filter(validateInteractorPredicate())
+            .collect(Collectors.toMap(UserInteractorPrefix::getPrefixedNameFromInstance,
                     Function.identity()));
 
 
@@ -114,6 +108,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
+        Collection<UserInteractor> interactors = getInteractors();
+
         interactors.forEach(slashCommand -> slashCommand
             .acceptComponentIdGenerator(((componentId, lifespan) -> {
                 UUID uuid = UUID.randomUUID();
@@ -127,12 +123,11 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     /**
-     * Validates the given interactor
+     * Returns a predicate which validates the given interactor
      *
-     * @return whenever the command should be checked
+     * @return A predicate which validates the given interactor
      */
-    @NotNull
-    private static Predicate<UserInteractor> validateInteractor() {
+    private static Predicate<UserInteractor> validateInteractorPredicate() {
         return interactor -> {
             String name = interactor.getName();
 
@@ -142,9 +137,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             }
 
             if (name.startsWith("s-") || name.startsWith("mc-") || name.startsWith("uc-")) {
-                logger.warn(
-                        "Names that starts with s-, mc- or uc- aren't recommended and might break other commands. (name: {})",
-                        name);
+                throw new IllegalArgumentException("The interactor");
             }
 
             return true;
@@ -154,7 +147,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     @Override
     @Unmodifiable
     public Collection<UserInteractor> getInteractors() {
-        return interactors;
+        return nameToInteractor.values();
     }
 
     @Override
@@ -163,39 +156,24 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         return Optional.ofNullable(nameToInteractor.get(name));
     }
 
+    @Override
     public <T extends UserInteractor> Optional<T> getInteractor(final String name,
-            @Nullable final Class<? extends T> type) {
-        String prefix = "";
+            final Class<? extends T> type) {
+        Objects.requireNonNull(type, "The given type cannot be null");
 
-        if (null == type) {
-            List<UserInteractor> anyInteractors = getAnyInteractors(name);
-            if (anyInteractors.isEmpty()) {
-                return Optional.empty();
-            } else {
-                return Optional.ofNullable((T) anyInteractors.get(0));
-            }
-        } else if (SlashCommand.class.isAssignableFrom(type)) {
-            prefix = "s-";
-        } else if (MessageContextCommand.class.isAssignableFrom(type)) {
-            prefix = "mc-";
-        } else if (UserContextCommand.class.isAssignableFrom(type)) {
-            prefix = "uc-";
-        }
-
+        String prefix = UserInteractorPrefix.getPrefixedNameFromClass(type, name);
         return Optional.ofNullable(nameToInteractor.get(prefix + name))
             .filter(type::isInstance)
             .map(type::cast);
     }
 
-    public List<UserInteractor> getAnyInteractors(final String name) {
-
+    @Override
+    public List<UserInteractor> getInteractorsWithName(final String name) {
         List<UserInteractor> localInteractors = new ArrayList<>(4);
 
-        getInteractor(name, SlashCommand.class).ifPresent(localInteractors::add);
-        getInteractor(name, MessageContextCommand.class).ifPresent(localInteractors::add);
-        getInteractor(name, UserContextCommand.class).ifPresent(localInteractors::add);
-        getInteractor(name, UserInteractor.class).ifPresent(localInteractors::add);
-
+        for (UserInteractorPrefix value : UserInteractorPrefix.values()) {
+            getInteractor(name, value.getClassType()).ifPresent(localInteractors::add);
+        }
 
         return localInteractors;
     }
