@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.mikael.urlbuilder.UrlBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,17 +38,11 @@ final class WolframAlphaHandler {
      */
     private static final int MAX_IMAGE_HEIGHT_PX = 400;
     /**
-     * Maximum amount of embeds Discord supports.
-     * <p>
-     * This should be replaced with a constant provided by JDA, once it does offer one.
-     */
-    private static final int MAX_EMBEDS = 10;
-    /**
      * Maximum amount of tiles to send.
      * <p>
      * One embed is used as initial description and summary.
      */
-    private static final int MAX_TILES = MAX_EMBEDS - 1;
+    private static final int MAX_TILES = Message.MAX_EMBED_COUNT - 1;
 
     private final String query;
     private final String userApiQuery;

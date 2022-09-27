@@ -39,7 +39,7 @@ final class TemporaryQuarantineAction extends RevocableRoleBasedAction {
     @Override
     public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild
-            .removeRoleFromMember(target.getIdLong(),
+            .removeRoleFromMember(target,
                     ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
             .reason(reason);
     }

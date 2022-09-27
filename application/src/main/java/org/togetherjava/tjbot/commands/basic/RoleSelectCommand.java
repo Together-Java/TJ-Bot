@@ -183,9 +183,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .map(RoleSelectCommand::mapToSelectOption)
             .forEach(menu::addOptions);
 
-        OptionMapping titleOption = event.getOption(TITLE_OPTION);
-        String title = titleOption == null ? "Select your roles:" : titleOption.getAsString();
-
+        String title =
+                event.getOption(TITLE_OPTION, "Select your roles:", OptionMapping::getAsString);
         MessageEmbed embed = createEmbed(title, event.getOption(DESCRIPTION_OPTION).getAsString());
 
         event.replyEmbeds(embed).addActionRow(menu.build()).queue();

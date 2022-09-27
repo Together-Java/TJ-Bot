@@ -39,8 +39,7 @@ final class TemporaryMuteAction extends RevocableRoleBasedAction {
     @Override
     public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild
-            .removeRoleFromMember(target.getIdLong(),
-                    ModerationUtils.getMutedRole(guild, config).orElseThrow())
+            .removeRoleFromMember(target, ModerationUtils.getMutedRole(guild, config).orElseThrow())
             .reason(reason);
     }
 }
