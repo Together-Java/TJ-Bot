@@ -136,8 +136,19 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 return false;
             }
 
+            for (UserInteractorPrefix value : UserInteractorPrefix.values()) {
+                String prefix = value.getPrefix();
+
+                if (name.startsWith(prefix)) {
+                    throw new IllegalArgumentException(
+                            "The interactor's name cannot start with any of the reserved prefixes. ("
+                                    + prefix + ")");
+                }
+            }
+
             if (name.startsWith("s-") || name.startsWith("mc-") || name.startsWith("uc-")) {
-                throw new IllegalArgumentException("The interactor");
+                throw new IllegalArgumentException(
+                        "The interactor's name cannot start with any of the prefixes.");
             }
 
             return true;

@@ -8,8 +8,6 @@ import org.jetbrains.annotations.Contract;
  * This is used for separate interactors with the same name, by command type (and possibly more in
  * the future). Our system doesn't allow multiple interactors with the same name, while having a
  * slash-command and a message-context-command with the same name can be really useful.
- * <p>
- * The
  */
 public enum UserInteractorPrefix {
     /*
