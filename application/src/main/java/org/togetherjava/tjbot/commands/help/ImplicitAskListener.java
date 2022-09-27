@@ -3,13 +3,14 @@ package org.togetherjava.tjbot.commands.help;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -170,7 +171,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             });
     }
 
-    private static MessageAction sendInitialMessage(ThreadChannel threadChannel,
+    private static MessageCreateAction sendInitialMessage(ThreadChannel threadChannel,
             Message originalMessage, String title) {
         String content = originalMessage.getContentRaw();
         Member author = originalMessage.getMember();
@@ -181,8 +182,9 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        Message threadMessage = new MessageBuilder(
-                """
+        MessageCreateData threadMessage = new MessageCreateBuilder()
+            .setContent(
+                    """
                         %s has a question about '**%s**' and will send the details now.
 
                         Please use `/help-thread change category` to greatly increase the visibility of the question."""
@@ -191,7 +193,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         return threadChannel.sendMessage(threadMessage);
     }
 
-    private static MessageAction notifyUser(IMentionable threadChannel, Message message) {
+    private static MessageCreateAction notifyUser(IMentionable threadChannel, Message message) {
         return message.getChannel()
             .sendMessage(
                     """

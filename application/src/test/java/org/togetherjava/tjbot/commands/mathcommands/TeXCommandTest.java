@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.mathcommands;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,7 +37,7 @@ final class TeXCommandTest {
 
     private void verifySuccessfulResponse(SlashCommandInteractionEvent event, String query) {
         verify(jdaTester.getInteractionHookMock(), description("Testing query: " + query))
-            .editOriginal(any(byte[].class), eq("tex.png"));
+            .editOriginalAttachments(FileUpload.fromData(any(byte[].class), eq("tex.png")));
     }
 
     private static List<String> provideSupportedQueries() {

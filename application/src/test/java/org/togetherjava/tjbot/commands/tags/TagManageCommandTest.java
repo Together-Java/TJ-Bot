@@ -1,13 +1,14 @@
 package org.togetherjava.tjbot.commands.tags;
 
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -133,7 +133,7 @@ final class TagManageCommandTest {
     }
 
     private void postMessage(String content, String id) {
-        Message message = new MessageBuilder(content).build();
+        MessageCreateData message = new MessageCreateBuilder().setContent(content).build();
         doReturn(jdaTester.createSucceededActionMock(message)).when(jdaTester.getTextChannelSpy())
             .retrieveMessageById(id);
     }
@@ -166,7 +166,7 @@ final class TagManageCommandTest {
 
         // THEN the command responds with its content as an attachment
         verify(jdaTester.getReplyActionMock())
-            .addFile(aryEq("bar".getBytes(StandardCharsets.UTF_8)), anyString());
+            .addFiles(FileUpload.fromData("bar".getBytes(StandardCharsets.UTF_8), anyString()));
         verify(modAuditLogWriter, never()).write(any(), any(), any(), any(), any(), any());
     }
 

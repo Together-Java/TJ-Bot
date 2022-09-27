@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,13 +49,16 @@ final class RemindRoutineTest {
 
         Member member = jdaTester.createMemberSpy(unknownMemberId);
 
-        RestAction<User> unknownMemberAction = jdaTester.createFailedActionMock(
-                jdaTester.createErrorResponseException(ErrorResponse.UNKNOWN_USER));
+        CacheRestAction<User> unknownMemberAction = jdaTester.createFailedActionMock(
+                jdaTester.createErrorResponseException(ErrorResponse.UNKNOWN_USER),
+                CacheRestAction.class);
         when(jdaTester.getJdaMock().retrieveUserById(unknownMemberId))
             .thenReturn(unknownMemberAction);
 
-        RestAction<PrivateChannel> unknownPrivateChannelAction = jdaTester.createFailedActionMock(
-                jdaTester.createErrorResponseException(ErrorResponse.UNKNOWN_USER));
+        CacheRestAction<PrivateChannel> unknownPrivateChannelAction =
+                jdaTester.createFailedActionMock(
+                        jdaTester.createErrorResponseException(ErrorResponse.UNKNOWN_USER),
+                        CacheRestAction.class);
         when(jdaTester.getJdaMock().openPrivateChannelById(anyLong()))
             .thenReturn(unknownPrivateChannelAction);
         when(jdaTester.getJdaMock().openPrivateChannelById(anyString()))

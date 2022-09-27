@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -14,16 +15,20 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.Response;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
-import net.dv8tion.jda.api.utils.AttachmentOption;
+import net.dv8tion.jda.api.utils.AttachmentProxy;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
+import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.*;
 import net.dv8tion.jda.internal.requests.Requester;
 import net.dv8tion.jda.internal.requests.restaction.AuditableRestActionImpl;
-import net.dv8tion.jda.internal.requests.restaction.MessageActionImpl;
-import net.dv8tion.jda.internal.requests.restaction.WebhookMessageUpdateActionImpl;
+import net.dv8tion.jda.internal.requests.restaction.MessageCreateActionImpl;
+import net.dv8tion.jda.internal.requests.restaction.WebhookMessageEditActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
 import org.mockito.ArgumentMatchers;
@@ -32,10 +37,8 @@ import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import javax.annotation.Nullable;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
@@ -86,8 +89,8 @@ public final class JdaTester {
     private final GuildImpl guild;
     private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
-    private final MessageActionImpl messageAction;
-    private final WebhookMessageUpdateActionImpl webhookMessageUpdateAction;
+    private final MessageCreateActionImpl messageCreateAction;
+    private final WebhookMessageEditActionImpl webhookMessageEditAction;
     private final TextChannelImpl textChannel;
     private final PrivateChannelImpl privateChannel;
     private final InteractionHook interactionHook;
@@ -115,8 +118,8 @@ public final class JdaTester {
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
         privateChannel = spy(new PrivateChannelImpl(jda, PRIVATE_CHANNEL_ID, user));
-        messageAction = mock(MessageActionImpl.class);
-        webhookMessageUpdateAction = mock(WebhookMessageUpdateActionImpl.class);
+        messageCreateAction = mock(MessageCreateActionImpl.class);
+        webhookMessageEditAction = mock(WebhookMessageEditActionImpl.class);
         replyCallbackAction = mock(ReplyCallbackAction.class);
         EntityBuilder entityBuilder = mock(EntityBuilder.class);
         Role everyoneRole = new RoleImpl(GUILD_ID, guild);
@@ -152,48 +155,52 @@ public final class JdaTester {
         when(replyAction.addActionRow(ArgumentMatchers.<ItemComponent>any()))
             .thenReturn(replyAction);
         when(replyAction.setContent(anyString())).thenReturn(replyAction);
-        when(replyAction.addFile(any(byte[].class), any(String.class), any(AttachmentOption.class)))
-            .thenReturn(replyAction);
+        when(replyAction.addFiles(anyCollection())).thenReturn(replyAction);
+        when(replyAction.addFiles(any(FileUpload.class))).thenReturn(replyAction);
         doNothing().when(replyAction).queue();
 
         auditableRestAction = createSucceededActionMock(null, AuditableRestActionImpl.class);
 
-        doNothing().when(webhookMessageUpdateAction).queue();
-        doReturn(webhookMessageUpdateAction).when(webhookMessageUpdateAction)
+        doNothing().when(webhookMessageEditAction).queue();
+        doReturn(webhookMessageEditAction).when(webhookMessageEditAction)
             .setActionRow(any(ItemComponent.class));
 
         doReturn(everyoneRole).when(guild).getPublicRole();
         doReturn(selfMember).when(guild).getMember(selfUser);
         doReturn(member).when(guild).getMember(not(eq(selfUser)));
 
-        RestAction<User> userAction = createSucceededActionMock(member.getUser(), RestAction.class);
+        CacheRestAction<User> userAction =
+                createSucceededActionMock(member.getUser(), CacheRestAction.class);
         when(jda.retrieveUserById(anyLong())).thenReturn(userAction);
 
         doReturn(null).when(textChannel).retrieveMessageById(any());
 
         interactionHook = mock(InteractionHook.class);
-        when(interactionHook.editOriginal(anyString())).thenReturn(webhookMessageUpdateAction);
-        when(interactionHook.editOriginal(any(Message.class)))
-            .thenReturn(webhookMessageUpdateAction);
-        when(interactionHook.editOriginal(any(byte[].class), any(), any()))
-            .thenReturn(webhookMessageUpdateAction);
+        when(interactionHook.editOriginal(anyString())).thenReturn(webhookMessageEditAction);
+        when(interactionHook.editOriginal(any(MessageEditData.class)))
+            .thenReturn(webhookMessageEditAction);
+        when(interactionHook.editOriginalAttachments(any(FileUpload.class)))
+            .thenReturn(webhookMessageEditAction);
 
-        doReturn(messageAction).when(textChannel).sendMessageEmbeds(any(), any());
-        doReturn(messageAction).when(textChannel).sendMessageEmbeds(any());
+        doReturn(messageCreateAction).when(textChannel).sendMessageEmbeds(any(), any());
+        doReturn(messageCreateAction).when(textChannel).sendMessageEmbeds(any());
+        doReturn(privateChannel).when(textChannel).asPrivateChannel();
 
-        doNothing().when(messageAction).queue();
-        when(messageAction.content(any())).thenReturn(messageAction);
+        doNothing().when(messageCreateAction).queue();
+        when(messageCreateAction.setContent(any())).thenReturn(messageCreateAction);
+        when(messageCreateAction.addContent(any())).thenReturn(messageCreateAction);
 
-        RestAction<PrivateChannel> privateChannelAction =
-                createSucceededActionMock(privateChannel, RestAction.class);
+        CacheRestAction<PrivateChannel> privateChannelAction =
+                createSucceededActionMock(privateChannel, CacheRestAction.class);
         when(jda.openPrivateChannelById(anyLong())).thenReturn(privateChannelAction);
         when(jda.openPrivateChannelById(anyString())).thenReturn(privateChannelAction);
         doReturn(privateChannelAction).when(user).openPrivateChannel();
         doReturn(null).when(privateChannel).retrieveMessageById(any());
-        doReturn(messageAction).when(privateChannel).sendMessage(anyString());
-        doReturn(messageAction).when(privateChannel).sendMessage(any(Message.class));
-        doReturn(messageAction).when(privateChannel).sendMessageEmbeds(any(), any());
-        doReturn(messageAction).when(privateChannel).sendMessageEmbeds(any());
+        doReturn(messageCreateAction).when(privateChannel).sendMessage(anyString());
+        doReturn(messageCreateAction).when(privateChannel)
+            .sendMessage(any(MessageCreateData.class));
+        doReturn(messageCreateAction).when(privateChannel).sendMessageEmbeds(any(), any());
+        doReturn(messageCreateAction).when(privateChannel).sendMessageEmbeds(any());
     }
 
     /**
@@ -532,13 +539,13 @@ public final class JdaTester {
      * @param attachments attachments of the message, empty if none
      * @return the event of receiving the given message
      */
-    public MessageReceivedEvent createMessageReceiveEvent(Message message,
+    public MessageReceivedEvent createMessageReceiveEvent(MessageCreateData message,
             List<Message.Attachment> attachments) {
-        Message spyMessage = spy(message);
-        mockMessage(spyMessage);
-        doReturn(attachments).when(spyMessage).getAttachments();
+        Message receivedMessage = clientMessageToReceivedMessageMock(message);
+        mockMessage(receivedMessage);
+        doReturn(attachments).when(receivedMessage).getAttachments();
 
-        return new MessageReceivedEvent(jda, responseNumber.getAndIncrement(), spyMessage);
+        return new MessageReceivedEvent(jda, responseNumber.getAndIncrement(), receivedMessage);
     }
 
     private void mockInteraction(IReplyCallback interaction) {
@@ -551,9 +558,7 @@ public final class JdaTester {
 
         doReturn(textChannel).when(interaction).getChannel();
         doReturn(textChannel).when(interaction).getMessageChannel();
-        doReturn(textChannel).when(interaction).getTextChannel();
         doReturn(textChannel).when(interaction).getGuildChannel();
-        doReturn(privateChannel).when(interaction).getPrivateChannel();
 
         doReturn(interactionHook).when(interaction).getHook();
         doReturn(replyCallbackAction).when(interaction).deferReply();
@@ -567,14 +572,14 @@ public final class JdaTester {
     }
 
     private void mockMessage(Message message) {
-        doReturn(messageAction).when(message).reply(anyString());
-        doReturn(messageAction).when(message).replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
-        doReturn(messageAction).when(message).replyEmbeds(anyCollection());
+        doReturn(messageCreateAction).when(message).reply(anyString());
+        doReturn(messageCreateAction).when(message)
+            .replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
+        doReturn(messageCreateAction).when(message).replyEmbeds(anyCollection());
 
         doReturn(auditableRestAction).when(message).delete();
 
-        doReturn(auditableRestAction).when(message).addReaction(any(Emote.class));
-        doReturn(auditableRestAction).when(message).addReaction(any(String.class));
+        doReturn(auditableRestAction).when(message).addReaction(any(Emoji.class));
 
         doReturn(member).when(message).getMember();
         doReturn(member.getUser()).when(message).getAuthor();
@@ -585,5 +590,49 @@ public final class JdaTester {
 
         doReturn(message.getContentRaw()).when(message).getContentDisplay();
         doReturn(message.getContentRaw()).when(message).getContentStripped();
+    }
+
+    Message clientMessageToReceivedMessageMock(MessageCreateData clientMessage) {
+        Message receivedMessage = mock(Message.class);
+
+        when(receivedMessage.getJDA()).thenReturn(jda);
+        when(receivedMessage.getComponents()).thenReturn(clientMessage.getComponents());
+        when(receivedMessage.getEmbeds()).thenReturn(clientMessage.getEmbeds());
+        when(receivedMessage.getContentRaw()).thenReturn(clientMessage.getContent());
+        when(receivedMessage.getContentDisplay()).thenReturn(clientMessage.getContent());
+        when(receivedMessage.getContentStripped()).thenReturn(clientMessage.getContent());
+
+        List<Message.Attachment> attachments = clientMessage.getAttachments()
+            .stream()
+            .map(this::clientAttachmentToReceivedAttachmentMock)
+            .toList();
+        when(receivedMessage.getAttachments()).thenReturn(attachments);
+
+        return receivedMessage;
+    }
+
+    private Message.Attachment clientAttachmentToReceivedAttachmentMock(
+            FileUpload clientAttachment) {
+        Message.Attachment receivedAttachment = mock(Message.Attachment.class);
+        AttachmentProxy attachmentProxy = mock(AttachmentProxy.class);
+
+        when(receivedAttachment.getJDA()).thenReturn(jda);
+        when(receivedAttachment.getFileName()).thenReturn(clientAttachment.getName());
+        when(receivedAttachment.getFileExtension())
+            .thenReturn(getFileExtension(clientAttachment.getName()).orElse(null));
+        when(receivedAttachment.getProxy()).thenReturn(attachmentProxy);
+
+        when(attachmentProxy.download())
+            .thenReturn(CompletableFuture.completedFuture(clientAttachment.getData()));
+
+        return receivedAttachment;
+    }
+
+    private static Optional<String> getFileExtension(String fileName) {
+        int extensionStartIndex = fileName.lastIndexOf('.');
+        if (extensionStartIndex == -1) {
+            return Optional.empty();
+        }
+        return Optional.of(fileName.substring(extensionStartIndex + 1));
     }
 }

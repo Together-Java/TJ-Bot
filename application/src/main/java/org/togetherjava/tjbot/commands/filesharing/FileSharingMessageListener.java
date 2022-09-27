@@ -218,7 +218,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             return false;
         }
 
-        ThreadChannel thread = event.getThreadChannel();
+        ThreadChannel thread = event.getChannel().asThreadChannel();
         String rootChannelName = thread.getParentChannel().getName();
         return isStagingChannelName.test(rootChannelName)
                 || isOverviewChannelName.test(rootChannelName);

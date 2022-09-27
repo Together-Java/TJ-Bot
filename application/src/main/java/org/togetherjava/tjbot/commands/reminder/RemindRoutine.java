@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.Routine;
@@ -95,9 +95,9 @@ public final class RemindRoutine implements Routine {
 
     private static void sendReminderViaRoute(RestAction<ReminderRoute> routeAction, long id,
             CharSequence content, TemporalAccessor createdAt) {
-        Function<ReminderRoute, MessageAction> sendMessage = route -> route.channel
+        Function<ReminderRoute, MessageCreateAction> sendMessage = route -> route.channel
             .sendMessageEmbeds(createReminderEmbed(content, createdAt, route.target()))
-            .content(route.description());
+            .setContent(route.description());
 
         Consumer<Throwable> logFailure = failure -> logger.warn(
                 """

@@ -1,18 +1,19 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import io.mikael.urlbuilder.UrlBuilder;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.togetherjava.tjbot.commands.CommandVisibility;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -74,13 +75,11 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
     private static void sendResponse(WolframAlphaHandler.HandlerResponse response,
             IDeferrableCallback event) {
-        WebhookMessageUpdateAction<Message> action =
-                event.getHook().editOriginalEmbeds(response.embeds());
+        List<FileUpload> files = response.attachments()
+            .stream()
+            .map(attachment -> FileUpload.fromData(attachment.data(), attachment.name()))
+            .toList();
 
-        for (WolframAlphaHandler.Attachment attachment : response.attachments()) {
-            action = action.addFile(attachment.data(), attachment.name());
-        }
-
-        action.queue();
+        event.getHook().editOriginalEmbeds(response.embeds()).setFiles(files).queue();
     }
 }

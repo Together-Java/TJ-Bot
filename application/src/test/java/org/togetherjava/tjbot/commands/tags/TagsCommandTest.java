@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,7 +43,7 @@ final class TagsCommandTest {
     private ButtonInteractionEvent triggerButtonClick(Member userWhoClicked, long idOfAuthor) {
         ButtonInteractionEvent event = jdaTester.createButtonInteractionEvent()
             .setUserWhoClicked(userWhoClicked)
-            .setActionRows(ActionRow.of(TagSystem.createDeleteButton("foo")))
+            .setActionRow(TagSystem.createDeleteButton("foo"))
             .buildWithSingleButton();
         command.onButtonClick(event, List.of(Long.toString(idOfAuthor)));
         return event;

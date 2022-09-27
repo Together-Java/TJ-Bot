@@ -2,10 +2,12 @@ package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,9 +112,10 @@ public final class HelpSystemHelper {
                 HelpSystemHelper.embedWith(
                         "Don't forget to close your thread using the command **/help-thread close** when your question has been answered, thanks."));
 
-        MessageAction action = threadChannel.sendMessage(message);
+        MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
-            action = action.addFile(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH);
+            action = action
+                .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
         }
         return action.setEmbeds(embeds);
     }
@@ -295,7 +298,9 @@ public final class HelpSystemHelper {
                             Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
                             Please use the `/help-thread change category` slash-command and pick what fits best, thanks 🙂
                             """);
-            Message message = new MessageBuilder(author.getAsMention()).setEmbeds(embed).build();
+            MessageCreateData message = new MessageCreateBuilder().setContent(author.getAsMention())
+                .setEmbeds(embed)
+                .build();
 
             return threadChannel.sendMessage(message);
         }).queue();

@@ -4,15 +4,14 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import net.dv8tion.jda.api.utils.AttachmentOption;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
 import java.awt.Color;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
@@ -71,11 +70,12 @@ public final class ModAuditLogWriter {
             embedBuilder.setAuthor(author.getAsTag(), null, author.getAvatarUrl());
         }
 
-        MessageAction message =
+        MessageCreateAction message =
                 auditLogChannel.orElseThrow().sendMessageEmbeds(embedBuilder.build());
 
         for (Attachment attachment : attachments) {
-            message = message.addFile(attachment.getContentRaw(), attachment.name());
+            message = message
+                .addFiles(FileUpload.fromData(attachment.getContentRaw(), attachment.name()));
         }
         message.queue();
     }
@@ -103,7 +103,7 @@ public final class ModAuditLogWriter {
 
     /**
      * Represents attachment to messages, as for example used by
-     * {@link MessageAction#addFile(File, String, AttachmentOption...)}.
+     * {@link MessageCreateAction#addFiles(FileUpload...)}.
      *
      * @param name the name of the attachment, example: {@code "foo.md"}
      * @param content the content of the attachment
