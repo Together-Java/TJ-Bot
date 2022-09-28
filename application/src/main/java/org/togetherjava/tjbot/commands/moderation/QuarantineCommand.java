@@ -67,7 +67,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                 """
                         Hey there, sorry to tell you but unfortunately you have been put under quarantine in the server %s.
                         This means you can no longer interact with anyone in the server until you have been unquarantined again.
-                        If you think this was a mistake, or the reason no longer applies, please contact a moderator or admin of the server.
+                        To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                         The reason for the quarantine is: %s
                         """
                     .formatted(guild.getName(), reason);

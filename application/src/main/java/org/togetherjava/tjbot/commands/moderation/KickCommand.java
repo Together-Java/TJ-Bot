@@ -75,7 +75,7 @@ public final class KickCommand extends SlashCommandAdapter {
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
+                            To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                             The reason for the kick is: %s
                             """
                         .formatted(guild.getName(), reason)))

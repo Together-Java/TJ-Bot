@@ -255,7 +255,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                         This means you can no longer interact with anyone in the server until you have been unquarantined again.
 
                         If you think this was a mistake (for example, your account was hacked, but you got back control over it),
-                        please contact a moderator or admin of the server.
+                        than to get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                         """
                     .formatted(guild.getName());
 

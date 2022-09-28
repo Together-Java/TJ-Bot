@@ -120,7 +120,7 @@ public final class Config {
 
     /**
      * Gets the REGEX pattern used to identify the channel that is supposed to contain all messages
-     * from command modmail
+     * from users who want to contact a moderator
      *
      * @return the channel name pattern
      */

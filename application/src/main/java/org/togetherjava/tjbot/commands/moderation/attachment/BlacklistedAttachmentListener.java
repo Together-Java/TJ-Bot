@@ -66,6 +66,7 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
                         Hey there, you posted a message containing a blacklisted file attachment: %s.
                         We had to delete your message for security reasons.
 
+                        To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                         Feel free to repost your message without, or with a different file instead. Sorry for any inconvenience caused by this 🙇️
                         """
                     .formatted(blacklistedAttachments);
