@@ -129,7 +129,7 @@ final class TagsCommandTest {
     }
 
     @Test
-    @DisplayName("The list of tags can not deleted by other users")
+    @DisplayName("The list of tags cannot be deleted by other users")
     void othersCanNotDeleteList() {
         // GIVEN a '/tags' message send by an author and another user
         long idOfAuthor = 1;

@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -14,10 +13,8 @@ import org.togetherjava.tjbot.commands.SlashCommand;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 
 import static org.mockito.Mockito.when;
 
@@ -195,12 +192,11 @@ public final class ButtonClickEventBuilder {
 
         // Otherwise, attempt to extract the button from the message. Only allow a single button in
         // this case to prevent ambiguity.
-        return requireSingleButton(getMessageButtons(message));
+        return requireSingleButton(message.getButtons());
     }
 
     private static Button requireButtonInMessage(Button clickedButton, Message message) {
-        boolean isClickedButtonUnknown =
-                getMessageButtons(message).noneMatch(clickedButton::equals);
+        boolean isClickedButtonUnknown = !message.getButtons().contains(clickedButton);
 
         if (isClickedButtonUnknown) {
             throw new IllegalArgumentException(
@@ -210,22 +206,20 @@ public final class ButtonClickEventBuilder {
         return clickedButton;
     }
 
-    private static Button requireSingleButton(Stream<? extends Button> stream) {
-        Function<String, ? extends RuntimeException> descriptionToException =
-                IllegalArgumentException::new;
+    private static Button requireSingleButton(List<? extends Button> buttons) {
+        if (buttons.isEmpty()) {
+            throw new IllegalArgumentException("The message contains no buttons,"
+                    + " unable to automatically determine the clicked button."
+                    + " Add the button to the message first.");
+        }
 
-        return stream.reduce((x, y) -> {
-            throw descriptionToException
-                .apply("The message contains more than a single button, unable to automatically determine the clicked button."
-                        + " Either only use a single button or explicitly state the clicked button");
-        })
-            .orElseThrow(() -> descriptionToException.apply(
-                    "The message contains no buttons, unable to automatically determine the clicked button."
-                            + " Add the button to the message first."));
-    }
+        if (buttons.size() > 1) {
+            throw new IllegalArgumentException("The message contains more than a single button,"
+                    + " unable to automatically determine the clicked button."
+                    + " Either only use a single button or explicitly state the clicked button");
+        }
 
-    private static Stream<Button> getMessageButtons(Message message) {
-        return message.getActionRows().stream().map(ActionRow::getButtons).flatMap(List::stream);
+        return buttons.get(0);
     }
 
     private ButtonInteractionEvent mockButtonClickEvent(Message message, Button clickedButton) {

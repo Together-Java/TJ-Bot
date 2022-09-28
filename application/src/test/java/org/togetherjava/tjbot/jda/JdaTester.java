@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.Response;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -31,12 +32,16 @@ import net.dv8tion.jda.internal.requests.restaction.MessageCreateActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.WebhookMessageEditActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
+import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
+import org.mockito.MockingDetails;
 import org.mockito.stubbing.Answer;
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
@@ -47,8 +52,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mockingDetails;
 
 /**
  * Utility class for testing {@link SlashCommand}s.
@@ -247,7 +254,10 @@ public final class JdaTester {
         };
 
         UnaryOperator<Message> mockMessageOperator = event -> {
-            Message message = spy(event);
+            MockingDetails mockingDetails = mockingDetails(event);
+            Message message =
+                    mockingDetails.isMock() || mockingDetails.isSpy() ? event : spy(event);
+
             mockMessage(message);
             return message;
         };
@@ -548,6 +558,56 @@ public final class JdaTester {
         return new MessageReceivedEvent(jda, responseNumber.getAndIncrement(), receivedMessage);
     }
 
+    /**
+     * Creates an argument matcher that asserts that an attachment has the given content.
+     * <p>
+     * This requires the data-stream in the attachment to support
+     * {@link InputStream#markSupported()}. This is the case for most simpler streams, such as
+     * strings or files.
+     * <p>
+     * An example would be
+     * 
+     * <pre>
+     * {
+     *     &#64;code
+     *     verify(jdaTester.getReplyActionMock())
+     *       .addFiles(
+     *         argThat(jdaTester.createAttachmentHasContentMatcher("foo"))
+     *       );
+     *
+     *     // checking that the following has been called
+     *
+     *     event.reply("")
+     *       .addFiles(
+     *         FileUpload.fromData("foo".getBytes(StandardCharsets.UTF_8), "")
+     *       );
+     * }
+     * </pre>
+     *
+     * @param content the content the attachment should have
+     * @return the created matcher
+     */
+    public ArgumentMatcher<FileUpload> createAttachmentHasContentMatcher(String content) {
+        return attachment -> {
+            if (attachment == null) {
+                return false;
+            }
+
+            InputStream dataStream = attachment.getData();
+            if (!dataStream.markSupported()) {
+                return false;
+            }
+
+            byte[] expectedContentRaw = content.getBytes(StandardCharsets.UTF_8);
+            dataStream.mark(expectedContentRaw.length);
+
+            byte[] actualContent = assertDoesNotThrow(() -> attachment.getData().readAllBytes());
+            assertDoesNotThrow(dataStream::reset);
+
+            return Arrays.equals(expectedContentRaw, actualContent);
+        };
+    }
+
     private void mockInteraction(IReplyCallback interaction) {
         doReturn(replyAction).when(interaction).reply(anyString());
         doReturn(replyAction).when(interaction).replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
@@ -592,15 +652,28 @@ public final class JdaTester {
         doReturn(message.getContentRaw()).when(message).getContentStripped();
     }
 
-    Message clientMessageToReceivedMessageMock(MessageCreateData clientMessage) {
+    /**
+     * Transforms the given client-side message to a mocked message received from Discord.
+     *
+     * @param clientMessage the client-side message to transform
+     * @return the mocked copy of the given message, but as message received from Discord
+     */
+    public Message clientMessageToReceivedMessageMock(MessageCreateData clientMessage) {
         Message receivedMessage = mock(Message.class);
+        var foo = clientMessage.getComponents();
 
         when(receivedMessage.getJDA()).thenReturn(jda);
-        when(receivedMessage.getComponents()).thenReturn(clientMessage.getComponents());
         when(receivedMessage.getEmbeds()).thenReturn(clientMessage.getEmbeds());
         when(receivedMessage.getContentRaw()).thenReturn(clientMessage.getContent());
         when(receivedMessage.getContentDisplay()).thenReturn(clientMessage.getContent());
         when(receivedMessage.getContentStripped()).thenReturn(clientMessage.getContent());
+
+        when(receivedMessage.getComponents()).thenReturn(clientMessage.getComponents());
+        when(receivedMessage.getButtons()).thenReturn(clientMessage.getComponents()
+            .stream()
+            .map(LayoutComponent::getButtons)
+            .flatMap(List::stream)
+            .toList());
 
         List<Message.Attachment> attachments = clientMessage.getAttachments()
             .stream()
