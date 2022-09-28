@@ -108,7 +108,7 @@ public final class HelpSystemHelper {
                                     **provide details**, context, more code, examples and maybe some screenshots. \
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command **/close** when your question has been answered, thanks."));
+                        "Don't forget to close your thread using the command **/help-thread close** when your question has been answered, thanks."));
 
         MessageAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
@@ -293,7 +293,7 @@ public final class HelpSystemHelper {
             MessageEmbed embed = HelpSystemHelper.embedWith(
                     """
                             Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
-                            Please use the `/change-help-category` slash-command and pick what fits best, thanks 🙂
+                            Please use the `/help-thread change category` slash-command and pick what fits best, thanks 🙂
                             """);
             Message message = new MessageBuilder(author.getAsMention()).setEmbeds(embed).build();
 
