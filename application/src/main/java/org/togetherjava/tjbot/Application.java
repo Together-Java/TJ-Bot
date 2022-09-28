@@ -3,6 +3,7 @@ package org.togetherjava.tjbot;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,6 @@ import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -91,7 +91,7 @@ public class Application {
             jda.addEventListener(core);
 
             logger.info("Bot is ready");
-        } catch (LoginException e) {
+        } catch (InvalidTokenException e) {
             logger.error("Failed to login", e);
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting for setup to complete", e);
