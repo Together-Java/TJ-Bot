@@ -18,10 +18,12 @@ import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
@@ -33,19 +35,14 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
 public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private static final String CATEGORY_SUBCOMMAND = "category";
-    private static final String TITLE_SUBCOMMAND = "title";
-    private static final String CLOSE_SUBCOMMAND = "close";
-
-    private static final Supplier<Cache<Long, Instant>> newCaffeine = () -> Caffeine.newBuilder()
-        .maximumSize(1_000)
-        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-        .build();
+    private static final String CHANGE_CATEGORY_SUBCOMMAND = "category";
+    private static final String CHANGE_CATEGORY_OPTION = "category";
+    private static final String CHANGE_TITLE_OPTION = "title";
+    private static final String CHANGE_TITLE_SUBCOMMAND = "title";
 
     private final HelpSystemHelper helper;
-    private final Cache<Long, Instant> helpThreadIdToLastCategoryChange = newCaffeine.get();
-    private final Cache<Long, Instant> helpThreadIdToLastTitleChange = newCaffeine.get();
-    private final Cache<Long, Instant> helpThreadIdToLastClose = newCaffeine.get();
+    private final Map<Subcommand, Cache<Long, Instant>> subcommandToCooldownCache;
+    private final Map<Subcommand, BiConsumer<SlashCommandInteractionEvent, ThreadChannel>> subcommandToEventHandler;
 
     /**
      * Creates a new instance.
@@ -56,44 +53,73 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     public HelpThreadCommand(Config config, HelpSystemHelper helper) {
         super("help-thread", "Help thread specific commands", SlashCommandVisibility.GUILD);
 
-        OptionData category =
-                new OptionData(OptionType.STRING, CATEGORY_SUBCOMMAND, "new category", true);
+        OptionData categoryChoices =
+                new OptionData(OptionType.STRING, CHANGE_CATEGORY_OPTION, "new category", true);
         config.getHelpSystem()
             .getCategories()
-            .forEach(categoryText -> category.addChoice(categoryText, categoryText));
+            .forEach(categoryText -> categoryChoices.addChoice(categoryText, categoryText));
 
-        getData().addSubcommandGroups(new SubcommandGroupData("change",
-                "Change the details of this help thread").addSubcommands(
-                        new SubcommandData(CATEGORY_SUBCOMMAND,
-                                "Change the category of this help thread").addOptions(category),
-                        new SubcommandData(TITLE_SUBCOMMAND, "Change the title of this help thread")
-                            .addOption(OptionType.STRING, TITLE_SUBCOMMAND, "new title", true)));
+        SubcommandData changeCategory =
+                Subcommand.CHANGE_CATEGORY.toSubcommandData().addOptions(categoryChoices);
 
-        getData().addSubcommands(new SubcommandData(CLOSE_SUBCOMMAND, "Close this help thread"));
+        SubcommandData changeTitle = Subcommand.CHANGE_TITLE.toSubcommandData()
+            .addOption(OptionType.STRING, CHANGE_TITLE_OPTION, "new title", true);
+
+        SubcommandGroupData changeCommands =
+                new SubcommandGroupData("change", "Change the details of this help thread")
+                    .addSubcommands(changeCategory, changeTitle);
+        getData().addSubcommandGroups(changeCommands);
+
+        getData().addSubcommands(Subcommand.CLOSE.toSubcommandData());
 
         this.helper = helper;
+
+        Supplier<Cache<Long, Instant>> createCooldownCache = () -> Caffeine.newBuilder()
+            .maximumSize(1_000)
+            .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
+            .build();
+        subcommandToCooldownCache = new EnumMap<>(Arrays.stream(Subcommand.values())
+            .filter(Subcommand::hasCooldown)
+            .collect(Collectors.toMap(Function.identity(), any -> createCooldownCache.get())));
+        subcommandToEventHandler = new EnumMap<>(
+                Map.of(Subcommand.CHANGE_CATEGORY, this::changeCategory, Subcommand.CHANGE_TITLE,
+                        this::changeTitle, Subcommand.CLOSE, this::closeThread));
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         ThreadChannel helpThread = event.getThreadChannel();
 
-        switch (event.getSubcommandName()) {
-            case CATEGORY_SUBCOMMAND -> changeCategory(event, helpThread);
-            case TITLE_SUBCOMMAND -> changeTitle(event, helpThread);
-            case CLOSE_SUBCOMMAND -> close(event, helpThread);
-            default -> {
-                // This can never be the case
-            }
+        Subcommand invokedSubcommand = Arrays.stream(Subcommand.values())
+            .filter(subcommand -> subcommand.getCommandName().equals(event.getSubcommandName()))
+            .findAny()
+            .orElseThrow();
+
+        if (invokedSubcommand.hasCooldown()
+                && isHelpThreadOnCooldown(invokedSubcommand, helpThread)) {
+            sendCooldownMessage(event);
+            return;
         }
+
+        subcommandToEventHandler.get(invokedSubcommand).accept(event, helpThread);
     }
 
-    private boolean isHelpThreadOnCooldown(Cache<Long, Instant> helpThreadIdToLastAction,
-            ThreadChannel helpThread) {
+    private boolean isHelpThreadOnCooldown(Subcommand subcommand, ThreadChannel helpThread) {
+        Cache<? super Long, Instant> helpThreadIdToLastAction = requireCooldownCache(subcommand);
         return Optional.ofNullable(helpThreadIdToLastAction.getIfPresent(helpThread.getIdLong()))
             .map(lastAction -> lastAction.plus(COOLDOWN_DURATION_VALUE, COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)
             .isPresent();
+    }
+
+    private Cache<? super Long, Instant> requireCooldownCache(Subcommand subcommand) {
+        if (!subcommand.hasCooldown()) {
+            throw new IllegalArgumentException(
+                    "Must only be used with subcommands that do have cooldown, but " + subcommand
+                            + " was given.");
+        }
+
+        return subcommandToCooldownCache.get(subcommand);
     }
 
     private void sendCooldownMessage(SlashCommandInteractionEvent event) {
@@ -106,16 +132,10 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     }
 
     private void changeCategory(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        if (isHelpThreadOnCooldown(helpThreadIdToLastCategoryChange, helpThread)) {
-            sendCooldownMessage(event);
-            return;
-        }
-
-        String category = event.getOption(CATEGORY_SUBCOMMAND).getAsString();
-
-        helpThreadIdToLastCategoryChange.put(helpThread.getIdLong(), Instant.now());
+        String category = event.getOption(CHANGE_CATEGORY_OPTION).getAsString();
 
         event.deferReply().queue();
+        refreshCooldownFor(Subcommand.CHANGE_CATEGORY, helpThread);
 
         helper.renameChannelToCategory(helpThread, category)
             .flatMap(any -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
@@ -123,43 +143,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private void changeTitle(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        if (isHelpThreadOnCooldown(helpThreadIdToLastTitleChange, helpThread)) {
-            sendCooldownMessage(event);
-            return;
-        }
-
-        String title = event.getOption(TITLE_SUBCOMMAND).getAsString();
-
-        if (!HelpSystemHelper.isTitleValid(title)) {
-            event.reply(
-                    "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
-                        .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
-        helpThreadIdToLastTitleChange.put(helpThread.getIdLong(), Instant.now());
-
-        helper.renameChannelToTitle(helpThread, title)
-            .flatMap(any -> event.reply("Changed the title to **%s**.".formatted(title)))
-            .queue();
-    }
-
-    private void close(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
-        if (isHelpThreadOnCooldown(helpThreadIdToLastClose, helpThread)) {
-            sendCooldownMessage(event);
-            return;
-        }
-
-        helpThreadIdToLastClose.put(helpThread.getIdLong(), Instant.now());
-
-        MessageEmbed embed = new EmbedBuilder().setDescription("Closed the thread.")
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
-            .build();
-
-        event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
+    private void refreshCooldownFor(Subcommand subcommand, ThreadChannel helpThread) {
+        Cache<? super Long, Instant> helpThreadIdToLastAction = requireCooldownCache(subcommand);
+        helpThreadIdToLastAction.put(helpThread.getIdLong(), Instant.now());
     }
 
     private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
@@ -181,5 +167,72 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         String headsUpWithRole = headsUpPattern.formatted(helperRole.orElseThrow().getAsMention());
         return action.flatMap(any -> helpThread.sendMessage(headsUpWithoutRole)
             .flatMap(message -> message.editMessage(headsUpWithRole)));
+    }
+
+    private void changeTitle(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        String title = event.getOption(CHANGE_TITLE_OPTION).getAsString();
+
+        if (!HelpSystemHelper.isTitleValid(title)) {
+            event.reply(
+                    "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
+                        .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        refreshCooldownFor(Subcommand.CHANGE_TITLE, helpThread);
+
+        helper.renameChannelToTitle(helpThread, title)
+            .flatMap(any -> event.reply("Changed the title to **%s**.".formatted(title)))
+            .queue();
+    }
+
+    private void closeThread(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        refreshCooldownFor(Subcommand.CLOSE, helpThread);
+
+        MessageEmbed embed = new EmbedBuilder().setDescription("Closed the thread.")
+            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .build();
+
+        event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
+    }
+
+    enum Subcommand {
+        CHANGE_CATEGORY(CHANGE_CATEGORY_SUBCOMMAND, "Change the category of this help thread",
+                Cooldown.YES),
+        CHANGE_TITLE(CHANGE_TITLE_SUBCOMMAND, "Change the title of this help thread", Cooldown.YES),
+        CLOSE("close", "Close this help thread", Cooldown.YES);
+
+        private final String commandName;
+        private final String description;
+        private final Cooldown cooldown;
+
+        Subcommand(String commandName, String description, Cooldown cooldown) {
+            this.commandName = commandName;
+            this.description = description;
+            this.cooldown = cooldown;
+        }
+
+        String getCommandName() {
+            return commandName;
+        }
+
+        String getDescription() {
+            return description;
+        }
+
+        boolean hasCooldown() {
+            return cooldown == Cooldown.YES;
+        }
+
+        SubcommandData toSubcommandData() {
+            return new SubcommandData(commandName, description);
+        }
+    }
+
+    enum Cooldown {
+        YES,
+        NO
     }
 }
