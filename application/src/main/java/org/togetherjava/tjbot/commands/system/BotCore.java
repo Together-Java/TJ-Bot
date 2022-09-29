@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.CommandReloading;
 import org.togetherjava.tjbot.commands.*;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdParser;
@@ -118,6 +119,10 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         if (logger.isInfoEnabled()) {
             logger.info("Available user interactors: {}", interactors);
         }
+
+
+        CommandReloading.reloadCommands(jda, this);
+        scheduleRoutines(jda);
     }
 
     /**
@@ -188,21 +193,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
 
-    /**
-     * Trigger once JDA is ready. Subsequent calls are ignored.
-     *
-     * @param jda the JDA instance to work with
-     */
-    public void onReady(JDA jda) {
-        if (!receivedOnReady.compareAndSet(false, true)) {
-            // Ensures that we only enter the event once
-            return;
-        }
-
-        scheduleRoutines(jda);
-    }
-
-    private void scheduleRoutines(JDA jda) {
+    public void scheduleRoutines(JDA jda) {
         routines.forEach(routine -> {
             Runnable command = () -> {
                 String routineName = routine.getClass().getSimpleName();
