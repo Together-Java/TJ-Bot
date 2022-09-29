@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.Unmodifiable;
@@ -51,7 +50,6 @@ import java.util.stream.Stream;
  */
 public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
-    private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
@@ -201,14 +199,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             return;
         }
 
-        // Register reload on all guilds
-        logger.debug("JDA is ready, registering reload command");
-        jda.getGuildCache()
-            .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
-        // NOTE We do not have to wait for reload to complete for the command system to be ready
-        // itself
-        logger.debug("Bot core is now ready");
-
         scheduleRoutines(jda);
     }
 
@@ -283,23 +273,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
             .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
-    }
-
-    private void registerReloadCommand(Guild guild) {
-        guild.retrieveCommands().queue(commands -> {
-            // Has it been registered already?
-            if (commands.stream().map(Command::getName).anyMatch(RELOAD_COMMAND::equals)) {
-                logger.debug("Command '{}' has already been registered for guild '{}'",
-                        RELOAD_COMMAND, guild.getName());
-                return;
-            }
-
-            logger.debug("Register '{}' for guild '{}'", RELOAD_COMMAND, guild.getName());
-            SlashCommand reloadCommand = requireSlashCommand(RELOAD_COMMAND);
-            guild.upsertCommand(reloadCommand.getData())
-                .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
-                        guild.getName()));
-        }, ex -> handleRegisterErrors(ex, guild));
     }
 
     /**
