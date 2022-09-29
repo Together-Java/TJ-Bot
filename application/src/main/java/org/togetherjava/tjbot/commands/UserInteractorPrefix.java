@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Contract;
  */
 public enum UserInteractorPrefix {
     /*
-     * Implementations that are none of the following have no dedicated prefix,
-     * the USER_INTERACTOR value stands for these implementations.
+     * Implementations that are none of the following have no dedicated prefix, the USER_INTERACTOR
+     * value stands for these implementations.
      */
 
     SLASH_COMMAND(SlashCommand.class, "s-"),
@@ -51,11 +51,11 @@ public enum UserInteractorPrefix {
     /**
      * Checks what enum value the given instance collaborates to.
      * <p>
-     * This returns the name of the interactor, and adds the designated prefix to the name.
-     * As example, a slash-command with the name "help" becomes "s-help".
+     * This returns the name of the interactor, and adds the designated prefix to the name. As
+     * example, a slash-command with the name "help" becomes "s-help".
      *
      * @param instance an instance to type check for a prefix
-     * @param <T>      the type of the instance
+     * @param <T> the type of the instance
      * @return the interactor's name, with its prefix
      */
     public static <T extends UserInteractor> String getPrefixedNameFromInstance(final T instance) {
@@ -75,16 +75,16 @@ public enum UserInteractorPrefix {
     /**
      * Checks what enum value the given instance collaborates to.
      * <p>
-     * This combines the given name, with the interactor's prefix.
-     * As example, a slash-command with the name "help" becomes "s-help".
+     * This combines the given name, with the interactor's prefix. As example, a slash-command with
+     * the name "help" becomes "s-help".
      *
      * @param clazz the class to get the prefix from
-     * @param name  the name of the instance
-     * @param <T>   the type of the instance
+     * @param name the name of the instance
+     * @param <T> the type of the instance
      * @return the prefixed {@link String}
      */
     public static <T extends UserInteractor> String getPrefixedNameFromClass(final Class<T> clazz,
-                                                                             final String name) {
+            final String name) {
 
         for (UserInteractorPrefix value : values()) {
             Class<? extends UserInteractor> valueClassType = value.getClassType();

@@ -13,9 +13,9 @@ import java.util.List;
  * Represents a feature that can interact with users. The most used implementation is
  * {@link SlashCommand}, {@link UserContextCommand} and {@link MessageContextCommand}.
  * <p>
- * An interactor can react to button clicks and selection menu actions.
- * This is done based on the given {@link #getName()}, because of this names have to be unique.
- * But, names can be complicated if their type is different, all the types can be seen in {@link UserInteractorPrefix}
+ * An interactor can react to button clicks and selection menu actions. This is done based on the
+ * given {@link #getName()}, because of this names have to be unique. But, names can be complicated
+ * if their type is different, all the types can be seen in {@link UserInteractorPrefix}
  */
 public interface UserInteractor extends Feature {
 

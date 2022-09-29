@@ -69,8 +69,8 @@ public class CommandReloading {
      */
     @Contract("_, _, _ -> param2")
     private static CommandListUpdateAction updateCommandsIf(
-            final Predicate<? super BotCommand> commandFilter, final CommandListUpdateAction updateAction,
-            final CommandProvider commandProvider) {
+            final Predicate<? super BotCommand> commandFilter,
+            final CommandListUpdateAction updateAction, final CommandProvider commandProvider) {
         commandProvider.getInteractors()
             .stream()
             .filter(BotCommand.class::isInstance)
