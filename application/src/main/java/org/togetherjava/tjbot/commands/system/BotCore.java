@@ -186,6 +186,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
 
+    /**
+     * Schedules the registered routines.
+     * <p>
+     * This needs a ready {@link JDA} instance.
+     *
+     * @param jda a ready JDA instance
+     */
     public void scheduleRoutines(JDA jda) {
         routines.forEach(routine -> {
             Runnable command = () -> {
