@@ -11,14 +11,12 @@ import org.jetbrains.annotations.Contract;
  */
 public enum UserInteractorPrefix {
     /*
-     * Implementations that are none of the following have no dedicated prefix, the USER_INTERACTOR
-     * value stands for these implementations.
+     * Implementations that are none of the following have no dedicated prefix
      */
 
     SLASH_COMMAND(SlashCommand.class, "s-"),
     MESSAGE_CONTEXT_COMMAND(MessageContextCommand.class, "mc-"),
-    USER_CONTEXT_COMMAND(UserContextCommand.class, "uc-"),
-    USER_INTERACTOR(UserInteractor.class, "");
+    USER_CONTEXT_COMMAND(UserContextCommand.class, "uc-");
 
 
     private final Class<? extends UserInteractor> classType;

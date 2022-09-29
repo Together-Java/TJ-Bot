@@ -168,8 +168,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             final Class<? extends T> type) {
         Objects.requireNonNull(type, "The given type cannot be null");
 
-        String prefix = UserInteractorPrefix.getPrefixedNameFromClass(type, name);
-        return Optional.ofNullable(prefixedNameToInteractor.get(prefix + name))
+        String prefixedName = UserInteractorPrefix.getPrefixedNameFromClass(type, name);
+        return Optional.ofNullable(prefixedNameToInteractor.get(prefixedName))
             .filter(type::isInstance)
             .map(type::cast);
     }
