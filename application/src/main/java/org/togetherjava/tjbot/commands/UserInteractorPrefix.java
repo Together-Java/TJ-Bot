@@ -11,8 +11,8 @@ import org.jetbrains.annotations.Contract;
  */
 public enum UserInteractorPrefix {
     /*
-     * order CANNOT be modified This is because USER_INTERACTOR applies to every interactor, but
-     * still I thought it'd be useful to document there's no prefix.
+     * Implementations that are none of the following have no dedicated prefix,
+     * the USER_INTERACTOR value stands for these implementations.
      */
 
     SLASH_COMMAND(SlashCommand.class, "s-"),
@@ -32,7 +32,7 @@ public enum UserInteractorPrefix {
     /**
      * The prefix for the command
      *
-     * @return
+     * @return the command's prefix
      */
     public String getPrefix() {
         return prefix;
@@ -42,7 +42,7 @@ public enum UserInteractorPrefix {
     /**
      * The class type that should receive the prefix
      *
-     * @return
+     * @return a {@link Class} instance of the type
      */
     public Class<? extends UserInteractor> getClassType() {
         return classType;
@@ -51,11 +51,12 @@ public enum UserInteractorPrefix {
     /**
      * Checks what enum value the given instance collaborates to.
      * <p>
-     * As example,
+     * This returns the name of the interactor, and adds the designated prefix to the name.
+     * As example, a slash-command with the name "help" becomes "s-help".
      *
      * @param instance an instance to type check for a prefix
-     * @param <T> the type of the instance
-     * @return the prefixed {@link String}
+     * @param <T>      the type of the instance
+     * @return the interactor's name, with its prefix
      */
     public static <T extends UserInteractor> String getPrefixedNameFromInstance(final T instance) {
         String name = instance.getName();
@@ -74,15 +75,16 @@ public enum UserInteractorPrefix {
     /**
      * Checks what enum value the given instance collaborates to.
      * <p>
-     * As example,
+     * This combines the given name, with the interactor's prefix.
+     * As example, a slash-command with the name "help" becomes "s-help".
      *
      * @param clazz the class to get the prefix from
-     * @param name the name of the instance
-     * @param <T> the type of the instance
+     * @param name  the name of the instance
+     * @param <T>   the type of the instance
      * @return the prefixed {@link String}
      */
     public static <T extends UserInteractor> String getPrefixedNameFromClass(final Class<T> clazz,
-            final String name) {
+                                                                             final String name) {
 
         for (UserInteractorPrefix value : values()) {
             Class<? extends UserInteractor> valueClassType = value.getClassType();
