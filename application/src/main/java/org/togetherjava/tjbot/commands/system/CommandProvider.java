@@ -33,15 +33,15 @@ public interface CommandProvider {
     /**
      * Gets the interactor registered under the given name, if any.
      * <p>
-     * This command excepts the name with the prefix of the command, if you prefer using a
+     * This command excepts the name to include the prefix already, if you prefer using a
      * {@link Class} instance of the command/type instead, use {@link #getInteractor(String, Class)}
      * instead.-
      *
-     * @param name the name of the command (including its prefix, see
+     * @param prefixedName the name of the command (including its prefix, see
      *        {@link org.togetherjava.tjbot.commands.UserInteractorPrefix UserInteractorPrefix}
      * @return the interactor registered under this name, if any
      */
-    Optional<UserInteractor> getInteractor(String name);
+    Optional<UserInteractor> getInteractor(String prefixedName);
 
     /**
      * Gets the interactor registered under the given name, if any.

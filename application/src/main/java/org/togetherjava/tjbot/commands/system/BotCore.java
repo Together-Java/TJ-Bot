@@ -1,19 +1,14 @@
 package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Channel;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +25,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -55,12 +49,11 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Config config;
-    private final Map<String, UserInteractor> nameToInteractor;
+    private final Map<String, UserInteractor> prefixedNameToInteractor;
     private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
-    private final AtomicBoolean receivedOnReady = new AtomicBoolean(false);
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -95,7 +88,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             .toList();
 
         // User Interactors (e.g. slash commands)
-        nameToInteractor = features.stream()
+        prefixedNameToInteractor = features.stream()
             .filter(UserInteractor.class::isInstance)
             .map(UserInteractor.class::cast)
             .filter(validateInteractorPredicate())
@@ -161,13 +154,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     @Override
     @Unmodifiable
     public Collection<UserInteractor> getInteractors() {
-        return nameToInteractor.values();
+        return prefixedNameToInteractor.values();
     }
 
     @Override
-    public Optional<UserInteractor> getInteractor(final String name) {
+    public Optional<UserInteractor> getInteractor(final String prefixedName) {
 
-        return Optional.ofNullable(nameToInteractor.get(name));
+        return Optional.ofNullable(prefixedNameToInteractor.get(prefixedName));
     }
 
     @Override
@@ -176,7 +169,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         Objects.requireNonNull(type, "The given type cannot be null");
 
         String prefix = UserInteractorPrefix.getPrefixedNameFromClass(type, name);
-        return Optional.ofNullable(nameToInteractor.get(prefix + name))
+        return Optional.ofNullable(prefixedNameToInteractor.get(prefix + name))
             .filter(type::isInstance)
             .map(type::cast);
     }
@@ -335,33 +328,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         return getInteractor(name).orElseThrow();
     }
 
-    private void handleRegisterErrors(Throwable ex, Guild guild) {
-        new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, errorResponse -> {
-            // Find a channel that we have permissions to write to
-            // NOTE Unfortunately, there is no better accurate way to find a proper channel
-            // where we can report the setup problems other than simply iterating all of them.
-            Optional<TextChannel> channelToReportTo = guild.getTextChannelCache()
-                .stream()
-                .filter(channel -> guild.getPublicRole()
-                    .hasPermission(channel, Permission.MESSAGE_SEND))
-                .findAny();
-
-            // Report the problem to the guild
-            channelToReportTo.ifPresent(textChannel -> textChannel
-                .sendMessage("I need the commands scope, please invite me correctly."
-                        + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
-                            .formatted(config.getDiscordGuildInvite(), config.getProjectWebsite()))
-                .queue());
-
-            guild.leave().queue();
-
-            String unableToReportText = channelToReportTo.isPresent() ? ""
-                    : " Did not find any public text channel to report the issue to, unable to inform the guild.";
-            logger.warn(
-                    "Guild '{}' does not have the required command scope, unable to register, leaving it.{}",
-                    guild.getName(), unableToReportText, ex);
-        }).accept(ex);
-    }
 
     @SuppressWarnings("EmptyMethod")
     private static void onComponentIdRemoved(ComponentId componentId) {

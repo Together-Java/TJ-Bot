@@ -33,12 +33,13 @@ public class CommandReloading {
      * @param jda the JDA to update commands on
      * @param commandProvider the {@link CommandProvider} to grab commands from
      */
-    public static void reloadCommands(JDA jda, CommandProvider commandProvider) {
+    public static void reloadCommands(final JDA jda, final CommandProvider commandProvider) {
         logger.info("Reloading commands...");
-        List<CommandListUpdateAction> actions = Collections.synchronizedList(new ArrayList<>());
+        // 110 is based on the fact you can have 100 slash commands, and 20 context commands max.
+        List<CommandListUpdateAction> actions = Collections.synchronizedList(new ArrayList<>(120));
 
         // Reload global commands
-        actions.add(updateCommandsIf(command -> command.getVisibility() == CommandVisibility.GLOBAL,
+        actions.add(updateCommandsIf(command -> CommandVisibility.GLOBAL == command.getVisibility(),
                 getGlobalUpdateAction(jda), commandProvider));
 
         // Reload guild commands (potentially many guilds)
@@ -47,7 +48,7 @@ public class CommandReloading {
         // list. However, correctly reducing RestActions in a stream is not trivial.
         getGuildUpdateActions(jda)
             .map(updateAction -> updateCommandsIf(
-                    command -> command.getVisibility() == CommandVisibility.GUILD, updateAction,
+                    command -> CommandVisibility.GUILD == command.getVisibility(), updateAction,
                     commandProvider))
             .forEach(actions::add);
         logger.debug("Reloading commands over {} action-upstreams", actions.size());
@@ -55,6 +56,8 @@ public class CommandReloading {
         // Send message when all are done
         RestAction.allOf(actions).queue(a -> logger.debug("Commands successfully reloaded!"));
     }
+
+
 
     /**
      * Updates all commands given by the command provider which pass the given filter by pushing
@@ -66,8 +69,8 @@ public class CommandReloading {
      */
     @Contract("_, _, _ -> param2")
     private static CommandListUpdateAction updateCommandsIf(
-            Predicate<? super BotCommand> commandFilter, CommandListUpdateAction updateAction,
-            CommandProvider commandProvider) {
+            final Predicate<? super BotCommand> commandFilter, final CommandListUpdateAction updateAction,
+            final CommandProvider commandProvider) {
         commandProvider.getInteractors()
             .stream()
             .filter(BotCommand.class::isInstance)
@@ -79,11 +82,11 @@ public class CommandReloading {
         return updateAction;
     }
 
-    private static CommandListUpdateAction getGlobalUpdateAction(JDA jda) {
+    private static CommandListUpdateAction getGlobalUpdateAction(final JDA jda) {
         return jda.updateCommands();
     }
 
-    private static Stream<CommandListUpdateAction> getGuildUpdateActions(JDA jda) {
+    private static Stream<CommandListUpdateAction> getGuildUpdateActions(final JDA jda) {
         return jda.getGuildCache().stream().map(Guild::updateCommands);
     }
 
