@@ -90,12 +90,16 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             .toList();
 
         // User Interactors (e.g. slash commands)
-        prefixedNameToInteractor = features.stream()
-            .filter(UserInteractor.class::isInstance)
-            .map(UserInteractor.class::cast)
-            .filter(validateInteractorPredicate())
-            .collect(Collectors.toMap(UserInteractorPrefix::getPrefixedNameFromInstance,
-                    Function.identity()));
+        prefixedNameToInteractor =
+                features.stream()
+                    .filter(UserInteractor.class::isInstance)
+                    .map(UserInteractor.class::cast)
+                    .filter(validateInteractorPredicate())
+                    .collect(
+                            Collectors.toMap(
+                                    userInteractor -> userInteractor.getType()
+                                        .getPrefixedName(userInteractor.getName()),
+                                    Function.identity()));
 
 
         // Component Id Store
@@ -125,12 +129,16 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         return interactor -> {
             String name = Objects.requireNonNull(interactor.getName());
 
-            for (UserInteractorPrefix value : UserInteractorPrefix.values()) {
-                String prefix = value.getPrefix();
+            for (UserInteractionType interactionType : UserInteractionType.values()) {
+                if (interactionType == UserInteractionType.OTHER) {
+                    continue;
+                }
+
+                String prefix = interactionType.getPrefix();
 
                 if (name.startsWith(prefix)) {
                     throw new IllegalArgumentException(
-                            "The interactor's name cannot start with any of the reserved prefixes. ("
+                            "The interactor's name must not start with any of the reserved prefixes. ("
                                     + prefix + ")");
                 }
             }
@@ -145,34 +153,16 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         return prefixedNameToInteractor.values();
     }
 
-    @Override
-    public Optional<UserInteractor> getInteractor(final String prefixedName) {
-
+    /**
+     * Gets the interactor registered under the given name, if any.
+     *
+     * @param prefixedName the name of the command (including its prefix, see
+     *        {@link UserInteractionType UserInteractionType}
+     * @return the interactor registered under this name, if any
+     */
+    private Optional<UserInteractor> getInteractor(final String prefixedName) {
         return Optional.ofNullable(prefixedNameToInteractor.get(prefixedName));
     }
-
-    @Override
-    public <T extends UserInteractor> Optional<T> getInteractor(final String name,
-            final Class<? extends T> type) {
-        Objects.requireNonNull(type, "The given type cannot be null");
-
-        String prefixedName = UserInteractorPrefix.getPrefixedNameFromClass(type, name);
-        return Optional.ofNullable(prefixedNameToInteractor.get(prefixedName))
-            .filter(type::isInstance)
-            .map(type::cast);
-    }
-
-    @Override
-    public List<UserInteractor> getInteractorsWithName(final String name) {
-        List<UserInteractor> localInteractors = new ArrayList<>(4);
-
-        for (UserInteractorPrefix value : UserInteractorPrefix.values()) {
-            getInteractor(name, value.getClassType()).ifPresent(localInteractors::add);
-        }
-
-        return localInteractors;
-    }
-
 
     /**
      * Schedules the registered routines.
@@ -237,9 +227,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", name, event.getId(),
                 event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractorPrefix.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class)
-                    .onSlashCommand(event));
+        COMMAND_SERVICE.execute(
+                () -> requireUserInteractor(UserInteractionType.SLASH_COMMAND.getPrefixedName(name),
+                        SlashCommand.class).onSlashCommand(event));
     }
 
     @Override
@@ -248,9 +238,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         logger.debug("Received auto completion from command '{}' (#{}) on guild '{}'",
                 event.getCommandPath(), event.getId(), event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractorPrefix.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class)
-                    .onAutoComplete(event));
+        COMMAND_SERVICE.execute(
+                () -> requireUserInteractor(UserInteractionType.SLASH_COMMAND.getPrefixedName(name),
+                        SlashCommand.class).onAutoComplete(event));
     }
 
     @Override
@@ -276,7 +266,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received message context command '{}' (#{}) on guild '{}'", name,
                 event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractorPrefix.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
+                UserInteractionType.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
                 MessageContextCommand.class).onMessageContext(event));
     }
 
@@ -287,7 +277,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received user context command '{}' (#{}) on guild '{}'", name, event.getId(),
                 event.getGuild());
         COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractorPrefix.USER_CONTEXT_COMMAND.getPrefixedName(name),
+                UserInteractionType.USER_CONTEXT_COMMAND.getPrefixedName(name),
                 UserContextCommand.class).onUserContext(event));
     }
 
@@ -342,21 +332,22 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     /**
      * Gets the given user interactor by its full name, requires it exists and is of the given type.
      *
-     * @param fullName the full name of the interactor, including the prefix
+     * @param prefixedName the prefixed name of the interactor
      * @param typeToken a token of the type to expect
      * @return the user interactor with the given name
      * @param <T> the type to expect the user interactor to be of
      */
-    private <T extends UserInteractor> T requireUserInteractor(String fullName,
+    private <T extends UserInteractor> T requireUserInteractor(String prefixedName,
             Class<T> typeToken) {
-        UserInteractor userInteractor = getInteractor(fullName).orElseThrow(
-                () -> new IllegalArgumentException("There is no interactor with name " + fullName));
+        UserInteractor userInteractor =
+                getInteractor(prefixedName).orElseThrow(() -> new IllegalArgumentException(
+                        "There is no interactor with name " + prefixedName));
 
         if (!typeToken.isInstance(userInteractor)) {
             throw new IllegalArgumentException(
                     "The interactor %s is not of the expected type %s, but instead %s".formatted(
-                            fullName, typeToken.getSimpleName(),
-                            fullName.getClass().getSimpleName()));
+                            prefixedName, typeToken.getSimpleName(),
+                            prefixedName.getClass().getSimpleName()));
         }
 
         return typeToken.cast(userInteractor);

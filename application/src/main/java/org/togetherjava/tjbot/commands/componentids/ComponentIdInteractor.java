@@ -2,8 +2,10 @@ package org.togetherjava.tjbot.commands.componentids;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.UserInteractionType;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Delegate class for interacting with component IDs. Provides methods to easily generate valid
@@ -17,17 +19,20 @@ import java.util.Arrays;
  */
 public final class ComponentIdInteractor {
     private final String name;
+    private final UserInteractionType userInteractionType;
     private ComponentIdGenerator generator;
 
     /**
      * Creates a new instance.
      *
+     * @param userInteractionType The type of interaction component IDs are used by
      * @param name The unique name of the interactor. Requirements for this are documented in
      *        {@link net.dv8tion.jda.api.interactions.commands.build.Commands#slash(String, String)}.
      *        After registration of the interactor, the name must not change anymore.
      */
-    public ComponentIdInteractor(String name) {
-        this.name = name;
+    public ComponentIdInteractor(UserInteractionType userInteractionType, String name) {
+        this.name = Objects.requireNonNull(name);
+        this.userInteractionType = Objects.requireNonNull(userInteractionType);
     }
 
     /**
@@ -87,6 +92,7 @@ public final class ComponentIdInteractor {
      */
     @SuppressWarnings("OverloadedVarargsMethod")
     public String generateComponentId(Lifespan lifespan, String... args) {
-        return generator.generate(new ComponentId(getName(), Arrays.asList(args)), lifespan);
+        return generator.generate(new ComponentId(userInteractionType.getPrefixedName(getName()),
+                Arrays.asList(args)), lifespan);
     }
 }

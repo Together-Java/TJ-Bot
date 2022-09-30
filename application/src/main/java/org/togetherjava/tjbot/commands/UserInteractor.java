@@ -16,20 +16,30 @@ import java.util.List;
  * <p>
  * An interactor can react to button clicks and selection menu actions. This is done based on the
  * given {@link #getName()}, because of this names have to be unique. But, names can be complicated
- * if their type is different, all the types can be seen in {@link UserInteractorPrefix}
+ * if their type is different, all the types can be seen in {@link UserInteractionType}
  */
 public interface UserInteractor extends Feature {
 
     /**
      * Gets the name of the interactor.
      * <p>
-     * You cannot start the name with any of the prefixes found in {@link UserInteractorPrefix}
+     * You cannot start the name with any of the prefixes found in {@link UserInteractionType}
      * <p>
      * After registration of the interactor, the name must not change anymore.
      *
      * @return the name of the interactor
      */
     String getName();
+
+
+    /**
+     * Gets the type of interactors this interactor allows.
+     * <p>
+     * After registration of the interactor, the type must not change anymore.
+     *
+     * @return the type of the interaction allowed by this interactor
+     */
+    UserInteractionType getType();
 
     /**
      * Triggered by the core system when a button corresponding to this implementation (based on

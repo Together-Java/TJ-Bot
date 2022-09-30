@@ -40,7 +40,6 @@ import java.util.List;
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
 public interface SlashCommand extends BotCommand {
-
     /**
      * Gets the description of the command.
      * <p>
