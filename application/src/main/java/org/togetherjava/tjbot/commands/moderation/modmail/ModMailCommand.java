@@ -4,18 +4,18 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
@@ -60,16 +60,25 @@ public final class ModMailCommand extends SlashCommandAdapter {
      *
      * @param config the config to use for this
      */
-    public ModMailCommand(Config config) {
+    public ModMailCommand(JDA jda, Config config) {
         super(COMMAND_NAME, "Send a message to the moderators of the selected guild",
-                SlashCommandVisibility.GLOBAL);
+                CommandVisibility.GLOBAL);
 
-        getData()
-            .addOption(OptionType.STRING, OPTION_MESSAGE, "What do you want to tell them?", true)
-            .addOption(OptionType.STRING, OPTION_SERVER_GUILD, "Your guild name", true)
-            .addOption(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS, "if set, your name is hidden",
-                    false);
+        OptionData message = new OptionData(OptionType.STRING, OPTION_MESSAGE,
+                "What do you want to tell them?", true);
+        OptionData guildOption = new OptionData(OptionType.STRING, OPTION_SERVER_GUILD,
+                "Your server guild ID", true);
+        OptionData anonymous = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
+                "if set, your name is hidden", false);
 
+        List<Command.Choice> choices = jda.getGuildCache()
+            .stream()
+            .map(guild -> new Command.Choice(guild.getName(), guild.getIdLong()))
+            .toList();
+
+        guildOption.addChoices(choices);
+
+        getData().addOptions(message, guildOption, anonymous);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -146,11 +155,11 @@ public final class ModMailCommand extends SlashCommandAdapter {
     }
 
     private Optional<TextChannel> getChannel(SlashCommandInteractionEvent event) {
-        String userGuildName = event.getOption(OPTION_SERVER_GUILD).getAsString();
+        long userGuildId = event.getOption(OPTION_SERVER_GUILD).getAsLong();
         return event.getJDA()
             .getGuildCache()
             .stream()
-            .filter(guild -> guild.getName().equals(userGuildName))
+            .filter(guild -> guild.getIdLong() == userGuildId)
             .findAny()
             .orElseThrow()
             .getTextChannelCache()
