@@ -12,8 +12,8 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
@@ -53,7 +53,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
      * @param helper the helper to use
      */
     public HelpThreadCommand(Config config, HelpSystemHelper helper) {
-        super("help-thread", "Help thread specific commands", SlashCommandVisibility.GUILD);
+        super("help-thread", "Help thread specific commands", CommandVisibility.GUILD);
 
         OptionData categoryChoices =
                 new OptionData(OptionType.STRING, CHANGE_CATEGORY_OPTION, "new category", true);
