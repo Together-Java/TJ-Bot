@@ -11,6 +11,7 @@
 * [[Add a new command]]
   * [[Add days command]]
   * [[Add question command]]
+  * [[Adding context commands]]
 * [[Component IDs]]
 * [[JDA Tips and Tricks]]
 
