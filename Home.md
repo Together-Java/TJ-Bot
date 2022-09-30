@@ -10,6 +10,7 @@ If you want to join the party, please have a look at:
 * [[Add a new command]]
   * [[Add days command]]
   * [[Add question command]]
+  * [[Adding context commands]]
 * [[Component IDs]]
 * [[JDA Tips and Tricks]]
 
