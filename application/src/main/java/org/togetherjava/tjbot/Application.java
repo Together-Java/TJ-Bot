@@ -83,7 +83,11 @@ public class Application {
                 .build();
 
             jda.awaitReady();
+
             BotCore core = new BotCore(jda, database, config);
+            CommandReloading.reloadCommands(jda, core);
+            core.scheduleRoutines(jda);
+
             jda.addEventListener(core);
 
             logger.info("Bot is ready");
