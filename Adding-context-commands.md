@@ -7,7 +7,6 @@ Please read [[Add a new command]] first.
 ## What you will learn
 * add a custom user context command
 * add a custom message context command
-* reply to messages
 
 # Tutorial
 
