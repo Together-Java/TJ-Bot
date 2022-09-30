@@ -50,7 +50,6 @@ public interface BotCommand extends UserInteractor {
      */
     Command.Type getType();
 
-
     /**
      * Gets the visibility of this command.
      * <p>
