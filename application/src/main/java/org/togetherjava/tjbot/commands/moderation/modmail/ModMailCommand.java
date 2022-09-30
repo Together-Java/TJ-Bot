@@ -57,7 +57,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
     /**
      * Creates a new instance.
-     *
+     * 
+     * @param jda the JDA instance to use to retrieve guildCache
      * @param config the config to use for this
      */
     public ModMailCommand(JDA jda, Config config) {
