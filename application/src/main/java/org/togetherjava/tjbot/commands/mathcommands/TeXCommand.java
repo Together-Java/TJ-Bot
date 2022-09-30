@@ -15,7 +15,8 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

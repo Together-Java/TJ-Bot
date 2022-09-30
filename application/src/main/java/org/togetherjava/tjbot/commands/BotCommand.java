@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
 
 import java.util.List;
 
@@ -26,20 +25,6 @@ import java.util.List;
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
 public interface BotCommand extends UserInteractor {
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * Requirements for this are documented in
-     * {@link net.dv8tion.jda.api.interactions.commands.build.Commands Commands}. If your command is
-     * a slash-command, take a look at
-     * {@link net.dv8tion.jda.api.interactions.commands.build.Commands#slash(String, String)
-     * Commands#slash(String, String)}. For context commands, use
-     * {@link Commands#context(Command.Type, String) Commands#context(Command.Type, String)}.
-     *
-     * @return the name of the interactor
-     */
-    String getName();
 
     /**
      * Gets the type of this command.
