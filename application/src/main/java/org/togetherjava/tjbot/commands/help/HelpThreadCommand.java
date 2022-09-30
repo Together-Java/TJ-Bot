@@ -24,6 +24,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
@@ -41,6 +42,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final String CHANGE_TITLE_SUBCOMMAND = "title";
 
     private final HelpSystemHelper helper;
+    private final Map<String, Subcommand> nameToSubcommand;
     private final Map<Subcommand, Cache<Long, Instant>> subcommandToCooldownCache;
     private final Map<Subcommand, BiConsumer<SlashCommandInteractionEvent, ThreadChannel>> subcommandToEventHandler;
 
@@ -78,7 +80,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .maximumSize(1_000)
             .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
             .build();
-        subcommandToCooldownCache = new EnumMap<>(Arrays.stream(Subcommand.values())
+        nameToSubcommand = streamSubcommands()
+            .collect(Collectors.toMap(Subcommand::getCommandName, Function.identity()));
+        subcommandToCooldownCache = new EnumMap<>(streamSubcommands()
             .filter(Subcommand::hasCooldown)
             .collect(Collectors.toMap(Function.identity(), any -> createCooldownCache.get())));
         subcommandToEventHandler = new EnumMap<>(
@@ -90,10 +94,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         ThreadChannel helpThread = event.getThreadChannel();
 
-        Subcommand invokedSubcommand = Arrays.stream(Subcommand.values())
-            .filter(subcommand -> subcommand.getCommandName().equals(event.getSubcommandName()))
-            .findAny()
-            .orElseThrow();
+        Subcommand invokedSubcommand =
+                Objects.requireNonNull(nameToSubcommand.get(event.getSubcommandName()));
 
         if (invokedSubcommand.hasCooldown()
                 && isHelpThreadOnCooldown(invokedSubcommand, helpThread)) {
@@ -196,6 +198,10 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .build();
 
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
+    }
+
+    private static Stream<Subcommand> streamSubcommands() {
+        return Arrays.stream(Subcommand.values());
     }
 
     enum Subcommand {
