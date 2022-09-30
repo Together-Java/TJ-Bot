@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.commands;
 /**
  * Visibility of a slash command, i.e. in which context it can be used by users.
  */
-public enum SlashCommandVisibility {
+public enum CommandVisibility {
     /**
      * The command can be used within the context of a guild.
      */

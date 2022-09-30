@@ -1,22 +1,18 @@
 package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Channel;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
-import net.dv8tion.jda.api.requests.ErrorResponse;
+import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.CommandReloading;
 import org.togetherjava.tjbot.commands.*;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdParser;
@@ -29,8 +25,8 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,19 +43,17 @@ import java.util.stream.Stream;
  * event listener, using {@link net.dv8tion.jda.api.JDA#addEventListener(Object...)}. Afterwards,
  * the system is ready and will correctly forward events to all commands.
  */
-public final class BotCore extends ListenerAdapter implements SlashCommandProvider {
+public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
-    private static final String RELOAD_COMMAND = "reload";
     private static final ExecutorService COMMAND_SERVICE = Executors.newCachedThreadPool();
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Config config;
-    private final Map<String, UserInteractor> nameToInteractor;
+    private final Map<String, UserInteractor> prefixedNameToInteractor;
     private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
-    private final AtomicBoolean receivedOnReady = new AtomicBoolean(false);
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -94,74 +88,112 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .toList();
 
         // User Interactors (e.g. slash commands)
-        nameToInteractor = features.stream()
+        prefixedNameToInteractor = features.stream()
             .filter(UserInteractor.class::isInstance)
             .map(UserInteractor.class::cast)
-            .collect(Collectors.toMap(UserInteractor::getName, Function.identity()));
+            .filter(validateInteractorPredicate())
+            .collect(Collectors.toMap(UserInteractorPrefix::getPrefixedNameFromInstance,
+                    Function.identity()));
 
-        // Reload Command
-        if (nameToInteractor.containsKey(RELOAD_COMMAND)) {
-            throw new IllegalStateException(
-                    "The 'reload' command is a special reserved command that must not be used by other user interactors");
-        }
-        nameToInteractor.put(RELOAD_COMMAND, new ReloadCommand(this));
 
         // Component Id Store
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
-        nameToInteractor.values()
-            .forEach(slashCommand -> slashCommand
-                .acceptComponentIdGenerator(((componentId, lifespan) -> {
-                    UUID uuid = UUID.randomUUID();
-                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                    return uuid.toString();
-                })));
+        Collection<UserInteractor> interactors = getInteractors();
+
+        interactors.forEach(slashCommand -> slashCommand
+            .acceptComponentIdGenerator(((componentId, lifespan) -> {
+                UUID uuid = UUID.randomUUID();
+                componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                return uuid.toString();
+            })));
 
         if (logger.isInfoEnabled()) {
-            logger.info("Available user interactors: {}", nameToInteractor.keySet());
-        }
-    }
-
-    @Override
-    public Collection<SlashCommand> getSlashCommands() {
-        return nameToInteractor.values()
-            .stream()
-            .filter(SlashCommand.class::isInstance)
-            .map(SlashCommand.class::cast)
-            .toList();
-    }
-
-    @Override
-    public Optional<SlashCommand> getSlashCommand(String name) {
-        return Optional.ofNullable(nameToInteractor.get(name))
-            .filter(SlashCommand.class::isInstance)
-            .map(SlashCommand.class::cast);
-    }
-
-    /**
-     * Trigger once JDA is ready. Subsequent calls are ignored.
-     * 
-     * @param jda the JDA instance to work with
-     */
-    public void onReady(JDA jda) {
-        if (!receivedOnReady.compareAndSet(false, true)) {
-            // Ensures that we only enter the event once
-            return;
+            logger.info("Available user interactors: {}", interactors);
         }
 
-        // Register reload on all guilds
-        logger.debug("JDA is ready, registering reload command");
-        jda.getGuildCache()
-            .forEach(guild -> COMMAND_SERVICE.execute(() -> registerReloadCommand(guild)));
-        // NOTE We do not have to wait for reload to complete for the command system to be ready
-        // itself
-        logger.debug("Bot core is now ready");
 
+        CommandReloading.reloadCommands(jda, this);
         scheduleRoutines(jda);
     }
 
-    private void scheduleRoutines(JDA jda) {
+    /**
+     * Returns a predicate which validates the given interactor
+     *
+     * @return A predicate which validates the given interactor
+     */
+    private static Predicate<UserInteractor> validateInteractorPredicate() {
+        return interactor -> {
+            String name = interactor.getName();
+
+            if (name == null) {
+                logger.error("An interactor's name shouldn't be null! {}", interactor);
+                return false;
+            }
+
+            for (UserInteractorPrefix value : UserInteractorPrefix.values()) {
+                String prefix = value.getPrefix();
+
+                if (name.startsWith(prefix)) {
+                    throw new IllegalArgumentException(
+                            "The interactor's name cannot start with any of the reserved prefixes. ("
+                                    + prefix + ")");
+                }
+            }
+
+            if (name.startsWith("s-") || name.startsWith("mc-") || name.startsWith("uc-")) {
+                throw new IllegalArgumentException(
+                        "The interactor's name cannot start with any of the prefixes.");
+            }
+
+            return true;
+        };
+    }
+
+    @Override
+    @Unmodifiable
+    public Collection<UserInteractor> getInteractors() {
+        return prefixedNameToInteractor.values();
+    }
+
+    @Override
+    public Optional<UserInteractor> getInteractor(final String prefixedName) {
+
+        return Optional.ofNullable(prefixedNameToInteractor.get(prefixedName));
+    }
+
+    @Override
+    public <T extends UserInteractor> Optional<T> getInteractor(final String name,
+            final Class<? extends T> type) {
+        Objects.requireNonNull(type, "The given type cannot be null");
+
+        String prefixedName = UserInteractorPrefix.getPrefixedNameFromClass(type, name);
+        return Optional.ofNullable(prefixedNameToInteractor.get(prefixedName))
+            .filter(type::isInstance)
+            .map(type::cast);
+    }
+
+    @Override
+    public List<UserInteractor> getInteractorsWithName(final String name) {
+        List<UserInteractor> localInteractors = new ArrayList<>(4);
+
+        for (UserInteractorPrefix value : UserInteractorPrefix.values()) {
+            getInteractor(name, value.getClassType()).ifPresent(localInteractors::add);
+        }
+
+        return localInteractors;
+    }
+
+
+    /**
+     * Schedules the registered routines.
+     * <p>
+     * This needs a ready {@link JDA} instance.
+     *
+     * @param jda a ready JDA instance
+     */
+    public void scheduleRoutines(JDA jda) {
         routines.forEach(routine -> {
             Runnable command = () -> {
                 String routineName = routine.getClass().getSimpleName();
@@ -234,23 +266,6 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
             .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
     }
 
-    private void registerReloadCommand(Guild guild) {
-        guild.retrieveCommands().queue(commands -> {
-            // Has it been registered already?
-            if (commands.stream().map(Command::getName).anyMatch(RELOAD_COMMAND::equals)) {
-                logger.debug("Command '{}' has already been registered for guild '{}'",
-                        RELOAD_COMMAND, guild.getName());
-                return;
-            }
-
-            logger.debug("Register '{}' for guild '{}'", RELOAD_COMMAND, guild.getName());
-            SlashCommand reloadCommand = requireSlashCommand(RELOAD_COMMAND);
-            guild.upsertCommand(reloadCommand.getData())
-                .queue(command -> logger.debug("Registered '{}' for guild '{}'", RELOAD_COMMAND,
-                        guild.getName()));
-        }, ex -> handleRegisterErrors(ex, guild));
-    }
-
     /**
      * Forwards the given component event to the associated user interactor.
      * <p>
@@ -305,7 +320,7 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      * @throws NullPointerException if the command with the given name was not registered
      */
     private SlashCommand requireSlashCommand(String name) {
-        return getSlashCommand(name).orElseThrow(
+        return getInteractor(name, SlashCommand.class).orElseThrow(
                 () -> new NullPointerException("There is no slash command with name " + name));
     }
 
@@ -314,39 +329,12 @@ public final class BotCore extends ListenerAdapter implements SlashCommandProvid
      *
      * @param name the name of the user interactor to get
      * @return the user interactor with the given name
-     * @throws NullPointerException if the user interactor with the given name was not registered
+     * @throws NoSuchElementException if the user interactor with the given name was not registered
      */
-    private UserInteractor requireUserInteractor(String name) {
-        return Objects.requireNonNull(nameToInteractor.get(name));
+    private UserInteractor requireUserInteractor(final String name) {
+        return getInteractor(name).orElseThrow();
     }
 
-    private void handleRegisterErrors(Throwable ex, Guild guild) {
-        new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, errorResponse -> {
-            // Find a channel that we have permissions to write to
-            // NOTE Unfortunately, there is no better accurate way to find a proper channel
-            // where we can report the setup problems other than simply iterating all of them.
-            Optional<TextChannel> channelToReportTo = guild.getTextChannelCache()
-                .stream()
-                .filter(channel -> guild.getPublicRole()
-                    .hasPermission(channel, Permission.MESSAGE_SEND))
-                .findAny();
-
-            // Report the problem to the guild
-            channelToReportTo.ifPresent(textChannel -> textChannel
-                .sendMessage("I need the commands scope, please invite me correctly."
-                        + " You can join '%s' or visit '%s' for more info, I will leave your guild now."
-                            .formatted(config.getDiscordGuildInvite(), config.getProjectWebsite()))
-                .queue());
-
-            guild.leave().queue();
-
-            String unableToReportText = channelToReportTo.isPresent() ? ""
-                    : " Did not find any public text channel to report the issue to, unable to inform the guild.";
-            logger.warn(
-                    "Guild '{}' does not have the required command scope, unable to register, leaving it.{}",
-                    guild.getName(), unableToReportText, ex);
-        }).accept(ex);
-    }
 
     @SuppressWarnings("EmptyMethod")
     private static void onComponentIdRemoved(ComponentId componentId) {

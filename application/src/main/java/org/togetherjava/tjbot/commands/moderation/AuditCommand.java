@@ -14,8 +14,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -46,7 +46,7 @@ public final class AuditCommand extends SlashCommandAdapter {
      */
     public AuditCommand(ModerationActionsStore actionsStore) {
         super(COMMAND_NAME, "Lists all moderation actions that have been taken against a user",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who to retrieve actions for",
                 true);

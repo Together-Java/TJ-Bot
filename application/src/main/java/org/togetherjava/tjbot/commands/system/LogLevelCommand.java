@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import java.util.stream.Stream;
 
@@ -31,7 +31,7 @@ public final class LogLevelCommand extends SlashCommandAdapter {
      */
     public LogLevelCommand() {
         super("set-log-level", "Changes the log level of the bot while it is running.",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         OptionData option =
                 new OptionData(OptionType.STRING, LOG_LEVEL_OPTION, "the log level to set", true);

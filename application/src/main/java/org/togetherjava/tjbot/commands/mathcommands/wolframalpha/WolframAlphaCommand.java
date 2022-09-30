@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.net.http.HttpClient;
@@ -40,7 +40,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
      */
     public WolframAlphaCommand(Config config) {
         super("wolfram-alpha", "Renders mathematical queries using WolframAlpha",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
         getData().addOption(OptionType.STRING, QUERY_OPTION, "the query to send to WolframAlpha",
                 true);
         appId = config.getWolframAlphaAppId();

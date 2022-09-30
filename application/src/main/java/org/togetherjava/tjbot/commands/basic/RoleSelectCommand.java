@@ -15,11 +15,12 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.awt.Color;
+import java.awt.*;
+import java.util.List;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
  * <p>
  * The command works in two stages. First, a user sets up a role selection dialog by using the
  * command:
- * 
+ *
  * <pre>
  * {@code
  * /role-select
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
  *   selectable-role2: @Droid
  * }
  * </pre>
- * 
+ *
  * Afterwards, users can pick their roles in a menu, upon which the command adjusts their roles.
  */
 public final class RoleSelectCommand extends SlashCommandAdapter {
@@ -61,7 +62,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     public RoleSelectCommand() {
         super("role-select",
                 "Creates a dialog that lets users pick roles, system roles are ignored when selected.",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         OptionData roleOption = new OptionData(OptionType.ROLE, ROLE_OPTION,
                 "pick roles that users will then be able to select", true);

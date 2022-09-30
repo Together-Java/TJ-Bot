@@ -97,6 +97,10 @@ public class Features {
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new OnGuildLeaveCloseThreadListener(database));
 
+        // Message context commands
+
+        // User context commands
+
         // Slash commands
         features.add(new LogLevelCommand());
         features.add(new PingCommand());
