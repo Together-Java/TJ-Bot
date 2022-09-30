@@ -33,9 +33,9 @@ public interface CommandProvider {
     /**
      * Gets the interactor registered under the given name, if any.
      * <p>
-     * This command excepts the name to include the prefix already, if you prefer using a
+     * This command expects the name to include the prefix already, if you prefer using a
      * {@link Class} instance of the command/type instead, use {@link #getInteractor(String, Class)}
-     * instead.-
+     * instead.
      *
      * @param prefixedName the name of the command (including its prefix, see
      *        {@link org.togetherjava.tjbot.commands.UserInteractorPrefix UserInteractorPrefix}
@@ -48,7 +48,7 @@ public interface CommandProvider {
      * <p>
      * Unlike {@link #getInteractor(String)}, this command expects the name, without the prefix (see
      * {@link org.togetherjava.tjbot.commands.UserInteractorPrefix UserInteractorPrefix}). Instead,
-     * this command excepts a {@link Class} instance of the commands class. This can be
+     * this command expects a {@link Class} instance of the commands class. This can be
      * {@link org.togetherjava.tjbot.commands.SlashCommand SlashCommand}, or even as specific as
      * {@link org.togetherjava.tjbot.commands.basic.PingCommand PingCommand}.
      *

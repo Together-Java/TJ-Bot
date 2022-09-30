@@ -23,6 +23,16 @@ import java.util.stream.Stream;
 public class CommandReloading {
     private static final Logger logger = LoggerFactory.getLogger(CommandReloading.class);
 
+    /**
+     * According to <a href=
+     * "https://discord.com/developers/docs/interactions/application-commands#registering-a-command">Discord
+     * docs</a>, there can be a maximum of 110 commands, 100 slash, and 5 context each.
+     * <p>
+     * Because this bot most of the time operates in only 1 server, chances of exceeding this limit
+     * is low.
+     */
+    public static final int MAX_COMMAND_COUNT = 110;
+
     private CommandReloading() {
         throw new UnsupportedOperationException("Utility class");
     }
@@ -35,8 +45,8 @@ public class CommandReloading {
      */
     public static void reloadCommands(final JDA jda, final CommandProvider commandProvider) {
         logger.info("Reloading commands...");
-        // 110 is based on the fact you can have 100 slash commands, and 20 context commands max.
-        List<CommandListUpdateAction> actions = Collections.synchronizedList(new ArrayList<>(120));
+        List<CommandListUpdateAction> actions =
+                Collections.synchronizedList(new ArrayList<>(MAX_COMMAND_COUNT));
 
         // Reload global commands
         actions.add(updateCommandsIf(command -> CommandVisibility.GLOBAL == command.getVisibility(),
