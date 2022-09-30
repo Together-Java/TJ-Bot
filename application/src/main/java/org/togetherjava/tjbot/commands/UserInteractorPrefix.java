@@ -7,17 +7,23 @@ import org.jetbrains.annotations.Contract;
  * <p>
  * This is used for separate interactors with the same name, by command type (and possibly more in
  * the future). Our system doesn't allow multiple interactors with the same name, while having a
- * slash-command and a message-context-command with the same name can be really useful.
+ * slash-command, and a message-context-command with the same name can be useful.
  */
 public enum UserInteractorPrefix {
-    /*
-     * Implementations that are none of the following have no dedicated prefix
+    // Implementations that are none of the following have no dedicated prefix.
+
+    /**
+     * Prefix for slash commands.
      */
-
     SLASH_COMMAND(SlashCommand.class, "s-"),
+    /**
+     * Prefix for message context commands.
+     */
     MESSAGE_CONTEXT_COMMAND(MessageContextCommand.class, "mc-"),
+    /**
+     * Prefix for user context commands.
+     */
     USER_CONTEXT_COMMAND(UserContextCommand.class, "uc-");
-
 
     private final Class<? extends UserInteractor> classType;
     private final String prefix;
@@ -34,6 +40,16 @@ public enum UserInteractorPrefix {
      */
     public String getPrefix() {
         return prefix;
+    }
+
+    /**
+     * Returns the name, attached with the prefix in front of it.
+     *
+     * @param name the name
+     * @return the name, with the prefix in front of it.
+     */
+    public String getPrefixedName(String name) {
+        return prefix + name;
     }
 
     /**
