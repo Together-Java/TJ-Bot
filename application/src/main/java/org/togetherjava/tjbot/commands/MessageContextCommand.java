@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands;
 
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -50,7 +49,7 @@ public interface MessageContextCommand extends BotCommand {
      * <p>
      * Buttons or menus have to be created with a component ID (see
      * {@link ComponentInteraction#getComponentId()},
-     * {@link net.dv8tion.jda.api.interactions.components.buttons.Button#of(ButtonStyle, String, Emoji)})
+     * {@link net.dv8tion.jda.api.interactions.components.buttons.Button#of(ButtonStyle, String, String)})
      * in a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>

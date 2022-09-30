@@ -4,7 +4,6 @@ import io.mikael.urlbuilder.UrlBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
