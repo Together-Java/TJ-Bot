@@ -2,13 +2,16 @@ package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Channel;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +33,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.togetherjava.tjbot.commands.UserInteractorPrefix.*;
 
 /**
  * The bot core is the core of command handling in this application.
@@ -245,9 +250,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        logger.debug("Received slash command '{}' (#{}) on guild '{}'", event.getName(),
-                event.getId(), event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireSlashCommand(event.getName()).onSlashCommand(event));
+        String name = event.getName();
+
+        logger.debug("Received slash command '{}' (#{}) on guild '{}'", name, event.getId(),
+                event.getGuild());
+        COMMAND_SERVICE.execute(
+                () -> this.<SlashCommand>requireUserInteractor(SLASH_COMMAND.getPrefixedName(name))
+                    .onSlashCommand(event));
     }
 
     @Override
@@ -265,6 +274,31 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         COMMAND_SERVICE
             .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
     }
+
+    @Override
+    public void onMessageContextInteraction(@NotNull final MessageContextInteractionEvent event) {
+        String name = event.getName();
+
+        logger.debug("Received message context command '{}' (#{}) on guild '{}'", name,
+                event.getId(), event.getGuild());
+        COMMAND_SERVICE.execute(
+                () -> this
+                    .<MessageContextCommand>requireUserInteractor(
+                            MESSAGE_CONTEXT_COMMAND.getPrefixedName(name))
+                    .onMessageContext(event));
+    }
+
+    @Override
+    public void onUserContextInteraction(@NotNull final UserContextInteractionEvent event) {
+        String name = event.getName();
+
+        logger.debug("Received user context command '{}' (#{}) on guild '{}'", name, event.getId(),
+                event.getGuild());
+        COMMAND_SERVICE.execute(() -> this
+            .<UserContextCommand>requireUserInteractor(USER_CONTEXT_COMMAND.getPrefixedName(name))
+            .onUserContext(event));
+    }
+
 
     /**
      * Forwards the given component event to the associated user interactor.
@@ -319,20 +353,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * @return the command with the given name
      * @throws NullPointerException if the command with the given name was not registered
      */
-    private SlashCommand requireSlashCommand(String name) {
-        return getInteractor(name, SlashCommand.class).orElseThrow(
-                () -> new NullPointerException("There is no slash command with name " + name));
-    }
-
-    /**
-     * Gets the given user interactor by its name and requires that it exists.
-     *
-     * @param name the name of the user interactor to get
-     * @return the user interactor with the given name
-     * @throws NoSuchElementException if the user interactor with the given name was not registered
-     */
-    private UserInteractor requireUserInteractor(final String name) {
-        return getInteractor(name).orElseThrow();
+    private <T extends UserInteractor> T requireUserInteractor(String name) {
+        return (T) getInteractor(name).orElseThrow(
+                () -> new NullPointerException("There is no interactor with name " + name));
     }
 
 

@@ -37,6 +37,16 @@ public enum UserInteractorPrefix {
     }
 
     /**
+     * Returns the name, attached with the prefix in front of it.
+     *
+     * @param name the name
+     * @return the name, with the prefix in front of it.
+     */
+    public String getPrefixedName(String name) {
+        return prefix + name;
+    }
+
+    /**
      * The class type that should receive the prefix
      *
      * @return a {@link Class} instance of the type
