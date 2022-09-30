@@ -1,25 +1,19 @@
 package org.togetherjava.tjbot.logging.discord;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.send.WebhookEmbed;
+import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
+import club.minnced.discord.webhook.send.WebhookMessage;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.logging.LogMarkers;
-import org.togetherjava.tjbot.logging.discord.api.DiscordLogBatch;
-import org.togetherjava.tjbot.logging.discord.api.DiscordLogMessageEmbed;
 
-import javax.annotation.Nullable;
-import java.io.IOException;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,31 +25,29 @@ import java.util.stream.Stream;
  * Logs are forwarded in correct order, based on their timestamp. They are not forwarded
  * immediately, but at a fixed schedule in batches of {@value MAX_BATCH_SIZE} logs.
  * <p>
- * Failed logs are repeated {@value MAX_RETRIES_UNTIL_DISCARD} times until eventually discarded.
- * <p>
  * Although unlikely to hit, the class maximally buffers {@value MAX_PENDING_LOGS} logs until
  * discarding further logs. Under normal circumstances, the class can easily handle high loads of
  * logs.
+ * <p>
+ * The class is thread-safe.
  */
 final class DiscordLogForwarder {
     private static final Logger logger = LoggerFactory.getLogger(DiscordLogForwarder.class);
 
     private static final int MAX_PENDING_LOGS = 10_000;
-    private static final int MAX_BATCH_SIZE = 10;
-    private static final int MAX_RETRIES_UNTIL_DISCARD = 3;
-    private static final int HTTP_STATUS_TOO_MANY_REQUESTS = 429;
-    private static final int HTTP_STATUS_OK_START = 200;
-    private static final int HTTP_STATUS_OK_END = 300;
-
-    private static final HttpClient CLIENT = HttpClient.newHttpClient();
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final int MAX_BATCH_SIZE = WebhookMessage.MAX_EMBEDS;
     private static final ScheduledExecutorService SERVICE =
             Executors.newSingleThreadScheduledExecutor();
-
     /**
-     * The Discord webhook to send logs to.
+     * Has to be small enough for fitting all {@value MAX_BATCH_SIZE} embeds contained in a batch
+     * into the total character length of ~6000.
      */
-    private final URI webhook;
+    private static final int MAX_EMBED_DESCRIPTION = 1_000;
+    private static final Map<Level, Integer> LEVEL_TO_AMBIENT_COLOR =
+            Map.of(Level.TRACE, 0x00B362, Level.DEBUG, 0x00A5CE, Level.INFO, 0xAC59FF, Level.WARN,
+                    0xDFDF00, Level.ERROR, 0xBF2200, Level.FATAL, 0xFF8484);
+
+    private final WebhookClient webhookClient;
     /**
      * Internal buffer of logs that still have to be forwarded to Discord. Actions are synchronized
      * using {@link #pendingLogsLock} to ensure thread safety.
@@ -63,30 +55,20 @@ final class DiscordLogForwarder {
     private final Queue<LogMessage> pendingLogs = new PriorityQueue<>();
     private final Object pendingLogsLock = new Object();
 
-    /**
-     * If present, a rate limit has been hit and further requests must be made only after this
-     * moment.
-     */
-    @Nullable
-    private Instant rateLimitExpiresAt;
-    /**
-     * The amount of subsequent failed requests. Requests are tried
-     * {@value MAX_RETRIES_UNTIL_DISCARD} times until discarded. Resets to 0 once a request was
-     * successful.
-     */
-    private int currentRetries;
-
     DiscordLogForwarder(URI webhook) {
-        this.webhook = webhook;
+        webhookClient = WebhookClient.withUrl(webhook.toString());
 
         SERVICE.scheduleWithFixedDelay(this::processPendingLogs, 5, 5, TimeUnit.SECONDS);
     }
+
 
     /**
      * Forwards the given log message to Discord.
      * <p>
      * Logs are not immediately forwarded, but on a schedule. If the maximal buffer size of
      * {@value MAX_PENDING_LOGS} is exceeded, logs are discarded.
+     * <p>
+     * This method is thread-safe.
      *
      * @param event the log to forward
      */
@@ -108,54 +90,19 @@ final class DiscordLogForwarder {
 
     private void processPendingLogs() {
         try {
-            if (handleIsRateLimitActive()) {
-                // Try again later
-                return;
-            }
-
             // Process batch
             List<LogMessage> logsToProcess = pollLogsToProcessBatch();
             if (logsToProcess.isEmpty()) {
                 return;
             }
 
-            List<DiscordLogMessageEmbed> embeds =
-                    logsToProcess.stream().map(LogMessage::embed).toList();
-            DiscordLogBatch logBatch = new DiscordLogBatch(embeds);
+            List<WebhookEmbed> logBatch = logsToProcess.stream().map(LogMessage::embed).toList();
 
-            LogSendResult result = sendLogBatch(logBatch);
-            if (result == LogSendResult.SUCCESS) {
-                currentRetries = 0;
-            } else {
-                currentRetries++;
-                if (currentRetries <= MAX_RETRIES_UNTIL_DISCARD) {
-                    synchronized (pendingLogsLock) {
-                        // Try again later
-                        pendingLogs.addAll(logsToProcess);
-                    }
-                } else {
-                    logger.warn(LogMarkers.NO_DISCORD, """
-                            A log batch keeps failing forwarding to Discord. \
-                            Discarding the problematic batch.""");
-                }
-            }
+            webhookClient.send(logBatch);
         } catch (Exception e) {
             logger.warn(LogMarkers.NO_DISCORD,
                     "Unknown error when forwarding pending logs to Discord.", e);
         }
-    }
-
-    private boolean handleIsRateLimitActive() {
-        if (rateLimitExpiresAt == null) {
-            return false;
-        }
-
-        if (Instant.now().isAfter(rateLimitExpiresAt)) {
-            // Rate limit has expired, reset
-            rateLimitExpiresAt = null;
-        }
-
-        return true;
     }
 
     private List<LogMessage> pollLogsToProcessBatch() {
@@ -165,72 +112,43 @@ final class DiscordLogForwarder {
         }
     }
 
-    private LogSendResult sendLogBatch(DiscordLogBatch logBatch) {
-        String rawPayload;
-        try {
-            rawPayload = JSON.writeValueAsString(logBatch);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("Unable to write JSON for log batch.", e);
-        }
-
-        HttpRequest request = HttpRequest.newBuilder(webhook)
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(rawPayload))
-            .build();
-
-        try {
-            HttpResponse<String> response =
-                    CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response.statusCode() == HTTP_STATUS_TOO_MANY_REQUESTS) {
-                response.headers()
-                    .firstValueAsLong("Retry-After")
-                    .ifPresent(retryAfterSeconds -> rateLimitExpiresAt =
-                            Instant.now().plusSeconds(retryAfterSeconds));
-                logger.debug(LogMarkers.NO_DISCORD,
-                        "Hit rate limits when trying to forward log batch to Discord.");
-                return LogSendResult.RATE_LIMIT;
-            }
-            if (response.statusCode() < HTTP_STATUS_OK_START
-                    || response.statusCode() >= HTTP_STATUS_OK_END) {
-                if (logger.isWarnEnabled()) {
-                    logger.warn(LogMarkers.NO_DISCORD,
-                            "Discord webhook API responded with {} when forwarding log batch. Body: {}",
-                            response.statusCode(), response.body());
-                }
-                return LogSendResult.ERROR;
-            }
-
-            return LogSendResult.SUCCESS;
-        } catch (IOException e) {
-            logger.warn(LogMarkers.NO_DISCORD, "Unknown error when sending log batch to Discord.",
-                    e);
-            return LogSendResult.ERROR;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return LogSendResult.ERROR;
-        }
-    }
-
-    private record LogMessage(DiscordLogMessageEmbed embed,
+    private record LogMessage(WebhookEmbed embed,
             Instant timestamp) implements Comparable<LogMessage> {
+
         private static LogMessage ofEvent(LogEvent event) {
-            DiscordLogMessageEmbed embed = DiscordLogMessageEmbed.ofEvent(event);
+            String authorName = event.getLoggerName();
+            String title = event.getLevel().name();
+            int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
+            String description =
+                    abbreviate(event.getMessage().getFormattedMessage(), MAX_EMBED_DESCRIPTION);
             Instant timestamp = Instant.ofEpochMilli(event.getInstant().getEpochMillisecond());
 
+            WebhookEmbed embed = new WebhookEmbedBuilder()
+                .setAuthor(new WebhookEmbed.EmbedAuthor(authorName, null, null))
+                .setTitle(new WebhookEmbed.EmbedTitle(title, null))
+                .setDescription(description)
+                .setColor(colorDecimal)
+                .setTimestamp(timestamp)
+                .build();
+
             return new LogMessage(embed, timestamp);
+        }
+
+        private static String abbreviate(String text, int maxLength) {
+            if (text.length() < maxLength) {
+                return text;
+            }
+
+            if (maxLength < 3) {
+                return text.substring(0, maxLength);
+            }
+
+            return text.substring(0, maxLength - 3) + "...";
         }
 
         @Override
         public int compareTo(@NotNull LogMessage o) {
             return timestamp.compareTo(o.timestamp);
         }
-    }
-
-
-    private enum LogSendResult {
-        SUCCESS,
-        RATE_LIMIT,
-        ERROR
     }
 }
