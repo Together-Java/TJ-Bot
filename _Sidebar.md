@@ -14,6 +14,7 @@
   * [[Adding context commands]]
 * [[Component IDs]]
 * [[JDA Tips and Tricks]]
+* [[Connect SonarLint extension to our SonarCloud]]
 
 #### Project documentation
 
