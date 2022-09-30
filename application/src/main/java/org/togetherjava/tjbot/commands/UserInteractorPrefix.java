@@ -35,8 +35,6 @@ public enum UserInteractorPrefix {
     public String getPrefix() {
         return prefix;
     }
-
-
     /**
      * The class type that should receive the prefix
      *

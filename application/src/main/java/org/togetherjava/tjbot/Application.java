@@ -83,8 +83,6 @@ public class Application {
                 .build();
 
             jda.awaitReady();
-
-
             BotCore core = new BotCore(jda, database, config);
             jda.addEventListener(core);
 

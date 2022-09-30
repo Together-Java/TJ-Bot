@@ -66,9 +66,6 @@ public class CommandReloading {
         // Send message when all are done
         RestAction.allOf(actions).queue(a -> logger.debug("Commands successfully reloaded!"));
     }
-
-
-
     /**
      * Updates all commands given by the command provider which pass the given filter by pushing
      * through the given action upstream.
