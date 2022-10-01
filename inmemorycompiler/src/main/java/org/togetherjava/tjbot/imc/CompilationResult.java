@@ -66,4 +66,14 @@ public record CompilationResult(boolean success, byte @NotNull [] bytes,
 
         return result;
     }
+
+    @Override
+    public String toString()
+    {
+        return "CompilationResult{" +
+                "success=" + success +
+                ", bytes=" + Arrays.toString(bytes) +
+                ", compileInfos=" + compileInfos +
+                '}';
+    }
 }
