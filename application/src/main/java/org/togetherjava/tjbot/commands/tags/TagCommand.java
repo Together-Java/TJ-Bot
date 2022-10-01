@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.tags;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -12,8 +13,11 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
+
+import static org.togetherjava.tjbot.commands.utils.StringDistances.prefixEditDistance;
 
 /**
  * Implements the {@code /tag} command which lets the bot respond content of a tag that has been
@@ -49,7 +53,7 @@ public final class TagCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
+        String id = event.getOption(ID_OPTION).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
         if (tagSystem.handleIsUnknownTag(id, event)) {
@@ -71,15 +75,22 @@ public final class TagCommand extends SlashCommandAdapter {
 
     @Override
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        if (event.getFocusedOption().getName().equals(ID_OPTION)) {
-            List<Command.Choice> choices = tagSystem.getAllIds()
-                .stream()
-                .filter(id -> id.startsWith(event.getFocusedOption().getValue()))
-                .map(id -> new Command.Choice(id, id))
-                .limit(OptionData.MAX_CHOICES)
-                .toList();
+        AutoCompleteQuery focusedOption = event.getFocusedOption();
+
+        if (focusedOption.getName().equals(ID_OPTION)) {
+            List<Command.Choice> choices =
+                    matches(focusedOption.getValue(), tagSystem.getAllIds()).stream()
+                        .map(id -> new Command.Choice(id, id))
+                        .limit(OptionData.MAX_CHOICES)
+                        .toList();
 
             event.replyChoices(choices).queue();
         }
+    }
+
+    private static List<String> matches(String prefix, Collection<String> candidates) {
+        return candidates.stream()
+            .sorted(Comparator.comparingInt(candidate -> prefixEditDistance(prefix, candidate)))
+            .toList();
     }
 }
