@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -42,9 +43,10 @@ public final class TagCommand extends SlashCommandAdapter {
         // TODO Think about adding an ephemeral selection menu with pagination support
         // if the user calls this without id or similar
         getData().addOptions(
-                new OptionData(OptionType.STRING, ID_OPTION, "The id of the tag to display", true, true),
-                new OptionData(OptionType.USER, REPLY_TO_USER_OPTION, "Optionally, the user who you want to reply to", false)
-        );
+                new OptionData(OptionType.STRING, ID_OPTION, "The id of the tag to display", true,
+                        true),
+                new OptionData(OptionType.USER, REPLY_TO_USER_OPTION,
+                        "Optionally, the user who you want to reply to", false));
     }
 
     @Override
@@ -71,14 +73,16 @@ public final class TagCommand extends SlashCommandAdapter {
 
     @Override
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        if (event.getName().equals(COMMAND_NAME) && event.getFocusedOption().getName().equals(ID_OPTION)) {
-            event.replyChoices(
-                    tagSystem.getAllIds().stream()
-                            .filter(id -> id.startsWith(event.getFocusedOption().getValue()))
-                            .map(id -> new Command.Choice(id, id))
-                            .limit(MAX_OPTIONS)
-                            .toList()
-            ).queue();
+        if (event.getName().equals(COMMAND_NAME)
+                && event.getFocusedOption().getName().equals(ID_OPTION)) {
+            List<Command.Choice> choices = tagSystem.getAllIds()
+                .stream()
+                .filter(id -> id.startsWith(event.getFocusedOption().getValue()))
+                .map(id -> new Command.Choice(id, id))
+                .limit(MAX_OPTIONS)
+                .toList();
+
+            event.replyChoices(choices).queue();
         }
     }
 }
