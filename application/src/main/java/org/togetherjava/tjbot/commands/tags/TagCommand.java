@@ -28,7 +28,6 @@ public final class TagCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "tag";
     static final String ID_OPTION = "id";
     static final String REPLY_TO_USER_OPTION = "reply-to";
-    private static final int MAX_OPTIONS = 25;
 
     /**
      * Creates a new instance, using the given tag system as base.
@@ -73,13 +72,12 @@ public final class TagCommand extends SlashCommandAdapter {
 
     @Override
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        if (event.getName().equals(COMMAND_NAME)
-                && event.getFocusedOption().getName().equals(ID_OPTION)) {
+        if (event.getFocusedOption().getName().equals(ID_OPTION)) {
             List<Command.Choice> choices = tagSystem.getAllIds()
                 .stream()
                 .filter(id -> id.startsWith(event.getFocusedOption().getValue()))
                 .map(id -> new Command.Choice(id, id))
-                .limit(MAX_OPTIONS)
+                .limit(OptionData.MAX_CHOICES)
                 .toList();
 
             event.replyChoices(choices).queue();
