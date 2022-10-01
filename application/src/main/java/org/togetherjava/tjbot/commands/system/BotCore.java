@@ -244,7 +244,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
     @Override
     public void onCommandAutoCompleteInteraction(
-            @NotNull final CommandAutoCompleteInteractionEvent event) {
+            final CommandAutoCompleteInteractionEvent event) {
         String name = event.getName();
 
         logger.debug("Received auto completion from command-subcommand '{}-{}' (#{}) on guild '{}'",
