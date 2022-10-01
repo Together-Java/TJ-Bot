@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  *     ```
  * }
  * </pre>
- * 
+ *
  * then apply the application
  */
 public final class BytecodeCommand extends BotCommandAdapter
@@ -66,9 +66,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         event.reply("Compiling...")
             .mentionRepliedUser(false)
             .flatMap(InteractionHook::retrieveOriginal)
-            .queue(compReply -> {
-                compile(message, compReply, parseCommandFromMessage(content));
-            });
+            .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
     }
 
     // Delete our messages if the user deletes their request message
