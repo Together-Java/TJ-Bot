@@ -26,8 +26,8 @@ public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
 
     private static final String COMMAND_NAME = "tag";
-    private static final String ID_OPTION = "id";
-    private static final String REPLY_TO_USER_OPTION = "reply-to";
+    static final String ID_OPTION = "id";
+    static final String REPLY_TO_USER_OPTION = "reply-to";
     private static final int MAX_OPTIONS = 25;
 
     /**
