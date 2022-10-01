@@ -243,12 +243,11 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     @Override
-    public void onCommandAutoCompleteInteraction(
-            final CommandAutoCompleteInteractionEvent event) {
+    public void onCommandAutoCompleteInteraction(final CommandAutoCompleteInteractionEvent event) {
         String name = event.getName();
 
-        logger.debug("Received auto completion from command-subcommand '{}-{}' (#{}) on guild '{}'",
-                name, event.getSubcommandName(), event.getId(), event.getGuild());
+        logger.debug("Received auto completion from command '{}' (#{}) on guild '{}'",
+                event.getCommandPath(), event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireUserInteractor(
                 UserInteractorPrefix.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class)
                     .onAutoComplete(event));
