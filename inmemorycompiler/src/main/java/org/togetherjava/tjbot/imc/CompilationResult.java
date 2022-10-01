@@ -68,12 +68,8 @@ public record CompilationResult(boolean success, byte @NotNull [] bytes,
     }
 
     @Override
-    public String toString()
-    {
-        return "CompilationResult{" +
-                "success=" + success +
-                ", bytes=" + Arrays.toString(bytes) +
-                ", compileInfos=" + compileInfos +
-                '}';
+    public String toString() {
+        return "CompilationResult{" + "success=" + success + ", bytes=" + Arrays.toString(bytes)
+                + ", compileInfos=" + compileInfos + '}';
     }
 }
