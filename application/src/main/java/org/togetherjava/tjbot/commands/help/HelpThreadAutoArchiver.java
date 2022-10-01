@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public final class HelpThreadAutoArchiver implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
     private static final int SCHEDULE_MINUTES = 60;
-    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(24);
+    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
 
     private final HelpSystemHelper helper;
 
@@ -73,12 +73,12 @@ public final class HelpThreadAutoArchiver implements Routine {
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
             logger.debug("Auto archiving help thread {}", threadChannel.getId());
 
-            MessageEmbed embed = new EmbedBuilder().setDescription(
-                    """
-                            Closed the thread due to inactivity.
+            MessageEmbed embed = new EmbedBuilder().setDescription("""
+                    Closed the thread due to inactivity.
 
-                            If your question was not resolved yet, feel free to create a new thread. \
-                            But try to improve the quality of your question to make it easier to help you 👍""")
+                    If your question was not resolved yet, feel free to just post a message \
+                    to reopen it, or create a new thread. But try to improve the quality of \
+                    your question to make it easier to help you 👍""")
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
 

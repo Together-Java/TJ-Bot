@@ -11,8 +11,8 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
@@ -48,7 +48,7 @@ public final class ChangeHelpCategoryCommand extends SlashCommandAdapter {
      */
     public ChangeHelpCategoryCommand(Config config, HelpSystemHelper helper) {
         super("change-help-category", "changes the category of a help thread",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         OptionData category = new OptionData(OptionType.STRING, CATEGORY_OPTION,
                 "select what describes the question the best", true);

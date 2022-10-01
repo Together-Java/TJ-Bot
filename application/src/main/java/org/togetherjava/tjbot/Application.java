@@ -84,13 +84,14 @@ public class Application {
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .build();
 
-            BotCore core = new BotCore(jda, database, config);
-            jda.addEventListener(core);
             jda.awaitReady();
 
-            // We fire the event manually, since the core might be added too late to receive the
-            // actual event fired from JDA
-            core.onReady(jda);
+            BotCore core = new BotCore(jda, database, config);
+            CommandReloading.reloadCommands(jda, core);
+            core.scheduleRoutines(jda);
+
+            jda.addEventListener(core);
+
             logger.info("Bot is ready");
         } catch (LoginException e) {
             logger.error("Failed to login", e);

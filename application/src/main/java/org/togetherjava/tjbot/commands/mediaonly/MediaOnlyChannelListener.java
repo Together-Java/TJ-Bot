@@ -4,9 +4,9 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
@@ -37,27 +37,23 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
             return;
         }
 
-        if (messageHasNoMediaAttached(event)) {
-            deleteMessage(event).flatMap(any -> dmUser(event)).queue();
+        Message message = event.getMessage();
+        if (message.getType() == MessageType.THREAD_CREATED) {
+            return;
+        }
+
+        if (messageHasNoMediaAttached(message)) {
+            message.delete().flatMap(any -> dmUser(message)).queue();
         }
     }
 
-    private static boolean messageHasNoMediaAttached(MessageReceivedEvent event) {
-        Message message = event.getMessage();
+    private boolean messageHasNoMediaAttached(Message message) {
         return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
                 && !message.getContentRaw().contains("http");
     }
 
-    private AuditableRestAction<Void> deleteMessage(MessageReceivedEvent event) {
-        return event.getMessage().delete();
-    }
-
-    private RestAction<Message> dmUser(MessageReceivedEvent event) {
-        return dmUser(event.getMessage());
-    }
-
-    private RestAction<Message> dmUser(Message originalMessage) {
-        String originalMessageContent = originalMessage.getContentRaw();
+    private RestAction<Message> dmUser(Message message) {
+        String originalMessageContent = message.getContentRaw();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
                     .setColor(Color.ORANGE)
@@ -68,7 +64,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                     .setEmbeds(originalMessageEmbed)
                     .build();
 
-        return originalMessage.getAuthor()
+        return message.getAuthor()
             .openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(dmMessage));
     }

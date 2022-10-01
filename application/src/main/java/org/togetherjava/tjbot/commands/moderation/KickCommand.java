@@ -14,8 +14,8 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -41,7 +41,7 @@ public final class KickCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public KickCommand(ModerationActionsStore actionsStore) {
-        super(COMMAND_NAME, "Kicks the given user from the server", SlashCommandVisibility.GUILD);
+        super(COMMAND_NAME, "Kicks the given user from the server", CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to kick", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be kicked", true);

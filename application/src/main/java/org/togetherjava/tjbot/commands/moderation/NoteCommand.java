@@ -7,8 +7,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -34,7 +34,7 @@ public final class NoteCommand extends SlashCommandAdapter {
      * @param actionsStore used to store actions issued by this command
      */
     public NoteCommand(ModerationActionsStore actionsStore) {
-        super("note", "Writes a note about the given user", SlashCommandVisibility.GUILD);
+        super("note", "Writes a note about the given user", CommandVisibility.GUILD);
 
         getData()
             .addOption(OptionType.USER, USER_OPTION, "The user who you want to write a note about",

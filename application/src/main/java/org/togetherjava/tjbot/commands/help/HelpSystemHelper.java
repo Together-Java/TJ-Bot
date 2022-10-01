@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
@@ -19,6 +21,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -46,20 +51,26 @@ public final class HelpSystemHelper {
     static final int TITLE_COMPACT_LENGTH_MIN = 2;
     static final int TITLE_COMPACT_LENGTH_MAX = 70;
 
+    private static final ScheduledExecutorService SERVICE = Executors.newScheduledThreadPool(3);
+    private static final int SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES = 5;
+
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
     private final Predicate<String> isStagingChannelName;
     private final String stagingChannelPattern;
     private final String categoryRoleSuffix;
     private final Database database;
+    private final JDA jda;
 
     /**
      * Creates a new instance.
      *
+     * @param jda the JDA instance to use
      * @param config the config to use
      * @param database the database to store help thread metadata in
      */
-    public HelpSystemHelper(Config config, Database database) {
+    public HelpSystemHelper(JDA jda, Config config, Database database) {
+        this.jda = jda;
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
 
@@ -237,6 +248,57 @@ public final class HelpSystemHelper {
             .stream()
             .filter(Predicate.not(ThreadChannel::isArchived))
             .toList();
+    }
+
+    void scheduleUncategorizedAdviceCheck(long threadChannelId, long authorId) {
+        SERVICE.schedule(() -> {
+            try {
+                executeUncategorizedAdviceCheck(threadChannelId, authorId);
+            } catch (Exception e) {
+                logger.warn(
+                        "Unknown error during an uncategorized advice check on thread {} by author {}.",
+                        threadChannelId, authorId, e);
+            }
+        }, SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES, TimeUnit.MINUTES);
+    }
+
+    private void executeUncategorizedAdviceCheck(long threadChannelId, long authorId) {
+        logger.debug("Executing uncategorized advice check for thread {} by author {}.",
+                threadChannelId, authorId);
+        jda.retrieveUserById(authorId).flatMap(author -> {
+            ThreadChannel threadChannel = jda.getThreadChannelById(threadChannelId);
+            if (threadChannel == null) {
+                logger.debug(
+                        "Channel for uncategorized advice check seems to be deleted (thread {} by author {}).",
+                        threadChannelId, authorId);
+                return new CompletedRestAction<>(jda, null);
+            }
+
+            if (threadChannel.isArchived()) {
+                logger.debug(
+                        "Channel for uncategorized advice check is archived already (thread {} by author {}).",
+                        threadChannelId, authorId);
+                return new CompletedRestAction<>(jda, null);
+            }
+
+            Optional<String> category = getCategoryOfChannel(threadChannel);
+            if (category.isPresent()) {
+                logger.debug(
+                        "Channel for uncategorized advice check seems to have a category now (thread {} by author {}).",
+                        threadChannelId, authorId);
+                return new CompletedRestAction<>(jda, null);
+            }
+
+            // Still no category, send advice
+            MessageEmbed embed = HelpSystemHelper.embedWith(
+                    """
+                            Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
+                            Please use the `/change-help-category` slash-command and pick what fits best, thanks 🙂
+                            """);
+            Message message = new MessageBuilder(author.getAsMention()).setEmbeds(embed).build();
+
+            return threadChannel.sendMessage(message);
+        }).queue();
     }
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,

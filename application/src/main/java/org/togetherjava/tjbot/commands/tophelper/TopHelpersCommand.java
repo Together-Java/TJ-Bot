@@ -14,8 +14,8 @@ import org.jooq.Records;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.annotation.Nullable;
@@ -51,7 +51,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
      */
     public TopHelpersCommand(Database database) {
         super(COMMAND_NAME, "Lists top helpers for the last month, or a given month",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         OptionData monthData = new OptionData(OptionType.STRING, MONTH_OPTION,
                 "the month to compute for, by default the last month", false);

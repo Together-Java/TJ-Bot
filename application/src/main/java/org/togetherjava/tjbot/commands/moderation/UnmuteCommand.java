@@ -10,8 +10,8 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
@@ -42,7 +42,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     public UnmuteCommand(ModerationActionsStore actionsStore, Config config) {
         super(COMMAND_NAME,
                 "Unmutes the given already muted user so that they can send messages again",
-                SlashCommandVisibility.GUILD);
+                CommandVisibility.GUILD);
 
         getData().addOption(OptionType.USER, TARGET_OPTION, "The user who you want to unmute", true)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be unmuted", true);
