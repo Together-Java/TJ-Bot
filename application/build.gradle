@@ -81,3 +81,9 @@ application {
         '--add-opens=jdk.jdeps/com.sun.tools.javap=ALL-UNNAMED'
     ]
 }
+
+run {
+    jvmArgs = [
+        '--add-opens=jdk.jdeps/com.sun.tools.javap=ALL-UNNAMED'
+    ]
+}

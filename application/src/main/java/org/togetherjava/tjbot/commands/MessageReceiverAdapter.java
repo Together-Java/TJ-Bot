@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 
@@ -41,6 +42,12 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
     public void onMessageUpdated(MessageUpdateEvent event) {
+        // Adapter does not react by default, subclasses may change this behavior
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onMessageDeleted(MessageDeleteEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 }

@@ -2,11 +2,17 @@ package org.togetherjava.tjbot.commands.bytecode;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageUpdateEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.jetbrains.annotations.NotNull;
+import org.togetherjava.tjbot.commands.BotCommandAdapter;
+import org.togetherjava.tjbot.commands.CommandVisibility;
+import org.togetherjava.tjbot.commands.MessageContextCommand;
+import org.togetherjava.tjbot.commands.MessageReceiver;
 import org.togetherjava.tjbot.imc.CompilationResult;
 import org.togetherjava.tjbot.imc.CompileInfo;
 import org.togetherjava.tjbot.imc.InMemoryCompiler;
@@ -21,14 +27,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Bytecode command that uses the standard-text commands (!bytecode ...) because multiline support
- * for slashcommands is soon<sup>tm</sup>.<br>
- * Example usage:
+ * Bytecode command that uses the message context commands Example usage:
  * <p>
  *
  * <pre>
  * {@code
- *     !bytecode ```java
+ *     ```java
  *     class Test {
  *         public void foo() {
  *             System.out.println("Hello World!");
@@ -37,9 +41,11 @@ import java.util.stream.Collectors;
  *     ```
  * }
  * </pre>
+ * 
+ * then apply the application
  */
-public final class BytecodeCommand extends ListenerAdapter {
-    private static final String COMMAND_PREFIX = "!bytecode ";
+public final class BytecodeCommand extends BotCommandAdapter
+        implements MessageContextCommand, MessageReceiver {
     private static final String CODE_BLOCK_OPENING = "```\n";
     private static final String CODE_BLOCK_CLOSING = "\n```";
 
@@ -47,38 +53,42 @@ public final class BytecodeCommand extends ListenerAdapter {
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
     private final Map<Long, List<Long>> userToBotMessages = new HashMap<>();
 
-    // Fresh compile when a user sends a message with !bytecode ...
-    @Override
-    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) {
-            return;
-        }
+    public BytecodeCommand() {
+        super(Commands.message("View bytecode"), CommandVisibility.GUILD);
+    }
 
-        Message message = event.getMessage();
+    // Fresh compile when a user uses the message context command on one of their messages
+    @Override
+    public void onMessageContext(@NotNull MessageContextInteractionEvent event) {
+        Message message = event.getTarget();
         String content = message.getContentRaw();
 
-        if (!content.startsWith(COMMAND_PREFIX)) {
-            return;
-        }
-
-        message.reply("Compiling...")
+        event.reply("Compiling...")
             .mentionRepliedUser(false)
-            .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
+            .flatMap(InteractionHook::retrieveOriginal)
+            .queue(compReply -> {
+                compile(message, compReply, parseCommandFromMessage(content));
+            });
     }
 
     // Delete our messages if the user deletes their request message
     @Override
-    public void onGuildMessageDelete(@NotNull GuildMessageDeleteEvent event) {
+    public void onMessageDeleted(@NotNull MessageDeleteEvent event) {
         long mesageIdLong = event.getMessageIdLong();
 
         if (userToBotMessages.containsKey(mesageIdLong)) {
-            deleteMyMessages(mesageIdLong, event.getChannel());
+            deleteMyMessages(mesageIdLong, event.getTextChannel());
         }
+    }
+
+    @Override
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        /* empty */
     }
 
     // Recompile when the user sends edits their request message
     @Override
-    public void onGuildMessageUpdate(@NotNull GuildMessageUpdateEvent event) {
+    public void onMessageUpdated(@NotNull MessageUpdateEvent event) {
         Message message = event.getMessage();
         long messageIdLong = event.getMessageIdLong();
 
@@ -98,14 +108,6 @@ public final class BytecodeCommand extends ListenerAdapter {
         }
 
         textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
-            String content = message.getContentRaw();
-
-            if (!content.startsWith(COMMAND_PREFIX)) {
-                deleteMyMessages(message.getIdLong(), textChannel);
-
-                return;
-            }
-
             textChannel.purgeMessagesById(myMessages.stream()
                 .skip(1) // skip our first message to edit it
                 .map(String::valueOf)
@@ -113,7 +115,7 @@ public final class BytecodeCommand extends ListenerAdapter {
 
             myMessage.editMessage("Recompiling...").queue();
 
-            compile(message, myMessage, parseCommandFromMessage(content));
+            compile(message, myMessage, parseCommandFromMessage(message.getContentRaw()));
         });
     }
 
@@ -260,13 +262,12 @@ public final class BytecodeCommand extends ListenerAdapter {
     }
 
     private @NotNull String parseCommandFromMessage(@NotNull String messageContent) {
-        String withoutPrefix = messageContent.substring(COMMAND_PREFIX.length());
-        Matcher codeBlockMatcher = codeBlockExtractorPattern.matcher(withoutPrefix);
+        Matcher codeBlockMatcher = codeBlockExtractorPattern.matcher(messageContent);
 
         if (codeBlockMatcher.find()) {
             return codeBlockMatcher.group(1);
         }
 
-        return withoutPrefix;
+        return messageContent;
     }
 }
