@@ -25,7 +25,6 @@ import java.util.Objects;
 public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
 
-    private static final String COMMAND_NAME = "tag";
     static final String ID_OPTION = "id";
     static final String REPLY_TO_USER_OPTION = "reply-to";
 
@@ -35,7 +34,7 @@ public final class TagCommand extends SlashCommandAdapter {
      * @param tagSystem the system providing the actual tag data
      */
     public TagCommand(TagSystem tagSystem) {
-        super(COMMAND_NAME, "Display a tags content", CommandVisibility.GUILD);
+        super("tag", "Display a tags content", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
 
