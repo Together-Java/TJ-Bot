@@ -6,6 +6,8 @@ import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
+import org.togetherjava.tjbot.commands.github.GitHubCommand;
+import org.togetherjava.tjbot.commands.github.GitHubReference;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
@@ -65,6 +67,7 @@ public class Features {
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(jda, config, database);
+        GitHubReference githubReference = new GitHubReference(config);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -92,6 +95,7 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(githubReference);
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
@@ -128,6 +132,7 @@ public class Features {
         features.add(new CloseCommand());
         features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
         features.add(new ChangeHelpTitleCommand(helpSystemHelper));
+        features.add(new GitHubCommand(githubReference));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));

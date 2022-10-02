@@ -44,7 +44,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
     private static final String SHARE_API = "https://api.github.com/gists";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
-    private final String gistApiKey;
+    private final String githubApiKey;
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
@@ -53,14 +53,14 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param config used to get api key and channel names.
      * @see org.togetherjava.tjbot.commands.Features
      */
     public FileSharingMessageListener(Config config) {
         super(Pattern.compile(".*"));
 
-        gistApiKey = config.getGistApiKey();
+        githubApiKey = config.getGitHubApiKey();
         isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
             .asMatchPredicate();
         isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
@@ -171,7 +171,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(SHARE_API))
             .header("Accept", "application/json")
-            .header("Authorization", "token " + gistApiKey)
+            .header("Authorization", "token " + githubApiKey)
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build();
 

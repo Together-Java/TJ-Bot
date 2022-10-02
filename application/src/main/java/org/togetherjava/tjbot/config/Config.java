@@ -15,7 +15,7 @@ import java.util.List;
  */
 public final class Config {
     private final String token;
-    private final String gistApiKey;
+    private final String githubApiKey;
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
@@ -29,14 +29,15 @@ public final class Config {
     private final ScamBlockerConfig scamBlocker;
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
-    private final List<String> blacklistedFileExtension;
-
     private final String mediaOnlyChannelPattern;
+    private final List<String> blacklistedFileExtension;
+    private final String githubReferenceChannelPattern;
+    private final List<Long> githubRepositories;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
-            @JsonProperty("gistApiKey") String gistApiKey,
+            @JsonProperty("githubApiKey") String githubApiKey,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
             @JsonProperty("discordGuildInvite") String discordGuildInvite,
@@ -51,9 +52,11 @@ public final class Config {
             @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
             @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
             @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern,
-            @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension) {
+            @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension,
+            @JsonProperty("githubReferenceChannelPattern") String githubReferenceChannelPattern,
+            @JsonProperty("githubRepositories") List<Long> githubRepositories) {
         this.token = token;
-        this.gistApiKey = gistApiKey;
+        this.githubApiKey = githubApiKey;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
@@ -69,6 +72,8 @@ public final class Config {
         this.helpSystem = helpSystem;
         this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
         this.blacklistedFileExtension = blacklistedFileExtension;
+        this.githubReferenceChannelPattern = githubReferenceChannelPattern;
+        this.githubRepositories = githubRepositories;
     }
 
     /**
@@ -119,8 +124,8 @@ public final class Config {
      *      "https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">Create
      *      a GitHub key</a>
      */
-    public String getGistApiKey() {
-        return gistApiKey;
+    public String getGitHubApiKey() {
+        return githubApiKey;
     }
 
     /**
@@ -241,5 +246,19 @@ public final class Config {
      */
     public List<String> getBlacklistedFileExtensions() {
         return Collections.unmodifiableList(blacklistedFileExtension);
+    }
+
+    /**
+     * The REGEX pattern used to identify the channels that support GitHub issue referencing
+     */
+    public String getGitHubReferenceChannelPattern() {
+        return githubReferenceChannelPattern;
+    }
+
+    /**
+     * The list of repositories that are searched when referencing a GitHub issue
+     */
+    public List<Long> getGitHubRepositories() {
+        return githubRepositories;
     }
 }
