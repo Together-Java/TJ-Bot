@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Channel;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
@@ -239,6 +240,17 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         COMMAND_SERVICE.execute(() -> requireUserInteractor(
                 UserInteractorPrefix.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class)
                     .onSlashCommand(event));
+    }
+
+    @Override
+    public void onCommandAutoCompleteInteraction(final CommandAutoCompleteInteractionEvent event) {
+        String name = event.getName();
+
+        logger.debug("Received auto completion from command '{}' (#{}) on guild '{}'",
+                event.getCommandPath(), event.getId(), event.getGuild());
+        COMMAND_SERVICE.execute(() -> requireUserInteractor(
+                UserInteractorPrefix.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class)
+                    .onAutoComplete(event));
     }
 
     @Override
