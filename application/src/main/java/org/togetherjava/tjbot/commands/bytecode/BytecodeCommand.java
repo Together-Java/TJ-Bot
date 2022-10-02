@@ -99,7 +99,7 @@ public final class BytecodeCommand extends BotCommandAdapter
 
         if (myMessages.isEmpty()) {
             message.reply(
-                    "An unknown error occurred (`userMessagesToMyMessages.get(messageIdLong).isEmpty() == true`)")
+                    "An unknown error occurred (`userMessagesToBotMessages.get(messageIdLong).isEmpty() == true`)")
                 .queue();
 
             return;
