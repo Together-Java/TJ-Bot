@@ -100,11 +100,11 @@ public class GitHubReference extends MessageReceiverAdapter {
 
         for (List<MessageEmbed> messageEmbeds : partition) {
             if (first) {
-                message.replyEmbeds(messageEmbeds).queue();
+                message.replyEmbeds(messageEmbeds).mentionRepliedUser(false).queue();
 
                 first = false;
             } else {
-                textChannel.sendMessageEmbeds(messageEmbeds).queue();
+                textChannel.sendMessageEmbeds(messageEmbeds).mentionRepliedUser(false).queue();
             }
         }
     }
