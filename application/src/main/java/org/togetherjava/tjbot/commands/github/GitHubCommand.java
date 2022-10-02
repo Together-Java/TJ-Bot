@@ -112,13 +112,13 @@ public class GitHubCommand extends SlashCommandAdapter {
             try {
                 return repo.getIssues(GHIssueState.ALL);
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         }).flatMap(List::stream).sorted((i1, i2) -> {
             try {
                 return i2.getUpdatedAt().compareTo(i1.getUpdatedAt());
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         }).map(issue -> "[#%d] %s".formatted(issue.getNumber(), issue.getTitle())).toList();
 
