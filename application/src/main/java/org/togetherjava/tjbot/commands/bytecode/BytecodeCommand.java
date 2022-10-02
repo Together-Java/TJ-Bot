@@ -125,7 +125,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         channel.purgeMessagesById(userToBotMessages.get(msgId)
             .stream()
             .map(String::valueOf)
-            .collect(Collectors.toList()));
+            .toList();
 
         userToBotMessages.remove(msgId);
     }
