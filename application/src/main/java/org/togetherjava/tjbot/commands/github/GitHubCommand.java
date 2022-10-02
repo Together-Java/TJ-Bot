@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.commands.utils.StringDistances;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +25,12 @@ import java.util.regex.Matcher;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GitHubCommand extends SlashCommandAdapter {
-    private static final long ONE_MINUTE_IN_MILLIS = 60 * 1000;
+    private static final long ONE_MINUTE_IN_MILLIS = 60_000L;
+
+    /**
+     * The command option name of this slash command (this is only there to make the linter happy lol)
+     */
+    private static final String COMMAND_OPTION_NAME = "title";
 
     private final GitHubReference reference;
 
@@ -44,7 +50,7 @@ public class GitHubCommand extends SlashCommandAdapter {
 
         this.reference = reference;
 
-        getData().addOption(OptionType.STRING, "title", "Title of the issue you're looking for",
+        getData().addOption(OptionType.STRING, COMMAND_OPTION_NAME, "Title of the issue you're looking for",
                 true, true);
 
         updateCache();
@@ -52,7 +58,7 @@ public class GitHubCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        String title = event.getOption("title").getAsString();
+        String title = event.getOption(COMMAND_OPTION_NAME).getAsString();
         Matcher matcher = GitHubReference.ISSUE_REFERENCE_PATTERN.matcher(title);
 
         if (!matcher.find()) {
@@ -68,7 +74,7 @@ public class GitHubCommand extends SlashCommandAdapter {
             try {
                 event.replyEmbeds(reference.generateReply(issue.get())).queue();
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         } else {
             event.reply("Could not find the issue you are looking for").setEphemeral(true).queue();

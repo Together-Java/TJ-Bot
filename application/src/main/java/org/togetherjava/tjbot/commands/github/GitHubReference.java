@@ -15,6 +15,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -50,7 +51,7 @@ public class GitHubReference extends MessageReceiverAdapter {
         try {
             acquireRepositories();
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -89,7 +90,7 @@ public class GitHubReference extends MessageReceiverAdapter {
                     embeds.add(generateReply(issue.get()));
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         }
 
@@ -133,13 +134,13 @@ public class GitHubReference extends MessageReceiverAdapter {
 
     // this is utterly stupid
     /**
-     * Either properly gathers the name of a user or throws a RuntimeException
+     * Either properly gathers the name of a user or throws a UncheckedIOException
      */
-    private String getUserNameOrFailAtRuntime(GHUser user) throws RuntimeException {
+    private String getUserNameOrFailAtRuntime(GHUser user) throws UncheckedIOException {
         try {
             return user.getName();
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -154,7 +155,7 @@ public class GitHubReference extends MessageReceiverAdapter {
             } catch (FileNotFoundException ignored) {
                 return Optional.<GHIssue>empty();
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                throw new UncheckedIOException(ex);
             }
         }).filter(Optional::isPresent).map(Optional::get).findAny();
     }
