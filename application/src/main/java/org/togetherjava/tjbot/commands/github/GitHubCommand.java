@@ -84,7 +84,7 @@ public class GitHubCommand extends SlashCommandAdapter {
 
     @Override
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        String title = event.getOption("title").getAsString();
+        String title = event.getOption(COMMAND_OPTION_NAME).getAsString();
 
         if (title.isEmpty()) {
             event.replyChoiceStrings(autocompleteCache.stream().limit(25).toList()).queue();
