@@ -28,7 +28,8 @@ public class GitHubCommand extends SlashCommandAdapter {
     private static final long ONE_MINUTE_IN_MILLIS = 60_000L;
 
     /**
-     * The command option name of this slash command (this is only there to make the linter happy lol)
+     * The command option name of this slash command (this is only there to make the linter happy
+     * lol)
      */
     private static final String COMMAND_OPTION_NAME = "title";
 
@@ -50,8 +51,8 @@ public class GitHubCommand extends SlashCommandAdapter {
 
         this.reference = reference;
 
-        getData().addOption(OptionType.STRING, COMMAND_OPTION_NAME, "Title of the issue you're looking for",
-                true, true);
+        getData().addOption(OptionType.STRING, COMMAND_OPTION_NAME,
+                "Title of the issue you're looking for", true, true);
 
         updateCache();
     }
