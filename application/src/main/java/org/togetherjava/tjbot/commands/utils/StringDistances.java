@@ -51,6 +51,14 @@ public class StringDistances {
             .min(Comparator.comparingInt(candidate -> prefixEditDistance(prefix, candidate)));
     }
 
+    /**
+     * Gives sorted suggestion to autocomplete a prefix string from the given options
+     *
+     * @param prefix the prefix to give suggestion for
+     * @param candidates all the possible suggestions
+     * @param errorMargin error margin of suggestions, error percentage / 100
+     * @return collection of autocomplete suggestions
+     */
     public static Collection<String> autocompleteSuggestions(CharSequence prefix,
             Collection<String> candidates, double errorMargin) {
         int firstCandidateScore = candidates.stream()
