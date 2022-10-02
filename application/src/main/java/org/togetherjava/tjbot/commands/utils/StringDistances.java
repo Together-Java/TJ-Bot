@@ -4,7 +4,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+
+record CandidateScore(String candidate, int score) implements Comparable<CandidateScore> {
+    @Override
+    public int compareTo(CandidateScore otherCandidateScore) {
+        return Integer.compare(this.score, otherCandidateScore.score);
+    }
+}
+
 
 /**
  * Utility class for computing string distances, for example the edit distance between two words.
@@ -49,6 +58,23 @@ public class StringDistances {
             Collection<S> candidates) {
         return candidates.stream()
             .min(Comparator.comparingInt(candidate -> prefixEditDistance(prefix, candidate)));
+    }
+
+    public static Collection<String> autocompleteSuggestions(CharSequence prefix,
+            Collection<String> candidates, double errorMargin) {
+        AtomicInteger firstCandidateScore = new AtomicInteger(-1);
+        return candidates.stream()
+            .map(candidate -> new CandidateScore(candidate, prefixEditDistance(prefix, candidate)))
+            .sorted()
+            .peek(candidate -> {
+                if (firstCandidateScore.get() == -1) {
+                    firstCandidateScore.set(candidate.score());
+                }
+            })
+            .takeWhile(candidateScore -> candidateScore.score() <= firstCandidateScore.get()
+                    + firstCandidateScore.get() * errorMargin)
+            .map(CandidateScore::candidate)
+            .toList();
     }
 
     /**

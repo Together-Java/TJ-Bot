@@ -11,13 +11,10 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.StringDistances;
 
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-
-import static org.togetherjava.tjbot.commands.utils.StringDistances.prefixEditDistance;
 
 /**
  * Implements the {@code /tag} command which lets the bot respond content of a tag that has been
@@ -78,19 +75,14 @@ public final class TagCommand extends SlashCommandAdapter {
         AutoCompleteQuery focusedOption = event.getFocusedOption();
 
         if (focusedOption.getName().equals(ID_OPTION)) {
-            List<Command.Choice> choices =
-                    matches(focusedOption.getValue(), tagSystem.getAllIds()).stream()
-                        .map(id -> new Command.Choice(id, id))
-                        .limit(OptionData.MAX_CHOICES)
-                        .toList();
+            Collection<Command.Choice> choices = StringDistances
+                .autocompleteSuggestions(focusedOption.getValue(), tagSystem.getAllIds(), 0.5)
+                .stream()
+                .map(id -> new Command.Choice(id, id))
+                .limit(OptionData.MAX_CHOICES)
+                .toList();
 
             event.replyChoices(choices).queue();
         }
-    }
-
-    private static List<String> matches(String prefix, Collection<String> candidates) {
-        return candidates.stream()
-            .sorted(Comparator.comparingInt(candidate -> prefixEditDistance(prefix, candidate)))
-            .toList();
     }
 }
