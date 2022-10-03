@@ -104,12 +104,12 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         componentIdParser = uuid -> componentIdStore.get(UUID.fromString(uuid));
         Collection<UserInteractor> interactors = getInteractors();
 
-        interactors.forEach(slashCommand -> slashCommand
-            .acceptComponentIdGenerator(((componentId, lifespan) -> {
-                UUID uuid = UUID.randomUUID();
-                componentIdStore.putOrThrow(uuid, componentId, lifespan);
-                return uuid.toString();
-            })));
+        interactors.forEach(
+                interactor -> interactor.acceptComponentIdGenerator(((componentId, lifespan) -> {
+                    UUID uuid = UUID.randomUUID();
+                    componentIdStore.putOrThrow(uuid, componentId, lifespan);
+                    return uuid.toString();
+                })));
 
         if (logger.isInfoEnabled()) {
             logger.info("Available user interactors: {}", interactors);
