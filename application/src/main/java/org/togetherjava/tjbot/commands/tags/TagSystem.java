@@ -32,7 +32,7 @@ public final class TagSystem {
     /**
      * todo document
      */
-    protected static final String TAG_SUGGESTION_INDICATOR = "tag suggestion";
+    static final String TAG_SUGGESTION_INDICATOR = "tag suggestion";
 
     /**
      * The ambient color to use for tag system related messages.
