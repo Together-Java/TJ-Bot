@@ -230,4 +230,3 @@ public final class Database {
         private T result;
     }
 }
-
