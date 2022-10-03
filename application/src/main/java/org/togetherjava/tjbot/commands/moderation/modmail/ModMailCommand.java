@@ -4,9 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -16,19 +14,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.help.HelpSystemHelper;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static org.togetherjava.tjbot.commands.utils.StringDistances.prefixEditDistance;
 
 /**
  * Implements the /modmail command, which allows users to contact a moderator within the server or
@@ -65,11 +65,11 @@ public final class ModMailCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Send a message to the moderators of the selected guild",
                 CommandVisibility.GLOBAL);
 
-        OptionData message = new OptionData(OptionType.STRING, OPTION_MESSAGE,
+        OptionData messageOption = new OptionData(OptionType.STRING, OPTION_MESSAGE,
                 "What do you want to tell them?", true);
         OptionData guildOption = new OptionData(OptionType.STRING, OPTION_SERVER_GUILD,
                 "Your server guild ID", true);
-        OptionData anonymous = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
+        OptionData anonymousOption = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
                 "if set, your name is hidden", false);
 
         List<Command.Choice> choices = jda.getGuildCache()
@@ -79,7 +79,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         guildOption.addChoices(choices);
 
-        getData().addOptions(message, guildOption, anonymous);
+        getData().addOptions(messageOption, guildOption, anonymousOption);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -111,14 +111,12 @@ public final class ModMailCommand extends SlashCommandAdapter {
             return;
         }
 
-        String content = event.getOption(OPTION_MESSAGE).getAsString();
-        List<ModAuditLogWriter.Attachment> attachments = getAttachments(content);
+        String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
 
         String user = getAuthorName(event);
-        MessageAction message =
-                modMailAuditLog.orElseThrow().sendMessageEmbeds(createModMailMessage(user));
+        MessageAction message = modMailAuditLog.orElseThrow()
+            .sendMessageEmbeds(createModMailMessage(user, userMessage));
 
-        message = buildAttachment(attachments, message);
         message.queue();
 
         event.reply("Thank you for contacting the moderators").setEphemeral(true).queue();
@@ -134,36 +132,18 @@ public final class ModMailCommand extends SlashCommandAdapter {
         return event.getUser().getAsMention();
     }
 
-    private MessageAction buildAttachment(List<ModAuditLogWriter.Attachment> attachments,
-            MessageAction message) {
-        for (ModAuditLogWriter.Attachment attachment : attachments) {
-            message = message.addFile(attachment.getContentRaw(), attachment.name());
-        }
-        return message;
-    }
-
-    private MessageEmbed createModMailMessage(String user) {
-        return new EmbedBuilder().setAuthor("/modmail from '%s' ".formatted(user))
+    private MessageEmbed createModMailMessage(String user, String userMessage) {
+        return new EmbedBuilder().setDescription("**/modmail from %s** ".formatted(user))
+            .setFooter(userMessage)
             .setColor(AMBIENT_COLOR)
-            .setTitle("Modmail")
             .build();
-    }
-
-    private List<ModAuditLogWriter.Attachment> getAttachments(String content) {
-        List<ModAuditLogWriter.Attachment> attachments = new ArrayList<>();
-        attachments.add(new ModAuditLogWriter.Attachment("content.md", content));
-        return attachments;
     }
 
     private Optional<TextChannel> getChannel(SlashCommandInteractionEvent event) {
         long userGuildId = event.getOption(OPTION_SERVER_GUILD).getAsLong();
-        return event.getJDA()
-            .getGuildCache()
-            .stream()
-            .filter(guild -> guild.getIdLong() == userGuildId)
-            .findAny()
-            .orElseThrow()
-            .getTextChannelCache()
+        Guild guild = Objects.requireNonNull(event.getJDA().getGuildById(userGuildId),
+                "Something went wrong with selecting the guild.");
+        return guild.getTextChannelCache()
             .stream()
             .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
             .findAny();
