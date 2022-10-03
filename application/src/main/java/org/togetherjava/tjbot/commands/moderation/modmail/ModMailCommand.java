@@ -14,9 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.help.HelpSystemHelper;
 import org.togetherjava.tjbot.config.Config;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
 import java.time.Instant;
@@ -26,9 +24,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.togetherjava.tjbot.commands.utils.StringDistances.prefixEditDistance;
 
 /**
  * Implements the /modmail command, which allows users to contact a moderator within the server or
