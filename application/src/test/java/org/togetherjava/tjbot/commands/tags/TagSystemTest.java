@@ -52,10 +52,10 @@ final class TagSystemTest {
         SlashCommandInteractionEvent event =
                 jdaTester.createSlashCommandInteractionEvent(new TagCommand(system)).build();
 
-        assertFalse(system.handleIsUnknownTag("known", event));
+        assertFalse(system.handleIsUnknownTag("known", event, a -> null));
         verify(event, never()).reply(anyString());
 
-        assertTrue(system.handleIsUnknownTag("unknown", event));
+        assertTrue(system.handleIsUnknownTag("unknown", event, a -> null));
         verify(event).reply(anyString());
     }
 

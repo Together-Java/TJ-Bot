@@ -2,16 +2,18 @@ package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import org.apache.commons.collections4.ListUtils;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
 import java.awt.Color;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +21,17 @@ import java.util.stream.Collectors;
  * underlying database.
  */
 public final class TagSystem {
+    /**
+     * The amount of candidates that are suggested as buttons in the message that tells the user
+     * that the tag they tried accessing doesn't exist
+     */
+    private static final int CANDIDATE_SUGGESTIONS_PER_USAGE = 5;
+
+    /**
+     * todo document
+     */
+    protected static final String TAG_SUGGESTION_INDICATOR = "tag suggestion";
+
     /**
      * The ambient color to use for tag system related messages.
      */
@@ -57,17 +70,31 @@ public final class TagSystem {
      * @param event the event to send messages with
      * @return whether the given tag is unknown to the system
      */
-    boolean handleIsUnknownTag(String id, IReplyCallback event) {
+    boolean handleIsUnknownTag(String id, IReplyCallback event, Function<String[], String> componentIdGenerator) {
         if (hasTag(id)) {
             return false;
         }
-        String suggestionText = StringDistances.closestMatch(id, getAllIds())
-            .map(", did you perhaps mean '%s'?"::formatted)
-            .orElse(".");
 
-        event.reply("Could not find any tag with id '%s'%s".formatted(id, suggestionText))
+        List<String> candidates = getAllIds().stream()
+            .sorted(Comparator
+                .comparingInt(candidate -> StringDistances.editDistance(id, candidate)))
+            .limit(CANDIDATE_SUGGESTIONS_PER_USAGE)
+            .toList();
+        List<ActionRow> rows = new ArrayList<>();
+        List<List<String>> partition = ListUtils.partition(candidates, 5);
+
+        for (List<String> part : partition) {
+            rows.add(ActionRow
+                .of(part.stream().map(i -> Button.secondary(componentIdGenerator.apply(new String[] { TAG_SUGGESTION_INDICATOR, i }), i)).toList()));
+        }
+
+        event
+            .reply("Could not find any tag with id '%s', did you perhaps mean any of the following?"
+                .formatted(id))
             .setEphemeral(true)
+            .addActionRows(rows)
             .queue();
+
         return true;
     }
 

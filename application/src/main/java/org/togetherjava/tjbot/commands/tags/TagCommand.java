@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -9,6 +10,7 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -46,7 +48,7 @@ public final class TagCommand extends SlashCommandAdapter {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
-        if (tagSystem.handleIsUnknownTag(id, event)) {
+        if (tagSystem.handleIsUnknownTag(id, event, super::generateComponentId)) {
             return;
         }
 
@@ -61,5 +63,10 @@ public final class TagCommand extends SlashCommandAdapter {
             message = message.setContent(replyToUserOption.getAsUser().getAsMention());
         }
         message.queue();
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        System.out.println(event.getComponentId());
     }
 }
