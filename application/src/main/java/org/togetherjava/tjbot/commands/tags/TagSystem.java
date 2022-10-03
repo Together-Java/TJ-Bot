@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -11,6 +12,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
+import javax.annotation.Nullable;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Function;
@@ -70,7 +72,9 @@ public final class TagSystem {
      * @param event the event to send messages with
      * @return whether the given tag is unknown to the system
      */
-    boolean handleIsUnknownTag(String id, IReplyCallback event, Function<String[], String> componentIdGenerator) {
+    boolean handleIsUnknownTag(String id, IReplyCallback event,
+            Function<String[], String> componentIdGenerator,
+            @Nullable OptionMapping userToReplyTo) {
         if (hasTag(id)) {
             return false;
         }
@@ -84,8 +88,15 @@ public final class TagSystem {
         List<List<String>> partition = ListUtils.partition(candidates, 5);
 
         for (List<String> part : partition) {
-            rows.add(ActionRow
-                .of(part.stream().map(i -> Button.secondary(componentIdGenerator.apply(new String[] { TAG_SUGGESTION_INDICATOR, i }), i)).toList()));
+            rows.add(
+                    ActionRow
+                        .of(part.stream()
+                            .map(i -> Button.secondary(componentIdGenerator.apply(new String[] {
+                                    TAG_SUGGESTION_INDICATOR, i,
+                                    userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
+                                            : null}),
+                                    i))
+                            .toList()));
         }
 
         event

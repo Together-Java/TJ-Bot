@@ -1,17 +1,21 @@
 package org.togetherjava.tjbot.commands.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Implements the {@code /tag} command which lets the bot respond content of a tag that has been
@@ -48,25 +52,40 @@ public final class TagCommand extends SlashCommandAdapter {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
-        if (tagSystem.handleIsUnknownTag(id, event, super::generateComponentId)) {
+        if (tagSystem.handleIsUnknownTag(id, event, super::generateComponentId,
+                replyToUserOption)) {
             return;
         }
 
-        ReplyCallbackAction message = event
-            .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(id).orElseThrow())
-                .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
-                .setTimestamp(Instant.now())
-                .setColor(TagSystem.AMBIENT_COLOR)
-                .build());
-
-        if (replyToUserOption != null) {
-            message = message.setContent(replyToUserOption.getAsUser().getAsMention());
-        }
-        message.queue();
+        sendTagReply(event, event.getUser().getName(), id, Optional.of(event.getCommandString()),
+                Optional.ofNullable(replyToUserOption)
+                    .map(OptionMapping::getAsUser)
+                    .map(IMentionable::getAsMention));
     }
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        System.out.println(event.getComponentId());
+        if (!TagSystem.TAG_SUGGESTION_INDICATOR.equals(args.get(0))) {
+            return;
+        }
+
+        sendTagReply(event, event.getUser().getName(), args.get(1), Optional.empty(),
+                Optional.ofNullable(args.get(2)));
+    }
+
+    /**
+     * Sends the reply for a successfull /tag use (i.e. the given tag exists)
+     */
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private void sendTagReply(IReplyCallback callback, String userName, String tag,
+            Optional<String> commandString, Optional<String> replyToUser) {
+        callback
+            .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(tag).orElseThrow())
+                .setFooter(userName + commandString.map(s -> " • used " + s).orElse(""))
+                .setTimestamp(Instant.now())
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build())
+            .setContent(replyToUser.orElse(""))
+            .queue();
     }
 }
