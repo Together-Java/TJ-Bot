@@ -185,7 +185,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
                 """
                         %s has a question about '**%s**' and will send the details now.
 
-                        Please use `/change-help-category` to greatly increase the visibility of the question."""
+                        Please use `/help-thread change category` to greatly increase the visibility of the question."""
                     .formatted(author, title)).setEmbeds(embed).build();
 
         return threadChannel.sendMessage(threadMessage);
