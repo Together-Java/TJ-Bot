@@ -76,6 +76,7 @@ subprojects {
             targetExclude("build/**")
             endWithNewline()
             removeUnusedImports()
+            // TODO Use latest eclipse jdt formatter, issue tracking this: https://github.com/Together-Java/TJ-Bot/issues/605
             eclipse('4.19.0').configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }
     }
