@@ -3,7 +3,7 @@ package org.togetherjava.tjbot.commands.github;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.collections4.ListUtils;
 import org.kohsuke.github.*;
@@ -96,7 +96,7 @@ public class GitHubReference extends MessageReceiverAdapter {
 
         List<List<MessageEmbed>> partition = ListUtils.partition(embeds, 10);
         boolean first = true;
-        TextChannel textChannel = message.getTextChannel();
+        TextChannel textChannel = message.getChannel().asTextChannel();
 
         for (List<MessageEmbed> messageEmbeds : partition) {
             if (first) {

@@ -40,7 +40,7 @@ public final class Config {
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty(value = "token", required = true) String token,
-            @JsonProperty(value = "gistApiKey", required = true) String gistApiKey,
+            @JsonProperty(value = "githubApiKey", required = true) String githubApiKey,
             @JsonProperty(value = "databasePath", required = true) String databasePath,
             @JsonProperty(value = "projectWebsite", required = true) String projectWebsite,
             @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
@@ -67,10 +67,10 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty("githubReferenceChannelPattern", required = true) String githubReferenceChannelPattern,
-            @JsonProperty("githubRepositories", required = true) List<Long> githubRepositories) {
+            @JsonProperty(value = "githubReferenceChannelPattern", required = true) String githubReferenceChannelPattern,
+            @JsonProperty(value = "githubRepositories", required = true) List<Long> githubRepositories) {
         this.token = Objects.requireNonNull(token);
-        this.gistApiKey = Objects.requireNonNull(gistApiKey);
+        this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
