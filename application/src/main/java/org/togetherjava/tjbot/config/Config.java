@@ -36,7 +36,7 @@ public final class Config {
     private final String logErrorChannelWebhook;
     private final String githubReferenceChannelPattern;
     private final List<Long> githubRepositories;
-    
+
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty(value = "token", required = true) String token,
@@ -276,6 +276,7 @@ public final class Config {
      */
     public List<Long> getGitHubRepositories() {
         return githubRepositories;
+    }
 
     /**
      * The Discord channel webhook for posting log messages with levels INFO, DEBUG and TRACE.

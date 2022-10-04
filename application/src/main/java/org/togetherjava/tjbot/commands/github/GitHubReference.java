@@ -34,7 +34,7 @@ public class GitHubReference extends MessageReceiverAdapter {
      * The pattern used to determine whether a message is referencing an issue
      */
     protected static final Pattern ISSUE_REFERENCE_PATTERN =
-            Pattern.compile("(?:\\s+|[()\\[\\]<>]|^)#(\\d+)(?:\\s+|[()\\[\\]<>]|$)");
+            Pattern.compile("#(\\d+)");
 
     private final Config config;
 
