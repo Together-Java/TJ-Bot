@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.tags;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
@@ -18,9 +17,9 @@ import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
 import javax.annotation.Nullable;
-import java.awt.Color;
+import java.awt.*;
+import java.util.List;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
