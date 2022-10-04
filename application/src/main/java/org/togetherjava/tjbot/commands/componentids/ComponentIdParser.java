@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.componentids;
 
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -28,7 +27,7 @@ public interface ComponentIdParser {
      * interactions, such as button or selection menus.
      * <p>
      * See {@link ComponentInteraction#getComponentId()} and
-     * {@link Button#of(ButtonStyle, String, Emoji)} for details on where the ID was originally
+     * {@link Button#of(ButtonStyle, String, String)} for details on where the ID was originally
      * transported with.
      *
      * @param uuid the UUID to parse which represents the component ID

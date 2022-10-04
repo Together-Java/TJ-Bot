@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -110,7 +111,8 @@ public final class TeXCommand extends SlashCommandAdapter {
             throws IOException {
         ByteArrayOutputStream renderedTextImageStream = getRenderedTextImageStream(image);
         event.getHook()
-            .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
+            .editOriginalAttachments(
+                    FileUpload.fromData(renderedTextImageStream.toByteArray(), "tex.png"))
             .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
             .queue();
     }

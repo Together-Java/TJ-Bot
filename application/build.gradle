@@ -45,10 +45,12 @@ dependencies {
     implementation project(':database')
     implementation project(':utils')
 
-    implementation 'net.dv8tion:JDA:5.0.0-alpha.9'
+    implementation 'net.dv8tion:JDA:5.0.0-alpha.20'
 
     implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
+
+    implementation 'club.minnced:discord-webhooks:0.8.2'
 
     implementation 'org.jooq:jooq:3.17.2'
 
@@ -63,7 +65,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
 
-	implementation 'com.github.freva:ascii-table:1.7.0'
+	implementation 'com.github.freva:ascii-table:1.8.0'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
 

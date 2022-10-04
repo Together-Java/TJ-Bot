@@ -2,16 +2,17 @@ package org.togetherjava.tjbot.commands.moderation.scam;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -25,8 +26,8 @@ import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
-import javax.annotation.Nullable;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Consumer;
@@ -168,7 +169,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         deleteMessage(event);
         quarantineAuthor(event);
         dmUser(event);
-        reportScamMessage(event, "Detected and handled scam", null);
+        reportScamMessage(event, "Detected and handled scam", List.of());
     }
 
     private void addScamToHistory(MessageReceivedEvent event) {
@@ -176,7 +177,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void logScamMessage(MessageReceivedEvent event) {
-        logger.warn("Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
+        logger.warn(LogMarkers.SENSITIVE,
+                "Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
                 event.getMessageId(), event.getAuthor().getId(), event.getChannel().getId(),
                 event.getGuild().getId());
     }
@@ -203,7 +205,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void reportScamMessage(MessageReceivedEvent event, String reportTitle,
-            @Nullable ActionRow confirmDialog) {
+            List<? extends Button> confirmDialog) {
         Guild guild = event.getGuild();
         Optional<TextChannel> reportChannel = getReportChannel(guild);
         if (reportChannel.isEmpty()) {
@@ -222,8 +224,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())
                     .build();
-        Message message =
-                new MessageBuilder().setEmbeds(embed).setActionRows(confirmDialog).build();
+        MessageCreateData message =
+                new MessageCreateBuilder().setEmbeds(embed).setActionRow(confirmDialog).build();
 
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
@@ -252,13 +254,13 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
-    private ActionRow createConfirmDialog(MessageReceivedEvent event) {
+    private List<Button> createConfirmDialog(MessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
                 event.getAuthor().getIdLong(),
                 ScamHistoryStore.hashMessageContent(event.getMessage()));
 
-        return ActionRow.of(Button.success(generateComponentId(args), "Yes"),
+        return List.of(Button.success(generateComponentId(args), "Yes"),
                 Button.danger(generateComponentId(args), "No"));
     }
 
@@ -281,7 +283,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         MessageUtils.disableButtons(event.getMessage());
         event.deferEdit().queue();
         if (event.getButton().getStyle() == ButtonStyle.DANGER) {
-            logger.info(
+            logger.info(LogMarkers.SENSITIVE,
                     "Identified a false-positive scam (id '{}', hash '{}') in guild '{}' sent by author '{}'",
                     args.messageId, args.contentHash, args.guildId, args.authorId);
             return;
@@ -307,7 +309,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 TextChannel channel = guild.getTextChannelById(scamMessage.channelId());
                 if (channel == null) {
                     logger.debug(
-                            "Attempted to delete scam messages, bot the channel '{}' does not exist anymore, skipping deleting messages for this channel.",
+                            "Attempted to delete scam messages, but the channel '{}' does not exist anymore, skipping deleting messages for this channel.",
                             scamMessage.channelId());
                     return;
                 }
@@ -318,10 +320,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         Consumer<Throwable> onRetrieveAuthorFailure = new ErrorHandler()
             .handle(ErrorResponse.UNKNOWN_USER,
-                    failure -> logger.debug(
+                    failure -> logger.debug(LogMarkers.SENSITIVE,
                             "Attempted to handle scam, but user '{}' does not exist anymore.",
                             args.authorId))
-            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(
+            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(LogMarkers.SENSITIVE,
                     "Attempted to handle scam, but user '{}' is not a member of the guild anymore.",
                     args.authorId));
 

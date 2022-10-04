@@ -2,17 +2,21 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -21,6 +25,7 @@ import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -68,8 +73,10 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        auditUser(guild.getIdLong(), target.getIdLong(), event.getMember().getIdLong(), -1,
-                event.getJDA()).flatMap(event::reply).queue();
+        auditUser(MessageCreateBuilder::new, guild.getIdLong(), target.getIdLong(),
+                event.getMember().getIdLong(), -1, event.getJDA()).map(MessageCreateBuilder::build)
+                    .flatMap(event::reply)
+                    .queue();
     }
 
     private boolean handleChecks(Member bot, Member author, @Nullable Member target,
@@ -86,7 +93,8 @@ public final class AuditCommand extends SlashCommandAdapter {
      *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions, {@code -1} encodes the last
      *        page
      */
-    private RestAction<Message> auditUser(long guildId, long targetId, long callerId,
+    private <R extends MessageRequest<R>> RestAction<R> auditUser(
+            Supplier<R> messageBuilderSupplier, long guildId, long targetId, long callerId,
             int pageNumber, JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
         List<List<ActionRecord>> groupedActions = groupActionsByPages(actions);
@@ -103,8 +111,8 @@ public final class AuditCommand extends SlashCommandAdapter {
             .map(user -> createSummaryEmbed(user, actions))
             .flatMap(auditEmbed -> attachEmbedFields(auditEmbed, groupedActions, pageNumberInLimits,
                     totalPages, jda))
-            .map(auditEmbed -> attachPageTurnButtons(auditEmbed, pageNumberInLimits, totalPages,
-                    guildId, targetId, callerId));
+            .map(auditEmbed -> attachPageTurnButtons(messageBuilderSupplier, auditEmbed,
+                    pageNumberInLimits, totalPages, guildId, targetId, callerId));
     }
 
     private List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
@@ -197,20 +205,22 @@ public final class AuditCommand extends SlashCommandAdapter {
         return TimeUtil.getDateTimeString(when.atOffset(ZoneOffset.UTC));
     }
 
-    private Message attachPageTurnButtons(EmbedBuilder auditEmbed, int pageNumber, int totalPages,
-            long guildId, long targetId, long callerId) {
-        var messageBuilder = new MessageBuilder(auditEmbed.build());
+    private <R extends MessageRequest<R>> R attachPageTurnButtons(
+            Supplier<R> messageBuilderSupplier, EmbedBuilder auditEmbed, int pageNumber,
+            int totalPages, long guildId, long targetId, long callerId) {
+        var messageBuilder = messageBuilderSupplier.get();
+        messageBuilder.setEmbeds(auditEmbed.build());
 
         if (totalPages <= 1) {
-            return messageBuilder.build();
+            return messageBuilder;
         }
-        ActionRow pageTurnButtons =
+        List<Button> pageTurnButtons =
                 createPageTurnButtons(guildId, targetId, callerId, pageNumber, totalPages);
 
-        return messageBuilder.setActionRows(pageTurnButtons).build();
+        return messageBuilder.setActionRow(pageTurnButtons);
     }
 
-    private ActionRow createPageTurnButtons(long guildId, long targetId, long callerId,
+    private List<Button> createPageTurnButtons(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
         int previousButtonTurnPageBy = -1;
         Button previousButton = createPageTurnButton(PREVIOUS_BUTTON_LABEL, guildId, targetId,
@@ -226,7 +236,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             nextButton = nextButton.asDisabled();
         }
 
-        return ActionRow.of(previousButton, nextButton);
+        return List.of(previousButton, nextButton);
     }
 
     private Button createPageTurnButton(String label, long guildId, long targetId, long callerId,
@@ -256,8 +266,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         long targetId = Long.parseLong(args.get(1));
         int pageToDisplay = currentPage + turnPageBy;
 
-        auditUser(guildId, targetId, buttonUserId, pageToDisplay, event.getJDA())
-            .flatMap(event::editMessage)
-            .queue();
+        auditUser(MessageEditBuilder::new, guildId, targetId, buttonUserId, pageToDisplay,
+                event.getJDA()).map(MessageEditBuilder::build).flatMap(event::editMessage).queue();
     }
 }
