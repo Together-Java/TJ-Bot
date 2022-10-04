@@ -61,16 +61,23 @@ public class StringDistances {
      */
     public static Collection<String> autocompleteSuggestions(CharSequence prefix,
             Collection<String> candidates, double errorMargin) {
+        record MatchScore(String candidate, int score) implements Comparable<MatchScore> {
+            @Override
+            public int compareTo(MatchScore otherMatchScore) {
+                return Integer.compare(this.score, otherMatchScore.score);
+            }
+        }
+
         int firstCandidateScore = candidates.stream()
             .mapToInt(candidate -> prefixEditDistance(prefix, candidate))
             .min()
             .orElse(0);
         return candidates.stream()
-            .map(candidate -> new CandidateScore(candidate, prefixEditDistance(prefix, candidate)))
+            .map(candidate -> new MatchScore(candidate, prefixEditDistance(prefix, candidate)))
             .sorted()
-            .takeWhile(candidateScore -> candidateScore.score() <= firstCandidateScore
+            .takeWhile(matchScore -> matchScore.score() <= firstCandidateScore
                     + firstCandidateScore * errorMargin)
-            .map(CandidateScore::candidate)
+            .map(MatchScore::candidate)
             .toList();
     }
 
