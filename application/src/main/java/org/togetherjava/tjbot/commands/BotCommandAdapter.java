@@ -134,4 +134,12 @@ public abstract class BotCommandAdapter implements BotCommand {
             .generate(new ComponentId(UserInteractorPrefix.getPrefixedNameFromInstance(this),
                     Arrays.asList(args)), lifespan);
     }
+
+    /**
+     * @return the component id generator used by {@link #generateComponentId(String...)} and
+     *         {@link #generateComponentId(Lifespan, String...)}
+     */
+    protected final ComponentIdGenerator getComponentIdGenerator() {
+        return componentIdGenerator;
+    }
 }

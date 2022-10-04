@@ -8,6 +8,10 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.apache.commons.collections4.ListUtils;
+import org.togetherjava.tjbot.commands.UserInteractorPrefix;
+import org.togetherjava.tjbot.commands.componentids.ComponentId;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.commands.componentids.Lifespan;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
@@ -28,11 +32,6 @@ public final class TagSystem {
      * The amount of tags suggested when the user types an incorrect tag name.
      */
     private static final int TAG_SUGGESTIONS_AMOUNT = 5;
-
-    /**
-     * todo document
-     */
-    static final String TAG_SUGGESTION_INDICATOR = "tag suggestion";
 
     /**
      * The ambient color to use for tag system related messages.
@@ -69,11 +68,13 @@ public final class TagSystem {
      *
      * @param id the id of the tag to check
      * @param event the event to send messages with
+     * @param componentIdGenerator the component id generator to generate the button ids with
+     * @param userToReplyTo the user that was originally meant to be replied to when the tag command
+     *        was invoked
      * @return whether the given tag is unknown to the system
      */
     boolean handleIsUnknownTag(String id, IReplyCallback event,
-            Function<String[], String> componentIdGenerator,
-            @Nullable OptionMapping userToReplyTo) {
+            ComponentIdGenerator componentIdGenerator, @Nullable OptionMapping userToReplyTo) {
         if (hasTag(id)) {
             return false;
         }
@@ -84,22 +85,23 @@ public final class TagSystem {
             .limit(TAG_SUGGESTIONS_AMOUNT)
             .toList();
         List<List<String>> partition = ListUtils.partition(candidates, 5);
-        ReplyCallbackAction action = event
-                .reply("Could not find any tag with id '%s'%s"
-                        .formatted(id, candidates.isEmpty() ? "." : ", did you perhaps mean any of the following?"))
-                .setEphemeral(true);
+        ReplyCallbackAction action =
+                event
+                    .reply("Could not find any tag with id '%s'%s".formatted(id,
+                            candidates.isEmpty() ? "."
+                                    : ", did you perhaps mean any of the following?"))
+                    .setEphemeral(true);
 
         for (List<String> part : partition) {
-            action.addActionRow(
-                        part.stream()
-                            .map(i -> Button.secondary(componentIdGenerator.apply(new String[] {
-                                    TAG_SUGGESTION_INDICATOR, i,
-                                    userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
-                                            : null}),
-                                    i))
-                            .toList());
+            action.addActionRow(part.stream()
+                .map(i -> Button.secondary(componentIdGenerator.generate(new ComponentId(
+                        UserInteractorPrefix.getPrefixedNameFromClass(TagCommand.class, "tag"),
+                        Arrays.asList(i,
+                                userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
+                                        : null)),
+                        Lifespan.REGULAR), i))
+                .toList());
         }
-
 
         return true;
     }

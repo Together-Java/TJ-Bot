@@ -69,8 +69,8 @@ final class TagCommandTest {
         SlashCommandInteractionEvent event = triggerSlashCommand("second", null);
 
         // THEN responds that the tag could not be found and instead suggests using the other tag
-        verify(event)
-            .reply("Could not find any tag with id 'second', did you perhaps mean any of the following?");
+        verify(event).reply(
+                "Could not find any tag with id 'second', did you perhaps mean any of the following?");
     }
 
     @Test

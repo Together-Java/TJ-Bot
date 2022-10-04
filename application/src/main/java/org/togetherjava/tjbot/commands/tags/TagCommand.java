@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
+import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -50,40 +51,35 @@ public final class TagCommand extends SlashCommandAdapter {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
-        if (tagSystem.handleIsUnknownTag(id, event, super::generateComponentId,
+        if (tagSystem.handleIsUnknownTag(id, event, super.getComponentIdGenerator(),
                 replyToUserOption)) {
             return;
         }
 
-        sendTagReply(event, event.getUser().getName(), id, Optional.of(event.getCommandString()),
-                Optional.ofNullable(replyToUserOption)
-                    .map(OptionMapping::getAsUser)
-                    .map(IMentionable::getAsMention));
+        sendTagReply(event, event.getUser().getName(), id, event.getCommandString(),
+                replyToUserOption == null ? null : replyToUserOption.getAsUser().getAsMention());
     }
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        if (!TagSystem.TAG_SUGGESTION_INDICATOR.equals(args.get(0))) {
-            return;
-        }
-
-        sendTagReply(event, event.getUser().getName(), args.get(1), Optional.empty(),
-                Optional.ofNullable(args.get(2)));
+        sendTagReply(event, event.getUser().getName(), args.get(0), null, args.get(1));
     }
 
     /**
      * Sends the reply for a successfull /tag use (i.e. the given tag exists)
      */
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private void sendTagReply(IReplyCallback callback, String userName, String tag,
-            Optional<String> commandString, Optional<String> replyToUser) {
+            @Nullable String commandString, @Nullable String replyToUser) {
+        Optional<String> commandStringOpt = Optional.ofNullable(commandString);
+        Optional<String> replyToUserOpt = Optional.ofNullable(replyToUser);
+
         callback
             .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(tag).orElseThrow())
-                .setFooter(userName + commandString.map(s -> " • used " + s).orElse(""))
+                .setFooter(userName + commandStringOpt.map(s -> " • used " + s).orElse(""))
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
-            .setContent(replyToUser.orElse(""))
+            .setContent(replyToUserOpt.orElse(""))
             .queue();
     }
 }
