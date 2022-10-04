@@ -76,7 +76,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                     .addSubcommands(changeCategory, changeTitle);
         getData().addSubcommandGroups(changeCommands);
 
-        getData().addSubcommands(Subcommand.CLOSE.toSubcommandData());
+        getData().addSubcommands(Subcommand.CLOSE.toSubcommandData(),
+                Subcommand.BOOKMARK.toSubcommandData());
 
         this.helper = helper;
 
@@ -89,9 +90,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         subcommandToCooldownCache = new EnumMap<>(streamSubcommands()
             .filter(Subcommand::hasCooldown)
             .collect(Collectors.toMap(Function.identity(), any -> createCooldownCache.get())));
-        subcommandToEventHandler = new EnumMap<>(
-                Map.of(Subcommand.CHANGE_CATEGORY, this::changeCategory, Subcommand.CHANGE_TITLE,
-                        this::changeTitle, Subcommand.CLOSE, this::closeThread));
+        subcommandToEventHandler = new EnumMap<>(Map.of(Subcommand.CHANGE_CATEGORY,
+                this::changeCategory, Subcommand.CHANGE_TITLE, this::changeTitle, Subcommand.CLOSE,
+                this::closeThread, Subcommand.BOOKMARK, this::bookmarkThread));
     }
 
     @Override
@@ -204,6 +205,18 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
+    private void bookmarkThread(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        event.getUser()
+            .openPrivateChannel()
+            .flatMap(channel -> channel.sendMessage(String.format("<#%s>", helpThread.getIdLong())))
+            .queue();
+
+        event.reply(
+                "An attempt has made to send a link of this help thread to your DMs. Check your inbox")
+            .setEphemeral(true)
+            .queue();
+    }
+
     private static Stream<Subcommand> streamSubcommands() {
         return Arrays.stream(Subcommand.values());
     }
@@ -212,7 +225,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         CHANGE_CATEGORY(CHANGE_CATEGORY_SUBCOMMAND, "Change the category of this help thread",
                 Cooldown.YES),
         CHANGE_TITLE(CHANGE_TITLE_SUBCOMMAND, "Change the title of this help thread", Cooldown.YES),
-        CLOSE("close", "Close this help thread", Cooldown.YES);
+        CLOSE("close", "Close this help thread", Cooldown.YES),
+        BOOKMARK("bookmark", "Bookmark this help thread", Cooldown.NO);
 
         private final String commandName;
         private final String description;
