@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.basic;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -183,9 +184,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .map(RoleSelectCommand::mapToSelectOption)
             .forEach(menu::addOptions);
 
-        OptionMapping titleOption = event.getOption(TITLE_OPTION);
-        String title = titleOption == null ? "Select your roles:" : titleOption.getAsString();
-
+        String title =
+                event.getOption(TITLE_OPTION, "Select your roles:", OptionMapping::getAsString);
         MessageEmbed embed = createEmbed(title, event.getOption(DESCRIPTION_OPTION).getAsString());
 
         event.replyEmbeds(embed).addActionRow(menu.build()).queue();
@@ -196,7 +196,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
         SelectOption option = SelectOption.of(role.getName(), role.getId());
         if (null != roleIcon && roleIcon.isEmoji()) {
-            option = option.withEmoji((Emoji.fromUnicode(roleIcon.getEmoji())));
+            option = option.withEmoji(Emoji.fromUnicode(roleIcon.getEmoji()));
         }
 
         return option;

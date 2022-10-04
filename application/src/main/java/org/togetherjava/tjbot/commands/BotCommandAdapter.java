@@ -51,7 +51,7 @@ public abstract class BotCommandAdapter implements BotCommand {
      * @param visibility the visibility of the command
      */
     protected BotCommandAdapter(CommandData data, CommandVisibility visibility) {
-        this.data = Objects.requireNonNull(data, "The data shouldn't be null");
+        this.data = data.setGuildOnly(visibility == CommandVisibility.GUILD);
         this.visibility = Objects.requireNonNull(visibility, "The visibility shouldn't be null");
 
         this.name = data.getName();

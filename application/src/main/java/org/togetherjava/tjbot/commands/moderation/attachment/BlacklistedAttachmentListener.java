@@ -1,11 +1,12 @@
 package org.togetherjava.tjbot.commands.moderation.attachment;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
@@ -49,13 +50,12 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
     }
 
     private RestAction<Message> dmUser(Message message) {
-        Message dmMessage = createDmMessage(message);
         return message.getAuthor()
             .openPrivateChannel()
-            .flatMap(privateChannel -> privateChannel.sendMessage(dmMessage));
+            .flatMap(privateChannel -> privateChannel.sendMessage(createDmMessage(message)));
     }
 
-    private Message createDmMessage(Message originalMessage) {
+    private MessageCreateData createDmMessage(Message originalMessage) {
         String contentRaw = originalMessage.getContentRaw();
         String blacklistedAttachments =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(originalMessage));
@@ -71,17 +71,20 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
 
         // No embed needed if there was no message from the user
         if (contentRaw.isEmpty()) {
-            return new MessageBuilder(dmMessageContent).build();
+            return new MessageCreateBuilder().setContent(dmMessageContent).build();
         }
         return createBaseResponse(contentRaw, dmMessageContent);
     }
 
-    private Message createBaseResponse(String originalMessageContent, String dmMessageContent) {
+    private MessageCreateData createBaseResponse(String originalMessageContent,
+            String dmMessageContent) {
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
                     .setColor(Color.ORANGE)
                     .build();
-        return new MessageBuilder(dmMessageContent).setEmbeds(originalMessageEmbed).build();
+        return new MessageCreateBuilder().setContent(dmMessageContent)
+            .setEmbeds(originalMessageEmbed)
+            .build();
     }
 
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {

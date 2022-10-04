@@ -1,10 +1,17 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageType;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +119,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(overviewChannel);
         logger.debug("Found {} active questions", activeThreads.size());
 
-        Message message = new MessageBuilder()
+        MessageEditData message = new MessageEditBuilder()
             .setContent(STATUS_TITLE + "\n\n" + createDescription(activeThreads))
             .build();
 
@@ -165,7 +172,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     private RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
-            Message updatedStatusMessage, MessageChannel overviewChannel) {
+            MessageEditData updatedStatusMessage, MessageChannel overviewChannel) {
         logger.debug("Sending the updated question overview");
         if (statusMessage == null) {
             int currentFailures = FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.incrementAndGet();
@@ -174,7 +181,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
                         "Failed to locate the question overview too often ({} times), sending a fresh message instead.",
                         currentFailures);
                 FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.set(0);
-                return overviewChannel.sendMessage(updatedStatusMessage);
+                return overviewChannel
+                    .sendMessage(MessageCreateData.fromEditData(updatedStatusMessage));
             }
 
             logger.info(

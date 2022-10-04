@@ -2,10 +2,10 @@ package org.togetherjava.tjbot.commands.filesharing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
@@ -114,7 +114,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
         for (Message.Attachment attachment : attachments) {
-            CompletableFuture<Void> task = attachment.retrieveInputStream()
+            CompletableFuture<Void> task = attachment.getProxy()
+                .download()
                 .thenApply(this::readAttachment)
                 .thenAccept(
                         content -> nameToFile.put(getNameOf(attachment), new GistFile(content)));
@@ -217,7 +218,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             return false;
         }
 
-        ThreadChannel thread = event.getThreadChannel();
+        ThreadChannel thread = event.getChannel().asThreadChannel();
         String rootChannelName = thread.getParentChannel().getName();
         return isStagingChannelName.test(rootChannelName)
                 || isOverviewChannelName.test(rootChannelName);

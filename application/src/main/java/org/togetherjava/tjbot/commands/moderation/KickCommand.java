@@ -89,7 +89,7 @@ public final class KickCommand extends SlashCommandAdapter {
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationAction.KICK, null, reason);
 
-        return guild.kick(target, reason).reason(reason);
+        return guild.kick(target).reason(reason);
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,

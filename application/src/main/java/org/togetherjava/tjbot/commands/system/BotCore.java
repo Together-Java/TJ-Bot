@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Channel;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -270,7 +269,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     @Override
-    public void onMessageContextInteraction(@NotNull final MessageContextInteractionEvent event) {
+    public void onMessageContextInteraction(final MessageContextInteractionEvent event) {
         String name = event.getName();
 
         logger.debug("Received message context command '{}' (#{}) on guild '{}'", name,
@@ -281,7 +280,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     @Override
-    public void onUserContextInteraction(@NotNull final UserContextInteractionEvent event) {
+    public void onUserContextInteraction(final UserContextInteractionEvent event) {
         String name = event.getName();
 
         logger.debug("Received user context command '{}' (#{}) on guild '{}'", name, event.getId(),

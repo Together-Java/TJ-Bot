@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
@@ -157,7 +158,7 @@ public final class BanCommand extends SlashCommandAdapter {
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationAction.BAN, expiresAt, reason);
 
-        return guild.ban(target, deleteHistoryDays, reason);
+        return guild.ban(target, deleteHistoryDays, TimeUnit.DAYS).reason(reason);
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})

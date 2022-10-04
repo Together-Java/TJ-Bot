@@ -1,10 +1,11 @@
 package org.togetherjava.tjbot.commands.mediaonly;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.config.Config;
@@ -32,7 +33,7 @@ final class MediaOnlyChannelListenerTest {
     @Test
     void deletesMessageWithoutMedia() {
         // GIVEN a message without media
-        Message message = new MessageBuilder().setContent("any").build();
+        MessageCreateData message = new MessageCreateBuilder().setContent("any").build();
 
         // WHEN sending the message
         MessageReceivedEvent event = sendMessage(message);
@@ -45,7 +46,8 @@ final class MediaOnlyChannelListenerTest {
     void keepsMessageWithEmbed() {
         // GIVEN a message with an embed
         MessageEmbed embed = new EmbedBuilder().setDescription("any").build();
-        Message message = new MessageBuilder().setContent("any").setEmbeds(embed).build();
+        MessageCreateData message =
+                new MessageCreateBuilder().setContent("any").setEmbeds(embed).build();
 
         // WHEN sending the message
         MessageReceivedEvent event = sendMessage(message);
@@ -57,7 +59,7 @@ final class MediaOnlyChannelListenerTest {
     @Test
     void keepsMessageWithAttachment() {
         // GIVEN a message with an attachment
-        Message message = new MessageBuilder().setContent("any").build();
+        MessageCreateData message = new MessageCreateBuilder().setContent("any").build();
         List<Message.Attachment> attachments = List.of(mock(Message.Attachment.class));
 
         // WHEN sending the message
@@ -70,7 +72,7 @@ final class MediaOnlyChannelListenerTest {
     @Test
     void keepsMessageWithLinkedMedia() {
         // GIVEN a message with media linked in the message
-        Message message = new MessageBuilder()
+        MessageCreateData message = new MessageCreateBuilder()
             .setContent("Check out this cute cat https://i.imgur.com/HLFByUJ.png")
             .build();
 
@@ -84,20 +86,20 @@ final class MediaOnlyChannelListenerTest {
     @Test
     void sendsAuthorDmUponDeletion() {
         // GIVEN a message without media
-        Message message = new MessageBuilder().setContent("any").build();
+        MessageCreateData message = new MessageCreateBuilder().setContent("any").build();
 
         // WHEN sending the message
         MessageReceivedEvent event = sendMessage(message);
 
         // THEN the author receives a DM
-        verify(jdaTester.getPrivateChannelSpy()).sendMessage(any(Message.class));
+        verify(jdaTester.getPrivateChannelSpy()).sendMessage(any(MessageCreateData.class));
     }
 
-    private MessageReceivedEvent sendMessage(Message message) {
+    private MessageReceivedEvent sendMessage(MessageCreateData message) {
         return sendMessage(message, List.of());
     }
 
-    private MessageReceivedEvent sendMessage(Message message,
+    private MessageReceivedEvent sendMessage(MessageCreateData message,
             List<Message.Attachment> attachments) {
         MessageReceivedEvent event = jdaTester.createMessageReceiveEvent(message, attachments);
         mediaOnlyChannelListener.onMessageReceived(event);
