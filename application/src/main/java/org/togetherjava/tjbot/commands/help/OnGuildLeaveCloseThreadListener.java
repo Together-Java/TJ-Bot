@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;

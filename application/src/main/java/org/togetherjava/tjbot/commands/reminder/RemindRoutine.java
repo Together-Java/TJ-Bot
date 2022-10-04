@@ -10,10 +10,12 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.annotation.Nullable;
+
 import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;

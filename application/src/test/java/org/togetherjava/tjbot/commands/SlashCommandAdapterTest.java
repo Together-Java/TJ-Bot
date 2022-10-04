@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.junit.jupiter.api.Test;
+
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

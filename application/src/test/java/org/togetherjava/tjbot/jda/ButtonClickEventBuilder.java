@@ -9,9 +9,11 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;

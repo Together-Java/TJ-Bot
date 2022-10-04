@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.logging.LogMarkers;

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.core.filter.LevelRangeFilter;
 import org.apache.logging.log4j.core.filter.MarkerFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.logging.LogMarkers;
 

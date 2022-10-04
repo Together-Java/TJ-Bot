@@ -9,12 +9,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

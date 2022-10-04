@@ -8,6 +8,7 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
+
 import org.togetherjava.tjbot.db.util.CheckedConsumer;
 import org.togetherjava.tjbot.db.util.CheckedFunction;
 

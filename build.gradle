@@ -76,6 +76,10 @@ subprojects {
             targetExclude("build/**")
             endWithNewline()
             removeUnusedImports()
+            // empty string '' covers all imports that aren't explicitly specified,
+            // we use it as catch-all for external dependencies like JDA
+            // '\\#` is prefix for static imports
+            importOrder('','org.togetherjava', 'javax', 'java', '\\#')
             // TODO Use latest eclipse jdt formatter, issue tracking this: https://github.com/Together-Java/TJ-Bot/issues/605
             eclipse('4.19.0').configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.jda.JdaTester;
 

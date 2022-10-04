@@ -14,11 +14,13 @@ import org.jooq.Records;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.annotation.Nullable;
+
 import java.math.BigDecimal;
 import java.time.*;
 import java.time.format.TextStyle;

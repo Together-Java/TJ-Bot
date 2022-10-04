@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.basic;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 

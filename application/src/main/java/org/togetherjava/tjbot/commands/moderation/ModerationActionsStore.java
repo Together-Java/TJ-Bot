@@ -1,11 +1,13 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import org.jooq.Condition;
+
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModerationActions;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
 import javax.annotation.Nullable;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;

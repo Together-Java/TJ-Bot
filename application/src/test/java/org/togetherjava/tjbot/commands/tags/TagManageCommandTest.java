@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;

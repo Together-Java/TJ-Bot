@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.tophelper;
 import net.dv8tion.jda.api.JDA;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 

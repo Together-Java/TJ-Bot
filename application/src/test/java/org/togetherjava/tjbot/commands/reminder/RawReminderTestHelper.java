@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.Tables;
 import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
