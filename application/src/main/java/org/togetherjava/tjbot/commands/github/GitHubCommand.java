@@ -27,11 +27,7 @@ import java.util.regex.Matcher;
 public class GitHubCommand extends SlashCommandAdapter {
     private static final long ONE_MINUTE_IN_MILLIS = 60_000L;
 
-    /**
-     * The command option name of this slash command (this is only there to make the linter happy
-     * lol)
-     */
-    private static final String COMMAND_OPTION_NAME = "title";
+    private static final String TITLE_OPTION = "title";
 
     private final GitHubReference reference;
 
@@ -51,7 +47,7 @@ public class GitHubCommand extends SlashCommandAdapter {
 
         this.reference = reference;
 
-        getData().addOption(OptionType.STRING, COMMAND_OPTION_NAME,
+        getData().addOption(OptionType.STRING, TITLE_OPTION,
                 "Title of the issue you're looking for", true, true);
 
         updateCache();
@@ -59,7 +55,7 @@ public class GitHubCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        String title = event.getOption(COMMAND_OPTION_NAME).getAsString();
+        String title = event.getOption(TITLE_OPTION).getAsString();
         Matcher matcher = GitHubReference.ISSUE_REFERENCE_PATTERN.matcher(title);
 
         if (!matcher.find()) {
@@ -84,7 +80,7 @@ public class GitHubCommand extends SlashCommandAdapter {
 
     @Override
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        String title = event.getOption(COMMAND_OPTION_NAME).getAsString();
+        String title = event.getOption(TITLE_OPTION).getAsString();
 
         if (title.isEmpty()) {
             event.replyChoiceStrings(autocompleteCache.stream().limit(25).toList()).queue();
