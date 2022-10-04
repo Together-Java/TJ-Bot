@@ -61,8 +61,10 @@ public final class Config {
                     required = true) String mediaOnlyChannelPattern,
             @JsonProperty(value = "blacklistedFileExtension",
                     required = true) List<String> blacklistedFileExtension,
-            @JsonProperty(value = "logInfoChannelWebhook", required = true) String logInfoChannelWebhook,
-            @JsonProperty(value = "logErrorChannelWebhook", required = true) String logErrorChannelWebhook) {
+            @JsonProperty(value = "logInfoChannelWebhook",
+                    required = true) String logInfoChannelWebhook,
+            @JsonProperty(value = "logErrorChannelWebhook",
+                    required = true) String logErrorChannelWebhook) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
