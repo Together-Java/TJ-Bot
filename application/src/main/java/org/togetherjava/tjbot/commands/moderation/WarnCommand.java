@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -69,7 +70,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private void warnUser(User target, Member author, String reason, Guild guild) {
-        logger.info("'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE, "'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                 reason);
 

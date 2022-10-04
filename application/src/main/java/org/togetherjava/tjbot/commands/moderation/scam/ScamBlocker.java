@@ -26,6 +26,7 @@ import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.awt.Color;
 import java.util.*;
@@ -176,7 +177,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void logScamMessage(MessageReceivedEvent event) {
-        logger.warn("Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
+        logger.warn(LogMarkers.SENSITIVE,
+                "Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
                 event.getMessageId(), event.getAuthor().getId(), event.getChannel().getId(),
                 event.getGuild().getId());
     }
@@ -281,7 +283,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         MessageUtils.disableButtons(event.getMessage());
         event.deferEdit().queue();
         if (event.getButton().getStyle() == ButtonStyle.DANGER) {
-            logger.info(
+            logger.info(LogMarkers.SENSITIVE,
                     "Identified a false-positive scam (id '{}', hash '{}') in guild '{}' sent by author '{}'",
                     args.messageId, args.contentHash, args.guildId, args.authorId);
             return;
@@ -307,7 +309,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 TextChannel channel = guild.getTextChannelById(scamMessage.channelId());
                 if (channel == null) {
                     logger.debug(
-                            "Attempted to delete scam messages, bot the channel '{}' does not exist anymore, skipping deleting messages for this channel.",
+                            "Attempted to delete scam messages, but the channel '{}' does not exist anymore, skipping deleting messages for this channel.",
                             scamMessage.channelId());
                     return;
                 }
@@ -318,10 +320,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         Consumer<Throwable> onRetrieveAuthorFailure = new ErrorHandler()
             .handle(ErrorResponse.UNKNOWN_USER,
-                    failure -> logger.debug(
+                    failure -> logger.debug(LogMarkers.SENSITIVE,
                             "Attempted to handle scam, but user '{}' does not exist anymore.",
                             args.authorId))
-            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(
+            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(LogMarkers.SENSITIVE,
                     "Attempted to handle scam, but user '{}' is not a member of the guild anymore.",
                     args.authorId));
 
