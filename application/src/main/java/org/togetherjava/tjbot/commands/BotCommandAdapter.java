@@ -130,7 +130,8 @@ public abstract class BotCommandAdapter implements BotCommand {
      */
     @SuppressWarnings({"OverloadedVarargsMethod", "WeakerAccess"})
     protected final String generateComponentId(Lifespan lifespan, String... args) {
-        return componentIdGenerator.generate(new ComponentId(getName(), Arrays.asList(args)),
-                lifespan);
+        return componentIdGenerator
+            .generate(new ComponentId(UserInteractorPrefix.getPrefixedNameFromInstance(this),
+                    Arrays.asList(args)), lifespan);
     }
 }
