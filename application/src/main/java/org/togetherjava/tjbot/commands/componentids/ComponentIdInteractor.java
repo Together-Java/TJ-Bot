@@ -36,15 +36,6 @@ public final class ComponentIdInteractor {
     }
 
     /**
-     * Gets the name of the interactor.
-     *
-     * @return the name of the interactor
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
      * Must be used before generating component IDs with {@link #generateComponentId(String...)} and
      * similar.
      * <p>
@@ -92,7 +83,8 @@ public final class ComponentIdInteractor {
      */
     @SuppressWarnings("OverloadedVarargsMethod")
     public String generateComponentId(Lifespan lifespan, String... args) {
-        return generator.generate(new ComponentId(userInteractionType.getPrefixedName(getName()),
-                Arrays.asList(args)), lifespan);
+        return generator.generate(
+                new ComponentId(userInteractionType.getPrefixedName(name), Arrays.asList(args)),
+                lifespan);
     }
 }

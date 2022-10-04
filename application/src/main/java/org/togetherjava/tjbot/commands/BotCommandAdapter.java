@@ -34,6 +34,7 @@ import java.util.Objects;
  * Registration of commands can be done in {@link Features}.
  */
 public abstract class BotCommandAdapter implements BotCommand {
+    private final String name;
     private final UserInteractionType type;
     private final CommandVisibility visibility;
     private final CommandData data;
@@ -49,8 +50,9 @@ public abstract class BotCommandAdapter implements BotCommand {
         this.data = data.setGuildOnly(visibility == CommandVisibility.GUILD);
         this.visibility = Objects.requireNonNull(visibility, "The visibility shouldn't be null");
 
+        name = data.getName();
         type = commandTypeToInteractionType(data.getType());
-        componentIdInteractor = new ComponentIdInteractor(type, data.getName());
+        componentIdInteractor = new ComponentIdInteractor(type, name);
     }
 
     private static UserInteractionType commandTypeToInteractionType(Command.Type type) {
@@ -65,7 +67,7 @@ public abstract class BotCommandAdapter implements BotCommand {
 
     @Override
     public final String getName() {
-        return componentIdInteractor.getName();
+        return name;
     }
 
     @Override
