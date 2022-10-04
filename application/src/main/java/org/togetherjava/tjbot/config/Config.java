@@ -135,9 +135,9 @@ public final class Config {
     }
 
     /**
-     * Gets the API Key of GitHub to upload pastes via the API.
+     * Gets the API Key of GitHub.
      *
-     * @return the upload services API Key
+     * @return the API Key
      * @see <a href=
      *      "https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">Create
      *      a GitHub key</a>
