@@ -209,12 +209,15 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.getUser()
             .openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(String.format("<#%s>", helpThread.getIdLong())))
-            .queue();
-
-        event.reply(
-                "An attempt has made to send a link of this help thread to your DMs. Check your inbox")
-            .setEphemeral(true)
-            .queue();
+            .queue(onSuccess -> event.reply("A link to this help thread has been sent to your DMs")
+                .setEphemeral(true)
+                .queue(),
+                    onFailure -> event.reply("""
+                            Unable to send a DM. Try doing:-
+                            1. Make sure this bot isn't blocked
+                            2. Make sure you allow DMs from members of this server""")
+                        .setEphemeral(true)
+                        .queue());
     }
 
     private static Stream<Subcommand> streamSubcommands() {
