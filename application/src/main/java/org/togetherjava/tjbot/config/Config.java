@@ -67,8 +67,10 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "githubReferenceChannelPattern", required = true) String githubReferenceChannelPattern,
-            @JsonProperty(value = "githubRepositories", required = true) List<Long> githubRepositories) {
+            @JsonProperty(value = "githubReferenceChannelPattern",
+                    required = true) String githubReferenceChannelPattern,
+            @JsonProperty(value = "githubRepositories",
+                    required = true) List<Long> githubRepositories) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
