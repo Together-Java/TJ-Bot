@@ -208,7 +208,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private void bookmarkThread(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
         event.getUser()
             .openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(helpThread.getAsMention()))
+            .flatMap(channel -> channel
+                .sendMessage("You bookmarked the following thread: " + helpThread.getAsMention()))
             .queue(onSuccess -> event.reply("A link to this help thread has been sent to your DMs")
                 .setEphemeral(true)
                 .queue(),
