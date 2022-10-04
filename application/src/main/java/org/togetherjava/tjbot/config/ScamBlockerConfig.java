@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * Configuration for the scam blocker system, see
  * {@link org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker}.
  */
-@SuppressWarnings("ClassCanBeRecord")
 @JsonRootName("scamBlocker")
 public final class ScamBlockerConfig {
     private final Mode mode;
@@ -23,17 +23,20 @@ public final class ScamBlockerConfig {
     private final int isHostSimilarToKeywordDistanceThreshold;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private ScamBlockerConfig(@JsonProperty("mode") Mode mode,
-            @JsonProperty("reportChannelPattern") String reportChannelPattern,
-            @JsonProperty("hostWhitelist") Set<String> hostWhitelist,
-            @JsonProperty("hostBlacklist") Set<String> hostBlacklist,
-            @JsonProperty("suspiciousHostKeywords") Set<String> suspiciousHostKeywords,
-            @JsonProperty("isHostSimilarToKeywordDistanceThreshold") int isHostSimilarToKeywordDistanceThreshold) {
-        this.mode = mode;
-        this.reportChannelPattern = reportChannelPattern;
-        this.hostWhitelist = new HashSet<>(hostWhitelist);
-        this.hostBlacklist = new HashSet<>(hostBlacklist);
-        this.suspiciousHostKeywords = new HashSet<>(suspiciousHostKeywords);
+    private ScamBlockerConfig(@JsonProperty(value = "mode", required = true) Mode mode,
+            @JsonProperty(value = "reportChannelPattern",
+                    required = true) String reportChannelPattern,
+            @JsonProperty(value = "hostWhitelist", required = true) Set<String> hostWhitelist,
+            @JsonProperty(value = "hostBlacklist", required = true) Set<String> hostBlacklist,
+            @JsonProperty(value = "suspiciousHostKeywords",
+                    required = true) Set<String> suspiciousHostKeywords,
+            @JsonProperty(value = "isHostSimilarToKeywordDistanceThreshold",
+                    required = true) int isHostSimilarToKeywordDistanceThreshold) {
+        this.mode = Objects.requireNonNull(mode);
+        this.reportChannelPattern = Objects.requireNonNull(reportChannelPattern);
+        this.hostWhitelist = new HashSet<>(Objects.requireNonNull(hostWhitelist));
+        this.hostBlacklist = new HashSet<>(Objects.requireNonNull(hostBlacklist));
+        this.suspiciousHostKeywords = new HashSet<>(Objects.requireNonNull(suspiciousHostKeywords));
         this.isHostSimilarToKeywordDistanceThreshold = isHostSimilarToKeywordDistanceThreshold;
     }
 

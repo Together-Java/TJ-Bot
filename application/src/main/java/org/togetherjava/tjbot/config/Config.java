@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Configuration of the application. Create instances using {@link #load(Path)}.
@@ -35,40 +36,47 @@ public final class Config {
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private Config(@JsonProperty("token") String token,
-            @JsonProperty("gistApiKey") String gistApiKey,
-            @JsonProperty("databasePath") String databasePath,
-            @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite,
-            @JsonProperty("modAuditLogChannelPattern") String modAuditLogChannelPattern,
-            @JsonProperty("mutedRolePattern") String mutedRolePattern,
-            @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
-            @JsonProperty("softModerationRolePattern") String softModerationRolePattern,
-            @JsonProperty("tagManageRolePattern") String tagManageRolePattern,
-            @JsonProperty("suggestions") SuggestionsConfig suggestions,
-            @JsonProperty("quarantinedRolePattern") String quarantinedRolePattern,
-            @JsonProperty("scamBlocker") ScamBlockerConfig scamBlocker,
-            @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId,
-            @JsonProperty("helpSystem") HelpSystemConfig helpSystem,
-            @JsonProperty("mediaOnlyChannelPattern") String mediaOnlyChannelPattern,
-            @JsonProperty("blacklistedFileExtension") List<String> blacklistedFileExtension) {
-        this.token = token;
-        this.gistApiKey = gistApiKey;
-        this.databasePath = databasePath;
-        this.projectWebsite = projectWebsite;
-        this.discordGuildInvite = discordGuildInvite;
-        this.modAuditLogChannelPattern = modAuditLogChannelPattern;
-        this.mutedRolePattern = mutedRolePattern;
-        this.heavyModerationRolePattern = heavyModerationRolePattern;
-        this.softModerationRolePattern = softModerationRolePattern;
-        this.tagManageRolePattern = tagManageRolePattern;
-        this.suggestions = suggestions;
-        this.quarantinedRolePattern = quarantinedRolePattern;
-        this.scamBlocker = scamBlocker;
-        this.wolframAlphaAppId = wolframAlphaAppId;
-        this.helpSystem = helpSystem;
-        this.mediaOnlyChannelPattern = mediaOnlyChannelPattern;
-        this.blacklistedFileExtension = blacklistedFileExtension;
+    private Config(@JsonProperty(value = "token", required = true) String token,
+            @JsonProperty(value = "gistApiKey", required = true) String gistApiKey,
+            @JsonProperty(value = "databasePath", required = true) String databasePath,
+            @JsonProperty(value = "projectWebsite", required = true) String projectWebsite,
+            @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
+            @JsonProperty(value = "modAuditLogChannelPattern",
+                    required = true) String modAuditLogChannelPattern,
+            @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
+            @JsonProperty(value = "heavyModerationRolePattern",
+                    required = true) String heavyModerationRolePattern,
+            @JsonProperty(value = "softModerationRolePattern",
+                    required = true) String softModerationRolePattern,
+            @JsonProperty(value = "tagManageRolePattern",
+                    required = true) String tagManageRolePattern,
+            @JsonProperty(value = "suggestions", required = true) SuggestionsConfig suggestions,
+            @JsonProperty(value = "quarantinedRolePattern",
+                    required = true) String quarantinedRolePattern,
+            @JsonProperty(value = "scamBlocker", required = true) ScamBlockerConfig scamBlocker,
+            @JsonProperty(value = "wolframAlphaAppId", required = true) String wolframAlphaAppId,
+            @JsonProperty(value = "helpSystem", required = true) HelpSystemConfig helpSystem,
+            @JsonProperty(value = "mediaOnlyChannelPattern",
+                    required = true) String mediaOnlyChannelPattern,
+            @JsonProperty(value = "blacklistedFileExtension",
+                    required = true) List<String> blacklistedFileExtension) {
+        this.token = Objects.requireNonNull(token);
+        this.gistApiKey = Objects.requireNonNull(gistApiKey);
+        this.databasePath = Objects.requireNonNull(databasePath);
+        this.projectWebsite = Objects.requireNonNull(projectWebsite);
+        this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
+        this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
+        this.mutedRolePattern = Objects.requireNonNull(mutedRolePattern);
+        this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
+        this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
+        this.tagManageRolePattern = Objects.requireNonNull(tagManageRolePattern);
+        this.suggestions = Objects.requireNonNull(suggestions);
+        this.quarantinedRolePattern = Objects.requireNonNull(quarantinedRolePattern);
+        this.scamBlocker = Objects.requireNonNull(scamBlocker);
+        this.wolframAlphaAppId = Objects.requireNonNull(wolframAlphaAppId);
+        this.helpSystem = Objects.requireNonNull(helpSystem);
+        this.mediaOnlyChannelPattern = Objects.requireNonNull(mediaOnlyChannelPattern);
+        this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
     }
 
     /**
