@@ -34,7 +34,7 @@ public final class Config {
     private final String mediaOnlyChannelPattern;
     private final String logInfoChannelWebhook;
     private final String logErrorChannelWebhook;
-    private final String githubReferenceChannelPattern;
+    private final String githubReferencingEnabledChannelPattern;
     private final List<Long> githubRepositories;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
@@ -67,8 +67,8 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "githubReferenceChannelPattern",
-                    required = true) String githubReferenceChannelPattern,
+            @JsonProperty(value = "githubReferencingEnabledChannelPattern",
+                    required = true) String githubReferencingEnabledChannelPattern,
             @JsonProperty(value = "githubRepositories",
                     required = true) List<Long> githubRepositories) {
         this.token = Objects.requireNonNull(token);
@@ -90,7 +90,8 @@ public final class Config {
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
-        this.githubReferenceChannelPattern = Objects.requireNonNull(githubReferenceChannelPattern);
+        this.githubReferencingEnabledChannelPattern =
+                Objects.requireNonNull(githubReferencingEnabledChannelPattern);
         this.githubRepositories = Objects.requireNonNull(githubRepositories);
     }
 
@@ -269,8 +270,8 @@ public final class Config {
     /**
      * The REGEX pattern used to identify the channels that support GitHub issue referencing
      */
-    public String getGitHubReferenceChannelPattern() {
-        return githubReferenceChannelPattern;
+    public String getGitHubReferencingEnabledChannelPattern() {
+        return githubReferencingEnabledChannelPattern;
     }
 
     /**

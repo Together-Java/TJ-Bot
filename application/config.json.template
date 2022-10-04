@@ -84,7 +84,7 @@
         "wsf",
         "wsh"
     ],
-    "githubReferenceChannelPattern": "general",
+    "githubReferencingEnabledChannelPattern": "general",
     "githubRepositories": [
         <repository id here (e.g. 403389278>
     ],

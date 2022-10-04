@@ -13,10 +13,12 @@ import org.togetherjava.tjbot.commands.utils.StringDistances;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.TemporalAmount;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.stream.Stream;
 
 /**
  * Slash command (/github) used to search for an issue in one of the repositories listed in the
@@ -27,23 +29,27 @@ import java.util.regex.Matcher;
 public class GitHubCommand extends SlashCommandAdapter {
     private static final long ONE_MINUTE_IN_MILLIS = 60_000L;
 
+    /**
+     * Compares the getUpdatedAt values
+     */
+    private static final Comparator<GHIssue> GITHUB_ISSUE_TIME_COMPARATOR = (i1, i2) -> {
+        try {
+            return i2.getUpdatedAt().compareTo(i1.getUpdatedAt());
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    };
+
     private static final String TITLE_OPTION = "title";
 
     private final GitHubReference reference;
 
-    /**
-     * The last time the cache was updated (millis after Jan 1st 1970)
-     * <p>
-     * The cache updates every minute (see the ONE_MINUTE_IN_MILLIS constant)
-     */
-    private long lastCache;
-    /**
-     * The currently cached auto completion
-     */
+    private Instant lastCacheUpdate;
     private List<String> autocompleteCache;
 
     public GitHubCommand(GitHubReference reference) {
-        super("github", "Search GitHub for an issue", CommandVisibility.GUILD);
+        super("github-search", "Search configured GitHub repositories for an issue/pull request",
+                CommandVisibility.GUILD);
 
         this.reference = reference;
 
@@ -59,23 +65,19 @@ public class GitHubCommand extends SlashCommandAdapter {
         Matcher matcher = GitHubReference.ISSUE_REFERENCE_PATTERN.matcher(title);
 
         if (!matcher.find()) {
-            event.reply("Could not parse your query").setEphemeral(true).queue();
+            event.reply(
+                    "Could not parse your query. Was not able to find an issue number in it (e.g. #207).")
+                .setEphemeral(true)
+                .queue();
 
             return;
         }
 
-        int id = Integer.parseInt(matcher.group(1));
-        Optional<GHIssue> issue = reference.findIssue(id);
-
-        if (issue.isPresent()) {
-            try {
-                event.replyEmbeds(reference.generateReply(issue.get())).queue();
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
-        } else {
-            event.reply("Could not find the issue you are looking for").setEphemeral(true).queue();
-        }
+        reference.findIssue(Integer.parseInt(matcher.group("id")))
+            .ifPresentOrElse(issue -> event.replyEmbeds(reference.generateReply(issue)).queue(),
+                    () -> event.reply("Could not find the issue you are looking for.")
+                        .setEphemeral(true)
+                        .queue());
     }
 
     @Override
@@ -85,24 +87,19 @@ public class GitHubCommand extends SlashCommandAdapter {
         if (title.isEmpty()) {
             event.replyChoiceStrings(autocompleteCache.stream().limit(25).toList()).queue();
         } else {
-            event
-                .replyChoiceStrings(autocompleteCache.stream()
-                    .sorted(Comparator.comparingInt(s -> StringDistances.editDistance(title,
-                            s.replaceFirst("\\[\\d+] ", ""))))
-                    .limit(25)
-                    .toList())
-                .queue();
+            Queue<String> queue = new PriorityQueue<>(Comparator.comparingInt(
+                    s -> StringDistances.editDistance(title, s.replaceFirst("\\[#\\d+] ", ""))));
+
+            queue.addAll(autocompleteCache);
+
+            event.replyChoiceStrings(Stream.generate(queue::poll).limit(25).toList()).queue();
         }
 
-        if (lastCache <= System.currentTimeMillis() - ONE_MINUTE_IN_MILLIS) {
+        if (lastCacheUpdate.isAfter(Instant.now().minus(Duration.ofMinutes(1)))) {
             updateCache();
         }
     }
 
-    /**
-     * Updates the cache (has no time check, i.e. it does not check whether ONE_MINUTE_IN_MILLIS has
-     * passed since the last cache)
-     */
     private void updateCache() {
         autocompleteCache = reference.getRepositories().parallelStream().map(repo -> {
             try {
@@ -110,14 +107,12 @@ public class GitHubCommand extends SlashCommandAdapter {
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
-        }).flatMap(List::stream).sorted((i1, i2) -> {
-            try {
-                return i2.getUpdatedAt().compareTo(i1.getUpdatedAt());
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
-        }).map(issue -> "[#%d] %s".formatted(issue.getNumber(), issue.getTitle())).toList();
+        })
+            .flatMap(List::stream)
+            .sorted(GITHUB_ISSUE_TIME_COMPARATOR)
+            .map(issue -> "[#%d] %s".formatted(issue.getNumber(), issue.getTitle()))
+            .toList();
 
-        lastCache = System.currentTimeMillis();
+        lastCacheUpdate = Instant.now();
     }
 }

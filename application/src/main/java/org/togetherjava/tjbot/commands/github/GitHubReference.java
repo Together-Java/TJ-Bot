@@ -33,7 +33,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     /**
      * The pattern used to determine whether a message is referencing an issue
      */
-    protected static final Pattern ISSUE_REFERENCE_PATTERN = Pattern.compile("#(\\d+)");
+    protected static final Pattern ISSUE_REFERENCE_PATTERN = Pattern.compile("#(?<id>\\d+)");
 
     private final Config config;
 
@@ -43,28 +43,27 @@ public class GitHubReference extends MessageReceiverAdapter {
     private List<GHRepository> repositories;
 
     public GitHubReference(Config config) {
-        super(Pattern.compile(config.getGitHubReferenceChannelPattern()));
+        super(Pattern.compile(config.getGitHubReferencingEnabledChannelPattern()));
 
         this.config = config;
 
-        try {
-            acquireRepositories();
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
+        acquireRepositories();
     }
 
     /**
-     * Scans all repositories mentioned in the config and adds their object representations using
-     * kohuske's API to a list
+     * Acquires the list of repositories to use as a source for lookup.
      */
-    private void acquireRepositories() throws IOException {
-        repositories = new ArrayList<>();
+    private void acquireRepositories() {
+        try {
+            repositories = new ArrayList<>();
 
-        GitHub githubApi = GitHub.connectUsingOAuth(config.getGitHubApiKey());
+            GitHub githubApi = GitHub.connectUsingOAuth(config.getGitHubApiKey());
 
-        for (long repo : config.getGitHubRepositories()) {
-            repositories.add(githubApi.getRepositoryById(repo));
+            for (long repoId : config.getGitHubRepositories()) {
+                repositories.add(githubApi.getRepositoryById(repoId));
+            }
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 
@@ -80,30 +79,30 @@ public class GitHubReference extends MessageReceiverAdapter {
         List<MessageEmbed> embeds = new ArrayList<>();
 
         while (matcher.find()) {
-            int id = Integer.parseInt(matcher.group(1));
-
-            try {
-                Optional<GHIssue> issue = findIssue(id);
-
-                if (issue.isPresent()) {
-                    embeds.add(generateReply(issue.get()));
-                }
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
+            findIssue(Integer.parseInt(matcher.group("id")))
+                .ifPresent(issue -> embeds.add(generateReply(issue)));
         }
 
+        replyBatchEmbeds(embeds, message, false);
+    }
+
+    /**
+     * Replies to the given message with the given embeds in "batches", sending 10 embeds at a time
+     * (the discord limit)
+     */
+    private void replyBatchEmbeds(List<MessageEmbed> embeds, Message message,
+            boolean mentionRepliedUser) {
         List<List<MessageEmbed>> partition = ListUtils.partition(embeds, 10);
-        boolean first = true;
+        boolean isFirstBatch = true;
         TextChannel textChannel = message.getChannel().asTextChannel();
 
         for (List<MessageEmbed> messageEmbeds : partition) {
-            if (first) {
-                message.replyEmbeds(messageEmbeds).mentionRepliedUser(false).queue();
+            if (isFirstBatch) {
+                message.replyEmbeds(messageEmbeds).mentionRepliedUser(mentionRepliedUser).queue();
 
-                first = false;
+                isFirstBatch = false;
             } else {
-                textChannel.sendMessageEmbeds(messageEmbeds).mentionRepliedUser(false).queue();
+                textChannel.sendMessageEmbeds(messageEmbeds).queue();
             }
         }
     }
@@ -111,31 +110,34 @@ public class GitHubReference extends MessageReceiverAdapter {
     /**
      * Generates the embed to reply with when someone references an issue
      */
-    protected MessageEmbed generateReply(GHIssue issue) throws IOException {
-        return new EmbedBuilder()
-            .setColor(issue.getState() == GHIssueState.OPEN ? Color.green.getRGB()
-                    : Color.red.getRGB())
-            .setDescription(issue.getBody())
-            .setTitle("[#%d] %s".formatted(issue.getNumber(), issue.getTitle()),
-                    issue.getHtmlUrl().toString())
-            .setAuthor(issue.getUser().getName())
-            .setFooter("%s • %s".formatted(
-                    issue.getLabels()
-                        .stream()
-                        .map(GHLabel::getName)
-                        .collect(Collectors.joining(", ")),
-                    issue.getAssignees()
-                        .stream()
-                        .map(this::getUserNameOrFailAtRuntime)
-                        .collect(Collectors.joining(", "))))
-            .build();
+    protected MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
+        try {
+            return new EmbedBuilder()
+                .setColor(issue.getState() == GHIssueState.OPEN ? Color.green.getRGB()
+                        : Color.red.getRGB())
+                .setDescription(issue.getBody())
+                .setTitle("[#%d] %s".formatted(issue.getNumber(), issue.getTitle()),
+                        issue.getHtmlUrl().toString())
+                .setAuthor(issue.getUser().getName())
+                .setFooter("%s • %s".formatted(
+                        issue.getLabels()
+                            .stream()
+                            .map(GHLabel::getName)
+                            .collect(Collectors.joining(", ")),
+                        issue.getAssignees()
+                            .stream()
+                            .map(this::getUserNameOrThrow)
+                            .collect(Collectors.joining(", "))))
+                .build();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
-    // this is utterly stupid
     /**
      * Either properly gathers the name of a user or throws a UncheckedIOException
      */
-    private String getUserNameOrFailAtRuntime(GHUser user) throws UncheckedIOException {
+    private String getUserNameOrThrow(GHUser user) throws UncheckedIOException {
         try {
             return user.getName();
         } catch (IOException ex) {
@@ -144,8 +146,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     }
 
     /**
-     * Safely (returning an optional instead of throwing an exception) looks through all of the
-     * given repositories for an issue/pr with the given id
+     * Looks through all of the given repositories for an issue/pr with the given id
      */
     protected Optional<GHIssue> findIssue(int id) {
         return repositories.stream().map(repository -> {
@@ -156,11 +157,11 @@ public class GitHubReference extends MessageReceiverAdapter {
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
-        }).filter(Optional::isPresent).map(Optional::get).findAny();
+        }).filter(Optional::isPresent).map(Optional::orElseThrow).findAny();
     }
 
     /**
-     * All repositories monitored by this instance
+     * All repositories monitored by this instance.
      */
     protected List<GHRepository> getRepositories() {
         return repositories;
