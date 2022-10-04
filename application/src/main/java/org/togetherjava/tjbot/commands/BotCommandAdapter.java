@@ -35,7 +35,7 @@ import java.util.Objects;
  */
 public abstract class BotCommandAdapter implements BotCommand {
     private final String name;
-    private final UserInteractionType type;
+    private final UserInteractionType interactionType;
     private final CommandVisibility visibility;
     private final CommandData data;
     private final ComponentIdInteractor componentIdInteractor;
@@ -51,8 +51,8 @@ public abstract class BotCommandAdapter implements BotCommand {
         this.visibility = Objects.requireNonNull(visibility, "The visibility shouldn't be null");
 
         name = data.getName();
-        type = commandTypeToInteractionType(data.getType());
-        componentIdInteractor = new ComponentIdInteractor(type, name);
+        interactionType = commandTypeToInteractionType(data.getType());
+        componentIdInteractor = new ComponentIdInteractor(interactionType, name);
     }
 
     private static UserInteractionType commandTypeToInteractionType(Command.Type type) {
@@ -71,8 +71,8 @@ public abstract class BotCommandAdapter implements BotCommand {
     }
 
     @Override
-    public final UserInteractionType getType() {
-        return type;
+    public final UserInteractionType getInteractionType() {
+        return interactionType;
     }
 
     @Override

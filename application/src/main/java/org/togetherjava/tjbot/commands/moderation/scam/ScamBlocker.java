@@ -83,7 +83,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         isReportChannel = channel -> isReportChannelName.test(channel.getName());
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
 
-        componentIdInteractor = new ComponentIdInteractor(getType(), getName());
+        componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
     }
 
     @Override
@@ -92,7 +92,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public UserInteractionType getType() {
+    public UserInteractionType getInteractionType() {
         return UserInteractionType.OTHER;
     }
 

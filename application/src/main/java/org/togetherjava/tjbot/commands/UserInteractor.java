@@ -39,7 +39,7 @@ public interface UserInteractor extends Feature {
      *
      * @return the type of the interaction allowed by this interactor
      */
-    UserInteractionType getType();
+    UserInteractionType getInteractionType();
 
     /**
      * Triggered by the core system when a button corresponding to this implementation (based on

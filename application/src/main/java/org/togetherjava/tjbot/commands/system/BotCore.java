@@ -97,7 +97,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                     .filter(validateInteractorPredicate())
                     .collect(
                             Collectors.toMap(
-                                    userInteractor -> userInteractor.getType()
+                                    userInteractor -> userInteractor.getInteractionType()
                                         .getPrefixedName(userInteractor.getName()),
                                     Function.identity()));
 
