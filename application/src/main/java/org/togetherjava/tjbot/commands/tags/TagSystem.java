@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.apache.commons.collections4.ListUtils;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
@@ -24,10 +25,9 @@ import java.util.stream.Collectors;
  */
 public final class TagSystem {
     /**
-     * The amount of candidates that are suggested as buttons in the message that tells the user
-     * that the tag they tried accessing doesn't exist
+     * The amount of tags suggested when the user types an incorrect tag name.
      */
-    private static final int CANDIDATE_SUGGESTIONS_PER_USAGE = 5;
+    private static final int TAG_SUGGESTIONS_AMOUNT = 5;
 
     /**
      * todo document
@@ -81,29 +81,25 @@ public final class TagSystem {
         List<String> candidates = getAllIds().stream()
             .sorted(Comparator
                 .comparingInt(candidate -> StringDistances.editDistance(id, candidate)))
-            .limit(CANDIDATE_SUGGESTIONS_PER_USAGE)
+            .limit(TAG_SUGGESTIONS_AMOUNT)
             .toList();
-        List<ActionRow> rows = new ArrayList<>();
         List<List<String>> partition = ListUtils.partition(candidates, 5);
+        ReplyCallbackAction action = event
+                .reply("Could not find any tag with id '%s'%s"
+                        .formatted(id, candidates.isEmpty() ? "." : ", did you perhaps mean any of the following?"))
+                .setEphemeral(true);
 
         for (List<String> part : partition) {
-            rows.add(
-                    ActionRow
-                        .of(part.stream()
+            action.addActionRow(
+                        part.stream()
                             .map(i -> Button.secondary(componentIdGenerator.apply(new String[] {
                                     TAG_SUGGESTION_INDICATOR, i,
                                     userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
                                             : null}),
                                     i))
-                            .toList()));
+                            .toList());
         }
 
-        event
-            .reply("Could not find any tag with id '%s'%s"
-                .formatted(id, candidates.isEmpty() ? "." : ", did you perhaps mean any of the following?"))
-            .setEphemeral(true)
-            .addActionRows(rows)
-            .queue();
 
         return true;
     }

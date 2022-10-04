@@ -167,8 +167,6 @@ public final class JdaTester {
         when(replyAction.addActionRow(anyCollection())).thenReturn(replyAction);
         when(replyAction.addActionRow(ArgumentMatchers.<ItemComponent>any()))
             .thenReturn(replyAction);
-        when(replyAction.addActionRows(anyCollection())).thenReturn(replyAction);
-        when(replyAction.addActionRows(ArgumentMatchers.<ActionRow>any())).thenReturn(replyAction);
         when(replyAction.setContent(anyString())).thenReturn(replyAction);
         when(replyAction.addFiles(anyCollection())).thenReturn(replyAction);
         when(replyAction.addFiles(any(FileUpload.class))).thenReturn(replyAction);
@@ -574,7 +572,7 @@ public final class JdaTester {
      * strings or files.
      * <p>
      * An example would be
-     * 
+     *
      * <pre>
      * {
      *     &#64;code
