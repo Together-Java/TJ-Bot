@@ -184,10 +184,12 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         MessageCreateData threadMessage = new MessageCreateBuilder()
             .setContent(
                     """
-                        %s has a question about '**%s**' and will send the details now.
+                            %s has a question about '**%s**' and will send the details now.
 
-                        Please use `/help-thread change category` to greatly increase the visibility of the question."""
-                    .formatted(author, title)).setEmbeds(embed).build();
+                            Please use `/help-thread change category` to greatly increase the visibility of the question."""
+                        .formatted(author, title))
+            .setEmbeds(embed)
+            .build();
 
         return threadChannel.sendMessage(threadMessage);
     }

@@ -3,7 +3,11 @@ package org.togetherjava.tjbot.commands.help;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -11,7 +15,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
@@ -92,7 +96,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        ThreadChannel helpThread = event.getThreadChannel();
+        ThreadChannel helpThread = event.getChannel().asThreadChannel();
 
         Subcommand invokedSubcommand =
                 Objects.requireNonNull(nameToSubcommand.get(event.getSubcommandName()));
@@ -153,7 +157,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
             ThreadChannel helpThread, String category) {
         String changedContent = "Changed the category to **%s**.".formatted(category);
-        WebhookMessageUpdateAction<Message> action = hook.editOriginal(changedContent);
+        WebhookMessageEditAction<Message> action = hook.editOriginal(changedContent);
 
         Optional<Role> helperRole = helper.handleFindRoleForCategory(category, guild);
         if (helperRole.isEmpty()) {
