@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -82,14 +83,15 @@ public final class KickCommand extends SlashCommandAdapter {
 
     private AuditableRestAction<Void> kickUser(Member target, Member author, String reason,
             Guild guild) {
-        logger.info("'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationAction.KICK, null, reason);
 
-        return guild.kick(target, reason).reason(reason);
+        return guild.kick(target).reason(reason);
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,

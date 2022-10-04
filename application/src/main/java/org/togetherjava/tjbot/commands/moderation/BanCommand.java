@@ -18,12 +18,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
@@ -127,7 +129,8 @@ public final class BanCommand extends SlashCommandAdapter {
                     .setEphemeral(true));
             }
         }
-        logger.warn("Something unexpected went wrong while trying to ban the user '{}'.",
+        logger.warn(LogMarkers.SENSITIVE,
+                "Something unexpected went wrong while trying to ban the user '{}'.",
                 target.getAsTag(), alreadyBannedFailure);
         return Optional.of(event.reply("Failed to ban the user due to an unexpected problem.")
             .setEphemeral(true));
@@ -148,7 +151,7 @@ public final class BanCommand extends SlashCommandAdapter {
             int deleteHistoryDays, Guild guild) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        logger.info(
+        logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) banned the user '{}' ({}) {} from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                 durationMessage, guild.getName(), deleteHistoryDays, reason);
@@ -157,7 +160,7 @@ public final class BanCommand extends SlashCommandAdapter {
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
                 ModerationAction.BAN, expiresAt, reason);
 
-        return guild.ban(target, deleteHistoryDays, reason);
+        return guild.ban(target, deleteHistoryDays, TimeUnit.DAYS).reason(reason);
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})

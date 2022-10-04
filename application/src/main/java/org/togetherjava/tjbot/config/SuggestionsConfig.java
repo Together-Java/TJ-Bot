@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
+import java.util.Objects;
+
 /**
  * Configuration for the suggestion system, see
  * {@link org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter}.
  */
-@SuppressWarnings("ClassCanBeRecord")
 @JsonRootName("suggestions")
 public final class SuggestionsConfig {
     private final String channelPattern;
@@ -16,12 +17,13 @@ public final class SuggestionsConfig {
     private final String downVoteEmoteName;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private SuggestionsConfig(@JsonProperty("channelPattern") String channelPattern,
-            @JsonProperty("upVoteEmoteName") String upVoteEmoteName,
-            @JsonProperty("downVoteEmoteName") String downVoteEmoteName) {
-        this.channelPattern = channelPattern;
-        this.upVoteEmoteName = upVoteEmoteName;
-        this.downVoteEmoteName = downVoteEmoteName;
+    private SuggestionsConfig(
+            @JsonProperty(value = "channelPattern", required = true) String channelPattern,
+            @JsonProperty(value = "upVoteEmoteName", required = true) String upVoteEmoteName,
+            @JsonProperty(value = "downVoteEmoteName", required = true) String downVoteEmoteName) {
+        this.channelPattern = Objects.requireNonNull(channelPattern);
+        this.upVoteEmoteName = Objects.requireNonNull(upVoteEmoteName);
+        this.downVoteEmoteName = Objects.requireNonNull(downVoteEmoteName);
     }
 
     /**

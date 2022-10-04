@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 /**
  * Action to revoke temporary bans, as applied by
@@ -36,14 +37,14 @@ final class TemporaryBanAction implements RevocableModerationAction {
     public FailureIdentification handleRevokeFailure(Throwable failure, long targetId) {
         if (failure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
-                logger.debug(
+                logger.debug(LogMarkers.SENSITIVE,
                         "Attempted to revoke a temporary ban but user '{}' does not exist anymore.",
                         targetId);
                 return FailureIdentification.KNOWN;
             }
 
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
-                logger.debug(
+                logger.debug(LogMarkers.SENSITIVE,
                         "Attempted to revoke a temporary ban but the user '{}' is not banned anymore.",
                         targetId);
                 return FailureIdentification.KNOWN;

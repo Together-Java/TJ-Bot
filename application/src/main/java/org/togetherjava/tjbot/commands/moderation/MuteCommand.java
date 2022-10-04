@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
@@ -103,7 +104,8 @@ public final class MuteCommand extends SlashCommandAdapter {
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        logger.info("'{}' ({}) muted the user '{}' ({}) {} in guild '{}' for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) muted the user '{}' ({}) {} in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), durationMessage, guild.getName(), reason);
 

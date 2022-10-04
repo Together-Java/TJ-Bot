@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
@@ -157,7 +158,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
         String content = tagSystem.getTag(id).orElseThrow();
         event.reply("")
-            .addFile(content.getBytes(StandardCharsets.UTF_8), CONTENT_FILE_NAME)
+            .addFiles(FileUpload.fromData(content.getBytes(StandardCharsets.UTF_8),
+                    CONTENT_FILE_NAME))
             .queue();
     }
 
@@ -294,9 +296,8 @@ public final class TagManageCommand extends SlashCommandAdapter {
             } catch (NoSuchElementException e) {
                 // NOTE Rare race condition, for example if another thread deleted the tag in the
                 // meantime
-                logger.warn(String.format(
-                        "tried to retrieve content of tag '%s', but the content doesn't exist.",
-                        id));
+                logger.warn("Tried to retrieve content of tag '{}', but the content doesn't exist.",
+                        id);
             }
         }
 
