@@ -100,8 +100,8 @@ public final class TagSystem {
         }
 
         event
-            .reply("Could not find any tag with id '%s', did you perhaps mean any of the following?"
-                .formatted(id))
+            .reply("Could not find any tag with id '%s'%s"
+                .formatted(id, candidates.isEmpty() ? "." : ", did you perhaps mean any of the following?"))
             .setEphemeral(true)
             .addActionRows(rows)
             .queue();

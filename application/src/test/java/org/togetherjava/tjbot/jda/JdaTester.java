@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.Response;
@@ -151,6 +152,8 @@ public final class JdaTester {
         when(replyAction.addActionRow(anyCollection())).thenReturn(replyAction);
         when(replyAction.addActionRow(ArgumentMatchers.<ItemComponent>any()))
             .thenReturn(replyAction);
+        when(replyAction.addActionRows(anyCollection())).thenReturn(replyAction);
+        when(replyAction.addActionRows(ArgumentMatchers.<ActionRow>any())).thenReturn(replyAction);
         when(replyAction.setContent(anyString())).thenReturn(replyAction);
         when(replyAction.addFile(any(byte[].class), any(String.class), any(AttachmentOption.class)))
             .thenReturn(replyAction);

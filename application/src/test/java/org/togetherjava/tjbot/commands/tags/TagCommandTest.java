@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.commands.componentids.ComponentId;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.commands.componentids.Lifespan;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
@@ -27,6 +30,8 @@ final class TagCommandTest {
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
         command = new TagCommand(system);
+
+        command.acceptComponentIdGenerator((componentId, lifespan) -> "foo");
     }
 
     private SlashCommandInteractionEvent triggerSlashCommand(String id,
@@ -65,7 +70,7 @@ final class TagCommandTest {
 
         // THEN responds that the tag could not be found and instead suggests using the other tag
         verify(event)
-            .reply("Could not find any tag with id 'second', did you perhaps mean 'first'?");
+            .reply("Could not find any tag with id 'second', did you perhaps mean any of the following?");
     }
 
     @Test
