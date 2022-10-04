@@ -36,7 +36,7 @@ public final class Config {
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private Config(@JsonProperty("token") String token,
+    private Config(@JsonProperty(value = "token", required = true) String token,
             @JsonProperty(value = "gistApiKey", required = true) String gistApiKey,
             @JsonProperty(value = "databasePath", required = true) String databasePath,
             @JsonProperty(value = "projectWebsite", required = true) String projectWebsite,
