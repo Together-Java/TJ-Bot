@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -64,21 +65,25 @@ public class MessageUtils {
      * in Discord.
      *
      * @param guild the {@link Guild} that contains the command
-     * @param commandInput the command's name
+     * @param baseCommandName the command's name
+     * @param subcommands optional subcommands, depending on the base command used
      * @return Formatted string for the mentioned slash command
      * @throws IllegalArgumentException when the command name doesn't match with the guild's
      *         commands
      */
-    public static RestAction<String> mentionSlashCommand(Guild guild, String... commandInput) {
-        String commandWithOptions = String.join(" ", commandInput);
+    public static RestAction<String> mentionSlashCommand(Guild guild, String baseCommandName,
+            String... subcommands) {
+        List<String> fullCommand = new ArrayList<>(List.of(baseCommandName));
+        fullCommand.addAll(List.of(subcommands));
         return guild.retrieveCommands().map(guildCommands -> {
             Command guildCommand = guildCommands.stream()
-                .filter(c -> c.getName().equalsIgnoreCase(commandInput[0]))
+                .filter(c -> c.getName().equalsIgnoreCase(baseCommandName))
                 .findAny()
                 .orElseThrow(
-                        () -> new IllegalArgumentException("Command %s does not exist in guild %s"
-                            .formatted(commandWithOptions, guild.getId())));
-            return String.format("</%s:%d>", commandWithOptions, guildCommand.getIdLong());
+                        () -> new IllegalArgumentException("Command '%s' does not exist in guild %s"
+                            .formatted(String.join(" ", fullCommand), guild.getId())));
+            return String.format("</%s:%d>", String.join(" ", fullCommand),
+                    guildCommand.getIdLong());
         });
     }
 
