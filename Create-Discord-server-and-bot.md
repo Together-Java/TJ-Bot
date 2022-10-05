@@ -16,14 +16,14 @@ This tutorial shows how to create your own Discord server and a Discord bot, whi
 
 As first step, you need to create your own Discord server. This is surprisingly easy.
 We use Discord's server template feature for this, this way you don't have to create all the channels, roles and more on your own.
-Can you still modify the servers channels and roles after creation, as it's only a template.
+You can still modify the servers channels and roles after creation, as it's only a template.
 
-This can be done using the following [URL](https://discord.new/WhtXEUZeFdTg)
+This can be done using the following [link](https://discord.new/WhtXEUZeFdTg).
 
 1. Open the URL from above
-2. Follow the dialog and enter details
-  2.1. Upload a picture
-  2.2. Enter a name
+2. Follow the dialog and enter details  
+  2.1. Upload a picture  
+  2.2. Enter a name  
   2.3. smack the **Create** button
 3. boom! you have your own Discord server 🎉 
 
