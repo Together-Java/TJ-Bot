@@ -11,17 +11,22 @@ final class StringDistancesTest {
 
     @Test
     void autoCompleteSuggestions() {
-        record TestCase(String name, Collection<String> expectedSuggestions, String prefix, Collection<String> candidates, double errorMargin) {
+        record TestCase(String name, Collection<String> expectedSuggestions, String prefix,
+                Collection<String> candidates, double errorMargin) {
         }
 
-        List<TestCase> tests = List.of(
-                new TestCase("empty_candidates", List.of(), "prefix", List.of(), 0),
-                new TestCase("empty_prefix", List.of("one", "two", "three"), "", List.of("one", "two", "three"), 0),
-                new TestCase("real_test", List.of("java", "one", "js", "j"), "jo", List.of("java", "xj", "bs", "one", "yes", "js", "a", "j"), 0.8)
-        );
+        List<TestCase> tests =
+                List.of(new TestCase("empty_candidates", List.of(), "prefix", List.of(), 0),
+                        new TestCase("empty_prefix", List.of("one", "two", "three"), "",
+                                List.of("one", "two", "three"), 0),
+                        new TestCase("real_test", List.of("java", "one", "js", "j"), "jo",
+                                List.of("java", "xj", "bs", "one", "yes", "js", "a", "j"), 0.8));
 
         for (TestCase test : tests) {
-            assertEquals(test.expectedSuggestions, StringDistances.autocompleteSuggestions(test.prefix, test.candidates, test.errorMargin), "Test '%s' failed".formatted(test.name));
+            assertEquals(
+                    test.expectedSuggestions, StringDistances.autocompleteSuggestions(test.prefix,
+                            test.candidates, test.errorMargin),
+                    "Test '%s' failed".formatted(test.name));
         }
     }
 
