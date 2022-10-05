@@ -146,7 +146,7 @@ final class DiscordLogForwarder {
             .sum();
 
         if (totalDescriptionLength >= MAX_BATCH_DESCRIPTION_TOTAL) {
-            // Shorten logs further to go the below limit
+            // Shorten logs further to go below limit
             return logBatch.stream().map(LogMessage::shortened).toList();
         }
 
