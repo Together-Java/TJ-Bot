@@ -139,7 +139,8 @@ public abstract class BotCommandAdapter implements BotCommand {
     /**
      * Gets the generator used to create component IDs.
      * <p>
-     * In general, prefer using {@link #generateComponentId(Lifespan, String...)} and {@link #generateComponentId(String...)} instead of interacting with the generator directly.
+     * In general, prefer using {@link #generateComponentId(Lifespan, String...)} and
+     * {@link #generateComponentId(String...)} instead of interacting with the generator directly.
      *
      * @return the generator
      */

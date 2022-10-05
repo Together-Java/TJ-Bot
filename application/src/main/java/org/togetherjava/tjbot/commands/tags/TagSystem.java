@@ -69,8 +69,8 @@ public final class TagSystem {
      * @param id the id of the tag to check
      * @param event the event to send messages with
      * @param componentIdGenerator used to generate buttons with tag suggestions
-     * @param replyTargetUser the user that was originally meant to be replied to when the tag command
-     *        was invoked
+     * @param replyTargetUser the user that was originally meant to be replied to when the tag
+     *        command was invoked
      * @return whether the given tag is unknown to the system
      */
     boolean handleIsUnknownTag(String id, IReplyCallback event,
@@ -79,12 +79,13 @@ public final class TagSystem {
             return false;
         }
 
-        Queue<String> closestMatches = new PriorityQueue<>(Comparator
-                .comparingInt(candidate -> StringDistances.editDistance(id, candidate)));
+        Queue<String> closestMatches = new PriorityQueue<>(
+                Comparator.comparingInt(candidate -> StringDistances.editDistance(id, candidate)));
 
         closestMatches.addAll(getAllIds());
 
-        List<String> suggestions = Stream.generate(closestMatches::poll).limit(TAG_SUGGESTIONS_AMOUNT).toList();
+        List<String> suggestions =
+                Stream.generate(closestMatches::poll).limit(TAG_SUGGESTIONS_AMOUNT).toList();
         ReplyCallbackAction action =
                 event
                     .reply("Could not find any tag with id '%s'%s".formatted(id,
@@ -95,22 +96,25 @@ public final class TagSystem {
 
         for (List<String> batch : batches) {
             action.addActionRow(batch.stream()
-                    .map(suggestion -> createSuggestionButton(suggestion, componentIdGenerator, replyTargetUser))
-                    .toList());
+                .map(suggestion -> createSuggestionButton(suggestion, componentIdGenerator,
+                        replyTargetUser))
+                .toList());
         }
 
         return true;
     }
 
     /**
-     * Creates a button for a suggestion for {@link #handleIsUnknownTag(String, IReplyCallback, ComponentIdGenerator, OptionMapping)}.
+     * Creates a button for a suggestion for
+     * {@link #handleIsUnknownTag(String, IReplyCallback, ComponentIdGenerator, OptionMapping)}.
      */
-    private Button createSuggestionButton(String suggestion, ComponentIdGenerator componentIdGenerator, @Nullable OptionMapping userToReplyTo) {
+    private Button createSuggestionButton(String suggestion,
+            ComponentIdGenerator componentIdGenerator, @Nullable OptionMapping userToReplyTo) {
         return Button.secondary(componentIdGenerator.generate(new ComponentId(
-                        UserInteractorPrefix.getPrefixedNameFromClass(TagCommand.class, TagCommand.COMMAND_NAME),
-                        Arrays.asList(suggestion,
-                                userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
-                                        : null)),
+                UserInteractorPrefix.getPrefixedNameFromClass(TagCommand.class,
+                        TagCommand.COMMAND_NAME),
+                Arrays.asList(suggestion,
+                        userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention() : null)),
                 Lifespan.REGULAR), suggestion);
     }
 

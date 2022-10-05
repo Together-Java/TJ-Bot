@@ -51,8 +51,8 @@ public final class TagCommand extends SlashCommandAdapter {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
-        if (tagSystem.handleIsUnknownTag(id, event, Objects.requireNonNull(getComponentIdGenerator()),
-                replyToUserOption)) {
+        if (tagSystem.handleIsUnknownTag(id, event,
+                Objects.requireNonNull(getComponentIdGenerator()), replyToUserOption)) {
             return;
         }
 
