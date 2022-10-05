@@ -34,6 +34,7 @@ public class GitHubReference extends MessageReceiverAdapter {
      * The pattern used to determine whether a message is referencing an issue
      */
     protected static final Pattern ISSUE_REFERENCE_PATTERN = Pattern.compile("#(?<id>\\d+)");
+    protected static final String ID_GROUP = "id";
 
     private final Config config;
 
@@ -79,7 +80,7 @@ public class GitHubReference extends MessageReceiverAdapter {
         List<MessageEmbed> embeds = new ArrayList<>();
 
         while (matcher.find()) {
-            findIssue(Integer.parseInt(matcher.group("id")))
+            findIssue(Integer.parseInt(matcher.group(ID_GROUP)))
                 .ifPresent(issue -> embeds.add(generateReply(issue)));
         }
 
@@ -87,12 +88,12 @@ public class GitHubReference extends MessageReceiverAdapter {
     }
 
     /**
-     * Replies to the given message with the given embeds in "batches", sending 10 embeds at a time
-     * (the discord limit)
+     * Replies to the given message with the given embeds in "batches", sending
+     * {@value Message#MAX_EMBED_COUNT} embeds at a time (the discord limit)
      */
     private void replyBatchEmbeds(List<MessageEmbed> embeds, Message message,
             boolean mentionRepliedUser) {
-        List<List<MessageEmbed>> partition = ListUtils.partition(embeds, 10);
+        List<List<MessageEmbed>> partition = ListUtils.partition(embeds, Message.MAX_EMBED_COUNT);
         boolean isFirstBatch = true;
         TextChannel textChannel = message.getChannel().asTextChannel();
 

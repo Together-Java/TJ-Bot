@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.*;
+import java.util.function.ToIntFunction;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
@@ -27,10 +27,10 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class GitHubCommand extends SlashCommandAdapter {
-    private static final long ONE_MINUTE_IN_MILLIS = 60_000L;
+    private static final Duration CACHE_EXPIRES_AFTER = Duration.ofMinutes(1);
 
     /**
-     * Compares the getUpdatedAt values
+     * Compares the getUpdatedAt values.
      */
     private static final Comparator<GHIssue> GITHUB_ISSUE_TIME_COMPARATOR = (i1, i2) -> {
         try {
@@ -45,7 +45,7 @@ public class GitHubCommand extends SlashCommandAdapter {
     private final GitHubReference reference;
 
     private Instant lastCacheUpdate;
-    private List<String> autocompleteCache;
+    private List<String> autocompleteGHIssueCache;
 
     public GitHubCommand(GitHubReference reference) {
         super("github-search", "Search configured GitHub repositories for an issue/pull request",
@@ -73,7 +73,7 @@ public class GitHubCommand extends SlashCommandAdapter {
             return;
         }
 
-        reference.findIssue(Integer.parseInt(matcher.group("id")))
+        reference.findIssue(Integer.parseInt(matcher.group(GitHubReference.ID_GROUP)))
             .ifPresentOrElse(issue -> event.replyEmbeds(reference.generateReply(issue)).queue(),
                     () -> event.reply("Could not find the issue you are looking for.")
                         .setEphemeral(true)
@@ -85,23 +85,28 @@ public class GitHubCommand extends SlashCommandAdapter {
         String title = event.getOption(TITLE_OPTION).getAsString();
 
         if (title.isEmpty()) {
-            event.replyChoiceStrings(autocompleteCache.stream().limit(25).toList()).queue();
+            event.replyChoiceStrings(autocompleteGHIssueCache.stream().limit(25).toList()).queue();
         } else {
-            Queue<String> queue = new PriorityQueue<>(Comparator.comparingInt(
-                    s -> StringDistances.editDistance(title, s.replaceFirst("\\[#\\d+] ", ""))));
+            Queue<String> closestSuggestions =
+                    new PriorityQueue<>(Comparator.comparingInt(suggestionScorer(title)));
 
-            queue.addAll(autocompleteCache);
+            closestSuggestions.addAll(autocompleteGHIssueCache);
 
-            event.replyChoiceStrings(Stream.generate(queue::poll).limit(25).toList()).queue();
+            event.replyChoiceStrings(Stream.generate(closestSuggestions::poll).limit(25).toList())
+                .queue();
         }
 
-        if (lastCacheUpdate.isAfter(Instant.now().minus(Duration.ofMinutes(1)))) {
+        if (lastCacheUpdate.isAfter(Instant.now().minus(CACHE_EXPIRES_AFTER))) {
             updateCache();
         }
     }
 
+    private ToIntFunction<String> suggestionScorer(String title) {
+        return s -> StringDistances.editDistance(title, s.replaceFirst("\\[#\\d+] ", ""));
+    }
+
     private void updateCache() {
-        autocompleteCache = reference.getRepositories().parallelStream().map(repo -> {
+        autocompleteGHIssueCache = reference.getRepositories().parallelStream().map(repo -> {
             try {
                 return repo.getIssues(GHIssueState.ALL);
             } catch (IOException ex) {
