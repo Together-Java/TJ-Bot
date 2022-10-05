@@ -25,6 +25,7 @@ import java.util.Optional;
 public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
 
+    static final String COMMAND_NAME = "tag";
     static final String ID_OPTION = "id";
     static final String REPLY_TO_USER_OPTION = "reply-to";
 
@@ -34,7 +35,7 @@ public final class TagCommand extends SlashCommandAdapter {
      * @param tagSystem the system providing the actual tag data
      */
     public TagCommand(TagSystem tagSystem) {
-        super("tag", "Display a tags content", CommandVisibility.GUILD);
+        super(COMMAND_NAME, "Display a tags content", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
 
@@ -50,7 +51,7 @@ public final class TagCommand extends SlashCommandAdapter {
         String id = Objects.requireNonNull(event.getOption(ID_OPTION)).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
-        if (tagSystem.handleIsUnknownTag(id, event, super.getComponentIdGenerator(),
+        if (tagSystem.handleIsUnknownTag(id, event, Objects.requireNonNull(getComponentIdGenerator()),
                 replyToUserOption)) {
             return;
         }
@@ -65,20 +66,19 @@ public final class TagCommand extends SlashCommandAdapter {
     }
 
     /**
-     * Sends the reply for a successfull /tag use (i.e. the given tag exists)
+     * Sends the reply for a successfull /tag use (i.e. the given tag exists).
      */
-    private void sendTagReply(IReplyCallback callback, String userName, String tag,
-            @Nullable String commandString, @Nullable String replyToUser) {
+    private void sendTagReply(IReplyCallback event, String invokerUserName, String tag,
+            @Nullable String commandString, @Nullable String replyTargetUser) {
         Optional<String> commandStringOpt = Optional.ofNullable(commandString);
-        Optional<String> replyToUserOpt = Optional.ofNullable(replyToUser);
 
-        callback
+        event
             .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(tag).orElseThrow())
-                .setFooter(userName + commandStringOpt.map(s -> " • used " + s).orElse(""))
+                .setFooter(invokerUserName + commandStringOpt.map(s -> " • used " + s).orElse(""))
                 .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
-            .setContent(replyToUserOpt.orElse(""))
+            .setContent(replyTargetUser)
             .queue();
     }
 }

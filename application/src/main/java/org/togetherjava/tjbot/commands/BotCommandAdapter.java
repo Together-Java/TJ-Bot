@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
@@ -136,10 +137,13 @@ public abstract class BotCommandAdapter implements BotCommand {
     }
 
     /**
-     * @return the component id generator used by {@link #generateComponentId(String...)} and
-     *         {@link #generateComponentId(Lifespan, String...)}
+     * Gets the generator used to create component IDs.
+     * <p>
+     * In general, prefer using {@link #generateComponentId(Lifespan, String...)} and {@link #generateComponentId(String...)} instead of interacting with the generator directly.
+     *
+     * @return the generator
      */
-    protected final ComponentIdGenerator getComponentIdGenerator() {
+    protected final @Nullable ComponentIdGenerator getComponentIdGenerator() {
         return componentIdGenerator;
     }
 }

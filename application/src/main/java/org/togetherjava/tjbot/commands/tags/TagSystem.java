@@ -21,6 +21,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The core of the tag system. Provides methods to read and create tags, directly tied to the
@@ -67,42 +68,50 @@ public final class TagSystem {
      *
      * @param id the id of the tag to check
      * @param event the event to send messages with
-     * @param componentIdGenerator the component id generator to generate the button ids with
-     * @param userToReplyTo the user that was originally meant to be replied to when the tag command
+     * @param componentIdGenerator used to generate buttons with tag suggestions
+     * @param replyTargetUser the user that was originally meant to be replied to when the tag command
      *        was invoked
      * @return whether the given tag is unknown to the system
      */
     boolean handleIsUnknownTag(String id, IReplyCallback event,
-            ComponentIdGenerator componentIdGenerator, @Nullable OptionMapping userToReplyTo) {
+            ComponentIdGenerator componentIdGenerator, @Nullable OptionMapping replyTargetUser) {
         if (hasTag(id)) {
             return false;
         }
 
-        List<String> candidates = getAllIds().stream()
-            .sorted(Comparator
-                .comparingInt(candidate -> StringDistances.editDistance(id, candidate)))
-            .limit(TAG_SUGGESTIONS_AMOUNT)
-            .toList();
-        List<List<String>> partition = ListUtils.partition(candidates, 5);
+        Queue<String> closestMatches = new PriorityQueue<>(Comparator
+                .comparingInt(candidate -> StringDistances.editDistance(id, candidate)));
+
+        closestMatches.addAll(getAllIds());
+
+        List<String> suggestions = Stream.generate(closestMatches::poll).limit(TAG_SUGGESTIONS_AMOUNT).toList();
         ReplyCallbackAction action =
                 event
                     .reply("Could not find any tag with id '%s'%s".formatted(id,
-                            candidates.isEmpty() ? "."
+                            suggestions.isEmpty() ? "."
                                     : ", did you perhaps mean any of the following?"))
                     .setEphemeral(true);
+        List<List<String>> batches = ListUtils.partition(suggestions, 5);
 
-        for (List<String> part : partition) {
-            action.addActionRow(part.stream()
-                .map(i -> Button.secondary(componentIdGenerator.generate(new ComponentId(
-                        UserInteractorPrefix.getPrefixedNameFromClass(TagCommand.class, "tag"),
-                        Arrays.asList(i,
-                                userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
-                                        : null)),
-                        Lifespan.REGULAR), i))
-                .toList());
+        for (List<String> batch : batches) {
+            action.addActionRow(batch.stream()
+                    .map(suggestion -> createSuggestionButton(suggestion, componentIdGenerator, replyTargetUser))
+                    .toList());
         }
 
         return true;
+    }
+
+    /**
+     * Creates a button for a suggestion for {@link #handleIsUnknownTag(String, IReplyCallback, ComponentIdGenerator, OptionMapping)}.
+     */
+    private Button createSuggestionButton(String suggestion, ComponentIdGenerator componentIdGenerator, @Nullable OptionMapping userToReplyTo) {
+        return Button.secondary(componentIdGenerator.generate(new ComponentId(
+                        UserInteractorPrefix.getPrefixedNameFromClass(TagCommand.class, TagCommand.COMMAND_NAME),
+                        Arrays.asList(suggestion,
+                                userToReplyTo != null ? userToReplyTo.getAsUser().getAsMention()
+                                        : null)),
+                Lifespan.REGULAR), suggestion);
     }
 
     /**
