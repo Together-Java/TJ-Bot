@@ -1,10 +1,9 @@
 /**
- * This package provides utility classes to compile Java code fully in memory. (IMC stands for
- * In-Memory-Compiler)
+ * This package offers the {@link org.togetherjava.tjbot.commands.bytecode.BytecodeCommand}.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package org.togetherjava.tjbot.imc;
+package org.togetherjava.tjbot.commands.bytecode;
 
 import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 

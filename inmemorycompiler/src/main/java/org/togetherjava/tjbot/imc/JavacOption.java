@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.imc;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Enum that represents every possible javac executable option that does not include an argument.
  */
@@ -14,16 +12,16 @@ public enum JavacOption {
     PARAMETERS("-parameters"),
     WERROR("-Werror");
 
-    private final @NotNull String option;
+    private final String option;
 
-    JavacOption(@NotNull String option) {
+    JavacOption(String option) {
         this.option = option;
     }
 
     /**
      * @return textual representation of the option
      */
-    public @NotNull String getOption() {
+    public String getOption() {
         return option;
     }
 }

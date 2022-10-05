@@ -17,16 +17,16 @@ public enum JavapOption {
     SYSTEM_INFO("-sysinfo"),
     CONSTANTS("-constants");
 
-    private final @NotNull String option;
+    private final String option;
 
-    JavapOption(@NotNull String option) {
+    JavapOption(String option) {
         this.option = option;
     }
 
     /**
      * @return textual representation of the option
      */
-    public @NotNull String getOption() {
+    public String getOption() {
         return option;
     }
 }

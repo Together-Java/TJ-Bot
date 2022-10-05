@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.javap;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.tools.ForwardingJavaFileManager;
@@ -17,11 +16,11 @@ import java.net.URI;
  * @see JavaFileManager
  */
 class IMJavapFileManager extends ForwardingJavaFileManager<JavaFileManager> {
-    private final byte @NotNull [] bytes;
-    private final @NotNull String fileName;
+    private final byte[] bytes;
+    private final String fileName;
 
-    protected IMJavapFileManager(@NotNull JavaFileManager fileManager, byte @NotNull [] bytes,
-            @NotNull String fileName) {
+    protected IMJavapFileManager(JavaFileManager fileManager, byte[] bytes,
+            String fileName) {
         super(fileManager);
 
         this.bytes = bytes;
@@ -29,11 +28,11 @@ class IMJavapFileManager extends ForwardingJavaFileManager<JavaFileManager> {
     }
 
     @Override
-    public @NotNull JavaFileObject getJavaFileForInput(@Nullable Location location,
-            @Nullable String className, @NotNull JavaFileObject.Kind kind) {
+    public JavaFileObject getJavaFileForInput(@Nullable Location location,
+            @Nullable String className, JavaFileObject.Kind kind) {
         return new SimpleJavaFileObject(URI.create("file:///%s".formatted(fileName)), kind) {
             @Override
-            public @NotNull InputStream openInputStream() {
+            public InputStream openInputStream() {
                 return new ByteArrayInputStream(bytes);
             }
         };

@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.BotCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.MessageContextCommand;
@@ -48,6 +47,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         implements MessageContextCommand, MessageReceiver {
     private static final String CODE_BLOCK_OPENING = "```rust\n";
     private static final String CODE_BLOCK_CLOSING = "\n```";
+    private static final Pattern ANY_CHANNEL_NAME = Pattern.compile(".*");
 
     private final Pattern codeBlockExtractorPattern =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
@@ -57,9 +57,13 @@ public final class BytecodeCommand extends BotCommandAdapter
         super(Commands.message("View bytecode"), CommandVisibility.GUILD);
     }
 
-    // Fresh compile when a user uses the message context command on one of their messages
     @Override
-    public void onMessageContext(@NotNull MessageContextInteractionEvent event) {
+    public Pattern getChannelNamePattern() {
+        return ANY_CHANNEL_NAME;
+    }
+
+    @Override
+    public void onMessageContext(MessageContextInteractionEvent event) {
         Message message = event.getTarget();
         String content = message.getContentRaw();
 
@@ -69,9 +73,8 @@ public final class BytecodeCommand extends BotCommandAdapter
             .queue(compReply -> compile(message, compReply, parseCommandFromMessage(content)));
     }
 
-    // Delete our messages if the user deletes their request message
     @Override
-    public void onMessageDeleted(@NotNull MessageDeleteEvent event) {
+    public void onMessageDeleted(MessageDeleteEvent event) {
         long mesageIdLong = event.getMessageIdLong();
 
         if (userToBotMessages.containsKey(mesageIdLong)) {
@@ -80,13 +83,12 @@ public final class BytecodeCommand extends BotCommandAdapter
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
-        /* empty */
+    public void onMessageReceived(MessageReceivedEvent event) {
+        // Method isn't needed, context-commands are used for the initial message
     }
 
-    // Recompile when the user sends edits their request message
     @Override
-    public void onMessageUpdated(@NotNull MessageUpdateEvent event) {
+    public void onMessageUpdated(MessageUpdateEvent event) {
         Message message = event.getMessage();
         long messageIdLong = event.getMessageIdLong();
 
@@ -95,29 +97,29 @@ public final class BytecodeCommand extends BotCommandAdapter
         }
 
         TextChannel textChannel = message.getTextChannel();
-        List<Long> myMessages = userToBotMessages.get(messageIdLong);
+        List<Long> botMessages = userToBotMessages.get(messageIdLong);
 
-        if (myMessages.isEmpty()) {
+        if (botMessages.isEmpty()) {
             message.reply(
-                    "An unknown error occurred (`userMessagesToBotMessages.get(messageIdLong).isEmpty() == true`)")
+                    "An unknown error occurred")
                 .queue();
 
             return;
         }
 
-        textChannel.retrieveMessageById(myMessages.get(0)).queue(myMessage -> {
-            textChannel.purgeMessagesById(myMessages.stream()
-                .skip(1) // skip our first message to edit it
+        textChannel.retrieveMessageById(botMessages.get(0)).queue(botMessage -> {
+            textChannel.purgeMessagesById(botMessages.stream()
+                .skip(1) // skip the first bot message to edit it
                 .map(String::valueOf)
                 .toList());
 
-            myMessage.editMessage("Recompiling...").queue();
+            botMessage.editMessage("Recompiling...").queue();
 
-            compile(message, myMessage, parseCommandFromMessage(message.getContentRaw()));
+            compile(message, botMessage, parseCommandFromMessage(message.getContentRaw()));
         });
     }
 
-    private void deleteMyMessages(@NotNull Long msgId, @NotNull TextChannel channel) {
+    private void deleteMyMessages(Long msgId, TextChannel channel) {
         if (!userToBotMessages.containsKey(msgId)) {
             return;
         }
@@ -128,16 +130,16 @@ public final class BytecodeCommand extends BotCommandAdapter
         userToBotMessages.remove(msgId);
     }
 
-    private void compile(@NotNull Message userMessage, @NotNull Message myMessage,
-            @NotNull String content) {
-        userToBotMessages.put(userMessage.getIdLong(), List.of(myMessage.getIdLong()));
+    private void compile(Message userMessage, Message botMessage,
+            String content) {
+        userToBotMessages.put(userMessage.getIdLong(), List.of(botMessage.getIdLong()));
 
         CompilationResult result;
 
         try {
             result = InMemoryCompiler.compile(content, JavacOption.DEBUG_ALL);
         } catch (RuntimeException e) {
-            myMessage
+            botMessage
                 .editMessage("A fatal error has occurred during compilation. %s"
                     .formatted(e.getMessage()))
                 .mentionRepliedUser(false)
@@ -147,7 +149,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         }
 
         if (!result.success()) {
-            myMessage
+            botMessage
                 .editMessage("Compilation failed." + CODE_BLOCK_OPENING
                         + iterToCollection(result.compileInfos()).stream()
                             .map(CompileInfo::diagnostic)
@@ -160,7 +162,7 @@ public final class BytecodeCommand extends BotCommandAdapter
             return;
         }
 
-        myMessage.editMessage("Compilation was successfull! Disassembling...")
+        botMessage.editMessage("Compilation was successfull! Disassembling...")
             .mentionRepliedUser(false)
             .queue(disReply -> {
                 String disassembled;
@@ -168,7 +170,7 @@ public final class BytecodeCommand extends BotCommandAdapter
                 try {
                     disassembled = Javap.disassemble(result.bytes(), JavapOption.VERBOSE);
                 } catch (RuntimeException e) {
-                    myMessage
+                    botMessage
                         .editMessage("A fatal error has occurred during disassembly. %s"
                             .formatted(e.getMessage()))
                         .mentionRepliedUser(false)
@@ -211,7 +213,7 @@ public final class BytecodeCommand extends BotCommandAdapter
             });
     }
 
-    private @NotNull String surroundInCodeBlock(@NotNull String s) {
+    private String surroundInCodeBlock(String s) {
         return CODE_BLOCK_OPENING + s + CODE_BLOCK_CLOSING;
     }
 
@@ -224,7 +226,7 @@ public final class BytecodeCommand extends BotCommandAdapter
      * }
      * </pre>
      */
-    private @NotNull List<@NotNull String> explodeEvery(@NotNull String message,
+    private List<String> explodeEvery(String message,
             int maxPartLength) {
         List<String> result = new ArrayList<>();
         String[] lines = message.split("\n");
@@ -249,7 +251,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         return result;
     }
 
-    private <E> @NotNull Collection<E> iterToCollection(@NotNull Iterable<E> iter) {
+    private <E> Collection<E> iterToCollection(Iterable<E> iter) {
         Collection<E> list = new ArrayList<>();
 
         iter.forEach(list::add);
@@ -257,7 +259,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         return list;
     }
 
-    private @NotNull String parseCommandFromMessage(@NotNull String messageContent) {
+    private String parseCommandFromMessage(String messageContent) {
         Matcher codeBlockMatcher = codeBlockExtractorPattern.matcher(messageContent);
 
         if (codeBlockMatcher.find()) {

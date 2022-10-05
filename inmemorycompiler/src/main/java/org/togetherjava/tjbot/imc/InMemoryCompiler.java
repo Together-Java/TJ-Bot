@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.imc;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.tools.*;
@@ -33,8 +32,8 @@ public final class InMemoryCompiler {
      * @param javacOptions javac options to use
      * @return the compiled code in form of a {@link CompilationResult}
      */
-    public static @NotNull CompilationResult compile(@Nullable String code,
-            @NotNull JavacOption @NotNull... javacOptions) {
+    public static CompilationResult compile(@Nullable String code,
+            JavacOption... javacOptions) {
         if (code == null || code.isEmpty()) {
             return CompilationResult.empty();
         }
@@ -68,7 +67,7 @@ public final class InMemoryCompiler {
      * @param content content of the imfjo
      * @return the generated compilation unit
      */
-    private static @NotNull SimpleJavaFileObject genCompilationUnitJFO(@NotNull String content) {
+    private static SimpleJavaFileObject genCompilationUnitJFO(String content) {
         // random protocol, any works
         return new SimpleJavaFileObject(URI.create("string:///" + TEMP_CLASS_NAME.replace('.', '/')
                 + JavaFileObject.Kind.SOURCE.extension), JavaFileObject.Kind.SOURCE) {
@@ -79,7 +78,7 @@ public final class InMemoryCompiler {
              * @return content
              */
             @Override
-            public @NotNull String getCharContent(boolean ignoreEncodingErrors) {
+            public String getCharContent(boolean ignoreEncodingErrors) {
                 return content;
             }
         };

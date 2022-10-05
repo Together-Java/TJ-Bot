@@ -1,10 +1,6 @@
-/**
- * This package provides utility classes to compile Java code fully in memory. (IMC stands for
- * In-Memory-Compiler)
- */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package org.togetherjava.tjbot.imc;
+package org.togetherjava.tjbot.javap;
 
 import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 

@@ -1,19 +1,17 @@
 package org.togetherjava.tjbot.imc;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 class ByteJavaFileObjectLoader extends ClassLoader {
     private final Map<String, InMemoryByteJavaFileObject> nameToClassJFO = new LinkedHashMap<>();
 
-    public ByteJavaFileObjectLoader(@NotNull ClassLoader parent) {
+    public ByteJavaFileObjectLoader(ClassLoader parent) {
         super(parent);
     }
 
-    public @NotNull InMemoryByteJavaFileObject registerJFO(
-            @NotNull InMemoryByteJavaFileObject jfo) {
+    public InMemoryByteJavaFileObject registerJFO(
+            InMemoryByteJavaFileObject jfo) {
         nameToClassJFO.put(jfo.getName(), jfo);
 
         return jfo;
@@ -26,15 +24,15 @@ class ByteJavaFileObjectLoader extends ClassLoader {
      * @throws UnsupportedOperationException always
      */
     @Override
-    protected @NotNull Class<?> findClass(String name) throws UnsupportedOperationException {
+    protected Class<?> findClass(String name) throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
 
-    public byte @NotNull [] getLastBytes() {
+    public byte[] getLastBytes() {
         return last(nameToClassJFO.values().toArray(InMemoryByteJavaFileObject[]::new)).getBytes();
     }
 
-    private <E> @NotNull E last(@NotNull E[] col) {
+    private <E> E last(E[] col) {
         return col[col.length - 1];
     }
 }

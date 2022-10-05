@@ -20,24 +20,15 @@ import java.util.regex.Pattern;
  */
 public interface MessageReceiver extends Feature {
     /**
-     * The pattern used as a default value for {@link MessageReceiver#getChannelNamePattern()}.
-     */
-    Pattern ANY_PATTERN = Pattern.compile(".*");
-
-    /**
      * Retrieves the pattern matching the names of channels of which this receiver is interested in
      * receiving sent messages from. Called by the core system once during the startup in order to
      * register the receiver accordingly.
      * <p>
      * Changes on the pattern returned by this method afterwards will not be picked up.
-     * <p>
-     * Defaults to .* (i.e. any channel).
      *
      * @return the pattern matching the names of relevant channels
      */
-    default Pattern getChannelNamePattern() {
-        return ANY_PATTERN;
-    }
+    Pattern getChannelNamePattern();
 
     /**
      * Triggered by the core system whenever a new message was sent and received in a text channel

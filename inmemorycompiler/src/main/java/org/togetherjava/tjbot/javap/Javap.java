@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.javap;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -74,8 +72,8 @@ public final class Javap {
      * @return disassembled view
      * @throws ReflectionException if an exception occurs while doing reflection black magic
      */
-    public static @NotNull String disassemble(byte @NotNull [] bytes,
-            @NotNull JavapOption @NotNull... options) throws ReflectionException {
+    public static String disassemble(byte [] bytes,
+            JavapOption... options) throws ReflectionException {
         StringWriter stringWriter = new StringWriter();
         PrintWriter log = new PrintWriter(stringWriter);
 
@@ -110,8 +108,8 @@ public final class Javap {
      * {@link PrintWriter} using
      * {@link com.sun.tools.javap.JavapFileManager#create(DiagnosticListener, PrintWriter)}
      */
-    private static @NotNull JavaFileManager getDefaultFileManager(@NotNull Object javapTaskInstance,
-            @NotNull PrintWriter log) throws InvocationTargetException, IllegalAccessException {
+    private static JavaFileManager getDefaultFileManager(Object javapTaskInstance,
+            PrintWriter log) throws InvocationTargetException, IllegalAccessException {
         return (JavaFileManager) javapFileManagerCreateMethod.invoke(null,
                 getDiagnosticListenerForWriter(javapTaskInstance, log), log);
     }
@@ -119,7 +117,7 @@ public final class Javap {
     /**
      * Creates a new {@link com.sun.tools.javap.JavapTask} instance
      */
-    private static @NotNull Object createJavapTaskObject() throws NoSuchMethodException,
+    private static Object createJavapTaskObject() throws NoSuchMethodException,
             InvocationTargetException, InstantiationException, IllegalAccessException {
         return javapTaskCls.getConstructor().newInstance();
     }
@@ -130,8 +128,8 @@ public final class Javap {
      * {@link com.sun.tools.javap.JavapTask#getDiagnosticListenerForWriter(Writer)}
      */
     @SuppressWarnings("unchecked")
-    private static @NotNull DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(
-            @NotNull Object javapTaskInstance, @NotNull PrintWriter log)
+    private static DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(
+            Object javapTaskInstance, PrintWriter log)
             throws InvocationTargetException, IllegalAccessException {
         return (DiagnosticListener<JavaFileObject>) javapTaskGetDiagnosticListenerForWriterMethod
             .invoke(javapTaskInstance, log); // getDiagnosticListenerForWriter's signature:

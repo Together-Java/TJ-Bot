@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.imc;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.tools.Diagnostic;
 import java.util.Objects;
 
@@ -10,7 +8,7 @@ import java.util.Objects;
  *
  * @see javax.tools.Diagnostic
  */
-public record CompileInfo(@NotNull Diagnostic<?> diagnostic) {
+public record CompileInfo(Diagnostic<?> diagnostic) {
     @Override
     public boolean equals(Object o) {
         if (this == o)

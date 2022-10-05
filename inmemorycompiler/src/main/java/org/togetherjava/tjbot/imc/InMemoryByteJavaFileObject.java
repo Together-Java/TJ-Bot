@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.imc;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.tools.SimpleJavaFileObject;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -13,18 +11,18 @@ import java.net.URI;
  * @see javax.tools.SimpleJavaFileObject
  */
 class InMemoryByteJavaFileObject extends SimpleJavaFileObject {
-    private final @NotNull ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    public InMemoryByteJavaFileObject(@NotNull String className) {
+    public InMemoryByteJavaFileObject(String className) {
         super(URI.create(className), Kind.CLASS);
     }
 
     @Override
-    public @NotNull OutputStream openOutputStream() {
+    public OutputStream openOutputStream() {
         return baos;
     }
 
-    public byte @NotNull [] getBytes() {
+    public byte[] getBytes() {
         return baos.toByteArray();
     }
 }
