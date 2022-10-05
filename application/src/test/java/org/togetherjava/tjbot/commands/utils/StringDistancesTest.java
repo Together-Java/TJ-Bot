@@ -20,7 +20,8 @@ final class StringDistancesTest {
                         new TestCase("empty_prefix", List.of("one", "three", "two"), "",
                                 List.of("one", "two", "three"), 0),
                         new TestCase("all_empty", List.of(), "", List.of(), 1),
-                        new TestCase("max_error", List.of("aa"), "a", List.of("json", "one", "aa", "two", "++"), 1),
+                        new TestCase("max_error", List.of("aa"), "a",
+                                List.of("json", "one", "aa", "two", "++"), 1),
                         new TestCase("real_test", List.of("j", "java", "js", "one"), "jo",
                                 List.of("java", "xj", "bs", "one", "yes", "js", "a", "j"), 0.5));
 
