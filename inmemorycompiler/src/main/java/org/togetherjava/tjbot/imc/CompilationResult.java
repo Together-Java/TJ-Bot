@@ -6,8 +6,7 @@ import java.util.Collections;
 /**
  * Class representing a compilation result of {@link InMemoryCompiler}
  */
-public record CompilationResult(boolean success, byte[] bytes,
-        Iterable<CompileInfo> compileInfos) {
+public record CompilationResult(boolean success, byte[] bytes, Iterable<CompileInfo> compileInfos) {
 
     private static final CompilationResult EMPTY_RESULT =
             new CompilationResult(false, new byte[0], Collections.emptyList());
@@ -36,8 +35,7 @@ public record CompilationResult(boolean success, byte[] bytes,
      * @param compileInfos compilation infos
      * @return the generated compilation result
      */
-    public static CompilationResult success(byte[] bytes,
-            Iterable<CompileInfo> compileInfos) {
+    public static CompilationResult success(byte[] bytes, Iterable<CompileInfo> compileInfos) {
         return new CompilationResult(true, bytes, compileInfos);
     }
 

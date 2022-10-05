@@ -19,8 +19,7 @@ class IMJavapFileManager extends ForwardingJavaFileManager<JavaFileManager> {
     private final byte[] bytes;
     private final String fileName;
 
-    protected IMJavapFileManager(JavaFileManager fileManager, byte[] bytes,
-            String fileName) {
+    protected IMJavapFileManager(JavaFileManager fileManager, byte[] bytes, String fileName) {
         super(fileManager);
 
         this.bytes = bytes;

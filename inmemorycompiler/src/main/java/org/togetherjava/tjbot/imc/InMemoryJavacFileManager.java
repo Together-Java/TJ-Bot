@@ -24,9 +24,8 @@ class InMemoryJavacFileManager extends ForwardingJavaFileManager<JavaFileManager
     }
 
     @Override
-    public JavaFileObject getJavaFileForOutput(@Nullable Location location,
-            String className, @Nullable JavaFileObject.Kind kind,
-            @Nullable FileObject sibling) {
+    public JavaFileObject getJavaFileForOutput(@Nullable Location location, String className,
+            @Nullable JavaFileObject.Kind kind, @Nullable FileObject sibling) {
         return classLoader.registerJFO(new InMemoryByteJavaFileObject(className));
     }
 

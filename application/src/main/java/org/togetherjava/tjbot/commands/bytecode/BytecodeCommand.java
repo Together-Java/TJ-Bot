@@ -100,9 +100,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         List<Long> botMessages = userToBotMessages.get(messageIdLong);
 
         if (botMessages.isEmpty()) {
-            message.reply(
-                    "An unknown error occurred")
-                .queue();
+            message.reply("An unknown error occurred").queue();
 
             return;
         }
@@ -130,8 +128,7 @@ public final class BytecodeCommand extends BotCommandAdapter
         userToBotMessages.remove(msgId);
     }
 
-    private void compile(Message userMessage, Message botMessage,
-            String content) {
+    private void compile(Message userMessage, Message botMessage, String content) {
         userToBotMessages.put(userMessage.getIdLong(), List.of(botMessage.getIdLong()));
 
         CompilationResult result;
@@ -226,8 +223,7 @@ public final class BytecodeCommand extends BotCommandAdapter
      * }
      * </pre>
      */
-    private List<String> explodeEvery(String message,
-            int maxPartLength) {
+    private List<String> explodeEvery(String message, int maxPartLength) {
         List<String> result = new ArrayList<>();
         String[] lines = message.split("\n");
         int currentLength = 0;

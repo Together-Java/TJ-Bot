@@ -32,8 +32,7 @@ public final class InMemoryCompiler {
      * @param javacOptions javac options to use
      * @return the compiled code in form of a {@link CompilationResult}
      */
-    public static CompilationResult compile(@Nullable String code,
-            JavacOption... javacOptions) {
+    public static CompilationResult compile(@Nullable String code, JavacOption... javacOptions) {
         if (code == null || code.isEmpty()) {
             return CompilationResult.empty();
         }

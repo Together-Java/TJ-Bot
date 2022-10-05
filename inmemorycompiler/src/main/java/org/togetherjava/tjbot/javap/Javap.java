@@ -72,8 +72,8 @@ public final class Javap {
      * @return disassembled view
      * @throws ReflectionException if an exception occurs while doing reflection black magic
      */
-    public static String disassemble(byte [] bytes,
-            JavapOption... options) throws ReflectionException {
+    public static String disassemble(byte[] bytes, JavapOption... options)
+            throws ReflectionException {
         StringWriter stringWriter = new StringWriter();
         PrintWriter log = new PrintWriter(stringWriter);
 
@@ -108,8 +108,8 @@ public final class Javap {
      * {@link PrintWriter} using
      * {@link com.sun.tools.javap.JavapFileManager#create(DiagnosticListener, PrintWriter)}
      */
-    private static JavaFileManager getDefaultFileManager(Object javapTaskInstance,
-            PrintWriter log) throws InvocationTargetException, IllegalAccessException {
+    private static JavaFileManager getDefaultFileManager(Object javapTaskInstance, PrintWriter log)
+            throws InvocationTargetException, IllegalAccessException {
         return (JavaFileManager) javapFileManagerCreateMethod.invoke(null,
                 getDiagnosticListenerForWriter(javapTaskInstance, log), log);
     }

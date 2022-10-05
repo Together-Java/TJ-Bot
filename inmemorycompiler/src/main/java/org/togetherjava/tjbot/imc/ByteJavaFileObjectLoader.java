@@ -10,8 +10,7 @@ class ByteJavaFileObjectLoader extends ClassLoader {
         super(parent);
     }
 
-    public InMemoryByteJavaFileObject registerJFO(
-            InMemoryByteJavaFileObject jfo) {
+    public InMemoryByteJavaFileObject registerJFO(InMemoryByteJavaFileObject jfo) {
         nameToClassJFO.put(jfo.getName(), jfo);
 
         return jfo;
