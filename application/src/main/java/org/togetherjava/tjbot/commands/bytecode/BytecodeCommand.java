@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  */
 public final class BytecodeCommand extends BotCommandAdapter
         implements MessageContextCommand, MessageReceiver {
-    private static final String CODE_BLOCK_OPENING = "```\n";
+    private static final String CODE_BLOCK_OPENING = "```rust\n";
     private static final String CODE_BLOCK_CLOSING = "\n```";
 
     private final Pattern codeBlockExtractorPattern =
