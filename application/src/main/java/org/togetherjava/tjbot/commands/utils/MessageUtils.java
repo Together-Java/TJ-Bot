@@ -64,19 +64,21 @@ public class MessageUtils {
      * in Discord.
      *
      * @param guild the {@link Guild} that contains the command
-     * @param command the command's name
+     * @param commandInput the command's name
      * @return Formatted string for the mentioned slash command
      * @throws IllegalArgumentException when the command name doesn't match with the guild's
      *         commands
      */
-    public static RestAction<String> mentionSlashCommand(Guild guild, String command) {
-        return guild.retrieveCommands().map(commands -> {
-            Command foundCommand = commands.stream()
-                .filter(c -> c.getName().equalsIgnoreCase(command))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Command %s does not exist in guild %s".formatted(command, guild.getId())));
-            return String.format("</%s:%d>", command, foundCommand.getIdLong());
+    public static RestAction<String> mentionSlashCommand(Guild guild, String... commandInput) {
+        String commandWithOptions = String.join(" ", commandInput);
+        return guild.retrieveCommands().map(guildCommands -> {
+            Command guildCommand = guildCommands.stream()
+                .filter(c -> c.getName().equalsIgnoreCase(commandInput[0]))
+                .findAny()
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Command %s does not exist in guild %s"
+                            .formatted(commandWithOptions, guild.getId())));
+            return String.format("</%s:%d>", commandWithOptions, guildCommand.getIdLong());
         });
     }
 

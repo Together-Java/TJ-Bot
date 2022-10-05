@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -93,12 +94,15 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        return MessageUtils.mentionSlashCommand(threadChannel.getGuild(), CloseCommand.COMMAND_NAME)
-            .flatMap(command -> sendExplanationMessage(threadChannel, command));
+        return MessageUtils
+            .mentionSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                    HelpThreadCommand.Subcommand.CLOSE.getCommandName())
+            .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
+                    closeCommandMention));
     }
 
     private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
-            String command) {
+            String closeCommandMention) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
@@ -124,7 +128,7 @@ public final class HelpSystemHelper {
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
                         "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(command)));
+                            .formatted(closeCommandMention)));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
@@ -307,16 +311,24 @@ public final class HelpSystemHelper {
             }
 
             // Still no category, send advice
-            MessageEmbed embed = HelpSystemHelper.embedWith(
-                    """
-                            Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
-                            Please use the `/help-thread change category` slash-command and pick what fits best, thanks 🙂
-                            """);
-            MessageCreateData message = new MessageCreateBuilder().setContent(author.getAsMention())
-                .setEmbeds(embed)
-                .build();
+            return MessageUtils
+                .mentionSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                        HelpThreadCommand.CHANGE_SUBCOMMAND,
+                        HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
+                .flatMap(command -> {
+                    MessageEmbed embed = HelpSystemHelper.embedWith(
+                            """
+                                    Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
+                                    Please use the %s slash-command and pick what fits best, thanks 🙂
+                                    """
+                                .formatted(command));
+                    MessageCreateData message =
+                            new MessageCreateBuilder().setContent(author.getAsMention())
+                                .setEmbeds(embed)
+                                .build();
 
-            return threadChannel.sendMessage(message);
+                    return threadChannel.sendMessage(message);
+                });
         }).queue();
     }
 

@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
@@ -120,7 +119,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
                 : lastHelpThread.getAsMention();
 
         MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
-            .map(command -> message.getChannel()
+            .flatMap(command -> message.getChannel()
                 .sendMessage("""
                         %s Please use %s to follow up on your question, \
                         or use %s to ask a new questions, thanks."""
@@ -186,14 +185,18 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .build();
 
         return MessageUtils
-            .mentionSlashCommand(originalMessage.getGuild(), ChangeHelpCategoryCommand.COMMAND_NAME)
+            .mentionSlashCommand(originalMessage.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                    HelpThreadCommand.CHANGE_SUBCOMMAND,
+                    HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
             .flatMap(command -> {
                 MessageCreateData threadMessage = new MessageCreateBuilder()
-                        .setContent("""
-                        %s has a question about '**%s**' and will send the details now.
+                    .setContent("""
+                            %s has a question about '**%s**' and will send the details now.
 
-                        Please use %s to greatly increase the visibility of the question."""
-                    .formatted(author, title, command)).setEmbeds(embed).build();
+                            Please use %s to greatly increase the visibility of the question."""
+                        .formatted(author, title, command))
+                    .setEmbeds(embed)
+                    .build();
 
                 return threadChannel.sendMessage(threadMessage);
             });
