@@ -58,7 +58,7 @@ Next up, you want to create your own bot.
 ![Add Bot](https://i.imgur.com/8jshb9M.png)
 ![Confim add bot](https://i.imgur.com/vps9yLt.png)
 ![Token](https://i.imgur.com/l0UZPD3.png)
-![Enable Server Members Intent](https://i.imgur.com/NoOgtkK.png)
+![Enable Intents](https://i.imgur.com/Hi4bkCZ.png)
 ![scopes](https://i.imgur.com/8x6WjDT.png)
 ![Bot permissions](https://i.imgur.com/pkTFsJq.png)
 ![url](https://i.imgur.com/j7yVKeM.png)
