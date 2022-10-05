@@ -45,6 +45,8 @@ public final class Config {
             @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
             @JsonProperty(value = "modAuditLogChannelPattern",
                     required = true) String modAuditLogChannelPattern,
+            @JsonProperty(value = "modMailChannelPattern",
+                    required = true) String modMailChannelPattern,
             @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
             @JsonProperty(value = "heavyModerationRolePattern",
                     required = true) String heavyModerationRolePattern,
@@ -72,6 +74,7 @@ public final class Config {
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
+        this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
         this.mutedRolePattern = Objects.requireNonNull(mutedRolePattern);
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
