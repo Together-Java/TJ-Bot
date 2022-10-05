@@ -64,7 +64,13 @@ public class StringDistances {
         record MatchScore(String candidate, int score) implements Comparable<MatchScore> {
             @Override
             public int compareTo(MatchScore otherMatchScore) {
-                return Integer.compare(this.score, otherMatchScore.score);
+                int compare = Integer.compare(this.score, otherMatchScore.score);
+
+                if (compare == 0) {
+                    return this.candidate.compareTo(otherMatchScore.candidate);
+                }
+
+                return compare;
             }
         }
 
