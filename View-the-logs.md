@@ -1,32 +1,17 @@
 # Overview
 
 There are two ways to read the logs of the bots:
-* by using the **logviewer**
+* by reading the forwarded messages in **Discord**
 * by manually logging in to the **VPS** and looking up the log files
 
-## Logviewer
+## Discord
 
-1. Ask a member of the [Moderator](https://github.com/orgs/Together-Java/teams/moderators)-Team to be granted access to the logviewer.
-2. Visit the website https://togetherjava.duckdns.org:5006
-3. and login with your Discord account,
-4. accept the authorization.
+All log messages, with a few sensitive exceptions, are forwarded to Discord via webhooks. You can read them in the two channels:
 
-![discord login](https://i.imgur.com/im6EMzO.png)
-![discord authorization](https://i.imgur.com/pceELaM.png)
+* **tjbot_log_info** - contains all `INFO`, `DEBUG`, `TRACE` messages
+* **tjbot_log_error** - contains all `WARN`, `ERROR`, `FATAL` messages
 
-5. You should now be able to see the logs in the logviewer 🎉
-
-![logviewer example](https://i.imgur.com/5cuZI85.png)
-
-### Quick overview
-
-On the **left side** you can see three views (depending on your role, some might be missing).
-* **Logs** displays the actual logfiles.
-* **Streamed** displays the log-events as the main application sends them to the web application.
-* **User-Management** enables adding or removing users who can access this website and editing their roles (right click the panel).
-
-![side panel](https://i.imgur.com/RM1tCy6.png)
-![user management](https://i.imgur.com/xCygzQZ.png)
+![log channels](https://i.imgur.com/nkvy80n.png)
 
 ## Manually viewing the files
 
