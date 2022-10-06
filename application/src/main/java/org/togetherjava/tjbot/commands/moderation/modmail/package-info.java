@@ -1,5 +1,5 @@
 /**
- * This packages offers all the functionality for mod mail messages.
+ * This packages offers all the functionality for messaging moderators trough mod mail.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
