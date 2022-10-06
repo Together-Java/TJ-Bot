@@ -5,24 +5,26 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 import org.togetherjava.tjbot.config.Config;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -50,14 +52,14 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final String OPTION_SERVER_GUILD = "server-guild";
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
+    private static final Color AMBIENT_COLOR = Color.black;
     private final Cache<Long, Instant> authorIdToLastCommandInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
-    private static final Color AMBIENT_COLOR = Color.black;
 
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param jda the JDA instance to use to retrieve guildCache
      * @param config the config to use for this
      */
@@ -70,7 +72,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         OptionData guildOption = new OptionData(OptionType.STRING, OPTION_SERVER_GUILD,
                 "Your server guild ID", true);
         OptionData anonymousOption = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
-                "if set, your name is hidden", false);
+                "if set, your name is hidden", true);
 
         List<Command.Choice> choices = jda.getGuildCache()
             .stream()
@@ -94,28 +96,34 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        MessageChannel messageChannel = event.getChannel();
-        if (isChannelOnCooldown(messageChannel)) {
-            event
-                .reply("Can only be used once per %s."
-                    .formatted(COOLDOWN_DURATION_UNIT.toString().toLowerCase(Locale.US)))
+        long userId = event.getUser().getIdLong();
+        if (isChannelOnCooldown(userId)) {
+            event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
                 .setEphemeral(true)
                 .queue();
             return;
         }
-        authorIdToLastCommandInvocation.put(messageChannel.getIdLong(), Instant.now());
+        authorIdToLastCommandInvocation.put(userId, Instant.now());
 
         Optional<TextChannel> modMailAuditLog = getChannel(event);
         if (modMailAuditLog.isEmpty()) {
-            logger.warn("This modmail audit log is empty.");
+            logger.warn("Cannot find the designated modmail channel in this server.");
             return;
         }
 
         String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
-
-        String user = getAuthorName(event);
+        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
+        String user = event.getUser().getAsMention();
         MessageCreateAction message = modMailAuditLog.orElseThrow()
-            .sendMessageEmbeds(createModMailMessage(user, userMessage));
+            .sendMessageEmbeds(createModMailMessage(user, userMessage))
+            .addActionRow(DiscordClientAction.General.USER.asLinkButton("Click to see profile!",
+                    String.valueOf(userId)));
+
+        if (wantsToStayAnonymous) {
+            user = "Anonymous";
+            message = modMailAuditLog.orElseThrow()
+                .sendMessageEmbeds(createModMailMessage(user, userMessage));
+        }
 
         message.queue();
 
@@ -123,18 +131,9 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
     }
 
-
-    private String getAuthorName(SlashCommandInteractionEvent event) {
-        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
-        if (wantsToStayAnonymous) {
-            return "Anonymous";
-        }
-        return event.getUser().getAsMention();
-    }
-
     private MessageEmbed createModMailMessage(String user, String userMessage) {
-        return new EmbedBuilder().setDescription("**/modmail from %s** ".formatted(user))
-            .setFooter(userMessage)
+        return new EmbedBuilder().setTitle("**/modmail from %s** ".formatted(user))
+            .setDescription(userMessage)
             .setColor(AMBIENT_COLOR)
             .build();
     }
@@ -149,9 +148,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .findAny();
     }
 
-    private boolean isChannelOnCooldown(MessageChannel channel) {
-        return Optional
-            .ofNullable(authorIdToLastCommandInvocation.getIfPresent(channel.getIdLong()))
+    private boolean isChannelOnCooldown(long userId) {
+        return Optional.ofNullable(authorIdToLastCommandInvocation.getIfPresent(userId))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,
                     COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)
