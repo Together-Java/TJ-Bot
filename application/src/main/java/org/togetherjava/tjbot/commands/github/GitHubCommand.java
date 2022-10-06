@@ -24,8 +24,6 @@ import java.util.stream.Stream;
  * Slash command (/github) used to search for an issue in one of the repositories listed in the
  * config. It even comes with auto completion!
  */
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class GitHubCommand extends SlashCommandAdapter {
     private static final Duration CACHE_EXPIRES_AFTER = Duration.ofMinutes(1);
 
