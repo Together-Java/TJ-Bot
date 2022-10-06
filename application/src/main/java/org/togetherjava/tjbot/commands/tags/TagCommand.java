@@ -39,8 +39,6 @@ public final class TagCommand extends SlashCommandAdapter {
 
         this.tagSystem = tagSystem;
 
-        // TODO Think about adding an ephemeral selection menu with pagination support
-        // if the user calls this without id or similar
         getData().addOptions(
                 new OptionData(OptionType.STRING, ID_OPTION, "The id of the tag to display", true,
                         true),
