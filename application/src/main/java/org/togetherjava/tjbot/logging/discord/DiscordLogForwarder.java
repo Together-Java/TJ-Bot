@@ -138,17 +138,15 @@ final class DiscordLogForwarder {
         private static String describeLogEvent(LogEvent event) {
             String logMessage = event.getMessage().getFormattedMessage();
 
-            Throwable throwable = event.getThrown();
-            if (throwable == null) {
+            Throwable exception = event.getThrown();
+            if (exception == null) {
                 return logMessage;
             }
 
-            StringWriter writer = new StringWriter(logMessage.length());
-            writer.append(logMessage).append("\n");
+            StringWriter exceptionWriter = new StringWriter();
+            exception.printStackTrace(new PrintWriter(exceptionWriter));
 
-            throwable.printStackTrace(new PrintWriter(writer));
-
-            return writer.toString();
+            return logMessage + "\n" + exceptionWriter.toString().replace("\t", "> ");
         }
 
         private static String abbreviate(String text, int maxLength) {
