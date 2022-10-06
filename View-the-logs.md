@@ -4,6 +4,8 @@ There are two ways to read the logs of the bots:
 * by reading the forwarded messages in **Discord**
 * by manually logging in to the **VPS** and looking up the log files
 
+The log level can be changed temporarily using the command `/set-log-level`.
+
 ## Discord
 
 All log messages, with a few sensitive exceptions, are forwarded to Discord via webhooks. You can read them in the two channels:
