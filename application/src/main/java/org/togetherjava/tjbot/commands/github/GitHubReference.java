@@ -27,8 +27,6 @@ import java.util.List;
  * GitHub Referencing feature. If someone sends #id of an issue (e.g. #207) the bot replies with an
  * embed that contains info on the issue/pr
  */
-@ParametersAreNonnullByDefault
-@MethodsReturnNonnullByDefault
 public class GitHubReference extends MessageReceiverAdapter {
     /**
      * The pattern used to determine whether a message is referencing an issue
