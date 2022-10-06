@@ -86,7 +86,7 @@
     ],
     "githubReferencingEnabledChannelPattern": "general",
     "githubRepositories": [
-        <repository id here (e.g. 403389278>
+        <repository id here (e.g. 403389278)>
     ],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>"
