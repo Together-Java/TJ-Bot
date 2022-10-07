@@ -41,13 +41,13 @@ public final class ComponentIdInteractor {
      * <p>
      * It will provide the interactor a component ID generator through this method, which can be
      * used to generate component IDs, as used for button or selection menus. See
-     * {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how to use
-     * this.
+     * {@link org.togetherjava.tjbot.commands.UserInteractor#acceptComponentIdGenerator(ComponentIdGenerator)}
+     * for details on how to use this.
      *
      * @param generator the provided component ID generator
      */
     public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
-        this.generator = generator;
+        this.generator = Objects.requireNonNull(generator);
     }
 
     /**
