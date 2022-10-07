@@ -18,9 +18,8 @@ final class StringDistancesTest {
         List<TestCase> tests = List.of();
 
         for (TestCase test : tests) {
-            assertEquals(
-                    test.expectedSuggestions, StringDistances.closeMatches(test.prefix,
-                            test.candidates, test.limit),
+            assertEquals(test.expectedSuggestions,
+                    StringDistances.closeMatches(test.prefix, test.candidates, test.limit),
                     "Test '%s' failed".formatted(test.name));
         }
     }
