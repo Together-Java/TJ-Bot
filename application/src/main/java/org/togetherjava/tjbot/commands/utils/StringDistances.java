@@ -12,7 +12,7 @@ public class StringDistances {
      * Matches that are further off than this are not considered as match anymore. The value is
      * between 0.0 (full match) and 1.0 (completely different).
      */
-    private static final double offByPercentageThreshold = 0.5;
+    private static final double OFF_BY_PERCENTAGE_THRESHOLD = 0.5;
 
     private StringDistances() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
@@ -56,11 +56,12 @@ public class StringDistances {
     }
 
     /**
-     * Gives sorted suggestion to autocomplete a prefix string from the given options
+     * Gives sorted suggestion to autocomplete a prefix string from the given options.
      *
-     * @param prefix the prefix to give suggestion for
-     * @param candidates all the possible suggestions
-     * @return collection of autocomplete suggestions
+     * @param prefix the prefix to give matches for
+     * @param candidates all the possible matches
+     * @param limit number of matches to generate at max
+     * @return the matches closest to the given prefix, limited to the given limit
      */
     public static Collection<String> closeMatches(CharSequence prefix,
             Collection<String> candidates, int limit) {
@@ -79,7 +80,7 @@ public class StringDistances {
     }
 
     private static boolean isCloseEnough(MatchScore matchScore, CharSequence prefix) {
-        return matchScore.score / prefix.length() <= offByPercentageThreshold;
+        return matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
     }
 
     /**
