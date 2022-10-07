@@ -10,25 +10,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 final class StringDistancesTest {
 
     @Test
-    void autoCompleteSuggestions() {
+    void closeMatches() {
         record TestCase(String name, Collection<String> expectedSuggestions, String prefix,
-                Collection<String> candidates, double errorMargin) {
+                Collection<String> candidates, int limit) {
         }
 
-        List<TestCase> tests =
-                List.of(new TestCase("empty_candidates", List.of(), "prefix", List.of(), 0),
-                        new TestCase("empty_prefix", List.of("one", "three", "two"), "",
-                                List.of("one", "two", "three"), 0),
-                        new TestCase("all_empty", List.of(), "", List.of(), 1),
-                        new TestCase("max_error", List.of("aa"), "a",
-                                List.of("json", "one", "aa", "two", "++"), 1),
-                        new TestCase("real_test", List.of("j", "java", "js", "one"), "jo",
-                                List.of("java", "xj", "bs", "one", "yes", "js", "a", "j"), 0.5));
+        List<TestCase> tests = List.of();
 
         for (TestCase test : tests) {
             assertEquals(
-                    test.expectedSuggestions, StringDistances.autocompleteSuggestions(test.prefix,
-                            test.candidates, test.errorMargin),
+                    test.expectedSuggestions, StringDistances.closeMatches(test.prefix,
+                            test.candidates, test.limit),
                     "Test '%s' failed".formatted(test.name));
         }
     }

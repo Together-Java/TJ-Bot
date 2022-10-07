@@ -1,15 +1,19 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Utility class for computing string distances, for example the edit distance between two words.
  */
 public class StringDistances {
+    /**
+     * Matches that are further off than this are not considered as match anymore. The value is
+     * between 0.0 (full match) and 1.0 (completely different).
+     */
+    private static final double offByPercentageThreshold = 0.5;
+
     private StringDistances() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
@@ -56,22 +60,26 @@ public class StringDistances {
      *
      * @param prefix the prefix to give suggestion for
      * @param candidates all the possible suggestions
-     * @param errorMargin error margin of suggestions, error percentage / 100
      * @return collection of autocomplete suggestions
      */
-    public static Collection<String> autocompleteSuggestions(CharSequence prefix,
-            Collection<String> candidates, double errorMargin) {
-        int firstCandidateScore = candidates.stream()
-            .mapToInt(candidate -> prefixEditDistance(prefix, candidate))
-            .min()
-            .orElse(0);
-        return candidates.stream()
+    public static Collection<String> closeMatches(CharSequence prefix,
+            Collection<String> candidates, int limit) {
+        Collection<MatchScore> scoredMatches = candidates.stream()
             .map(candidate -> new MatchScore(candidate, prefixEditDistance(prefix, candidate)))
-            .sorted()
-            .takeWhile(matchScore -> matchScore.score() <= firstCandidateScore
-                    + firstCandidateScore * errorMargin)
-            .map(MatchScore::candidate)
             .toList();
+
+        Queue<MatchScore> bestMatches = new PriorityQueue<>();
+        bestMatches.addAll(scoredMatches);
+
+        return Stream.generate(bestMatches::poll)
+            .takeWhile(matchScore -> isCloseEnough(matchScore, prefix))
+            .map(MatchScore::candidate)
+            .limit(limit)
+            .toList();
+    }
+
+    private static boolean isCloseEnough(MatchScore matchScore, CharSequence prefix) {
+        return matchScore.score / prefix.length() <= offByPercentageThreshold;
     }
 
     /**
