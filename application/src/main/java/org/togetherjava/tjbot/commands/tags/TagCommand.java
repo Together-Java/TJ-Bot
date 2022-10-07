@@ -72,15 +72,15 @@ public final class TagCommand extends SlashCommandAdapter {
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
         AutoCompleteQuery focusedOption = event.getFocusedOption();
 
-        if (focusedOption.getName().equals(ID_OPTION)) {
-            return;
+        if (!focusedOption.getName().equals(ID_OPTION)) {
+            throw new IllegalArgumentException("Unexpected option");
         }
 
-        Collection<Command.Choice> choices = StringDistances
-            .closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), OptionData.MAX_CHOICES)
-            .stream()
-            .map(id -> new Command.Choice(id, id))
-            .toList();
+        Collection<Command.Choice> choices =
+                StringDistances.closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), 5)
+                    .stream()
+                    .map(id -> new Command.Choice(id, id))
+                    .toList();
 
         event.replyChoices(choices).queue();
     }

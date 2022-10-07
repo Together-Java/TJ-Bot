@@ -65,6 +65,14 @@ public class StringDistances {
      */
     public static Collection<String> closeMatches(CharSequence prefix,
             Collection<String> candidates, int limit) {
+        if (prefix.isEmpty()) {
+            return candidates.stream().sorted().limit(limit).toList();
+        }
+
+        if (candidates.isEmpty()) {
+            return candidates;
+        }
+
         Collection<MatchScore> scoredMatches = candidates.stream()
             .map(candidate -> new MatchScore(candidate, prefixEditDistance(prefix, candidate)))
             .toList();
@@ -73,14 +81,14 @@ public class StringDistances {
         bestMatches.addAll(scoredMatches);
 
         return Stream.generate(bestMatches::poll)
+            .limit(limit)
             .takeWhile(matchScore -> isCloseEnough(matchScore, prefix))
             .map(MatchScore::candidate)
-            .limit(limit)
             .toList();
     }
 
     private static boolean isCloseEnough(MatchScore matchScore, CharSequence prefix) {
-        return matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
+        return (double) matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
     }
 
     /**

@@ -15,7 +15,16 @@ final class StringDistancesTest {
                 Collection<String> candidates, int limit) {
         }
 
-        List<TestCase> tests = List.of();
+        List<String> exampleTags = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
+                "key", "nvim", "py", "tag", "taz", "vi", "vim");
+
+        List<TestCase> tests = List.of(new TestCase("no_tags", List.of(), "foo", List.of(), 5),
+                new TestCase("no_prefix", List.of("c", "c#", "c++", "emacs", "foo"), "",
+                        exampleTags, 5),
+                new TestCase("both_empty", List.of(), "", List.of(), 5),
+                new TestCase("test0", List.of("vi", "vim"), "v", exampleTags, 5),
+                new TestCase("test1", List.of("java", "js"), "j", exampleTags, 5),
+                new TestCase("test2", List.of("c", "c#", "c++"), "c", exampleTags, 5));
 
         for (TestCase test : tests) {
             assertEquals(test.expectedSuggestions,
