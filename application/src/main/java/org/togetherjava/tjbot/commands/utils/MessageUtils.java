@@ -17,6 +17,8 @@ import java.util.List;
  * other commands to avoid similar methods appearing everywhere.
  */
 public class MessageUtils {
+    private static final String ABBREVIATION = "...";
+
     private MessageUtils() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
@@ -43,7 +45,7 @@ public class MessageUtils {
 
     /**
      * Escapes every markdown content in the given string.
-     *
+     * <p>
      * If the escaped message is sent to Discord, it will display the original message.
      * 
      * @param text the text to escape
@@ -84,6 +86,27 @@ public class MessageUtils {
             }
             return String.format("</%s:%s>", String.join(" ", commandPath), guildCommand.getId());
         });
+    }
+
+    /**
+     * Abbreviates the given text if it is too long.
+     * <p>
+     * Abbreviation is done by adding {@value ABBREVIATION}.
+     *
+     * @param text the text to abbreviate
+     * @param maxLength the maximal length of the abbreviated text
+     * @return the abbreviated text, guaranteed to be smaller than the given length
+     */
+    public static String abbreviate(String text, int maxLength) {
+        if (text.length() <= maxLength) {
+            return text;
+        }
+
+        if (maxLength < ABBREVIATION.length()) {
+            return text.substring(0, maxLength);
+        }
+
+        return text.substring(0, maxLength - ABBREVIATION.length()) + ABBREVIATION;
     }
 
 }
