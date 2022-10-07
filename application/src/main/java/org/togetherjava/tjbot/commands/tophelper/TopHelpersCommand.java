@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.annotation.Nullable;
@@ -42,7 +43,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(TopHelpersCommand.class);
     private static final String COMMAND_NAME = "top-helpers";
     private static final String MONTH_OPTION = "at-month";
-    private static final int TOP_HELPER_LIMIT = 20;
+    private static final int TOP_HELPER_LIMIT = 18;
+
+    private static final int MAX_USER_NAME_LIMIT = 15;
 
     private final Database database;
 
@@ -143,8 +146,11 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                     userIdToMember.get(topHelper.authorId())))
             .toList();
 
-        String message =
-                "```java%n%s%n```".formatted(dataTableToString(topHelpersDataTable, timeRange));
+        String message = """
+                ```java
+                // for %s
+                %s
+                ```""".formatted(timeRange.description(), dataTableToString(topHelpersDataTable));
 
         event.getHook().editOriginal(message).queue();
     }
@@ -152,20 +158,18 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     private static List<String> topHelperToDataRow(TopHelperResult topHelper,
             @Nullable Member member) {
         String id = Long.toString(topHelper.authorId());
-        String name = member == null ? "UNKNOWN_USER" : member.getEffectiveName();
+        String name = MessageUtils.abbreviate(
+                member == null ? "UNKNOWN_USER" : member.getEffectiveName(), MAX_USER_NAME_LIMIT);
         String messageLengths = Long.toString(topHelper.messageLengths().longValue());
 
         return List.of(id, name, messageLengths);
     }
 
-    private static String dataTableToString(Collection<List<String>> dataTable,
-            TimeRange timeRange) {
+    private static String dataTableToString(Collection<List<String>> dataTable) {
         return dataTableToAsciiTable(dataTable,
                 List.of(new ColumnSetting("Id", HorizontalAlign.RIGHT),
                         new ColumnSetting("Name", HorizontalAlign.RIGHT),
-                        new ColumnSetting(
-                                "Message lengths (for %s)".formatted(timeRange.description()),
-                                HorizontalAlign.RIGHT)));
+                        new ColumnSetting("Message lengths", HorizontalAlign.RIGHT)));
     }
 
     private static String dataTableToAsciiTable(Collection<List<String>> dataTable,
