@@ -129,6 +129,7 @@ public final class TagCommand extends SlashCommandAdapter {
     }
 
     private static CompletableFuture<List<LinkPreview>> createLinkPreviews(List<String> links) {
+        // TODO This stuff needs some polishing, barely readable
         List<CompletableFuture<Optional<LinkPreview>>> tasks = IntStream.range(0, links.size())
             .mapToObj(i -> createLinkPreview(links.get(i), i + ".png"))
             .toList();
