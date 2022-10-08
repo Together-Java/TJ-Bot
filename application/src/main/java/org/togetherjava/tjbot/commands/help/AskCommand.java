@@ -136,10 +136,11 @@ public final class AskCommand extends SlashCommandAdapter {
             .map(role -> " (%s)".formatted(role.getAsMention()))
             .orElse("");
 
-        String contentPattern = "%s has a question about '**%s**'%%s and will send the details now."
-            .formatted(author.getAsMention(), title);
-        String contentWithoutRole = contentPattern.formatted("");
-        String contentWithRole = contentPattern.formatted(roleMentionDescription);
+        String contentPrefix =
+                "%s has a question about '**%s**'".formatted(author.getAsMention(), title);
+        String contentSuffix = " and will send the details now.";
+        String contentWithoutRole = contentPrefix + contentSuffix;
+        String contentWithRole = contentPrefix + roleMentionDescription + contentSuffix;
 
         // We want to invite all members of a role, but without hard-pinging them. However,
         // manually inviting them is cumbersome and can hit rate limits.
