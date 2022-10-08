@@ -17,11 +17,16 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 
+import javax.annotation.Nullable;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -98,6 +103,7 @@ public final class TagCommand extends SlashCommandAdapter {
         // Compute link previews
         event.deferReply().queue();
 
+        // TODO Move all that link preview stuff into some helper
         createLinkPreviews(links).thenAccept(linkPreviews -> {
             if (linkPreviews.isEmpty()) {
                 // Did not find any previews
@@ -143,10 +149,30 @@ public final class TagCommand extends SlashCommandAdapter {
     }
 
     private record LinkPreview(FileUpload attachment, MessageEmbed embed) {
+        static LinkPreview ofContents(@Nullable String title, String url,
+                @Nullable String description, String thumbnailName, InputStream thumbnail) {
+            FileUpload attachment = FileUpload.fromData(thumbnail, thumbnailName);
+            MessageEmbed embed = new EmbedBuilder().setTitle(title, url)
+                .setDescription(description)
+                .setThumbnail("attachment://" + thumbnailName)
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build();
+
+            return new LinkPreview(attachment, embed);
+        }
+
+        static LinkPreview ofThumbnail(String thumbnailName, InputStream thumbnail) {
+            FileUpload attachment = FileUpload.fromData(thumbnail, thumbnailName);
+            MessageEmbed embed = new EmbedBuilder().setThumbnail("attachment://" + thumbnailName)
+                .setColor(TagSystem.AMBIENT_COLOR)
+                .build();
+
+            return new LinkPreview(attachment, embed);
+        }
     }
 
     private static CompletableFuture<Optional<LinkPreview>> createLinkPreview(String link,
-            String name) {
+            String attachmentName) {
         URI linkAsUri;
         try {
             linkAsUri = URI.create(link);
@@ -158,33 +184,28 @@ public final class TagCommand extends SlashCommandAdapter {
         CompletableFuture<HttpResponse<InputStream>> task =
                 CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream());
 
-        return task.thenApply(response -> {
+        return task.thenCompose(response -> {
             int statusCode = response.statusCode();
             if (statusCode < HttpURLConnection.HTTP_OK
                     || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                return Optional.empty();
+                return CompletableFuture.completedFuture(Optional.empty());
             }
-            // TODO Add OpenGraph extraction "og:image"
-            if (!isResponseAnImage(response)) {
-                return Optional.empty();
+            if (isResponseOfType(response, "image")) {
+                return CompletableFuture.completedFuture(
+                        Optional.of(LinkPreview.ofThumbnail(attachmentName, response.body())));
+            }
+            if (isResponseOfType(response, "text/html")) {
+                return parseWebsite(link, attachmentName, response.body());
             }
 
-            FileUpload attachment = FileUpload.fromData(response.body(), name);
-            MessageEmbed embed = new EmbedBuilder()
-                // TODO Add title "og:title" and description "og:description",
-                // fallback to "twitter:title" and "twitter:description" if necessary
-                .setThumbnail("attachment://" + name)
-                .setColor(TagSystem.AMBIENT_COLOR)
-                .build();
-
-            return Optional.of(new LinkPreview(attachment, embed));
+            return CompletableFuture.completedFuture(Optional.empty());
         });
     }
 
-    private static boolean isResponseAnImage(HttpResponse<?> response) {
+    private static boolean isResponseOfType(HttpResponse<?> response, String type) {
         return response.headers()
             .firstValue("Content-Type")
-            .filter(contentType -> contentType.startsWith("image"))
+            .filter(contentType -> contentType.startsWith(type))
             .isPresent();
     }
 
@@ -204,5 +225,69 @@ public final class TagCommand extends SlashCommandAdapter {
             .toList();
 
         event.replyChoices(choices).queue();
+    }
+    private static CompletableFuture<Optional<LinkPreview>> parseWebsite(String link,
+            String attachmentName, InputStream websiteContent) {
+        Document doc;
+        try {
+            doc = Jsoup.parse(websiteContent, null, link);
+        } catch (IOException e) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
+        String title = parseOpenGraphTwitterMeta(doc, "title", doc.title()).orElse(null);
+        String description =
+                parseOpenGraphTwitterMeta(doc, "description", doc.title()).orElse(null);
+        String image = parseOpenGraphMeta(doc, "image").orElse(null);
+
+        if (image == null) {
+            // TODO Can still do something
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
+        // TODO Massive duplication
+        URI imageAsUri;
+        try {
+            imageAsUri = URI.create(image);
+        } catch (IllegalArgumentException e) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
+        HttpRequest request = HttpRequest.newBuilder(imageAsUri).build();
+        CompletableFuture<HttpResponse<InputStream>> task =
+                CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream());
+
+        return task.thenCompose(response -> {
+            int statusCode = response.statusCode();
+            if (statusCode < HttpURLConnection.HTTP_OK
+                    || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
+                return CompletableFuture.completedFuture(Optional.empty());
+            }
+            if (!isResponseOfType(response, "image")) {
+                return CompletableFuture.completedFuture(Optional.empty());
+            }
+            return CompletableFuture.completedFuture(Optional.of(LinkPreview.ofContents(title, link,
+                    description, attachmentName, response.body())));
+        });
+    }
+
+    private static Optional<String> parseOpenGraphTwitterMeta(Document doc, String metaProperty,
+            @Nullable String fallback) {
+        String value = Optional
+            .ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
+            .or(() -> Optional
+                .ofNullable(doc.selectFirst("meta[property=twitter:%s".formatted(metaProperty))))
+            .map(element -> element.attr("content"))
+            .orElse(fallback);
+        if (value == null) {
+            return Optional.empty();
+        }
+        return value.isBlank() ? Optional.empty() : Optional.of(value);
+    }
+
+    private static Optional<String> parseOpenGraphMeta(Document doc, String metaProperty) {
+        return Optional.ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
+            .map(element -> element.attr("content"))
+            .filter(Predicate.not(String::isBlank));
     }
 }

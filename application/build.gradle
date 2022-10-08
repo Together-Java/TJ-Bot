@@ -57,6 +57,8 @@ dependencies {
 
     implementation 'io.mikael:urlbuilder:2.0.9'
 
+    implementation 'org.jsoup:jsoup:1.15.3'
+
     implementation 'org.scilab.forge:jlatexmath:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-greek:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-cyrillic:1.0.7'
