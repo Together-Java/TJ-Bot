@@ -88,7 +88,7 @@ public class StringDistances {
     }
 
     private static boolean isCloseEnough(MatchScore matchScore, CharSequence prefix) {
-        return (double) matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
+        return matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
     }
 
     /**
@@ -182,10 +182,10 @@ public class StringDistances {
         return table;
     }
 
-    private record MatchScore(String candidate, int score) implements Comparable<MatchScore> {
+    private record MatchScore(String candidate, double score) implements Comparable<MatchScore> {
         @Override
         public int compareTo(MatchScore otherMatchScore) {
-            int compareResult = Integer.compare(this.score, otherMatchScore.score);
+            int compareResult = Double.compare(this.score, otherMatchScore.score);
 
             if (compareResult == 0) {
                 return this.candidate.compareTo(otherMatchScore.candidate);
