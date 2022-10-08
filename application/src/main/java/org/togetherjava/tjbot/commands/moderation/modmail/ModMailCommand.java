@@ -95,6 +95,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
+        event.deferReply().setEphemeral(true).queue();
+
         if (isChannelOnCooldown(userId)) {
             event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
                 .setEphemeral(true)
@@ -123,15 +125,22 @@ public final class ModMailCommand extends SlashCommandAdapter {
                 .sendMessageEmbeds(createModMailMessage(user, userMessage));
         }
 
-        message.queue();
-
-        event.reply("Thank you for contacting the moderators").setEphemeral(true).queue();
+        message.mapToResult().flatMap(result -> {
+            if (result.isSuccess()) {
+                return event.getHook().editOriginal("Your message has been forwarded, thanks.");
+            } else {
+                return event.getHook()
+                    .editOriginal("There was an issue forwarding your message, sorry. We are "
+                            + "investigating.");
+            }
+        }).queue();
 
     }
 
     private MessageEmbed createModMailMessage(String user, String userMessage) {
         return new EmbedBuilder().setDescription("**/modmail from %s** ".formatted(user))
             .setFooter(userMessage)
+            .appendDescription("")
             .setColor(AMBIENT_COLOR)
             .build();
     }
