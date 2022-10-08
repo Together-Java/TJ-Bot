@@ -8,9 +8,11 @@ import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
+
 import java.awt.Color;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;

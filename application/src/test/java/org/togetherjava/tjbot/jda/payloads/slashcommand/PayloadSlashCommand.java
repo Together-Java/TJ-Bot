@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 
 public final class PayloadSlashCommand {

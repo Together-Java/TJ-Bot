@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.moderation.scam;
 
 import net.dv8tion.jda.api.JDA;
+
 import org.togetherjava.tjbot.commands.Routine;
 
 import java.time.Instant;

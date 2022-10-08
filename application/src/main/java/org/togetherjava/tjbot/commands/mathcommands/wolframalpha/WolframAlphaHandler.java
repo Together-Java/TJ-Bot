@@ -7,8 +7,9 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error;
+
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.*;
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

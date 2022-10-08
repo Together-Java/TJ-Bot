@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
+
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;

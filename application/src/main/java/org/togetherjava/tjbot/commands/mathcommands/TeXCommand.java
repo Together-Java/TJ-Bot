@@ -12,10 +12,12 @@ import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import javax.imageio.ImageIO;
+
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;

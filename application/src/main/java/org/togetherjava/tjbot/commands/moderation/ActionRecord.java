@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation;
 import org.togetherjava.tjbot.db.generated.tables.records.ModerationActionsRecord;
 
 import javax.annotation.Nullable;
+
 import java.time.Instant;
 
 /**

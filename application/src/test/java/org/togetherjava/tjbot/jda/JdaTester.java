@@ -42,10 +42,12 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.MockingDetails;
 import org.mockito.stubbing.Answer;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import javax.annotation.Nullable;
+
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;

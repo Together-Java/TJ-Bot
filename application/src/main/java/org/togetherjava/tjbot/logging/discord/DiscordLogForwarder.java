@@ -9,6 +9,7 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.net.URI;
