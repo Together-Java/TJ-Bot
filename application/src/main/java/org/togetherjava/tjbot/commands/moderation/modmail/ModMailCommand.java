@@ -130,8 +130,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
     }
 
     private MessageEmbed createModMailMessage(String user, String userMessage) {
-        return new EmbedBuilder().setTitle("**/modmail from %s** ".formatted(user))
-            .setDescription(userMessage)
+        return new EmbedBuilder().setDescription("**/modmail from %s** ".formatted(user))
+            .setFooter(userMessage)
             .setColor(AMBIENT_COLOR)
             .build();
     }
