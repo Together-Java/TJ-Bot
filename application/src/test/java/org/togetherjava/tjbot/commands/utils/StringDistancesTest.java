@@ -15,18 +15,18 @@ final class StringDistancesTest {
                 Collection<String> candidates, int limit) {
         }
 
-        List<String> existingTags = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
+        List<String> candidates = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
                 "key", "nvim", "py", "tag", "taz", "vi", "vim");
         final int MAX_MATCHES = 5;
 
         List<TestCase> tests = List.of(
                 new TestCase("no_tags", List.of(), "foo", List.of(), MAX_MATCHES),
-                new TestCase("no_prefix", List.of("c", "c#", "c++", "emacs", "foo"), "",
-                        existingTags, MAX_MATCHES),
+                new TestCase("no_prefix", List.of("c", "c#", "c++", "emacs", "foo"), "", candidates,
+                        MAX_MATCHES),
                 new TestCase("both_empty", List.of(), "", List.of(), MAX_MATCHES),
-                new TestCase("withPrefix0", List.of("vi", "vim"), "v", existingTags, MAX_MATCHES),
-                new TestCase("withPrefix1", List.of("java", "js"), "j", existingTags, MAX_MATCHES),
-                new TestCase("withPrefix2", List.of("c", "c#", "c++"), "c", existingTags,
+                new TestCase("withPrefix0", List.of("vi", "vim"), "v", candidates, MAX_MATCHES),
+                new TestCase("withPrefix1", List.of("java", "js"), "j", candidates, MAX_MATCHES),
+                new TestCase("withPrefix2", List.of("c", "c#", "c++"), "c", candidates,
                         MAX_MATCHES));
 
         for (TestCase test : tests) {
