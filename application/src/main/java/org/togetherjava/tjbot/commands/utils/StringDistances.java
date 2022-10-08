@@ -65,10 +65,6 @@ public class StringDistances {
      */
     public static Collection<String> closeMatches(CharSequence prefix,
             Collection<String> candidates, int limit) {
-        if (prefix.isEmpty()) {
-            return candidates.stream().sorted().limit(limit).toList();
-        }
-
         if (candidates.isEmpty()) {
             return List.of();
         }
@@ -79,6 +75,13 @@ public class StringDistances {
 
         Queue<MatchScore> bestMatches = new PriorityQueue<>();
         bestMatches.addAll(scoredMatches);
+
+        if (prefix.isEmpty()) {
+            return Stream.generate(bestMatches::poll)
+                .limit(limit)
+                .map(MatchScore::candidate)
+                .toList();
+        }
 
         return Stream.generate(bestMatches::poll)
             .limit(limit)
