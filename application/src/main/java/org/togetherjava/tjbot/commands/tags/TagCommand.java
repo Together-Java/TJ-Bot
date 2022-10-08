@@ -25,7 +25,7 @@ import java.util.Collection;
  */
 public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
-
+    private static final int MAX_OPTIONS = 5;
     static final String ID_OPTION = "id";
     static final String REPLY_TO_USER_OPTION = "reply-to";
 
@@ -73,14 +73,15 @@ public final class TagCommand extends SlashCommandAdapter {
         AutoCompleteQuery focusedOption = event.getFocusedOption();
 
         if (!focusedOption.getName().equals(ID_OPTION)) {
-            throw new IllegalArgumentException("Unexpected option");
+            throw new IllegalArgumentException(
+                    "Unexpected option, was: " + focusedOption.getName());
         }
 
-        Collection<Command.Choice> choices =
-                StringDistances.closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), 5)
-                    .stream()
-                    .map(id -> new Command.Choice(id, id))
-                    .toList();
+        Collection<Command.Choice> choices = StringDistances
+            .closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), MAX_OPTIONS)
+            .stream()
+            .map(id -> new Command.Choice(id, id))
+            .toList();
 
         event.replyChoices(choices).queue();
     }

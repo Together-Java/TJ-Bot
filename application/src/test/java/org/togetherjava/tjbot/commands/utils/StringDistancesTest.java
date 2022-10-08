@@ -15,16 +15,19 @@ final class StringDistancesTest {
                 Collection<String> candidates, int limit) {
         }
 
-        List<String> exampleTags = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
+        List<String> existingTags = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
                 "key", "nvim", "py", "tag", "taz", "vi", "vim");
+        final int MAX_MATCHES = 5;
 
-        List<TestCase> tests = List.of(new TestCase("no_tags", List.of(), "foo", List.of(), 5),
+        List<TestCase> tests = List.of(
+                new TestCase("no_tags", List.of(), "foo", List.of(), MAX_MATCHES),
                 new TestCase("no_prefix", List.of("c", "c#", "c++", "emacs", "foo"), "",
-                        exampleTags, 5),
-                new TestCase("both_empty", List.of(), "", List.of(), 5),
-                new TestCase("test0", List.of("vi", "vim"), "v", exampleTags, 5),
-                new TestCase("test1", List.of("java", "js"), "j", exampleTags, 5),
-                new TestCase("test2", List.of("c", "c#", "c++"), "c", exampleTags, 5));
+                        existingTags, MAX_MATCHES),
+                new TestCase("both_empty", List.of(), "", List.of(), MAX_MATCHES),
+                new TestCase("withPrefix0", List.of("vi", "vim"), "v", existingTags, MAX_MATCHES),
+                new TestCase("withPrefix1", List.of("java", "js"), "j", existingTags, MAX_MATCHES),
+                new TestCase("withPrefix2", List.of("c", "c#", "c++"), "c", existingTags,
+                        MAX_MATCHES));
 
         for (TestCase test : tests) {
             assertEquals(test.expectedSuggestions,

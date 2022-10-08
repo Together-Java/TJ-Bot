@@ -70,7 +70,7 @@ public class StringDistances {
         }
 
         if (candidates.isEmpty()) {
-            return candidates;
+            return List.of();
         }
 
         Collection<MatchScore> scoredMatches = candidates.stream()
