@@ -25,7 +25,7 @@ import java.util.Collection;
  */
 public final class TagCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
-    private static final int MAX_OPTIONS = 5;
+    private static final int MAX_SUGGESTIONS = 5;
     static final String ID_OPTION = "id";
     static final String REPLY_TO_USER_OPTION = "reply-to";
 
@@ -78,7 +78,7 @@ public final class TagCommand extends SlashCommandAdapter {
         }
 
         Collection<Command.Choice> choices = StringDistances
-            .closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), MAX_OPTIONS)
+            .closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), MAX_SUGGESTIONS)
             .stream()
             .map(id -> new Command.Choice(id, id))
             .toList();
