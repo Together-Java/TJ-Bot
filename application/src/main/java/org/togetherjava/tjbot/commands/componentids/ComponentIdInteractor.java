@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.componentids;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.commands.UserInteractionType;
 
