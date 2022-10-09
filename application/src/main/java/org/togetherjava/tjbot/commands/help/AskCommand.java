@@ -164,7 +164,7 @@ public final class AskCommand extends SlashCommandAdapter {
         long messageId = threadChannel.getLatestMessageIdLong();
 
         if (messageId == 0) {
-            logger.debug("Can't find the first message in this help thread (#{})",
+            logger.warn("Can't find the first message in this help thread (#{})",
                     threadChannel.getId());
             return new CompletedRestAction<>(threadChannel.getJDA(), null);
         }
