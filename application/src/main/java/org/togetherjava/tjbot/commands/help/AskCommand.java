@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.internal.requests.RestActionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +129,7 @@ public final class AskCommand extends SlashCommandAdapter {
         helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
-            .flatMap(any -> threadChannel.pinMessageById(threadChannel.getLatestMessageId()))
+            .flatMap(any -> pinFirstMessage(threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
@@ -157,6 +158,17 @@ public final class AskCommand extends SlashCommandAdapter {
         return eventHook.editOriginal("""
                 Created a thread for you: %s
                 Please ask your question there, thanks.""".formatted(threadChannel.getAsMention()));
+    }
+
+    private static RestAction<Void> pinFirstMessage(ThreadChannel threadChannel) {
+        long messageId = threadChannel.getLatestMessageIdLong();
+
+        if (messageId == 0) {
+            logger.debug("Can't find the first message in this help thread (#{})", threadChannel.getId());
+            return null;
+        }
+
+        return threadChannel.pinMessageById(messageId);
     }
 
     private static void handleFailure(Throwable exception, InteractionHook eventHook) {
