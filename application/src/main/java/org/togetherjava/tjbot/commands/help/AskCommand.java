@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import net.dv8tion.jda.internal.requests.RestActionImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,7 +166,7 @@ public final class AskCommand extends SlashCommandAdapter {
 
         if (messageId == 0) {
             logger.debug("Can't find the first message in this help thread (#{})", threadChannel.getId());
-            return null;
+            return new CompletedRestAction<>(threadChannel.getJDA(), null);
         }
 
         return threadChannel.pinMessageById(messageId);
