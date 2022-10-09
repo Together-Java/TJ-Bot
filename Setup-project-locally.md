@@ -123,5 +123,4 @@ The bot is now running and connected to your server, hurray 🎉
 
 You can now execute commands and see the bot do its magic:
 
-![Bot in Discord](https://i.imgur.com/TtYs0OZ.png)
-![Bot in Console](https://i.imgur.com/z3QUSaz.png)
+![Bot command](https://user-images.githubusercontent.com/73871477/194744735-562b70a6-62ff-4675-9f04-e4327b38b2f6.png)
