@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.logging.LogMarkers;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.time.Instant;
 import java.util.*;
@@ -120,8 +122,7 @@ final class DiscordLogForwarder {
             String authorName = event.getLoggerName();
             String title = event.getLevel().name();
             int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
-            String description =
-                    abbreviate(event.getMessage().getFormattedMessage(), MAX_EMBED_DESCRIPTION);
+            String description = abbreviate(describeLogEvent(event), MAX_EMBED_DESCRIPTION);
             Instant timestamp = Instant.ofEpochMilli(event.getInstant().getEpochMillisecond());
 
             WebhookEmbed embed = new WebhookEmbedBuilder()
@@ -133,6 +134,20 @@ final class DiscordLogForwarder {
                 .build();
 
             return new LogMessage(embed, timestamp);
+        }
+
+        private static String describeLogEvent(LogEvent event) {
+            String logMessage = event.getMessage().getFormattedMessage();
+
+            Throwable exception = event.getThrown();
+            if (exception == null) {
+                return logMessage;
+            }
+
+            StringWriter exceptionWriter = new StringWriter();
+            exception.printStackTrace(new PrintWriter(exceptionWriter));
+
+            return logMessage + "\n" + exceptionWriter.toString().replace("\t", "> ");
         }
 
         private static String abbreviate(String text, int maxLength) {
