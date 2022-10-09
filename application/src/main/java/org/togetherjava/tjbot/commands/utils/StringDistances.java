@@ -76,13 +76,6 @@ public class StringDistances {
         Queue<MatchScore> bestMatches = new PriorityQueue<>();
         bestMatches.addAll(scoredMatches);
 
-        if (prefix.isEmpty()) {
-            return Stream.generate(bestMatches::poll)
-                .limit(limit)
-                .map(MatchScore::candidate)
-                .toList();
-        }
-
         return Stream.generate(bestMatches::poll)
             .limit(limit)
             .takeWhile(matchScore -> isCloseEnough(matchScore, prefix))
@@ -91,6 +84,10 @@ public class StringDistances {
     }
 
     private static boolean isCloseEnough(MatchScore matchScore, CharSequence prefix) {
+        if (prefix.isEmpty()) {
+            return true;
+        }
+
         return matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
     }
 
