@@ -127,12 +127,12 @@ public class Formatter {
     /**
      * Section POJR
      */
-    private static record Section(List<Token> tokens, boolean isCodeSection) {
+    private record Section(List<Token> tokens, boolean isCodeSection) {
     }
 
     /**
      * CheckedToken POJR
      */
-    private static record CheckedToken(Token token, boolean isCode) {
+    private record CheckedToken(Token token, boolean isCode) {
     }
 }

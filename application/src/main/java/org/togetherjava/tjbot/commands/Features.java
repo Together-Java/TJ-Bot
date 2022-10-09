@@ -7,6 +7,7 @@ import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
+import org.togetherjava.tjbot.commands.formatter.FormatCodeCommand;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
@@ -101,6 +102,7 @@ public class Features {
         features.add(new UserBannedDeleteRecentThreadsListener(database));
 
         // Message context commands
+        features.add(new FormatCodeCommand());
 
         // User context commands
 
