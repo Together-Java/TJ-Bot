@@ -123,7 +123,8 @@ final class DiscordLogForwarder {
             String authorName = event.getLoggerName();
             String title = event.getLevel().name();
             int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
-            String description = MessageUtils.abbreviate(describeLogEvent(event), MAX_EMBED_DESCRIPTION);
+            String description =
+                    MessageUtils.abbreviate(describeLogEvent(event), MAX_EMBED_DESCRIPTION);
             Instant timestamp = Instant.ofEpochMilli(event.getInstant().getEpochMillisecond());
 
             WebhookEmbed embed = new WebhookEmbedBuilder()
