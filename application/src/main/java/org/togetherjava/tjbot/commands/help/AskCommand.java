@@ -127,8 +127,8 @@ public final class AskCommand extends SlashCommandAdapter {
             Member author, String title, String category, Guild guild) {
         helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
-            .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(Message::pin)
+            .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
 
