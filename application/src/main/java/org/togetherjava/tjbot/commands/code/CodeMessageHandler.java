@@ -1,7 +1,11 @@
 package org.togetherjava.tjbot.commands.code;
 
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 
@@ -10,6 +14,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO Also needs UserInteractor / BotCommandAdapter (can one class even implement both wrt
+// prefixes? maybe split into two)
 public final class CodeMessageHandler extends MessageReceiverAdapter {
     private static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
     // TODO doc, lol
@@ -28,6 +34,16 @@ public final class CodeMessageHandler extends MessageReceiverAdapter {
         if (maybeCode.isEmpty()) {
             return;
         }
+
+
+        event.getMessage().reply(createCodeActionsResponse()).queue();
+    }
+
+    private static MessageCreateData createCodeActionsResponse() {
+        // TODO ...
+        return new MessageCreateBuilder().setContent("Detected code, here are some useful tools:")
+            .setActionRow(Button.primary("some id", "Format"))
+            .build();
     }
 
     @Override
@@ -38,6 +54,13 @@ public final class CodeMessageHandler extends MessageReceiverAdapter {
         if (maybeCode.isEmpty()) {
             return;
         }
+
+        // TODO ...
+    }
+
+    @Override
+    public void onMessageDeleted(MessageDeleteEvent event) {
+        // TODO ...
     }
 
     private static Optional<String> extractCode(CharSequence fullMessage) {
