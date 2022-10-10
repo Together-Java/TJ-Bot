@@ -160,18 +160,6 @@ public final class AskCommand extends SlashCommandAdapter {
                 Please ask your question there, thanks.""".formatted(threadChannel.getAsMention()));
     }
 
-    private static RestAction<Void> pinFirstMessage(ThreadChannel threadChannel) {
-        long messageId = threadChannel.getLatestMessageIdLong();
-
-        if (messageId == 0) {
-            logger.warn("Can't find the first message in this help thread (#{})",
-                    threadChannel.getId());
-            return new CompletedRestAction<>(threadChannel.getJDA(), null);
-        }
-
-        return threadChannel.pinMessageById(messageId);
-    }
-
     private static void handleFailure(Throwable exception, InteractionHook eventHook) {
         if (exception instanceof ErrorResponseException responseException) {
             ErrorResponse response = responseException.getErrorResponse();
