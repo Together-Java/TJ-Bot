@@ -17,13 +17,17 @@ import java.util.regex.Pattern;
 // TODO Also needs UserInteractor / BotCommandAdapter (can one class even implement both wrt
 // prefixes? maybe split into two)
 public final class CodeMessageHandler extends MessageReceiverAdapter {
-    private static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
+    static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
     // TODO doc, lol
     private static final Pattern CODE_BLOCK_EXTRACTOR_PATTERN =
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
 
+    private final FormatCodeCommand formatCodeCommand;
+
     public CodeMessageHandler() {
         super(Pattern.compile(".*"));
+
+        formatCodeCommand = new FormatCodeCommand();
     }
 
     @Override
@@ -46,6 +50,8 @@ public final class CodeMessageHandler extends MessageReceiverAdapter {
             .build();
     }
 
+    // TODO onButtonClick thingy
+
     @Override
     public void onMessageUpdated(MessageUpdateEvent event) {
         String content = event.getMessage().getContentRaw();
@@ -55,7 +61,8 @@ public final class CodeMessageHandler extends MessageReceiverAdapter {
             return;
         }
 
-        // TODO ...
+        // TODO Update existing message instead of reposting
+        event.getMessage().replyEmbeds(formatCodeCommand.apply(maybeCode.orElseThrow())).queue();
     }
 
     @Override
