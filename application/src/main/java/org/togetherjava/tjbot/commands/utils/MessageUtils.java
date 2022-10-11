@@ -65,7 +65,7 @@ public class MessageUtils {
      *
      * @param guild the {@link Guild} that contains the command
      * @param commandName the command's name
-     * @param subCommands optional subcommands, depending on the base command used
+     * @param subCommands optional subcommand group & subcommand, depending on the base command used
      * @return Formatted string for the mentioned slash command
      * @throws IllegalArgumentException when the command isn't found in the guild
      */
