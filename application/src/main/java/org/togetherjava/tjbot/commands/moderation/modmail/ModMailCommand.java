@@ -8,10 +8,13 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
@@ -34,10 +37,10 @@ import java.util.regex.Pattern;
  * Implements the /modmail command, which allows users to contact a moderator within the server or
  * even if not part of the server anymore, e.g. after a ban.
  * <p>
- * Therefore, the user DMs the bot and the message are forwarded to moderators in a dedicated
- * channel.
+ * Therefore, the user uses the SlashCommand /modmail and the message are forwarded to moderators in
+ * a dedicated channel.
  * <p>
- * Actions are then logged to a dedicated channel, given by
+ * Messages are then forwarded to a dedicated channel, given by
  * {@link Config#getModAuditLogChannelPattern()}.
  */
 
@@ -47,30 +50,31 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "modmail";
     private static final String OPTION_MESSAGE = "message";
     private static final String OPTION_STAY_ANONYMOUS = "stay-anonymous";
-    private static final String OPTION_SERVER_GUILD = "server-guild";
+    private static final String OPTION_GUILD = "server";
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private static final Color AMBIENT_COLOR = Color.black;
-    private final Cache<Long, Instant> authorIdToLastCommandInvocation = createCooldownCache();
+    private static final Color AMBIENT_COLOR = Color.BLACK;
+    private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
 
 
     /**
      * Creates a new instance.
      *
-     * @param jda the JDA instance to use to retrieve guildCache
-     * @param config the config to use for this
+     * @param jda the JDA instance to retrieve guildCache
+     * @param config to get the channel to forward modmails to
      */
     public ModMailCommand(JDA jda, Config config) {
-        super(COMMAND_NAME, "Send a message to the moderators of the selected guild",
+        super(COMMAND_NAME, "Contact the moderators of the selected guild",
                 CommandVisibility.GLOBAL);
 
         OptionData messageOption = new OptionData(OptionType.STRING, OPTION_MESSAGE,
                 "What do you want to tell them?", true);
-        OptionData guildOption = new OptionData(OptionType.STRING, OPTION_SERVER_GUILD,
-                "Your server guild ID", true);
+        OptionData guildOption = new OptionData(OptionType.STRING, OPTION_GUILD,
+                "The server to contact mods from", true);
         OptionData anonymousOption = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
-                "if set, your name is hidden", true);
+                "If set, your name is hidden - note that mods then can not get " + "back to you",
+                true);
 
         List<Command.Choice> choices = jda.getGuildCache()
             .stream()
@@ -95,46 +99,72 @@ public final class ModMailCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
+
+        handleCooldown(userId, event);
+
         event.deferReply().setEphemeral(true).queue();
 
+        long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
+        Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
+        if (modMailAuditLog.isEmpty()) {
+            logger.warn(
+                    "Cannot find the designated modmail channel in server %s server by the id of %d ."
+                        .formatted(event.getGuild().getName(), userGuildId));
+            return;
+        }
+
+        MessageCreateAction message = createMessage(event, userId, modMailAuditLog.orElseThrow());
+
+        sendMessage(event, message);
+
+    }
+
+    private void handleCooldown(long userId, SlashCommandInteractionEvent event) {
         if (isChannelOnCooldown(userId)) {
             event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
                 .setEphemeral(true)
                 .queue();
             return;
         }
-        authorIdToLastCommandInvocation.put(userId, Instant.now());
+        authorToLastModMailInvocation.put(userId, Instant.now());
+    }
 
-        Optional<TextChannel> modMailAuditLog = getChannel(event);
-        if (modMailAuditLog.isEmpty()) {
-            logger.warn("Cannot find the designated modmail channel in this server.");
-            return;
-        }
+    private Optional<TextChannel> getModMailChannel(JDA jda, long userGuildI) {
+        return jda.getGuildById(userGuildI)
+            .getTextChannelCache()
+            .stream()
+            .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
+            .findAny();
+    }
 
+    private MessageCreateAction createMessage(SlashCommandInteractionEvent event, long userId,
+            TextChannel modMailAuditLog) {
         String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
         boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
-        String user = event.getUser().getAsMention();
-        MessageCreateAction message = modMailAuditLog.orElseThrow()
-            .sendMessageEmbeds(createModMailMessage(user, userMessage))
-            .addActionRow(DiscordClientAction.General.USER.asLinkButton("Click to see profile!",
-                    String.valueOf(userId)));
-
+        String user;
+        MessageCreateAction message;
         if (wantsToStayAnonymous) {
             user = "Anonymous";
-            message = modMailAuditLog.orElseThrow()
-                .sendMessageEmbeds(createModMailMessage(user, userMessage));
+            message = modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
+        } else {
+            user = event.getUser().getAsMention();
+            message = modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage))
+                .addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
+                        String.valueOf(userId)));
         }
+        return message;
+    }
 
-        message.mapToResult().flatMap(result -> {
-            if (result.isSuccess()) {
-                return event.getHook().editOriginal("Your message has been forwarded, thanks.");
-            } else {
-                return event.getHook()
-                    .editOriginal("There was an issue forwarding your message, sorry. We are "
-                            + "investigating.");
-            }
-        }).queue();
-
+    private void sendMessage(SlashCommandInteractionEvent event, MessageCreateAction message) {
+        InteractionHook hook = event.getHook();
+        message.mapToResult()
+            .map(result -> result.isSuccess() ? "Your message has been forwarded, thanks."
+                    : "There was an issue forwarding your message, sorry. We are investigating.")
+            .flatMap(hook::editOriginal)
+            .queue(any -> {
+            }, error -> logger.warn(
+                    "There was an problem with forwarding the message to the modmail channel.",
+                    error)); // need to add on queue on success
     }
 
     private MessageEmbed createModMailMessage(String user, String userMessage) {
@@ -144,18 +174,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .build();
     }
 
-    private Optional<TextChannel> getChannel(SlashCommandInteractionEvent event) {
-        long userGuildId = event.getOption(OPTION_SERVER_GUILD).getAsLong();
-        Guild guild = Objects.requireNonNull(event.getJDA().getGuildById(userGuildId),
-                "Something went wrong with selecting the guild.");
-        return guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
-            .findAny();
-    }
-
     private boolean isChannelOnCooldown(long userId) {
-        return Optional.ofNullable(authorIdToLastCommandInvocation.getIfPresent(userId))
+        return Optional.ofNullable(authorToLastModMailInvocation.getIfPresent(userId))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,
                     COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)

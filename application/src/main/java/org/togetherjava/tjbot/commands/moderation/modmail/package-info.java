@@ -1,5 +1,6 @@
 /**
- * This packages offers all the functionality for messaging moderators trough mod mail.
+ * This packages offers all the functionality for messaging moderators trough mod mail see
+ * {@link org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand} as main entry point.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
