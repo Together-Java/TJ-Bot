@@ -10,11 +10,11 @@ final class MessageUtilsTest {
 
     @Test
     void escapeMarkdown() {
-        List<TestCase> tests = List.of(new TestCase("empty", "", ""),
-                new TestCase("no markdown", "hello world", "hello world"),
-                new TestCase(
+        List<TestCaseEscape> tests = List.of(new TestCaseEscape("empty", "", ""),
+                new TestCaseEscape("no markdown", "hello world", "hello world"),
+                new TestCaseEscape(
                         "basic markdown", "\\*\\*hello\\*\\* \\_world\\_", "**hello** _world_"),
-                new TestCase("code block", """
+                new TestCaseEscape("code block", """
                         \\`\\`\\`java
                         int x = 5;
                         \\`\\`\\`
@@ -23,9 +23,9 @@ final class MessageUtilsTest {
                         int x = 5;
                         ```
                         """),
-                new TestCase("escape simple", "hello\\\\\\\\world\\\\\\\\test",
+                new TestCaseEscape("escape simple", "hello\\\\\\\\world\\\\\\\\test",
                         "hello\\\\world\\\\test"),
-                new TestCase("escape complex", """
+                new TestCaseEscape("escape complex", """
                         Hello\\\\\\\\world
                         \\`\\`\\`java
                         Hello\\\\\\\\
@@ -46,7 +46,7 @@ final class MessageUtilsTest {
                         "Hello \\" World\\\\\\"" haha
                         ```
                         """),
-                new TestCase("escape real example",
+                new TestCaseEscape("escape real example",
                         """
                                 Graph traversal can be accomplished easily using \\*\\*BFS\\*\\* or \\*\\*DFS\\*\\*. The algorithms only differ in the order in which nodes are visited: https://i.imgur.com/n9WrkQG.png
 
@@ -158,12 +158,34 @@ final class MessageUtilsTest {
                                 ```
                                 """));
 
-        for (TestCase test : tests) {
+        for (TestCaseEscape test : tests) {
             assertEquals(test.escapedMessage(), MessageUtils.escapeMarkdown(test.originalMessage()),
                     "Test failed: " + test.testName());
         }
     }
 
-    private record TestCase(String testName, String escapedMessage, String originalMessage) {
+    private record TestCaseEscape(String testName, String escapedMessage, String originalMessage) {
+    }
+
+    @Test
+    void abbreviate() {
+        List<TestCaseAbbreviate> tests =
+                List.of(new TestCaseAbbreviate("base case", "hello...", "hello world", 8),
+                        new TestCaseAbbreviate("long enough", "hello world", "hello world", 15),
+                        new TestCaseAbbreviate("exact size", "hello world", "hello world", 11),
+                        new TestCaseAbbreviate("very small limit", "he", "hello world", 2),
+                        new TestCaseAbbreviate("empty input", "", "", 0),
+                        new TestCaseAbbreviate("zero limit", "", "hello world", 0),
+                        new TestCaseAbbreviate("small limit", "h...", "hello world", 4));
+
+        for (TestCaseAbbreviate test : tests) {
+            assertEquals(test.abbreviatedMessage(),
+                    MessageUtils.abbreviate(test.originalMessage(), test.limit()),
+                    "Test failed: " + test.testName());
+        }
+    }
+
+    private record TestCaseAbbreviate(String testName, String abbreviatedMessage,
+            String originalMessage, int limit) {
     }
 }
