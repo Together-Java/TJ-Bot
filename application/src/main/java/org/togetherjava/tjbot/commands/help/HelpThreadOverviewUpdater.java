@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands.help;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadOverviewUpdater.class);
 
-    private static final String STATUS_TITLE = "## __**Active questions**__ ##";
+    private static final String STATUS_TITLE = "## Active questions ##";
     private static final int OVERVIEW_QUESTION_LIMIT = 150;
     private static final AtomicInteger FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES =
             new AtomicInteger(0);
@@ -122,7 +123,9 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         logger.debug("Found {} active questions", activeThreads.size());
 
         MessageEditData message = new MessageEditBuilder()
-            .setContent(STATUS_TITLE + "\n\n" + createDescription(activeThreads))
+            .setEmbeds(new EmbedBuilder().setTitle(STATUS_TITLE)
+                .setDescription(createDescription(activeThreads))
+                .build())
             .build();
 
         getStatusMessage(overviewChannel)
@@ -165,12 +168,13 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     private static boolean isStatusMessage(Message message) {
-        if (!message.getAuthor().equals(message.getJDA().getSelfUser())) {
+        if (message.getEmbeds().isEmpty()
+                || !message.getAuthor().equals(message.getJDA().getSelfUser())) {
             return false;
         }
 
-        String content = message.getContentRaw();
-        return content.startsWith(STATUS_TITLE);
+        String messageEmbedTitle = message.getEmbeds().get(0).getTitle();
+        return STATUS_TITLE.equals(messageEmbedTitle);
     }
 
     private RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
