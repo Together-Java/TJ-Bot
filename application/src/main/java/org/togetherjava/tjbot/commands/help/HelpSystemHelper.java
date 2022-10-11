@@ -314,7 +314,7 @@ public final class HelpSystemHelper {
 
             // Still no category, send advice
             return MessageUtils.mentionSlashCommand(threadChannel.getGuild(),
-                    String.join(HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND,
+                    String.join(" ", HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND,
                             HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName()))
                 .flatMap(command -> {
                     MessageEmbed embed = HelpSystemHelper.embedWith(
