@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
-import org.jetbrains.annotations.NonNls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -41,7 +40,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadOverviewUpdater.class);
 
-    private static final @NonNls String STATUS_TITLE = "## Active questions ##";
+    private static final String STATUS_TITLE = "## Active questions ##";
     private static final int OVERVIEW_QUESTION_LIMIT = 150;
     private static final AtomicInteger FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES =
             new AtomicInteger(0);
