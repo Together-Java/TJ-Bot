@@ -7,8 +7,8 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -65,24 +65,20 @@ public class MessageUtils {
      * in Discord.
      *
      * @param guild the {@link Guild} that contains the command
-     * @param baseCommandName the command's name
-     * @param subcommands optional subcommands, depending on the base command used
+     * @param fullCommand the command's name with its optional subcommand
      * @return Formatted string for the mentioned slash command
-     * @throws IllegalArgumentException when the command name doesn't match with the guild's
-     *         commands
+     * @throws IllegalArgumentException when the command isn't found in the guild
      */
-    public static RestAction<String> mentionSlashCommand(Guild guild, String baseCommandName,
-            String... subcommands) {
-        List<String> fullCommand = new ArrayList<>(List.of(baseCommandName));
-        fullCommand.addAll(List.of(subcommands));
+    public static RestAction<String> mentionSlashCommand(Guild guild, @NotNull String fullCommand) {
+        List<String> fullCommandSplit = List.of(fullCommand.split(" "));
         return guild.retrieveCommands().map(guildCommands -> {
             Command guildCommand = guildCommands.stream()
-                .filter(c -> c.getName().equalsIgnoreCase(baseCommandName))
+                .filter(c -> c.getName().equalsIgnoreCase(fullCommandSplit.get(0)))
                 .findAny()
                 .orElseThrow(
                         () -> new IllegalArgumentException("Command '%s' does not exist in guild %s"
-                            .formatted(String.join(" ", fullCommand), guild.getId())));
-            return String.format("</%s:%d>", String.join(" ", fullCommand),
+                            .formatted(fullCommandSplit.get(0), guild.getId())));
+            return String.format("</%s:%d>", String.join(" ", fullCommandSplit),
                     guildCommand.getIdLong());
         });
     }

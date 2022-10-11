@@ -185,9 +185,9 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .build();
 
         return MessageUtils
-            .mentionSlashCommand(originalMessage.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                    HelpThreadCommand.CHANGE_SUBCOMMAND,
-                    HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
+            .mentionSlashCommand(originalMessage.getGuild(),
+                    String.join(HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND,
+                            HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName()))
             .flatMap(command -> {
                 MessageCreateData threadMessage = new MessageCreateBuilder()
                     .setContent("""

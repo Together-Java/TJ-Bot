@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
@@ -95,8 +96,9 @@ public final class HelpSystemHelper {
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         return MessageUtils
-            .mentionSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                    HelpThreadCommand.Subcommand.CLOSE.getCommandName())
+            .mentionSlashCommand(threadChannel.getGuild(),
+                    String.join(" ", HelpThreadCommand.COMMAND_NAME,
+                            HelpThreadCommand.Subcommand.CLOSE.getCommandName()))
             .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
                     closeCommandMention));
     }
@@ -311,10 +313,9 @@ public final class HelpSystemHelper {
             }
 
             // Still no category, send advice
-            return MessageUtils
-                .mentionSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                        HelpThreadCommand.CHANGE_SUBCOMMAND,
-                        HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
+            return MessageUtils.mentionSlashCommand(threadChannel.getGuild(),
+                    String.join(HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND,
+                            HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName()))
                 .flatMap(command -> {
                     MessageEmbed embed = HelpSystemHelper.embedWith(
                             """
