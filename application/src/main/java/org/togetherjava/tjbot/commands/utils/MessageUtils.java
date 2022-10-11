@@ -64,7 +64,7 @@ public class MessageUtils {
      * in Discord.
      *
      * @param guild the {@link Guild} that contains the command
-     * @param commandPath the command's name with its optional subcommand
+     * @param commandPath full command path with subcommand groups and subcommands
      * @return Formatted string for the mentioned slash command
      * @throws IllegalArgumentException when the command isn't found in the guild
      */
