@@ -80,7 +80,7 @@ public class MessageUtils {
                             .formatted(commandName, guild.getId())));
             String commandPath = commandName;
             if (subCommands.length > 0) {
-                commandPath = commandPath + " " + String.join(" ", subCommands);
+                commandPath += " " + String.join(" ", subCommands);
             }
             return String.format("</%s:%s>", String.join(" ", commandPath), guildCommand.getId());
         });
