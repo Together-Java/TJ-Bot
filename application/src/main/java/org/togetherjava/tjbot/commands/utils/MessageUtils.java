@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -65,21 +64,20 @@ public class MessageUtils {
      * in Discord.
      *
      * @param guild the {@link Guild} that contains the command
-     * @param fullCommand the command's name with its optional subcommand
+     * @param commandPath the command's name with its optional subcommand
      * @return Formatted string for the mentioned slash command
      * @throws IllegalArgumentException when the command isn't found in the guild
      */
-    public static RestAction<String> mentionSlashCommand(Guild guild, @NotNull String fullCommand) {
-        List<String> fullCommandSplit = List.of(fullCommand.split(" "));
+    public static RestAction<String> mentionSlashCommand(Guild guild, String commandPath) {
+        String commandName = commandPath.split(" ", 1)[0];
         return guild.retrieveCommands().map(guildCommands -> {
             Command guildCommand = guildCommands.stream()
-                .filter(c -> c.getName().equalsIgnoreCase(fullCommandSplit.get(0)))
+                .filter(c -> c.getName().equalsIgnoreCase(commandName))
                 .findAny()
                 .orElseThrow(
                         () -> new IllegalArgumentException("Command '%s' does not exist in guild %s"
-                            .formatted(fullCommandSplit.get(0), guild.getId())));
-            return String.format("</%s:%d>", String.join(" ", fullCommandSplit),
-                    guildCommand.getIdLong());
+                            .formatted(commandName, guild.getId())));
+            return String.format("</%s:%s>", commandPath, guildCommand.getId());
         });
     }
 
