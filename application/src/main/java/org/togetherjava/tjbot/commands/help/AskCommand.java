@@ -48,7 +48,7 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
  */
 public final class AskCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(AskCommand.class);
-
+    public static final String COMMAND_NAME = "ask";
     private static final String TITLE_OPTION = "title";
     private static final String CATEGORY_OPTION = "category";
     private final HelpSystemHelper helper;

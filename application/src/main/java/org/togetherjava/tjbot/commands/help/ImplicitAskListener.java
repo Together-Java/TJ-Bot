@@ -10,13 +10,13 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import java.time.Instant;
@@ -118,13 +118,15 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         String threadDescription = lastHelpThread == null ? "your previously created help thread"
                 : lastHelpThread.getAsMention();
 
-        message.getChannel()
-            .sendMessage("""
-                    %s Please use %s to follow up on your question, \
-                    or use `/ask` to ask a new questions, thanks."""
-                .formatted(author.getAsMention(), threadDescription))
-            .flatMap(any -> message.delete())
+        MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+            .flatMap(command -> message.getChannel()
+                .sendMessage("""
+                        %s Please use %s to follow up on your question, \
+                        or use %s to ask a new questions, thanks."""
+                    .formatted(author.getAsMention(), threadDescription, command))
+                .flatMap(any -> message.delete()))
             .queue();
+
         return false;
     }
 
@@ -171,7 +173,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
                     author.getIdLong()));
     }
 
-    private static MessageCreateAction sendInitialMessage(ThreadChannel threadChannel,
+    private static RestAction<Message> sendInitialMessage(ThreadChannel threadChannel,
             Message originalMessage, String title) {
         String content = originalMessage.getContentRaw();
         Member author = originalMessage.getMember();
@@ -182,27 +184,34 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        MessageCreateData threadMessage = new MessageCreateBuilder()
-            .setContent(
-                    """
+        return MessageUtils
+            .mentionSlashCommand(originalMessage.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                    HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                    HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
+            .flatMap(command -> {
+                MessageCreateData threadMessage = new MessageCreateBuilder()
+                    .setContent("""
                             %s has a question about '**%s**' and will send the details now.
 
-                            Please use `/help-thread change category` to greatly increase the visibility of the question."""
-                        .formatted(author, title))
-            .setEmbeds(embed)
-            .build();
+                            Please use %s to greatly increase the visibility of the question."""
+                        .formatted(author, title, command))
+                    .setEmbeds(embed)
+                    .build();
 
-        return threadChannel.sendMessage(threadMessage);
+                return threadChannel.sendMessage(threadMessage);
+            });
+
     }
 
-    private static MessageCreateAction notifyUser(IMentionable threadChannel, Message message) {
-        return message.getChannel()
-            .sendMessage(
-                    """
-                            %s Please use `/ask` to ask questions. Don't worry though, I created %s for you. \
-                            Please continue there, thanks."""
-                        .formatted(message.getAuthor().getAsMention(),
-                                threadChannel.getAsMention()));
+    private static RestAction<Message> notifyUser(IMentionable threadChannel, Message message) {
+        return MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+            .flatMap(command -> message.getChannel()
+                .sendMessage(
+                        """
+                                %s Please use %s to ask questions. Don't worry though, I created %s for you. \
+                                Please continue there, thanks."""
+                            .formatted(message.getAuthor().getAsMention(), command,
+                                    threadChannel.getAsMention())));
     }
 
     private static void handleFailure(Throwable exception) {

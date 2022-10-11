@@ -1,8 +1,11 @@
 package org.togetherjava.tjbot.commands.utils;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
 import java.util.List;
@@ -54,6 +57,33 @@ public class MessageUtils {
         String beforeEscape = text.replace("\\", "\\\\");
         String afterEscape = MarkdownSanitizer.escape(beforeEscape);
         return afterEscape.replace("\\```", "\\`\\`\\`");
+    }
+
+    /**
+     * Converts a slash command text to a mentioned slash command, which you can directly click on
+     * in Discord.
+     *
+     * @param guild the {@link Guild} that contains the command
+     * @param commandName the command's name
+     * @param subCommands optional subcommand group & subcommand, depending on the base command used
+     * @return Formatted string for the mentioned slash command
+     * @throws IllegalArgumentException when the command isn't found in the guild
+     */
+    public static RestAction<String> mentionSlashCommand(Guild guild, String commandName,
+            String... subCommands) {
+        return guild.retrieveCommands().map(guildCommands -> {
+            Command guildCommand = guildCommands.stream()
+                .filter(c -> c.getName().equalsIgnoreCase(commandName))
+                .findAny()
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Command '%s' does not exist in guild %s"
+                            .formatted(commandName, guild.getId())));
+            String commandPath = commandName;
+            if (subCommands.length > 0) {
+                commandPath += " " + String.join(" ", subCommands);
+            }
+            return String.format("</%s:%s>", String.join(" ", commandPath), guildCommand.getId());
+        });
     }
 
 }

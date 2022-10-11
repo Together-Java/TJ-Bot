@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
@@ -92,7 +94,16 @@ public final class HelpSystemHelper {
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
     }
 
-    RestAction<Message> sendExplanationMessage(MessageChannel threadChannel) {
+    RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
+        return MessageUtils
+            .mentionSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                    HelpThreadCommand.Subcommand.CLOSE.getCommandName())
+            .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
+                    closeCommandMention));
+    }
+
+    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
+            String closeCommandMention) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
@@ -117,7 +128,8 @@ public final class HelpSystemHelper {
                                     **provide details**, context, more code, examples and maybe some screenshots. \
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command **/help-thread close** when your question has been answered, thanks."));
+                        "Don't forget to close your thread using the command %s when your question has been answered, thanks."
+                            .formatted(closeCommandMention)));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
@@ -300,16 +312,24 @@ public final class HelpSystemHelper {
             }
 
             // Still no category, send advice
-            MessageEmbed embed = HelpSystemHelper.embedWith(
-                    """
-                            Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
-                            Please use the `/help-thread change category` slash-command and pick what fits best, thanks 🙂
-                            """);
-            MessageCreateData message = new MessageCreateBuilder().setContent(author.getAsMention())
-                .setEmbeds(embed)
-                .build();
+            return MessageUtils
+                .mentionSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                        HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                        HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
+                .flatMap(command -> {
+                    MessageEmbed embed = HelpSystemHelper.embedWith(
+                            """
+                                    Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
+                                    Please use the %s slash-command and pick what fits best, thanks 🙂
+                                    """
+                                .formatted(command));
+                    MessageCreateData message =
+                            new MessageCreateBuilder().setContent(author.getAsMention())
+                                .setEmbeds(embed)
+                                .build();
 
-            return threadChannel.sendMessage(message);
+                    return threadChannel.sendMessage(message);
+                });
         }).queue();
     }
 
