@@ -45,7 +45,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final String CHANGE_CATEGORY_OPTION = "category";
     private static final String CHANGE_TITLE_OPTION = "title";
     private static final String CHANGE_TITLE_SUBCOMMAND = "title";
-    public static final String CHANGE_SUBCOMMAND = "change";
+    public static final String CHANGE_SUBCOMMAND_GROUP = "change";
     public static final String COMMAND_NAME = "help-thread";
 
     private final HelpSystemHelper helper;
@@ -75,7 +75,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, CHANGE_TITLE_OPTION, "new title", true);
 
         SubcommandGroupData changeCommands =
-                new SubcommandGroupData(CHANGE_SUBCOMMAND, "Change the details of this help thread")
+                new SubcommandGroupData(CHANGE_SUBCOMMAND_GROUP, "Change the details of this help thread")
                     .addSubcommands(changeCategory, changeTitle);
         getData().addSubcommandGroups(changeCommands);
 

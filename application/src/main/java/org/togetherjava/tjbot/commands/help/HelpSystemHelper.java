@@ -97,8 +97,8 @@ public final class HelpSystemHelper {
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         return MessageUtils
             .mentionSlashCommand(threadChannel.getGuild(),
-                    String.join(" ", HelpThreadCommand.COMMAND_NAME,
-                            HelpThreadCommand.Subcommand.CLOSE.getCommandName()))
+                    HelpThreadCommand.COMMAND_NAME,
+                            HelpThreadCommand.Subcommand.CLOSE.getCommandName())
             .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
                     closeCommandMention));
     }
@@ -314,8 +314,8 @@ public final class HelpSystemHelper {
 
             // Still no category, send advice
             return MessageUtils.mentionSlashCommand(threadChannel.getGuild(),
-                    String.join(" ", HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND,
-                            HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName()))
+                    HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                            HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
                 .flatMap(command -> {
                     MessageEmbed embed = HelpSystemHelper.embedWith(
                             """
