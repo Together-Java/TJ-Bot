@@ -64,12 +64,13 @@ public class MessageUtils {
      * in Discord.
      *
      * @param guild the {@link Guild} that contains the command
-     * @param commandPath full command path with subcommand groups and subcommands
+     * @param commandName the command's name
+     * @param subCommands optional subcommands, depending on the base command used
      * @return Formatted string for the mentioned slash command
      * @throws IllegalArgumentException when the command isn't found in the guild
      */
-    public static RestAction<String> mentionSlashCommand(Guild guild, String... commandPath) {
-        String commandName = commandPath[0];
+    public static RestAction<String> mentionSlashCommand(Guild guild, String commandName,
+            String... subCommands) {
         return guild.retrieveCommands().map(guildCommands -> {
             Command guildCommand = guildCommands.stream()
                 .filter(c -> c.getName().equalsIgnoreCase(commandName))
@@ -77,6 +78,10 @@ public class MessageUtils {
                 .orElseThrow(
                         () -> new IllegalArgumentException("Command '%s' does not exist in guild %s"
                             .formatted(commandName, guild.getId())));
+            String commandPath = commandName;
+            if (subCommands.length > 0) {
+                commandPath = commandPath + " " + String.join(" ", subCommands);
+            }
             return String.format("</%s:%s>", String.join(" ", commandPath), guildCommand.getId());
         });
     }
