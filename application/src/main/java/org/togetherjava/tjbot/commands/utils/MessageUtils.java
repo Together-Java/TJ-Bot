@@ -69,7 +69,7 @@ public class MessageUtils {
      * @throws IllegalArgumentException when the command isn't found in the guild
      */
     public static RestAction<String> mentionSlashCommand(Guild guild, String commandPath) {
-        String commandName = commandPath.split(" ", 1)[0];
+        String commandName = commandPath.split(" ", 2)[0];
         return guild.retrieveCommands().map(guildCommands -> {
             Command guildCommand = guildCommands.stream()
                 .filter(c -> c.getName().equalsIgnoreCase(commandName))
