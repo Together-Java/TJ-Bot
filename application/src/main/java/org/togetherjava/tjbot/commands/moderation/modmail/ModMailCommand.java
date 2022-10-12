@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -103,9 +104,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
         long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
         if (modMailAuditLog.isEmpty()) {
-            logger.warn(
-                    "Cannot find the designated modmail channel in server %s server by the id of %d ."
-                        .formatted(event.getGuild().getName(), userGuildId));
+            logger.warn("Cannot find the designated modmail channel in server by id {}",
+                    userGuildId);
             return;
         }
 
