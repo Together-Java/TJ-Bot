@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,7 @@ public class ModerationUtils {
     private static final Logger logger = LoggerFactory.getLogger(ModerationUtils.class);
     /**
      * The maximal character limit for the reason of an auditable action, see for example
-     * {@link Guild#ban(User, int, String)}.
+     * {@link AuditableRestAction#reason(String)}.
      */
     private static final int REASON_MAX_LENGTH = 512;
     /**
