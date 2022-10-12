@@ -64,11 +64,8 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
-        String dmMessage = """
-                Hey there, you have been put out of quarantine in the server %s.
-                This means you can now interact with others in the server again.
-                The reason for the unquarantine is: %s
-                """.formatted(guild.getName(), reason);
+        String dmMessage =
+                ModerationUtils.getDmAdvice(ModerationAction.UNQUARANTINE, guild.getName(), reason);
 
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())

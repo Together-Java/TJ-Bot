@@ -75,14 +75,8 @@ public final class MuteCommand extends SlashCommandAdapter {
             GenericEvent event) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been muted %s in the server %s.
-                        This means you can no longer send any messages in the server until you have been unmuted again.
-                        To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
-                        The reason for the mute is: %s
-                        """
-                    .formatted(durationMessage, guild.getName(), reason);
+        String dmMessage = ModerationUtils.getDmAdvice(ModerationAction.MUTE, durationMessage,
+                guild.getName(), reason);
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(dmMessage))

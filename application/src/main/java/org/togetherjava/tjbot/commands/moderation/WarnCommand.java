@@ -61,12 +61,7 @@ public final class WarnCommand extends SlashCommandAdapter {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been warned in the server %s.
-                            To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
-                            The reason for the warning is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+                    ModerationUtils.getDmAdvice(ModerationAction.WARN, guild.getName(), reason)))
             .mapToResult()
             .map(Result::isSuccess);
     }

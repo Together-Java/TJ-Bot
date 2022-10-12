@@ -60,11 +60,8 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
-        String dmMessage = """
-                Hey there, you have been unmuted in the server %s.
-                This means you can now send messages in the server again.
-                The reason for the unmute is: %s
-                """.formatted(guild.getName(), reason);
+        String dmMessage =
+                ModerationUtils.getDmAdvice(ModerationAction.UNMUTE, guild.getName(), reason);
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(dmMessage))

@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -371,5 +372,39 @@ public class ModerationUtils {
      *        as {@code "1 day"}.
      */
     record TemporaryData(Instant expiresAt, String duration) {
+    }
+
+    /**
+     * Gives out advice depending on the {@link ModerationAction} and the parameters passed into it.
+     *
+     * @param action gives out a {@link ModerationAction} to be able to respond and build a message
+     *        appropriately such as {@link ModerationAction#BAN}, {@link ModerationAction#MUTE}
+     *        etc..
+     * @param message is the message that is being used to build responses, such as
+     *        {@link Guild#getName()}, and reasoning for an action.
+     * @return the appropriate advice.
+     */
+    public static String getDmAdvice(ModerationAction action, String... message) {
+        if (message.length == 3) {
+            return """
+                    Hey there, sorry to tell you but unfortunately you have been %s %s from the server %s.
+                    To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
+                    The reason for being %s is: %s
+                    """
+                .formatted(action, message, message, message, message);
+        } else if (ModerationAction.UNMUTE.getVerb().equals(action.getVerb())
+                || ModerationAction.UNQUARANTINE.getVerb().equals(action.getVerb())) {
+            return """
+                    Hey there, you have been %s in the server %s.
+                    This means you can now interact with others in the server again.
+                    The reason for the %s is: %s
+                    """.formatted(action, message, action, message);
+        }
+        return """
+                Hey there, sorry to tell you but unfortunately you have been %s, which came from the server %s.
+                To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
+                The reason for the kick is: %s
+                """
+            .formatted(action, message, message);
     }
 }

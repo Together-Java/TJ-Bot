@@ -64,13 +64,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
         String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been put under quarantine in the server %s.
-                        This means you can no longer interact with anyone in the server until you have been unquarantined again.
-                        To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
-                        The reason for the quarantine is: %s
-                        """
-                    .formatted(guild.getName(), reason);
+                ModerationUtils.getDmAdvice(ModerationAction.QUARANTINE, guild.getName(), reason);
 
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
