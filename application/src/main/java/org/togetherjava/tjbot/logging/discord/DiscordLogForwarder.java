@@ -194,8 +194,8 @@ final class DiscordLogForwarder {
         }
 
         private LogMessage shortened() {
-            String shortDescription =
-                    abbreviate(embed.getDescription(), MAX_EMBED_DESCRIPTION_SHORT);
+            String shortDescription = MessageUtils.abbreviate(
+                    Objects.requireNonNull(embed.getDescription()), MAX_EMBED_DESCRIPTION_SHORT);
             WebhookEmbed shortEmbed =
                     new WebhookEmbedBuilder(embed).setDescription(shortDescription).build();
 
