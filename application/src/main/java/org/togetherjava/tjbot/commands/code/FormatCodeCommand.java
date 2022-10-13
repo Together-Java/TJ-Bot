@@ -17,6 +17,11 @@ final class FormatCodeCommand implements CodeAction {
     }
 
     @Override
+    public String getLabel() {
+        return "Format";
+    }
+
+    @Override
     public MessageEmbed apply(String code) {
         String formattedCode = formatCode(code);
 

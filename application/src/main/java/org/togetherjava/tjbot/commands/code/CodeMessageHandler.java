@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.internal.requests.CompletedRestAction;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.UserInteractionType;
@@ -16,10 +17,15 @@ import org.togetherjava.tjbot.commands.UserInteractor;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 
+import javax.annotation.Nullable;
+
 import java.awt.Color;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class CodeMessageHandler extends MessageReceiverAdapter implements UserInteractor {
     static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
@@ -28,7 +34,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
             Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
 
     private final ComponentIdInteractor componentIdInteractor;
-    private final FormatCodeCommand formatCodeCommand;
+    private final Map<String, CodeAction> labelToCodeAction;
 
     // TODO Use a cafeeine cache
     private final Map<Long, Long> originalMessageToCodeReply =
@@ -39,7 +45,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
-        formatCodeCommand = new FormatCodeCommand();
+        labelToCodeAction =
+                Stream.of(new FormatCodeCommand(), new RunCodeCommand(), new BytecodeCommand())
+                    .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(),
+                            (x, y) -> y, LinkedHashMap::new));
     }
 
     @Override
@@ -80,15 +89,28 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private MessageCreateData createCodeReplyMessage(long originalMessageId) {
         return new MessageCreateBuilder().setContent("Detected code, here are some useful tools:")
-            .setActionRow(Button.primary(
-                    componentIdInteractor.generateComponentId(Long.toString(originalMessageId)),
-                    "Format"))
+            .setActionRow(createButtons(originalMessageId, null))
             .build();
+    }
+
+    private List<Button> createButtons(long originalMessageId,
+            @Nullable CodeAction disabledAction) {
+        return labelToCodeAction.values().stream().map(action -> {
+            Button button = createButtonForAction(action, originalMessageId);
+            return action == disabledAction ? button.asDisabled() : button;
+        }).toList();
+    }
+
+    private Button createButtonForAction(CodeAction action, long originalMessageId) {
+        return Button.primary(
+                componentIdInteractor.generateComponentId(Long.toString(originalMessageId)),
+                action.getLabel());
     }
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         long originalMessageId = Long.parseLong(args.get(0));
+        CodeAction codeAction = getActionOfEvent(event);
 
         event.deferEdit().queue();
 
@@ -114,13 +136,15 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                         .setEphemeral(true);
                 }
 
-                List<Button> buttons =
-                        event.getMessage().getButtons().stream().map(Button::asDisabled).toList();
                 return event.getHook()
-                    .editOriginalEmbeds(formatCodeCommand.apply(maybeCode.orElseThrow()))
-                    .setActionRow(buttons);
+                    .editOriginalEmbeds(codeAction.apply(maybeCode.orElseThrow()))
+                    .setActionRow(createButtons(originalMessageId, codeAction));
             })
             .queue();
+    }
+
+    private CodeAction getActionOfEvent(ButtonInteractionEvent event) {
+        return labelToCodeAction.get(event.getButton().getLabel());
     }
 
     @Override
@@ -139,12 +163,27 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         // TODO Duplication with all of the editMessageEmbeds etc
-        event.getChannel()
-            .retrieveMessageById(codeReplyMessageId)
-            .flatMap(codeReplyMessage -> codeReplyMessage
-                .editMessageEmbeds(formatCodeCommand.apply(maybeCode.orElseThrow())))
-            .mapToResult()
+        event.getChannel().retrieveMessageById(codeReplyMessageId).flatMap(codeReplyMessage -> {
+            Optional<CodeAction> maybeCodeAction = getCurrentActionFromCodeReply(codeReplyMessage);
+            if (maybeCodeAction.isEmpty()) {
+                // No action was clicked yet
+                return new CompletedRestAction<>(event.getJDA(), null);
+            }
+
+            return codeReplyMessage
+                .editMessageEmbeds(maybeCodeAction.orElseThrow().apply(maybeCode.orElseThrow()));
+        })
+            .mapToResult() // FIXME add some logging
             .queue();
+    }
+
+    private Optional<CodeAction> getCurrentActionFromCodeReply(Message codeReplyMessage) {
+        return codeReplyMessage.getButtons()
+            .stream()
+            .filter(Button::isDisabled)
+            .map(Button::getLabel)
+            .map(labelToCodeAction::get)
+            .findAny();
     }
 
     @Override
@@ -155,7 +194,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
             return;
         }
 
-        event.getChannel().deleteMessageById(codeReplyMessageId).mapToResult().queue();
+        event.getChannel().deleteMessageById(codeReplyMessageId).mapToResult().queue(); // FIXME add
+                                                                                        // some
+                                                                                        // logging
     }
 
     private static Optional<String> extractCode(CharSequence fullMessage) {
