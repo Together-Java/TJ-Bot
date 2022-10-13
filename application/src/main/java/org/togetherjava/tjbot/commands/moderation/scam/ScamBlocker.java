@@ -17,10 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
+import org.togetherjava.tjbot.commands.UserInteractionType;
 import org.togetherjava.tjbot.commands.UserInteractor;
-import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
-import org.togetherjava.tjbot.commands.componentids.Lifespan;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
@@ -58,7 +58,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final ScamHistoryStore scamHistoryStore;
     private final Predicate<String> hasRequiredRole;
 
-    private ComponentIdGenerator componentIdGenerator;
+    private final ComponentIdInteractor componentIdInteractor;
 
     /**
      * Creates a new listener to receive all message sent in any channel.
@@ -82,11 +82,18 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 Pattern.compile(reportChannelPattern).asMatchPredicate();
         isReportChannel = channel -> isReportChannelName.test(channel.getName());
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
+
+        componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
     }
 
     @Override
     public String getName() {
         return "scam-blocker";
+    }
+
+    @Override
+    public UserInteractionType getInteractionType() {
+        return UserInteractionType.OTHER;
     }
 
     @Override
@@ -96,7 +103,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     @Override
     public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
-        componentIdGenerator = generator;
+        componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
     @Override
@@ -266,8 +273,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private String generateComponentId(ComponentIdArguments args) {
-        return Objects.requireNonNull(componentIdGenerator)
-            .generate(new ComponentId(getName(), args.toList()), Lifespan.REGULAR);
+        return componentIdInteractor.generateComponentId(args.toArray());
     }
 
     @Override
@@ -346,9 +352,9 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     contentHash);
         }
 
-        List<String> toList() {
-            return List.of(mode.name(), Long.toString(guildId), Long.toString(channelId),
-                    Long.toString(messageId), Long.toString(authorId), contentHash);
+        String[] toArray() {
+            return new String[] {mode.name(), Long.toString(guildId), Long.toString(channelId),
+                    Long.toString(messageId), Long.toString(authorId), contentHash};
         }
     }
 }

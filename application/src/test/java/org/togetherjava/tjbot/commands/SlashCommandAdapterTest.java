@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 final class SlashCommandAdapterTest {
     private static final String NAME = "foo";
     private static final String PREFIXED_NAME =
-            UserInteractorPrefix.SLASH_COMMAND.getPrefix() + NAME;
+            UserInteractionType.SLASH_COMMAND.getPrefix() + NAME;
     private static final String DESCRIPTION = "Foo command";
     private static final CommandVisibility VISIBILITY = CommandVisibility.GUILD;
     private static final int UNIQUE_ID_ITERATIONS = 20;

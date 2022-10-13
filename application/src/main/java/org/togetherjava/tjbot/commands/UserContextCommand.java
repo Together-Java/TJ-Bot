@@ -23,7 +23,6 @@ import java.util.List;
  * {@link BotCommandAdapter} available that implemented most methods already. A new command can then
  * be registered by adding it to {@link Features}.
  * <p>
- * <p>
  * Context commands can either be visible globally in Discord or just to specific guilds. Minor
  * adjustments can be made via {@link CommandData}, which is then to be returned by
  * {@link #getData()} where the system will then pick it up from.
@@ -33,11 +32,9 @@ import java.util.List;
  * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
  * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
- * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
 public interface UserContextCommand extends BotCommand {
-
     /**
      * Triggered by the core system when a user context-command corresponding to this implementation
      * (based on {@link #getData()}) has been triggered.
