@@ -66,7 +66,6 @@ public final class OnGuildLeaveCloseThreadListener extends ListenerAdapter
             return;
         }
 
-
         MessageEmbed embed = new EmbedBuilder().setTitle("OP left")
             .setDescription("Closing thread...")
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
