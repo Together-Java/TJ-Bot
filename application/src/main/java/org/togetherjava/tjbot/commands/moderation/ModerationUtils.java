@@ -17,7 +17,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -391,20 +390,20 @@ public class ModerationUtils {
                     To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                     The reason for being %s is: %s
                     """
-                .formatted(action, message, message, message, message);
+                .formatted(action.getVerb(), message[0], message[1], action.getVerb(), message[2]);
         } else if (ModerationAction.UNMUTE.getVerb().equals(action.getVerb())
                 || ModerationAction.UNQUARANTINE.getVerb().equals(action.getVerb())) {
             return """
                     Hey there, you have been %s in the server %s.
                     This means you can now interact with others in the server again.
-                    The reason for the %s is: %s
-                    """.formatted(action, message, action, message);
+                    The reason for being %s is: %s
+                    """.formatted(action.getVerb(), message[0], action.getVerb(), message[1]);
         }
         return """
                 Hey there, sorry to tell you but unfortunately you have been %s, which came from the server %s.
                 To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
-                The reason for the kick is: %s
+                The reason for being %s is: %s
                 """
-            .formatted(action, message, message);
+            .formatted(action.getVerb(), message[0], action.getVerb(), message[1]);
     }
 }

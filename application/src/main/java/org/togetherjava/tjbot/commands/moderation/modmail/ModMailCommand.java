@@ -104,7 +104,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
         long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
         if (modMailAuditLog.isEmpty()) {
-            logger.warn("Cannot find the designated modmail channel in server by id {}",
+            logger.warn(
+                    "Cannot find the designated modmail channel in server by id {} with the pattern modmail",
                     userGuildId);
             return;
         }
