@@ -97,8 +97,10 @@ public final class ModMailCommand extends SlashCommandAdapter {
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
 
-        handleCooldown(userId, event);
-
+        if (handleIsOnCooldown(userId, event)) {
+            return;
+        }
+        authorToLastModMailInvocation.put(userId, Instant.now());
         event.deferReply().setEphemeral(true).queue();
 
         long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
@@ -116,14 +118,14 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
     }
 
-    private void handleCooldown(long userId, SlashCommandInteractionEvent event) {
+    private boolean handleIsOnCooldown(long userId, SlashCommandInteractionEvent event) {
         if (isChannelOnCooldown(userId)) {
             event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
                 .setEphemeral(true)
                 .queue();
-            return;
+            return true;
         }
-        authorToLastModMailInvocation.put(userId, Instant.now());
+        return false;
     }
 
     private Optional<TextChannel> getModMailChannel(JDA jda, long userGuildI) {
