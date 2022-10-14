@@ -47,11 +47,11 @@ public class GoogleResponseComposer {
                     JSONObject json = new JSONObject(response.body());
                     MessageEmbed relatedQuestionsMessageEmbed = null;
                     if (json.has("related_questions")) {
-                        logger.info("related_questions present within response from Google, adding results to response");
+                        logger.trace("related_questions present within response from Google, adding results to response");
                         relatedQuestionsMessageEmbed = createMessageEmbedForRelatedQuestions(json.getJSONArray("related_questions"), searchTerm);
                     }
                     if (json.has("organic_results")) {
-                        logger.info("organic_results present within response from Google, adding results to response");
+                        logger.trace("organic_results present within response from Google, adding results to response");
                         List<MessageEmbed> embeds = createMessageEmbedForOrganicResults(json.getJSONArray("organic_results"));
                         if(relatedQuestionsMessageEmbed != null) {
                             Collections.reverse(embeds);
@@ -80,7 +80,7 @@ public class GoogleResponseComposer {
      * @return A List of MessageEmbeds for dispatch.
      */
     public List<MessageEmbed> createMessageEmbedForOrganicResults(JSONArray searchResults) {
-        logger.info("Creating a list of MessageEmbed for a total of {} results", searchResults.length());
+        logger.trace("Creating a list of MessageEmbed for a total of {} results", searchResults.length());
         List<MessageEmbed> embeds = new ArrayList<>();
         for (int i = 0; i < Math.min(searchResults.length(), MAX_RESULTS_TO_SHOW); i++) {
             JSONObject result = searchResults.getJSONObject(i);
@@ -90,7 +90,7 @@ public class GoogleResponseComposer {
             EmbedBuilder eb = new EmbedBuilder();
             eb.setAuthor(title, link, null);
             eb.setDescription(snippet);
-            eb.setColor(Color.BLACK);
+            eb.setColor(Color.RED);
             embeds.add(eb.build());
         }
         return embeds;
@@ -104,7 +104,7 @@ public class GoogleResponseComposer {
      * @return A List of MessageEmbeds for dispatch.
      */
     public MessageEmbed createMessageEmbedForRelatedQuestions(JSONArray relatedQuestions, String searchTerm) {
-        logger.info("Creating a MessageEmbed for a total of {} results", relatedQuestions.length());
+        logger.trace("Creating a MessageEmbed for a total of {} results", relatedQuestions.length());
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < relatedQuestions.length(); i++) {
             JSONObject result = relatedQuestions.getJSONObject(i);

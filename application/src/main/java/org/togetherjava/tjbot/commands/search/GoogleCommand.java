@@ -52,7 +52,7 @@ public class GoogleCommand extends SlashCommandAdapter {
 
         event.deferReply().queue();
         String searchTerm = Objects.requireNonNull(event.getOption(COMMAND_OPTION)).getAsString();
-        logger.info("{} entered search term {}", Objects.requireNonNull(event.getMember()).getEffectiveName(), searchTerm);
+        logger.debug("{} entered search term {}", Objects.requireNonNull(event.getMember()).getEffectiveName(), searchTerm);
 
         new GoogleResponseComposer().doSearchAndSendResponse(searchStrategy, searchTerm, event);
     }
