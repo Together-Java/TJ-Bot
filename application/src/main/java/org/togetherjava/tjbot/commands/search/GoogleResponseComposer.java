@@ -41,11 +41,10 @@ public class GoogleResponseComposer {
      * @param searchTerm The query to search on Google.
      * @param event The Discord event so that a response can be sent.
      */
-    public void doSearchAndSendResponse(SearchStrategy searchStrategy, String searchTerm, SlashCommandInteractionEvent event) {
+    public void doSearchAndSendResponse(SearchStrategy<HttpResponse<String>> searchStrategy, String searchTerm, SlashCommandInteractionEvent event) {
         searchStrategy.search(searchTerm)
                 .thenAccept(response -> {
-                    HttpResponse<String> httpResponse = (HttpResponse<String>) response;
-                    JSONObject json = new JSONObject(httpResponse.body());
+                    JSONObject json = new JSONObject(response.body());
                     MessageEmbed relatedQuestionsMessageEmbed = null;
                     if (json.has("related_questions")) {
                         logger.info("related_questions present within response from Google, adding results to response");

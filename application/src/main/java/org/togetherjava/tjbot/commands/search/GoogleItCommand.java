@@ -7,6 +7,8 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
 
+import java.net.http.HttpResponse;
+
 /**
  * <p>This class is designed for specific use in the #active_questions channel within the Together Java Discord server.
  * As such, it is a convenience command that allows users to search their questions (thread title) on Google.</p>
@@ -18,7 +20,7 @@ public class GoogleItCommand extends SlashCommandAdapter {
     /**
      * The search strategy that is going to return the results to us.
      */
-    private final SearchStrategy searchStrategy;
+    private final SearchStrategy<HttpResponse<String>> searchStrategy;
 
     /** The error message displayed to the user if they are not within a thread in #active_questions. */
     private static final String WRONG_CHANNEL_ERROR = "You must be within a thread in #active_questions to run this command.";

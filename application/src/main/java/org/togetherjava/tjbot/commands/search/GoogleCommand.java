@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
 
+import java.net.http.HttpResponse;
 import java.util.Objects;
 /**
  * <p>This class contains the logic required for the '/google' slash command.</p>
@@ -26,7 +27,7 @@ public class GoogleCommand extends SlashCommandAdapter {
     /**
      * The search strategy that is going to return the results to us.
      */
-    private final SearchStrategy searchStrategy;
+    private final SearchStrategy<HttpResponse<String>> searchStrategy;
 
     /**
      * <p>Constructs a new {@code GoogleCommand} object and sets up the metadata for this command including the name,
