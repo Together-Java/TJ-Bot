@@ -19,6 +19,9 @@ public class GoogleItCommand extends SlashCommandAdapter {
      */
     private final SearchStrategy searchStrategy = new GoogleSearchStrategy();
 
+    /** The error message displayed to the user if they are not within a thread in #active_questions. */
+    private static final String WRONG_CHANNEL_ERROR = "You must be within a thread in #active_questions to run this command.";
+
     /**
      * <p>Constructs a new {@code GoogleItCommand} object and sets up the metadata for this command including the name,
      * description</p>
@@ -30,16 +33,17 @@ public class GoogleItCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         logger.info("Received /googleit slash command");
-        if(event.getChannel().getName().equals("active_questions")) {
-            try {
+        try {
+            String parent = event.getChannel().asThreadChannel().getParentChannel().getName();
+            if(parent.equals("active_questions")) {
                 String searchTerm = event.getChannel().asThreadChannel().getName();
                 event.deferReply().queue();
                 new GoogleResponseComposer().doSearchAndSendResponse(searchStrategy, searchTerm, event);
-            } catch (IllegalStateException ex) {
-                event.reply("You must be within a thread in #active_questions to run this command.").queue();
+            } else {
+                event.reply(WRONG_CHANNEL_ERROR).queue();
             }
-        } else {
-            event.reply("You must be within #active_questions to run this command.").queue();
+        } catch (IllegalStateException ex) {
+            event.reply(WRONG_CHANNEL_ERROR).queue();
         }
     }
 }
