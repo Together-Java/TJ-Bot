@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
  *      process of setting up the application and auth on Google's side.</p>
  * @author <a href="https://github.com/surajkumar">Suraj Kumar</a>
  */
-public class GoogleSearchStrategy extends SearchStrategy {
+public class GoogleSearchStrategy extends SearchStrategy<HttpResponse<String>> {
     /** The API key to provide authentication into Serpapi. */
     private final String apiKey;
 

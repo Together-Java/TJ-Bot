@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,8 +44,9 @@ public class GoogleResponseComposer {
     public void doSearchAndSendResponse(SearchStrategy searchStrategy, String searchTerm, SlashCommandInteractionEvent event) {
         searchStrategy.search(searchTerm)
                 .thenAccept(response -> {
+                    HttpResponse<String> httpResponse = (HttpResponse<String>) response;
+                    JSONObject json = new JSONObject(httpResponse.body());
                     MessageEmbed relatedQuestionsMessageEmbed = null;
-                    JSONObject json = new JSONObject(response.body());
                     if (json.has("related_questions")) {
                         logger.info("related_questions present within response from Google, adding results to response");
                         relatedQuestionsMessageEmbed = createMessageEmbedForRelatedQuestions(json.getJSONArray("related_questions"), searchTerm);

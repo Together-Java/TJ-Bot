@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.search;
 
-import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -14,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
  * etc.</p>
  * @author <a href="https://github.com/surajkumar">Suraj Kumar</a>
  */
-public abstract class SearchStrategy {
+public abstract class SearchStrategy<T> {
 
     /**
      * A common search function that should asynchronously handle a search function for a given term.
@@ -22,5 +21,5 @@ public abstract class SearchStrategy {
      * @param searchTerm The search term to look for.
      * @return           A CompletableFuture for retrieval of the response when ready.
      */
-    public abstract CompletableFuture<HttpResponse<String>> search(String searchTerm);
+    public abstract CompletableFuture<T> search(String searchTerm);
 }
