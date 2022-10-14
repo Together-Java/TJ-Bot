@@ -4,15 +4,14 @@ import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * <pre>A base class for a search Strategy. This allows us to implement multiple variations of a search functionality
+ * <p>
+ * A base class for a search Strategy. This allows us to implement multiple variations of a search functionality
  * without having to rewrite any of the main logic (except parsing) used for getting search results. For
  * example in the {@link GoogleSearchStrategy} the Serpapi API is used for fetching results from Google. If we were to
  * change this, we can do by creating a new SearchStrategy and replace the existing call with the new strategy
- * without further code changes.
- *
- * Additionally, we now have flexibility to implement searching in other platforms such as Stackoverflow, Yahoo, Bing
- * etc.</pre>
- *
+ * without further code changes.</p>
+ * <p>Additionally, we now have flexibility to implement searching in other platforms such as Stackoverflow, Yahoo, Bing
+ * etc.</p>
  * @author <a href="https://github.com/surajkumar">Suraj Kumar</a>
  */
 public abstract class SearchStrategy {

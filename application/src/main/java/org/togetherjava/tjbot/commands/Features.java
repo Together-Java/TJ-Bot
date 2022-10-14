@@ -20,6 +20,7 @@ import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutin
 import org.togetherjava.tjbot.commands.reminder.RemindCommand;
 import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
 import org.togetherjava.tjbot.commands.search.GoogleCommand;
+import org.togetherjava.tjbot.commands.search.GoogleItCommand;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.system.LogLevelCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
@@ -129,6 +130,7 @@ public class Features {
         features.add(new AskCommand(config, helpSystemHelper));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new GoogleCommand());
+        features.add(new GoogleItCommand());
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
