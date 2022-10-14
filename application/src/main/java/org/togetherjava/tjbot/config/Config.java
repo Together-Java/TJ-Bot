@@ -87,7 +87,7 @@ public final class Config {
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
-        this.serpapiApiKey = serpapiApiKey;
+        this.serpapiApiKey = Objects.requireNonNull(serpapiApiKey);
     }
 
     /**
