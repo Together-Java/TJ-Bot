@@ -16,8 +16,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class GoogleSearchStrategy extends SearchStrategy {
     /** The API key to provide authentication into Serpapi. */
-    private static final String API_KEY =
-            "1d84500b082341aad66de5cf02f7c83d8608411b01b7ffcbb2d40042eea250df";
+    private static final String API_KEY = System.getenv("serpapi-api-key");
 
     /** The Serpapi REST service URL used for fetching Google search results. */
     private static final String API_ENDPOINT = "https://serpapi.com/search";
