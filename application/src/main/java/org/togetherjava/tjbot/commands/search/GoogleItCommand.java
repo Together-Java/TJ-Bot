@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.config.Config;
 
 /**
  * <p>This class is designed for specific use in the #active_questions channel within the Together Java Discord server.
@@ -17,7 +18,7 @@ public class GoogleItCommand extends SlashCommandAdapter {
     /**
      * The search strategy that is going to return the results to us.
      */
-    private final SearchStrategy searchStrategy = new GoogleSearchStrategy();
+    private final SearchStrategy searchStrategy;
 
     /** The error message displayed to the user if they are not within a thread in #active_questions. */
     private static final String WRONG_CHANNEL_ERROR = "You must be within a thread in #active_questions to run this command.";
@@ -26,8 +27,9 @@ public class GoogleItCommand extends SlashCommandAdapter {
      * <p>Constructs a new {@code GoogleItCommand} object and sets up the metadata for this command including the name,
      * description</p>
      */
-    public GoogleItCommand() {
+    public GoogleItCommand(Config config) {
         super("googleit", "Searches the channel title on Google", CommandVisibility.GUILD);
+        searchStrategy = new GoogleSearchStrategy(config.getSerpapiApiKey());
     }
 
     @Override

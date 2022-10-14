@@ -129,8 +129,8 @@ public class Features {
         features.add(new WolframAlphaCommand(config));
         features.add(new AskCommand(config, helpSystemHelper));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
-        features.add(new GoogleCommand());
-        features.add(new GoogleItCommand());
+        features.add(new GoogleCommand(config));
+        features.add(new GoogleItCommand(config));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));

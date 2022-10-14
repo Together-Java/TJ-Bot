@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.config.Config;
 
 import java.util.Objects;
 /**
@@ -25,16 +26,17 @@ public class GoogleCommand extends SlashCommandAdapter {
     /**
      * The search strategy that is going to return the results to us.
      */
-    private final SearchStrategy searchStrategy = new GoogleSearchStrategy();
+    private final SearchStrategy searchStrategy;
 
     /**
      * <p>Constructs a new {@code GoogleCommand} object and sets up the metadata for this command including the name,
      * description and command options.</p>
      */
-    public GoogleCommand() {
+    public GoogleCommand(Config config) {
         super("google", "Searches Google for your search query", CommandVisibility.GUILD);
         this.getData()
                 .addOption(OptionType.STRING, COMMAND_OPTION, "the query to send to Google", true);
+        searchStrategy = new GoogleSearchStrategy(config.getSerpapiApiKey());
     }
     /**
      * <p>The main logic for the /google command.
