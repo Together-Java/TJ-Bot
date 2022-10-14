@@ -26,6 +26,11 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public final class Database {
 
+    static {
+        System.setProperty("org.jooq.no-logo", "true");
+        System.setProperty("org.jooq.no-tips", "true");
+    }
+
     private final DSLContext dslContext;
     /**
      * Lock used to implement thread-safety across this class. Any database modifying method must
