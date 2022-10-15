@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -58,16 +57,13 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         event.reply("The user is not muted.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
-            GenericEvent event) {
-        String dmMessage = """
-                Hey there, you have been unmuted in the server %s.
-                This means you can now send messages in the server again.
-                The reason for the unmute is: %s
-                """.formatted(guild.getName(), reason);
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description = "You can now send messages in the server again.";
+
+        return target.openPrivateChannel()
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, ACTION_VERB, description, reason, false)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -99,7 +95,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
     private void unmuteUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target, reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(
                     hasSentDm -> unmuteUser(target, author, reason, guild).map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))

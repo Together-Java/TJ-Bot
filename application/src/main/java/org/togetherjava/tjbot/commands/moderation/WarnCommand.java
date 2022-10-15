@@ -48,7 +48,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
     private RestAction<InteractionHook> warnUserFlow(User target, Member author, String reason,
             Guild guild, SlashCommandInteractionEvent event) {
-        return dmUser(target, reason, guild, event).map(hasSentDm -> {
+        return dmUser(target, reason, guild).map(hasSentDm -> {
             warnUser(target, author, reason, guild);
             return hasSentDm;
         })
@@ -56,17 +56,11 @@ public final class WarnCommand extends SlashCommandAdapter {
             .flatMap(event::replyEmbeds);
     }
 
-    private static RestAction<Boolean> dmUser(ISnowflake target, String reason, Guild guild,
-            SlashCommandInteractionEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been warned in the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
-                            The reason for the warning is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+    private static RestAction<Boolean> dmUser(User target, String reason, Guild guild) {
+        return target.openPrivateChannel()
+            .flatMap(channel -> channel.sendMessageEmbeds(
+                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, "", reason, true)
+                        .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }

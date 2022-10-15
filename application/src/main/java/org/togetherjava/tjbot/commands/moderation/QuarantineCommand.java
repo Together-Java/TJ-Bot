@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -61,20 +60,14 @@ public final class QuarantineCommand extends SlashCommandAdapter {
         event.reply("The user is already quarantined.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
-            GenericEvent event) {
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been put under quarantine in the server %s.
-                        This means you can no longer interact with anyone in the server until you have been unquarantined again.
-                        If you think this was a mistake, or the reason no longer applies, please contact a moderator or admin of the server.
-                        The reason for the quarantine is: %s
-                        """
-                    .formatted(guild.getName(), reason);
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description =
+                "This means you can no longer interact with anyone in the server until you have been unquarantined again.";
 
-        return event.getJDA()
-            .openPrivateChannelById(target.getIdLong())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+        return target.openPrivateChannel()
+            .flatMap(channel -> channel.sendMessageEmbeds(
+                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, description, reason, true)
+                        .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -107,7 +100,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private void quarantineUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target, reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> quarantineUser(target, author, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))

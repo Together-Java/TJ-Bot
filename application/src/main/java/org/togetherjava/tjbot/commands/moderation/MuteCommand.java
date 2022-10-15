@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -70,22 +69,16 @@ public final class MuteCommand extends SlashCommandAdapter {
         event.reply("The user is already muted.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
-            GenericEvent event) {
-        String durationMessage =
-                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been muted %s in the server %s.
-                        This means you can no longer send any messages in the server until you have been unmuted again.
-                        If you think this was a mistake, please contact a moderator or admin of the server.
-                        The reason for the mute is: %s
-                        """
-                    .formatted(durationMessage, guild.getName(), reason);
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+    private static RestAction<Boolean> sendDm(User target,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
+        String durationMessage = temporaryData == null ? "Permanent" : temporaryData.duration();
+        String description =
+                "You can no longer send any messages in the server until you have been unmuted again.";
+
+        return target.openPrivateChannel()
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, ACTION_VERB, description, reason, durationMessage)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -123,7 +116,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     private void muteUserFlow(Member target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target, temporaryData, reason, guild, event)
+        sendDm(target.getUser(), temporaryData, reason, guild)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))

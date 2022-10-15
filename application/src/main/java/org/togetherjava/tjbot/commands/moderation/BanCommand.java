@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -83,22 +82,14 @@ public final class BanCommand extends SlashCommandAdapter {
         return event.reply(message).setEphemeral(true);
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
-            GenericEvent event) {
-        String durationMessage =
-                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been banned %s from the server %s.
-                        If you think this was a mistake, please contact a moderator or admin of the server.
-                        The reason for the ban is: %s
-                        """
-                    .formatted(durationMessage, guild.getName(), reason);
+    private static RestAction<Boolean> sendDm(User target,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
+        String duration = temporaryData == null ? "Permanently" : temporaryData.duration();
 
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+        return target.openPrivateChannel()
+            .flatMap(channel -> channel.sendMessageEmbeds(
+                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, "", reason, duration)
+                        .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -141,7 +132,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private RestAction<InteractionHook> banUserFlow(User target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
             int deleteHistoryDays, Guild guild, SlashCommandInteractionEvent event) {
-        return sendDm(target, temporaryData, reason, guild, event)
+        return sendDm(target, temporaryData, reason, guild)
             .flatMap(hasSentDm -> banUser(target, author, temporaryData, reason, deleteHistoryDays,
                     guild).map(banResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))

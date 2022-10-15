@@ -1,11 +1,7 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.ISnowflake;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -60,7 +56,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
     private void kickUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target, reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
                 .map(kickResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
@@ -68,17 +64,11 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
-            GenericEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
-                            The reason for the kick is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        return target.openPrivateChannel()
+            .flatMap(channel -> channel.sendMessageEmbeds(
+                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, "", reason, true)
+                        .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }

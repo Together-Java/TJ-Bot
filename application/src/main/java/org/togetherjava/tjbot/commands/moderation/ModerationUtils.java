@@ -45,6 +45,23 @@ public class ModerationUtils {
      */
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
+    static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
+            String reason, boolean isPunishAction) {
+        return new EmbedBuilder().setAuthor(guild.getName())
+            .setThumbnail(guild.getIconUrl())
+            .setTitle(action.toUpperCase())
+            .setDescription(description
+                    + "\n\nIf you think this was a mistake, please contact a moderator or admin of the server.")
+            .addField("Reason", reason, true)
+            .setColor(isPunishAction ? Color.RED : Color.GREEN);
+    }
+
+    static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
+            String reason, String duration) {
+        return getModActionEmbed(guild, action, description, reason, true).addField("Duration",
+                duration, true);
+    }
+
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
      * the user.
