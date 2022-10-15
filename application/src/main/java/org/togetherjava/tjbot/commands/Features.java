@@ -84,7 +84,7 @@ public class Features {
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
         features
-                .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
 
         // Message receivers

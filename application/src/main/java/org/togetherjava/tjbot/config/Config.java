@@ -66,8 +66,7 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "serpapiApiKey",
-                    required = true) String serpapiApiKey) {
+            @JsonProperty(value = "serpapiApiKey", required = true) String serpapiApiKey) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -282,6 +281,7 @@ public final class Config {
 
     /**
      * The Serpapi API key to pass to the service call.
+     * 
      * @return The API key
      */
     public String getSerpapiApiKey() {

@@ -132,8 +132,7 @@ public final class HelpSystemHelper {
                             .formatted(closeCommandMention)),
 
                 HelpSystemHelper.embedWith(
-                        "You can now search your question on Google using the `/google` slash command! If you want me to search your question for you, just enter the slash command `/googleit`")
-        );
+                        "You can now search your question on Google using the `/google` slash command! If you want me to search your question for you, just enter the slash command `/googleit`"));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
