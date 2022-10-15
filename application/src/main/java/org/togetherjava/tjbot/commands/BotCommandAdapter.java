@@ -21,8 +21,8 @@ import java.util.Objects;
  * {@link Features}.
  * <p>
  * Further, {@link #onButtonClick(ButtonInteractionEvent, List)} and
- * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)} can be overridden if desired. The
- * default implementation is empty, the adapter will not react to such events.
+ * {@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)} can be overridden if desired.
+ * The default implementation is empty, the adapter will not react to such events.
  * <p>
  * The adapter manages some getters for you, you've to create the {@link CommandData} yourself. See
  * {@link #BotCommandAdapter(CommandData, CommandVisibility)}} for more info on that. Minimal
@@ -101,7 +101,7 @@ public abstract class BotCommandAdapter implements BotCommand {
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 

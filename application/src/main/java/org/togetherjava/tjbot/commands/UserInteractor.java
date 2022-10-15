@@ -76,7 +76,7 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args);
+    void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args);
 
 
     /**
@@ -110,7 +110,7 @@ public interface UserInteractor extends Feature {
      * given to this method during system setup. The required {@link ComponentId} instance accepts
      * optional extra arguments, which, if provided, can be picked up during the corresponding event
      * (see {@link #onButtonClick(ButtonInteractionEvent, List)},
-     * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)}).
+     * {@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}).
      * <p>
      * Alternatively, if {@link BotCommandAdapter} has been extended, it also offers a handy
      * {@link BotCommandAdapter#generateComponentId(String...)} method to ease the flow.

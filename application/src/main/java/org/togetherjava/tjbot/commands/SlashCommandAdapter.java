@@ -23,8 +23,8 @@ import java.util.stream.IntStream;
  * adding it to {@link Features}.
  * <p>
  * Further, {@link #onButtonClick(ButtonInteractionEvent, List)} and
- * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)} can be overridden if desired. The
- * default implementation is empty, the adapter will not react to such events.
+ * {@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)} can be overridden if desired.
+ * The default implementation is empty, the adapter will not react to such events.
  * <p>
  * The adapter manages all command related data itself, which can be provided during construction
  * (see {@link #SlashCommandAdapter(String, String, CommandVisibility)}). In order to add options,

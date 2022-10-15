@@ -98,7 +98,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
 

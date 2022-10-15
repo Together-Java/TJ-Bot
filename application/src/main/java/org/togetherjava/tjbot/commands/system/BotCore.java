@@ -258,7 +258,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
-            .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectionMenu));
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectMenuSelection));
     }
 
     @Override
