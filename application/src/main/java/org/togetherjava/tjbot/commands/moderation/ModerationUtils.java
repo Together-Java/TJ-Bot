@@ -45,6 +45,16 @@ public class ModerationUtils {
      */
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
+    /**
+     * Creates a nice looking embed for the mod action taken.
+     *
+     * @param guild the guild in which the action has been taken
+     * @param action the mod action itself
+     * @param description a short description explaining the action
+     * @param reason reason for the action taken
+     * @param isPunishAction is it a punish action e.g. ban, warn
+     * @return the embed
+     */
     static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
             String reason, boolean isPunishAction) {
         return new EmbedBuilder().setAuthor(guild.getName())
@@ -56,6 +66,16 @@ public class ModerationUtils {
             .setColor(isPunishAction ? Color.RED : Color.GREEN);
     }
 
+    /**
+     * Creates a nice looking embed for the mod action taken with duration
+     *
+     * @param guild the guild in which the action has been taken
+     * @param action the mod action itself
+     * @param description a short description explaining the action
+     * @param reason reason for the action taken
+     * @param duration the duration of mod action
+     * @return the embed
+     */
     static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
             String reason, String duration) {
         return getModActionEmbed(guild, action, description, reason, true).addField("Duration",
