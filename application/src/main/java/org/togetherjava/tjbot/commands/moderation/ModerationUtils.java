@@ -57,8 +57,7 @@ public class ModerationUtils {
      */
     static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
             String reason, boolean isPunishAction) {
-        return new EmbedBuilder().setAuthor(guild.getName())
-            .setThumbnail(guild.getIconUrl())
+        return new EmbedBuilder().setAuthor(guild.getName(), null, guild.getIconUrl())
             .setTitle(action.toUpperCase())
             .setDescription(description
                     + "\n\nIf you think this was a mistake, please contact a moderator or admin of the server.")
