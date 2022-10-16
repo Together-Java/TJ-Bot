@@ -85,6 +85,7 @@ public class Features {
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
+        features.add(new BookmarksCleanupRoutine(database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -129,6 +130,7 @@ public class Features {
         features.add(new AskCommand(config, helpSystemHelper));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
+        features.add(new BookmarksCommand(database));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
