@@ -61,7 +61,7 @@ public class ModerationUtils {
             .setTitle(action.toUpperCase())
             .setDescription(description
                     + "\n\nIf you think this was a mistake, please contact a moderator or admin of the server.")
-            .addField("Reason", reason, true)
+            .addField("Reason", reason, false)
             .setColor(isPunishAction ? Color.RED : Color.GREEN);
     }
 
@@ -78,7 +78,7 @@ public class ModerationUtils {
     static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
             String reason, String duration) {
         return getModActionEmbed(guild, action, description, reason, true).addField("Duration",
-                duration, true);
+                duration, false);
     }
 
     /**
