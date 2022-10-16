@@ -18,6 +18,10 @@ import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 public class BookmarksHelper {
 
+    private BookmarksHelper() {
+        throw new IllegalStateException("Utility class");
+    }
+
     protected static Optional<HelpThreadsRecord> getHelpThread(Database database, long channelId) {
         return database.read(context -> context.selectFrom(HELP_THREADS)
             .where(HELP_THREADS.CHANNEL_ID.eq(channelId))

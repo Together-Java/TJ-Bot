@@ -21,7 +21,7 @@ import java.util.Map;
 
 public class BookmarksCommand extends SlashCommandAdapter {
 
-    public static final long EXPIRE_DELAY_SECONDS = 3 * 24 * 60 * 60; // 3 Days
+    public static final long EXPIRE_DELAY_SECONDS = 3L * 24 * 60 * 60; // 3 Days
 
 
     private static final MessageEmbed EMBED_NOT_IN_DM =
@@ -166,15 +166,16 @@ public class BookmarksCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        switch (ComponentIdType.valueOf(args.get(0))) {
-            case ADD -> {
-                AddComponentIdArguments acida = AddComponentIdArguments.fromList(args);
-                onAddButtonClick(event, acida);
-            }
-            case VIEW -> {
-                ViewComponentIdArguments vcida = ViewComponentIdArguments.fromList(args);
-                onViewButtonClick(event, vcida);
-            }
+        ComponentIdType componentIdType = ComponentIdType.valueOf(args.get(0));
+
+        if (componentIdType == ComponentIdType.ADD) {
+            AddComponentIdArguments acida = AddComponentIdArguments.fromList(args);
+            onAddButtonClick(event, acida);
+        }
+
+        else if (componentIdType == ComponentIdType.VIEW) {
+            ViewComponentIdArguments vcida = ViewComponentIdArguments.fromList(args);
+            onViewButtonClick(event, vcida);
         }
     }
 
@@ -194,21 +195,16 @@ public class BookmarksCommand extends SlashCommandAdapter {
         BookmarksPaginator bookmarksPaginator = bookmarksPaginators.get(vcida.paginatorUUID);
 
         if (bookmarksPaginator != null) {
-            switch (vcida.action) {
-                case DELETE -> {
-                    BookmarksRecord currentBookmark = bookmarksPaginator.getCurrentBookmark();
 
-                    if (currentBookmark != null)
-                        BookmarksHelper.removeBookmark(database, currentBookmark.getCreatorId(),
-                                currentBookmark.getChannelId());
-                }
-                case RENEW -> {
-                    BookmarksRecord currentBookmark = bookmarksPaginator.getCurrentBookmark();
-
-                    if (currentBookmark != null)
-                        BookmarksHelper.renewBookmark(database, currentBookmark.getCreatorId(),
-                                currentBookmark.getChannelId());
-                }
+            // Handle bookmark related actions
+            BookmarksRecord currentBookmark = bookmarksPaginator.getCurrentBookmark();
+            if (currentBookmark != null) {
+                if (vcida.action == ViewAction.DELETE)
+                    BookmarksHelper.removeBookmark(database, currentBookmark.getCreatorId(),
+                            currentBookmark.getChannelId());
+                else if (vcida.action == ViewAction.RENEW)
+                    BookmarksHelper.renewBookmark(database, currentBookmark.getCreatorId(),
+                            currentBookmark.getChannelId());
             }
 
 

@@ -20,7 +20,7 @@ import java.util.UUID;
 
 public class BookmarksPaginator {
 
-    public static final long EXPIRE_DELAY_SECONDS = 10 * 60; // 10 Minutes
+    public static final long EXPIRE_DELAY_SECONDS = 10L * 60; // 10 Minutes
 
     private static final MessageEmbed EMBED_NO_BOOKMARKS = new EmbedBuilder()
         .setTitle("No bookmarks!")
@@ -58,7 +58,7 @@ public class BookmarksPaginator {
         // Send the initial message
         List<LayoutComponent> components = new ArrayList<>();
 
-        if (bookmarks.size() > 0) {
+        if (!bookmarks.isEmpty()) {
             // Use updated buttons
             components.add(ActionRow.of(this.btnPrev, this.btnNext, this.btnDelete, this.btnRenew));
         }
@@ -87,10 +87,10 @@ public class BookmarksPaginator {
      * Updates the button's disabled state
      */
     private void updateButtons() {
-        btnPrev = btnPrev.withDisabled(page == 0 || bookmarks.size() == 0);
-        btnNext = btnNext.withDisabled(page == bookmarks.size() - 1 || bookmarks.size() == 0);
-        btnDelete = btnDelete.withDisabled(bookmarks.size() == 0);
-        btnRenew = btnRenew.withDisabled(bookmarks.size() == 0);
+        btnPrev = btnPrev.withDisabled(page == 0 || bookmarks.isEmpty());
+        btnNext = btnNext.withDisabled(page == bookmarks.size() - 1 || bookmarks.isEmpty());
+        btnDelete = btnDelete.withDisabled(bookmarks.isEmpty());
+        btnRenew = btnRenew.withDisabled(bookmarks.isEmpty());
     }
 
     /**
@@ -99,7 +99,7 @@ public class BookmarksPaginator {
     private void update(ComponentInteraction componentInteraction) {
         List<LayoutComponent> components = new ArrayList<>();
 
-        if (bookmarks.size() > 0)
+        if (!bookmarks.isEmpty())
             components.add(ActionRow.of(btnPrev, btnNext, btnDelete, btnRenew));
 
         componentInteraction.editMessageEmbeds(generatePageEmbed())
@@ -139,7 +139,7 @@ public class BookmarksPaginator {
     }
 
     public @Nullable BookmarksRecord getCurrentBookmark() {
-        if (bookmarks.size() > 0)
+        if (!bookmarks.isEmpty())
             return bookmarks.get(page);
         else
             return null;
@@ -162,7 +162,7 @@ public class BookmarksPaginator {
     private void deleteBookmark() {
         bookmarks.remove(page);
 
-        if (bookmarks.size() > 0) {
+        if (!bookmarks.isEmpty()) {
             if (page >= bookmarks.size())
                 page--;
         } else
