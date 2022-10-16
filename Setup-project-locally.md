@@ -3,7 +3,7 @@
 This tutorial shows how to download, setup and start the **TJ-Bot** project locally on your machine.
 
 ## Prerequisites
-* [Java 18](https://adoptium.net/) installed
+* [Java 18](https://adoptium.net/temurin/releases?version=18) installed
 * your favorite Java IDE or text editor, e.g. [IntelliJ](https://www.jetbrains.com/idea/download/) or [Eclipse](https://www.eclipse.org/downloads/)
 * [`git`](https://git-scm.com/downloads) installed (or any GUI or IDE plugin)
 * [`gradle`](https://gradle.org/releases/) available (or any GUI or IDE plugin), you can either install it or use our provided wrapper
