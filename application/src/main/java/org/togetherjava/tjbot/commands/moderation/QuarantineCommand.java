@@ -62,7 +62,9 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
         String description =
-                "This means you can no longer interact with anyone in the server until you have been unquarantined again.";
+                """
+                        Hey there, sorry to tell you but unfortunately you have been put under quarantine.
+                                                This means you can no longer interact with anyone in the server until you have been unquarantined again.""";
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(

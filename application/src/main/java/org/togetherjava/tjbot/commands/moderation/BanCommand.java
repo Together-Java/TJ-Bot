@@ -85,11 +85,13 @@ public final class BanCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(User target,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String duration = temporaryData == null ? "Permanently" : temporaryData.duration();
+        String description =
+                "Hey there, sorry to tell you but unfortunately you have been banned from the server.";
 
         return target.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, "", reason, duration)
-                        .build()))
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, ACTION_VERB, description, reason, duration)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }

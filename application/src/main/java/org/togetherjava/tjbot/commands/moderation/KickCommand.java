@@ -65,9 +65,11 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description = "Hey there, sorry to tell you but unfortunately you have been kicked";
+
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, "", reason, true)
+                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, description, reason, true)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);

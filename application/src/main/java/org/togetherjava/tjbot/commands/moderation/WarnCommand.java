@@ -57,9 +57,12 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> dmUser(User target, String reason, Guild guild) {
+        String description =
+                "Hey there, sorry to tell you but unfortunately you have been warned in the server.";
+
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, "", reason, true)
+                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, description, reason, true)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);

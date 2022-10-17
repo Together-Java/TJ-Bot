@@ -58,7 +58,9 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
-        String description = "You can now send messages in the server again.";
+        String description = """
+                Hey there, you have been unmuted in the server.
+                                This means you can now send messages in the server again.""";
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils

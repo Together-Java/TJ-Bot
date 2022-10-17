@@ -73,7 +73,9 @@ public final class MuteCommand extends SlashCommandAdapter {
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage = temporaryData == null ? "Permanent" : temporaryData.duration();
         String description =
-                "You can no longer send any messages in the server until you have been unmuted again.";
+                """
+                        Hey there, sorry to tell you but unfortunately you have been muted.
+                                                This means you can no longer send any messages in the server until you have been unmuted again.""";
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
