@@ -129,7 +129,10 @@ public final class HelpSystemHelper {
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
                         "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(closeCommandMention)));
+                            .formatted(closeCommandMention)),
+
+                HelpSystemHelper.embedWith(
+                        "You can now search your question on Google using the `/google` slash command! If you want me to search your question for you, just enter the slash command `/googleit`"));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
