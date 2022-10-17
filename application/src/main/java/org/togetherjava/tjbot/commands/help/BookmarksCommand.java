@@ -25,22 +25,16 @@ public class BookmarksCommand extends SlashCommandAdapter {
 
 
     private static final MessageEmbed EMBED_NOT_IN_DM =
-            new EmbedBuilder().setTitle("This command cannot be used in a DM!")
-                .setColor(0xFF8484)
-                .build();
+            genSimpleEmbed("This command cannot be used in a DM!", 0xFF8484);
 
     private static final MessageEmbed EMBED_NOT_IN_HELP_THREAD =
-            new EmbedBuilder().setTitle("This command can only be used in help threads!")
-                .setColor(0xFF8484)
-                .build();
+            genSimpleEmbed("This command can only be used in help threads!", 0xFF8484);
 
     private static final MessageEmbed EMBED_ALREADY_BOOKMARKED =
-            new EmbedBuilder().setTitle("You have already bookmarked this thread!")
-                .setColor(0xFF8484)
-                .build();
+            genSimpleEmbed("You have already bookmarked this thread!", 0xFF8484);
 
     private static final MessageEmbed EMBED_BOOKMARK_REMOVED =
-            new EmbedBuilder().setTitle("The bookmark was removed!").setColor(0xFFA500).build();
+            genSimpleEmbed("The bookmark was removed!", 0xFFA500);
 
 
     private final Database database;
@@ -261,6 +255,12 @@ public class BookmarksCommand extends SlashCommandAdapter {
         return generateComponentId(new ViewComponentIdArguments(action, paginatorUUID).toArray());
     }
 
+    /**
+     * Generates a simpne embed with just a title and color
+     */
+    private static MessageEmbed genSimpleEmbed(String title, int color) {
+        return new EmbedBuilder().setTitle(title).setColor(color).build();
+    }
 
     public static Map<String, BookmarksPaginator> getBookmarksPaginators() {
         return bookmarksPaginators;
