@@ -63,9 +63,6 @@ public class BookmarksCommand extends SlashCommandAdapter {
         getData().addSubcommands(addSubCommand, viewSubCommand);
     }
 
-    /*
-     * Slash command handler section
-     */
 
     /**
      * Handler for all slash commands
@@ -160,10 +157,10 @@ public class BookmarksCommand extends SlashCommandAdapter {
         bookmarksPaginators.put(paginatorUUID, bookmarksPaginator);
     }
 
-    /*
-     * Click handler section
-     */
 
+    /*
+     * Button click handler
+     */
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         ComponentIdType componentIdType = ComponentIdType.valueOf(args.get(0));
@@ -212,11 +209,6 @@ public class BookmarksCommand extends SlashCommandAdapter {
         }
     }
 
-    /*
-     * Component argument section
-     *
-     * This section provides records for the ComponentIdType arguments
-     */
 
     private enum ComponentIdType {
         ADD,
