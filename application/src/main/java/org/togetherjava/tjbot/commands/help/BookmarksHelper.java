@@ -16,6 +16,9 @@ import java.util.Optional;
 import static org.togetherjava.tjbot.db.generated.Tables.BOOKMARKS;
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
+/**
+ * This is a utility class for interacting with the database
+ */
 public class BookmarksHelper {
 
     private BookmarksHelper() {
@@ -45,15 +48,9 @@ public class BookmarksHelper {
             .setChannelId(channelId)
             .setOriginalTitle(originalTitle)
             .setLastRenewedAt(Instant.now())
+            .setLastActivityAt(Instant.now())
             .setNote(note)
             .insert());
-    }
-
-    protected static void renewBookmark(Database database, long creatorId, long channelId) {
-        database.write(context -> context.update(BOOKMARKS)
-            .set(BOOKMARKS.LAST_RENEWED_AT, Instant.now())
-            .where(BOOKMARKS.CREATOR_ID.eq(creatorId), BOOKMARKS.CHANNEL_ID.eq(channelId))
-            .execute());
     }
 
     protected static void removeBookmark(Database database, long creatorId, long channelId) {
@@ -65,8 +62,23 @@ public class BookmarksHelper {
     protected static List<BookmarksRecord> getUserBookmarks(Database database, long creatorId) {
         return database.read(context -> context.selectFrom(BOOKMARKS)
             .where(BOOKMARKS.CREATOR_ID.eq(creatorId))
+            .orderBy(BOOKMARKS.LAST_ACTIVITY_AT.desc())
             .stream()
             .toList());
+    }
+
+    protected static void renewBookmark(Database database, long creatorId, long channelId) {
+        database.write(context -> context.update(BOOKMARKS)
+            .set(BOOKMARKS.LAST_RENEWED_AT, Instant.now())
+            .where(BOOKMARKS.CREATOR_ID.eq(creatorId), BOOKMARKS.CHANNEL_ID.eq(channelId))
+            .execute());
+    }
+
+    protected static void updateActivity(Database database, long channelId) {
+        database.write(context -> context.update(BOOKMARKS)
+            .set(BOOKMARKS.LAST_ACTIVITY_AT, Instant.now())
+            .where(BOOKMARKS.CHANNEL_ID.eq(channelId))
+            .execute());
     }
 
     protected static void cleanupUserBookmarks(Database database, long creatorId) {

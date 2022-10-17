@@ -95,6 +95,7 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(new BookmarksLastMessageUpdater(database, config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
