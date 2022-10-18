@@ -85,10 +85,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
         configModMailChannelPattern = config.getModMailChannelPattern();
     }
 
-    private String getConfigModMailChannelPattern(Config config) {
-        return config.getModMailChannelPattern();
-    }
-
     private Cache<Long, Instant> createCooldownCache() {
         return Caffeine.newBuilder()
             .maximumSize(1_000)
