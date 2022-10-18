@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -58,7 +59,7 @@ public class ModerationUtils {
     static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
             String reason, boolean isPunishAction) {
         return new EmbedBuilder().setAuthor(guild.getName(), null, guild.getIconUrl())
-            .setTitle(action.toUpperCase())
+            .setTitle(action.substring(0, 1).toUpperCase() + action.substring(1))
             .setDescription(description
                     + "\n\nIf you think this was a mistake, please contact a moderator or admin of the server.")
             .addField("Reason", reason, false)
