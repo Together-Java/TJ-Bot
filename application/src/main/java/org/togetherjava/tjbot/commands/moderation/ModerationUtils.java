@@ -377,8 +377,7 @@ public class ModerationUtils {
      * Gives out advice depending on the {@link ModerationAction} and the parameters passed into it.
      *
      * @param action gives out a {@link ModerationAction} to be able to respond and build a message
-     *        appropriately such as {@link ModerationAction#BAN}, {@link ModerationAction#MUTE}
-     *        etc..
+     *        appropriately such as {@link ModerationAction#MUTE} etc.
      * @param message is the message that is being used to build responses, such as
      *        {@link Guild#getName()}, and reasoning for an action.
      * @return the appropriate advice.

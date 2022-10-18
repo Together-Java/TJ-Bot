@@ -73,7 +73,12 @@ public final class KickCommand extends SlashCommandAdapter {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
-                    ModerationUtils.getDmAdvice(ModerationAction.KICK, guild.getName(), reason)))
+                    """
+                            Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
+                            If you think this was a mistake, please contact a moderator or admin of the server.
+                            The reason for the kick is: %s
+                            """
+                        .formatted(guild.getName(), reason)))
             .mapToResult()
             .map(Result::isSuccess);
     }

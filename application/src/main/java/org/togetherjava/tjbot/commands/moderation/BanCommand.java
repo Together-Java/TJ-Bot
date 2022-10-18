@@ -88,8 +88,13 @@ public final class BanCommand extends SlashCommandAdapter {
             GenericEvent event) {
         String durationMessage =
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        String dmMessage = ModerationUtils.getDmAdvice(ModerationAction.BAN, durationMessage,
-                guild.getName(), reason);
+        String dmMessage =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been banned %s from the server %s.
+                        If you think this was a mistake, please contact a moderator or admin of the server.
+                        The reason for the ban is: %s
+                        """
+                    .formatted(durationMessage, guild.getName(), reason);
 
         return event.getJDA()
             .openPrivateChannelById(target.getId())
