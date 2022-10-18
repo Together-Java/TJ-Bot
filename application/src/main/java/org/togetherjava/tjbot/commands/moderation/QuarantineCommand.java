@@ -64,7 +64,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
         String dmMessage =
-                ModerationUtils.getDmAdvice(ModerationAction.QUARANTINE, guild.getName(), reason);
+                ModerationUtils.getDmAdvice(ModerationAction.QUARANTINE, null, guild, reason);
 
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
@@ -376,33 +377,37 @@ public class ModerationUtils {
     /**
      * Gives out advice depending on the {@link ModerationAction} and the parameters passed into it.
      *
-     * @param action gives out a {@link ModerationAction} to be able to respond and build a message
-     *        appropriately such as {@link ModerationAction#MUTE} etc.
-     * @param message is the message that is being used to build responses, such as
-     *        {@link Guild#getName()}, and reasoning for an action.
+     * @param action the action that is being performed, such as banning a user.
+     * @param temporaryData is the message that is being used to display action duration.
+     * @param guild to retrieve the guild.
+     * @param reason for the action.
      * @return the appropriate advice.
      */
-    public static String getDmAdvice(ModerationAction action, String... message) {
-        if (message.length == 3) {
+    public static String getDmAdvice(ModerationAction action,
+            @Nullable ModerationUtils.TemporaryData temporaryData, Guild guild, String reason) {
+        if (action == ModerationAction.MUTE) {
+            String durationMessage =
+                    temporaryData == null ? "permanently" : "for " + temporaryData.duration();
             return """
-                    Hey there, sorry to tell you but unfortunately you have been %s %s from the server %s.
+                    Hey there, sorry to tell you but unfortunately you have been %s %s in the server %s.
                     To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                     The reason for being %s is: %s
                     """
-                .formatted(action.getVerb(), message[0], message[1], action.getVerb(), message[2]);
-        } else if (ModerationAction.UNMUTE.getVerb().equals(action.getVerb())
-                || ModerationAction.UNQUARANTINE.getVerb().equals(action.getVerb())) {
+                .formatted(action.getVerb(), durationMessage, guild.getName(), action.getVerb(),
+                        reason);
+        } else if (action == ModerationAction.UNMUTE || action == ModerationAction.UNQUARANTINE) {
             return """
                     Hey there, you have been %s in the server %s.
                     This means you can now interact with others in the server again.
                     The reason for being %s is: %s
-                    """.formatted(action.getVerb(), message[0], action.getVerb(), message[1]);
+                    """.formatted(action.getVerb(), guild.getName(), action.getVerb(), reason);
         }
         return """
-                Hey there, sorry to tell you but unfortunately you have been %s, which came from the server %s.
-                To get in touch with a moderator, you can simply use the **/modmail** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
+                Hey there, sorry to tell you but unfortunately you have been %s, in the server %s.
+                To get in touch with a moderator, you can simply use the %s command here in this chat. Your message will then be forwarded and a moderator will get back to you soon :thumbsup:
                 The reason for being %s is: %s
                 """
-            .formatted(action.getVerb(), message[0], action.getVerb(), message[1]);
+            .formatted(action.getVerb(), guild.getName(),
+                    MessageUtils.mentionSlashCommand(guild, "modmail"), action.getVerb(), reason);
     }
 }

@@ -61,7 +61,7 @@ public final class WarnCommand extends SlashCommandAdapter {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(
-                    ModerationUtils.getDmAdvice(ModerationAction.WARN, guild.getName(), reason)))
+                    ModerationUtils.getDmAdvice(ModerationAction.WARN, null, guild, reason)))
             .mapToResult()
             .map(Result::isSuccess);
     }

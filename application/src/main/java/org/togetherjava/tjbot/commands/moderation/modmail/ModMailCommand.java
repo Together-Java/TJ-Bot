@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -12,6 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +33,8 @@ import java.util.regex.Pattern;
 
 
 /**
- * Implements the /modmail command, which allows users to contact a moderator within the server or
- * even if not part of the server anymore, e.g. after a ban.
- * <p>
- * Therefore, the user uses the SlashCommand /modmail and the message are forwarded to moderators in
- * a dedicated channel.
- * <p>
- * Messages are then forwarded to a dedicated channel, given by
+ * Implements the /modmail command, which allows users to contact a moderator within the server
+ * which forwards messages to moderators in a dedicated channel given by
  * {@link Config#getModAuditLogChannelPattern()}.
  */
 
@@ -53,6 +50,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
+    private final String configModMailChannelPattern;
 
 
     /**
@@ -70,8 +68,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         OptionData guildOption = new OptionData(OptionType.STRING, OPTION_GUILD,
                 "The server to contact mods from", true);
         OptionData anonymousOption = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
-                "If set, your name is hidden - note that mods then can not get " + "back to you",
-                true);
+                "If set, your name is hidden - note that mods then can not get back to you", true);
 
         List<Command.Choice> choices = jda.getGuildCache()
             .stream()
@@ -84,6 +81,12 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
+
+        configModMailChannelPattern = config.getModMailChannelPattern();
+    }
+
+    private String getConfigModMailChannelPattern(Config config) {
+        return config.getModMailChannelPattern();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -107,68 +110,71 @@ public final class ModMailCommand extends SlashCommandAdapter {
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
         if (modMailAuditLog.isEmpty()) {
             logger.warn(
-                    "Cannot find the designated modmail channel in server by id {} with the pattern modmail",
-                    userGuildId);
+                    "Cannot find the designated modmail channel in server by id {} with the pattern {}",
+                    userGuildId, configModMailChannelPattern);
             return;
         }
 
-        MessageCreateAction message = createMessage(event, userId, modMailAuditLog.orElseThrow());
+        MessageCreateAction message =
+                createModMessage(event, userId, modMailAuditLog.orElseThrow());
 
         sendMessage(event, message);
 
     }
 
     private boolean handleIsOnCooldown(long userId, SlashCommandInteractionEvent event) {
-        if (isChannelOnCooldown(userId)) {
-            event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
-                .setEphemeral(true)
-                .queue();
-            return true;
+        if (!isChannelOnCooldown(userId)) {
+            return false;
         }
-        return false;
+        event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
+            .setEphemeral(true)
+            .queue();
+        return true;
     }
 
-    private Optional<TextChannel> getModMailChannel(JDA jda, long userGuildI) {
-        return jda.getGuildById(userGuildI)
+    private Optional<TextChannel> getModMailChannel(JDA jda, long guildId) {
+        return jda.getGuildById(guildId)
             .getTextChannelCache()
             .stream()
             .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
             .findAny();
     }
 
-    private MessageCreateAction createMessage(SlashCommandInteractionEvent event, long userId,
+    private MessageCreateAction createModMessage(SlashCommandInteractionEvent event, long userId,
             TextChannel modMailAuditLog) {
         String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
         boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
-        String user;
-        MessageCreateAction message;
-        if (wantsToStayAnonymous) {
-            user = "Anonymous";
-            message = modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
-        } else {
-            user = event.getUser().getAsMention();
-            message = modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage))
-                .addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
-                        String.valueOf(userId)));
+
+        User user = event.getUser();
+        MessageCreateAction message =
+                modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
+
+        if (!wantsToStayAnonymous) {
+            message.addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
+                    String.valueOf(userId)));
         }
         return message;
     }
 
     private void sendMessage(SlashCommandInteractionEvent event, MessageCreateAction message) {
         InteractionHook hook = event.getHook();
-        message.mapToResult()
-            .map(result -> result.isSuccess() ? "Your message has been forwarded, thanks."
-                    : "There was an issue forwarding your message, sorry. We are investigating.")
-            .flatMap(hook::editOriginal)
-            .queue(any -> {
-            }, error -> logger.warn(
-                    "There was an problem with forwarding the message to the modmail channel.",
-                    error)); // need to add on queue on success
+        message.mapToResult().map(result -> {
+            if (result.isSuccess()) {
+                return "Your message has been forwarded, thanks.";
+            }
+            logger.warn("There was an issue with forwarding users message.");
+            return "There was an issue forwarding your message, sorry. We are investigating.";
+        }).flatMap(hook::editOriginal).queue(any -> {
+        }, error -> logger.warn(
+                "There was an problem with forwarding the message to the modmail channel.", error));
     }
 
-    private MessageEmbed createModMailMessage(String user, String userMessage) {
-        return new EmbedBuilder().setDescription("**/modmail from %s** ".formatted(user))
-            .setFooter(userMessage)
+    private MessageEmbed createModMailMessage(@Nullable User author, String userMessage) {
+        String authorTag = author == null ? "Anonymous" : author.getAsTag();
+        String authorAvatar = author == null ? null : author.getAvatarUrl();
+        return new EmbedBuilder().setTitle("Modmail")
+            .setAuthor(authorTag, null, authorAvatar)
+            .setDescription(userMessage)
             .setColor(AMBIENT_COLOR)
             .build();
     }

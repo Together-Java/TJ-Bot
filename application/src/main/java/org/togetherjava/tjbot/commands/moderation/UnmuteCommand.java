@@ -61,7 +61,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
         String dmMessage =
-                ModerationUtils.getDmAdvice(ModerationAction.UNMUTE, guild.getName(), reason);
+                ModerationUtils.getDmAdvice(ModerationAction.UNMUTE, null, guild, reason);
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(dmMessage))

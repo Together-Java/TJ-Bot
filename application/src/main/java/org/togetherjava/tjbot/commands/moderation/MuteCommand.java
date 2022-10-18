@@ -73,10 +73,8 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(ISnowflake target,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
             GenericEvent event) {
-        String durationMessage =
-                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        String dmMessage = ModerationUtils.getDmAdvice(ModerationAction.MUTE, durationMessage,
-                guild.getName(), reason);
+        String dmMessage =
+                ModerationUtils.getDmAdvice(ModerationAction.MUTE, temporaryData, guild, reason);
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> channel.sendMessage(dmMessage))
