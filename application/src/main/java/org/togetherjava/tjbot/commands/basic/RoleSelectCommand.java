@@ -204,7 +204,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
         Guild guild = event.getGuild();
         List<Role> selectedRoles = event.getSelectedOptions()
             .stream()

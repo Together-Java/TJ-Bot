@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -75,7 +76,26 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args);
+    void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args);
+
+
+    /**
+     * Triggered by the core system when a modal corresponding to this implementation (based on
+     * {@link #getName()}) has been clicked.
+     * <p>
+     * This method may be called multithreaded. In particular, there are no guarantees that it will
+     * be executed on the same thread repeatedly or on the same thread that other event methods have
+     * been called on.
+     * <p>
+     * Details are available in the given event and the event also enables implementations to
+     * respond to it.
+     *
+     * @param event the event that triggered this
+     * @param args the arguments transported with the modal, see
+     *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
+     *        these are created
+     */
+    void onModalSubmitted(ModalInteractionEvent event, List<String> args);
 
     /**
      * Triggered by the core system during its setup phase. It will provide the command a component
@@ -90,7 +110,7 @@ public interface UserInteractor extends Feature {
      * given to this method during system setup. The required {@link ComponentId} instance accepts
      * optional extra arguments, which, if provided, can be picked up during the corresponding event
      * (see {@link #onButtonClick(ButtonInteractionEvent, List)},
-     * {@link #onSelectionMenu(SelectMenuInteractionEvent, List)}).
+     * {@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}).
      * <p>
      * Alternatively, if {@link BotCommandAdapter} has been extended, it also offers a handy
      * {@link BotCommandAdapter#generateComponentId(String...)} method to ease the flow.

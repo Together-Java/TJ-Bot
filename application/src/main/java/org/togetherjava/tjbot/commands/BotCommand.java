@@ -19,7 +19,7 @@ import java.util.List;
  * <p>
  * After registration, the system will notify a command whenever one of its corresponding command
  * method, buttons ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
- * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
+ * ({@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
