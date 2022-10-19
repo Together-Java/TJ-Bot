@@ -7,10 +7,12 @@ If you want to join the party, please have a look at:
 * [[Code Guidelines]]
 * [[Create Discord server and bot]]
 * [[Setup project locally]]
-* [[Add a new command]]
-  * [[Add days command]]
-  * [[Add question command]]
-  * [[Adding context commands]]
+* Features
+  * [[Add a new command]]
+    * [[Add days command]]
+    * [[Add question command]]
+    * [[Adding context commands]]
+  * [[Create and use modals]]
 * [[Component IDs]]
 * [[JDA Tips and Tricks]]
 
