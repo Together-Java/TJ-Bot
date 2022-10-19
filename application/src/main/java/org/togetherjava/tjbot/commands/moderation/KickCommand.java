@@ -69,9 +69,9 @@ public final class KickCommand extends SlashCommandAdapter {
         String description = "Hey there, sorry to tell you but unfortunately you have been kicked";
 
         return target.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true)
-                        .build()))
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, ACTION_TITLE, description, reason, true)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }

@@ -62,9 +62,9 @@ public final class WarnCommand extends SlashCommandAdapter {
                 "Hey there, sorry to tell you but unfortunately you have been warned in the server.";
 
         return target.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true)
-                        .build()))
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, ACTION_TITLE, description, reason, true)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }

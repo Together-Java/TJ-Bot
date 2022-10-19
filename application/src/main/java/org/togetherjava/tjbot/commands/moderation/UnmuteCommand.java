@@ -64,9 +64,9 @@ public final class UnmuteCommand extends SlashCommandAdapter {
                                 This means you can now send messages in the server again.""";
 
         return target.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, false)
-                        .build()))
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, ACTION_TITLE, description, reason, false)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }
