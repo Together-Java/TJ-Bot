@@ -65,8 +65,9 @@ public final class QuarantineCommand extends SlashCommandAdapter {
             GenericEvent event) {
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
-            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.MUTE, null, guild,
-                    reason, channel))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.QUARANTINE, null,
+                    "This means you can no longer interact with anyone in the server until you have been unquarantined again.",
+                    guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }

@@ -76,6 +76,7 @@ public final class MuteCommand extends SlashCommandAdapter {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
             .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.MUTE, temporaryData,
+                    "This means you can no longer send any messages in the server until you have been unmuted again.",
                     guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);

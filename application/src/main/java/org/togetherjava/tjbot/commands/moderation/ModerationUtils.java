@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
@@ -23,6 +24,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -64,7 +66,8 @@ public class ModerationUtils {
     /**
      * Soft violations were the user still remains member of the guild, such as a warning
      */
-    private static final Set<ModerationAction> SOFT_ACTIONS = EnumSet.of(ModerationAction.WARN);
+    private static final Set<ModerationAction> SOFT_ACTIONS =
+            EnumSet.of(ModerationAction.WARN, ModerationAction.QUARANTINE);
 
 
 
@@ -401,6 +404,8 @@ public class ModerationUtils {
      *
      * @param action the action that is being performed, such as banning a user.
      * @param temporaryData if the action is a temporary action, such as a 1 hour mute.
+     * @param additionalDescription any extra description that should be part of the message, if
+     *        desired
      * @param guild for which the action was triggered.
      * @param reason for the action.
      * @param textChannel for which messages are being sent to.
@@ -408,35 +413,41 @@ public class ModerationUtils {
      * @return the appropriate advice.
      */
     public static RestAction<Message> sendDmAdvice(ModerationAction action,
-            @Nullable TemporaryData temporaryData, Guild guild, String reason,
-            PrivateChannel textChannel) {
-        final String COMMAND_NAME = "modmail";
+            @Nullable TemporaryData temporaryData, @Nullable String additionalDescription,
+            Guild guild, String reason, PrivateChannel textChannel) {
+        String additionalDescriptionInfix =
+                additionalDescription == null ? "" : "\n" + additionalDescription;
+
         if (REVOKE_ACTIONS.contains(action)) {
             return textChannel.sendMessage("""
-                    Hey there, you have been %s in the server %s.
-                    This means you can now interact with others in the server again.
+                    Hey there, you have been %s in the server %s.%s
                     The reason for being %s is: %s
-                    """.formatted(action.getVerb(), guild.getName(), action.getVerb(), reason));
+                    """.formatted(action.getVerb(), guild.getName(), additionalDescriptionInfix,
+                    action.getVerb(), reason));
         }
         String durationMessage;
         if (SOFT_ACTIONS.contains(action)) {
             durationMessage = "";
         } else if (TEMPORARY_ACTIONS.contains(action)) {
             durationMessage =
-                    temporaryData == null ? "permanently" : "for " + temporaryData.duration();
+                    temporaryData == null ? " permanently" : " for " + temporaryData.duration();
         } else {
             throw new IllegalArgumentException(
                     "Action '%s' is not supported by this method".formatted(action));
         }
 
-        return MessageUtils.mentionSlashCommand(guild, COMMAND_NAME)
-            .flatMap(commandMention -> textChannel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been %s %s in the server %s.
-                            To get in touch with a moderator, you can simply use the **%s** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon 😊
-                            The reason for being %s is: %s
-                            """
-                        .formatted(action.getVerb(), durationMessage, guild.getName(), COMMAND_NAME,
-                                action.getVerb(), reason)));
+        UnaryOperator<String> createDmMessage =
+                commandMention -> """
+                        Hey there, sorry to tell you but unfortunately you have been %s%s in the server %s.%s
+                        To get in touch with a moderator, you can simply use the %s command here in this chat. \
+                        Your message will then be forwarded and a moderator will get back to you soon 😊
+                        The reason for being %s is: %s
+                        """
+                    .formatted(action.getVerb(), durationMessage, guild.getName(),
+                            additionalDescriptionInfix, commandMention, action.getVerb(), reason);
+
+        return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
+            .map(createDmMessage)
+            .flatMap(textChannel::sendMessage);
     }
 }

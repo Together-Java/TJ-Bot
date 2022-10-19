@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 public final class ModMailCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(ModMailCommand.class);
-    private static final String COMMAND_NAME = "modmail";
+    public static final String COMMAND_NAME = "modmail";
     private static final String OPTION_MESSAGE = "message";
     private static final String OPTION_STAY_ANONYMOUS = "stay-anonymous";
     private static final String OPTION_GUILD = "server";
@@ -141,7 +141,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
         boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
 
-        User user = wantsToStayAnonymous ? event.getUser() : null;
+        User user = wantsToStayAnonymous ? null : event.getUser();
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
         if (!wantsToStayAnonymous) {
