@@ -78,5 +78,6 @@ In the following, we will add two custom commands to the application:
   * e.g. `/question ask "noodles" "Do you like noodles?"` and `/question get "noodles"`
 
 Please refer to
-* [[Add days command]] and
-* [[Add question command]] respectively.
+* [[Add days command]],
+* [[Add question command]] and
+* [[Adding context commands]] respectively.
