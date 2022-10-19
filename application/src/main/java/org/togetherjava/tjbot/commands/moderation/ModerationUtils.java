@@ -407,7 +407,7 @@ public class ModerationUtils {
      *
      * @return the appropriate advice.
      */
-    public static RestAction<?> sendDmAdvice(ModerationAction action,
+    public static RestAction<Message> sendDmAdvice(ModerationAction action,
             @Nullable TemporaryData temporaryData, Guild guild, String reason,
             PrivateChannel textChannel) {
         final String COMMAND_NAME = "modmail";
