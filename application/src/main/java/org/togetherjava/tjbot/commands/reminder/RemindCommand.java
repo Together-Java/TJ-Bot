@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.db.Database;
@@ -15,6 +16,8 @@ import org.togetherjava.tjbot.db.Database;
 import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
@@ -33,7 +36,9 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  * Pending reminders are processed and send by {@link RemindRoutine}.
  */
 public final class RemindCommand extends SlashCommandAdapter {
-    private static final String COMMAND_NAME = "remind";
+    private static final String COMMAND_NAME = "reminder";
+    private static final String LIST_SUBCOMMAND = "list";
+    static final String ADD_SUBCOMMAND = "add";
     static final String TIME_AMOUNT_OPTION = "time-amount";
     static final String TIME_UNIT_OPTION = "time-unit";
     static final String CONTENT_OPTION = "content";
@@ -46,6 +51,7 @@ public final class RemindCommand extends SlashCommandAdapter {
     static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
+    private final Map<String, Consumer<SlashCommandInteractionEvent>> subcommandHandler = Map.of(ADD_SUBCOMMAND, this::handleAddCommand, LIST_SUBCOMMAND, this::handleListCommand);
 
     /**
      * Creates an instance of the command.
@@ -65,14 +71,20 @@ public final class RemindCommand extends SlashCommandAdapter {
                 "period to remind you in, the unit of time (e.g. 5 [weeks])", true);
         TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
 
-        getData().addOptions(timeUnit, timeAmount)
-            .addOption(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true);
+        getData().addSubcommands(
+                new SubcommandData(ADD_SUBCOMMAND, "adds a reminder").addOptions(timeAmount, timeUnit),
+                new SubcommandData(LIST_SUBCOMMAND, "lists all reminders")
+        );
 
         this.database = database;
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
+        subcommandHandler.get(event.getSubcommandName()).accept(event);
+    }
+
+    private void handleAddCommand(SlashCommandInteractionEvent event) {
         int timeAmount = Math.toIntExact(event.getOption(TIME_AMOUNT_OPTION).getAsLong());
         String timeUnit = event.getOption(TIME_UNIT_OPTION).getAsString();
         String content = event.getOption(CONTENT_OPTION).getAsString();
@@ -100,6 +112,10 @@ public final class RemindCommand extends SlashCommandAdapter {
             .setRemindAt(remindAt)
             .setContent(content)
             .insert());
+    }
+
+    private void handleListCommand(SlashCommandInteractionEvent event) {
+
     }
 
     private static Instant parseWhen(int whenAmount, String whenUnit) {
