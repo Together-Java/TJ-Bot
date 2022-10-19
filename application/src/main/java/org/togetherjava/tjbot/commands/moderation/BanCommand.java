@@ -89,9 +89,9 @@ public final class BanCommand extends SlashCommandAdapter {
                 "Hey there, sorry to tell you but unfortunately you have been banned from the server.";
 
         return target.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
-                .getModActionEmbed(guild, "Ban", description, reason, duration)
-                .build()))
+            .flatMap(channel -> channel.sendMessageEmbeds(
+                    ModerationUtils.getModActionEmbed(guild, "Ban", description, reason, duration)
+                        .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }

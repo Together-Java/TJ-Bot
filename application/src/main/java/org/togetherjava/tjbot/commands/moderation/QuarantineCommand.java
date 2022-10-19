@@ -67,9 +67,9 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                                                 This means you can no longer interact with anyone in the server until you have been unquarantined again.""";
 
         return target.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, "Quarantine", description, reason, true)
-                        .build()))
+            .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
+                .getModActionEmbed(guild, "Quarantine", description, reason, true)
+                .build()))
             .mapToResult()
             .map(Result::isSuccess);
     }
