@@ -62,7 +62,7 @@ public class ModerationUtils {
     private static final Set<ModerationAction> REVOKE_ACTIONS =
             EnumSet.of(ModerationAction.UNMUTE, ModerationAction.UNQUARANTINE);
     /**
-     * Actions which are letting you know of a violation you have committed.
+     * Soft violations were the user still remains member of the guild, such as a warning
      */
     private static final Set<ModerationAction> SOFT_ACTIONS = EnumSet.of(ModerationAction.WARN);
 
