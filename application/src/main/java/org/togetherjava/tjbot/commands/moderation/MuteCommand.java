@@ -37,6 +37,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "mute";
     private static final String ACTION_VERB = "mute";
+    private static final String ACTION_TITLE = "Mute";
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of("10 minutes", "30 minutes", "1 hour",
             "3 hours", "1 day", "3 days", "7 days", ModerationUtils.PERMANENT_DURATION);
@@ -79,7 +80,7 @@ public final class MuteCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
-                .getModActionEmbed(guild, "Mute", description, reason, durationMessage)
+                .getModActionEmbed(guild, ACTION_TITLE, description, reason, durationMessage)
                 .build()))
             .mapToResult()
             .map(Result::isSuccess);

@@ -30,6 +30,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
     private static final String ACTION_VERB = "warn";
+    private static final String ACTION_TITLE = "Warning";
     private final ModerationActionsStore actionsStore;
 
     /**
@@ -62,7 +63,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, "Warn", description, reason, true)
+                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);

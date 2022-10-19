@@ -32,6 +32,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "unmute";
     private static final String ACTION_VERB = "unmute";
+    private static final String ACTION_TITLE = "Unmute";
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -64,7 +65,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, "Unmute", description, reason, false)
+                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, false)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);

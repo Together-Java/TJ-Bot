@@ -32,6 +32,7 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "kick";
     private static final String ACTION_VERB = "kick";
+    private static final String ACTION_TITLE = "Kick";
     private final ModerationActionsStore actionsStore;
 
     /**
@@ -69,7 +70,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, "Kick", description, reason, true)
+                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);

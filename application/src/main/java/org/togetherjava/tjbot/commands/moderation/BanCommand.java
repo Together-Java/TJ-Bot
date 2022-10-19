@@ -44,6 +44,7 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
+    private static final String ACTION_TITLE = "Ban";
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of(ModerationUtils.PERMANENT_DURATION,
             "1 hour", "3 hours", "1 day", "2 days", "3 days", "7 days", "30 days");
@@ -90,7 +91,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, "Ban", description, reason, duration)
+                    ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, duration)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);
