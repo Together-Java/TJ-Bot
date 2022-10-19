@@ -141,10 +141,9 @@ public final class ModMailCommand extends SlashCommandAdapter {
         String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
         boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
 
-        User user = event.getUser();
+        User user = wantsToStayAnonymous ? event.getUser() : null;
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
-
         if (!wantsToStayAnonymous) {
             message.addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
                     String.valueOf(userId)));
@@ -160,9 +159,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
             }
             logger.warn("There was an issue with forwarding users message.");
             return "There was an issue forwarding your message, sorry. We are investigating.";
-        }).flatMap(hook::editOriginal).queue(any -> {
-        }, error -> logger.warn(
-                "There was an problem with forwarding the message to the modmail channel.", error));
+        }).flatMap(hook::editOriginal).queue();
     }
 
     private MessageEmbed createModMailMessage(@Nullable User author, String userMessage) {

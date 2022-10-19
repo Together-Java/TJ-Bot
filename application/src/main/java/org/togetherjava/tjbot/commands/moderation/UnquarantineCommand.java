@@ -64,12 +64,10 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
-        String dmMessage =
-                ModerationUtils.getDmAdvice(ModerationAction.UNQUARANTINE, null, guild, reason);
-
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.MUTE, null, guild,
+                    reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }
