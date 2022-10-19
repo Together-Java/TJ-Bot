@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
@@ -260,6 +262,28 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     @Override
+    public void onModalInteraction(final ModalInteractionEvent event) {
+        logger.debug("Received modal event '{}' (#{}) on guild '{}'", event.getModalId(),
+                event.getId(), event.getGuild());
+        COMMAND_SERVICE.execute(() -> {
+            Optional<ComponentId> componentIdOptional =
+                    handleParseComponentId(event, event.getModalId());
+
+            if (componentIdOptional.isEmpty()) {
+                return;
+            }
+
+            ComponentId componentId = componentIdOptional.orElseThrow();
+
+            UserInteractor interactor =
+                    requireUserInteractor(componentId.userInteractorName(), UserInteractor.class);
+            logger.trace("Routing a modal event with id '{}' back to user interactor '{}'",
+                    event.getModalId(), interactor.getName());
+            interactor.onModalSubmitted(event, componentId.elements());
+        });
+    }
+
+    @Override
     public void onMessageContextInteraction(final MessageContextInteractionEvent event) {
         String name = event.getName();
 
@@ -281,6 +305,42 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 UserContextCommand.class).onUserContext(event));
     }
 
+    /**
+     * Returns the {@link ComponentId} instace of the given componentId. If the component has
+     * expired, the user gets a message stating that.
+     *
+     * @param event the {@link IReplyCallback event} to reply to
+     * @param componentId the component's ID
+     * @return the relating {@link ComponentId}
+     */
+    public Optional<ComponentId> handleParseComponentId(IReplyCallback event, String componentId) {
+        Optional<ComponentId> componentIdOpt;
+        try {
+            componentIdOpt = componentIdParser.parse(componentId);
+        } catch (InvalidComponentIdFormatException | IllegalArgumentException e) {
+            logger.error(
+                    """
+                            Unable to route event (#{}) back to its corresponding {}}.
+                            The component ID was in an unexpected format. All button and menu events have to use a component ID created in a specific format
+                            (refer to the documentation of {}}). Component ID was: {}
+                            {}
+                            """,
+                    event.getId(), UserInteractor.class.getSimpleName(),
+                    UserInteractor.class.getSimpleName(), componentId, e);
+            // Unable to forward, simply fade out the event
+            return Optional.empty();
+        }
+
+        if (componentIdOpt.isEmpty()) {
+            logger.warn("The event (#{}) has an expired component ID, which was: {}.",
+                    event.getId(), componentId);
+            event.reply("Sorry, but this event has expired. You can not use it anymore.")
+                .setEphemeral(true)
+                .queue();
+        }
+
+        return componentIdOpt;
+    }
 
     /**
      * Forwards the given component event to the associated user interactor.
@@ -300,27 +360,15 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      */
     private <T extends ComponentInteraction> void forwardComponentCommand(T event,
             TriConsumer<? super UserInteractor, ? super T, ? super List<String>> interactorArgumentConsumer) {
-        Optional<ComponentId> componentIdOpt;
-        try {
-            componentIdOpt = componentIdParser.parse(event.getComponentId());
-        } catch (InvalidComponentIdFormatException e) {
-            logger
-                .error("Unable to route event (#{}) back to its corresponding user interactor. The component ID was in an unexpected format."
-                        + " All button and menu events have to use a component ID created in a specific format"
-                        + " (refer to the documentation of UserInteractor). Component ID was: {}",
-                        event.getId(), event.getComponentId(), e);
-            // Unable to forward, simply fade out the event
+
+        Optional<ComponentId> componentIdOptional =
+                handleParseComponentId(event, event.getComponentId());
+
+        if (componentIdOptional.isEmpty()) {
             return;
         }
-        if (componentIdOpt.isEmpty()) {
-            logger.warn("The event (#{}) has an expired component ID, which was: {}.",
-                    event.getId(), event.getComponentId());
-            event.reply("Sorry, but this event has expired. You can not use it anymore.")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-        ComponentId componentId = componentIdOpt.orElseThrow();
+
+        ComponentId componentId = componentIdOptional.orElseThrow();
 
         UserInteractor interactor =
                 requireUserInteractor(componentId.userInteractorName(), UserInteractor.class);
@@ -334,8 +382,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      *
      * @param prefixedName the prefixed name of the interactor
      * @param typeToken a token of the type to expect
-     * @return the user interactor with the given name
      * @param <T> the type to expect the user interactor to be of
+     * @return the user interactor with the given name
      */
     private <T extends UserInteractor> T requireUserInteractor(String prefixedName,
             Class<T> typeToken) {

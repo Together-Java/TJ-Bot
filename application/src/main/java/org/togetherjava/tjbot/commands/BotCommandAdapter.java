@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -101,6 +102,12 @@ public abstract class BotCommandAdapter implements BotCommand {
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
     public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+        // Adapter does not react by default, subclasses may change this behavior
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 
