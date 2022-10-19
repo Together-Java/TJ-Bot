@@ -7,8 +7,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
-import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,20 +51,18 @@ public class ModerationUtils {
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
-     * Provides you with an Enum of actions which have a timely constraint, like being muted for 1
-     * hour.
+     * Actions with timely constraint, like being muted for 1 hour.
      */
     private static final Set<ModerationAction> TEMPORARY_ACTIONS =
             EnumSet.of(ModerationAction.MUTE);
     /**
-     * Provides you with an Enum of actions which are revoking previously made actions on the user,
-     * like unmuting the user after it has been muted.
+     * Actions with revoking previously made actions on the user, like unmuting the user after it
+     * has been muted.
      */
     private static final Set<ModerationAction> REVOKE_ACTIONS =
             EnumSet.of(ModerationAction.UNMUTE, ModerationAction.UNQUARANTINE);
     /**
-     * Provides you with an Enum of actions which are letting you know of a violation you have
-     * committed.
+     * Actions which are letting you know of a violation you have committed.
      */
     private static final Set<ModerationAction> SOFT_ACTIONS = EnumSet.of(ModerationAction.WARN);
 
@@ -407,18 +403,20 @@ public class ModerationUtils {
      * @param temporaryData if the action is a temporary action, such as a 1 hour mute.
      * @param guild for which the action was triggered.
      * @param reason for the action.
+     * @param textChannel for which messages are being sent to.
+     *
      * @return the appropriate advice.
      */
-    public static RestAction<MessageCreateAction> sendDmAdvice(ModerationAction action,
-            @Nullable ModerationUtils.TemporaryData temporaryData, Guild guild, String reason,
+    public static RestAction<?> sendDmAdvice(ModerationAction action,
+            @Nullable TemporaryData temporaryData, Guild guild, String reason,
             PrivateChannel textChannel) {
         final String COMMAND_NAME = "modmail";
         if (REVOKE_ACTIONS.contains(action)) {
-            return new CompletedRestAction<>(guild.getJDA(), textChannel.sendMessage("""
+            return textChannel.sendMessage("""
                     Hey there, you have been %s in the server %s.
                     This means you can now interact with others in the server again.
                     The reason for being %s is: %s
-                    """.formatted(action.getVerb(), guild.getName(), action.getVerb(), reason)));
+                    """.formatted(action.getVerb(), guild.getName(), action.getVerb(), reason));
         }
         String durationMessage;
         if (SOFT_ACTIONS.contains(action)) {
@@ -432,7 +430,7 @@ public class ModerationUtils {
         }
 
         return MessageUtils.mentionSlashCommand(guild, COMMAND_NAME)
-            .map(commandMention -> textChannel.sendMessage(
+            .flatMap(commandMention -> textChannel.sendMessage(
                     """
                             Hey there, sorry to tell you but unfortunately you have been %s %s in the server %s.
                             To get in touch with a moderator, you can simply use the **%s** command here in this chat. Your message will then be forwarded and a moderator will get back to you soon 😊
