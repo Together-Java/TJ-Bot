@@ -49,16 +49,16 @@ public class ModerationUtils {
      * Creates a nice looking embed for the mod action taken.
      *
      * @param guild the guild in which the action has been taken
-     * @param action the mod action itself
+     * @param actionTitle the mod action itself e.g, Ban
      * @param description a short description explaining the action
      * @param reason reason for the action taken
      * @param isPunishAction is it a punish action e.g. ban, warn
      * @return the embed
      */
-    static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
+    static EmbedBuilder getModActionEmbed(Guild guild, String actionTitle, String description,
             String reason, boolean isPunishAction) {
         return new EmbedBuilder().setAuthor(guild.getName(), null, guild.getIconUrl())
-            .setTitle(action.substring(0, 1).toUpperCase() + action.substring(1))
+            .setTitle(actionTitle)
             .setDescription(description
                     + "\n\nIf you think this was a mistake, please contact a moderator or admin of the server.")
             .addField("Reason", reason, false)
@@ -69,15 +69,15 @@ public class ModerationUtils {
      * Creates a nice looking embed for the mod action taken with duration
      *
      * @param guild the guild in which the action has been taken
-     * @param action the mod action itself
+     * @param actionTitle the mod action itself
      * @param description a short description explaining the action
      * @param reason reason for the action taken
      * @param duration the duration of mod action
      * @return the embed
      */
-    static EmbedBuilder getModActionEmbed(Guild guild, String action, String description,
+    static EmbedBuilder getModActionEmbed(Guild guild, String actionTitle, String description,
             String reason, String duration) {
-        return getModActionEmbed(guild, action, description, reason, true).addField("Duration",
+        return getModActionEmbed(guild, actionTitle, description, reason, true).addField("Duration",
                 duration, false);
     }
 

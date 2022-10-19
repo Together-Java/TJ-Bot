@@ -68,7 +68,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
-                .getModActionEmbed(guild, ACTION_VERB, description, reason, false)
+                .getModActionEmbed(guild, "Unquarantine", description, reason, false)
                 .build()))
             .mapToResult()
             .map(Result::isSuccess);

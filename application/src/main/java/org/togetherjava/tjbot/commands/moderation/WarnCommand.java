@@ -62,7 +62,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(
-                    ModerationUtils.getModActionEmbed(guild, ACTION_VERB, description, reason, true)
+                    ModerationUtils.getModActionEmbed(guild, "Warn", description, reason, true)
                         .build()))
             .mapToResult()
             .map(Result::isSuccess);

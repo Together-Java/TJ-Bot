@@ -64,7 +64,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
-                .getModActionEmbed(guild, ACTION_VERB, description, reason, false)
+                .getModActionEmbed(guild, "Unmute", description, reason, false)
                 .build()))
             .mapToResult()
             .map(Result::isSuccess);

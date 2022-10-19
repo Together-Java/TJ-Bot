@@ -79,7 +79,7 @@ public final class MuteCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
-                .getModActionEmbed(guild, ACTION_VERB, description, reason, durationMessage)
+                .getModActionEmbed(guild, "Mute", description, reason, durationMessage)
                 .build()))
             .mapToResult()
             .map(Result::isSuccess);

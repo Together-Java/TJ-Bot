@@ -90,7 +90,7 @@ public final class BanCommand extends SlashCommandAdapter {
 
         return target.openPrivateChannel()
             .flatMap(channel -> channel.sendMessageEmbeds(ModerationUtils
-                .getModActionEmbed(guild, ACTION_VERB, description, reason, duration)
+                .getModActionEmbed(guild, "Ban", description, reason, duration)
                 .build()))
             .mapToResult()
             .map(Result::isSuccess);
