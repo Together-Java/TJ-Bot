@@ -23,7 +23,7 @@ We will create a very simple slash command that lets the user submit feedback, w
 
 The core of creating the model would be something like this:
 ```java
-TextInput body = TextInput.create(MESSAGE_INPUT, "Message", TextInputStyle.PARAGRAPH)
+TextInput body = TextInput.create("message", "Message", TextInputStyle.PARAGRAPH)
         .setPlaceholder("Put your feedback here")
         .setRequiredRange(10, 200)
         .build();
@@ -45,7 +45,7 @@ This gives a method `onModalSubmitted` which will automatically be called by the
 ```java
 @Override
 public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-    String message = event.getValue(MESSAGE_INPUT).getAsString();
+    String message = event.getValue("message").getAsString();
     System.out.println("User send feedback: " + message);
 
     event.reply("Thank you for your feedback!").setEphemeral(true).queue();
