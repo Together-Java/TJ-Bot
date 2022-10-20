@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation.scam;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -12,6 +13,7 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
@@ -34,6 +37,7 @@ import java.awt.Color;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -249,19 +253,24 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void dmUser(Guild guild, long userId, JDA jda) {
-        String dmMessage =
-                """
+        jda.openPrivateChannelById(userId).flatMap(channel -> dmUser(guild, channel)).queue();
+    }
+
+    private RestAction<Message> dmUser(Guild guild, PrivateChannel channel) {
+        UnaryOperator<String> createDmMessage =
+                commandMention -> """
                         Hey there, we detected that you did send scam in the server %s and therefore put you under quarantine.
                         This means you can no longer interact with anyone in the server until you have been unquarantined again.
 
                         If you think this was a mistake (for example, your account was hacked, but you got back control over it),
-                        you can get in touch with a moderator by using the **/modmail** command :thumbsup:
+                        you can get in touch with a moderator by using the %s command. \
+                        Your message will then be forwarded and a moderator will get back to you soon 👍
                         """
-                    .formatted(guild.getName());
+                    .formatted(guild.getName(), commandMention);
 
-        jda.openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(dmMessage))
-            .queue();
+        return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
+            .map(createDmMessage)
+            .flatMap(channel::sendMessage);
     }
 
     private Optional<TextChannel> getReportChannel(Guild guild) {
