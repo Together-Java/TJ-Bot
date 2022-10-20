@@ -182,7 +182,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
             return;
         }
 
-        // TODO Duplication with all of the editMessageEmbeds etc
         event.getChannel().retrieveMessageById(codeReplyMessageId).flatMap(codeReplyMessage -> {
             Optional<CodeAction> maybeCodeAction = getCurrentActionFromCodeReply(codeReplyMessage);
             if (maybeCodeAction.isEmpty()) {
