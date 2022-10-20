@@ -21,6 +21,7 @@ public final class Config {
     private final String projectWebsite;
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
+    private final String modMailChannelPattern;
     private final String mutedRolePattern;
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
@@ -44,6 +45,8 @@ public final class Config {
             @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
             @JsonProperty(value = "modAuditLogChannelPattern",
                     required = true) String modAuditLogChannelPattern,
+            @JsonProperty(value = "modMailChannelPattern",
+                    required = true) String modMailChannelPattern,
             @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
             @JsonProperty(value = "heavyModerationRolePattern",
                     required = true) String heavyModerationRolePattern,
@@ -71,6 +74,7 @@ public final class Config {
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
+        this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
         this.mutedRolePattern = Objects.requireNonNull(mutedRolePattern);
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
@@ -115,6 +119,16 @@ public final class Config {
      */
     public String getModAuditLogChannelPattern() {
         return modAuditLogChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain all messages
+     * from users who want to contact a moderator.
+     *
+     * @return the channel name pattern
+     */
+    public String getModMailChannelPattern() {
+        return modMailChannelPattern;
     }
 
     /**

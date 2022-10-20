@@ -73,19 +73,11 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(ISnowflake target,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
             GenericEvent event) {
-        String durationMessage =
-                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been muted %s in the server %s.
-                        This means you can no longer send any messages in the server until you have been unmuted again.
-                        If you think this was a mistake, please contact a moderator or admin of the server.
-                        The reason for the mute is: %s
-                        """
-                    .formatted(durationMessage, guild.getName(), reason);
         return event.getJDA()
             .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.MUTE, temporaryData,
+                    "This means you can no longer send any messages in the server until you have been unmuted again.",
+                    guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }

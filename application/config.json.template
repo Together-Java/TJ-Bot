@@ -5,6 +5,7 @@
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
     "modAuditLogChannelPattern": "mod_audit_log",
+    "modMailChannelPattern": "modmail",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Staff Assistant",

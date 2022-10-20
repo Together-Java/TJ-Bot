@@ -63,18 +63,11 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been put under quarantine in the server %s.
-                        This means you can no longer interact with anyone in the server until you have been unquarantined again.
-                        If you think this was a mistake, or the reason no longer applies, please contact a moderator or admin of the server.
-                        The reason for the quarantine is: %s
-                        """
-                    .formatted(guild.getName(), reason);
-
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.QUARANTINE, null,
+                    "This means you can no longer interact with anyone in the server until you have been unquarantined again.",
+                    guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }

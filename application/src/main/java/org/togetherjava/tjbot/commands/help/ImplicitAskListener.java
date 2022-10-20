@@ -118,7 +118,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         String threadDescription = lastHelpThread == null ? "your previously created help thread"
                 : lastHelpThread.getAsMention();
 
-        MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+        MessageUtils.mentionGuildSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
             .flatMap(command -> message.getChannel()
                 .sendMessage("""
                         %s Please use %s to follow up on your question, \
@@ -185,7 +185,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .build();
 
         return MessageUtils
-            .mentionSlashCommand(originalMessage.getGuild(), HelpThreadCommand.COMMAND_NAME,
+            .mentionGuildSlashCommand(originalMessage.getGuild(), HelpThreadCommand.COMMAND_NAME,
                     HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
                     HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
             .flatMap(command -> {
@@ -204,7 +204,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
     }
 
     private static RestAction<Message> notifyUser(IMentionable threadChannel, Message message) {
-        return MessageUtils.mentionSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
+        return MessageUtils.mentionGuildSlashCommand(message.getGuild(), AskCommand.COMMAND_NAME)
             .flatMap(command -> message.getChannel()
                 .sendMessage(
                         """

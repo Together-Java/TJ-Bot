@@ -3,11 +3,15 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
@@ -16,8 +20,11 @@ import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -44,6 +51,25 @@ public class ModerationUtils {
      * embeds.
      */
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
+
+    /**
+     * Actions with timely constraint, like being muted for 1 hour.
+     */
+    private static final Set<ModerationAction> TEMPORARY_ACTIONS =
+            EnumSet.of(ModerationAction.MUTE);
+    /**
+     * Actions with revoking previously made actions on the user, like unmuting the user after it
+     * has been muted.
+     */
+    private static final Set<ModerationAction> REVOKE_ACTIONS =
+            EnumSet.of(ModerationAction.UNMUTE, ModerationAction.UNQUARANTINE);
+    /**
+     * Soft violations were the user still remains member of the guild, such as a warning
+     */
+    private static final Set<ModerationAction> SOFT_ACTIONS =
+            EnumSet.of(ModerationAction.WARN, ModerationAction.QUARANTINE);
+
+
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -371,5 +397,57 @@ public class ModerationUtils {
      *        as {@code "1 day"}.
      */
     record TemporaryData(Instant expiresAt, String duration) {
+    }
+
+    /**
+     * Gives out advice depending on the {@link ModerationAction} and the parameters passed into it.
+     *
+     * @param action the action that is being performed, such as banning a user.
+     * @param temporaryData if the action is a temporary action, such as a 1 hour mute.
+     * @param additionalDescription any extra description that should be part of the message, if
+     *        desired
+     * @param guild for which the action was triggered.
+     * @param reason for the action.
+     * @param textChannel for which messages are being sent to.
+     *
+     * @return the appropriate advice.
+     */
+    public static RestAction<Message> sendDmAdvice(ModerationAction action,
+            @Nullable TemporaryData temporaryData, @Nullable String additionalDescription,
+            Guild guild, String reason, PrivateChannel textChannel) {
+        String additionalDescriptionInfix =
+                additionalDescription == null ? "" : "\n" + additionalDescription;
+
+        if (REVOKE_ACTIONS.contains(action)) {
+            return textChannel.sendMessage("""
+                    Hey there, you have been %s in the server %s.%s
+                    The reason for being %s is: %s
+                    """.formatted(action.getVerb(), guild.getName(), additionalDescriptionInfix,
+                    action.getVerb(), reason));
+        }
+        String durationMessage;
+        if (SOFT_ACTIONS.contains(action)) {
+            durationMessage = "";
+        } else if (TEMPORARY_ACTIONS.contains(action)) {
+            durationMessage =
+                    temporaryData == null ? " permanently" : " for " + temporaryData.duration();
+        } else {
+            throw new IllegalArgumentException(
+                    "Action '%s' is not supported by this method".formatted(action));
+        }
+
+        UnaryOperator<String> createDmMessage =
+                commandMention -> """
+                        Hey there, sorry to tell you but unfortunately you have been %s%s in the server %s.%s
+                        To get in touch with a moderator, you can simply use the %s command here in this chat. \
+                        Your message will then be forwarded and a moderator will get back to you soon 😊
+                        The reason for being %s is: %s
+                        """
+                    .formatted(action.getVerb(), durationMessage, guild.getName(),
+                            additionalDescriptionInfix, commandMention, action.getVerb(), reason);
+
+        return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
+            .map(createDmMessage)
+            .flatMap(textChannel::sendMessage);
     }
 }

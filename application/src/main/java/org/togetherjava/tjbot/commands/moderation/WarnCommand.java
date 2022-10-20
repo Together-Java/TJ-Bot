@@ -60,13 +60,8 @@ public final class WarnCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been warned in the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
-                            The reason for the warning is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.WARN, null, null,
+                    guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }
