@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.UserInteractionType;
@@ -29,6 +31,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class CodeMessageHandler extends MessageReceiverAdapter implements UserInteractor {
+    private static final Logger logger = LoggerFactory.getLogger(CodeMessageHandler.class);
+
     static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
     // TODO doc, lol
     private static final Pattern CODE_BLOCK_EXTRACTOR_PATTERN =
@@ -159,7 +163,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     @Override
     public void onMessageUpdated(MessageUpdateEvent event) {
-        Long codeReplyMessageId = originalMessageToCodeReply.get(event.getMessageIdLong());
+        long originalMessageId = event.getMessageIdLong();
+
+        Long codeReplyMessageId = originalMessageToCodeReply.get(originalMessageId);
         if (codeReplyMessageId == null) {
             // Unknown message
             return;
@@ -182,9 +188,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
             return codeReplyMessage
                 .editMessageEmbeds(maybeCodeAction.orElseThrow().apply(maybeCode.orElseThrow()));
-        })
-            .mapToResult() // FIXME add some logging
-            .queue();
+        }).queue(any -> {
+        }, failure -> logger.warn(
+                "Attempted to update a code-reply-message ({}), but failed. The original code-message was {}",
+                codeReplyMessageId, originalMessageId, failure));
     }
 
     private Optional<CodeAction> getCurrentActionFromCodeReply(Message codeReplyMessage) {
@@ -198,15 +205,18 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     @Override
     public void onMessageDeleted(MessageDeleteEvent event) {
-        Long codeReplyMessageId = originalMessageToCodeReply.remove(event.getMessageIdLong());
+        long originalMessageId = event.getMessageIdLong();
+
+        Long codeReplyMessageId = originalMessageToCodeReply.remove(originalMessageId);
         if (codeReplyMessageId == null) {
             // Unknown message
             return;
         }
 
-        event.getChannel().deleteMessageById(codeReplyMessageId).mapToResult().queue(); // FIXME add
-                                                                                        // some
-                                                                                        // logging
+        event.getChannel().deleteMessageById(codeReplyMessageId).queue(any -> {
+        }, failure -> logger.warn(
+                "Attempted to delete a code-reply-message ({}), but failed. The original code-message was {}",
+                codeReplyMessageId, originalMessageId, failure));
     }
 
     private static Optional<String> extractCode(CharSequence fullMessage) {
