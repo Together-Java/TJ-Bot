@@ -9,9 +9,12 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.jooq.Result;
+import org.jooq.SelectWhereStep;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 
 import java.time.*;
 import java.time.temporal.TemporalAmount;
@@ -72,7 +75,7 @@ public final class RemindCommand extends SlashCommandAdapter {
         TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
 
         getData().addSubcommands(
-                new SubcommandData(ADD_SUBCOMMAND, "adds a reminder").addOptions(timeAmount, timeUnit),
+                new SubcommandData(ADD_SUBCOMMAND, "adds a reminder").addOptions(timeAmount, timeUnit, new OptionData(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true)),
                 new SubcommandData(LIST_SUBCOMMAND, "lists all reminders")
         );
 
@@ -115,7 +118,15 @@ public final class RemindCommand extends SlashCommandAdapter {
     }
 
     private void handleListCommand(SlashCommandInteractionEvent event) {
+        Result<PendingRemindersRecord> pendingReminders = database.read(context -> {
+            try (SelectWhereStep<PendingRemindersRecord> select = context.selectFrom(PENDING_REMINDERS)) {
+                return select.where(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())).fetch();
+            }
+        });
 
+        for (PendingRemindersRecord pendingReminder : pendingReminders) {
+            
+        }
     }
 
     private static Instant parseWhen(int whenAmount, String whenUnit) {
