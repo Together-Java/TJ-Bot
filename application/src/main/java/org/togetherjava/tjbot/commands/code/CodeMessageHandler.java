@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands.code;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -23,7 +25,10 @@ import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 import javax.annotation.Nullable;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,9 +46,8 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     private final ComponentIdInteractor componentIdInteractor;
     private final Map<String, CodeAction> labelToCodeAction;
 
-    // TODO Use a cafeeine cache
-    private final Map<Long, Long> originalMessageToCodeReply =
-            Collections.synchronizedMap(new HashMap<>());
+    private final Cache<Long, Long> originalMessageToCodeReply =
+            Caffeine.newBuilder().maximumSize(10_000).build();
 
     public CodeMessageHandler() {
         super(Pattern.compile(".*"));
@@ -96,7 +100,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         originalMessage.reply(createCodeReplyMessage(originalMessage.getIdLong()))
-            .map(replyMessage -> originalMessageToCodeReply.put(originalMessage.getIdLong(),
+            .onSuccess(replyMessage -> originalMessageToCodeReply.put(originalMessage.getIdLong(),
                     replyMessage.getIdLong()))
             .queue();
     }
@@ -165,7 +169,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     public void onMessageUpdated(MessageUpdateEvent event) {
         long originalMessageId = event.getMessageIdLong();
 
-        Long codeReplyMessageId = originalMessageToCodeReply.get(originalMessageId);
+        Long codeReplyMessageId = originalMessageToCodeReply.getIfPresent(originalMessageId);
         if (codeReplyMessageId == null) {
             // Unknown message
             return;
@@ -207,11 +211,12 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     public void onMessageDeleted(MessageDeleteEvent event) {
         long originalMessageId = event.getMessageIdLong();
 
-        Long codeReplyMessageId = originalMessageToCodeReply.remove(originalMessageId);
+        Long codeReplyMessageId = originalMessageToCodeReply.getIfPresent(originalMessageId);
         if (codeReplyMessageId == null) {
             // Unknown message
             return;
         }
+        originalMessageToCodeReply.invalidate(codeReplyMessageId);
 
         event.getChannel().deleteMessageById(codeReplyMessageId).queue(any -> {
         }, failure -> logger.warn(
