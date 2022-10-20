@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.code;
 
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
@@ -62,7 +63,12 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     }
 
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException("Not used");
+    }
+
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
 
@@ -73,6 +79,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        if (event.isWebhookMessage() || event.getAuthor().isBot()) {
+            return;
+        }
+
         Message originalMessage = event.getMessage();
         String content = originalMessage.getContentRaw();
 
