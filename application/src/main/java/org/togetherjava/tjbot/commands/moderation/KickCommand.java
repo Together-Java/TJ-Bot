@@ -1,17 +1,12 @@
 package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.ISnowflake;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +31,7 @@ public final class KickCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "kick";
     private static final String ACTION_VERB = "kick";
+    private static final String ACTION_TITLE = "Kick";
     private final ModerationActionsStore actionsStore;
 
     /**
@@ -60,7 +56,7 @@ public final class KickCommand extends SlashCommandAdapter {
 
     private void kickUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target, reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
                 .map(kickResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
@@ -68,19 +64,12 @@ public final class KickCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
-            GenericEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been kicked from the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
-                            The reason for the kick is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
-            .mapToResult()
-            .map(Result::isSuccess);
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description = "Hey there, sorry to tell you but unfortunately you have been kicked";
+
+        return ModerationUtils.sendModActionDm(
+                ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true),
+                target);
     }
 
     private AuditableRestAction<Void> kickUser(Member target, Member author, String reason,

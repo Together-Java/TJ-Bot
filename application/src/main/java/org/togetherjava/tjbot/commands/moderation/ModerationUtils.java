@@ -3,10 +3,10 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
+import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +23,8 @@ import java.time.temporal.TemporalUnit;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -68,8 +68,6 @@ public class ModerationUtils {
      */
     private static final Set<ModerationAction> SOFT_ACTIONS =
             EnumSet.of(ModerationAction.WARN, ModerationAction.QUARANTINE);
-
-
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -390,6 +388,60 @@ public class ModerationUtils {
     }
 
     /**
+     * Creates a nice looking embed for the mod action taken.
+     *
+     * @param guild the guild in which the action has been taken
+     * @param actionTitle the mod action itself e.g, Ban
+     * @param description a short description explaining the action
+     * @param reason reason for the action taken
+     * @param isPunishAction is it a punish action e.g. ban, warn
+     * @return the embed
+     */
+    static RestAction<EmbedBuilder> getModActionEmbed(Guild guild, String actionTitle,
+            String description, String reason, boolean isPunishAction) {
+        Function<String, EmbedBuilder> embedBuilder = commandMention -> new EmbedBuilder()
+            .setAuthor(guild.getName(), null, guild.getIconUrl())
+            .setTitle(actionTitle)
+            .setDescription(description
+                    + "\n\nTo get in touch with a moderator, you can simply use the %s command here in this chat."
+                        .formatted(commandMention))
+            .addField("Reason", reason, false)
+            .setColor(isPunishAction ? Color.RED : Color.GREEN);
+
+        return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
+            .map(embedBuilder);
+    }
+
+    /**
+     * Creates a nice looking embed for the mod action taken with duration
+     *
+     * @param guild the guild in which the action has been taken
+     * @param actionTitle the mod action itself
+     * @param description a short description explaining the action
+     * @param reason reason for the action taken
+     * @param duration the duration of mod action
+     * @return the embed
+     */
+    static RestAction<EmbedBuilder> getModActionEmbed(Guild guild, String actionTitle,
+            String description, String reason, String duration) {
+        return getModActionEmbed(guild, actionTitle, description, reason, true)
+            .map(embedBuilder -> embedBuilder.addField("Duration", duration, false));
+    }
+
+    /**
+     * @param embedBuilder rest action to generate embed from
+     * @param target the user to send the generated embed
+     * @return boolean rest action, weather the dm is sent successfully
+     */
+    static RestAction<Boolean> sendModActionDm(RestAction<EmbedBuilder> embedBuilder, User target) {
+        return embedBuilder.map(EmbedBuilder::build)
+            .flatMap(embed -> target.openPrivateChannel()
+                .flatMap(channel -> channel.sendMessageEmbeds(embed)))
+            .mapToResult()
+            .map(Result::isSuccess);
+    }
+
+    /**
      * Wrapper to hold data relevant to temporary actions, for example the time it expires.
      *
      * @param expiresAt the time the temporary action expires
@@ -397,57 +449,5 @@ public class ModerationUtils {
      *        as {@code "1 day"}.
      */
     record TemporaryData(Instant expiresAt, String duration) {
-    }
-
-    /**
-     * Gives out advice depending on the {@link ModerationAction} and the parameters passed into it.
-     *
-     * @param action the action that is being performed, such as banning a user.
-     * @param temporaryData if the action is a temporary action, such as a 1 hour mute.
-     * @param additionalDescription any extra description that should be part of the message, if
-     *        desired
-     * @param guild for which the action was triggered.
-     * @param reason for the action.
-     * @param textChannel for which messages are being sent to.
-     *
-     * @return the appropriate advice.
-     */
-    public static RestAction<Message> sendDmAdvice(ModerationAction action,
-            @Nullable TemporaryData temporaryData, @Nullable String additionalDescription,
-            Guild guild, String reason, PrivateChannel textChannel) {
-        String additionalDescriptionInfix =
-                additionalDescription == null ? "" : "\n" + additionalDescription;
-
-        if (REVOKE_ACTIONS.contains(action)) {
-            return textChannel.sendMessage("""
-                    Hey there, you have been %s in the server %s.%s
-                    The reason for being %s is: %s
-                    """.formatted(action.getVerb(), guild.getName(), additionalDescriptionInfix,
-                    action.getVerb(), reason));
-        }
-        String durationMessage;
-        if (SOFT_ACTIONS.contains(action)) {
-            durationMessage = "";
-        } else if (TEMPORARY_ACTIONS.contains(action)) {
-            durationMessage =
-                    temporaryData == null ? " permanently" : " for " + temporaryData.duration();
-        } else {
-            throw new IllegalArgumentException(
-                    "Action '%s' is not supported by this method".formatted(action));
-        }
-
-        UnaryOperator<String> createDmMessage =
-                commandMention -> """
-                        Hey there, sorry to tell you but unfortunately you have been %s%s in the server %s.%s
-                        To get in touch with a moderator, you can simply use the %s command here in this chat. \
-                        Your message will then be forwarded and a moderator will get back to you soon 😊
-                        The reason for being %s is: %s
-                        """
-                    .formatted(action.getVerb(), durationMessage, guild.getName(),
-                            additionalDescriptionInfix, commandMention, action.getVerb(), reason);
-
-        return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
-            .map(createDmMessage)
-            .flatMap(textChannel::sendMessage);
     }
 }
