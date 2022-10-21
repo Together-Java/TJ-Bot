@@ -170,6 +170,8 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
             .flatMap(any -> message.delete())
             .flatMap(any -> helper.sendExplanationMessage(threadChannel))
             .onSuccess(any -> helper.scheduleUncategorizedAdviceCheck(threadChannel.getIdLong(),
+                    author.getIdLong()))
+            .onSuccess(any -> helper.scheduleNoActivityAdviceCheck(threadChannel.getIdLong(),
                     author.getIdLong()));
     }
 

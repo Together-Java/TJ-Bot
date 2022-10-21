@@ -64,7 +64,7 @@ public final class HelpSystemHelper {
 
     private static final ScheduledExecutorService SERVICE = Executors.newScheduledThreadPool(3);
     private static final int SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES = 5;
-
+    private static final int SEND_NO_ACTIVITY_ADVICE_AFTER_MINUTES = 5;
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
     private final Predicate<String> isStagingChannelName;
@@ -331,6 +331,23 @@ public final class HelpSystemHelper {
                     return threadChannel.sendMessage(message);
                 });
         }).queue();
+    }
+
+    // TODO remove duplication with #scheduledUncategorizedAdviceCheck
+    void scheduleNoActivityAdviceCheck(long threadChannelId, long authorId) {
+        SERVICE.schedule(() -> {
+            try {
+                executeNoActivityAdviceCheck(threadChannelId, authorId);
+            } catch (Exception e) {
+                logger.warn(
+                        "Unknown error during a no activity advice check on thread {} by author {}.",
+                        threadChannelId, authorId, e);
+            }
+        }, SEND_NO_ACTIVITY_ADVICE_AFTER_MINUTES, TimeUnit.MINUTES);
+    }
+
+    private void executeNoActivityAdviceCheck(long threadChannelId, long authorId) {
+        // TODO
     }
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
