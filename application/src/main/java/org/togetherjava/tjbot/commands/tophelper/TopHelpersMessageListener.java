@@ -18,6 +18,8 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
  * {@link TopHelpersCommand} to pick them up.
  */
 public final class TopHelpersMessageListener extends MessageReceiverAdapter {
+    private static final String UNCOUNTED_CHARS = "[^\\x20-\\x7E]";
+
     private final Database database;
 
     private final Predicate<String> isStagingChannelName;
@@ -65,13 +67,16 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     }
 
     private void addMessageRecord(MessageReceivedEvent event) {
+        String messageContent = event.getMessage().getContentRaw();
+        long messageLength = messageContent.replaceAll(UNCOUNTED_CHARS, "").length();
+
         database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
             .setMessageId(event.getMessage().getIdLong())
             .setGuildId(event.getGuild().getIdLong())
             .setChannelId(event.getChannel().getIdLong())
             .setAuthorId(event.getAuthor().getIdLong())
             .setSentAt(event.getMessage().getTimeCreated().toInstant())
-            .setMessageLength((long) event.getMessage().getContentRaw().length())
+            .setMessageLength(messageLength)
             .insert());
     }
 }
