@@ -34,7 +34,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -366,24 +365,22 @@ public final class HelpSystemHelper {
                     threadChannelId, authorId);
             return;
         }
-        new ScheduledThreadPoolExecutor(1).schedule(() -> {
-            if (threadChannel.getHistory()
-                .getRetrievedHistory()
-                .stream()
-                .map(Message::getAuthor)
-                .map(User::getIdLong)
-                .anyMatch(id -> id == authorId)) {
-                MessageEmbed embed = HelpSystemHelper.embedWith(
-                        """
-                                Hey there <@{}>👋 It has been five minutes and you have not shown any activity in this thread.
-                                Please elaborate on your question, or close the thread if it was created accidentally, thanks 🙂
-                                """,
-                        String.valueOf(authorId));
-                MessageCreateData message = new MessageCreateBuilder().setEmbeds(embed).build();
-                threadChannel.sendMessage(message).queue();
+        if (threadChannel.getHistory()
+            .getRetrievedHistory()
+            .stream()
+            .map(Message::getAuthor)
+            .map(User::getIdLong)
+            .anyMatch(id -> id == authorId)) {
+            MessageEmbed embed = HelpSystemHelper.embedWith(
+                    """
+                            Hey there {}👋 It has been five minutes and you have not shown any activity in this thread.
+                            Please elaborate on your question, or close the thread if it was created accidentally, thanks 🙂
+                            """,
+                    User.fromId(authorId).getAsMention());
+            MessageCreateData message = new MessageCreateBuilder().setEmbeds(embed).build();
+            threadChannel.sendMessage(message).queue();
 
-            }
-        }, SEND_NO_ACTIVITY_ADVICE_AFTER_MINUTES, TimeUnit.MINUTES);
+        }
 
     }
 
