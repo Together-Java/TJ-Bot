@@ -21,6 +21,8 @@ import org.togetherjava.tjbot.commands.UserInteractionType;
 import org.togetherjava.tjbot.commands.UserInteractor;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.commands.utils.CodeFence;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
@@ -30,34 +32,48 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+/**
+ * Handler that detects code in messages and offers code actions to the user, such as formatting
+ * their code.
+ * <p>
+ * Code actions are automatically updated whenever the code in the original message is edited or
+ * deleted.
+ */
 public final class CodeMessageHandler extends MessageReceiverAdapter implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(CodeMessageHandler.class);
 
     static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
-    // TODO doc, lol
-    private static final Pattern CODE_BLOCK_EXTRACTOR_PATTERN =
-            Pattern.compile("```(?:java)?\\s*([\\w\\W]+)```|``?([\\w\\W]+)``?");
 
     private final ComponentIdInteractor componentIdInteractor;
     private final Map<String, CodeAction> labelToCodeAction;
 
+    /**
+     * Memorizes the ID of the bots code-reply message that a message belongs to. That way, the
+     * code-reply can be retrieved and managed easily when the original message is edited or
+     * deleted. Losing this cache, for example during bot-restart, effectively disables this
+     * update-feature for old messages.
+     * <p>
+     * The feature is secondary though, which is why its kept in RAM and not in the DB.
+     */
     private final Cache<Long, Long> originalMessageToCodeReply =
             Caffeine.newBuilder().maximumSize(10_000).build();
 
+    /**
+     * Creates a new instance.
+     */
     public CodeMessageHandler() {
         super(Pattern.compile(".*"));
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
-        labelToCodeAction =
-                Stream.of(new FormatCodeCommand(), new RunCodeCommand(), new BytecodeCommand())
-                    .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(),
-                            (x, y) -> y, LinkedHashMap::new));
+        List<CodeAction> codeActions = List.of(new FormatCodeCommand());
+
+        labelToCodeAction = codeActions.stream()
+            .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,
+                    LinkedHashMap::new));
     }
 
     @Override
@@ -94,11 +110,13 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         Message originalMessage = event.getMessage();
         String content = originalMessage.getContentRaw();
 
-        Optional<String> maybeCode = extractCode(content);
+        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
         if (maybeCode.isEmpty()) {
+            // There is no code in the message, ignore it
             return;
         }
 
+        // Suggest code actions and remember the message <-> reply
         originalMessage.reply(createCodeReplyMessage(originalMessage.getIdLong()))
             .onSuccess(replyMessage -> originalMessageToCodeReply.put(originalMessage.getIdLong(),
                     replyMessage.getIdLong()))
@@ -132,6 +150,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
         event.deferEdit().queue();
 
+        // User decided for an action, apply it to the code
         event.getChannel()
             .retrieveMessageById(originalMessageId)
             .mapToResult()
@@ -143,10 +162,12 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                         .setEphemeral(true);
                 }
 
-                // Restore in case bot was restarted in the meantime
+                // If the bot got restarted in the meantime, it forgot about the message
+                // since we have the context here, we can restore that information
                 originalMessageToCodeReply.put(originalMessageId, event.getMessageIdLong());
 
-                Optional<String> maybeCode = extractCode(originalMessage.get().getContentRaw());
+                Optional<CodeFence> maybeCode =
+                        MessageUtils.extractCode(originalMessage.get().getContentRaw());
                 if (maybeCode.isEmpty()) {
                     return event.getHook()
                         .sendMessage(
@@ -154,6 +175,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                         .setEphemeral(true);
                 }
 
+                // Apply the selected action
                 return event.getHook()
                     .editOriginalEmbeds(codeAction.apply(maybeCode.orElseThrow()))
                     .setActionRow(createButtons(originalMessageId, codeAction));
@@ -171,24 +193,27 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
         Long codeReplyMessageId = originalMessageToCodeReply.getIfPresent(originalMessageId);
         if (codeReplyMessageId == null) {
-            // Unknown message
+            // Some unrelated non-code message was edited
             return;
         }
 
+        // Edit the code reply as well by re-applying the current action
         String content = event.getMessage().getContentRaw();
 
-        Optional<String> maybeCode = extractCode(content);
+        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
         if (maybeCode.isEmpty()) {
+            // The original message had code, but now the code was removed
             return;
         }
 
         event.getChannel().retrieveMessageById(codeReplyMessageId).flatMap(codeReplyMessage -> {
             Optional<CodeAction> maybeCodeAction = getCurrentActionFromCodeReply(codeReplyMessage);
             if (maybeCodeAction.isEmpty()) {
-                // No action was clicked yet
+                // The user did not decide on an action yet, nothing to update
                 return new CompletedRestAction<>(event.getJDA(), null);
             }
 
+            // Re-apply the current action
             return codeReplyMessage
                 .editMessageEmbeds(maybeCodeAction.orElseThrow().apply(maybeCode.orElseThrow()));
         }).queue(any -> {
@@ -198,6 +223,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     }
 
     private Optional<CodeAction> getCurrentActionFromCodeReply(Message codeReplyMessage) {
+        // The disabled action is the currently applied action
         return codeReplyMessage.getButtons()
             .stream()
             .filter(Button::isDisabled)
@@ -212,22 +238,16 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
         Long codeReplyMessageId = originalMessageToCodeReply.getIfPresent(originalMessageId);
         if (codeReplyMessageId == null) {
-            // Unknown message
+            // Some unrelated non-code message was deleted
             return;
         }
+
+        // Delete the code reply as well
         originalMessageToCodeReply.invalidate(codeReplyMessageId);
 
         event.getChannel().deleteMessageById(codeReplyMessageId).queue(any -> {
         }, failure -> logger.warn(
                 "Attempted to delete a code-reply-message ({}), but failed. The original code-message was {}",
                 codeReplyMessageId, originalMessageId, failure));
-    }
-
-    private static Optional<String> extractCode(CharSequence fullMessage) {
-        Matcher codeBlockMatcher = CODE_BLOCK_EXTRACTOR_PATTERN.matcher(fullMessage);
-        if (!codeBlockMatcher.find()) {
-            return Optional.empty();
-        }
-        return Optional.of(codeBlockMatcher.group(1));
     }
 }

@@ -3,10 +3,15 @@ package org.togetherjava.tjbot.commands.code;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.formatter.Formatter;
 import org.togetherjava.tjbot.formatter.tokenizer.Lexer;
 
-// TODO Doc
+/**
+ * Formats the given code.
+ * <p>
+ * While it will attempt formatting for any language, best results are achieved for Java code.
+ */
 final class FormatCodeCommand implements CodeAction {
     private final Lexer lexer;
     private final Formatter formatter;
@@ -22,11 +27,12 @@ final class FormatCodeCommand implements CodeAction {
     }
 
     @Override
-    public MessageEmbed apply(String code) {
-        String formattedCode = formatCode(code);
+    public MessageEmbed apply(CodeFence codeFence) {
+        String formattedCode = formatCode(codeFence.code());
+        CodeFence formattedCodeFence = new CodeFence(codeFence.language(), formattedCode);
 
         return new EmbedBuilder().setTitle("Formatted code")
-            .setDescription(formattedCode)
+            .setDescription(formattedCodeFence.toMarkdown())
             .setColor(CodeMessageHandler.AMBIENT_COLOR)
             .build();
     }

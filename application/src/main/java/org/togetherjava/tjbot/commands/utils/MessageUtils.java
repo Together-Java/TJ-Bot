@@ -10,7 +10,10 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility methods for {@link Message}.
@@ -20,6 +23,11 @@ import java.util.function.Supplier;
  */
 public class MessageUtils {
     private static final String ABBREVIATION = "...";
+    private static final String CODE_FENCE_LANGUAGE_GROUP = "language";
+    private static final String CODE_FENCE_CODE_GROUP = "code";
+    private static final Pattern CODE_FENCE_PATTERN =
+            Pattern.compile("```(?<%s>\\S*)\\s+(?<%s>.+)```".formatted(CODE_FENCE_LANGUAGE_GROUP,
+                    CODE_FENCE_CODE_GROUP));
 
     private MessageUtils() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
@@ -49,7 +57,7 @@ public class MessageUtils {
      * Escapes every markdown content in the given string.
      * <p>
      * If the escaped message is sent to Discord, it will display the original message.
-     * 
+     *
      * @param text the text to escape
      * @return the escaped text
      */
@@ -152,5 +160,35 @@ public class MessageUtils {
         // Clone of JDAs Channel#getAsMention, but unfortunately channel instances can not be
         // created out of just an ID, unlike User#fromId
         return "<#%d>".formatted(channelId);
+    }
+
+    /**
+     * Attempts to extract code posted in code-fences from the given message.
+     * <p>
+     * For example, it would extract {@code "int x = 5 + 3;"} from
+     * 
+     * <pre>
+     * Look at this:
+     * ```java
+     * int x = 5 + 3;
+     * ```
+     * Nice code.
+     * </pre>
+     * 
+     * If the message contains multiple code fences, only the first is extracted.
+     *
+     * @param fullMessage the message to extract code from
+     * @return the first found code snippet, if any
+     */
+    public static Optional<CodeFence> extractCode(CharSequence fullMessage) {
+        Matcher matcher = CODE_FENCE_PATTERN.matcher(fullMessage);
+        if (!matcher.find()) {
+            return Optional.empty();
+        }
+
+        String language = matcher.group(CODE_FENCE_LANGUAGE_GROUP);
+        String code = matcher.group(CODE_FENCE_CODE_GROUP);
+
+        return Optional.of(new CodeFence(language, code));
     }
 }

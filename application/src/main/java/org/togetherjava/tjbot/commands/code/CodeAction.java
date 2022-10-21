@@ -2,8 +2,24 @@ package org.togetherjava.tjbot.commands.code;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import org.togetherjava.tjbot.commands.utils.CodeFence;
+
+/**
+ * Actions that can be executed on code, such as running it.
+ */
 interface CodeAction {
+    /**
+     * The name of the action, displayed to the user for applying it.
+     *
+     * @return the label of the action
+     */
     String getLabel();
 
-    MessageEmbed apply(String code);
+    /**
+     * Applies the action to the given code and returns a message.
+     *
+     * @param codeFence the code to apply the action to
+     * @return the message to send to the user
+     */
+    MessageEmbed apply(CodeFence codeFence);
 }
