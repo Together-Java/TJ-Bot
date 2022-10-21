@@ -53,23 +53,6 @@ public class ModerationUtils {
     static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
-     * Actions with timely constraint, like being muted for 1 hour.
-     */
-    private static final Set<ModerationAction> TEMPORARY_ACTIONS =
-            EnumSet.of(ModerationAction.MUTE);
-    /**
-     * Actions with revoking previously made actions on the user, like unmuting the user after it
-     * has been muted.
-     */
-    private static final Set<ModerationAction> REVOKE_ACTIONS =
-            EnumSet.of(ModerationAction.UNMUTE, ModerationAction.UNQUARANTINE);
-    /**
-     * Soft violations were the user still remains member of the guild, such as a warning
-     */
-    private static final Set<ModerationAction> SOFT_ACTIONS =
-            EnumSet.of(ModerationAction.WARN, ModerationAction.QUARANTINE);
-
-    /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
      * the user.
      *
