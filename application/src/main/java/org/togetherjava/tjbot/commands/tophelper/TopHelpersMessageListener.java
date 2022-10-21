@@ -18,7 +18,13 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
  * {@link TopHelpersCommand} to pick them up.
  */
 public final class TopHelpersMessageListener extends MessageReceiverAdapter {
-    private static final String UNCOUNTED_CHARS = "[^\\x20-\\x7E]";
+    /**
+     * Matches invisible control characters and unused code points
+     * 
+     * @see <a href="https://www.regular-expressions.info/unicode.html#category">Unicode
+     *      Categories</a>
+     */
+    private static final String UNCOUNTED_CHARS = "\\P{C}";
 
     private final Database database;
 
