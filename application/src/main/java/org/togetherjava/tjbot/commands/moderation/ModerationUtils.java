@@ -372,7 +372,7 @@ public class ModerationUtils {
      * Creates a nice looking embed for the mod action taken.
      *
      * @param guild the guild in which the action has been taken
-     * @param actionTitle the mod action itself e.g, Ban
+     * @param actionTitle the mod action as title e.g, Ban
      * @param description a short description explaining the action
      * @param reason reason for the action taken
      * @param isPunishAction is it a punish action e.g. ban, warn
