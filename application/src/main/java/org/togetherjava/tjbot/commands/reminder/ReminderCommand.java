@@ -139,7 +139,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
             }
         })
             .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),
-                    getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), true));
+                    getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), false));
 
         event.replyEmbeds(remindersEmbed.build()).setEphemeral(true).queue();
     }
