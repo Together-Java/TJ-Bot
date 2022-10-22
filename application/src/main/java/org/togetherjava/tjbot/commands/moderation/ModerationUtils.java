@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
+import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +21,7 @@ import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
-import java.util.EnumSet;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -382,17 +380,21 @@ public class ModerationUtils {
      */
     static RestAction<EmbedBuilder> getModActionEmbed(Guild guild, String actionTitle,
             String description, String reason, boolean isPunishAction) {
-        Function<String, EmbedBuilder> embedBuilder = commandMention -> new EmbedBuilder()
-            .setAuthor(guild.getName(), null, guild.getIconUrl())
-            .setTitle(actionTitle)
-            .setDescription(description
-                    + "\n\nTo get in touch with a moderator, you can simply use the %s command here in this chat."
-                        .formatted(commandMention))
-            .addField("Reason", reason, false)
-            .setColor(isPunishAction ? Color.RED : Color.GREEN);
+        EmbedBuilder modActionEmbed =
+                new EmbedBuilder().setAuthor(guild.getName(), null, guild.getIconUrl())
+                    .setTitle(actionTitle)
+                    .setDescription(description)
+                    .addField("Reason", reason, false)
+                    .setColor(ModerationUtils.AMBIENT_COLOR);
+
+        if (!isPunishAction) {
+            return new CompletedRestAction<>(guild.getJDA(), modActionEmbed);
+        }
 
         return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
-            .map(embedBuilder);
+            .map(commandMention -> modActionEmbed.appendDescription(
+                    "\n\nTo get in touch with a moderator, you can use the %s command here."
+                        .formatted(commandMention)));
     }
 
     /**
