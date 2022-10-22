@@ -393,7 +393,7 @@ public class ModerationUtils {
 
         return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
             .map(commandMention -> modActionEmbed.appendDescription(
-                    "\n\nTo get in touch with a moderator, you can use the %s command here."
+                    "%n%nTo get in touch with a moderator, you can use the %s command here."
                         .formatted(commandMention)));
     }
 
