@@ -127,7 +127,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
                 Channel: <#%s>
                 Remind at: <t:%s>""".formatted(channelId, remindAt.getEpochSecond());
 
-        EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Reminders").setColor(RemindRoutine.AMBIENT_COLOR);
+        EmbedBuilder remindersEmbed =
+                new EmbedBuilder().setTitle("Reminders").setColor(RemindRoutine.AMBIENT_COLOR);
 
         database.read(context -> {
             try (SelectWhereStep<PendingRemindersRecord> select =
@@ -138,7 +139,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
                     .fetch();
             }
         }).forEach(reminder -> {
-            remindersEmbed.addField(reminder.getContent(), getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), true);
+            remindersEmbed.addField(reminder.getContent(),
+                    getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), true);
         });
 
         event.replyEmbeds(remindersEmbed.build()).setEphemeral(true).queue();
