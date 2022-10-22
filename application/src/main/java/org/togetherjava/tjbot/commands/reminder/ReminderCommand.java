@@ -16,7 +16,6 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 
-import java.awt.*;
 import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
@@ -138,10 +137,9 @@ public final class ReminderCommand extends SlashCommandAdapter {
                         .and(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())))
                     .fetch();
             }
-        }).forEach(reminder -> {
-            remindersEmbed.addField(reminder.getContent(),
-                    getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), true);
-        });
+        })
+            .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),
+                    getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), true));
 
         event.replyEmbeds(remindersEmbed.build()).setEphemeral(true).queue();
     }
