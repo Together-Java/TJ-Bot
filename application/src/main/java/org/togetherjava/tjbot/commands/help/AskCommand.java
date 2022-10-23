@@ -1,9 +1,8 @@
 package org.togetherjava.tjbot.commands.help;
 
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.IMentionable;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -19,9 +18,13 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
@@ -47,10 +50,16 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
  * </pre>
  */
 public final class AskCommand extends SlashCommandAdapter {
+    private static final int COOLDOWN_DURATION_VALUE = 5;
+    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Logger logger = LoggerFactory.getLogger(AskCommand.class);
     public static final String COMMAND_NAME = "ask";
     private static final String TITLE_OPTION = "title";
     private static final String CATEGORY_OPTION = "category";
+    private final Cache<Long, Instant> userToLastAsk = Caffeine.newBuilder()
+        .maximumSize(1_000)
+        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
+        .build();
     private final HelpSystemHelper helper;
 
     /**
@@ -77,6 +86,31 @@ public final class AskCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
+        if (isUserOnCooldown(event.getUser())) {
+            String message =
+                    """
+                            You can only create 1 help thread per 5 minutes. While you are waiting changing the infos of your previous thread may help.
+                            Use these commands in the help thread to change its details:-
+                            %s
+                            %s""";
+
+            RestAction<String> changeTitle = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
+                    HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                    HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
+            RestAction<String> changeCategory = MessageUtils.mentionGuildSlashCommand(
+                    event.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                    HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                    HelpThreadCommand.CHANGE_CATEGORY_OPTION);
+
+            RestAction.allOf(changeCategory, changeTitle)
+                .map(commandMentions -> message.formatted(commandMentions.get(0),
+                        commandMentions.get(1)))
+                .flatMap(event::reply)
+                .queue();
+
+            return;
+        }
+
         String title = event.getOption(TITLE_OPTION).getAsString();
         String category = event.getOption(CATEGORY_OPTION).getAsString();
 
@@ -102,8 +136,15 @@ public final class AskCommand extends SlashCommandAdapter {
         overviewChannel.createThreadChannel(name.toChannelName())
             .flatMap(threadChannel -> handleEvent(eventHook, threadChannel, author, title, category,
                     guild))
-            .queue(any -> {
-            }, e -> handleFailure(e, eventHook));
+            .queue(any -> userToLastAsk.put(event.getUser().getIdLong(), Instant.now()),
+                    e -> handleFailure(e, eventHook));
+    }
+
+    private boolean isUserOnCooldown(User user) {
+        return Optional.ofNullable(userToLastAsk.getIfPresent(user.getIdLong()))
+            .map(lastAction -> lastAction.plus(COOLDOWN_DURATION_VALUE, COOLDOWN_DURATION_UNIT))
+            .filter(Instant.now()::isBefore)
+            .isPresent();
     }
 
     private boolean handleIsValidTitle(CharSequence title, IReplyCallback event) {

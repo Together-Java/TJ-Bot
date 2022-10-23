@@ -42,9 +42,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final String CHANGE_CATEGORY_SUBCOMMAND = "category";
-    private static final String CHANGE_CATEGORY_OPTION = "category";
+    public static final String CHANGE_CATEGORY_OPTION = "category";
     private static final String CHANGE_TITLE_OPTION = "title";
-    private static final String CHANGE_TITLE_SUBCOMMAND = "title";
+    public static final String CHANGE_TITLE_SUBCOMMAND = "title";
     public static final String CHANGE_SUBCOMMAND_GROUP = "change";
     public static final String COMMAND_NAME = "help-thread";
 
