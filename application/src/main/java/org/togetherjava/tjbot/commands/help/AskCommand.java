@@ -105,7 +105,7 @@ public final class AskCommand extends SlashCommandAdapter {
             RestAction.allOf(changeCategory, changeTitle)
                 .map(commandMentions -> message.formatted(commandMentions.get(0),
                         commandMentions.get(1)))
-                .flatMap(event::reply)
+                .flatMap(text -> event.reply(text).setEphemeral(true))
                 .queue();
 
             return;
