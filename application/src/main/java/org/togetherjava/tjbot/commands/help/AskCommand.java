@@ -103,8 +103,7 @@ public final class AskCommand extends SlashCommandAdapter {
                     HelpThreadCommand.CHANGE_CATEGORY_OPTION);
 
             RestAction.allOf(changeCategory, changeTitle)
-                .map(commandMentions -> message.formatted(commandMentions.get(0),
-                        commandMentions.get(1)))
+                .map(mentions -> message.formatted(mentions.get(0), mentions.get(1)))
                 .flatMap(text -> event.reply(text).setEphemeral(true))
                 .queue();
 
