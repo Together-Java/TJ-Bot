@@ -134,8 +134,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
             .read(context -> context.selectFrom(PENDING_REMINDERS)
                 .where(PENDING_REMINDERS.GUILD_ID.eq(event.getGuild().getIdLong())
                     .and(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())))
+                .orderBy(PENDING_REMINDERS.CREATED_AT.asc())
                 .fetch())
-            .sortAsc(PENDING_REMINDERS.REMIND_AT)
             .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),
                     getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), false));
 
