@@ -336,7 +336,7 @@ class CodeSectionFormatter {
      */
     private void applyIndentation() {
         if (applyIndentation) {
-            result.append("    ".repeat(Math.max(0, indentation)));
+            result.append("  ".repeat(Math.max(0, indentation)));
 
             applyIndentation = false;
         }
