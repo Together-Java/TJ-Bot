@@ -53,6 +53,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private String reportedMessage;
     private String reportedMessageUrl;
 
+    /**
+     * Creates a new instance.
+     *
+     * @param config to get the channel to forward reports to
+     */
     public ReportCommand(Config config) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
 
