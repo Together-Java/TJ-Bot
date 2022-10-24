@@ -109,4 +109,7 @@ public class MessageUtils {
         return text.substring(0, maxLength - ABBREVIATION.length()) + ABBREVIATION;
     }
 
+    public static String mentionChannelById(long channelId) {
+        return "<#%s>".formatted(channelId);
+    }
 }

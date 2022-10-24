@@ -9,12 +9,12 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import org.jooq.SelectWhereStep;
+import net.dv8tion.jda.api.utils.TimeFormat;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 
 import java.time.*;
 import java.time.temporal.TemporalAmount;
@@ -26,14 +26,14 @@ import java.util.function.Consumer;
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
 /**
- * Implements the '/remind' command which can be used to automatically send reminders to oneself at
- * a future date.
+ * Implements the '/reminder' command which can be used to automatically send reminders to oneself
+ * at a future date.
  * <p>
  * Example usage:
  *
  * <pre>
  * {@code
- * /remind time-amount: 5 time-unit: weeks content: Hello World!
+ * /reminder create time-amount: 5 time-unit: weeks content: Hello World!
  * }
  * </pre>
  * <p>
@@ -42,7 +42,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 public final class ReminderCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "reminder";
     private static final String LIST_SUBCOMMAND = "list";
-    static final String ADD_SUBCOMMAND = "add";
+    static final String CREATE_SUBCOMMAND = "create";
     static final String TIME_AMOUNT_OPTION = "time-amount";
     static final String TIME_UNIT_OPTION = "time-unit";
     static final String CONTENT_OPTION = "content";
@@ -56,7 +56,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     private final Database database;
     private final Map<String, Consumer<SlashCommandInteractionEvent>> subcommandHandler = Map
-        .of(ADD_SUBCOMMAND, this::handleAddCommand, LIST_SUBCOMMAND, this::handleListCommand);
+        .of(CREATE_SUBCOMMAND, this::handleAddCommand, LIST_SUBCOMMAND, this::handleListCommand);
 
     /**
      * Creates an instance of the command.
@@ -77,11 +77,11 @@ public final class ReminderCommand extends SlashCommandAdapter {
         TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
 
         getData().addSubcommands(
-                new SubcommandData(ADD_SUBCOMMAND, "adds a reminder").addOptions(timeAmount,
+                new SubcommandData(CREATE_SUBCOMMAND, "creates a reminder").addOptions(timeAmount,
                         timeUnit,
                         new OptionData(OptionType.STRING, CONTENT_OPTION,
                                 "what to remind you about", true)),
-                new SubcommandData(LIST_SUBCOMMAND, "lists all reminders"));
+                new SubcommandData(LIST_SUBCOMMAND, "shows all your currently pending reminders"));
 
         this.database = database;
     }
@@ -123,21 +123,19 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     private void handleListCommand(SlashCommandInteractionEvent event) {
         BiFunction<Long, Instant, String> getDescription = (channelId, remindAt) -> """
-                Channel: <#%s>
-                Remind at: <t:%s>""".formatted(channelId, remindAt.getEpochSecond());
+                Channel: %s
+                Remind at: %s""".formatted(MessageUtils.mentionChannelById(channelId),
+                TimeFormat.DEFAULT.format(remindAt));
 
-        EmbedBuilder remindersEmbed =
-                new EmbedBuilder().setTitle("Reminders").setColor(RemindRoutine.AMBIENT_COLOR);
+        EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
+            .setColor(RemindRoutine.AMBIENT_COLOR);
 
-        database.read(context -> {
-            try (SelectWhereStep<PendingRemindersRecord> select =
-                    context.selectFrom(PENDING_REMINDERS)) {
-                return select
-                    .where(PENDING_REMINDERS.GUILD_ID.eq(event.getGuild().getIdLong())
-                        .and(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())))
-                    .fetch();
-            }
-        })
+        database
+            .read(context -> context.selectFrom(PENDING_REMINDERS)
+                .where(PENDING_REMINDERS.GUILD_ID.eq(event.getGuild().getIdLong())
+                    .and(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())))
+                .fetch())
+            .sortAsc(PENDING_REMINDERS.REMIND_AT)
             .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),
                     getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), false));
 

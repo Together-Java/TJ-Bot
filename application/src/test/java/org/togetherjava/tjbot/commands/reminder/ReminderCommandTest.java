@@ -43,7 +43,7 @@ final class ReminderCommandTest {
     private SlashCommandInteractionEvent triggerSlashCommand(int timeAmount, String timeUnit,
             String content, Member author) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
-            .setSubcommand(ReminderCommand.ADD_SUBCOMMAND)
+            .setSubcommand(ReminderCommand.CREATE_SUBCOMMAND)
             .setOption(ReminderCommand.TIME_AMOUNT_OPTION, timeAmount)
             .setOption(ReminderCommand.TIME_UNIT_OPTION, timeUnit)
             .setOption(ReminderCommand.CONTENT_OPTION, content)
