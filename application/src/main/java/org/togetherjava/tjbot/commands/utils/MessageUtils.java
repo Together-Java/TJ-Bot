@@ -27,7 +27,7 @@ public class MessageUtils {
     private static final String CODE_FENCE_CODE_GROUP = "code";
     private static final Pattern CODE_FENCE_PATTERN =
             Pattern.compile("```(?<%s>\\S*)\\s+(?<%s>.+)```".formatted(CODE_FENCE_LANGUAGE_GROUP,
-                    CODE_FENCE_CODE_GROUP));
+                    CODE_FENCE_CODE_GROUP), Pattern.DOTALL);
 
     private MessageUtils() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
