@@ -47,8 +47,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
-    private static String REPORTED_MESSAGE;
-    private static String REPORTED_MESSAGE_URL;
+    private static String reportedMessage;
+    private static String reportedMessageUrl;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
@@ -71,8 +71,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
-        REPORTED_MESSAGE = event.getTarget().getContentRaw();
-        REPORTED_MESSAGE_URL = event.getTarget().getJumpUrl();
+        reportedMessage = event.getTarget().getContentRaw();
+        reportedMessageUrl = event.getTarget().getJumpUrl();
 
         TextInput body = TextInput.create(MESSAGE_INPUT, "Message", TextInputStyle.PARAGRAPH)
             .setPlaceholder("Reason for reporting")
@@ -160,7 +160,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setDescription(("""
                     Reported Message: **%s**
                     [Reported Message URL](%s)
-                    Modal Message: **%s**""").formatted(REPORTED_MESSAGE, REPORTED_MESSAGE_URL,
+                    Modal Message: **%s**""").formatted(reportedMessage, reportedMessageUrl,
                     modalMessage))
             .setAuthor("Author ID: %s".formatted(userId))
             .setColor(AMBIENT_COLOR)
