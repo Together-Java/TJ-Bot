@@ -52,7 +52,7 @@ dependencies {
 
     implementation 'club.minnced:discord-webhooks:0.8.2'
 
-    implementation 'org.jooq:jooq:3.17.2'
+    implementation "org.jooq:jooq:$jooqVersion"
 
     implementation 'io.mikael:urlbuilder:2.0.9'
 
