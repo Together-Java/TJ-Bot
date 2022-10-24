@@ -26,6 +26,8 @@ final class ScamDetectorTest {
         ScamBlockerConfig scamConfig = mock(ScamBlockerConfig.class);
         when(config.getScamBlocker()).thenReturn(scamConfig);
 
+        when(scamConfig.getSuspiciousKeywords())
+            .thenReturn(Set.of("nitro", "boob", "sexi", "esex"));
         when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.gg",
                 "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly"));
@@ -139,6 +141,9 @@ final class ScamDetectorTest {
                         Steam is giving away free discord nitro, have time to pick up at my link https://bit.ly/3nlzmUa before the action is over.""",
                 """
                         @everyone, take nitro faster, it's already running out
-                        https://discordu.gift/u1CHEX2sjpDuR3T5""");
+                        https://discordu.gift/u1CHEX2sjpDuR3T5""",
+                "@everyone join now https://discord.gg/boobise",
+                "@everyone join now https://discord.gg/esexiest",
+                "@everyone Join Now | Free All 12-18 y.o. https://discord.gg/eesexe");
     }
 }

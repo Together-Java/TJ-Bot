@@ -5,6 +5,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
 import java.net.URI;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -39,19 +40,23 @@ public final class ScamDetector {
     }
 
     private boolean isScam(AnalyseResults results) {
-        if (results.pingsEveryone && results.containsNitroKeyword && results.hasUrl) {
+        if (results.pingsEveryone && results.containsSuspiciousKeyword && results.hasUrl) {
             return true;
         }
-        return results.containsNitroKeyword && results.hasSuspiciousUrl;
+        return results.containsSuspiciousKeyword && results.hasSuspiciousUrl;
     }
 
     private void analyzeToken(String token, AnalyseResults results) {
-        if ("@everyone".equalsIgnoreCase(token)) {
+        if (token.isBlank()) {
+            return;
+        }
+
+        if (!results.pingsEveryone && "@everyone".equalsIgnoreCase(token)) {
             results.pingsEveryone = true;
         }
 
-        if ("nitro".equalsIgnoreCase(token)) {
-            results.containsNitroKeyword = true;
+        if (!results.containsSuspiciousKeyword && containsSuspiciousKeyword(token)) {
+            results.containsSuspiciousKeyword = true;
         }
 
         if (token.startsWith("http")) {
@@ -91,6 +96,15 @@ public final class ScamDetector {
         }
     }
 
+    private boolean containsSuspiciousKeyword(String token) {
+        String preparedToken = token.toLowerCase(Locale.US);
+
+        return config.getSuspiciousKeywords()
+            .stream()
+            .map(keyword -> keyword.toLowerCase(Locale.US))
+            .anyMatch(preparedToken::contains);
+    }
+
     private boolean isHostSimilarToKeyword(String host, String keyword) {
         // NOTE This algorithm is far from optimal.
         // It is good enough for our purpose though and not that complex.
@@ -116,7 +130,7 @@ public final class ScamDetector {
 
     private static class AnalyseResults {
         private boolean pingsEveryone;
-        private boolean containsNitroKeyword;
+        private boolean containsSuspiciousKeyword;
         private boolean hasUrl;
         private boolean hasSuspiciousUrl;
     }
