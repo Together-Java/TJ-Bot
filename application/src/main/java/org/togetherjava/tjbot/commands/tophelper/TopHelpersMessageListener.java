@@ -24,7 +24,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
      * @see <a href="https://www.regular-expressions.info/unicode.html#category">Unicode
      *      Categories</a>
      */
-    private static final String UNCOUNTED_CHARS = "\\P{C}";
+    private static final String UNCOUNTED_CHARS = "\\p{C}";
 
     private final Database database;
 
