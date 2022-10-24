@@ -20,6 +20,7 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.db.Database;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
+import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 /**
  * Implements the {@code /ask} command, which is the main way of asking questions. The command can
@@ -61,14 +63,16 @@ public final class AskCommand extends SlashCommandAdapter {
         .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
         .build();
     private final HelpSystemHelper helper;
+    private final Database database;
 
     /**
      * Creates a new instance.
      *
      * @param config the config to use
      * @param helper the helper to use
+     * @param database the database to get help threads from
      */
-    public AskCommand(Config config, HelpSystemHelper helper) {
+    public AskCommand(Config config, HelpSystemHelper helper, Database database) {
         super("ask", "Ask a question - use this in the staging channel", CommandVisibility.GUILD);
 
         OptionData title =
@@ -82,31 +86,13 @@ public final class AskCommand extends SlashCommandAdapter {
         getData().addOptions(title, category);
 
         this.helper = helper;
+        this.database = database;
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         if (isUserOnCooldown(event.getUser())) {
-            String message =
-                    """
-                            You can only create 1 help thread per 5 minutes. While you are waiting changing the infos of your previous thread may help.
-                            Use these commands in the help thread to change its details:-
-                            %s
-                            %s""";
-
-            RestAction<String> changeTitle = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
-                    HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
-                    HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
-            RestAction<String> changeCategory = MessageUtils.mentionGuildSlashCommand(
-                    event.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                    HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
-                    HelpThreadCommand.CHANGE_CATEGORY_OPTION);
-
-            RestAction.allOf(changeCategory, changeTitle)
-                .map(mentions -> message.formatted(mentions.get(0), mentions.get(1)))
-                .flatMap(text -> event.reply(text).setEphemeral(true))
-                .queue();
-
+            sendCooldownResponse(event);
             return;
         }
 
@@ -144,6 +130,40 @@ public final class AskCommand extends SlashCommandAdapter {
             .map(lastAction -> lastAction.plus(COOLDOWN_DURATION_VALUE, COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)
             .isPresent();
+    }
+
+    private void sendCooldownResponse(SlashCommandInteractionEvent event) {
+        User user = event.getUser();
+
+        String message =
+                """
+                        Sorry, you can only create a single help thread every 5 minutes. Please use your existing thread %s instead.
+                        If you made a typo or similar, you can adjust the title using the command %s and the category with %s :ok_hand:""";
+
+        RestAction<String> changeTitle = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
+                HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
+        RestAction<String> changeCategory = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
+                HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                HelpThreadCommand.CHANGE_CATEGORY_OPTION);
+        long lastCreatedThreadId = database
+            .read(context -> context.selectFrom(HELP_THREADS)
+                .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
+                .orderBy(HELP_THREADS.CREATED_AT.desc())
+                .fetch())
+            .get(0)
+            .getChannelId();
+
+        if (lastCreatedThreadId == 0) {
+            logger.warn("Can't find the last help thread created by the user with id ({})",
+                    user.getId());
+        }
+
+        RestAction.allOf(changeCategory, changeTitle)
+            .map(mentions -> message.formatted(MessageUtils.mentionChannelById(lastCreatedThreadId),
+                    mentions.get(0), mentions.get(1)))
+            .flatMap(text -> event.reply(text).setEphemeral(true))
+            .queue();
     }
 
     private boolean handleIsValidTitle(CharSequence title, IReplyCallback event) {

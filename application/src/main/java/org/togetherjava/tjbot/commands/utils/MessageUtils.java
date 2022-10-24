@@ -141,4 +141,13 @@ public class MessageUtils {
         return text.substring(0, maxLength - ABBREVIATION.length()) + ABBREVIATION;
     }
 
+    /**
+     * Mentions a guild channel by its id
+     *
+     * @param channelId the channel id to mention
+     * @return channel mention
+     */
+    public static String mentionChannelById(long channelId) {
+        return "<#%s>".formatted(channelId);
+    }
 }

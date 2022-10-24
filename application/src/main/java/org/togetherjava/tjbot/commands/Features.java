@@ -126,7 +126,7 @@ public class Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
-        features.add(new AskCommand(config, helpSystemHelper));
+        features.add(new AskCommand(config, helpSystemHelper, database));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
 
