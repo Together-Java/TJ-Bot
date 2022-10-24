@@ -47,7 +47,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
-    private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
+    private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
     private String reportedMessage;
@@ -56,7 +56,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     /**
      * Creates a new instance.
      *
-     * @param config to get the channel to forward reports to
+     * @param config to get the channel to forward reports to.
      */
     public ReportCommand(Config config) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
@@ -91,26 +91,26 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        long userId = event.getUser().getIdLong();
+        long userID = event.getUser().getIdLong();
 
-        if (handleIsOnCooldown(userId, event)) {
+        if (handleIsOnCooldown(userID, event)) {
             return;
         }
-        authorToLastModMailInvocation.put(userId, Instant.now());
+        authorToLastReportInvocation.put(userID, Instant.now());
         event.deferReply().setEphemeral(true).queue();
 
-        long guildId = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
+        long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
             .getIdLong();
-        Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), guildId);
+        Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), guildID);
         if (modMailAuditLog.isEmpty()) {
             logger.warn(
                     "Cannot find the designated modmail channel in server by id {} with the pattern {}",
-                    guildId, configModMailChannelPattern);
+                    guildID, configModMailChannelPattern);
             return;
         }
         String modalMessage = event.getValue(MESSAGE_INPUT).getAsString();
         MessageCreateAction message =
-                createModMessage(modalMessage, userId, modMailAuditLog.orElseThrow());
+                createModMessage(modalMessage, userID, modMailAuditLog.orElseThrow());
 
         sendMessage(event, message);
 
@@ -118,8 +118,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     }
 
-    private boolean handleIsOnCooldown(long userId, ModalInteractionEvent event) {
-        if (!isChannelOnCooldown(userId)) {
+    private boolean handleIsOnCooldown(long userID, ModalInteractionEvent event) {
+        if (!isChannelOnCooldown(userID)) {
             return false;
         }
         event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
@@ -129,15 +129,15 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private boolean isChannelOnCooldown(long userId) {
-        return Optional.ofNullable(authorToLastModMailInvocation.getIfPresent(userId))
+        return Optional.ofNullable(authorToLastReportInvocation.getIfPresent(userId))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,
                     COOLDOWN_DURATION_UNIT))
             .filter(Instant.now()::isBefore)
             .isPresent();
     }
 
-    private Optional<TextChannel> getModMailChannel(JDA jda, long guildId) {
-        return jda.getGuildById(guildId)
+    private Optional<TextChannel> getModMailChannel(JDA jda, long guildID) {
+        return jda.getGuildById(guildID)
             .getTextChannelCache()
             .stream()
             .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
@@ -160,14 +160,14 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         }).flatMap(hook::editOriginal).queue();
     }
 
-    private MessageEmbed createReportMessage(String modalMessage, long userId) {
+    private MessageEmbed createReportMessage(String modalMessage, long userID) {
         return new EmbedBuilder().setTitle("Report")
             .setDescription(("""
                     Reported Message: **%s**
                     [Reported Message URL](%s)
                     Modal Message: **%s**""").formatted(reportedMessage, reportedMessageUrl,
                     modalMessage))
-            .setAuthor("Author ID: %s".formatted(userId))
+            .setAuthor("Author ID: %s".formatted(userID))
             .setColor(AMBIENT_COLOR)
             .setTimestamp(Instant.now())
             .build();
