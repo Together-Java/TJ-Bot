@@ -139,6 +139,10 @@ public final class ReminderCommand extends SlashCommandAdapter {
             .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),
                     getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), false));
 
+        if (remindersEmbed.getFields().isEmpty()) {
+            remindersEmbed.setDescription("No pending reminders");
+        }
+
         event.replyEmbeds(remindersEmbed.build()).setEphemeral(true).queue();
     }
 
