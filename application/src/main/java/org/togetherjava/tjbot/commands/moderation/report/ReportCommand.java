@@ -42,13 +42,13 @@ import java.util.regex.Pattern;
 public final class ReportCommand extends BotCommandAdapter implements MessageContextCommand {
 
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
-    public static final String COMMAND_NAME = "report";
+    private static final String COMMAND_NAME = "report";
     private static final String MESSAGE_INPUT = "message";
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
-    public static String REPORTED_MESSAGE;
-    public static String REPORTED_MESSAGE_URL;
+    private static String REPORTED_MESSAGE;
+    private static String REPORTED_MESSAGE_URL;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
