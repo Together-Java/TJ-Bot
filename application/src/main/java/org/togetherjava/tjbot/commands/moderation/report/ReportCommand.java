@@ -47,11 +47,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
-    private static String reportedMessage;
-    private static String reportedMessageUrl;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
+    private String reportedMessage;
+    private String reportedMessageUrl;
 
     public ReportCommand(Config config) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
