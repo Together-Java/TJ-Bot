@@ -133,6 +133,7 @@ public final class AskCommand extends SlashCommandAdapter {
     }
 
     private void sendCooldownResponse(SlashCommandInteractionEvent event) {
+        Guild guild = event.getGuild();
         User user = event.getUser();
 
         String message =
@@ -140,12 +141,10 @@ public final class AskCommand extends SlashCommandAdapter {
                         Sorry, you can only create a single help thread every %s %s. Please use your existing thread %s instead.
                         If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
 
-        RestAction<String> changeTitle = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
-                HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
-                HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
-        RestAction<String> changeCategory = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
-                HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
-                HelpThreadCommand.CHANGE_CATEGORY_OPTION);
+        RestAction<String> changeTitle =
+                mentionHelpChangeCommand(guild, HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
+        RestAction<String> changeCategory =
+                mentionHelpChangeCommand(guild, HelpThreadCommand.CHANGE_CATEGORY_SUBCOMMAND);
         long lastCreatedThreadId = database
             .read(context -> context.selectFrom(HELP_THREADS)
                 .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
@@ -234,5 +233,10 @@ public final class AskCommand extends SlashCommandAdapter {
         }
 
         logger.error("Attempted to create a help thread, but failed", exception);
+    }
+
+    private static RestAction<String> mentionHelpChangeCommand(Guild guild, String subcommand) {
+        return MessageUtils.mentionGuildSlashCommand(guild, HelpThreadCommand.COMMAND_NAME,
+                HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP, subcommand);
     }
 }
