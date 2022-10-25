@@ -24,7 +24,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
      * @see <a href="https://www.regular-expressions.info/unicode.html#category">Unicode
      *      Categories</a>
      */
-    private static final String UNCOUNTED_CHARS = "\\P{C}";
+    private static final Pattern UNCOUNTED_CHARS = Pattern.compile("\\p{C}");
 
     private final Database database;
 
@@ -74,7 +74,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
     private void addMessageRecord(MessageReceivedEvent event) {
         String messageContent = event.getMessage().getContentRaw();
-        long messageLength = messageContent.replaceAll(UNCOUNTED_CHARS, "").length();
+        long messageLength = UNCOUNTED_CHARS.matcher(messageContent).replaceAll("").length();
 
         database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
             .setMessageId(event.getMessage().getIdLong())
