@@ -137,7 +137,7 @@ public final class AskCommand extends SlashCommandAdapter {
 
         String message =
                 """
-                        Sorry, you can only create a single help thread every 5 minutes. Please use your existing thread %s instead.
+                        Sorry, you can only create a single help thread every %s %s. Please use your existing thread %s instead.
                         If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
 
         RestAction<String> changeTitle = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
@@ -160,8 +160,10 @@ public final class AskCommand extends SlashCommandAdapter {
         }
 
         RestAction.allOf(changeCategory, changeTitle)
-            .map(mentions -> message.formatted(MessageUtils.mentionChannelById(lastCreatedThreadId),
-                    mentions.get(0), mentions.get(1)))
+            .map(mentions -> message.formatted(COOLDOWN_DURATION_VALUE,
+                    COOLDOWN_DURATION_UNIT.name(),
+                    MessageUtils.mentionChannelById(lastCreatedThreadId), mentions.get(0),
+                    mentions.get(1)))
             .flatMap(text -> event.reply(text).setEphemeral(true))
             .queue();
     }
