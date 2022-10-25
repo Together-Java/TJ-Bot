@@ -32,6 +32,9 @@ public final class BookmarksSystem {
     public static final Color COLOR_WARNING = new Color(245, 169, 127);
     public static final Color COLOR_FAILURE = new Color(238, 153, 160);
 
+    public static final int MAX_BOOKMARK_COUNT_TOTAL = 1_000_000;
+    public static final int WARN_BOOKMARK_COUNT_TOTAL = 900_000;
+    public static final int MAX_BOOKMARK_COUNT_USER = 500;
     public static final int MAX_NOTE_LENGTH = 150;
 
     private final Database database;
@@ -129,6 +132,18 @@ public final class BookmarksSystem {
         database.write(context -> context.deleteFrom(BOOKMARKS)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID), BOOKMARKS.CHANNEL_ID.in(channelIDs))
             .execute());
+    }
+
+    int getTotalBookmarkCount() {
+        return database
+            .read(context -> context.selectCount().from(BOOKMARKS).fetchOne(0, int.class));
+    }
+
+    int getUserBookmarkCount(long authorID) {
+        return database.read(context -> context.selectCount()
+            .from(BOOKMARKS)
+            .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
+            .fetchOne(0, int.class));
     }
 
     /**

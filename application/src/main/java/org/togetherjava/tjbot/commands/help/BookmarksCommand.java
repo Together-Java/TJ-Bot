@@ -7,11 +7,15 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 public final class BookmarksCommand extends SlashCommandAdapter {
+
+    private static final Logger logger = LoggerFactory.getLogger(BookmarksCommand.class);
 
     public static final String COMMAND_NAME = "bookmarks";
     public static final String SUBCOMMAND_ADD = "add";
@@ -31,6 +35,14 @@ public final class BookmarksCommand extends SlashCommandAdapter {
             Bookmark added!
             """, BookmarksSystem.COLOR_SUCCESS);
 
+    private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED = BookmarksSystem.simpleEmbed("""
+            You can't add a bookmark right now because the total amount
+            of bookmarks has exceeded its limit! Please wait a bit.
+            """, BookmarksSystem.COLOR_FAILURE);
+
+    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED = BookmarksSystem.simpleEmbed("""
+            You have exceeded your bookmarks limit! Please delete your old bookmarks.
+            """, BookmarksSystem.COLOR_FAILURE);
 
     private final BookmarksSystem bookmarksSystem;
 
@@ -88,6 +100,27 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
         if (bookmarksSystem.didUserBookmarkChannel(userID, channelID)) {
             event.replyEmbeds(ALREADY_BOOKMARKED_EMBED).setEphemeral(true).queue();
+            return;
+        }
+
+        long bookmarkCountTotal = bookmarksSystem.getTotalBookmarkCount();
+        long bookmarkCountUser = bookmarksSystem.getUserBookmarkCount(userID);
+
+        if (bookmarkCountTotal == BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL - 1) {
+            logger.warn("The bookmark limit will be reached soon!");
+        }
+
+        if (bookmarkCountTotal == BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL - 1) {
+            logger.error("The bookmark limit has been reached!");
+        }
+
+        if (bookmarkCountTotal >= BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
+            event.replyEmbeds(BOOKMARK_LIMIT_TOTAL_EMBED).setEphemeral(true).queue();
+            return;
+        }
+
+        if (bookmarkCountUser >= BookmarksSystem.MAX_BOOKMARK_COUNT_USER) {
+            event.replyEmbeds(BOOKMARK_LIMIT_USER_EMBED).setEphemeral(true).queue();
             return;
         }
 
