@@ -110,7 +110,8 @@ public class MessageUtils {
     }
 
     /**
-     * Mentions a guild channel by its id
+     * Mentions a guild channel by its id Clone of JDAs Channel#getAsMention, but unfortunately
+     * channel instances can not be created out of just an ID, unlike User#fromId
      *
      * @param channelId the channel id to mention
      * @return channel mention
