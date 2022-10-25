@@ -145,7 +145,7 @@ public final class AskCommand extends SlashCommandAdapter {
                 mentionHelpChangeCommand(guild, HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
         RestAction<String> changeCategory =
                 mentionHelpChangeCommand(guild, HelpThreadCommand.CHANGE_CATEGORY_SUBCOMMAND);
-        long lastCreatedThreadId = database
+        long lastThreadByAuthorId = database
             .read(context -> context.selectFrom(HELP_THREADS)
                 .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
                 .orderBy(HELP_THREADS.CREATED_AT.desc())
@@ -153,16 +153,16 @@ public final class AskCommand extends SlashCommandAdapter {
             .get(0)
             .getChannelId();
 
-        if (lastCreatedThreadId == 0) {
+        if (lastThreadByAuthorId == 0) {
             logger.warn("Can't find the last help thread created by the user with id ({})",
                     user.getId());
         }
 
         RestAction.allOf(changeCategory, changeTitle)
-            .map(mentions -> message.formatted(COOLDOWN_DURATION_VALUE,
+            .map(commandMentions -> message.formatted(COOLDOWN_DURATION_VALUE,
                     COOLDOWN_DURATION_UNIT.name(),
-                    MessageUtils.mentionChannelById(lastCreatedThreadId), mentions.get(0),
-                    mentions.get(1)))
+                    MessageUtils.mentionChannelById(lastThreadByAuthorId), commandMentions.get(0),
+                    commandMentions.get(1)))
             .flatMap(text -> event.reply(text).setEphemeral(true))
             .queue();
     }
