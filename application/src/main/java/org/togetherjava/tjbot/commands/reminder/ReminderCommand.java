@@ -19,9 +19,7 @@ import org.togetherjava.tjbot.db.Database;
 import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
@@ -55,8 +53,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
     static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
-    private final Map<String, Consumer<SlashCommandInteractionEvent>> subcommandHandler = Map
-        .of(CREATE_SUBCOMMAND, this::handleAddCommand, LIST_SUBCOMMAND, this::handleListCommand);
 
     /**
      * Creates an instance of the command.
@@ -74,13 +70,13 @@ public final class ReminderCommand extends SlashCommandAdapter {
                     .setRequiredRange(MIN_TIME_AMOUNT, MAX_TIME_AMOUNT);
         OptionData timeUnit = new OptionData(OptionType.STRING, TIME_UNIT_OPTION,
                 "period to remind you in, the unit of time (e.g. 5 [weeks])", true);
+        OptionData content =
+                new OptionData(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true);
         TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
 
         getData().addSubcommands(
                 new SubcommandData(CREATE_SUBCOMMAND, "creates a reminder").addOptions(timeAmount,
-                        timeUnit,
-                        new OptionData(OptionType.STRING, CONTENT_OPTION,
-                                "what to remind you about", true)),
+                        timeUnit, content),
                 new SubcommandData(LIST_SUBCOMMAND, "shows all your currently pending reminders"));
 
         this.database = database;
@@ -88,10 +84,15 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        subcommandHandler.get(event.getSubcommandName()).accept(event);
+        switch (event.getSubcommandName()) {
+            case CREATE_SUBCOMMAND -> handleCreateCommand(event);
+            case LIST_SUBCOMMAND -> handleListCommand(event);
+            default -> throw new AssertionError(
+                    "Unexpected Subcommand: " + event.getSubcommandName());
+        }
     }
 
-    private void handleAddCommand(SlashCommandInteractionEvent event) {
+    private void handleCreateCommand(SlashCommandInteractionEvent event) {
         int timeAmount = Math.toIntExact(event.getOption(TIME_AMOUNT_OPTION).getAsLong());
         String timeUnit = event.getOption(TIME_UNIT_OPTION).getAsString();
         String content = event.getOption(CONTENT_OPTION).getAsString();
@@ -130,10 +131,13 @@ public final class ReminderCommand extends SlashCommandAdapter {
         EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
             .setColor(RemindRoutine.AMBIENT_COLOR);
 
+        long guildId = event.getGuild().getIdLong();
+        long userId = event.getUser().getIdLong();
+
         database
             .read(context -> context.selectFrom(PENDING_REMINDERS)
-                .where(PENDING_REMINDERS.GUILD_ID.eq(event.getGuild().getIdLong())
-                    .and(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())))
+                .where(PENDING_REMINDERS.GUILD_ID.eq(guildId)
+                    .and(PENDING_REMINDERS.AUTHOR_ID.eq(userId)))
                 .orderBy(PENDING_REMINDERS.CREATED_AT.asc())
                 .fetch())
             .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),

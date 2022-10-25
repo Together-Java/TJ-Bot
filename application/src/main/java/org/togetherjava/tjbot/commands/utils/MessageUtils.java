@@ -116,6 +116,6 @@ public class MessageUtils {
      * @return channel mention
      */
     public static String mentionChannelById(long channelId) {
-        return "<#%s>".formatted(channelId);
+        return "<#%d>".formatted(channelId);
     }
 }
