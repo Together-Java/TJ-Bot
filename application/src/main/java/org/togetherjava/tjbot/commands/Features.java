@@ -63,6 +63,7 @@ public class Features {
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
         TagSystem tagSystem = new TagSystem(database);
+        BookmarksSystem bookmarksSystem = new BookmarksSystem(config, database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
@@ -129,9 +130,11 @@ public class Features {
         features.add(new AskCommand(config, helpSystemHelper));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
+        features.add(new BookmarksCommand(bookmarksSystem));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
+        features.add(new BookmarkPaginatorInteractor(bookmarksSystem));
 
         return features;
     }
