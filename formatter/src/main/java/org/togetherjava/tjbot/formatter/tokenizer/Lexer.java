@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
  * Tokenizer that can turn a list of strings (or a string) into a list of tokens
  */
 public class Lexer {
+    static final String CONTENT_GROUP = "content";
     /**
      * Regex to match multi-line Java comments (including Javadoc)
      */
@@ -60,10 +61,10 @@ public class Lexer {
 
     private Token findToken(String content) {
         for (TokenType type : TokenType.values()) {
-            Matcher matcher = type.getRegex().matcher(content);
+            Matcher matcher = type.getPattern().matcher(content);
 
             if (matcher.find()) {
-                return new Token(matcher.group(1), type);
+                return new Token(matcher.group(CONTENT_GROUP), type);
             }
         }
 

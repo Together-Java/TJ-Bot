@@ -85,7 +85,7 @@ class CodeSectionFormatter {
     private void put(Token token) {
         TokenType type = token.type();
 
-        if (isOperator(token)) { // apply space before an operator (like +, - and *)
+        if (isBinaryOperator(token)) { // apply space before an operator (like +, - and *)
             result.append(' ');
         }
 
@@ -114,7 +114,7 @@ class CodeSectionFormatter {
     private boolean shouldPutSpaceAfter(Token token) {
         TokenType type = token.type();
 
-        return isKeyword(token) || isOperator(token) || isParenthesisRule(token)
+        return isKeyword(token) || isBinaryOperator(token) || isParenthesisRule(token)
                 || type == TokenType.CLOSE_BRACKETS // put a space after e.g. 'try' or 'else' and
                                                     // ] or if it's an operator
                 || type == TokenType.COMMA // for e.g. multi-arg method calls or method parameters
@@ -282,7 +282,7 @@ class CodeSectionFormatter {
 
         return token.type() == TokenType.CLOSE_PARENTHESIS
                 && nextType != TokenType.CLOSE_PARENTHESIS && nextType != TokenType.SEMICOLON
-                && !isOperator(next);
+                && !isBinaryOperator(next);
     }
 
     /**
@@ -299,23 +299,23 @@ class CodeSectionFormatter {
     }
 
     /**
-     * Checks if a given token is a keyword using {@link TokenType#isKeyword()}
+     * Checks if a given token is a keyword.
      *
      * @param token token to check
      * @return whether the given token is a keyword
      */
     private boolean isKeyword(Token token) {
-        return token.type().isKeyword();
+        return token.type().getAttribute() == TokenType.Attribute.KEYWORD;
     }
 
     /**
-     * Checks if a given token is an operator using {@link TokenType#isOperator()}
+     * Checks if a given token is a binary operator.
      *
      * @param token token to check
      * @return whether the given token is an operator
      */
-    private boolean isOperator(Token token) {
-        return token.type().isOperator();
+    private boolean isBinaryOperator(Token token) {
+        return token.type().getAttribute() == TokenType.Attribute.BINARY_OPERATOR;
     }
 
     /**
