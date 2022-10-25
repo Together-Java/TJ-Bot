@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
+import java.util.Objects;
+
 public final class BookmarksCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(BookmarksCommand.class);
@@ -23,26 +25,28 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     public static final String SUBCOMMAND_REMOVE = "remove";
     public static final String ADD_OPTION_NOTE = "note";
 
-    private static final MessageEmbed NOT_A_HELP_THREAD_EMBED = BookmarksSystem.simpleEmbed("""
+    private static final MessageEmbed NOT_A_HELP_THREAD_EMBED = BookmarksSystem.createTinyEmbed("""
             This command can only be run in help threads!
             """, BookmarksSystem.COLOR_FAILURE);
 
-    private static final MessageEmbed ALREADY_BOOKMARKED_EMBED = BookmarksSystem.simpleEmbed("""
+    private static final MessageEmbed ALREADY_BOOKMARKED_EMBED = BookmarksSystem.createTinyEmbed("""
             You already bookmarked this channel!
             """, BookmarksSystem.COLOR_FAILURE);
 
-    private static final MessageEmbed BOOKMARK_ADDED_EMBED = BookmarksSystem.simpleEmbed("""
+    private static final MessageEmbed BOOKMARK_ADDED_EMBED = BookmarksSystem.createTinyEmbed("""
             Bookmark added!
             """, BookmarksSystem.COLOR_SUCCESS);
 
-    private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED = BookmarksSystem.simpleEmbed("""
-            You can't add a bookmark right now because the total amount
-            of bookmarks has exceeded its limit! Please wait a bit.
-            """, BookmarksSystem.COLOR_FAILURE);
+    private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED =
+            BookmarksSystem.createTinyEmbed("""
+                    You can't add a bookmark right now because the total amount
+                    of bookmarks has exceeded its limit! Please wait a bit.
+                    """, BookmarksSystem.COLOR_FAILURE);
 
-    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED = BookmarksSystem.simpleEmbed("""
-            You have exceeded your bookmarks limit! Please delete your old bookmarks.
-            """, BookmarksSystem.COLOR_FAILURE);
+    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED =
+            BookmarksSystem.createTinyEmbed("""
+                    You have exceeded your bookmarks limit! Please delete your old bookmarks.
+                    """, BookmarksSystem.COLOR_FAILURE);
 
     private final BookmarksSystem bookmarksSystem;
 
@@ -64,20 +68,18 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                 "Bookmark this help thread, so that you can easily look it up again")
                     .addOptions(addNoteOption);
 
-        SubcommandData listSubCommand = new SubcommandData(SUBCOMMAND_LIST, "List your bookmarks");
+        SubcommandData listSubCommand =
+                new SubcommandData(SUBCOMMAND_LIST, "List all help threads currently bookmarked");
 
-        SubcommandData removeSubCommand =
-                new SubcommandData(SUBCOMMAND_REMOVE, "Remove some of your bookmarks");
+        SubcommandData removeSubCommand = new SubcommandData(SUBCOMMAND_REMOVE,
+                "Remove some of your bookmarked help threads");
 
         getData().addSubcommands(addSubCommand, listSubCommand, removeSubCommand);
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        String subCommandName = event.getSubcommandName();
-        if (subCommandName == null) {
-            throw new AssertionError("No subcommand was provided. This should not happen");
-        }
+        String subCommandName = Objects.requireNonNull(event.getSubcommandName());
 
         switch (subCommandName) {
             case SUBCOMMAND_ADD -> addBookmark(event);
@@ -88,19 +90,32 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     }
 
     private void addBookmark(SlashCommandInteractionEvent event) {
+        long userID = event.getUser().getIdLong();
+        long channelID = event.getChannel().getIdLong();
+        String note = event.getOption(ADD_OPTION_NOTE, OptionMapping::getAsString);
+
+        if (!handleCanAddBookmark(event)) {
+            return;
+        }
+
+        bookmarksSystem.addBookmark(userID, channelID, note);
+
+        replyEmbedEphemeral(event, BOOKMARK_ADDED_EMBED);
+    }
+
+    private boolean handleCanAddBookmark(SlashCommandInteractionEvent event) {
         MessageChannelUnion channel = event.getChannel();
         long channelID = channel.getIdLong();
         long userID = event.getUser().getIdLong();
-        String note = event.getOption(ADD_OPTION_NOTE, OptionMapping::getAsString);
 
         if (!bookmarksSystem.isHelpThread(channel)) {
             replyEmbedEphemeral(event, NOT_A_HELP_THREAD_EMBED);
-            return;
+            return false;
         }
 
         if (bookmarksSystem.didUserBookmarkChannel(userID, channelID)) {
             replyEmbedEphemeral(event, ALREADY_BOOKMARKED_EMBED);
-            return;
+            return false;
         }
 
         long bookmarkCountTotal = bookmarksSystem.getTotalBookmarkCount();
@@ -116,17 +131,15 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
         if (bookmarkCountTotal >= BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
             replyEmbedEphemeral(event, BOOKMARK_LIMIT_TOTAL_EMBED);
-            return;
+            return false;
         }
 
         if (bookmarkCountUser >= BookmarksSystem.MAX_BOOKMARK_COUNT_USER) {
             replyEmbedEphemeral(event, BOOKMARK_LIMIT_USER_EMBED);
-            return;
+            return false;
         }
 
-        bookmarksSystem.addBookmark(userID, channelID, note);
-
-        replyEmbedEphemeral(event, BOOKMARK_ADDED_EMBED);
+        return true;
     }
 
     private void replyEmbedEphemeral(SlashCommandInteractionEvent event, MessageEmbed embed) {

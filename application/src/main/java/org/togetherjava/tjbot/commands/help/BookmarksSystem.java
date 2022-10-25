@@ -173,13 +173,13 @@ public final class BookmarksSystem {
     }
 
     /**
-     * Creates a simple embed with just a description and color
+     * Creates an embed with just a description and color
      *
      * @param description The embed description
      * @param color The embed color
      * @return The generated embed
      */
-    static MessageEmbed simpleEmbed(String description, Color color) {
+    static MessageEmbed createTinyEmbed(String description, Color color) {
         return new EmbedBuilder().setDescription(description).setColor(color).build();
     }
 
