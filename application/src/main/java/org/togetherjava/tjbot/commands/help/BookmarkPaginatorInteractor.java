@@ -1,7 +1,9 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
@@ -159,6 +161,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
 
     private void onPaginationRequest(GenericCommandInteractionEvent event,
             PaginationType paginationType) {
+        JDA jda = event.getJDA();
         long userID = event.getUser().getIdLong();
         List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
 
@@ -172,7 +175,8 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
         List<LayoutComponent> components = new ArrayList<>();
         components.add(generateNavigationComponent(paginationType, 0));
         if (paginationType == PaginationType.REMOVE) {
-            components.addAll(generateRemoveComponents(bookmarks, paginationType, 0, List.of()));
+            components
+                .addAll(generateRemoveComponents(jda, bookmarks, paginationType, 0, List.of()));
         }
 
         event.replyEmbeds(pageEmbed).setComponents(components).setEphemeral(true).queue();
@@ -180,6 +184,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
 
     private void updatePagination(ComponentInteraction event, ComponentArguments args,
             List<BookmarksRecord> bookmarks) {
+        JDA jda = event.getJDA();
         MessageEmbed pageEmbed = generatePageEmbed(bookmarks, args);
 
         List<LayoutComponent> components = new ArrayList<>();
@@ -189,7 +194,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
         if (args.paginationType == PaginationType.REMOVE) {
             RemoveComponentArguments removeArgs = (RemoveComponentArguments) args;
 
-            components.addAll(generateRemoveComponents(bookmarks, removeArgs.paginationType,
+            components.addAll(generateRemoveComponents(jda, bookmarks, removeArgs.paginationType,
                     removeArgs.currentPageIndex, removeArgs.bookmarksToRemoveChannelIDs));
         }
 
@@ -266,7 +271,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
         return ActionRow.of(buttonPrev, buttonNext);
     }
 
-    private List<LayoutComponent> generateRemoveComponents(List<BookmarksRecord> bookmarks,
+    private List<LayoutComponent> generateRemoveComponents(JDA jda, List<BookmarksRecord> bookmarks,
             PaginationType paginationType, int currentPageIndex,
             List<Long> bookmarksToRemoveChannelIDs) {
         List<PageEntry> pageEntries = getPageEntries(bookmarks, currentPageIndex);
@@ -279,10 +284,14 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
         };
 
         List<SelectOption> selectMenuRemoveOptions = pageEntries.stream().map(pageEntry -> {
-            String label = "Delete bookmark %d".formatted(pageEntry.bookmarkNumber);
-            String channelID = String.valueOf(pageEntry.bookmark.getChannelId());
+            ThreadChannel channel = jda.getThreadChannelById(pageEntry.bookmark.getChannelId());
+            String channelIDString = String.valueOf(pageEntry.bookmark.getChannelId());
+            int bookmarkNumber = pageEntry.bookmarkNumber;
 
-            return SelectOption.of(label, channelID);
+            String label = channel != null ? "%d. %s".formatted(bookmarkNumber, channel.getName())
+                    : "Delete bookmark %d".formatted(bookmarkNumber);
+
+            return SelectOption.of(label, channelIDString);
         }).toList();
 
         String selectMenuRemoveId = generateRemoveComponentId.apply(SELECTMENU_REMOVE_NAME);
