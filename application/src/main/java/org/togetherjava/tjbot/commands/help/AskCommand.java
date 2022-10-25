@@ -149,13 +149,13 @@ public final class AskCommand extends SlashCommandAdapter {
             .read(context -> context.selectFrom(HELP_THREADS)
                 .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
                 .orderBy(HELP_THREADS.CREATED_AT.desc())
-                .fetch())
-            .get(0)
+                .fetchOne())
             .getChannelId();
 
         if (lastThreadByAuthorId == 0) {
             logger.warn("Can't find the last help thread created by the user with id ({})",
                     user.getId());
+            return;
         }
 
         RestAction.allOf(changeCategory, changeTitle)
