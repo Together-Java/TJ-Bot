@@ -149,6 +149,6 @@ public class MessageUtils {
      * @return the channel as formatted string which Discord interprets as clickable mention
      */
     public static String mentionChannelById(long channelId) {
-        return "<#%s>".formatted(channelId);
+        return "<#%d>".formatted(channelId);
     }
 }
