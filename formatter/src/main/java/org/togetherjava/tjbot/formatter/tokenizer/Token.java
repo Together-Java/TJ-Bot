@@ -1,7 +1,5 @@
 package org.togetherjava.tjbot.formatter.tokenizer;
 
-import java.util.Set;
-
 /**
  * Single token of a code, for example an opening-brace.
  * <p>
@@ -18,14 +16,8 @@ import java.util.Set;
  * @param type the type of the token, e.g., IDENTIFIER
  */
 public record Token(String content, TokenType type) {
-    private static final Set<TokenType> DEBUG_SHOW_CONTENT_TYPES =
-            Set.of(TokenType.IDENTIFIER, TokenType.UNKNOWN, TokenType.STRING, TokenType.COMMENT);
-
     @Override
     public String toString() {
-        // For some types it helps debugging to also show the content
-        String contentText =
-                DEBUG_SHOW_CONTENT_TYPES.contains(type) ? "(%s)".formatted(content) : "";
-        return type.name() + contentText;
+        return "%s(%s)".formatted(type.name(), content);
     }
 }

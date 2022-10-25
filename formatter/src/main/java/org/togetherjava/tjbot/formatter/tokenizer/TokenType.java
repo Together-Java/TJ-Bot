@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.formatter.tokenizer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 /**
@@ -44,7 +45,8 @@ public enum TokenType {
     ELSE_IF("else if", Attribute.KEYWORD),
     ELSE("else", Attribute.KEYWORD),
     SUPER("super", Attribute.KEYWORD),
-    // access modifiers
+
+    // Access modifiers
     PUBLIC("public", Attribute.KEYWORD),
     PRIVATE("private", Attribute.KEYWORD),
     PROTECTED("protected", Attribute.KEYWORD),
@@ -81,14 +83,20 @@ public enum TokenType {
     NOT("!"),
     WILDCARD("?"),
 
-    // TODO Simplify
-    COMMENT(Pattern.compile("//.*|/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/")),
+    // Comments
+    SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n)")),
+    MULTI_LINE_COMMENT(Pattern.compile("""
+            /\\* #Start
+            .* #Content
+            \\*/ #End
+            """, Pattern.DOTALL | Pattern.COMMENTS)),
 
     // Operators
-    // Technically not an operator, but used like one in enhanced-for
-    COLON(":", Attribute.BINARY_OPERATOR),
-    // Technically not an operator, but used like one in lambdas and switch expressions
-    ARROW("->", Attribute.BINARY_OPERATOR),
+    SMART_AND("&&", Attribute.BINARY_OPERATOR),
+    SINGLE_AND("&", Attribute.BINARY_OPERATOR),
+    SMART_OR("||", Attribute.BINARY_OPERATOR),
+    SINGLE_OR("|", Attribute.BINARY_OPERATOR),
+    XOR("^", Attribute.BINARY_OPERATOR),
     PLUS_EQUALS("+=", Attribute.BINARY_OPERATOR),
     MINUS_EQUALS("-=", Attribute.BINARY_OPERATOR),
     MULTIPLY_EQUALS("*=", Attribute.BINARY_OPERATOR),
@@ -103,24 +111,36 @@ public enum TokenType {
     LESS_THAN_OR_EQUALS("<=", Attribute.BINARY_OPERATOR),
     LESS_THAN("<", Attribute.BINARY_OPERATOR),
     ASSIGN("=", Attribute.BINARY_OPERATOR),
+    // Technically not an operator, but used like one in lambdas and switch expressions
+    ARROW("->", Attribute.BINARY_OPERATOR),
     PLUS_PLUS("++", Attribute.UNARY_OPERATOR),
     PLUS("+", Attribute.BINARY_OPERATOR),
     MINUS_MINUS("--", Attribute.UNARY_OPERATOR),
     MINUS("-", Attribute.BINARY_OPERATOR),
-    BOOL_AND("&&", Attribute.BINARY_OPERATOR),
-    BOOL_OR("||", Attribute.BINARY_OPERATOR),
     DIVIDE("/", Attribute.BINARY_OPERATOR),
     MULTIPLY("*", Attribute.BINARY_OPERATOR),
+    // Technically not an operator, but used like one in enhanced-for
+    COLON(":", Attribute.BINARY_OPERATOR),
 
     // Other
-    // TODO Simplify
     ANNOTATION(Pattern.compile("@[a-zA-Z]\\w*")),
-    NUMBER(Pattern.compile("(0[xb])?([0-9_]+|[0-9_]*(\\.\\d*))[dDfFlL]?")),
-    STRING(Pattern.compile("\"[^\"]*\"")),
+    NUMBER(Pattern.compile("""
+            (0[xb])? #Different base
+            ([\\d_]+ #Integers
+            | [\\d_]+\\.[\\d_]+ #Float with both, 1.3
+            | [\\d_]+\\. #Float only left, 1.
+            | \\.[\\d_]+ #Float only right, .1
+            )
+            [dDfFlL]? #Type suffix
+            """, Pattern.COMMENTS)),
+    // TODO Rework without regex, otherwise it either doesnt support escapes or blows up at 2 KB
+    // text
+    STRING(Pattern.compile("\"([^\"\\\\]*(\\\\.)?)*\"", Pattern.COMMENTS)),
     IDENTIFIER(Pattern.compile("[a-zA-Z]\\w*")),
     WHITESPACE(Pattern.compile("\\s+")),
 
-    UNKNOWN(Pattern.compile("."));
+    // Fallback for everything that has not been matched yet
+    UNKNOWN(Pattern.compile(".", Pattern.DOTALL));
 
     private final Pattern pattern;
     private final Attribute attribute;
@@ -173,7 +193,7 @@ public enum TokenType {
             patternText += notFollowedByLetter;
         }
 
-        return Pattern.compile(patternText);
+        return Pattern.compile(patternText, pattern.flags());
     }
 
     /**
@@ -199,5 +219,17 @@ public enum TokenType {
          * No further specification of the type.
          */
         NONE
+    }
+
+    /**
+     * Starts the application.
+     *
+     * @param args Not supported
+     */
+    public static void main(final String[] args) {
+        // FIXME Remove after testing
+        String text = "\"" + "hello \\\"John\\\" world".repeat(100) + "\"";
+        System.out.println(text.getBytes(StandardCharsets.UTF_8).length);
+        System.out.println(STRING.getPattern().matcher(text).matches());
     }
 }

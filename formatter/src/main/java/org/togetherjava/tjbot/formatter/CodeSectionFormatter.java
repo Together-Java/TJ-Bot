@@ -232,7 +232,8 @@ class CodeSectionFormatter {
      */
     private boolean shouldPutNewLineAfter(TokenType type) {
         if (type == TokenType.OPEN_BRACES || type == TokenType.SEMICOLON
-                || type == TokenType.COMMENT || type == TokenType.ANNOTATION) {
+                || type == TokenType.SINGLE_LINE_COMMENT || type == TokenType.MULTI_LINE_COMMENT
+                || type == TokenType.ANNOTATION) {
             return true;
         }
 
