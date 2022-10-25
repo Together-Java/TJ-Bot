@@ -94,12 +94,12 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         String note = event.getOption(ADD_OPTION_NOTE, OptionMapping::getAsString);
 
         if (!bookmarksSystem.isHelpThread(channel)) {
-            event.replyEmbeds(NOT_A_HELP_THREAD_EMBED).setEphemeral(true).queue();
+            replyEmbedEphemeral(event, NOT_A_HELP_THREAD_EMBED);
             return;
         }
 
         if (bookmarksSystem.didUserBookmarkChannel(userID, channelID)) {
-            event.replyEmbeds(ALREADY_BOOKMARKED_EMBED).setEphemeral(true).queue();
+            replyEmbedEphemeral(event, ALREADY_BOOKMARKED_EMBED);
             return;
         }
 
@@ -115,18 +115,22 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         }
 
         if (bookmarkCountTotal >= BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
-            event.replyEmbeds(BOOKMARK_LIMIT_TOTAL_EMBED).setEphemeral(true).queue();
+            replyEmbedEphemeral(event, BOOKMARK_LIMIT_TOTAL_EMBED);
             return;
         }
 
         if (bookmarkCountUser >= BookmarksSystem.MAX_BOOKMARK_COUNT_USER) {
-            event.replyEmbeds(BOOKMARK_LIMIT_USER_EMBED).setEphemeral(true).queue();
+            replyEmbedEphemeral(event, BOOKMARK_LIMIT_USER_EMBED);
             return;
         }
 
         bookmarksSystem.addBookmark(userID, channelID, note);
 
-        event.replyEmbeds(BOOKMARK_ADDED_EMBED).setEphemeral(true).queue();
+        replyEmbedEphemeral(event, BOOKMARK_ADDED_EMBED);
+    }
+
+    private void replyEmbedEphemeral(SlashCommandInteractionEvent event, MessageEmbed embed) {
+        event.replyEmbeds(embed).setEphemeral(true).queue();
     }
 
 }
