@@ -32,6 +32,8 @@ public final class BookmarksSystem {
     public static final Color COLOR_WARNING = new Color(245, 169, 127);
     public static final Color COLOR_FAILURE = new Color(238, 153, 160);
 
+    public static final int MAX_NOTE_LENGTH = 150;
+
     private final Database database;
     private final Predicate<String> isOverviewChannelName;
 

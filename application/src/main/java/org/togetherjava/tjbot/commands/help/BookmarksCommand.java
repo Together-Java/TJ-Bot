@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
@@ -42,9 +43,14 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Bookmark help threads", CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
 
+        OptionData addNoteOption =
+                new OptionData(OptionType.STRING, ADD_OPTION_NOTE, "A note for this bookmark")
+                    .setMaxLength(BookmarksSystem.MAX_NOTE_LENGTH)
+                    .setRequired(false);
+
         SubcommandData addSubCommand = new SubcommandData(SUBCOMMAND_ADD,
-                "Bookmark this help thread, so that you can easily look it up again").addOption(
-                        OptionType.STRING, ADD_OPTION_NOTE, "A note for this bookmark", false);
+                "Bookmark this help thread, so that you can easily look it up again")
+                    .addOptions(addNoteOption);
 
         SubcommandData listSubCommand = new SubcommandData(SUBCOMMAND_LIST, "List your bookmarks");
 
