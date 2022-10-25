@@ -138,7 +138,7 @@ public final class AskCommand extends SlashCommandAdapter {
         String message =
                 """
                         Sorry, you can only create a single help thread every 5 minutes. Please use your existing thread %s instead.
-                        If you made a typo or similar, you can adjust the title using the command %s and the category with %s :ok_hand:""";
+                        If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
 
         RestAction<String> changeTitle = MessageUtils.mentionGuildSlashCommand(event.getGuild(),
                 HelpThreadCommand.COMMAND_NAME, HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
