@@ -14,6 +14,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 import javax.annotation.Nullable;
 
 import java.awt.*;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
@@ -36,6 +37,7 @@ public final class BookmarksSystem {
     public static final int WARN_BOOKMARK_COUNT_TOTAL = 900_000;
     public static final int MAX_BOOKMARK_COUNT_USER = 500;
     public static final int MAX_NOTE_LENGTH = 150;
+    public static final Duration LEAVE_REMOVAL_DELAY = Duration.ofDays(7);
 
     private final Database database;
     private final Predicate<String> isOverviewChannelName;
@@ -118,6 +120,7 @@ public final class BookmarksSystem {
             .setChannelId(channelID)
             .setCreatedAt(Instant.now())
             .setNote(note)
+            .setScheduledRemovalAt(null)
             .insert());
     }
 
@@ -144,6 +147,29 @@ public final class BookmarksSystem {
             .from(BOOKMARKS)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
             .fetchOne(0, int.class));
+    }
+
+    void scheduleUsersBookmarksRemoval(long authorID) {
+        Instant scheduledRemovalAt = Instant.now().plus(LEAVE_REMOVAL_DELAY);
+
+        database.write(context -> context.update(BOOKMARKS)
+            .set(BOOKMARKS.SCHEDULED_REMOVAL_AT, scheduledRemovalAt)
+            .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
+            .execute());
+    }
+
+    void cancelUsersBookmarksRemoval(long authorID) {
+        database.write(context -> context.update(BOOKMARKS)
+            .setNull(BOOKMARKS.SCHEDULED_REMOVAL_AT)
+            .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
+            .execute());
+    }
+
+    void cleanRemovalScheduledBookmarks() {
+        database.write(context -> context.deleteFrom(BOOKMARKS)
+            .where(BOOKMARKS.SCHEDULED_REMOVAL_AT.isNotNull(),
+                    BOOKMARKS.SCHEDULED_REMOVAL_AT.lessThan(Instant.now()))
+            .execute());
     }
 
     /**
