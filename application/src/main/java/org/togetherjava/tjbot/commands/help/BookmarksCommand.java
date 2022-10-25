@@ -51,7 +51,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     private final BookmarksSystem bookmarksSystem;
 
     /**
-     * Creates a new instance and registers every sub command
+     * Creates a new instance and registers every sub command.
      *
      * @param bookmarksSystem The bookmarks system to use
      */

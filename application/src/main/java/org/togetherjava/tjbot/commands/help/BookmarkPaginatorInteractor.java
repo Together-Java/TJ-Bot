@@ -142,7 +142,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     }
 
     /**
-     * Gets called when {@link BookmarksCommand} requests a list pagination
+     * Gets called when {@link BookmarksCommand} requests a list pagination.
      * 
      * @param event The command interaction event
      */
@@ -151,7 +151,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     }
 
     /**
-     * Gets called when {@link BookmarksCommand} requests a remove pagination
+     * Gets called when {@link BookmarksCommand} requests a remove pagination.
      * 
      * @param event The command interaction event
      */
@@ -310,7 +310,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     }
 
     /**
-     * Removed the selected bookmarks from the bookmarks list and the database
+     * Removed the selected bookmarks from the bookmarks list and the database.
      *
      * @param bookmarks The bookmarks list
      * @param event The component interaction event
@@ -328,7 +328,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     }
 
     /**
-     * Calculates which bookmarks to display as page entries
+     * Calculates which bookmarks to display as page entries.
      *
      * @param bookmarks The bookmarks list
      * @param pageIndex The page index the entries should be for
@@ -346,7 +346,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     }
 
     /**
-     * Calculates the last page index for displaying all bookmarks
+     * Calculates the last page index for displaying all bookmarks.
      *
      * @param bookmarks The bookmarks list
      * @return The index of the last page
@@ -358,7 +358,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     }
 
     /**
-     * Makes sure that the page index never is negative or larger than the index of the last page
+     * Makes sure that the page index never is negative or larger than the index of the last page.
      *
      * @param bookmarks The bookmarks list
      * @param pageIndex The page possibly invalid index

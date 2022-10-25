@@ -7,7 +7,7 @@ import org.togetherjava.tjbot.commands.Routine;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tells the bookmarks system to clean bookmarks scheduled for removal
+ * Tells the bookmarks system to clean bookmarks scheduled for removal.
  */
 public final class BookmarksCleanupRoutine implements Routine {
 

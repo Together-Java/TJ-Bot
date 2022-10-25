@@ -173,7 +173,7 @@ public final class BookmarksSystem {
     }
 
     /**
-     * Creates an embed with just a description and color
+     * Creates an embed with just a description and color.
      *
      * @param description The embed description
      * @param color The embed color
