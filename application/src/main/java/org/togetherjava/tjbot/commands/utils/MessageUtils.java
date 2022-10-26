@@ -142,12 +142,13 @@ public class MessageUtils {
     }
 
     /**
-     * Mentions a guild channel by its id Clone of JDAs Channel#getAsMention, but unfortunately
-     * channel instances can not be created out of just an ID, unlike User#fromId
+     * Mentions a guild channel by its id.
      *
      * @param channelId the ID of the channel to mention
      * @return the channel as formatted string which Discord interprets as clickable mention
      */
+    // Clone of JDAs Channel#getAsMention, but unfortunately channel instances can not be created
+    // out of just an ID, unlike User#fromId
     public static String mentionChannelById(long channelId) {
         return "<#%d>".formatted(channelId);
     }

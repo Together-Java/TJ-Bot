@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
+import static org.togetherjava.tjbot.commands.help.HelpThreadCommand.*;
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 /**
@@ -133,18 +134,12 @@ public final class AskCommand extends SlashCommandAdapter {
     }
 
     private void sendCooldownResponse(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
         User user = event.getUser();
+        Guild guild = event.getGuild();
 
-        String message =
-                """
-                        Sorry, you can only create a single help thread every %s %s. Please use your existing thread %s instead.
-                        If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
-
-        RestAction<String> changeTitle =
-                mentionHelpChangeCommand(guild, HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND);
+        RestAction<String> changeTitle = mentionHelpChangeCommand(guild, CHANGE_TITLE_SUBCOMMAND);
         RestAction<String> changeCategory =
-                mentionHelpChangeCommand(guild, HelpThreadCommand.CHANGE_CATEGORY_SUBCOMMAND);
+                mentionHelpChangeCommand(guild, CHANGE_CATEGORY_SUBCOMMAND);
         long lastThreadByAuthorId = database
             .read(context -> context.selectFrom(HELP_THREADS)
                 .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
@@ -157,6 +152,11 @@ public final class AskCommand extends SlashCommandAdapter {
                     user.getId());
             return;
         }
+
+        String message =
+                """
+                        Sorry, you can only create a single help thread every %s %s. Please use your existing thread %s instead.
+                        If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
 
         RestAction.allOf(changeCategory, changeTitle)
             .map(commandMentions -> message.formatted(COOLDOWN_DURATION_VALUE,
@@ -236,7 +236,7 @@ public final class AskCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<String> mentionHelpChangeCommand(Guild guild, String subcommand) {
-        return MessageUtils.mentionGuildSlashCommand(guild, HelpThreadCommand.COMMAND_NAME,
-                HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP, subcommand);
+        return MessageUtils.mentionGuildSlashCommand(guild, COMMAND_NAME, CHANGE_SUBCOMMAND_GROUP,
+                subcommand);
     }
 }
