@@ -10,11 +10,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import org.jooq.Result;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 
 import java.time.*;
 import java.time.temporal.TemporalAmount;
@@ -134,20 +136,29 @@ public final class ReminderCommand extends SlashCommandAdapter {
         long guildId = event.getGuild().getIdLong();
         long userId = event.getUser().getIdLong();
 
-        database
-            .read(context -> context.selectFrom(PENDING_REMINDERS)
-                .where(PENDING_REMINDERS.GUILD_ID.eq(guildId)
-                    .and(PENDING_REMINDERS.AUTHOR_ID.eq(userId)))
-                .orderBy(PENDING_REMINDERS.CREATED_AT.asc())
-                .fetch())
-            .forEach(reminder -> remindersEmbed.addField(reminder.getContent(),
-                    getDescription.apply(reminder.getChannelId(), reminder.getRemindAt()), false));
+        Result<PendingRemindersRecord> pendingReminders = getReminders(guildId, userId);
 
-        if (remindersEmbed.getFields().isEmpty()) {
+        if (pendingReminders.isEmpty()) {
             remindersEmbed.setDescription("No pending reminders");
+        } else {
+            pendingReminders.forEach(reminder -> {
+                String content = reminder.getContent();
+                long channelId = reminder.getChannelId();
+                Instant remindAt = reminder.getRemindAt();
+
+                remindersEmbed.addField(content, getDescription.apply(channelId, remindAt), false);
+            });
         }
 
         event.replyEmbeds(remindersEmbed.build()).setEphemeral(true).queue();
+    }
+
+    private Result<PendingRemindersRecord> getReminders(long guildId, long userId) {
+        return database.read(context -> context.selectFrom(PENDING_REMINDERS)
+            .where(PENDING_REMINDERS.GUILD_ID.eq(guildId)
+                .and(PENDING_REMINDERS.AUTHOR_ID.eq(userId)))
+            .orderBy(PENDING_REMINDERS.REMIND_AT.asc())
+            .fetch());
     }
 
     private static Instant parseWhen(int whenAmount, String whenUnit) {
