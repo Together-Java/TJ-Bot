@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.formatter.Formatter;
-import org.togetherjava.tjbot.formatter.tokenizer.Lexer;
 
 /**
  * Formats the given code.
@@ -13,13 +12,7 @@ import org.togetherjava.tjbot.formatter.tokenizer.Lexer;
  * While it will attempt formatting for any language, best results are achieved for Java code.
  */
 final class FormatCodeCommand implements CodeAction {
-    private final Lexer lexer;
-    private final Formatter formatter;
-
-    FormatCodeCommand() {
-        lexer = new Lexer();
-        formatter = new Formatter();
-    }
+    private final Formatter formatter = new Formatter();
 
     @Override
     public String getLabel() {
@@ -37,7 +30,7 @@ final class FormatCodeCommand implements CodeAction {
             .build();
     }
 
-    private String formatCode(String code) {
-        return formatter.format(code, lexer);
+    private String formatCode(CharSequence code) {
+        return formatter.format(code);
     }
 }

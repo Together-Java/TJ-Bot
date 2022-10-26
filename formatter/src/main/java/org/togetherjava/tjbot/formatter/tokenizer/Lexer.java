@@ -31,9 +31,6 @@ public final class Lexer {
             advancePosition(remainingCode, token.content().length());
         }
 
-        // FIXME Replace by some nice trace logging
-        tokens.stream().forEach(System.out::println);
-
         return tokens;
     }
 

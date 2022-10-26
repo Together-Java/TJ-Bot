@@ -6,42 +6,28 @@ import org.togetherjava.tjbot.formatter.tokenizer.Token;
 import java.util.List;
 
 /**
- * Formatter which can format a given string into a string which contains code blocks etc
+ * Formats code given as string. See {@link #format(CharSequence)}.
+ * <p>
+ * Best results are achieved for Java code.
  */
-public class Formatter {
-    /**
-     * Formats the given tokens
-     *
-     * @param tokens tokens to format
-     * @return resulting code
-     */
-    public String format(List<Token> tokens) {
-        return writeCodeSection(tokens).toString();
-    }
+public final class Formatter {
+    private final Lexer lexer = new Lexer();
 
     /**
-     * Formats the given string using a given lexer
+     * Formats the given string.
+     * <p>
+     * Best results are achieved for Java code.
      *
-     * @param input input to format
-     * @param lexer lexer to use
-     * @return resulting code
+     * @param code the code to format
+     * @return the formatted code
      */
-    public String format(String input, Lexer lexer) {
-        return format(lexer.tokenize(input));
-    }
+    public String format(CharSequence code) {
+        List<Token> tokens = lexer.tokenize(code);
 
-    /**
-     * Writes and formats a given code section (in form of a list of tokens) into a StringBuilder
-     * using a {@link CodeSectionFormatter}
-     *
-     * @param tokens tokens to write
-     * @return written code sections
-     */
-    private StringBuilder writeCodeSection(List<Token> tokens) {
-        CodeSectionFormatter formatter = new CodeSectionFormatter(tokens);
+        CodeSectionFormatter codeFormatter = new CodeSectionFormatter(tokens);
+        codeFormatter.format();
+        StringBuilder formattedCode = codeFormatter.result();
 
-        formatter.format();
-
-        return formatter.result();
+        return formattedCode.toString();
     }
 }

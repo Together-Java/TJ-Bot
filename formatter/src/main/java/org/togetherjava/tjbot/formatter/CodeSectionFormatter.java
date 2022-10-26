@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 /**
  * Formatter which specifically formats code tokens (that are part of a section)
  */
-class CodeSectionFormatter {
+final class CodeSectionFormatter {
     private final StringBuilder result = new StringBuilder();
     private final SkippableLookaheadQueue<Token> queue;
 

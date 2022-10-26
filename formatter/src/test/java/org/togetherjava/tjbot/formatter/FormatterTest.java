@@ -5,18 +5,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import org.togetherjava.tjbot.formatter.tokenizer.Lexer;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FormatterTest {
-    Lexer lexer;
     Formatter formatter;
 
     @BeforeAll
     void init() {
-        lexer = new Lexer();
         formatter = new Formatter();
     }
 
@@ -29,8 +25,7 @@ class FormatterTest {
                     System.out.println("Hello World!");
                 }
                 ```""", formatter.format(
-                "public static\nvoid main ( String [ ]args){ System.out. println( \"Hello World!\"      );}",
-                lexer));
+                "public static\nvoid main ( String [ ]args){ System.out. println( \"Hello World!\"      );}"));
     }
 
     @Test
@@ -45,8 +40,7 @@ class FormatterTest {
                 }
                 return result;
                 ```""", formatter.format(
-                "List<String>input=new ArrayList<>();List<String> result=new ArrayList<>();for(String s:input){result.add(s.trim());}return result;",
-                lexer));
+                "List<String>input=new ArrayList<>();List<String> result=new ArrayList<>();for(String s:input){result.add(s.trim());}return result;"));
     }
 
     @Test
@@ -58,7 +52,7 @@ class FormatterTest {
                     if () {
                         if () {
                             if () {
-                ```""", formatter.format("if(){if(){if(){if(){", lexer));
+                ```""", formatter.format("if(){if(){if(){if(){"));
     }
 
     @Test
@@ -69,7 +63,7 @@ class FormatterTest {
                 while (if () e) {
                 }
                 }
-                ```""", formatter.format("while(if()e){}}", lexer));
+                ```""", formatter.format("while(if()e){}}"));
     }
 
     @Test
@@ -83,7 +77,7 @@ class FormatterTest {
                 }
                 else {
                 }
-                ```""", formatter.format("if(1){}else if(2){}else{}", lexer));
+                ```""", formatter.format("if(1){}else if(2){}else{}"));
     }
 
     @Test
@@ -92,7 +86,7 @@ class FormatterTest {
         assertEquals("""
                 ```java
                 foo(1, 2, 3, b);
-                ```""", formatter.format("foo(1,2,3,b);", lexer));
+                ```""", formatter.format("foo(1,2,3,b);"));
     }
 
     @Test
@@ -102,7 +96,7 @@ class FormatterTest {
                 ```java
                 void foo(int a, int b, Object c) {
                 }
-                ```""", formatter.format("void foo(int a, int b, Object c){}", lexer));
+                ```""", formatter.format("void foo(int a, int b, Object c){}"));
     }
 
     @Test
@@ -112,7 +106,7 @@ class FormatterTest {
                 ```java
                 for (int i = 0; i < 3; i++) {
                 }
-                ```""", formatter.format("for(int i=0;i<3;i++){}", lexer));
+                ```""", formatter.format("for(int i=0;i<3;i++){}"));
     }
 
     @Test
@@ -121,7 +115,7 @@ class FormatterTest {
         assertEquals("""
                 ```java
                 List<String> list = new ArrayList<>();
-                ```""", formatter.format("List<String>list=new ArrayList < > ( ) ;", lexer));
+                ```""", formatter.format("List<String>list=new ArrayList < > ( ) ;"));
     }
 
     @Test
@@ -130,7 +124,7 @@ class FormatterTest {
         assertEquals("""
                 ```java
                 3 < 2 && 2 > 3
-                ```""", formatter.format("3<2&&2>3", lexer));
+                ```""", formatter.format("3<2&&2>3"));
     }
 
     @Test
@@ -141,7 +135,7 @@ class FormatterTest {
                 // this is a comment
                 void foo() {
                 }
-                ```""", formatter.format("// this is a comment\nvoid foo() {}", lexer));
+                ```""", formatter.format("// this is a comment\nvoid foo() {}"));
     }
 
     @Test
@@ -152,7 +146,7 @@ class FormatterTest {
                 @MyAnnotation
                 void foo() {
                 }
-                ```""", formatter.format("@MyAnnotation\nvoid foo() {}", lexer));
+                ```""", formatter.format("@MyAnnotation\nvoid foo() {}"));
     }
 
     @Test
@@ -163,7 +157,7 @@ class FormatterTest {
                 () -> {
                     System.out.println("Hello World");
                 };
-                ```""", formatter.format("()->{System.out.println(\"Hello World\");};", lexer));
+                ```""", formatter.format("()->{System.out.println(\"Hello World\");};"));
     }
 
     @Test
@@ -174,8 +168,7 @@ class FormatterTest {
                 (s, e, d) -> {
                     System.out.println("Hello World");
                 };
-                ```""",
-                formatter.format("(s,e,d)->{System.out.println(\"Hello World\");};", lexer));
+                ```""", formatter.format("(s,e,d)->{System.out.println(\"Hello World\");};"));
     }
 
     @Test
@@ -186,7 +179,7 @@ class FormatterTest {
                 s -> {
                     System.out.println("Hello World");
                 };
-                ```""", formatter.format("s->{System.out.println(\"Hello World\");};", lexer));
+                ```""", formatter.format("s->{System.out.println(\"Hello World\");};"));
     }
 
     @Test
@@ -197,7 +190,7 @@ class FormatterTest {
                 (String s, Object b) -> {
                     System.out.println("Hello World");
                 };
-                ```""", formatter
-            .format("(String s,Object b)->{System.out.println(\"Hello World\");};", lexer));
+                ```""",
+                formatter.format("(String s,Object b)->{System.out.println(\"Hello World\");};"));
     }
 }
