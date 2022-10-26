@@ -79,7 +79,7 @@ public enum TokenType {
     METHOD_REFERENCE("::"),
     COMMA(","),
     NOT("!"),
-    WILDCARD("?"),
+    QUESTION_MARK("?"),
 
     // Comments
     SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n)")),
@@ -91,23 +91,30 @@ public enum TokenType {
 
     // Operators
     SMART_AND("&&", Attribute.BINARY_OPERATOR),
-    SINGLE_AND("&", Attribute.BINARY_OPERATOR),
     SMART_OR("||", Attribute.BINARY_OPERATOR),
-    SINGLE_OR("|", Attribute.BINARY_OPERATOR),
-    XOR("^", Attribute.BINARY_OPERATOR),
     PLUS_EQUALS("+=", Attribute.BINARY_OPERATOR),
     MINUS_EQUALS("-=", Attribute.BINARY_OPERATOR),
     MULTIPLY_EQUALS("*=", Attribute.BINARY_OPERATOR),
     DIVIDE_EQUALS("/=", Attribute.BINARY_OPERATOR),
     MODULO_EQUALS("%=", Attribute.BINARY_OPERATOR),
     AND_EQUALS("&=", Attribute.BINARY_OPERATOR),
+    XOR_EQUALS("^=", Attribute.BINARY_OPERATOR),
     OR_EQUALS("|=", Attribute.BINARY_OPERATOR),
+    LEFT_SHIFT_EQUALS("<<=", Attribute.BINARY_OPERATOR),
+    ARITHMETIC_RIGHT_SHIFT_EQUALS(">>=", Attribute.BINARY_OPERATOR),
+    LOGICAL_RIGHT_SHIFT_EQUALS(">>>=", Attribute.BINARY_OPERATOR),
     EQUALS("==", Attribute.BINARY_OPERATOR),
     NOT_EQUALS("!=", Attribute.BINARY_OPERATOR),
     GREATER_THAN_OR_EQUALS(">=", Attribute.BINARY_OPERATOR),
     GREATER_THAN(">", Attribute.BINARY_OPERATOR),
     LESS_THAN_OR_EQUALS("<=", Attribute.BINARY_OPERATOR),
     LESS_THAN("<", Attribute.BINARY_OPERATOR),
+    SINGLE_OR("|", Attribute.BINARY_OPERATOR),
+    SINGLE_AND("&", Attribute.BINARY_OPERATOR),
+    XOR("^", Attribute.BINARY_OPERATOR),
+    LEFT_SHIFT("<<", Attribute.BINARY_OPERATOR),
+    ARITHMETIC_RIGHT_SHIFT(">>", Attribute.BINARY_OPERATOR),
+    LOGICAL_RIGHT_SHIFT(">>>", Attribute.BINARY_OPERATOR),
     ASSIGN("=", Attribute.BINARY_OPERATOR),
     // Technically not an operator, but used like one in lambdas and switch expressions
     ARROW("->", Attribute.BINARY_OPERATOR),
@@ -119,6 +126,9 @@ public enum TokenType {
     MULTIPLY("*", Attribute.BINARY_OPERATOR),
     // Technically not an operator, but used like one in enhanced-for
     COLON(":", Attribute.BINARY_OPERATOR),
+    COMPLEMENT("~", Attribute.UNARY_OPERATOR),
+    MODULO("%", Attribute.BINARY_OPERATOR),
+    INSTANCE_OF("instanceof", Attribute.BINARY_OPERATOR),
 
     // Other
     ANNOTATION(Pattern.compile("@[a-zA-Z]\\w*")),

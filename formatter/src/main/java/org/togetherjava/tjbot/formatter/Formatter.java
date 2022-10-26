@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.formatter;
 
+import org.togetherjava.tjbot.formatter.formatting.CodeSectionFormatter;
 import org.togetherjava.tjbot.formatter.tokenizer.Lexer;
 import org.togetherjava.tjbot.formatter.tokenizer.Token;
 
@@ -23,11 +24,8 @@ public final class Formatter {
      */
     public String format(CharSequence code) {
         List<Token> tokens = lexer.tokenize(code);
-
         CodeSectionFormatter codeFormatter = new CodeSectionFormatter(tokens);
-        codeFormatter.format();
-        StringBuilder formattedCode = codeFormatter.result();
 
-        return formattedCode.toString();
+        return codeFormatter.format();
     }
 }

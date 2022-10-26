@@ -22,7 +22,7 @@ class LexerTest {
     @Test
     @DisplayName("Invalid input does throw an exception")
     void testInvalidInput() {
-        assertThrows(TokenizationException.class, () -> lexer.tokenize("\r"));
+        assertThrows(RuntimeException.class, () -> lexer.tokenize("\r"));
     }
 
     @Test
