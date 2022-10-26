@@ -1,18 +1,16 @@
 package org.togetherjava.tjbot.formatter.tokenizer;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.CharBuffer;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
  * All types of tokens recognized by {@link Lexer}.
  * <p>
- * Token types have REGEX patterns (see {@link #getPattern()}) that can be used to find the next
- * match. For example, for the code {@code int x = "foo"}, only {@link #INT} would match. Other
- * participating tokens, such as {@link #IDENTIFIER} or {@link #STRING} do not match yet.
- * <p>
- * The patterns have a named group {@link Lexer#CONTENT_GROUP} that can be used to retrieve the
- * matched content. For example, for the code {@code "foo"}, the pattern of {@link #STRING} would
- * match, and the group resolves to {@code "foo"}.
+ * Token types can be used to find the next matching token (see {@link #matches(CharSequence)}). For
+ * example, for the code {@code int x = "foo"}, only {@link #INT} would match. Other participating
+ * tokens, such as {@link #IDENTIFIER} or {@link #STRING} do not match yet.
  */
 // Sonar wants Javadoc on all tokens, but they are self-explanatory based
 // on the enum description and context.
@@ -133,29 +131,27 @@ public enum TokenType {
             )
             [dDfFlL]? #Type suffix
             """, Pattern.COMMENTS)),
-    // TODO Rework without regex, otherwise it either doesnt support escapes or blows up at 2 KB
-    // text
-    STRING(Pattern.compile("\"([^\"\\\\]*(\\\\.)?)*\"", Pattern.COMMENTS)),
+    STRING(Matching::matchesString, Attribute.NONE),
     IDENTIFIER(Pattern.compile("[a-zA-Z]\\w*")),
     WHITESPACE(Pattern.compile("\\s+")),
 
     // Fallback for everything that has not been matched yet
     UNKNOWN(Pattern.compile(".", Pattern.DOTALL));
 
-    private final Pattern pattern;
+    private final Function<CharSequence, Optional<String>> matcher;
     private final Attribute attribute;
 
-    TokenType(Pattern pattern, Attribute attribute) {
-        this.pattern = patchPattern(pattern, attribute);
+    TokenType(Function<CharSequence, Optional<String>> matcher, Attribute attribute) {
+        this.matcher = matcher;
         this.attribute = attribute;
     }
 
     TokenType(Pattern pattern) {
-        this(pattern, Attribute.NONE);
+        this(text -> Matching.matchesPattern(pattern, text), Attribute.NONE);
     }
 
     TokenType(String symbol, Attribute attribute) {
-        this(Pattern.compile(Pattern.quote(symbol)), attribute);
+        this(text -> Matching.matchesSymbol(symbol, text, attribute), attribute);
     }
 
     TokenType(String symbol) {
@@ -163,14 +159,18 @@ public enum TokenType {
     }
 
     /**
-     * Gets the pattern used to identify and match this token type.
+     * Attempts to match this token type against the given text and returns the matched token.
      * <p>
-     * The matched content can be retrieved through the named group {@link Lexer#CONTENT_GROUP}.
+     * For example, {@code INT.matches("int x = 5")} matches and returns {@code Token("int", INT)}.
+     * <p>
+     * For performance reasons, this method should ideally be called with an instance of
+     * {@link CharSequence} that creates views only, such as {@link CharBuffer}.
      *
-     * @return the pattern to identify this type
+     * @param text the text to match against
+     * @return the token matched by this type, if any
      */
-    public Pattern getPattern() {
-        return pattern;
+    public Optional<Token> matches(CharSequence text) {
+        return matcher.apply(text).map(content -> new Token(content, this));
     }
 
     /**
@@ -180,20 +180,6 @@ public enum TokenType {
      */
     public Attribute getAttribute() {
         return attribute;
-    }
-
-    private static Pattern patchPattern(Pattern pattern, Attribute attribute) {
-        // ^ to prevent matching somewhere in the middle of the given text, e.g.,
-        // "int x" should match for "int", not for "x".
-        // Patterns need the named group to retrieve the content
-        String patternText = "^(?<%s>%s)".formatted(Lexer.CONTENT_GROUP, pattern.pattern());
-
-        if (attribute == Attribute.KEYWORD) {
-            String notFollowedByLetter = "(?![a-zA-Z])";
-            patternText += notFollowedByLetter;
-        }
-
-        return Pattern.compile(patternText, pattern.flags());
     }
 
     /**
@@ -219,17 +205,5 @@ public enum TokenType {
          * No further specification of the type.
          */
         NONE
-    }
-
-    /**
-     * Starts the application.
-     *
-     * @param args Not supported
-     */
-    public static void main(final String[] args) {
-        // FIXME Remove after testing
-        String text = "\"" + "hello \\\"John\\\" world".repeat(100) + "\"";
-        System.out.println(text.getBytes(StandardCharsets.UTF_8).length);
-        System.out.println(STRING.getPattern().matcher(text).matches());
     }
 }

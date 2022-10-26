@@ -2,14 +2,12 @@ package org.togetherjava.tjbot.formatter.tokenizer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
+import java.util.Optional;
 
 /**
  * Tokenizer that can turn a list of strings (or a string) into a list of tokens
  */
 public class Lexer {
-    static final String CONTENT_GROUP = "content";
-
     /**
      * Tokenizes the given input by tokenizing each line individually (splitting by \n)
      *
@@ -38,10 +36,10 @@ public class Lexer {
 
     private Token findToken(String content) {
         for (TokenType type : TokenType.values()) {
-            Matcher matcher = type.getPattern().matcher(content);
+            Optional<Token> maybeToken = type.matches(content);
 
-            if (matcher.find()) {
-                return new Token(matcher.group(CONTENT_GROUP), type);
+            if (maybeToken.isPresent()) {
+                return maybeToken.orElseThrow();
             }
         }
 
