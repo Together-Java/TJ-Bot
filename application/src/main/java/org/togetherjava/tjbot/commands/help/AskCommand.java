@@ -144,14 +144,9 @@ public final class AskCommand extends SlashCommandAdapter {
             .read(context -> context.selectFrom(HELP_THREADS)
                 .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
                 .orderBy(HELP_THREADS.CREATED_AT.desc())
-                .fetchOne())
+                .fetch())
+            .get(0)
             .getChannelId();
-
-        if (lastThreadByAuthorId == 0) {
-            logger.warn("Can't find the last help thread created by the user with id ({})",
-                    user.getId());
-            return;
-        }
 
         String message =
                 """
@@ -160,7 +155,7 @@ public final class AskCommand extends SlashCommandAdapter {
 
         RestAction.allOf(changeCategory, changeTitle)
             .map(commandMentions -> message.formatted(COOLDOWN_DURATION_VALUE,
-                    COOLDOWN_DURATION_UNIT.name(),
+                    COOLDOWN_DURATION_UNIT.name().toLowerCase(),
                     MessageUtils.mentionChannelById(lastThreadByAuthorId), commandMentions.get(0),
                     commandMentions.get(1)))
             .flatMap(text -> event.reply(text).setEphemeral(true))
