@@ -1,31 +1,34 @@
 package org.togetherjava.tjbot.formatter.tokenizer;
 
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
- * Tokenizer that can turn a list of strings (or a string) into a list of tokens
+ * Tokenizer that turns code into a list of tokens.
  */
-public class Lexer {
+public final class Lexer {
     /**
-     * Tokenizes the given input by tokenizing each line individually (splitting by \n)
+     * Tokenizes the given code into its individual tokens.
      *
-     * @param input input to tokenize
-     * @return resulting tokens
+     * @param code code to tokenize
+     * @return the tokens the code consists of
      */
-    public List<Token> tokenize(String input) {
+    public List<Token> tokenize(CharSequence code) {
+        if (code.isEmpty()) {
+            return List.of();
+        }
+
         List<Token> tokens = new ArrayList<>();
-        int index = 0;
-        String content;
+        CharBuffer remainingCode = CharBuffer.wrap(code);
 
-        // TODO Performance problem, use rolling window instead
-        while (!(content = input.substring(index)).isEmpty()) {
-            Token token = findToken(content);
-
-            index += token.content().length();
-
+        while (!remainingCode.isEmpty()) {
+            Token token = nextToken(remainingCode);
             tokens.add(token);
+
+            advancePosition(remainingCode, token.content().length());
         }
 
         // FIXME Replace by some nice trace logging
@@ -34,15 +37,16 @@ public class Lexer {
         return tokens;
     }
 
-    private Token findToken(String content) {
-        for (TokenType type : TokenType.values()) {
-            Optional<Token> maybeToken = type.matches(content);
+    private Token nextToken(CharSequence content) {
+        // Try all token types in order, take the first match
+        return Stream.of(TokenType.getAllInMatchOrder())
+            .map(tokenType -> tokenType.matches(content))
+            .flatMap(Optional::stream)
+            .findFirst()
+            .orElseThrow();
+    }
 
-            if (maybeToken.isPresent()) {
-                return maybeToken.orElseThrow();
-            }
-        }
-
-        throw new TokenizationException("Token not found for '" + content + "'");
+    private static void advancePosition(CharBuffer charBuffer, int advanceBy) {
+        charBuffer.position(charBuffer.position() + advanceBy);
     }
 }

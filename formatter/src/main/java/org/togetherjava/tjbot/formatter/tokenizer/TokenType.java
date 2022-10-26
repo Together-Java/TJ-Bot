@@ -141,6 +141,19 @@ public enum TokenType {
     private final Function<CharSequence, Optional<String>> matcher;
     private final Attribute attribute;
 
+    /**
+     * Gets all token types in the order they should be used for matching.
+     * <p>
+     * This is important, since not all types match prefix-free. For example, {@link #DIVIDE} hides
+     * {@link #SINGLE_LINE_COMMENT} if matched before.
+     *
+     * @return all token types in match order
+     */
+    public static TokenType[] getAllInMatchOrder() {
+        // We have an order-dependency by design here
+        return TokenType.values();
+    }
+
     TokenType(Function<CharSequence, Optional<String>> matcher, Attribute attribute) {
         this.matcher = matcher;
         this.attribute = attribute;
