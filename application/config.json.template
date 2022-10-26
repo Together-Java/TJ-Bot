@@ -19,6 +19,7 @@
    "scamBlocker": {
        "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
        "reportChannelPattern": "commands",
+       "suspiciousKeywords": ["nitro", "boob", "sexy", "sexi", "esex"],
        "hostWhitelist": ["discord.com", "discord.gg", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"],
        "hostBlacklist": ["bit.ly"],
        "suspiciousHostKeywords": ["discord", "nitro", "premium"],
