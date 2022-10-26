@@ -185,6 +185,12 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     private void updatePagination(ComponentInteraction event, ComponentArguments args,
             List<BookmarksRecord> bookmarks) {
         JDA jda = event.getJDA();
+
+        if (bookmarks.isEmpty()) {
+            event.editMessageEmbeds(NO_BOOKMARKS_EMBED).setComponents().queue();
+            return;
+        }
+
         MessageEmbed pageEmbed = generatePageEmbed(bookmarks, args);
 
         List<LayoutComponent> components = new ArrayList<>();
@@ -365,7 +371,14 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
      * @return A valid page index
      */
     private static int ensurePageIndex(List<BookmarksRecord> bookmarks, int pageIndex) {
-        int maxPageIndex = Math.floorDiv(bookmarks.size() - 1, ENTRIES_PER_PAGE);
+        // If the bookmarks list is empty the maxBookmarkIndex would be -1. This causes the
+        // maxPageIndex to also return -1, resulting in other errors.
+        if (bookmarks.isEmpty()) {
+            return 0;
+        }
+
+        int maxBookmarkIndex = bookmarks.size() - 1;
+        int maxPageIndex = Math.floorDiv(maxBookmarkIndex, ENTRIES_PER_PAGE);
 
         pageIndex = Math.max(pageIndex, 0);
         pageIndex = Math.min(pageIndex, maxPageIndex);
