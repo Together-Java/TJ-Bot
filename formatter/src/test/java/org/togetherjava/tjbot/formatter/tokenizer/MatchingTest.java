@@ -48,7 +48,8 @@ final class MatchingTest {
                 Arguments.of("keyword as identifier", "newValue = 5", "new",
                         TokenType.Attribute.KEYWORD, false),
                 Arguments.of("keyword without space", "new=5", "new", TokenType.Attribute.KEYWORD,
-                        true));
+                        true),
+                Arguments.of("only keyword", "class", "class", TokenType.Attribute.KEYWORD, true));
     }
 
     @ParameterizedTest

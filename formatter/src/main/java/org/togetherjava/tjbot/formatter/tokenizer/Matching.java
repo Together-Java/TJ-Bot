@@ -62,7 +62,7 @@ final class Matching {
             return Optional.empty();
         }
 
-        if (attribute == TokenType.Attribute.KEYWORD) {
+        if (attribute == TokenType.Attribute.KEYWORD && text.length() > symbol.length()) {
             // Must not be followed by letter
             char nextChar = text.charAt(symbol.length());
             if (Character.isLetter(nextChar)) {

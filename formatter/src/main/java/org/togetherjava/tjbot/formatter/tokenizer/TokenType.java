@@ -97,11 +97,10 @@ public enum TokenType {
     SEMICOLON(";"),
     METHOD_REFERENCE("::"),
     COMMA(","),
-    NOT("!"),
     QUESTION_MARK("?"),
 
     // Comments
-    SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n)")),
+    SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n|$)")),
     MULTI_LINE_COMMENT(Pattern.compile("""
             /\\* #Start
             .* #Content
@@ -120,20 +119,21 @@ public enum TokenType {
     XOR_EQUALS("^=", Attribute.BINARY_OPERATOR),
     OR_EQUALS("|=", Attribute.BINARY_OPERATOR),
     LEFT_SHIFT_EQUALS("<<=", Attribute.BINARY_OPERATOR),
-    ARITHMETIC_RIGHT_SHIFT_EQUALS(">>=", Attribute.BINARY_OPERATOR),
     LOGICAL_RIGHT_SHIFT_EQUALS(">>>=", Attribute.BINARY_OPERATOR),
+    ARITHMETIC_RIGHT_SHIFT_EQUALS(">>=", Attribute.BINARY_OPERATOR),
     EQUALS("==", Attribute.BINARY_OPERATOR),
     NOT_EQUALS("!=", Attribute.BINARY_OPERATOR),
+    NOT("!"),
     GREATER_THAN_OR_EQUALS(">=", Attribute.BINARY_OPERATOR),
+    LOGICAL_RIGHT_SHIFT(">>>", Attribute.BINARY_OPERATOR),
+    ARITHMETIC_RIGHT_SHIFT(">>", Attribute.BINARY_OPERATOR),
     GREATER_THAN(">", Attribute.BINARY_OPERATOR),
     LESS_THAN_OR_EQUALS("<=", Attribute.BINARY_OPERATOR),
+    LEFT_SHIFT("<<", Attribute.BINARY_OPERATOR),
     LESS_THAN("<", Attribute.BINARY_OPERATOR),
     SINGLE_OR("|", Attribute.BINARY_OPERATOR),
     SINGLE_AND("&", Attribute.BINARY_OPERATOR),
     XOR("^", Attribute.BINARY_OPERATOR),
-    LEFT_SHIFT("<<", Attribute.BINARY_OPERATOR),
-    ARITHMETIC_RIGHT_SHIFT(">>", Attribute.BINARY_OPERATOR),
-    LOGICAL_RIGHT_SHIFT(">>>", Attribute.BINARY_OPERATOR),
     ASSIGN("=", Attribute.BINARY_OPERATOR),
     // Technically not an operator, but used like one in lambdas and switch expressions
     ARROW("->", Attribute.BINARY_OPERATOR),
