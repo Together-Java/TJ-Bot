@@ -26,9 +26,6 @@ public enum TokenType {
     RECORD("record", Attribute.KEYWORD),
     INTERFACE("interface", Attribute.KEYWORD),
     IMPORT("import", Attribute.KEYWORD),
-    IF("if", Attribute.KEYWORD),
-    FOR("for", Attribute.KEYWORD),
-    WHILE("while", Attribute.KEYWORD),
     NULL("null", Attribute.KEYWORD),
     EXTENDS("extends", Attribute.KEYWORD),
     IMPLEMENTS("implements", Attribute.KEYWORD),
@@ -37,12 +34,13 @@ public enum TokenType {
     PACKAGE("package", Attribute.KEYWORD),
     THIS("this", Attribute.KEYWORD),
     YIELD("yield", Attribute.KEYWORD),
-    CATCH("catch", Attribute.KEYWORD),
-    TRY("try", Attribute.KEYWORD),
-    // Technically two keywords, but we want it to stick together when formatting
-    ELSE_IF("else if", Attribute.KEYWORD),
-    ELSE("else", Attribute.KEYWORD),
     SUPER("super", Attribute.KEYWORD),
+    ASSERT("assert", Attribute.KEYWORD),
+    CONST("const", Attribute.KEYWORD),
+    DEFAULT("default", Attribute.KEYWORD),
+    FINALLY("finally", Attribute.KEYWORD),
+    THROWS("throws", Attribute.KEYWORD),
+    THROW("throw", Attribute.KEYWORD),
 
     // Access modifiers
     PUBLIC("public", Attribute.KEYWORD),
@@ -53,6 +51,11 @@ public enum TokenType {
     NON_SEALED("non-sealed", Attribute.KEYWORD),
     FINAL("final", Attribute.KEYWORD),
     ABSTRACT("abstract", Attribute.KEYWORD),
+    NATIVE("native", Attribute.KEYWORD),
+    STRICTFP("strictfp", Attribute.KEYWORD),
+    SYNCHRONIZED("synchronized", Attribute.KEYWORD),
+    TRANSIENT("transient", Attribute.KEYWORD),
+    VOLATILE("volatile", Attribute.KEYWORD),
 
     // Primitives
     VOID("void", Attribute.KEYWORD),
@@ -64,6 +67,22 @@ public enum TokenType {
     FLOAT("float", Attribute.KEYWORD),
     DOUBLE("double", Attribute.KEYWORD),
     CHAR("char", Attribute.KEYWORD),
+
+    // Flow control
+    IF("if", Attribute.KEYWORD),
+    // Technically two keywords, but we want it to stick together when formatting
+    ELSE_IF("else if", Attribute.KEYWORD),
+    ELSE("else", Attribute.KEYWORD),
+    FOR("for", Attribute.KEYWORD),
+    WHILE("while", Attribute.KEYWORD),
+    DO("do", Attribute.KEYWORD),
+    BREAK("break", Attribute.KEYWORD),
+    CONTINUE("continue", Attribute.KEYWORD),
+    SWITCH("switch", Attribute.KEYWORD),
+    CASE("case", Attribute.KEYWORD),
+    TRY("try", Attribute.KEYWORD),
+    CATCH("catch", Attribute.KEYWORD),
+    GOTO("goto", Attribute.KEYWORD),
 
     // Braces
     OPEN_PARENTHESIS("("),
