@@ -144,8 +144,8 @@ public final class AskCommand extends SlashCommandAdapter {
             .read(context -> context.selectFrom(HELP_THREADS)
                 .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
                 .orderBy(HELP_THREADS.CREATED_AT.desc())
-                .fetch())
-            .get(0)
+                .limit(1)
+                .fetchOne())
             .getChannelId();
 
         String message =
