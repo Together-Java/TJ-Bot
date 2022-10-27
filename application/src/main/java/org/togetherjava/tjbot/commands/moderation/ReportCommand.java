@@ -76,13 +76,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
+        long userID = event.getUser().getIdLong();
+
+        if (handleIsOnCooldown(userID, event)) {
+            return;
+        }
+        authorToLastReportInvocation.put(userID, Instant.now());
+
         String reportedMessage = event.getTarget().getContentRaw();
         String reportedMessageUrl = event.getTarget().getJumpUrl();
 
         TextInput body = TextInput
-            .create(REPORT_REASON,
-                    "Report this to a moderator, the report is completely " + "anonymous",
-                    TextInputStyle.PARAGRAPH)
+            .create(REPORT_REASON, "Anonymous report to the moderators", TextInputStyle.PARAGRAPH)
             .setPlaceholder("What is wrong with the message, why do you want to report it?")
             .setRequiredRange(3, 200)
             .build();
@@ -100,14 +105,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedMessage = args.get(0);
         String reportedMessageUrl = args.get(1);
 
-        long userID = event.getUser().getIdLong();
-
-        if (handleIsOnCooldown(userID, event)) {
-            return;
-        }
-        authorToLastReportInvocation.put(userID, Instant.now());
-        event.deferReply().setEphemeral(true).queue();
-
         long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
             .getIdLong();
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), guildID);
@@ -117,20 +114,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     guildID, configModMailChannelPattern);
             return;
         }
+        InteractionHook hook = event.getHook();
+        event.deferReply().setEphemeral(true).queue();
         String modalMessage = event.getValue(REPORT_REASON).getAsString();
+        long userID = event.getUser().getIdLong();
         MessageCreateAction modMessage = createModMessage(modalMessage, userID, reportedMessage,
                 reportedMessageUrl, modMailAuditLog.orElseThrow());
 
-        sendModMessage(event, modMessage);
-
-        event.getHook()
-            .editOriginal(
-                    "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.")
-            .queue();
-
+        sendModMessage(hook, modMessage);
     }
 
-    private boolean handleIsOnCooldown(long userID, ModalInteractionEvent event) {
+    private boolean handleIsOnCooldown(long userID, MessageContextInteractionEvent event) {
         if (!isAuthorOnCooldown(userID)) {
             return false;
         }
@@ -172,8 +166,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return modMailAuditLog.sendMessageEmbeds(embed);
     }
 
-    private void sendModMessage(ModalInteractionEvent event, MessageCreateAction message) {
-        InteractionHook hook = event.getHook();
+    private void sendModMessage(InteractionHook hook, MessageCreateAction message) {
         message.mapToResult().map(result -> {
             if (result.isSuccess()) {
                 return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
