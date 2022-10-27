@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -14,6 +15,8 @@ import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.Result;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,26 +105,31 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        String reportedMessage = args.get(0);
-        String reportedMessageUrl = args.get(1);
-
         long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
             .getIdLong();
-        Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), guildID);
+        Optional<TextChannel> modMailAuditLog =
+                handleRequireModMailChannel(event.getJDA(), guildID);
+
+        if (modMailAuditLog.isEmpty()) {
+            return;
+        }
+
+
+        sendModMessage(event, args, modMailAuditLog.orElseThrow());
+    }
+
+    private Optional<TextChannel> handleRequireModMailChannel(JDA jda, long guildID) {
+        Optional<TextChannel> modMailAuditLog = jda.getGuildById(guildID)
+            .getTextChannelCache()
+            .stream()
+            .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
+            .findAny();
         if (modMailAuditLog.isEmpty()) {
             logger.warn(
                     "Cannot find the designated modmail channel in server by id {} with the pattern {}",
                     guildID, configModMailChannelPattern);
-            return;
         }
-        InteractionHook hook = event.getHook();
-        event.deferReply().setEphemeral(true).queue();
-        String modalMessage = event.getValue(REPORT_REASON).getAsString();
-        long userID = event.getUser().getIdLong();
-        MessageCreateAction modMessage = createModMessage(modalMessage, userID, reportedMessage,
-                reportedMessageUrl, modMailAuditLog.orElseThrow());
-
-        sendModMessage(hook, modMessage);
+        return modMailAuditLog;
     }
 
     private boolean handleIsOnCooldown(long userID, MessageContextInteractionEvent event) {
@@ -166,14 +174,30 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return modMailAuditLog.sendMessageEmbeds(embed);
     }
 
-    private void sendModMessage(InteractionHook hook, MessageCreateAction message) {
-        message.mapToResult().map(result -> {
-            if (result.isSuccess()) {
-                return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
-            }
-            logger.warn("Unable to forward a message report to modmail channel.");
-            return "Sorry, there was an issue sending your report to the moderators. We are investigating.";
-        }).flatMap(hook::editOriginal).queue();
+    private void sendModMessage(ModalInteractionEvent event, List<String> args,
+            TextChannel modMailAuditLog) {
+        InteractionHook hook = event.getHook();
+
+        String reportedMessage = args.get(0);
+        String reportedMessageUrl = args.get(1);
+
+        event.deferReply().setEphemeral(true).queue();
+        String modalMessage = event.getValue(REPORT_REASON).getAsString();
+        long userID = event.getUser().getIdLong();
+        createModMessage(modalMessage, userID, reportedMessage, reportedMessageUrl, modMailAuditLog)
+            .mapToResult()
+            .map(this::createUserReply)
+            .flatMap(hook::editOriginal)
+            .queue();
+    }
+
+    @NotNull
+    private String createUserReply(Result<Message> result) {
+        if (result.isSuccess()) {
+            return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
+        }
+        logger.warn("Unable to forward a message report to modmail channel.");
+        return "Sorry, there was an issue sending your report to the moderators. We are investigating.";
     }
 
 }
