@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.formatter.formatting;
 
-import org.togetherjava.tjbot.formatter.tokenizer.Token;
 import org.togetherjava.tjbot.formatter.tokenizer.TokenType;
 
 import java.util.Collection;
@@ -45,7 +44,7 @@ final class FormatterRules {
             // End of generics
             // With space: List<Integer> values
             // No space: new ArrayList<>()
-            return tokens.peek().type() != TokenType.OPEN_PARENTHESIS;
+            return tokens.peekType() != TokenType.OPEN_PARENTHESIS;
         }
 
         return Set.of(TokenType.COMMA, // Map<Foo, Bar>
@@ -56,17 +55,16 @@ final class FormatterRules {
     }
 
     boolean shouldPutSpaceAfter(TokenType tokenType, int expectedSemicolonsInLine) {
-        List<Predicate<TokenType>> rules =
-                List.of(type -> type.getAttribute() == TokenType.Attribute.KEYWORD, // class Foo
-                        type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR, // 5 + 3
-                        this::shouldPutSpaceAfterClosingParenthesis, // foo() {
-                        TokenType.CLOSE_BRACKETS::equals, // foo[i] = 3
-                        TokenType.COMMA::equals, // foo(x, y)
-                        // String toString()
-                        type -> type == TokenType.IDENTIFIER
-                                && tokens.peek().type() == TokenType.IDENTIFIER,
-                        // for (a(); b(); c())
-                        type -> type == TokenType.SEMICOLON && expectedSemicolonsInLine > 0);
+        List<Predicate<TokenType>> rules = List.of(
+                type -> type.getAttribute() == TokenType.Attribute.KEYWORD, // class Foo
+                type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR, // 5 + 3
+                this::shouldPutSpaceAfterClosingParenthesis, // foo() {
+                TokenType.CLOSE_BRACKETS::equals, // foo[i] = 3
+                TokenType.COMMA::equals, // foo(x, y)
+                // String toString()
+                type -> type == TokenType.IDENTIFIER && tokens.peekType() == TokenType.IDENTIFIER,
+                // for (a(); b(); c())
+                type -> type == TokenType.SEMICOLON && expectedSemicolonsInLine > 0);
 
         return matchesAnyRule(tokenType, rules);
     }
@@ -76,7 +74,7 @@ final class FormatterRules {
             return false;
         }
 
-        TokenType nextType = tokens.peek().type();
+        TokenType nextType = tokens.peekType();
         if (nextType == TokenType.CLOSE_PARENTHESIS) {
             return false; // foo(bar())
         }
@@ -99,8 +97,8 @@ final class FormatterRules {
                 TokenType.SINGLE_LINE_COMMENT::equals, // // Foo
                 TokenType.MULTI_LINE_COMMENT::equals, // /* Foo */
                 TokenType.ANNOTATION::equals, // @Foo
-                type -> type == TokenType.CLOSE_BRACES
-                        && tokens.peek().type() != TokenType.SEMICOLON, // } but not };
+                // } but not };
+                type -> type == TokenType.CLOSE_BRACES && tokens.peekType() != TokenType.SEMICOLON,
                 // int x = 5; but not for (;;)
                 type -> type == TokenType.SEMICOLON && expectedSemicolonsInLine == 0);
 
@@ -115,9 +113,9 @@ final class FormatterRules {
 
         // Search the matching closing > as challenge to reduce the level back to 0
         // All encountered types must be allowed inside generics
-        Iterator<Token> tokenIter = tokens.peekStream().iterator();
-        while (tokenIter.hasNext()) {
-            TokenType tokenType = tokenIter.next().type();
+        Iterator<TokenType> tokenTypeIter = tokens.peekTypeStream().iterator();
+        while (tokenTypeIter.hasNext()) {
+            TokenType tokenType = tokenTypeIter.next();
 
             // Parenthesis not allowed in 5 < Foo.<>foo()
             if (!typesAllowedInGenerics.contains(tokenType)) {
@@ -154,8 +152,7 @@ final class FormatterRules {
         // 4 -> :
         Set<TokenType> ignoreTypes = Set.of(TokenType.ANNOTATION, TokenType.FINAL,
                 TokenType.MULTI_LINE_COMMENT, TokenType.SINGLE_LINE_COMMENT);
-        return tokens.peekStream()
-            .map(Token::type)
+        return tokens.peekTypeStream()
             .filter(Predicate.not(ignoreTypes::contains))
             .limit(4)
             .anyMatch(TokenType.COLON::equals);

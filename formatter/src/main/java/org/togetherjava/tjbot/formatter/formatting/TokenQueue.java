@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.formatter.formatting;
 
 import org.togetherjava.tjbot.formatter.tokenizer.Token;
+import org.togetherjava.tjbot.formatter.tokenizer.TokenType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,21 +32,22 @@ final class TokenQueue {
         return token;
     }
 
-    Token peek() {
-        return tokens.get(nextTokenIndex);
+    TokenType peekType() {
+        return tokens.get(nextTokenIndex).type();
     }
 
-    Token peekBack() {
-        return tokens.get(nextTokenIndex - 1);
+    TokenType peekTypeBack() {
+        return tokens.get(nextTokenIndex - 1).type();
     }
 
-    Stream<Token> peekStream() {
-        return tokens.subList(nextTokenIndex, tokens.size()).stream();
+    Stream<TokenType> peekTypeStream() {
+        return tokens.subList(nextTokenIndex, tokens.size()).stream().map(Token::type);
     }
 
-    Stream<Token> peekBackStream() {
+    Stream<TokenType> peekBackStream() {
         return IntStream.range(0, nextTokenIndex)
             .map(i -> nextTokenIndex - i - 1)
-            .mapToObj(tokens::get);
+            .mapToObj(tokens::get)
+            .map(Token::type);
     }
 }
