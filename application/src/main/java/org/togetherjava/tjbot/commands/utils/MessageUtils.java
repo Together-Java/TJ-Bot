@@ -111,15 +111,14 @@ public class MessageUtils {
 
     /**
      * Mentions a guild channel by its id. If the given channelId is unknown the formatted text will
-     * say `#deleted-channel` in discord
+     * say `#deleted-channel` in discord.
      *
      * @param channelId the ID of the channel to mention
      * @return the channel as formatted string which Discord interprets as clickable mention
      */
     public static String mentionChannelById(long channelId) {
         // Clone of JDAs Channel#getAsMention, but unfortunately channel instances can not be
-        // created
-        // out of just an ID, unlike User#fromId
+        // created out of just an ID, unlike User#fromId
         return "<#%d>".formatted(channelId);
     }
 }
