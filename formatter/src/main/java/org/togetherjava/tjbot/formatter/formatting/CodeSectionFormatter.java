@@ -6,18 +6,41 @@ import org.togetherjava.tjbot.formatter.tokenizer.TokenType;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO Javadoc
+/**
+ * Pretty-formats a given list of code tokens.
+ * <p>
+ * After creation, use {@link #format()}. This is a one-time method.
+ */
 public final class CodeSectionFormatter {
     private static final String INDENT = " ".repeat(2);
 
     private final TokenQueue tokens;
+    /**
+     * The actual set of rules to apply. For example, it decides when to put a space around a token.
+     */
     private final FormatterRules rules;
     private final StringBuilder result;
 
+    /**
+     * The current level of indentation, which is applied at the start of each new line.
+     */
     private int currentIndentLevel;
+    /**
+     * The current level of generic nesting. For example {@code List<List<Foo>>} has a level of 2 at
+     * token {@code Foo}.
+     */
     private int currentGenericLevel;
+    /**
+     * Whether the current token is at the start of a new line.
+     */
     private boolean isStartOfLine;
+    /**
+     * Whether the current line is expected to have multiple semicolons before a line-break is
+     * applied. For example in indexed for-loops {@code for (A(); B(); C())}.
+     */
     private int expectedSemicolonsInLine;
+
+    private boolean alreadyUsed;
 
     private static List<Token> patchTokens(List<Token> tokens) {
         // We rebuild the whitespaces ourselves and ignore existing
@@ -27,19 +50,44 @@ public final class CodeSectionFormatter {
         return patchedTokens;
     }
 
+    /**
+     * Creates an instance for formatting the given tokens.
+     * <p>
+     * The formatter is not backed by the list.
+     * 
+     * @param tokens to format
+     */
     public CodeSectionFormatter(List<Token> tokens) {
         this.tokens = new TokenQueue(patchTokens(tokens));
         result = new StringBuilder(this.tokens.remainingSize());
         rules = new FormatterRules(this.tokens);
     }
 
+    /**
+     * Pretty-formats the code tokens of this formatter.
+     * <p>
+     * This method must only be used once per instance.
+     * 
+     * @return the formatted code
+     */
     public String format() {
+        if (alreadyUsed) {
+            throw new IllegalStateException(
+                    "This method must only be used once, create a new instance instead.");
+        }
+
         while (!tokens.isEmpty()) {
             Token token = tokens.consume();
             process(token);
         }
 
-        return result.toString();
+        String resultText = result.toString();
+
+        // Clear the builder to prevent memory leaks
+        result.setLength(0);
+        alreadyUsed = true;
+
+        return resultText;
     }
 
     private void process(Token token) {
@@ -83,7 +131,7 @@ public final class CodeSectionFormatter {
         }
 
         // Start of generic
-        if (tokenType == TokenType.LESS_THAN && rules.isStartOfGeneric()) {
+        if (rules.isStartOfGeneric(tokenType)) {
             currentGenericLevel = 1;
         }
     }

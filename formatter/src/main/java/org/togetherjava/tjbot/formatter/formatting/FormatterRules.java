@@ -9,12 +9,20 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Rules used by {@link CodeSectionFormatter} to format code.
+ */
 // Sonar complains about commented out code on multiple methods.
 // A false-positive, this is intentional explanation.
 @SuppressWarnings("squid:S125")
 final class FormatterRules {
     private final TokenQueue tokens;
 
+    /**
+     * Creates a set of rules for the given tokens.
+     *
+     * @param tokens to format with rules of this instance, read-only
+     */
     FormatterRules(TokenQueue tokens) {
         this.tokens = tokens;
     }
@@ -24,15 +32,15 @@ final class FormatterRules {
         return rules.stream().anyMatch(rule -> rule.test(tokenType));
     }
 
+    boolean shouldPutSpaceBeforeGeneric(TokenType tokenType) {
+        return Set.of(TokenType.EXTENDS, TokenType.SUPER).contains(tokenType);
+    }
+
     boolean shouldPutSpaceBefore(TokenType tokenType) {
         // 5 + 3
         List<Predicate<TokenType>> rules =
                 List.of(type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR);
         return matchesAnyRule(tokenType, rules);
-    }
-
-    boolean shouldPutSpaceBeforeGeneric(TokenType tokenType) {
-        return Set.of(TokenType.EXTENDS, TokenType.SUPER).contains(tokenType);
     }
 
     boolean shouldPutSpaceAfterGeneric(TokenType tokenType, int currentGenericLevel) {
@@ -105,7 +113,11 @@ final class FormatterRules {
         return matchesAnyRule(tokenType, rules);
     }
 
-    boolean isStartOfGeneric() {
+    boolean isStartOfGeneric(TokenType tokenType) {
+        if (tokenType != TokenType.LESS_THAN) {
+            return false;
+        }
+
         Set<TokenType> typesAllowedInGenerics = Set.of(TokenType.LESS_THAN, TokenType.GREATER_THAN,
                 TokenType.QUESTION_MARK, TokenType.EXTENDS, TokenType.SUPER, TokenType.COMMA,
                 TokenType.DOT, TokenType.IDENTIFIER);
@@ -113,18 +125,18 @@ final class FormatterRules {
 
         // Search the matching closing > as challenge to reduce the level back to 0
         // All encountered types must be allowed inside generics
-        Iterator<TokenType> tokenTypeIter = tokens.peekTypeStream().iterator();
-        while (tokenTypeIter.hasNext()) {
-            TokenType tokenType = tokenTypeIter.next();
+        Iterator<TokenType> previewIter = tokens.peekTypeStream().iterator();
+        while (previewIter.hasNext()) {
+            TokenType previewTokenType = previewIter.next();
 
             // Parenthesis not allowed in 5 < Foo.<>foo()
-            if (!typesAllowedInGenerics.contains(tokenType)) {
+            if (!typesAllowedInGenerics.contains(previewTokenType)) {
                 break;
             }
 
-            if (tokenType == TokenType.LESS_THAN) {
+            if (previewTokenType == TokenType.LESS_THAN) {
                 genericLevel++;
-            } else if (tokenType == TokenType.GREATER_THAN) {
+            } else if (previewTokenType == TokenType.GREATER_THAN) {
                 genericLevel--;
             }
 
