@@ -114,7 +114,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             return;
         }
 
-
         sendModMessage(event, args, modMailAuditLog.orElseThrow());
     }
 
@@ -150,14 +149,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .isPresent();
     }
 
-    private Optional<TextChannel> getModMailChannel(JDA jda, long guildID) {
-        return jda.getGuildById(guildID)
-            .getTextChannelCache()
-            .stream()
-            .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
-            .findAny();
-    }
-
     private MessageCreateAction createModMessage(String modalMessage, long userID,
             String reportedMessage, String reportedMessageUrl, TextChannel modMailAuditLog) {
         MessageEmbed embed = new EmbedBuilder().setTitle("Report")
@@ -166,7 +157,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     [Reported Message URL](%s)
                     Modal Message: **%s**""").formatted(reportedMessage, reportedMessageUrl,
                     modalMessage))
-            .setAuthor("Author ID: %s".formatted(userID))
+            .setAuthor("Author ID: %d".formatted(userID))
             .setColor(AMBIENT_COLOR)
             .setTimestamp(Instant.now())
             .build();
