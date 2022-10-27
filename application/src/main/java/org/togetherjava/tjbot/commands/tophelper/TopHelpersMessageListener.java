@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.tophelper;
 
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -20,11 +21,11 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     /**
      * Matches invisible control characters and unused code points
-     * 
+     *
      * @see <a href="https://www.regular-expressions.info/unicode.html#category">Unicode
      *      Categories</a>
      */
-    public static final Pattern UNCOUNTED_CHARS = Pattern.compile("\\p{C}");
+    private static final Pattern INVALID_CHARACTERS = Pattern.compile("\\p{C}");
 
     private final Database database;
 
@@ -50,31 +51,15 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
-            return;
-        }
-
-        if (!isHelpThread(event)) {
+        if (shouldIgnoreMessage(event)) {
             return;
         }
 
         addMessageRecord(event);
     }
 
-    private boolean isHelpThread(MessageReceivedEvent event) {
-        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
-            return false;
-        }
-
-        ThreadChannel thread = event.getChannel().asThreadChannel();
-        String rootChannelName = thread.getParentChannel().getName();
-        return isStagingChannelName.test(rootChannelName)
-                || isOverviewChannelName.test(rootChannelName);
-    }
-
     private void addMessageRecord(MessageReceivedEvent event) {
-        String messageContent = event.getMessage().getContentRaw();
-        long messageLength = UNCOUNTED_CHARS.matcher(messageContent).replaceAll("").length();
+        long messageLength = countValidCharacters(event.getMessage().getContentRaw());
 
         database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
             .setMessageId(event.getMessage().getIdLong())
@@ -85,4 +70,26 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
             .setMessageLength(messageLength)
             .insert());
     }
+
+    boolean shouldIgnoreMessage(MessageReceivedEvent event) {
+        MessageChannelUnion channel = event.getChannel();
+
+        return event.getAuthor().isBot() || event.isWebhookMessage() || !isHelpThread(channel);
+    }
+
+    boolean isHelpThread(MessageChannelUnion channel) {
+        if (channel.getType() != ChannelType.GUILD_PUBLIC_THREAD) {
+            return false;
+        }
+
+        ThreadChannel thread = channel.asThreadChannel();
+        String rootChannelName = thread.getParentChannel().getName();
+        return isStagingChannelName.test(rootChannelName)
+                || isOverviewChannelName.test(rootChannelName);
+    }
+
+    static long countValidCharacters(String messageContent) {
+        return INVALID_CHARACTERS.matcher(messageContent).replaceAll("").length();
+    }
+
 }
