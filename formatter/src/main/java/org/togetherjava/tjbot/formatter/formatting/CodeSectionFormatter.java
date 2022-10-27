@@ -62,9 +62,13 @@ public final class CodeSectionFormatter {
         }
 
         if (isStartOfLine) {
-            result.append(INDENT.repeat(Math.max(0, currentIndentLevel)));
+            result.append(createIndent());
             isStartOfLine = false;
         }
+    }
+
+    private String createIndent() {
+        return INDENT.repeat(Math.max(0, currentIndentLevel));
     }
 
     private void preHandleGenericLevel(TokenType tokenType) {
@@ -101,8 +105,7 @@ public final class CodeSectionFormatter {
         String content = token.content();
 
         if (token.type() == TokenType.MULTI_LINE_COMMENT) {
-            // TODO Doesnt work as intended
-            content = content.stripIndent();
+            content = rules.patchMultiLineComment(content, createIndent());
         }
 
         result.append(content);

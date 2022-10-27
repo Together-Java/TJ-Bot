@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 // Sonar complains about commented out code on multiple methods.
 // A false-positive, this is intentional explanation.
@@ -158,5 +159,27 @@ final class FormatterRules {
             .filter(Predicate.not(ignoreTypes::contains))
             .limit(4)
             .anyMatch(TokenType.COLON::equals);
+    }
+
+    String patchMultiLineComment(String content, String indent) {
+        List<String> lines = content.lines().toList();
+        if (lines.size() <= 1) {
+            // Nothing to patch for one-line multi-line comments, such as /* foo */
+            return content;
+        }
+
+        // All other lines need indent, and an extra space
+        /*
+         * Example multi-line comment
+         */
+        String firstLine = lines.get(0);
+        List<String> otherLines = lines.subList(1, lines.size());
+
+        String otherLinesText = otherLines.stream()
+            .map(String::strip)
+            .map(otherLine -> indent + " " + otherLine)
+            .collect(Collectors.joining("\n"));
+
+        return firstLine + "\n" + otherLinesText;
     }
 }
