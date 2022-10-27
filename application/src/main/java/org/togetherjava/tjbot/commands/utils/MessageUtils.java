@@ -12,8 +12,6 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Utility methods for {@link Message}.
@@ -23,11 +21,7 @@ import java.util.regex.Pattern;
  */
 public class MessageUtils {
     private static final String ABBREVIATION = "...";
-    private static final String CODE_FENCE_LANGUAGE_GROUP = "language";
-    private static final String CODE_FENCE_CODE_GROUP = "code";
-    private static final Pattern CODE_FENCE_PATTERN =
-            Pattern.compile("```(?<%s>\\S*)\\s+(?<%s>.+)```".formatted(CODE_FENCE_LANGUAGE_GROUP,
-                    CODE_FENCE_CODE_GROUP), Pattern.DOTALL);
+    private static final String CODE_FENCE_SYMBOL = "```";
 
     private MessageUtils() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
@@ -180,14 +174,33 @@ public class MessageUtils {
      * @param fullMessage the message to extract code from
      * @return the first found code snippet, if any
      */
-    public static Optional<CodeFence> extractCode(CharSequence fullMessage) {
-        Matcher matcher = CODE_FENCE_PATTERN.matcher(fullMessage);
-        if (!matcher.find()) {
+    public static Optional<CodeFence> extractCode(String fullMessage) {
+        int codeFenceStart = fullMessage.indexOf(CODE_FENCE_SYMBOL);
+        if (codeFenceStart == -1) {
             return Optional.empty();
         }
 
-        String language = matcher.group(CODE_FENCE_LANGUAGE_GROUP);
-        String code = matcher.group(CODE_FENCE_CODE_GROUP);
+        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, codeFenceStart + 1);
+        if (codeFenceEnd == -1) {
+            return Optional.empty();
+        }
+
+        // Language is between ``` and newline, no spaces allowed, like ```java
+        // Look for the next newline and then assert no space between
+        String language = null;
+        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
+        int languageEnd = fullMessage.indexOf('\n', codeFenceStart);
+        if (languageEnd != -1) {
+            String languageCandidate = fullMessage.substring(languageStart, languageEnd);
+            if (!languageCandidate.isEmpty() && languageCandidate.indexOf(' ') == -1) {
+                language = languageCandidate;
+            }
+        }
+        if (language == null) {
+            languageEnd = languageStart;
+        }
+
+        String code = fullMessage.substring(languageEnd, codeFenceEnd).strip();
 
         return Optional.of(new CodeFence(language, code));
     }
