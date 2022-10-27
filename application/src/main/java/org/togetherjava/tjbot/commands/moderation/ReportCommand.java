@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.moderation.report;
+package org.togetherjava.tjbot.commands.moderation;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -36,27 +36,27 @@ import java.util.regex.Pattern;
 /**
  * Implements the /report command, which allows users to contact a moderator within the server which
  * forwards messages to moderators in a dedicated channel given by
- * {@link Config#getModMailChannelPattern()} ()}.
+ * {@link Config#getModMailChannelPattern()}.
+ *
+ * The /report command would give us necessary information about the offending user, and specific
+ * message that was offensive.
  */
-
 public final class ReportCommand extends BotCommandAdapter implements MessageContextCommand {
 
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
     private static final String COMMAND_NAME = "report";
-    private static final String MESSAGE_INPUT = "message";
+    private static final String REPORT_REASON = "reportReason";
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
-    private String reportedMessage;
-    private String reportedMessageUrl;
 
     /**
      * Creates a new instance.
      *
-     * @param config to get the channel to forward reports to.
+     * @param config to get the channel to forward reports to
      */
     public ReportCommand(Config config) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
@@ -76,21 +76,30 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
-        reportedMessage = event.getTarget().getContentRaw();
-        reportedMessageUrl = event.getTarget().getJumpUrl();
+        String reportedMessage = event.getTarget().getContentRaw();
+        String reportedMessageUrl = event.getTarget().getJumpUrl();
 
-        TextInput body = TextInput.create(MESSAGE_INPUT, "Message", TextInputStyle.PARAGRAPH)
-            .setPlaceholder("Reason for reporting")
-            .setRequiredRange(10, 200)
+        TextInput body = TextInput
+            .create(REPORT_REASON,
+                    "Report this to a moderator, the report is completely " + "anonymous",
+                    TextInputStyle.PARAGRAPH)
+            .setPlaceholder("What is wrong with the message, why do you want to report it?")
+            .setRequiredRange(3, 200)
             .build();
 
-        Modal modal = Modal.create(generateComponentId(), "Report").addActionRow(body).build();
+        Modal modal =
+                Modal.create(generateComponentId(reportedMessage, reportedMessageUrl), "Report")
+                    .addActionRow(body)
+                    .build();
 
         event.replyModal(modal).queue();
     }
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
+        String reportedMessage = args.get(0);
+        String reportedMessageUrl = args.get(1);
+
         long userID = event.getUser().getIdLong();
 
         if (handleIsOnCooldown(userID, event)) {
@@ -108,18 +117,21 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     guildID, configModMailChannelPattern);
             return;
         }
-        String modalMessage = event.getValue(MESSAGE_INPUT).getAsString();
-        MessageCreateAction message =
-                createModMessage(modalMessage, userID, modMailAuditLog.orElseThrow());
+        String modalMessage = event.getValue(REPORT_REASON).getAsString();
+        MessageCreateAction modMessage = createModMessage(modalMessage, userID, reportedMessage,
+                reportedMessageUrl, modMailAuditLog.orElseThrow());
 
-        sendMessage(event, message);
+        sendModMessage(event, modMessage);
 
-        event.getHook().editOriginal("Thank you for your feedback!").queue();
+        event.getHook()
+            .editOriginal(
+                    "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.")
+            .queue();
 
     }
 
     private boolean handleIsOnCooldown(long userID, ModalInteractionEvent event) {
-        if (!isChannelOnCooldown(userID)) {
+        if (!isAuthorOnCooldown(userID)) {
             return false;
         }
         event.reply("Can only be used once per %s minutes.".formatted(COOLDOWN_DURATION_VALUE))
@@ -128,7 +140,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return true;
     }
 
-    private boolean isChannelOnCooldown(long userId) {
+    private boolean isAuthorOnCooldown(long userId) {
         return Optional.ofNullable(authorToLastReportInvocation.getIfPresent(userId))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,
                     COOLDOWN_DURATION_UNIT))
@@ -145,23 +157,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private MessageCreateAction createModMessage(String modalMessage, long userID,
-            TextChannel modMailAuditLog) {
-        return modMailAuditLog.sendMessageEmbeds(createReportMessage(modalMessage, userID));
-    }
-
-    private void sendMessage(ModalInteractionEvent event, MessageCreateAction message) {
-        InteractionHook hook = event.getHook();
-        message.mapToResult().map(result -> {
-            if (result.isSuccess()) {
-                return "Your message has been forwarded, thanks.";
-            }
-            logger.warn("There was an issue with forwarding users message.");
-            return "There was an issue forwarding your message, sorry. We are investigating.";
-        }).flatMap(hook::editOriginal).queue();
-    }
-
-    private MessageEmbed createReportMessage(String modalMessage, long userID) {
-        return new EmbedBuilder().setTitle("Report")
+            String reportedMessage, String reportedMessageUrl, TextChannel modMailAuditLog) {
+        MessageEmbed embed = new EmbedBuilder().setTitle("Report")
             .setDescription(("""
                     Reported Message: **%s**
                     [Reported Message URL](%s)
@@ -171,5 +168,19 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .setTimestamp(Instant.now())
             .build();
+
+        return modMailAuditLog.sendMessageEmbeds(embed);
     }
+
+    private void sendModMessage(ModalInteractionEvent event, MessageCreateAction message) {
+        InteractionHook hook = event.getHook();
+        message.mapToResult().map(result -> {
+            if (result.isSuccess()) {
+                return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
+            }
+            logger.warn("Unable to forward a message report to modmail channel.");
+            return "Sorry, there was an issue sending your report to the moderators. We are investigating.";
+        }).flatMap(hook::editOriginal).queue();
+    }
+
 }
