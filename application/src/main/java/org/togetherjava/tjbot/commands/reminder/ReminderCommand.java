@@ -35,6 +35,10 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  * {@code
  * /reminder create time-amount: 5 time-unit: weeks content: Hello World!
  * }
+ *
+ * {@code
+ * /reminder list
+ * }
  * </pre>
  * <p>
  * Pending reminders are processed and send by {@link RemindRoutine}.
@@ -52,6 +56,10 @@ public final class ReminderCommand extends SlashCommandAdapter {
     private static final List<String> TIME_UNITS =
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
+    private static final int MAX_PAGE_LENGTH = 10;
+    private static final int MAX_REMINDER_TITLE_LENGTH = 256;
+    private static final String PREVIOUS_BUTTON_LABEL = "⬅";
+    private static final String NEXT_BUTTON_LABEL = "➡";
     static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
