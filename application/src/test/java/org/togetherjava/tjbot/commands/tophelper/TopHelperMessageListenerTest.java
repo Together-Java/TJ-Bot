@@ -32,7 +32,7 @@ final class TopHelperMessageListenerTest {
     private static final String OVERVIEW_CHANNEL_PATTERN = "active_questions";
 
     private static JdaTester jdaTester;
-    private static TopHelpersMessageListener topHelpersListenerSpy;
+    private static TopHelpersMessageListener topHelpersListener;
 
     @BeforeAll
     static void setUp() {
@@ -46,7 +46,7 @@ final class TopHelperMessageListenerTest {
         when(config.getHelpSystem()).thenReturn(helpSystemConfig);
 
         jdaTester = new JdaTester();
-        topHelpersListenerSpy = spy(new TopHelpersMessageListener(database, config));
+        topHelpersListener = new TopHelpersMessageListener(database, config);
     }
 
     @Test
@@ -57,7 +57,7 @@ final class TopHelperMessageListenerTest {
                 createFakeMessageRecievedEvent(false, false, true, OVERVIEW_CHANNEL_PATTERN);
 
         // WHEN checking if the message should be ignored
-        boolean shouldBeIgnored = topHelpersListenerSpy.shouldIgnoreMessage(event);
+        boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
 
         // THEN the message is not ignored
         assertFalse(shouldBeIgnored);
@@ -71,7 +71,7 @@ final class TopHelperMessageListenerTest {
                 createFakeMessageRecievedEvent(true, false, true, OVERVIEW_CHANNEL_PATTERN);
 
         // WHEN checking if the message should be ignored
-        boolean shouldBeIgnored = topHelpersListenerSpy.shouldIgnoreMessage(event);
+        boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
 
         // THEN the message is ignored
         assertTrue(shouldBeIgnored);
@@ -85,7 +85,7 @@ final class TopHelperMessageListenerTest {
                 createFakeMessageRecievedEvent(false, true, true, OVERVIEW_CHANNEL_PATTERN);
 
         // WHEN checking if the message should be ignored
-        boolean shouldBeIgnored = topHelpersListenerSpy.shouldIgnoreMessage(event);
+        boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
 
         // THEN the message is ignored
         assertTrue(shouldBeIgnored);
@@ -102,9 +102,9 @@ final class TopHelperMessageListenerTest {
 
         // WHEN checking if the message should be ignored
         boolean ignoresNonThreadChannels =
-                topHelpersListenerSpy.shouldIgnoreMessage(eventNotAThread);
+                topHelpersListener.shouldIgnoreMessage(eventNotAThread);
         boolean ignoresWrongParentNames =
-                topHelpersListenerSpy.shouldIgnoreMessage(eventWrongParentName);
+                topHelpersListener.shouldIgnoreMessage(eventWrongParentName);
 
         // THEN the message is ignored
         assertTrue(ignoresNonThreadChannels, "Failed to ignore non-thread channels");
