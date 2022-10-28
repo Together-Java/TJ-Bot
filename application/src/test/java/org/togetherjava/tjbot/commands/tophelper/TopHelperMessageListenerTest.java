@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
@@ -95,8 +96,7 @@ final class TopHelperMessageListenerTest {
                 createFakeMessageReceivedEvent(false, false, true, "memes");
 
         // WHEN checking if the message should be ignored
-        boolean ignoresNonThreadChannels =
-                topHelpersListener.shouldIgnoreMessage(eventNotAThread);
+        boolean ignoresNonThreadChannels = topHelpersListener.shouldIgnoreMessage(eventNotAThread);
         boolean ignoresWrongParentNames =
                 topHelpersListener.shouldIgnoreMessage(eventWrongParentName);
 
