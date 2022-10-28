@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FormatterTest {
+    // FIXME Rework this test
     Formatter formatter;
 
     @BeforeAll

@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.formatter.tokenizer.TokenType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -59,8 +60,12 @@ final class TokenQueue {
      * Consumes the next token. Must only be invoked if {@link #isEmpty()} returns {@code false}.
      * 
      * @return the consumed token
+     * @throws NoSuchElementException if the queue is empty
      */
     Token consume() {
+        if (isEmpty()) {
+            throw new NoSuchElementException("The queue is empty, can not consume another token");
+        }
         Token token = tokens.get(nextTokenIndex);
         nextTokenIndex++;
         return token;
@@ -73,8 +78,12 @@ final class TokenQueue {
      * That is the type of the token, which would be returned by using {@link #consume()}.
      * 
      * @return the next tokens type
+     * @throws NoSuchElementException if the queue is empty
      */
     TokenType peekType() {
+        if (isEmpty()) {
+            throw new NoSuchElementException("The queue is empty, can not peek another token");
+        }
         return tokens.get(nextTokenIndex).type();
     }
 
@@ -86,33 +95,42 @@ final class TokenQueue {
      * {@link #consume()}.
      * 
      * @return the previous tokens type
+     * @throws NoSuchElementException if no token was consumed yet
      */
     TokenType peekTypeBack() {
+        if (nextTokenIndex == 0) {
+            throw new NoSuchElementException("No token has been consumed yet, can not peek back");
+        }
         return tokens.get(nextTokenIndex - 1).type();
     }
 
     /**
-     * Peeks at the type of the next tokens, without consuming them. Must only be used if
-     * {@link #isEmpty()} returns {@code false}.
+     * Peeks at the type of the next tokens, without consuming them.
      * <p>
      * This essentially gives a stream for all remaining tokens in the queue.
      * 
-     * @return the next tokens types
+     * @return the next tokens types, an empty stream if the queue is empty
      */
     Stream<TokenType> peekTypeStream() {
+        if (isEmpty()) {
+            return Stream.of();
+        }
         return tokens.subList(nextTokenIndex, tokens.size()).stream().map(Token::type);
     }
 
     /**
-     * Peeks at the type of the previous tokens, without changing the queue. Must only be used after
-     * {@link #consume()} ()} has been used at least once.
+     * Peeks at the type of the previous tokens, without changing the queue.
      * <p>
      * This essentially gives a stream for all already consumed tokens in the queue. The stream is
      * ordered from the most recently consumed token to the first consumed token.
      * 
-     * @return the previous tokens types
+     * @return the previous tokens types, an empty stream if no token has been consumed yet
      */
     Stream<TokenType> peekBackStream() {
+        if (nextTokenIndex == 0) {
+            return Stream.of();
+        }
+
         return IntStream.range(0, nextTokenIndex)
             .map(i -> nextTokenIndex - i - 1)
             .mapToObj(tokens::get)
