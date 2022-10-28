@@ -5,11 +5,16 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.TimeFormat;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import org.jooq.Result;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
@@ -20,6 +25,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord
 
 import java.time.*;
 import java.time.temporal.TemporalAmount;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -102,6 +108,21 @@ public final class ReminderCommand extends SlashCommandAdapter {
         }
     }
 
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        int pageNumber = Integer.parseInt(args.get(0));
+        int pageTurnBy = Integer.parseInt(args.get(1));
+
+        Result<PendingRemindersRecord> pendingReminders =
+                getPendingReminders(event.getGuild(), event.getUser());
+        int pageToShow = pageNumber + pageTurnBy;
+
+        event
+            .editMessage(
+                    MessageEditData.fromCreateData(createListMessage(pendingReminders, pageToShow)))
+            .queue();
+    }
+
     private void handleCreateCommand(SlashCommandInteractionEvent event) {
         int timeAmount = Math.toIntExact(event.getOption(TIME_AMOUNT_OPTION).getAsLong());
         String timeUnit = event.getOption(TIME_UNIT_OPTION).getAsString();
@@ -133,40 +154,95 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private void handleListCommand(SlashCommandInteractionEvent event) {
+        Result<PendingRemindersRecord> pendingReminders =
+                getPendingReminders(event.getGuild(), event.getUser());
+
+        event.reply(createListMessage(pendingReminders, 1)).setEphemeral(true).queue();
+    }
+
+    private Result<PendingRemindersRecord> getPendingReminders(Guild guild, User user) {
+        return database.read(context -> context.selectFrom(PENDING_REMINDERS)
+            .where(PENDING_REMINDERS.GUILD_ID.eq(guild.getIdLong())
+                .and(PENDING_REMINDERS.AUTHOR_ID.eq(user.getIdLong())))
+            .orderBy(PENDING_REMINDERS.REMIND_AT.asc())
+            .fetch());
+    }
+
+    private MessageCreateData createListMessage(Result<PendingRemindersRecord> pendingReminders,
+            int pageToShow) {
+        int totalPages = (int) Math.ceil(pendingReminders.size() / (double) MAX_PAGE_LENGTH);
+
+        EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
+            .setColor(RemindRoutine.AMBIENT_COLOR);
+        MessageCreateBuilder listMessage = new MessageCreateBuilder();
+
+        if (pendingReminders.isEmpty()) {
+            remindersEmbed.setDescription("No pending reminders");
+        } else {
+            if (totalPages > 1) {
+                remindersEmbed.setFooter("Page: " + pageToShow + "/" + totalPages);
+
+                getRemindersPage(pendingReminders, pageToShow)
+                    .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
+
+                listMessage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
+            } else {
+                pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
+            }
+        }
+
+        return listMessage.addEmbeds(remindersEmbed.build()).build();
+    }
+
+    private List<Button> createPageTurnButtons(int pageNumber, int totalPages) {
+        int previousButtonTurnPageBy = -1;
+        Button previousButton =
+                createPageTurnButton(PREVIOUS_BUTTON_LABEL, pageNumber, previousButtonTurnPageBy);
+        if (pageNumber <= 1) {
+            previousButton = previousButton.asDisabled();
+        }
+
+        int nextButtonTurnPageBy = 1;
+        Button nextButton =
+                createPageTurnButton(NEXT_BUTTON_LABEL, pageNumber, nextButtonTurnPageBy);
+        if (pageNumber >= totalPages) {
+            nextButton = nextButton.asDisabled();
+        }
+
+        return List.of(previousButton, nextButton);
+    }
+
+    private Button createPageTurnButton(String label, long pageNumber, int turnPageBy) {
+        return Button.primary(
+                generateComponentId(String.valueOf(pageNumber), String.valueOf(turnPageBy)), label);
+    }
+
+    private static List<PendingRemindersRecord> getRemindersPage(
+            Result<PendingRemindersRecord> remindersRecords, int pageNumber) {
+        List<PendingRemindersRecord> reminders = new ArrayList<>(MAX_PAGE_LENGTH);
+
+        int start = (pageNumber - 1) * MAX_PAGE_LENGTH;
+        int end = Math.min(start + MAX_PAGE_LENGTH, remindersRecords.size());
+
+        for (int i = start; i < end; i++) {
+            reminders.add(remindersRecords.get(i));
+        }
+
+        return reminders;
+    }
+
+    private static void addReminderAsField(PendingRemindersRecord reminder, EmbedBuilder embed) {
         BiFunction<Long, Instant, String> getDescription = (channelId, remindAt) -> """
                 Channel: %s
                 Remind at: %s""".formatted(MessageUtils.mentionChannelById(channelId),
                 TimeFormat.DEFAULT.format(remindAt));
 
-        EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
-            .setColor(RemindRoutine.AMBIENT_COLOR);
+        String content = reminder.getContent();
+        long channelId = reminder.getChannelId();
+        Instant remindAt = reminder.getRemindAt();
 
-        long guildId = event.getGuild().getIdLong();
-        long userId = event.getUser().getIdLong();
-
-        Result<PendingRemindersRecord> pendingReminders = getReminders(guildId, userId);
-
-        if (pendingReminders.isEmpty()) {
-            remindersEmbed.setDescription("No pending reminders");
-        } else {
-            pendingReminders.forEach(reminder -> {
-                String content = reminder.getContent();
-                long channelId = reminder.getChannelId();
-                Instant remindAt = reminder.getRemindAt();
-
-                remindersEmbed.addField(content, getDescription.apply(channelId, remindAt), false);
-            });
-        }
-
-        event.replyEmbeds(remindersEmbed.build()).setEphemeral(true).queue();
-    }
-
-    private Result<PendingRemindersRecord> getReminders(long guildId, long userId) {
-        return database.read(context -> context.selectFrom(PENDING_REMINDERS)
-            .where(PENDING_REMINDERS.GUILD_ID.eq(guildId)
-                .and(PENDING_REMINDERS.AUTHOR_ID.eq(userId)))
-            .orderBy(PENDING_REMINDERS.REMIND_AT.asc())
-            .fetch());
+        embed.addField(MessageUtils.abbreviate(content, MAX_REMINDER_TITLE_LENGTH),
+                getDescription.apply(channelId, remindAt), false);
     }
 
     private static Instant parseWhen(int whenAmount, String whenUnit) {
