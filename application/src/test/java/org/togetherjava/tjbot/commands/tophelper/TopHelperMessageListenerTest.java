@@ -8,12 +8,10 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.UserImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.ThreadChannelImpl;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
@@ -50,7 +48,6 @@ final class TopHelperMessageListenerTest {
     }
 
     @Test
-    @DisplayName("Recognizes valid messages")
     void recognizesValidMessages() {
         // GIVEN a message by a human in a help channel
         MessageReceivedEvent event =
@@ -64,7 +61,6 @@ final class TopHelperMessageListenerTest {
     }
 
     @Test
-    @DisplayName("Ignores bots")
     void ignoresBots() {
         // GIVEN a message from a bot
         MessageReceivedEvent event =
@@ -78,7 +74,6 @@ final class TopHelperMessageListenerTest {
     }
 
     @Test
-    @DisplayName("Ignores webhooks")
     void ignoresWebhooks() {
         // GIVEN a message from a webhook
         MessageReceivedEvent event =
@@ -92,7 +87,6 @@ final class TopHelperMessageListenerTest {
     }
 
     @Test
-    @DisplayName("Ignores wrong channels")
     void ignoresWrongChannels() {
         // GIVEN a message outside a help thread
         MessageReceivedEvent eventNotAThread =
@@ -136,7 +130,6 @@ final class TopHelperMessageListenerTest {
 
     @ParameterizedTest
     @MethodSource("provideInvalidCharactersWithDescription")
-    @DisplayName("Does ignore invalid characters")
     void excludesInvalidCharacters(String invalidChars, String description) {
         // GIVEN a string of invalid characters
 
@@ -151,7 +144,6 @@ final class TopHelperMessageListenerTest {
 
     @ParameterizedTest
     @MethodSource("provideValidCharacters")
-    @DisplayName("Does count valid characters")
     void countsValidCharacters(String validChars) {
         // GIVEN a string of valid characters
 
