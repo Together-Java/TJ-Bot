@@ -25,7 +25,6 @@ import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord
 
 import java.time.*;
 import java.time.temporal.TemporalAmount;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -86,9 +85,9 @@ public final class ReminderCommand extends SlashCommandAdapter {
                     .setRequiredRange(MIN_TIME_AMOUNT, MAX_TIME_AMOUNT);
         OptionData timeUnit = new OptionData(OptionType.STRING, TIME_UNIT_OPTION,
                 "period to remind you in, the unit of time (e.g. 5 [weeks])", true);
+        TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
         OptionData content =
                 new OptionData(OptionType.STRING, CONTENT_OPTION, "what to remind you about", true);
-        TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
 
         getData().addSubcommands(
                 new SubcommandData(CREATE_SUBCOMMAND, "creates a reminder").addOptions(timeAmount,
@@ -170,7 +169,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     private MessageCreateData createListMessage(Result<PendingRemindersRecord> pendingReminders,
             int pageToShow) {
-        int totalPages = (int) Math.ceil(pendingReminders.size() / (double) MAX_PAGE_LENGTH);
+        int totalPages = Math.ceilDiv(pendingReminders.size(), MAX_PAGE_LENGTH);
 
         EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
             .setColor(RemindRoutine.AMBIENT_COLOR);
@@ -182,7 +181,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
             if (totalPages > 1) {
                 remindersEmbed.setFooter("Page: " + pageToShow + "/" + totalPages);
 
-                getRemindersPage(pendingReminders, pageToShow)
+                getPageEntries(pendingReminders, pageToShow)
                     .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
 
                 listMessage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
@@ -217,18 +216,12 @@ public final class ReminderCommand extends SlashCommandAdapter {
                 generateComponentId(String.valueOf(pageNumber), String.valueOf(turnPageBy)), label);
     }
 
-    private static List<PendingRemindersRecord> getRemindersPage(
+    private static List<PendingRemindersRecord> getPageEntries(
             Result<PendingRemindersRecord> remindersRecords, int pageNumber) {
-        List<PendingRemindersRecord> reminders = new ArrayList<>(MAX_PAGE_LENGTH);
-
         int start = (pageNumber - 1) * MAX_PAGE_LENGTH;
         int end = Math.min(start + MAX_PAGE_LENGTH, remindersRecords.size());
 
-        for (int i = start; i < end; i++) {
-            reminders.add(remindersRecords.get(i));
-        }
-
-        return reminders;
+        return remindersRecords.subList(start, end);
     }
 
     private static void addReminderAsField(PendingRemindersRecord reminder, EmbedBuilder embed) {
