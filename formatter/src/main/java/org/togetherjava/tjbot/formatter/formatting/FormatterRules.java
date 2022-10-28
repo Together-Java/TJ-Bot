@@ -128,11 +128,8 @@ final class FormatterRules {
             // The space is added before the operator already
             return false; // foo() + 3
         }
-        if (nextType == TokenType.DOT) {
-            return false; // foo().bar()
-        }
-
-        return true; // foo() {
+        // foo { and not foo().bar()
+        return nextType != TokenType.DOT;
     }
 
     boolean shouldPutNewlineAfter(TokenType tokenType, int expectedSemicolonsInLine) {

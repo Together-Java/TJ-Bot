@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class FormatterTest {
-    // FIXME Rework this test
     private Formatter formatter;
 
     @BeforeEach

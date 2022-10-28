@@ -100,12 +100,12 @@ public enum TokenType {
     QUESTION_MARK("?", Attribute.BINARY_OPERATOR),
 
     // Comments
-    SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n|$)")),
+    SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n|$)"), "// Foo"),
     MULTI_LINE_COMMENT(Pattern.compile("""
             /\\* #Start
             .* #Content
             \\*/ #End
-            """, Pattern.DOTALL | Pattern.COMMENTS)),
+            """, Pattern.DOTALL | Pattern.COMMENTS), "/* Foo */"),
 
     // Operators
     // NOTE right shifts (<<, >>, >>>) are intentionally left out
@@ -150,7 +150,7 @@ public enum TokenType {
     INSTANCE_OF("instanceof", Attribute.BINARY_OPERATOR),
 
     // Other
-    ANNOTATION(Pattern.compile("@[a-zA-Z]\\w*")),
+    ANNOTATION(Pattern.compile("@[a-zA-Z]\\w*"), "@Foo"),
     NUMBER(Pattern.compile("""
             (0[xb])? #Different base
             ([\\d_]+ #Integers
@@ -159,16 +159,17 @@ public enum TokenType {
             | \\.[\\d_]+ #Float only right, .1
             )
             [dDfFlL]? #Type suffix
-            """, Pattern.COMMENTS)),
-    STRING(Matching::matchesString, Attribute.NONE),
-    IDENTIFIER(Pattern.compile("[a-zA-Z]\\w*")),
-    WHITESPACE(Pattern.compile("\\s+")),
+            """, Pattern.COMMENTS), "1_23.4_56F"),
+    STRING(Matching::matchesString, Attribute.NONE, "\"foo\""),
+    IDENTIFIER(Pattern.compile("[a-zA-Z]\\w*"), "foo"),
+    WHITESPACE(Pattern.compile("\\s+"), " "),
 
     // Fallback for everything that has not been matched yet
-    UNKNOWN(Pattern.compile(".", Pattern.DOTALL));
+    UNKNOWN(Pattern.compile(".", Pattern.DOTALL), "°");
 
     private final Function<CharSequence, Optional<String>> matcher;
     private final Attribute attribute;
+    private final String contentExample;
 
     /**
      * Gets all token types in the order they should be used for matching.
@@ -183,17 +184,29 @@ public enum TokenType {
         return TokenType.values();
     }
 
-    TokenType(Function<CharSequence, Optional<String>> matcher, Attribute attribute) {
+    TokenType(Function<CharSequence, Optional<String>> matcher, Attribute attribute,
+            String contentExample) {
         this.matcher = matcher;
         this.attribute = attribute;
+        this.contentExample = contentExample;
+
+        requireMatchesExample();
     }
 
-    TokenType(Pattern pattern) {
-        this(text -> Matching.matchesPattern(pattern, text), Attribute.NONE);
+    private void requireMatchesExample() {
+        if (matcher.apply(contentExample).isEmpty()) {
+            throw new AssertionError(
+                    "The given content example (%s) is not matched by the token type (%s)"
+                        .formatted(contentExample, this));
+        }
+    }
+
+    TokenType(Pattern pattern, String contentExample) {
+        this(text -> Matching.matchesPattern(pattern, text), Attribute.NONE, contentExample);
     }
 
     TokenType(String symbol, Attribute attribute) {
-        this(text -> Matching.matchesSymbol(symbol, text, attribute), attribute);
+        this(text -> Matching.matchesSymbol(symbol, text, attribute), attribute, symbol);
     }
 
     TokenType(String symbol) {
@@ -222,6 +235,15 @@ public enum TokenType {
      */
     public Attribute getAttribute() {
         return attribute;
+    }
+
+    /**
+     * An example token content this type would match.
+     * 
+     * @return example match
+     */
+    String getContentExample() {
+        return contentExample;
     }
 
     /**
