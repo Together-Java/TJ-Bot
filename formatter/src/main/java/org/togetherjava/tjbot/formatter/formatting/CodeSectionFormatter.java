@@ -11,6 +11,9 @@ import java.util.List;
  * <p>
  * After creation, use {@link #format()}. This is a one-time method.
  */
+// Sonar complains about commented out code on multiple methods.
+// A false-positive, this is intentional explanation.
+@SuppressWarnings("squid:S125")
 public final class CodeSectionFormatter {
     private static final String INDENT = " ".repeat(2);
 
@@ -39,6 +42,8 @@ public final class CodeSectionFormatter {
      * applied. For example in indexed for-loops {@code for (A(); B(); C())}.
      */
     private int expectedSemicolonsInLine;
+    private boolean isInPackageDeclaration;
+    private boolean isInImportDeclaration;
 
     private boolean alreadyUsed;
 
@@ -153,7 +158,7 @@ public final class CodeSectionFormatter {
         String content = token.content();
 
         if (token.type() == TokenType.MULTI_LINE_COMMENT) {
-            content = rules.patchMultiLineComment(content, createIndent());
+            content = FormatterRules.patchMultiLineComment(content, createIndent());
         }
 
         result.append(content);
@@ -169,6 +174,8 @@ public final class CodeSectionFormatter {
         handleNewLineSuffix(tokenType);
         handleExpectedSemicolonsInLine(tokenType);
         postHandleGenericLevel(tokenType);
+        handlePackageDeclaration(tokenType);
+        handleImportDeclaration(tokenType);
     }
 
     private void handleSpaceSuffix(TokenType tokenType) {
@@ -202,6 +209,44 @@ public final class CodeSectionFormatter {
     private void postHandleGenericLevel(TokenType tokenType) {
         if (currentGenericLevel > 0 && tokenType == TokenType.GREATER_THAN) {
             currentGenericLevel--;
+        }
+    }
+
+    private void handlePackageDeclaration(TokenType tokenType) {
+        if (tokenType == TokenType.PACKAGE) {
+            isInPackageDeclaration = true;
+            return;
+        }
+
+        if (!isInPackageDeclaration) {
+            return;
+        }
+
+        // package foo.bar.Baz;
+        if (tokenType == TokenType.SEMICOLON) {
+            // End of package needs an extra empty line
+            isInPackageDeclaration = false;
+            result.append('\n');
+        }
+    }
+
+    private void handleImportDeclaration(TokenType tokenType) {
+        if (tokenType == TokenType.IMPORT) {
+            isInImportDeclaration = true;
+            return;
+        }
+
+        if (!isInImportDeclaration) {
+            return;
+        }
+
+        // import foo.bar.Baz;
+        if (tokenType == TokenType.SEMICOLON) {
+            isInImportDeclaration = false;
+            if (rules.isEndOfLastImportDeclaration()) {
+                // End of last import needs an extra empty line
+                result.append('\n');
+            }
         }
     }
 }

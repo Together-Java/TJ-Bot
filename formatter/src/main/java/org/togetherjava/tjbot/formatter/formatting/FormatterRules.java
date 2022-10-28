@@ -38,9 +38,25 @@ final class FormatterRules {
 
     boolean shouldPutSpaceBefore(TokenType tokenType) {
         // 5 + 3
-        List<Predicate<TokenType>> rules =
-                List.of(type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR);
+        List<Predicate<TokenType>> rules = List.of(
+                // 5 + 3, but not inside x >> 1
+                type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR
+                        && isRightShiftStartOrNone(tokenType),
+                TokenType.IMPLEMENTS::equals, TokenType.EXTENDS::equals);
         return matchesAnyRule(tokenType, rules);
+    }
+
+    private boolean isRightShiftStartOrNone(TokenType tokenType) {
+        if (tokenType != TokenType.GREATER_THAN) {
+            return true;
+        }
+
+        // The start of a >> has no > to the left
+        return tokens.peekTypeBackStream()
+            .skip(1)
+            .limit(1)
+            .findFirst()
+            .orElseThrow() != TokenType.GREATER_THAN;
     }
 
     boolean shouldPutSpaceAfterGeneric(TokenType tokenType, int currentGenericLevel) {
@@ -65,16 +81,32 @@ final class FormatterRules {
     boolean shouldPutSpaceAfter(TokenType tokenType, int expectedSemicolonsInLine) {
         List<Predicate<TokenType>> rules = List.of(
                 type -> type.getAttribute() == TokenType.Attribute.KEYWORD, // class Foo
-                type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR, // 5 + 3
+                // 5 + 3, but not inside x >> 1
+                type -> type.getAttribute() == TokenType.Attribute.BINARY_OPERATOR
+                        && isRightShiftEndOrNone(tokenType),
                 this::shouldPutSpaceAfterClosingParenthesis, // foo() {
                 TokenType.CLOSE_BRACKETS::equals, // foo[i] = 3
                 TokenType.COMMA::equals, // foo(x, y)
                 // String toString()
                 type -> type == TokenType.IDENTIFIER && tokens.peekType() == TokenType.IDENTIFIER,
+                // class Foo {
+                type -> type == TokenType.IDENTIFIER && tokens.peekType() == TokenType.OPEN_BRACES,
                 // for (a(); b(); c())
-                type -> type == TokenType.SEMICOLON && expectedSemicolonsInLine > 0);
+                type -> type == TokenType.SEMICOLON && expectedSemicolonsInLine > 0,
+                // } catch, } finally
+                type -> type == TokenType.CLOSE_BRACES
+                        && Set.of(TokenType.CATCH, TokenType.FINALLY).contains(tokens.peekType()));
 
         return matchesAnyRule(tokenType, rules);
+    }
+
+    private boolean isRightShiftEndOrNone(TokenType tokenType) {
+        if (tokenType != TokenType.GREATER_THAN) {
+            return true;
+        }
+
+        // The end of a >> has no > to the right
+        return tokens.peekType() != TokenType.GREATER_THAN;
     }
 
     private boolean shouldPutSpaceAfterClosingParenthesis(TokenType tokenType) {
@@ -88,6 +120,9 @@ final class FormatterRules {
         }
         if (nextType == TokenType.SEMICOLON) {
             return false; // foo();
+        }
+        if (nextType == TokenType.COMMA) {
+            return false; // foo(a, bar(), c);
         }
         if (nextType.getAttribute() == TokenType.Attribute.BINARY_OPERATOR) {
             // The space is added before the operator already
@@ -104,10 +139,14 @@ final class FormatterRules {
         List<Predicate<TokenType>> rules = List.of(TokenType.OPEN_BRACES::equals, // foo() {
                 TokenType.SINGLE_LINE_COMMENT::equals, // // Foo
                 TokenType.MULTI_LINE_COMMENT::equals, // /* Foo */
-                TokenType.ANNOTATION::equals, // @Foo
+                // @Foo but not @Foo(bar)
+                type -> type == TokenType.ANNOTATION
+                        && tokens.peekType() != TokenType.OPEN_PARENTHESIS,
                 // } but not };
-                type -> type == TokenType.CLOSE_BRACES && tokens.peekType() != TokenType.SEMICOLON,
-                // int x = 5; but not for (;;)
+                type -> type == TokenType.CLOSE_BRACES && tokens.peekType() != TokenType.SEMICOLON
+                        && tokens.peekType() != TokenType.CATCH
+                        && tokens.peekType() != TokenType.FINALLY,
+                // int x = 5; but not for (;;), } catch, } finally
                 type -> type == TokenType.SEMICOLON && expectedSemicolonsInLine == 0);
 
         return matchesAnyRule(tokenType, rules);
@@ -156,21 +195,33 @@ final class FormatterRules {
             return false;
         }
 
-        // Check the next significant tokens, one must be a colon
+        // Either indexed or enhanced for loop
+        // Check the next significant tokens, none must be a colon
         // for (int x : values)
         // 1 -> (
         // 2 -> int
         // 3 -> x
         // 4 -> :
-        Set<TokenType> ignoreTypes = Set.of(TokenType.ANNOTATION, TokenType.FINAL,
-                TokenType.MULTI_LINE_COMMENT, TokenType.SINGLE_LINE_COMMENT);
+        Set<TokenType> ignoreTypes =
+                Set.of(TokenType.ANNOTATION, TokenType.FINAL, TokenType.MULTI_LINE_COMMENT,
+                        TokenType.SINGLE_LINE_COMMENT, TokenType.WHITESPACE, TokenType.DOT);
         return tokens.peekTypeStream()
             .filter(Predicate.not(ignoreTypes::contains))
-            .limit(4)
-            .anyMatch(TokenType.COLON::equals);
+            .limit(6)
+            .noneMatch(TokenType.COLON::equals);
     }
 
-    String patchMultiLineComment(String content, String indent) {
+    boolean isEndOfLastImportDeclaration() {
+        // After the last import statement, no further import follows
+        Set<TokenType> ignoreTypes = Set.of(TokenType.MULTI_LINE_COMMENT,
+                TokenType.SINGLE_LINE_COMMENT, TokenType.WHITESPACE);
+        return tokens.peekTypeStream()
+            .filter(Predicate.not(ignoreTypes::contains))
+            .limit(1)
+            .noneMatch(TokenType.IMPORT::equals);
+    }
+
+    static String patchMultiLineComment(String content, String indent) {
         List<String> lines = content.lines().toList();
         if (lines.size() <= 1) {
             // Nothing to patch for one-line multi-line comments, such as /* foo */

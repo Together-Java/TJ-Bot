@@ -108,22 +108,22 @@ final class TokenQueueTest {
     }
 
     @Test
-    void peekBackStream() {
+    void peekTypeBackStream() {
         TokenQueue queue = provideEmptyTokenQueue();
-        assertTrue(queue.peekBackStream().toList().isEmpty());
+        assertTrue(queue.peekTypeBackStream().toList().isEmpty());
 
         queue = provide2TokenQueue();
-        assertTrue(queue.peekBackStream().toList().isEmpty());
+        assertTrue(queue.peekTypeBackStream().toList().isEmpty());
 
         queue.consume();
         List<TokenType> expectedTypes = List.of(TokenType.CLASS);
-        assertEquals(expectedTypes, queue.peekBackStream().toList());
+        assertEquals(expectedTypes, queue.peekTypeBackStream().toList());
         // Does not consume tokens, still the same
-        assertEquals(expectedTypes, queue.peekBackStream().toList());
+        assertEquals(expectedTypes, queue.peekTypeBackStream().toList());
 
         queue.consume();
         expectedTypes = List.of(TokenType.IDENTIFIER, TokenType.CLASS);
-        assertEquals(expectedTypes, queue.peekBackStream().toList());
+        assertEquals(expectedTypes, queue.peekTypeBackStream().toList());
     }
 
     private static TokenQueue provide2TokenQueue() {

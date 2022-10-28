@@ -126,7 +126,7 @@ final class TokenQueue {
      * 
      * @return the previous tokens types, an empty stream if no token has been consumed yet
      */
-    Stream<TokenType> peekBackStream() {
+    Stream<TokenType> peekTypeBackStream() {
         if (nextTokenIndex == 0) {
             return Stream.of();
         }

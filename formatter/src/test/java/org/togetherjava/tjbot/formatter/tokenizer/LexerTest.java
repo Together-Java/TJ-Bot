@@ -53,10 +53,11 @@ final class LexerTest {
     @Test
     @DisplayName("Keywords can be used as identifier if a letter follows them, such as new vs newText")
     void keywordVersusIdentifier() {
+        String code = "new newText";
         List<TokenType> expectedTypes =
                 List.of(TokenType.NEW, TokenType.WHITESPACE, TokenType.IDENTIFIER);
 
-        List<TokenType> actualTypes = tokenize("new newText");
+        List<TokenType> actualTypes = tokenize(code);
 
         assertEquals(expectedTypes, actualTypes);
     }
@@ -69,6 +70,19 @@ final class LexerTest {
         TokenType actualTokenType = tokenize(text).get(0);
 
         assertEquals(expectedTokenType, actualTokenType, "Tested on: " + text);
+    }
+
+    @Test
+    @DisplayName("Nested generics with multi-close > must be identified as GREATER.")
+    void nestedGenericsMultiCloseGreater() {
+        String code = "List<List<Foo>>";
+        List<TokenType> expectedTypes = List.of(TokenType.IDENTIFIER, TokenType.LESS_THAN,
+                TokenType.IDENTIFIER, TokenType.LESS_THAN, TokenType.IDENTIFIER,
+                TokenType.GREATER_THAN, TokenType.GREATER_THAN);
+
+        List<TokenType> actualTypes = tokenize(code);
+
+        assertEquals(expectedTypes, actualTypes);
     }
 
     private static String provideExampleContent(TokenType tokenType) {
@@ -163,8 +177,6 @@ final class LexerTest {
             case EQUALS -> "==";
             case NOT_EQUALS -> "!=";
             case GREATER_THAN_OR_EQUALS -> ">=";
-            case LOGICAL_RIGHT_SHIFT -> ">>>";
-            case ARITHMETIC_RIGHT_SHIFT -> ">>";
             case GREATER_THAN -> ">";
             case LESS_THAN_OR_EQUALS -> "<=";
             case LEFT_SHIFT -> "<<";

@@ -97,7 +97,7 @@ public enum TokenType {
     SEMICOLON(";"),
     METHOD_REFERENCE("::"),
     COMMA(","),
-    QUESTION_MARK("?"),
+    QUESTION_MARK("?", Attribute.BINARY_OPERATOR),
 
     // Comments
     SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n|$)")),
@@ -108,6 +108,8 @@ public enum TokenType {
             """, Pattern.DOTALL | Pattern.COMMENTS)),
 
     // Operators
+    // NOTE right shifts (<<, >>, >>>) are intentionally left out
+    // they conflict with nested generics like List<List<Foo>>
     SMART_AND("&&", Attribute.BINARY_OPERATOR),
     SMART_OR("||", Attribute.BINARY_OPERATOR),
     PLUS_EQUALS("+=", Attribute.BINARY_OPERATOR),
@@ -125,8 +127,6 @@ public enum TokenType {
     NOT_EQUALS("!=", Attribute.BINARY_OPERATOR),
     NOT("!"),
     GREATER_THAN_OR_EQUALS(">=", Attribute.BINARY_OPERATOR),
-    LOGICAL_RIGHT_SHIFT(">>>", Attribute.BINARY_OPERATOR),
-    ARITHMETIC_RIGHT_SHIFT(">>", Attribute.BINARY_OPERATOR),
     GREATER_THAN(">", Attribute.BINARY_OPERATOR),
     LESS_THAN_OR_EQUALS("<=", Attribute.BINARY_OPERATOR),
     LEFT_SHIFT("<<", Attribute.BINARY_OPERATOR),
