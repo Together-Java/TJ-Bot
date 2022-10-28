@@ -61,7 +61,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
     private static final List<String> TIME_UNITS =
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
-    private static final int MAX_PAGE_LENGTH = 10;
+    private static final int REMINDERS_PER_PAGE = 10;
     private static final int MAX_REMINDER_TITLE_LENGTH = 256;
     private static final String PREVIOUS_BUTTON_LABEL = "⬅";
     private static final String NEXT_BUTTON_LABEL = "➡";
@@ -169,7 +169,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     private MessageCreateData createListMessage(Result<PendingRemindersRecord> pendingReminders,
             int pageToShow) {
-        int totalPages = Math.ceilDiv(pendingReminders.size(), MAX_PAGE_LENGTH);
+        int totalPages = Math.ceilDiv(pendingReminders.size(), REMINDERS_PER_PAGE);
 
         EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
             .setColor(RemindRoutine.AMBIENT_COLOR);
@@ -179,7 +179,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
             remindersEmbed.setDescription("No pending reminders");
         } else {
             if (totalPages > 1) {
-                remindersEmbed.setFooter("Page: " + pageToShow + "/" + totalPages);
+                remindersEmbed.setFooter("Page: %d/%d".formatted(pageToShow, totalPages));
 
                 getPageEntries(pendingReminders, pageToShow)
                     .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
@@ -218,8 +218,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     private static List<PendingRemindersRecord> getPageEntries(
             Result<PendingRemindersRecord> remindersRecords, int pageNumber) {
-        int start = (pageNumber - 1) * MAX_PAGE_LENGTH;
-        int end = Math.min(start + MAX_PAGE_LENGTH, remindersRecords.size());
+        int start = (pageNumber - 1) * REMINDERS_PER_PAGE;
+        int end = Math.min(start + REMINDERS_PER_PAGE, remindersRecords.size());
 
         return remindersRecords.subList(start, end);
     }
