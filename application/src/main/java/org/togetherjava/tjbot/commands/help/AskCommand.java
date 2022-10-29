@@ -21,6 +21,7 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -140,24 +141,35 @@ public final class AskCommand extends SlashCommandAdapter {
         RestAction<String> changeTitle = mentionHelpChangeCommand(guild, CHANGE_TITLE_SUBCOMMAND);
         RestAction<String> changeCategory =
                 mentionHelpChangeCommand(guild, CHANGE_CATEGORY_SUBCOMMAND);
-        long lastThreadByAuthorId = database
-            .read(context -> context.selectFrom(HELP_THREADS)
-                .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
-                .orderBy(HELP_THREADS.CREATED_AT.desc())
-                .limit(1)
-                .fetchOne())
-            .getChannelId();
+
+        HelpThreadsRecord lastThreadByAuthor =
+                database.read(context -> context.selectFrom(HELP_THREADS)
+                    .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
+                    .orderBy(HELP_THREADS.CREATED_AT.desc())
+                    .limit(1)
+                    .fetchOne());
+
+        String cooldownDuration =
+                COOLDOWN_DURATION_VALUE + " " + COOLDOWN_DURATION_UNIT.name().toLowerCase();
+
+        if (lastThreadByAuthor == null) {
+            logger.warn("Can't find the last help thread created by the user with id ({})",
+                    user.getId());
+            event
+                .reply("Sorry, something went wrong try again after %s".formatted(cooldownDuration))
+                .queue();
+            return;
+        }
 
         String message =
                 """
-                        Sorry, you can only create a single help thread every %s %s. Please use your existing thread %s instead.
+                        Sorry, you can only create a single help thread every %s. Please use your existing thread %s instead.
                         If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
 
         RestAction.allOf(changeCategory, changeTitle)
-            .map(commandMentions -> message.formatted(COOLDOWN_DURATION_VALUE,
-                    COOLDOWN_DURATION_UNIT.name().toLowerCase(),
-                    MessageUtils.mentionChannelById(lastThreadByAuthorId), commandMentions.get(0),
-                    commandMentions.get(1)))
+            .map(commandMentions -> message.formatted(cooldownDuration,
+                    MessageUtils.mentionChannelById(lastThreadByAuthor.getChannelId()),
+                    commandMentions.get(0), commandMentions.get(1)))
             .flatMap(text -> event.reply(text).setEphemeral(true))
             .queue();
     }
