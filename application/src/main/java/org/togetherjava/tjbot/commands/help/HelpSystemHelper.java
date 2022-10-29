@@ -333,7 +333,6 @@ public final class HelpSystemHelper {
         }).queue();
     }
 
-    // TODO remove duplication with #scheduledUncategorizedAdviceCheck
     void scheduleNoActivityAdviceCheck(long threadChannelId, long authorId) {
         SERVICE.schedule(() -> {
             try {
@@ -347,7 +346,6 @@ public final class HelpSystemHelper {
     }
 
     private void executeNoActivityAdviceCheck(long threadChannelId, long authorId) {
-        // TODO
         logger.debug("Executing no activity advice check for thread {} by author {}.",
                 threadChannelId, authorId);
 
