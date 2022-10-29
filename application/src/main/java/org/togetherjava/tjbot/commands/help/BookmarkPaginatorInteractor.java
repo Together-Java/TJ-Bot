@@ -42,9 +42,8 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
     private static final String BUTTON_REMOVE_NAME = "button-remove";
     private static final String SELECTMENU_REMOVE_NAME = "selectmenu-remove";
 
-    private static final MessageEmbed NO_BOOKMARKS_EMBED = BookmarksSystem.createTinyEmbed("""
-            You don't have any bookmarks!
-            """, BookmarksSystem.COLOR_FAILURE);
+    private static final MessageEmbed NO_BOOKMARKS_EMBED = BookmarksSystem
+        .createTinyEmbed("You don't have any bookmarks!", BookmarksSystem.COLOR_FAILURE);
 
     private final BookmarksSystem bookmarksSystem;
     private final ComponentIdInteractor componentIdInteractor;
