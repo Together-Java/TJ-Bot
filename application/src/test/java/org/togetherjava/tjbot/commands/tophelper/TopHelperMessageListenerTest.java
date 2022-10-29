@@ -1,12 +1,9 @@
 package org.togetherjava.tjbot.commands.tophelper;
 
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.internal.JDAImpl;
-import net.dv8tion.jda.internal.entities.UserImpl;
-import net.dv8tion.jda.internal.entities.channel.concrete.ThreadChannelImpl;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,7 +19,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HELP_CHANNEL_MESSAGES;
 
 final class TopHelperMessageListenerTest {
@@ -108,23 +106,16 @@ final class TopHelperMessageListenerTest {
 
     MessageReceivedEvent createFakeMessageReceivedEvent(boolean isBot, boolean isWebhook,
             boolean isThread, String parentChannelName) {
-        Message messageMock = mock(Message.class);
-        ThreadChannelImpl threadMock = mock(ThreadChannelImpl.class, RETURNS_DEEP_STUBS);
+        try (MessageCreateData message = new MessageCreateBuilder().setContent("Test").build()) {
+            MessageReceivedEvent event = jdaTester.createMessageReceiveEvent(message, List.of(),
+                    isThread ? ChannelType.GUILD_PUBLIC_THREAD : ChannelType.TEXT);
 
-        User user = new UserImpl(123456789, (JDAImpl) jdaTester.getJdaMock()).setName("John Doe")
-            .setDiscriminator("1234")
-            .setBot(isBot);
+            when(jdaTester.getMemberSpy().getUser().isBot()).thenReturn(isBot);
+            when(event.getMessage().isWebhookMessage()).thenReturn(isWebhook);
+            when(jdaTester.getTextChannelSpy().getName()).thenReturn(parentChannelName);
 
-        when(threadMock.getType())
-            .thenReturn(isThread ? ChannelType.GUILD_PUBLIC_THREAD : ChannelType.TEXT);
-        when(threadMock.getParentChannel().getName()).thenReturn(parentChannelName);
-        when(threadMock.asThreadChannel()).thenReturn(threadMock);
-
-        when(messageMock.isWebhookMessage()).thenReturn(isWebhook);
-        when(messageMock.getAuthor()).thenReturn(user);
-        when(messageMock.getChannel()).thenReturn(threadMock);
-
-        return new MessageReceivedEvent(jdaTester.getJdaMock(), 0, messageMock);
+            return event;
+        }
     }
 
 
