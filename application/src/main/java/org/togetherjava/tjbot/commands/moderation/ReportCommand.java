@@ -48,7 +48,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
     private static final String COMMAND_NAME = "report";
-    private static final String REPORT_REASON = "reportReason";
+    private static final String REPORT_REASON_INPUT_ID = "reportReason";
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
@@ -90,7 +90,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedMessageUrl = event.getTarget().getJumpUrl();
 
         TextInput body = TextInput
-            .create(REPORT_REASON, "Anonymous report to the moderators", TextInputStyle.PARAGRAPH)
+            .create(REPORT_REASON_INPUT_ID, "Anonymous report to the moderators",
+                    TextInputStyle.PARAGRAPH)
             .setPlaceholder("What is wrong with the message, why do you want to report it?")
             .setRequiredRange(3, 200)
             .build();
@@ -108,7 +109,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
             .getIdLong();
         Optional<TextChannel> modMailAuditLog =
-                handleRequireModMailChannel(event.getJDA(), guildID);
+                handleRequireModMailChannel(event, event.getJDA(), guildID);
 
         if (modMailAuditLog.isEmpty()) {
             return;
@@ -117,13 +118,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         sendModMessage(event, args, modMailAuditLog.orElseThrow());
     }
 
-    private Optional<TextChannel> handleRequireModMailChannel(JDA jda, long guildID) {
+    private Optional<TextChannel> handleRequireModMailChannel(ModalInteractionEvent event, JDA jda,
+            long guildID) {
         Optional<TextChannel> modMailAuditLog = jda.getGuildById(guildID)
             .getTextChannelCache()
             .stream()
             .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
             .findAny();
         if (modMailAuditLog.isEmpty()) {
+            event
+                .reply("Sorry, there was an issue sending your report to the moderators. We are "
+                        + "investigating.")
+                .queue();
             logger.warn(
                     "Cannot find the designated modmail channel in server by id {} with the pattern {}",
                     guildID, configModMailChannelPattern);
@@ -173,7 +179,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedMessageUrl = args.get(1);
 
         event.deferReply().setEphemeral(true).queue();
-        String modalMessage = event.getValue(REPORT_REASON).getAsString();
+        String modalMessage = event.getValue(REPORT_REASON_INPUT_ID).getAsString();
         long userID = event.getUser().getIdLong();
         createModMessage(modalMessage, userID, reportedMessage, reportedMessageUrl, modMailAuditLog)
             .mapToResult()
