@@ -65,7 +65,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                     .addOptions(addNoteOption);
 
         SubcommandData listSubCommand =
-                new SubcommandData(SUBCOMMAND_LIST, "List all help threads currently bookmarked");
+                new SubcommandData(SUBCOMMAND_LIST, "List all help threads that you bookmarked");
 
         SubcommandData removeSubCommand = new SubcommandData(SUBCOMMAND_REMOVE,
                 "Remove some of your bookmarked help threads");
