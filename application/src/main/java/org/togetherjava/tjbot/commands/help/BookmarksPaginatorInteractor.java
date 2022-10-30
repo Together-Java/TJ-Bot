@@ -355,6 +355,12 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
      * @return The index of the last page
      */
     private static int getLastPageIndex(List<BookmarksRecord> bookmarks) {
+        // If the bookmarks list is empty the maxBookmarkIndex would be -1. This causes the
+        // maxPageIndex to also return -1, resulting in other errors.
+        if (bookmarks.isEmpty()) {
+            return 0;
+        }
+
         int highestBookmarkIndex = bookmarks.size() - 1;
 
         return Math.floorDiv(highestBookmarkIndex, ENTRIES_PER_PAGE);
