@@ -31,6 +31,12 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
+/**
+ * This class can create a paginated message for listing or removing bookmarks. A paginated message
+ * is requested by calling
+ * {@link BookmarksSystem#requestListPagination(GenericCommandInteractionEvent)} or
+ * {@link BookmarksSystem#requestRemovePagination(GenericCommandInteractionEvent)}
+ */
 public final class BookmarksPaginatorInteractor implements UserInteractor {
 
     private static final int ENTRIES_PER_PAGE = 10;
