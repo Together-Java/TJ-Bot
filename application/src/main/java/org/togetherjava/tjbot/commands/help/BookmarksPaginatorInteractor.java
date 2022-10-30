@@ -422,18 +422,18 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             this.componentName = componentName;
         }
 
-        @Override
-        public String[] toArray() {
-            return new String[] {paginationType.name(), componentName,
-                    String.valueOf(currentPageIndex)};
-        }
-
         public static ComponentArguments fromStringArgs(List<String> stringArgs) {
             PaginationType paginationType = PaginationType.valueOf(stringArgs.get(0));
             String componentName = stringArgs.get(1);
             int currentPageIndex = Integer.parseInt(stringArgs.get(2));
 
             return new ComponentArguments(paginationType, componentName, currentPageIndex);
+        }
+
+        @Override
+        public String[] toArray() {
+            return new String[] {paginationType.name(), componentName,
+                    String.valueOf(currentPageIndex)};
         }
 
     }
