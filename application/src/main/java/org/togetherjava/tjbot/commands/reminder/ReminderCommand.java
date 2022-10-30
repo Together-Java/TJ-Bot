@@ -108,12 +108,18 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        int pageNumber = Integer.parseInt(args.get(0));
-        int pageTurnBy = Integer.parseInt(args.get(1));
+        int pageToShow = Integer.parseInt(args.get(0));
+
+        switch (event.getButton().getLabel()) {
+            case PREVIOUS_BUTTON_LABEL -> pageToShow--;
+            case NEXT_BUTTON_LABEL -> pageToShow++;
+            default -> {
+                // do nothing
+            }
+        }
 
         Result<PendingRemindersRecord> pendingReminders =
                 getPendingReminders(event.getGuild(), event.getUser());
-        int pageToShow = pageNumber + pageTurnBy;
 
         event
             .editMessage(
@@ -193,26 +199,19 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private List<Button> createPageTurnButtons(int pageNumber, int totalPages) {
-        int previousButtonTurnPageBy = -1;
-        Button previousButton =
-                createPageTurnButton(PREVIOUS_BUTTON_LABEL, pageNumber, previousButtonTurnPageBy);
+        Button previousButton = Button.primary(generateComponentId(String.valueOf(pageNumber)),
+                PREVIOUS_BUTTON_LABEL);
         if (pageNumber <= 1) {
             previousButton = previousButton.asDisabled();
         }
 
-        int nextButtonTurnPageBy = 1;
         Button nextButton =
-                createPageTurnButton(NEXT_BUTTON_LABEL, pageNumber, nextButtonTurnPageBy);
+                Button.primary(generateComponentId(String.valueOf(pageNumber)), NEXT_BUTTON_LABEL);
         if (pageNumber >= totalPages) {
             nextButton = nextButton.asDisabled();
         }
 
         return List.of(previousButton, nextButton);
-    }
-
-    private Button createPageTurnButton(String label, long pageNumber, int turnPageBy) {
-        return Button.primary(
-                generateComponentId(String.valueOf(pageNumber), String.valueOf(turnPageBy)), label);
     }
 
     private static List<PendingRemindersRecord> getPageEntries(
