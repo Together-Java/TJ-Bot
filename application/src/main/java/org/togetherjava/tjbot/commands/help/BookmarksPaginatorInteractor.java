@@ -193,7 +193,8 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             return;
         }
 
-        MessageEmbed pageEmbed = generatePageEmbed(bookmarks, args);
+        MessageEmbed pageEmbed =
+                generatePageEmbed(bookmarks, args.paginationType, args.currentPageIndex);
 
         List<LayoutComponent> components = new ArrayList<>();
 
@@ -207,11 +208,6 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         }
 
         event.editMessageEmbeds(pageEmbed).setComponents(components).queue();
-    }
-
-    private static MessageEmbed generatePageEmbed(List<BookmarksRecord> bookmarks,
-            ComponentArguments args) {
-        return generatePageEmbed(bookmarks, args.paginationType, args.currentPageIndex);
     }
 
     private static MessageEmbed generatePageEmbed(List<BookmarksRecord> bookmarks,
