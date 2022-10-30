@@ -37,7 +37,7 @@ public final class BookmarksSystem {
     public static final int WARN_BOOKMARK_COUNT_TOTAL = 900_000;
     public static final int MAX_BOOKMARK_COUNT_USER = 500;
     public static final int MAX_NOTE_LENGTH = 150;
-    public static final Duration LEAVE_REMOVAL_DELAY = Duration.ofDays(7);
+    public static final Duration LEAVE_BOOKMARKS_REMOVAL_DELAY = Duration.ofDays(7);
 
     private final Database database;
     private final Predicate<String> isOverviewChannelName;
@@ -150,7 +150,7 @@ public final class BookmarksSystem {
     }
 
     void scheduleUsersBookmarksRemoval(long authorID) {
-        Instant scheduledRemovalAt = Instant.now().plus(LEAVE_REMOVAL_DELAY);
+        Instant scheduledRemovalAt = Instant.now().plus(LEAVE_BOOKMARKS_REMOVAL_DELAY);
 
         database.write(context -> context.update(BOOKMARKS)
             .set(BOOKMARKS.SCHEDULED_REMOVAL_AT, scheduledRemovalAt)
