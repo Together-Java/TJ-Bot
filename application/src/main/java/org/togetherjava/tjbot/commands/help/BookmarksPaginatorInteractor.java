@@ -212,7 +212,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
     private static MessageEmbed generatePageEmbed(List<BookmarksRecord> bookmarks,
             PaginationType paginationType, int currentPageIndex) {
-        int highestPageIndex = getLastPageIndex(bookmarks);
+        int lastPageIndex = getLastPageIndex(bookmarks);
 
         String title;
         Color color;
@@ -248,7 +248,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         });
 
         String description = descriptionJoiner.toString();
-        String footer = "Page %d/%d".formatted(currentPageIndex + 1, highestPageIndex + 1);
+        String footer = "Page %d/%d".formatted(currentPageIndex + 1, lastPageIndex + 1);
 
         return new EmbedBuilder().setTitle(title)
             .setDescription(description)
