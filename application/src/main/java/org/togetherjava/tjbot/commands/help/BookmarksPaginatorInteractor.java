@@ -216,7 +216,6 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
         String title;
         Color color;
-
         switch (paginationType) {
             case LIST -> {
                 title = "Bookmarks List";
