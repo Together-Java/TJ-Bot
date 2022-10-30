@@ -17,6 +17,7 @@ import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -76,9 +77,7 @@ public final class BookmarksSystem {
      * @param event The command interaction event
      */
     void requestListPagination(GenericCommandInteractionEvent event) {
-        if (listPaginationConsumer == null) {
-            throw new AssertionError("No list pagination consumer was provided");
-        }
+        Objects.requireNonNull(listPaginationConsumer, "No list pagination consumer was provided");
 
         listPaginationConsumer.accept(event);
     }
@@ -89,9 +88,8 @@ public final class BookmarksSystem {
      * @param event The command interaction event
      */
     void requestRemovePagination(GenericCommandInteractionEvent event) {
-        if (removePaginationConsumer == null) {
-            throw new AssertionError("No remove pagination consumer was provided");
-        }
+        Objects.requireNonNull(removePaginationConsumer,
+                "No remove pagination consumer was provided");
 
         removePaginationConsumer.accept(event);
     }
