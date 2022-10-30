@@ -26,7 +26,6 @@ import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord
 import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
-import java.util.function.BiFunction;
 
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
@@ -225,17 +224,17 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private static void addReminderAsField(PendingRemindersRecord reminder, EmbedBuilder embed) {
-        BiFunction<Long, Instant, String> getDescription = (channelId, remindAt) -> """
-                Channel: %s
-                Remind at: %s""".formatted(MessageUtils.mentionChannelById(channelId),
-                TimeFormat.DEFAULT.format(remindAt));
-
         String content = reminder.getContent();
         long channelId = reminder.getChannelId();
         Instant remindAt = reminder.getRemindAt();
 
-        embed.addField(MessageUtils.abbreviate(content, MAX_REMINDER_TITLE_LENGTH),
-                getDescription.apply(channelId, remindAt), false);
+        String description = """
+                Channel: %s
+                Remind at: %s""".formatted(MessageUtils.mentionChannelById(channelId),
+                TimeFormat.DEFAULT.format(remindAt));
+
+        embed.addField(MessageUtils.abbreviate(content, MAX_REMINDER_TITLE_LENGTH), description,
+                false);
     }
 
     private static Instant parseWhen(int whenAmount, String whenUnit) {
