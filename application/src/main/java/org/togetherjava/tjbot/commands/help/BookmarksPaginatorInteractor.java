@@ -238,9 +238,9 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
             StringJoiner entryJoiner = new StringJoiner("\n");
 
-            entryJoiner.add("**%d.** <#%d>".formatted(bookmarkNumber, channelID)); // #. [Channel]
+            entryJoiner.add("**%d.** <#%d>".formatted(bookmarkNumber, channelID));
             if (note != null && paginationType != PaginationType.REMOVE) {
-                entryJoiner.add("*%s*".formatted(note)); // Note
+                entryJoiner.add("*%s*".formatted(note));
             }
 
             descriptionJoiner.add(entryJoiner.toString());
