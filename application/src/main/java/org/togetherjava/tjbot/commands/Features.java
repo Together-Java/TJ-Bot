@@ -136,7 +136,7 @@ public class Features {
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
-        features.add(new BookmarkPaginatorInteractor(bookmarksSystem));
+        features.add(new BookmarksPaginatorInteractor(bookmarksSystem));
 
         return features;
     }

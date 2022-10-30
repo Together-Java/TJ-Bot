@@ -25,7 +25,7 @@ import static org.togetherjava.tjbot.db.generated.tables.Bookmarks.BOOKMARKS;
 
 /**
  * The bookmarks system provides methods to interact with the database. It also enables the
- * {@link BookmarksCommand} to request paginations from the {@link BookmarkPaginatorInteractor}.
+ * {@link BookmarksCommand} to request paginations from the {@link BookmarksPaginatorInteractor}.
  */
 public final class BookmarksSystem {
 
@@ -71,7 +71,7 @@ public final class BookmarksSystem {
     }
 
     /**
-     * Requests a list pagination from the {@link BookmarkPaginatorInteractor}.
+     * Requests a list pagination from the {@link BookmarksPaginatorInteractor}.
      *
      * @param event The command interaction event
      */
@@ -84,7 +84,7 @@ public final class BookmarksSystem {
     }
 
     /**
-     * Requests a remove pagination from the {@link BookmarkPaginatorInteractor}.
+     * Requests a remove pagination from the {@link BookmarksPaginatorInteractor}.
      *
      * @param event The command interaction event
      */

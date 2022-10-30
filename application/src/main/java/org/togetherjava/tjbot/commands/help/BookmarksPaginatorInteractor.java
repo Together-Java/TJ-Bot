@@ -31,7 +31,7 @@ import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
-public final class BookmarkPaginatorInteractor implements UserInteractor {
+public final class BookmarksPaginatorInteractor implements UserInteractor {
 
     private static final int ENTRIES_PER_PAGE = 10;
     private static final Emoji BUTTON_PREV_EMOJI = Emoji.fromUnicode("⬅");
@@ -53,7 +53,7 @@ public final class BookmarkPaginatorInteractor implements UserInteractor {
      *
      * @param bookmarksSystem The bookmarks system to use
      */
-    public BookmarkPaginatorInteractor(BookmarksSystem bookmarksSystem) {
+    public BookmarksPaginatorInteractor(BookmarksSystem bookmarksSystem) {
         this.bookmarksSystem = bookmarksSystem;
         this.componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
