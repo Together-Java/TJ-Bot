@@ -130,11 +130,8 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             RemoveComponentArguments removeArgs = (RemoveComponentArguments) args;
 
             if (removeArgs.componentName.equals(SELECTMENU_REMOVE_NAME)) {
-                List<Long> bookmarksToRemoveChannelIDs =
+                removeArgs.bookmarksToRemoveChannelIDs =
                         selected.stream().map(o -> Long.parseLong(o.getValue())).toList();
-
-                args = new RemoveComponentArguments(args.paginationType, args.componentName,
-                        args.currentPageIndex, bookmarksToRemoveChannelIDs);
             } else {
                 throw new IllegalArgumentException(
                         "Pagination type REMOVE should only have a single menu");
