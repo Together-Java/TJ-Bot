@@ -172,15 +172,16 @@ public final class BookmarksSystem {
             .execute());
     }
 
-    /**
-     * Creates an embed with just a description and color.
-     *
-     * @param description The embed description
-     * @param color The embed color
-     * @return The generated embed
-     */
-    static MessageEmbed createTinyEmbed(String description, Color color) {
-        return new EmbedBuilder().setDescription(description).setColor(color).build();
+    static MessageEmbed createSuccessEmbed(String content) {
+        return new EmbedBuilder().setDescription(content).setColor(COLOR_SUCCESS).build();
+    }
+
+    static MessageEmbed createWarningEmbed(String content) {
+        return new EmbedBuilder().setDescription(content).setColor(COLOR_WARNING).build();
+    }
+
+    static MessageEmbed createFailureEmbed(String content) {
+        return new EmbedBuilder().setDescription(content).setColor(COLOR_FAILURE).build();
     }
 
 }

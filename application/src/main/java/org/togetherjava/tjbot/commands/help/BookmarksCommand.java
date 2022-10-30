@@ -25,24 +25,24 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     public static final String SUBCOMMAND_REMOVE = "remove";
     public static final String ADD_OPTION_NOTE = "note";
 
-    private static final MessageEmbed NOT_A_HELP_THREAD_EMBED = BookmarksSystem.createTinyEmbed(
-            "This command can only be run in help threads!", BookmarksSystem.COLOR_FAILURE);
+    private static final MessageEmbed NOT_A_HELP_THREAD_EMBED =
+            BookmarksSystem.createFailureEmbed("This command can only be run in help threads!");
 
-    private static final MessageEmbed ALREADY_BOOKMARKED_EMBED = BookmarksSystem
-        .createTinyEmbed("You already bookmarked this channel!", BookmarksSystem.COLOR_FAILURE);
+    private static final MessageEmbed ALREADY_BOOKMARKED_EMBED =
+            BookmarksSystem.createFailureEmbed("You already bookmarked this channel!");
 
     private static final MessageEmbed BOOKMARK_ADDED_EMBED =
-            BookmarksSystem.createTinyEmbed("Bookmark added!", BookmarksSystem.COLOR_SUCCESS);
+            BookmarksSystem.createSuccessEmbed("Bookmark added!");
 
-    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED = BookmarksSystem.createTinyEmbed(
-            "You have exceeded your bookmarks limit! Please delete your old bookmarks.",
-            BookmarksSystem.COLOR_FAILURE);
+    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED =
+            BookmarksSystem.createFailureEmbed(
+                    "You have exceeded your bookmarks limit! Please delete your old bookmarks.");
 
     private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED =
-            BookmarksSystem.createTinyEmbed("""
+            BookmarksSystem.createWarningEmbed("""
                     You can't add a bookmark right now because the total amount
                     of bookmarks has exceeded its limit! Please wait a bit.
-                    """, BookmarksSystem.COLOR_FAILURE);
+                    """);
 
     private final BookmarksSystem bookmarksSystem;
 
