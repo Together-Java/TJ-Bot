@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.Result;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,7 +187,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .queue();
     }
 
-    @NotNull
     private String createUserReply(Result<Message> result) {
         if (result.isSuccess()) {
             return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
