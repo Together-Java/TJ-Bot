@@ -344,7 +344,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
         return bookmarks.subList(indexStart, indexEnd)
             .stream()
-            .map(b -> new PageEntry(bookmarks.indexOf(b) + 1, b))
+            .map(bookmark -> new PageEntry(bookmarks.indexOf(bookmark) + 1, bookmark))
             .toList();
     }
 
