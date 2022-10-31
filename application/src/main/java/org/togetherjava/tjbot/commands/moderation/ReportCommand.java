@@ -158,10 +158,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             String reportedMessage, String reportedMessageUrl, TextChannel modMailAuditLog) {
         MessageEmbed embed = new EmbedBuilder().setTitle("Report")
             .setDescription(("""
-                    Reason: **%s**
+                    Reported Message: **%s**
                     [Reported Message URL](%s)
-                    Modal Message: **%s**""").formatted(reportedMessage, reportedMessageUrl,
-                    modalMessage))
+                    Reason: **%s**""").formatted(reportedMessage, reportedMessageUrl, modalMessage))
             .setAuthor("Author ID: %d".formatted(userID))
             .setColor(AMBIENT_COLOR)
             .setTimestamp(Instant.now())
