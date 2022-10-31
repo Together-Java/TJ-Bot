@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -62,8 +64,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
     private static final int REMINDERS_PER_PAGE = 10;
     private static final int MAX_REMINDER_TITLE_LENGTH = 256;
-    private static final String PREVIOUS_BUTTON_LABEL = "⬅";
-    private static final String NEXT_BUTTON_LABEL = "➡";
+    private static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
+    private static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
     static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;
@@ -110,12 +112,11 @@ public final class ReminderCommand extends SlashCommandAdapter {
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         int pageToShow = Integer.parseInt(args.get(0));
 
-        switch (event.getButton().getLabel()) {
-            case PREVIOUS_BUTTON_LABEL -> pageToShow--;
-            case NEXT_BUTTON_LABEL -> pageToShow++;
-            default -> {
-                // do nothing
-            }
+        EmojiUnion emoji = event.getButton().getEmoji();
+        if (PREVIOUS_BUTTON_EMOJI.equals(emoji)) {
+            pageToShow--;
+        } else if (NEXT_BUTTON_EMOJI.equals(emoji)) {
+            pageToShow++;
         }
 
         Result<PendingRemindersRecord> pendingReminders =
@@ -199,14 +200,16 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private List<Button> createPageTurnButtons(int pageNumber, int totalPages) {
-        Button previousButton = Button.primary(generateComponentId(String.valueOf(pageNumber)),
-                PREVIOUS_BUTTON_LABEL);
+        String pageNumberString = String.valueOf(pageNumber);
+
+        Button previousButton =
+                Button.primary(generateComponentId(pageNumberString), PREVIOUS_BUTTON_EMOJI);
         if (pageNumber <= 1) {
             previousButton = previousButton.asDisabled();
         }
 
         Button nextButton =
-                Button.primary(generateComponentId(String.valueOf(pageNumber)), NEXT_BUTTON_LABEL);
+                Button.primary(generateComponentId(pageNumberString), NEXT_BUTTON_EMOJI);
         if (pageNumber >= totalPages) {
             nextButton = nextButton.asDisabled();
         }
