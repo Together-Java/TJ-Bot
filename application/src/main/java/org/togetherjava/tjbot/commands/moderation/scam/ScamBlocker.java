@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.UserInteractionType;
 import org.togetherjava.tjbot.commands.UserInteractor;
@@ -33,7 +34,6 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
-import java.awt.Color;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -49,7 +49,6 @@ import java.util.regex.Pattern;
  */
 public final class ScamBlocker extends MessageReceiverAdapter implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(ScamBlocker.class);
-    private static final Color AMBIENT_COLOR = Color.decode("#CFBFF5");
     private static final Set<ScamBlockerConfig.Mode> MODES_WITH_IMMEDIATE_DELETION =
             EnumSet.of(ScamBlockerConfig.Mode.AUTO_DELETE_BUT_APPROVE_QUARANTINE,
                     ScamBlockerConfig.Mode.AUTO_DELETE_AND_QUARANTINE);
@@ -239,7 +238,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     .setTitle(reportTitle)
                     .setAuthor(author.getAsTag(), null, author.getAvatarUrl())
                     .setTimestamp(event.getMessage().getTimeCreated())
-                    .setColor(AMBIENT_COLOR)
+                    .setColor(Colors.SCAM_BLOCKER)
                     .setFooter(author.getId())
                     .build();
         MessageCreateData message =

@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
@@ -138,7 +139,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
             .setAuthor(user.getName(), null, user.getAvatarUrl())
             .setDescription(createSummaryMessageDescription(actions))
-            .setColor(ModerationUtils.AMBIENT_COLOR);
+            .setColor(Colors.MODERATION);
     }
 
     private static String createSummaryMessageDescription(Collection<ActionRecord> actions) {

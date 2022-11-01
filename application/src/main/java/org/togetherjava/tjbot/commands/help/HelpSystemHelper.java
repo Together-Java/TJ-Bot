@@ -18,6 +18,7 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelpSystemConfig;
@@ -27,7 +28,6 @@ import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
@@ -46,8 +46,6 @@ import java.util.stream.Stream;
  */
 public final class HelpSystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(HelpSystemHelper.class);
-
-    static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
     private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
 
@@ -156,7 +154,7 @@ public final class HelpSystemHelper {
     }
 
     private static MessageEmbed embedWith(CharSequence message, @Nullable String imageUrl) {
-        return new EmbedBuilder().setColor(AMBIENT_COLOR)
+        return new EmbedBuilder().setColor(Colors.HELP)
             .setDescription(message)
             .setImage(imageUrl)
             .build();

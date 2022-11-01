@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.db.Database;
 
@@ -68,7 +69,7 @@ public final class OnGuildLeaveCloseThreadListener extends ListenerAdapter
 
         MessageEmbed embed = new EmbedBuilder().setTitle("OP left")
             .setDescription("Closing thread...")
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .setColor(Colors.HELP)
             .build();
         threadChannel.sendMessageEmbeds(embed)
             .flatMap(any -> threadChannel.getManager().setArchived(true))

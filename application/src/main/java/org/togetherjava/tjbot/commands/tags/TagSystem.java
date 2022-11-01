@@ -10,7 +10,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.db.generated.tables.records.TagsRecord;
 
-import java.awt.Color;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,11 +19,6 @@ import java.util.stream.Collectors;
  * underlying database.
  */
 public final class TagSystem {
-    /**
-     * The ambient color to use for tag system related messages.
-     */
-    static final Color AMBIENT_COLOR = Color.decode("#FA8072");
-
     private final Database database;
 
     /**

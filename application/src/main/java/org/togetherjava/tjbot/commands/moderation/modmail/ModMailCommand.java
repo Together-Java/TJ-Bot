@@ -17,12 +17,12 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 import org.togetherjava.tjbot.config.Config;
 
-import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -47,7 +47,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final String OPTION_GUILD = "server";
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
@@ -168,7 +167,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         return new EmbedBuilder().setTitle("Modmail")
             .setAuthor(authorTag, null, authorAvatar)
             .setDescription(userMessage)
-            .setColor(AMBIENT_COLOR)
+            .setColor(Colors.MODMAIL)
             .build();
     }
 

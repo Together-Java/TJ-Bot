@@ -9,13 +9,13 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import java.awt.Color;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.UnaryOperator;
@@ -93,7 +93,7 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
             String dmMessageContent) {
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
+                    .setColor(Colors.BLACKLISTED_ATTACHMENT)
                     .build();
         return new MessageCreateBuilder().setContent(dmMessageContent)
             .setEmbeds(originalMessageEmbed)

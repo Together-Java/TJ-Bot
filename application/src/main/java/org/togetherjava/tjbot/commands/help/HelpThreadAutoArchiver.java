@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.Routine;
 
 import java.time.Duration;
@@ -84,7 +85,7 @@ public final class HelpThreadAutoArchiver implements Routine {
                     If your question was not resolved yet, feel free to just post a message \
                     to reopen it, or create a new thread. But try to improve the quality of \
                     your question to make it easier to help you 👍""")
-                .setColor(HelpSystemHelper.AMBIENT_COLOR)
+                .setColor(Colors.HELP)
                 .build();
 
             threadChannel.sendMessageEmbeds(embed)

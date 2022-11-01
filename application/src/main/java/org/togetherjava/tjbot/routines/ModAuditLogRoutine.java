@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
@@ -28,7 +29,6 @@ import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
@@ -51,7 +51,6 @@ public final class ModAuditLogRoutine implements Routine {
     private static final int CHECK_AUDIT_LOG_START_HOUR = 4;
     private static final int CHECK_AUDIT_LOG_EVERY_HOURS = 8;
     private static final int HOURS_OF_DAY = 24;
-    private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
     private final Database database;
     private final Config config;
@@ -345,7 +344,7 @@ public final class ModAuditLogRoutine implements Routine {
             return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
                 .setDescription(description)
                 .setTimestamp(timestamp)
-                .setColor(AMBIENT_COLOR)
+                .setColor(Colors.MOD_AUDIT_LOG)
                 .build();
         }
     }

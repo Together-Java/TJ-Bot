@@ -11,12 +11,12 @@ import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +32,6 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  */
 public final class RemindRoutine implements Routine {
     static final Logger logger = LoggerFactory.getLogger(RemindRoutine.class);
-    private static final Color AMBIENT_COLOR = Color.decode("#F7F492");
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private final Database database;
 
@@ -120,7 +119,7 @@ public final class RemindRoutine implements Routine {
             .setDescription(content)
             .setFooter("reminder from")
             .setTimestamp(createdAt)
-            .setColor(AMBIENT_COLOR)
+            .setColor(Colors.REMIND)
             .build();
     }
 

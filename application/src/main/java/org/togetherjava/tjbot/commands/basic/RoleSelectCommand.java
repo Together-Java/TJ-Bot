@@ -17,13 +17,12 @@ import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
-import java.awt.*;
 import java.util.*;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,8 +52,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     private static final String TITLE_OPTION = "title";
     private static final String DESCRIPTION_OPTION = "description";
     private static final String ROLE_OPTION = "selectable-role";
-
-    private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
 
     private static final int OPTIONAL_ROLES_AMOUNT = 22;
 
@@ -265,7 +262,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     private static MessageEmbed createEmbed(String title, CharSequence description) {
         return new EmbedBuilder().setTitle(title)
             .setDescription(description)
-            .setColor(AMBIENT_COLOR)
+            .setColor(Colors.ROLE_SELECT)
             .build();
     }
 }

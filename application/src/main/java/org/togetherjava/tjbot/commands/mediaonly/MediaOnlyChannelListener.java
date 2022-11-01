@@ -9,10 +9,10 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
-import java.awt.Color;
 import java.util.regex.Pattern;
 
 /**
@@ -58,7 +58,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         String originalMessageContent = message.getContentRaw();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
+                    .setColor(Colors.MEDIA_ONLY)
                     .build();
 
         MessageCreateData dmMessage = new MessageCreateBuilder().setContent(

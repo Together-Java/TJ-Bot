@@ -10,13 +10,13 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -46,11 +46,6 @@ public class ModerationUtils {
      * user as option for selection.
      */
     static final String PERMANENT_DURATION = "permanent";
-    /**
-     * The ambient color used by moderation actions, often used to streamline the color theme of
-     * embeds.
-     */
-    static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
      * Actions with timely constraint, like being muted for 1 hour.
@@ -311,7 +306,7 @@ public class ModerationUtils {
         return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
             .setDescription(description)
             .setTimestamp(Instant.now())
-            .setColor(AMBIENT_COLOR)
+            .setColor(Colors.COLOR_MAUVE)
             .build();
     }
 

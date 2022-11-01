@@ -13,13 +13,13 @@ import org.scilab.forge.jlatexmath.TeXFormula;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import javax.imageio.ImageIO;
 
-import java.awt.Color;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,8 +49,6 @@ public final class TeXCommand extends SlashCommandAdapter {
     static final String INVALID_INLINE_FORMAT_ERROR_MESSAGE =
             "The amount of $-symbols must be divisible by two. Did you forget to close an expression?";
     private static final float DEFAULT_IMAGE_SIZE = 40.0F;
-    private static final Color BACKGROUND_COLOR = Color.decode("#36393F");
-    private static final Color FOREGROUND_COLOR = Color.decode("#FFFFFF");
     private static final Logger logger = LoggerFactory.getLogger(TeXCommand.class);
 
     /**
@@ -101,7 +99,7 @@ public final class TeXCommand extends SlashCommandAdapter {
 
     private Image renderImage(TeXFormula formula) {
         Image image = formula.createBufferedImage(TeXConstants.STYLE_DISPLAY, DEFAULT_IMAGE_SIZE,
-                FOREGROUND_COLOR, BACKGROUND_COLOR);
+                Colors.TEX_FOREGROUND, Colors.TEX_BACKGROUND);
 
         if (image.getWidth(null) == -1 || image.getHeight(null) == -1) {
             throw new IllegalStateException("Image has no height or width");

@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
@@ -181,7 +182,7 @@ public final class ImplicitAskListener extends MessageReceiverAdapter {
         MessageEmbed embed = new EmbedBuilder().setDescription(content)
             .setAuthor(author.getEffectiveName(), author.getEffectiveAvatarUrl(),
                     author.getEffectiveAvatarUrl())
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .setColor(Colors.HELP)
             .build();
 
         return MessageUtils

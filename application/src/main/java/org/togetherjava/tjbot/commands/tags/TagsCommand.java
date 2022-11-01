@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
@@ -65,7 +66,7 @@ public final class TagsCommand extends SlashCommandAdapter {
                 .setDescription(tagListText)
                 .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
                 .setTimestamp(Instant.now())
-                .setColor(TagSystem.AMBIENT_COLOR)
+                .setColor(Colors.TAG)
                 .build())
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))

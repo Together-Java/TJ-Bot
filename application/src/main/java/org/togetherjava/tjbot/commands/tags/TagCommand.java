@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
@@ -60,7 +61,7 @@ public final class TagCommand extends SlashCommandAdapter {
             .replyEmbeds(new EmbedBuilder().setDescription(tagSystem.getTag(id).orElseThrow())
                 .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
                 .setTimestamp(Instant.now())
-                .setColor(TagSystem.AMBIENT_COLOR)
+                .setColor(Colors.TAG)
                 .build());
 
         if (replyToUserOption != null) {

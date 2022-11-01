@@ -8,10 +8,10 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.*;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.Error;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 final class WolframAlphaHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(WolframAlphaHandler.class);
     private static final XmlMapper XML = new XmlMapper();
-    private static final Color AMBIENT_COLOR = Color.decode("#4290F5");
     private static final String SERVICE_NAME = "Wolfram|Alpha";
     /**
      * WolframAlpha API endpoint for regular users (web frontend).
@@ -195,7 +194,7 @@ final class WolframAlphaHandler {
     private HandlerResponse responseOf(CharSequence text) {
         MessageEmbed embed = new EmbedBuilder().setTitle(buildTitle(), userApiQuery)
             .setDescription(text)
-            .setColor(AMBIENT_COLOR)
+            .setColor(Colors.WOLFRAM_ALPHA)
             .build();
 
         return new HandlerResponse(List.of(embed), List.of());
@@ -206,7 +205,7 @@ final class WolframAlphaHandler {
         List<MessageEmbed> embeds = new ArrayList<>();
         embeds.add(new EmbedBuilder().setTitle(buildTitle(), userApiQuery)
             .setDescription(text)
-            .setColor(AMBIENT_COLOR)
+            .setColor(Colors.WOLFRAM_ALPHA)
             .build());
 
         List<Attachment> attachments = new ArrayList<>(tiles.size());
@@ -216,7 +215,7 @@ final class WolframAlphaHandler {
             String tileTitle = "result%d.%s".formatted(i, WolframAlphaImages.IMAGE_FORMAT);
 
             attachments.add(new Attachment(tileTitle, WolframAlphaImages.imageToBytes(tile)));
-            embeds.add(new EmbedBuilder().setColor(AMBIENT_COLOR)
+            embeds.add(new EmbedBuilder().setColor(Colors.WOLFRAM_ALPHA)
                 .setImage("attachment://" + tileTitle)
                 .build());
 

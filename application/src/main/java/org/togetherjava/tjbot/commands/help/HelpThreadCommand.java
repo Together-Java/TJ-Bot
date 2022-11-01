@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
@@ -201,7 +202,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         refreshCooldownFor(Subcommand.CLOSE, helpThread);
 
         MessageEmbed embed = new EmbedBuilder().setDescription("Closed the thread.")
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .setColor(Colors.HELP)
             .build();
 
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();

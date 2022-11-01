@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
@@ -110,7 +111,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
                 .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
                 .setFooter(event.getUser().getName())
                 .setTimestamp(Instant.now())
-                .setColor(TagSystem.AMBIENT_COLOR)
+                .setColor(Colors.TAG)
                 .build())
             .queue();
     }

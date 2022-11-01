@@ -17,6 +17,7 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.commands.Colors;
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
@@ -124,6 +125,7 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
 
         MessageEditData message = new MessageEditBuilder()
             .setEmbeds(new EmbedBuilder().setTitle(STATUS_TITLE)
+                .setColor(Colors.HELP)
                 .setDescription(createDescription(activeThreads))
                 .build())
             .build();
