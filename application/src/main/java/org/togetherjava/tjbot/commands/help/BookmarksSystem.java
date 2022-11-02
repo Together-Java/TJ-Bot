@@ -137,15 +137,12 @@ public final class BookmarksSystem {
     }
 
     int getTotalBookmarkCount() {
-        return database
-            .read(context -> context.selectCount().from(BOOKMARKS).fetchOne(0, int.class));
+        return database.read(context -> context.fetchCount(BOOKMARKS));
     }
 
     int getUserBookmarkCount(long authorID) {
-        return database.read(context -> context.selectCount()
-            .from(BOOKMARKS)
-            .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
-            .fetchOne(0, int.class));
+        return database
+            .read(context -> context.fetchCount(BOOKMARKS, BOOKMARKS.AUTHOR_ID.eq(authorID)));
     }
 
     void startDeletionPeriodForUser(long authorID) {
