@@ -142,8 +142,8 @@ public class MessageUtils {
     }
 
     /**
-     * Mentions a guild channel by its id. If the given channelId is unknown the formatted text will
-     * say `#deleted-channel` in discord.
+     * Mentions a guild channel by its id. If the given channelId is unknown, the formatted text
+     * will say <i>#deleted-channel</i> in Discord.
      *
      * @param channelId the ID of the channel to mention
      * @return the channel as formatted string which Discord interprets as clickable mention
