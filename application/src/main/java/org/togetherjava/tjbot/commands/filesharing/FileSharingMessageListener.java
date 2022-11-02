@@ -65,7 +65,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
     private final Predicate<String> isStagingChannelName;
     private final Predicate<String> isOverviewChannelName;
-    private final Predicate<String> softModPattern;
+    private final Predicate<String> isSoftModRole;
 
     /**
      * Creates a new instance.
@@ -81,7 +81,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
             .asMatchPredicate();
         isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
             .asMatchPredicate();
-        softModPattern = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
+        isSoftModRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
     }
 
     @Override
@@ -249,6 +249,32 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
                 || isOverviewChannelName.test(rootChannelName);
     }
 
+    private void deleteGist(String gistId) {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(SHARE_API + "/" + gistId))
+                .header("Accept", "application/json")
+                .header("Authorization", "token " + gistApiKey)
+                .DELETE()
+                .build();
+
+        HttpResponse<String> apiResponse;
+        try {
+            apiResponse = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "Attempting to delete a gist, but the request got interrupted.", e);
+        }
+
+
+        int status = apiResponse.statusCode();
+        if (status == 404) {
+            LOGGER.warn("Gist API unexpected response while deleting gist: {}.", apiResponse.body());
+        }
+    }
+
     @Override
     public String getName() {
         return "filesharing";
@@ -266,41 +292,18 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        Member user = event.getMember();
-        String authorId = args.get(0);
+        Member interactionUser = event.getMember();
+        String gistAuthorId = args.get(0);
         boolean hasSoftModPermissions =
-                user.getRoles().stream().map(Role::getName).noneMatch(softModPattern);
+                interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
 
-        if (!authorId.equals(user.getId()) && hasSoftModPermissions) {
+        if (!gistAuthorId.equals(interactionUser.getId()) && !hasSoftModPermissions) {
             event.reply("You do not have permission for this action.").setEphemeral(true).queue();
             return;
         }
 
         String gistId = args.get(1);
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(SHARE_API + "/" + gistId))
-            .header("Accept", "application/json")
-            .header("Authorization", "token " + gistApiKey)
-            .DELETE()
-            .build();
-
-        HttpResponse<String> apiResponse;
-        try {
-            apiResponse = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(
-                    "Attempting to delete a gist, but the request got interrupted.", e);
-        }
-
-
-        int status = apiResponse.statusCode();
-        if (status == 404) {
-            throw new IllegalStateException("Gist API unexpected response while deleting gist: %s."
-                .formatted(apiResponse.body()));
-        }
+        deleteGist(gistId);
 
         Message message = event.getMessage();
         List<Button> buttons = message.getButtons();
