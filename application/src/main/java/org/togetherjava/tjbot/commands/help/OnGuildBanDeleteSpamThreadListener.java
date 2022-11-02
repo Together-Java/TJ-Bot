@@ -14,12 +14,18 @@ import java.time.Instant;
 
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
+/**
+ * Implements the functionality to delete recent help threads when the user gets banned.
+ */
 public final class OnGuildBanDeleteSpamThreadListener extends ListenerAdapter
         implements EventReceiver {
     private static final Duration recentThreadDuration = Duration.ofMinutes(30);
 
     private final Database database;
 
+    /**
+     * @param database the database to get help threads from
+     */
     public OnGuildBanDeleteSpamThreadListener(Database database) {
         this.database = database;
     }
