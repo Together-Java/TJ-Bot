@@ -63,6 +63,10 @@ public final class ReminderCommand extends SlashCommandAdapter {
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
     private static final int REMINDERS_PER_PAGE = 10;
+    /**
+     * Maximum length of field title set by <a href=
+     * "https://discord.com/developers/docs/resources/channel#embed-object-embed-limits">Discord</a>
+     */
     private static final int MAX_REMINDER_TITLE_LENGTH = 256;
     private static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
     private static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
@@ -122,10 +126,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
         Result<PendingRemindersRecord> pendingReminders =
                 getPendingReminders(event.getGuild(), event.getUser());
 
-        event
-            .editMessage(
-                    MessageEditData.fromCreateData(createListMessage(pendingReminders, pageToShow)))
-            .queue();
+        MessageCreateData message = createPendingRemindersPage(pendingReminders, pageToShow);
+        event.editMessage(MessageEditData.fromCreateData(message)).queue();
     }
 
     private void handleCreateCommand(SlashCommandInteractionEvent event) {
@@ -162,7 +164,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
         Result<PendingRemindersRecord> pendingReminders =
                 getPendingReminders(event.getGuild(), event.getUser());
 
-        event.reply(createListMessage(pendingReminders, 1)).setEphemeral(true).queue();
+        event.reply(createPendingRemindersPage(pendingReminders, 1)).setEphemeral(true).queue();
     }
 
     private Result<PendingRemindersRecord> getPendingReminders(Guild guild, User user) {
@@ -173,13 +175,13 @@ public final class ReminderCommand extends SlashCommandAdapter {
             .fetch());
     }
 
-    private MessageCreateData createListMessage(Result<PendingRemindersRecord> pendingReminders,
-            int pageToShow) {
+    private MessageCreateData createPendingRemindersPage(
+            Result<PendingRemindersRecord> pendingReminders, int pageToShow) {
         int totalPages = Math.ceilDiv(pendingReminders.size(), REMINDERS_PER_PAGE);
 
         EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
             .setColor(RemindRoutine.AMBIENT_COLOR);
-        MessageCreateBuilder listMessage = new MessageCreateBuilder();
+        MessageCreateBuilder pendingRemindersPage = new MessageCreateBuilder();
 
         if (pendingReminders.isEmpty()) {
             remindersEmbed.setDescription("No pending reminders");
@@ -190,27 +192,27 @@ public final class ReminderCommand extends SlashCommandAdapter {
                 getPageEntries(pendingReminders, pageToShow)
                     .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
 
-                listMessage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
+                pendingRemindersPage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
             } else {
                 pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
             }
         }
 
-        return listMessage.addEmbeds(remindersEmbed.build()).build();
+        return pendingRemindersPage.addEmbeds(remindersEmbed.build()).build();
     }
 
-    private List<Button> createPageTurnButtons(int pageNumber, int totalPages) {
-        String pageNumberString = String.valueOf(pageNumber);
+    private List<Button> createPageTurnButtons(int currentPage, int totalPages) {
+        String pageNumberString = String.valueOf(currentPage);
 
         Button previousButton =
                 Button.primary(generateComponentId(pageNumberString), PREVIOUS_BUTTON_EMOJI);
-        if (pageNumber <= 1) {
+        if (currentPage <= 1) {
             previousButton = previousButton.asDisabled();
         }
 
         Button nextButton =
                 Button.primary(generateComponentId(pageNumberString), NEXT_BUTTON_EMOJI);
-        if (pageNumber >= totalPages) {
+        if (currentPage >= totalPages) {
             nextButton = nextButton.asDisabled();
         }
 
@@ -218,8 +220,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private static List<PendingRemindersRecord> getPageEntries(
-            Result<PendingRemindersRecord> remindersRecords, int pageNumber) {
-        int start = (pageNumber - 1) * REMINDERS_PER_PAGE;
+            Result<PendingRemindersRecord> remindersRecords, int pageToDisplay) {
+        int start = (pageToDisplay - 1) * REMINDERS_PER_PAGE;
         int end = Math.min(start + REMINDERS_PER_PAGE, remindersRecords.size());
 
         return remindersRecords.subList(start, end);
