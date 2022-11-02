@@ -50,8 +50,8 @@ public final class BookmarksSystem {
     /**
      * Creates a new instance of the bookmarks system.
      *
-     * @param config The config to use
-     * @param database The database to use
+     * @param config to get the overview channel pattern
+     * @param database to store and retrieve bookmarks
      */
     public BookmarksSystem(Config config, Database database) {
         this.database = database;

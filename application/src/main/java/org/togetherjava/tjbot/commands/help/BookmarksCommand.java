@@ -49,7 +49,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     /**
      * Creates a new instance and registers every sub command.
      *
-     * @param bookmarksSystem The bookmarks system to use
+     * @param bookmarksSystem The {@link BookmarksSystem} to request pagination and manage bookmarks
      */
     public BookmarksCommand(BookmarksSystem bookmarksSystem) {
         super(COMMAND_NAME, "Bookmark help threads", CommandVisibility.GLOBAL);

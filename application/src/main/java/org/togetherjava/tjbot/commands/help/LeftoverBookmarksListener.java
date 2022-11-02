@@ -18,7 +18,7 @@ public final class LeftoverBookmarksListener extends ListenerAdapter implements 
     /**
      * Creates a new instance.
      *
-     * @param bookmarksSystem The bookmarks system to use
+     * @param bookmarksSystem The {@link BookmarksSystem} to start or cancel the deletion period
      */
     public LeftoverBookmarksListener(BookmarksSystem bookmarksSystem) {
         this.bookmarksSystem = bookmarksSystem;

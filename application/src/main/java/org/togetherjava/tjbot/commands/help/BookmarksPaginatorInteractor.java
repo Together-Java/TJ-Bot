@@ -56,7 +56,8 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     /**
      * Creates a new instance.
      *
-     * @param bookmarksSystem The bookmarks system to use
+     * @param bookmarksSystem The {@link BookmarksSystem} to register the pagination consumers and
+     *        manage bookmarks
      */
     public BookmarksPaginatorInteractor(BookmarksSystem bookmarksSystem) {
         this.bookmarksSystem = bookmarksSystem;
@@ -315,9 +316,9 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     /**
      * Removed the selected bookmarks from the bookmarks list and the database.
      *
-     * @param bookmarks The bookmarks list
-     * @param event The component interaction event
-     * @param args The remove component arguments
+     * @param bookmarks The users bookmarks
+     * @param event The {@link ComponentInteraction} event
+     * @param args The {@link RemoveComponentArguments}
      */
     private void removeSelectedBookmarks(List<BookmarksRecord> bookmarks,
             ComponentInteraction event, RemoveComponentArguments args) {
@@ -333,7 +334,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     /**
      * Calculates which bookmarks to display as page entries.
      *
-     * @param bookmarks The bookmarks list
+     * @param bookmarks The users bookmarks
      * @param pageIndex The page index the entries should be for
      * @return A list of entries to be displayed on the requested page
      */
@@ -351,7 +352,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     /**
      * Calculates the last page index for displaying all bookmarks.
      *
-     * @param bookmarks The bookmarks list
+     * @param bookmarks The users bookmarks
      * @return The index of the last page
      */
     private static int getLastPageIndex(List<BookmarksRecord> bookmarks) {
@@ -369,8 +370,8 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     /**
      * Makes sure that the page index never is negative or larger than the index of the last page.
      *
-     * @param bookmarks The bookmarks list
-     * @param pageIndex The page possibly invalid index
+     * @param bookmarks The users bookmarks
+     * @param pageIndex The possibly invalid page index
      * @return A valid page index
      */
     private static int ensurePageIndex(List<BookmarksRecord> bookmarks, int pageIndex) {

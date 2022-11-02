@@ -16,7 +16,7 @@ public final class LeftoverBookmarksCleanupRoutine implements Routine {
     /**
      * Creates a new instance.
      *
-     * @param bookmarksSystem The bookmarks system to use
+     * @param bookmarksSystem The {@link BookmarksSystem} to delete leftover bookmarks
      */
     public LeftoverBookmarksCleanupRoutine(BookmarksSystem bookmarksSystem) {
         this.bookmarksSystem = bookmarksSystem;
