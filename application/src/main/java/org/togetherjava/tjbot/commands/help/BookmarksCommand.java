@@ -70,8 +70,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         SubcommandData listSubCommand =
                 new SubcommandData(SUBCOMMAND_LIST, "List all of your bookmarks");
 
-        SubcommandData removeSubCommand = new SubcommandData(SUBCOMMAND_REMOVE,
-                "Remove some of your bookmarked help threads");
+        SubcommandData removeSubCommand =
+                new SubcommandData(SUBCOMMAND_REMOVE, "Remove some of your bookmarks");
 
         getData().addSubcommands(addSubCommand, listSubCommand, removeSubCommand);
     }
