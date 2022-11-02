@@ -109,8 +109,8 @@ public final class BookmarksSystem {
     boolean didUserBookmarkChannel(long userID, long channelID) {
         return database.read(context -> context.selectFrom(BOOKMARKS)
             .where(BOOKMARKS.AUTHOR_ID.eq(userID), BOOKMARKS.CHANNEL_ID.eq(channelID))
-            .fetch()
-            .isNotEmpty());
+            .limit(1)
+            .fetchOne() != null);
     }
 
     void addBookmark(long authorID, long channelID, @Nullable String note) {
