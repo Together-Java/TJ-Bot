@@ -118,7 +118,7 @@ public final class BookmarksSystem {
             .setChannelId(channelID)
             .setCreatedAt(Instant.now())
             .setNote(note)
-            .setScheduledRemovalAt(null)
+            .setDeleteAt(null)
             .insert());
     }
 
@@ -148,25 +148,24 @@ public final class BookmarksSystem {
     }
 
     void scheduleUsersBookmarksRemoval(long authorID) {
-        Instant scheduledRemovalAt = Instant.now().plus(LEAVE_BOOKMARKS_REMOVAL_DELAY);
+        Instant delete_at = Instant.now().plus(LEAVE_BOOKMARKS_REMOVAL_DELAY);
 
         database.write(context -> context.update(BOOKMARKS)
-            .set(BOOKMARKS.SCHEDULED_REMOVAL_AT, scheduledRemovalAt)
+            .set(BOOKMARKS.DELETE_AT, delete_at)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
             .execute());
     }
 
     void cancelUsersBookmarksRemoval(long authorID) {
         database.write(context -> context.update(BOOKMARKS)
-            .setNull(BOOKMARKS.SCHEDULED_REMOVAL_AT)
+            .setNull(BOOKMARKS.DELETE_AT)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
             .execute());
     }
 
     void cleanRemovalScheduledBookmarks() {
         database.write(context -> context.deleteFrom(BOOKMARKS)
-            .where(BOOKMARKS.SCHEDULED_REMOVAL_AT.isNotNull(),
-                    BOOKMARKS.SCHEDULED_REMOVAL_AT.lessThan(Instant.now()))
+            .where(BOOKMARKS.DELETE_AT.isNotNull(), BOOKMARKS.DELETE_AT.lessThan(Instant.now()))
             .execute());
     }
 
