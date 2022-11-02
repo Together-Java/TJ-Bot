@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -129,7 +130,7 @@ public final class BookmarksSystem {
             .fetch());
     }
 
-    void removeBookmarks(long authorID, List<Long> channelIDs) {
+    void removeBookmarks(long authorID, Set<Long> channelIDs) {
         database.write(context -> context.deleteFrom(BOOKMARKS)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID), BOOKMARKS.CHANNEL_ID.in(channelIDs))
             .execute());

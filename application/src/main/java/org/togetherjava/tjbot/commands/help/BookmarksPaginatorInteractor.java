@@ -24,12 +24,11 @@ import org.togetherjava.tjbot.commands.utils.Arraylizable;
 import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
-import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 /**
  * This class can create a paginated message for listing or removing bookmarks. A paginated message
@@ -130,8 +129,9 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             RemoveComponentArguments removeArgs = (RemoveComponentArguments) args;
 
             if (removeArgs.componentName.equals(SELECTMENU_REMOVE_NAME)) {
-                removeArgs.bookmarksToRemoveChannelIDs =
-                        selected.stream().map(o -> Long.parseLong(o.getValue())).toList();
+                removeArgs.bookmarksToRemoveChannelIDs = selected.stream()
+                    .map(o -> Long.parseLong(o.getValue()))
+                    .collect(Collectors.toSet());
             } else {
                 throw new IllegalArgumentException(
                         "Pagination type REMOVE should only have a single menu");
@@ -178,7 +178,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         components.add(generateNavigationComponent(paginationType, 0));
         if (paginationType == PaginationType.REMOVE) {
             components
-                .addAll(generateRemoveComponents(jda, bookmarks, paginationType, 0, List.of()));
+                .addAll(generateRemoveComponents(jda, bookmarks, paginationType, 0, Set.of()));
         }
 
         event.replyEmbeds(pageEmbed).setComponents(components).setEphemeral(true).queue();
@@ -276,7 +276,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
     private List<LayoutComponent> generateRemoveComponents(JDA jda, List<BookmarksRecord> bookmarks,
             PaginationType paginationType, int currentPageIndex,
-            List<Long> bookmarksToRemoveChannelIDs) {
+            Set<Long> bookmarksToRemoveChannelIDs) {
         List<PageEntry> pageEntries = getPageEntries(bookmarks, currentPageIndex);
 
         UnaryOperator<String> generateRemoveComponentId = name -> {
@@ -301,7 +301,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         SelectMenu selectMenuRemove = SelectMenu.create(selectMenuRemoveId)
             .setPlaceholder("Select bookmarks to delete")
             .addOptions(selectMenuRemoveOptions)
-            .setDefaultValues(parseListToStringList(bookmarksToRemoveChannelIDs))
+            .setDefaultValues(parseCollectionToStringList(bookmarksToRemoveChannelIDs))
             .setRequiredRange(0, selectMenuRemoveOptions.size())
             .build();
 
@@ -395,8 +395,8 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
                 : ComponentArguments.fromStringArgs(stringArgs);
     }
 
-    private static List<String> parseListToStringList(List<?> list) {
-        return list.stream().map(String::valueOf).toList();
+    private static List<String> parseCollectionToStringList(Collection<?> items) {
+        return items.stream().map(String::valueOf).toList();
     }
 
     private enum PaginationType {
@@ -441,13 +441,13 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
     private static class RemoveComponentArguments extends ComponentArguments {
 
-        List<Long> bookmarksToRemoveChannelIDs;
+        Set<Long> bookmarksToRemoveChannelIDs;
 
         public RemoveComponentArguments(PaginationType paginationType, String componentName,
-                int currentPageIndex, List<Long> bookmarksToRemoveChannelIDs) {
+                int currentPageIndex, Set<Long> bookmarksToRemoveChannelIDs) {
             super(paginationType, componentName, currentPageIndex);
             this.bookmarksToRemoveChannelIDs =
-                    Collections.unmodifiableList(bookmarksToRemoveChannelIDs);
+                    Collections.unmodifiableSet(bookmarksToRemoveChannelIDs);
         }
 
         public static RemoveComponentArguments fromStringArgs(List<String> stringArgs) {
@@ -456,7 +456,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             int currentPageIndex = Integer.parseInt(stringArgs.get(2));
 
             List<String> remainingStringArgs = stringArgs.subList(3, stringArgs.size());
-            List<Long> bookmarksToRemoveChannelIDs = parseStringListToLongList(remainingStringArgs);
+            Set<Long> bookmarksToRemoveChannelIDs = parseStringListToLongSet(remainingStringArgs);
 
             return new RemoveComponentArguments(paginationType, componentName, currentPageIndex,
                     bookmarksToRemoveChannelIDs);
@@ -469,13 +469,13 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             argsList.add(paginationType.name());
             argsList.add(componentName);
             argsList.add(String.valueOf(currentPageIndex));
-            argsList.addAll(parseListToStringList(bookmarksToRemoveChannelIDs));
+            argsList.addAll(parseCollectionToStringList(bookmarksToRemoveChannelIDs));
 
             return argsList.toArray(String[]::new);
         }
 
-        private static List<Long> parseStringListToLongList(List<String> stringList) {
-            return stringList.stream().map(Long::parseLong).toList();
+        private static Set<Long> parseStringListToLongSet(List<String> stringList) {
+            return stringList.stream().map(Long::parseLong).collect(Collectors.toSet());
         }
 
     }
