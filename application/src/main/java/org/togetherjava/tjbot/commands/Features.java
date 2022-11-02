@@ -98,7 +98,7 @@ public class Features {
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new OnGuildLeaveCloseThreadListener(database));
-        features.add(new OnGuildBanDeleteSpamThreadListener(database));
+        features.add(new SpamThreadDeletionListener(database));
 
         // Message context commands
 
