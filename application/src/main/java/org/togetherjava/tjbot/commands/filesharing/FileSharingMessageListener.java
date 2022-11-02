@@ -2,16 +2,25 @@ package org.togetherjava.tjbot.commands.filesharing;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
+import org.togetherjava.tjbot.commands.UserInteractionType;
+import org.togetherjava.tjbot.commands.UserInteractor;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.config.Config;
 
 import java.io.IOException;
@@ -37,10 +46,13 @@ import java.util.regex.Pattern;
  * contains a file with the given extension in the
  * {@link FileSharingMessageListener#extensionFilter}.
  */
-public class FileSharingMessageListener extends MessageReceiverAdapter {
+public class FileSharingMessageListener extends MessageReceiverAdapter implements UserInteractor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSharingMessageListener.class);
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    private final ComponentIdInteractor componentIdInteractor =
+            new ComponentIdInteractor(getInteractionType(), getName());
 
     private static final String SHARE_API = "https://api.github.com/gists";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
@@ -51,6 +63,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
     private final Predicate<String> isStagingChannelName;
     private final Predicate<String> isOverviewChannelName;
+    private final Predicate<String> softModPattern;
 
     /**
      * Creates a new instance.
@@ -66,6 +79,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             .asMatchPredicate();
         isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
             .asMatchPredicate();
+        softModPattern = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
     }
 
     @Override
@@ -128,8 +142,10 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
 
         GistFiles files = new GistFiles(nameToFile);
         GistRequest request = new GistRequest(event.getAuthor().getName(), false, files);
-        String url = uploadToGist(request);
-        sendResponse(event, url);
+        GistResponse response = uploadToGist(request);
+        String url = response.getHtmlUrl();
+        String gistId = response.getGistId();
+        sendResponse(event, url, gistId);
     }
 
     private String readAttachment(InputStream stream) {
@@ -160,7 +176,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         return fileName;
     }
 
-    private String uploadToGist(GistRequest jsonRequest) {
+    private GistResponse uploadToGist(GistRequest jsonRequest) {
         String body;
         try {
             body = JSON.writeValueAsString(jsonRequest);
@@ -203,15 +219,20 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
             throw new IllegalStateException(
                     "Attempting to upload file to gist, but unable to parse its JSON response.", e);
         }
-        return gistResponse.getHtmlUrl();
+        return gistResponse;
     }
 
-    private void sendResponse(MessageReceivedEvent event, String url) {
+    private void sendResponse(MessageReceivedEvent event, String url, String gistId) {
         Message message = event.getMessage();
         String messageContent =
                 "I uploaded your attachments as **gist**. That way, they are easier to read for everyone, especially mobile users 👍";
 
-        message.reply(messageContent).setActionRow(Button.link(url, "gist")).queue();
+        Button gist = Button.link(url, "gist");
+
+        Button delete = Button.danger(componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
+                Emoji.fromUnicode("🗑️"));
+
+        message.reply(messageContent).setActionRow(gist, delete).queue();
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
@@ -224,4 +245,67 @@ public class FileSharingMessageListener extends MessageReceiverAdapter {
         return isStagingChannelName.test(rootChannelName)
                 || isOverviewChannelName.test(rootChannelName);
     }
+
+    @Override
+    public String getName() {
+        return "filesharing";
+    }
+
+    @Override
+    public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
+        componentIdInteractor.acceptComponentIdGenerator(generator);
+    }
+
+    @Override
+    public UserInteractionType getInteractionType() {
+        return UserInteractionType.OTHER;
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        Member user = event.getMember();
+
+        if (!args.get(0).equals(user.getId()) && user.getRoles().stream().map(Role::getName).noneMatch(softModPattern)) {
+            event.reply("You do not have permission for this action.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        String gistId = args.get(1);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(SHARE_API + "/" + gistId))
+                .header("Accept", "application/json")
+                .header("Authorization", "token " + gistApiKey)
+                .DELETE()
+                .build();
+
+        HttpResponse<String> apiResponse;
+        try {
+            apiResponse = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(
+                    "Attempting to delete a gist, but the request got interrupted.", e);
+        }
+
+
+        int status = apiResponse.statusCode();
+        if (status == 404) {
+            throw new IllegalStateException("Gist API unexpected response while deleting gist: %s."
+                    .formatted(apiResponse.body()));
+        }
+
+        Message message = event.getMessage();
+        List<Button> buttons = message.getButtons();
+        event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList())).queue();
+    }
+
+    @Override
+    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException("Not used");
+    }
+
 }
