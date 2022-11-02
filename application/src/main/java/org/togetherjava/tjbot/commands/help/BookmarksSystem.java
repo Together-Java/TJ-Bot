@@ -148,10 +148,10 @@ public final class BookmarksSystem {
     }
 
     void startDeletionPeriodForUser(long authorID) {
-        Instant delete_at = Instant.now().plus(REMOVE_BOOKMARKS_AFTER_LEAVE_DELAY);
+        Instant deleteAt = Instant.now().plus(REMOVE_BOOKMARKS_AFTER_LEAVE_DELAY);
 
         database.write(context -> context.update(BOOKMARKS)
-            .set(BOOKMARKS.DELETE_AT, delete_at)
+            .set(BOOKMARKS.DELETE_AT, deleteAt)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
             .execute());
     }
