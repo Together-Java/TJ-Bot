@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -308,7 +309,12 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     }
 
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException("Not used");
+    }
+
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
 
