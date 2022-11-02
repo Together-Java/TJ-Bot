@@ -41,7 +41,7 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
     @Override
     public void onGuildBan(GuildBanEvent event) {
         RestAction.allOf(getRecentHelpThreads(event.getUser()).stream()
-            .map(record -> event.getJDA().getThreadChannelById(record.value1()))
+            .map(channelId -> event.getJDA().getThreadChannelById(channelId.value1()))
             .filter(Objects::nonNull)
             .map(ThreadChannel::delete)
             .toList()).queue();
