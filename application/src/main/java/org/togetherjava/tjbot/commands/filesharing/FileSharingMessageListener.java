@@ -251,11 +251,11 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
     private void deleteGist(String gistId) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(SHARE_API + "/" + gistId))
-                .header("Accept", "application/json")
-                .header("Authorization", "token " + gistApiKey)
-                .DELETE()
-                .build();
+            .uri(URI.create(SHARE_API + "/" + gistId))
+            .header("Accept", "application/json")
+            .header("Authorization", "token " + gistApiKey)
+            .DELETE()
+            .build();
 
         HttpResponse<String> apiResponse;
         try {
@@ -271,7 +271,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
         int status = apiResponse.statusCode();
         if (status == 404) {
-            LOGGER.warn("Gist API unexpected response while deleting gist: {}.", apiResponse.body());
+            LOGGER.warn("Gist API unexpected response while deleting gist: {}.",
+                    apiResponse.body());
         }
     }
 
