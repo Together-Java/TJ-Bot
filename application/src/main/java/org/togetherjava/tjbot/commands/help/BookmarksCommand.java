@@ -26,23 +26,25 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     public static final String ADD_OPTION_NOTE = "note";
 
     private static final MessageEmbed NOT_A_HELP_THREAD_EMBED =
-            BookmarksSystem.createFailureEmbed("This command can only be run in help threads!");
+            BookmarksSystem.createFailureEmbed("You can only bookmark help threads.");
 
     private static final MessageEmbed ALREADY_BOOKMARKED_EMBED =
-            BookmarksSystem.createFailureEmbed("You already bookmarked this channel!");
+            BookmarksSystem.createFailureEmbed("You have already bookmarked this channel.");
 
     private static final MessageEmbed BOOKMARK_ADDED_EMBED =
-            BookmarksSystem.createSuccessEmbed("Bookmark added!");
+            BookmarksSystem.createSuccessEmbed("Your bookmark was added.");
 
-    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED =
-            BookmarksSystem.createFailureEmbed(
-                    "You have exceeded your bookmarks limit! Please delete your old bookmarks.");
+    private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED = BookmarksSystem
+        .createFailureEmbed(
+                "You have exceeded your bookmarks limit. Please delete some of your other bookmarks.");
 
-    private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED =
-            BookmarksSystem.createWarningEmbed("""
-                    You can't add a bookmark right now because the total amount
-                    of bookmarks has exceeded its limit! Please wait a bit.
-                    """);
+    private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED = BookmarksSystem
+        .createWarningEmbed(
+                """
+                        You cannot add a bookmark right now because the total amount of bookmarks has exceeded its limit.
+                        Please wait a bit until some of them have been deleted or contact a moderator.
+                        Sorry for the inconvenience.
+                        """);
 
     private final BookmarksSystem bookmarksSystem;
 
