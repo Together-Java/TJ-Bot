@@ -6,13 +6,13 @@ import net.dv8tion.jda.api.events.guild.GuildBanEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.jooq.Record1;
-import org.jooq.Result;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.db.Database;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
@@ -41,19 +41,23 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
     @Override
     public void onGuildBan(GuildBanEvent event) {
         RestAction.allOf(getRecentHelpThreads(event.getUser()).stream()
-            .map(channelId -> event.getJDA().getThreadChannelById(channelId.value1()))
+            .map(event.getJDA()::getThreadChannelById)
             .filter(Objects::nonNull)
             .map(ThreadChannel::delete)
             .toList()).queue();
     }
 
-    private Result<Record1<Long>> getRecentHelpThreads(User user) {
+    private List<Long> getRecentHelpThreads(User user) {
         Instant recentThreadThreshold = Instant.now().minus(RECENT_THREAD_DURATION);
 
-        return database.read(context -> context.select(HELP_THREADS.CHANNEL_ID)
-            .from(HELP_THREADS)
-            .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong())
-                .and(HELP_THREADS.CREATED_AT.greaterThan(recentThreadThreshold)))
-            .fetch());
+        return database
+            .read(context -> context.select(HELP_THREADS.CHANNEL_ID)
+                .from(HELP_THREADS)
+                .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong())
+                    .and(HELP_THREADS.CREATED_AT.greaterThan(recentThreadThreshold)))
+                .fetch())
+            .stream()
+            .map(Record1::value1)
+            .toList();
     }
 }
