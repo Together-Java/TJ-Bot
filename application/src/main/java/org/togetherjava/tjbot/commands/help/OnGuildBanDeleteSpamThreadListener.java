@@ -16,7 +16,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 public final class OnGuildBanDeleteSpamThreadListener extends ListenerAdapter
         implements EventReceiver {
-    private final static Duration recentThreadDuration = Duration.ofMinutes(30);
+    private static final Duration recentThreadDuration = Duration.ofMinutes(30);
 
     private final Database database;
 
