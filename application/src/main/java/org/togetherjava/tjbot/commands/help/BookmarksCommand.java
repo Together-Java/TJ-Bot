@@ -115,13 +115,13 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         }
 
         long bookmarkCountTotal = bookmarksSystem.getTotalBookmarkCount();
-        if (bookmarkCountTotal == BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL - 1) {
+        if (bookmarkCountTotal == BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL) {
             logger.warn("The bookmark limit will be reached soon!");
         }
-        if (bookmarkCountTotal == BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL - 1) {
+        if (bookmarkCountTotal == BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
             logger.error("The bookmark limit has been reached!");
         }
-        if (bookmarkCountTotal >= BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
+        if (bookmarkCountTotal > BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
             sendResponse(event, BOOKMARK_LIMIT_TOTAL_EMBED);
             return false;
         }
