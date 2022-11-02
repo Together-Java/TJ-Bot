@@ -30,15 +30,15 @@ import static org.togetherjava.tjbot.db.generated.tables.Bookmarks.BOOKMARKS;
  */
 public final class BookmarksSystem {
 
-    public static final Color COLOR_SUCCESS = new Color(166, 218, 149);
-    public static final Color COLOR_WARNING = new Color(245, 169, 127);
-    public static final Color COLOR_FAILURE = new Color(238, 153, 160);
+    static final int MAX_BOOKMARK_COUNT_TOTAL = 1_000_000;
+    static final int WARN_BOOKMARK_COUNT_TOTAL = 900_000;
+    static final int MAX_BOOKMARK_COUNT_PER_USER = 500;
+    static final int MAX_NOTE_LENGTH = 150;
+    private static final Duration REMOVE_BOOKMARKS_AFTER_LEAVE_DELAY = Duration.ofDays(7);
 
-    public static final int MAX_BOOKMARK_COUNT_TOTAL = 1_000_000;
-    public static final int WARN_BOOKMARK_COUNT_TOTAL = 900_000;
-    public static final int MAX_BOOKMARK_COUNT_PER_USER = 500;
-    public static final int MAX_NOTE_LENGTH = 150;
-    public static final Duration REMOVE_BOOKMARKS_AFTER_LEAVE_DELAY = Duration.ofDays(7);
+    static final Color COLOR_SUCCESS = new Color(166, 218, 149);
+    static final Color COLOR_WARNING = new Color(245, 169, 127);
+    static final Color COLOR_FAILURE = new Color(238, 153, 160);
 
     private final Database database;
     private final Predicate<String> isOverviewChannelName;
