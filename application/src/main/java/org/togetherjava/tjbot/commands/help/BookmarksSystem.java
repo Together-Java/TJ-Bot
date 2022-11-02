@@ -169,16 +169,20 @@ public final class BookmarksSystem {
             .execute());
     }
 
+    private static MessageEmbed createColoredEmbed(String content, Color color) {
+        return new EmbedBuilder().setDescription(content).setColor(color).build();
+    }
+
     static MessageEmbed createSuccessEmbed(String content) {
-        return new EmbedBuilder().setDescription(content).setColor(COLOR_SUCCESS).build();
+        return createColoredEmbed(content, COLOR_SUCCESS);
     }
 
     static MessageEmbed createWarningEmbed(String content) {
-        return new EmbedBuilder().setDescription(content).setColor(COLOR_WARNING).build();
+        return createColoredEmbed(content, COLOR_WARNING);
     }
 
     static MessageEmbed createFailureEmbed(String content) {
-        return new EmbedBuilder().setDescription(content).setColor(COLOR_FAILURE).build();
+        return createColoredEmbed(content, COLOR_FAILURE);
     }
 
 }
