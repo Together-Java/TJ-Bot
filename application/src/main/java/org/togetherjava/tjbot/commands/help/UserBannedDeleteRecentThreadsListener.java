@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.guild.GuildBanEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.requests.RestAction;
 import org.jooq.Record1;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
@@ -40,11 +39,14 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        RestAction.allOf(getRecentHelpThreads(event.getUser()).stream()
+        getRecentHelpThreads(event.getUser()).stream()
             .map(event.getJDA()::getThreadChannelById)
             .filter(Objects::nonNull)
             .map(ThreadChannel::delete)
-            .toList()).queue();
+            .forEach(restAction -> restAction.queue(onSuccess -> {
+            }, onFailure -> {
+
+            }));
     }
 
     private List<Long> getRecentHelpThreads(User user) {
