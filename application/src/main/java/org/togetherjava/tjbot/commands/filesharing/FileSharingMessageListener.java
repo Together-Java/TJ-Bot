@@ -264,8 +264,10 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         Member user = event.getMember();
+        String authorId = args.get(0);
+        boolean hasSoftModPermissions = user.getRoles().stream().map(Role::getName).noneMatch(softModPattern);
 
-        if (!args.get(0).equals(user.getId()) && user.getRoles().stream().map(Role::getName).noneMatch(softModPattern)) {
+        if (!authorId.equals(user.getId()) && hasSoftModPermissions) {
             event.reply("You do not have permission for this action.")
                     .setEphemeral(true)
                     .queue();
