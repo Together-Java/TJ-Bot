@@ -7,9 +7,9 @@ import org.togetherjava.tjbot.commands.Routine;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tells the bookmarks system to clean bookmarks scheduled for removal.
+ * Tells the bookmarks system to delete the old bookmarks of users that left the guild
  */
-public final class BookmarksCleanupRoutine implements Routine {
+public final class LeftoverBookmarksCleanupRoutine implements Routine {
 
     private final BookmarksSystem bookmarksSystem;
 
@@ -18,7 +18,7 @@ public final class BookmarksCleanupRoutine implements Routine {
      *
      * @param bookmarksSystem The bookmarks system to use
      */
-    public BookmarksCleanupRoutine(BookmarksSystem bookmarksSystem) {
+    public LeftoverBookmarksCleanupRoutine(BookmarksSystem bookmarksSystem) {
         this.bookmarksSystem = bookmarksSystem;
     }
 
@@ -29,7 +29,7 @@ public final class BookmarksCleanupRoutine implements Routine {
 
     @Override
     public void runRoutine(JDA jda) {
-        bookmarksSystem.cleanRemovalScheduledBookmarks();
+        bookmarksSystem.deleteLeftoverBookmarks();
     }
 
 }

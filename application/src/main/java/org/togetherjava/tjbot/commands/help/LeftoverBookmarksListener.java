@@ -8,10 +8,10 @@ import org.jetbrains.annotations.NotNull;
 import org.togetherjava.tjbot.commands.EventReceiver;
 
 /**
- * Schedules a users bookmarks to be removed when leaving the guild. Also cancels the scheduled
- * removal when rejoining before the bookmarks were removed.
+ * Initiates the bookmarks deletion period for a user when leaving the guild. When the user rejoins
+ * the guild the deletion period will be canceled
  */
-public final class BookmarksGuildLeaveListener extends ListenerAdapter implements EventReceiver {
+public final class LeftoverBookmarksListener extends ListenerAdapter implements EventReceiver {
 
     private final BookmarksSystem bookmarksSystem;
 
@@ -20,7 +20,7 @@ public final class BookmarksGuildLeaveListener extends ListenerAdapter implement
      *
      * @param bookmarksSystem The bookmarks system to use
      */
-    public BookmarksGuildLeaveListener(BookmarksSystem bookmarksSystem) {
+    public LeftoverBookmarksListener(BookmarksSystem bookmarksSystem) {
         this.bookmarksSystem = bookmarksSystem;
     }
 
@@ -28,13 +28,13 @@ public final class BookmarksGuildLeaveListener extends ListenerAdapter implement
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
         long userID = event.getUser().getIdLong();
 
-        bookmarksSystem.scheduleUsersBookmarksRemoval(userID);
+        bookmarksSystem.startDeletionPeriodForUser(userID);
     }
 
     @Override
     public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
         long userID = event.getUser().getIdLong();
 
-        bookmarksSystem.cancelUsersBookmarksRemoval(userID);
+        bookmarksSystem.cancelDeletionPeriodForUser(userID);
     }
 }

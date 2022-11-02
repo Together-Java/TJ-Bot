@@ -86,7 +86,7 @@ public class Features {
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
-        features.add(new BookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -100,7 +100,7 @@ public class Features {
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new OnGuildLeaveCloseThreadListener(database));
-        features.add(new BookmarksGuildLeaveListener(bookmarksSystem));
+        features.add(new LeftoverBookmarksListener(bookmarksSystem));
 
         // Message context commands
 

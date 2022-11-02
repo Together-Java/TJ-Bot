@@ -147,7 +147,7 @@ public final class BookmarksSystem {
             .fetchOne(0, int.class));
     }
 
-    void scheduleUsersBookmarksRemoval(long authorID) {
+    void startDeletionPeriodForUser(long authorID) {
         Instant delete_at = Instant.now().plus(LEAVE_BOOKMARKS_REMOVAL_DELAY);
 
         database.write(context -> context.update(BOOKMARKS)
@@ -156,14 +156,14 @@ public final class BookmarksSystem {
             .execute());
     }
 
-    void cancelUsersBookmarksRemoval(long authorID) {
+    void cancelDeletionPeriodForUser(long authorID) {
         database.write(context -> context.update(BOOKMARKS)
             .setNull(BOOKMARKS.DELETE_AT)
             .where(BOOKMARKS.AUTHOR_ID.eq(authorID))
             .execute());
     }
 
-    void cleanRemovalScheduledBookmarks() {
+    void deleteLeftoverBookmarks() {
         database.write(context -> context.deleteFrom(BOOKMARKS)
             .where(BOOKMARKS.DELETE_AT.isNotNull(), BOOKMARKS.DELETE_AT.lessThan(Instant.now()))
             .execute());
