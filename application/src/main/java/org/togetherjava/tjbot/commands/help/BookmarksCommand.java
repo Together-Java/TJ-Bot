@@ -54,11 +54,12 @@ public final class BookmarksCommand extends SlashCommandAdapter {
      * @param bookmarksSystem The {@link BookmarksSystem} to request pagination and manage bookmarks
      */
     public BookmarksCommand(BookmarksSystem bookmarksSystem) {
-        super(COMMAND_NAME, "Bookmark help threads", CommandVisibility.GLOBAL);
+        super(COMMAND_NAME, "Bookmark help threads so that you can easily look them up again",
+                CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
 
-        OptionData addNoteOption =
-                new OptionData(OptionType.STRING, ADD_OPTION_NOTE, "A note for this bookmark")
+        OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_OPTION_NOTE,
+                "Your personal comment on this bookmark")
                     .setMaxLength(BookmarksSystem.MAX_NOTE_LENGTH)
                     .setRequired(false);
 
@@ -67,7 +68,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                     .addOptions(addNoteOption);
 
         SubcommandData listSubCommand =
-                new SubcommandData(SUBCOMMAND_LIST, "List all help threads that you bookmarked");
+                new SubcommandData(SUBCOMMAND_LIST, "List all of your bookmarks");
 
         SubcommandData removeSubCommand = new SubcommandData(SUBCOMMAND_REMOVE,
                 "Remove some of your bookmarked help threads");
