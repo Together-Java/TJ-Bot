@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.UserInteractionType;
 import org.togetherjava.tjbot.commands.UserInteractor;
@@ -229,7 +230,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
         Button gist = Button.link(url, "gist");
 
-        Button delete = Button.danger(componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
+        Button delete = Button.danger(
+                componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
                 Emoji.fromUnicode("🗑️"));
 
         message.reply(messageContent).setActionRow(gist, delete).queue();
@@ -265,22 +267,21 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         Member user = event.getMember();
         String authorId = args.get(0);
-        boolean hasSoftModPermissions = user.getRoles().stream().map(Role::getName).noneMatch(softModPattern);
+        boolean hasSoftModPermissions =
+                user.getRoles().stream().map(Role::getName).noneMatch(softModPattern);
 
         if (!authorId.equals(user.getId()) && hasSoftModPermissions) {
-            event.reply("You do not have permission for this action.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
             return;
         }
 
         String gistId = args.get(1);
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(SHARE_API + "/" + gistId))
-                .header("Accept", "application/json")
-                .header("Authorization", "token " + gistApiKey)
-                .DELETE()
-                .build();
+            .uri(URI.create(SHARE_API + "/" + gistId))
+            .header("Accept", "application/json")
+            .header("Authorization", "token " + gistApiKey)
+            .DELETE()
+            .build();
 
         HttpResponse<String> apiResponse;
         try {
@@ -297,12 +298,13 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
         int status = apiResponse.statusCode();
         if (status == 404) {
             throw new IllegalStateException("Gist API unexpected response while deleting gist: %s."
-                    .formatted(apiResponse.body()));
+                .formatted(apiResponse.body()));
         }
 
         Message message = event.getMessage();
         List<Button> buttons = message.getButtons();
-        event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList())).queue();
+        event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
+            .queue();
     }
 
     @Override
