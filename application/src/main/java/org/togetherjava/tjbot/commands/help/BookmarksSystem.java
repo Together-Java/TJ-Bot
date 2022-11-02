@@ -36,7 +36,7 @@ public final class BookmarksSystem {
 
     public static final int MAX_BOOKMARK_COUNT_TOTAL = 1_000_000;
     public static final int WARN_BOOKMARK_COUNT_TOTAL = 900_000;
-    public static final int MAX_BOOKMARK_COUNT_USER = 500;
+    public static final int MAX_BOOKMARK_COUNT_PER_USER = 500;
     public static final int MAX_NOTE_LENGTH = 150;
     public static final Duration LEAVE_BOOKMARKS_REMOVAL_DELAY = Duration.ofDays(7);
 

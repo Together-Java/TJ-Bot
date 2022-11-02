@@ -130,7 +130,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
             return false;
         }
 
-        if (bookmarkCountUser >= BookmarksSystem.MAX_BOOKMARK_COUNT_USER) {
+        if (bookmarkCountUser >= BookmarksSystem.MAX_BOOKMARK_COUNT_PER_USER) {
             replyEmbedEphemeral(event, BOOKMARK_LIMIT_USER_EMBED);
             return false;
         }
