@@ -163,7 +163,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     Reason: **%s**""").formatted(reportedMessage, reportedMessageUrl, modalMessage))
             .setAuthor("Author ID: %d".formatted(userID))
             .setColor(AMBIENT_COLOR)
-            .setTimestamp(Instant.now())
             .build();
 
         return modMailAuditLog.sendMessageEmbeds(embed);
