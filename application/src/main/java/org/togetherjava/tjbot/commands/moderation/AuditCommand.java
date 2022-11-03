@@ -21,6 +21,7 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.Pagination;
 
 import javax.annotation.Nullable;
 
@@ -106,7 +107,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         if (pageNumber == -1) {
             pageNumberInLimits = totalPages;
         } else {
-            pageNumberInLimits = clamp(1, pageNumber, totalPages);
+            pageNumberInLimits = Pagination.clamp(1, pageNumber, totalPages);
         }
 
         return jda.retrieveUserById(targetId)
@@ -128,10 +129,6 @@ public final class AuditCommand extends SlashCommandAdapter {
         }
 
         return groupedActions;
-    }
-
-    private static int clamp(int minInclusive, int value, int maxInclusive) {
-        return Math.min(Math.max(minInclusive, value), maxInclusive);
     }
 
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
