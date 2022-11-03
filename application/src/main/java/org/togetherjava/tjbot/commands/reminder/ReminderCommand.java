@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.reminder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
@@ -63,11 +64,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
     private static final int REMINDERS_PER_PAGE = 10;
-    /**
-     * Maximum length of field title set by <a href=
-     * "https://discord.com/developers/docs/resources/channel#embed-object-embed-limits">Discord</a>
-     */
-    private static final int MAX_REMINDER_TITLE_LENGTH = 256;
     private static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
     private static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
     static final int MAX_PENDING_REMINDERS_PER_USER = 100;
@@ -176,7 +172,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private MessageCreateData createPendingRemindersPage(
-            Result<PendingRemindersRecord> pendingReminders, int pageToShow) {
+            List<PendingRemindersRecord> pendingReminders, int pageToShow) {
+        // 12 reminders, 10 per page, ceil(12 / 10) = 2
         int totalPages = Math.ceilDiv(pendingReminders.size(), REMINDERS_PER_PAGE);
 
         EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
@@ -187,15 +184,11 @@ public final class ReminderCommand extends SlashCommandAdapter {
             remindersEmbed.setDescription("No pending reminders");
         } else {
             if (totalPages > 1) {
+                pendingReminders = getPageEntries(pendingReminders, pageToShow);
                 remindersEmbed.setFooter("Page: %d/%d".formatted(pageToShow, totalPages));
-
-                getPageEntries(pendingReminders, pageToShow)
-                    .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
-
                 pendingRemindersPage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
-            } else {
-                pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
             }
+            pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
         }
 
         return pendingRemindersPage.addEmbeds(remindersEmbed.build()).build();
@@ -220,7 +213,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
     }
 
     private static List<PendingRemindersRecord> getPageEntries(
-            Result<PendingRemindersRecord> remindersRecords, int pageToDisplay) {
+            List<PendingRemindersRecord> remindersRecords, int pageToDisplay) {
         int start = (pageToDisplay - 1) * REMINDERS_PER_PAGE;
         int end = Math.min(start + REMINDERS_PER_PAGE, remindersRecords.size());
 
@@ -237,7 +230,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
                 Remind at: %s""".formatted(MessageUtils.mentionChannelById(channelId),
                 TimeFormat.DEFAULT.format(remindAt));
 
-        embed.addField(MessageUtils.abbreviate(content, MAX_REMINDER_TITLE_LENGTH), description,
+        embed.addField(MessageUtils.abbreviate(content, MessageEmbed.TITLE_MAX_LENGTH), description,
                 false);
     }
 
