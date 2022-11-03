@@ -271,8 +271,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
         int status = apiResponse.statusCode();
         if (status == 404) {
-            LOGGER.warn("Gist API unexpected response while deleting gist: {}.",
-                    apiResponse.body());
+            String responseBody = apiResponse.body();
+            LOGGER.warn("Gist API unexpected response while deleting gist: {}.", responseBody);
         }
     }
 
