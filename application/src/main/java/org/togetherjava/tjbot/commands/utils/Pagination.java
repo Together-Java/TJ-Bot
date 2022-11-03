@@ -1,5 +1,8 @@
 package org.togetherjava.tjbot.commands.utils;
 
+/**
+ * Utility for pagination.
+ */
 public class Pagination {
     private Pagination() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
