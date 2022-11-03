@@ -268,7 +268,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
                     "Attempting to delete a gist, but the request got interrupted.", e);
         }
 
-
         int status = apiResponse.statusCode();
         if (status == 404) {
             String responseBody = apiResponse.body();
@@ -303,13 +302,13 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
             return;
         }
 
-        String gistId = args.get(1);
-        deleteGist(gistId);
-
         Message message = event.getMessage();
         List<Button> buttons = message.getButtons();
         event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
             .queue();
+
+        String gistId = args.get(1);
+        deleteGist(gistId);
     }
 
     @Override
