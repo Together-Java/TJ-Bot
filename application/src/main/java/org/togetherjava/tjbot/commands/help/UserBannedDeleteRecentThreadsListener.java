@@ -13,6 +13,7 @@ import org.togetherjava.tjbot.db.Database;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
@@ -42,12 +43,12 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        getRecentHelpThreads(event.getUser()).forEach(channelId -> event.getJDA()
-            .getThreadChannelById(channelId)
-            .delete()
-            .queue(onSuccess -> {
-            }, onFailure -> logger.warn("Failed to delete thread {} from banned user.", channelId,
-                    onFailure)));
+        getRecentHelpThreads(event.getUser()).stream()
+            .map(event.getJDA()::getThreadChannelById)
+            .filter(Objects::nonNull)
+            .forEach(threadChannel -> threadChannel.delete().queue(any -> {
+            }, failure -> logger.warn("Failed to delete thread {} from banned user.",
+                    threadChannel.getId(), failure)));
     }
 
     private List<Long> getRecentHelpThreads(User user) {
