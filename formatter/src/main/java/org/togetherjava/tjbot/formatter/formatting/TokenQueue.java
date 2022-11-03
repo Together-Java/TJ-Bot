@@ -11,7 +11,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * Queue that holds tokens to be consumed.
+ * Queue that holds {@link Token}s to be consumed. Generally, this holds the result of lexing code
+ * (see {@link org.togetherjava.tjbot.formatter.tokenizer.Lexer}), then processed by the actual
+ * formatter (see {@link CodeSectionFormatter}).
  * <p>
  * The core methods are {@link #consume()} and {@link #isEmpty()}. Further, the queue allows peeking
  * in both directions.

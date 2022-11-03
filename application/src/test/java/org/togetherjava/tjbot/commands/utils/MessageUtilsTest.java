@@ -7,8 +7,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import javax.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -195,8 +195,9 @@ final class MessageUtilsTest {
             String originalMessage, int limit) {
     }
 
-    private static Stream<Arguments> provideExtractCodeTests() {
-        return Stream.of(createExtractCodeArgumentsFor("basic", """
+    private static List<Arguments> provideExtractCodeTests() {
+        List<Arguments> tests = new ArrayList<>();
+        tests.add(createExtractCodeArgumentsFor("basic", """
                 Foo
                 %s
                 Bar""", "java", """
@@ -204,33 +205,49 @@ final class MessageUtilsTest {
                   public static void main(String[] args) {
                     System.out.println("Hello");
                   }
-                }"""), createExtractCodeArgumentsFor("code only", "%s", "java", """
-                int x = 5;"""), Arguments.of("fence ends on code line", """
+                }"""));
+
+        tests.add(createExtractCodeArgumentsFor("code only", "%s", "java", """
+                int x = 5;"""));
+
+        tests.add(Arguments.of("fence ends on code line", """
                 ```java
-                int x = 5;```""", new CodeFence("java", "int x = 5;")),
-                createExtractCodeArgumentsFor("other language", "Foo %s Bar", "kotlin", """
-                        fun main() {
-                          println("Hello, World!")
-                        }"""),
-                createExtractCodeArgumentsFor("no language", "Foo %s Bar", null, "foo=bar"),
-                Arguments.of("no language single line no spaces", "```int```",
-                        new CodeFence(null, "int")),
-                createExtractCodeArgumentsFor("multiple fences", """
-                        Foo
-                        %s
-                        Bar
-                        ```java
-                        int x = 5;
-                        ```""", "java", "System.out.println(10);"),
-                Arguments.of("no code", "foo", null), Arguments.of("empty", "", null),
-                Arguments.of("unclosed code block", """
-                        Foo
-                        ```java
-                        int x = 5;""", null), Arguments.of("almost closed code block", """
-                        ```java
-                        int x = 5;
-                        ``""", null),
-                Arguments.of("small code fence", "Foo `int x = 5` Bar", null));
+                int x = 5;```""", new CodeFence("java", "int x = 5;")));
+
+        tests.add(createExtractCodeArgumentsFor("other language", "Foo %s Bar", "kotlin", """
+                fun main() {
+                  println("Hello, World!")
+                }"""));
+
+        tests.add(createExtractCodeArgumentsFor("no language", "Foo %s Bar", null, "foo=bar"));
+
+        tests.add(Arguments.of("no language single line no spaces", "```int```",
+                new CodeFence(null, "int")));
+
+        tests.add(createExtractCodeArgumentsFor("multiple fences", """
+                Foo
+                %s
+                Bar
+                ```java
+                int x = 5;
+                ```""", "java", "System.out.println(10);"));
+
+        tests.add(Arguments.of("no code", "foo", null));
+        tests.add(Arguments.of("empty", "", null));
+
+        tests.add(Arguments.of("unclosed code block", """
+                Foo
+                ```java
+                int x = 5;""", null));
+
+        tests.add(Arguments.of("almost closed code block", """
+                ```java
+                int x = 5;
+                ``""", null));
+
+        tests.add(Arguments.of("small code fence", "Foo `int x = 5` Bar", null));
+
+        return tests;
     }
 
     private static Arguments createExtractCodeArgumentsFor(String testName, String textTemplate,

@@ -59,7 +59,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
      * The feature is secondary though, which is why its kept in RAM and not in the DB.
      */
     private final Cache<Long, Long> originalMessageToCodeReply =
-            Caffeine.newBuilder().maximumSize(10_000).build();
+            Caffeine.newBuilder().maximumSize(2_000).build();
 
     /**
      * Creates a new instance.
@@ -130,10 +130,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     }
 
     private List<Button> createButtons(long originalMessageId,
-            @Nullable CodeAction disabledAction) {
+            @Nullable CodeAction currentlyActiveAction) {
         return labelToCodeAction.values().stream().map(action -> {
             Button button = createButtonForAction(action, originalMessageId);
-            return action == disabledAction ? button.asDisabled() : button;
+            return action == currentlyActiveAction ? button.asDisabled() : button;
         }).toList();
     }
 
