@@ -149,7 +149,7 @@ public final class AskCommand extends SlashCommandAdapter {
             logger.warn("Can't find the last help thread created by the user with id ({})",
                     user.getId());
             event
-                .reply("Sorry, something went wrong. Please try again after %s"
+                .reply("Sorry, something went wrong. Please try again after %s."
                     .formatted(cooldownDuration))
                 .queue();
             return;
