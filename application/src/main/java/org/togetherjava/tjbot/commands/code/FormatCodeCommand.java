@@ -22,7 +22,10 @@ final class FormatCodeCommand implements CodeAction {
     @Override
     public MessageEmbed apply(CodeFence codeFence) {
         String formattedCode = formatCode(codeFence.code());
-        CodeFence formattedCodeFence = new CodeFence(codeFence.language(), formattedCode);
+        // Any syntax highlighting is better than none
+        String language = codeFence.language() == null ? "java" : codeFence.language();
+
+        CodeFence formattedCodeFence = new CodeFence(language, formattedCode);
 
         return new EmbedBuilder().setTitle("Formatted code")
             .setDescription(formattedCodeFence.toMarkdown())
