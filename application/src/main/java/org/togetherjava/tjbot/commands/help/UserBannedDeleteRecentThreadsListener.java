@@ -1,10 +1,11 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.guild.GuildBanEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jooq.Record1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.db.Database;
@@ -12,7 +13,6 @@ import org.togetherjava.tjbot.db.Database;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
@@ -25,7 +25,10 @@ import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
  */
 public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
         implements EventReceiver {
+    private static final Logger logger =
+            LoggerFactory.getLogger(UserBannedDeleteRecentThreadsListener.class);
     private static final Duration RECENT_THREAD_DURATION = Duration.ofMinutes(30);
+
     private final Database database;
 
     /**
@@ -39,14 +42,12 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        getRecentHelpThreads(event.getUser()).stream()
-            .map(event.getJDA()::getThreadChannelById)
-            .filter(Objects::nonNull)
-            .map(ThreadChannel::delete)
-            .forEach(restAction -> restAction.queue(onSuccess -> {
-            }, onFailure -> {
-
-            }));
+        getRecentHelpThreads(event.getUser()).forEach(channelId -> event.getJDA()
+            .getThreadChannelById(channelId)
+            .delete()
+            .queue(onSuccess -> {
+            }, onFailure -> logger.warn("Failed to delete thread {} from banned user.", channelId,
+                    onFailure)));
     }
 
     private List<Long> getRecentHelpThreads(User user) {
