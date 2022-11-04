@@ -23,7 +23,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     public static final String SUBCOMMAND_ADD = "add";
     public static final String SUBCOMMAND_LIST = "list";
     public static final String SUBCOMMAND_REMOVE = "remove";
-    public static final String ADD_OPTION_NOTE = "note";
+    public static final String ADD_BOOKMARK_NOTE_OPTION = "note";
 
     private static final MessageEmbed NOT_A_HELP_THREAD_EMBED =
             BookmarksSystem.createFailureEmbed("You can only bookmark help threads.");
@@ -59,7 +59,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                 CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
 
-        OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_OPTION_NOTE,
+        OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_BOOKMARK_NOTE_OPTION,
                 "Your personal comment on this bookmark")
                     .setMaxLength(BookmarksSystem.MAX_NOTE_LENGTH)
                     .setRequired(false);
@@ -92,7 +92,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     private void addBookmark(SlashCommandInteractionEvent event) {
         long userID = event.getUser().getIdLong();
         long channelID = event.getChannel().getIdLong();
-        String note = event.getOption(ADD_OPTION_NOTE, OptionMapping::getAsString);
+        String note = event.getOption(ADD_BOOKMARK_NOTE_OPTION, OptionMapping::getAsString);
 
         if (!handleCanAddBookmark(event)) {
             return;
