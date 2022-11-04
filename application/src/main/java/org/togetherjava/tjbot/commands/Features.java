@@ -18,8 +18,8 @@ import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
-import org.togetherjava.tjbot.commands.reminder.RemindCommand;
 import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
+import org.togetherjava.tjbot.commands.reminder.ReminderCommand;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.system.LogLevelCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
@@ -121,7 +121,7 @@ public class Features {
         features.add(new TopHelpersCommand(database));
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore));
-        features.add(new RemindCommand(database));
+        features.add(new ReminderCommand(database));
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
