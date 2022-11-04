@@ -47,8 +47,8 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
             .map(event.getJDA()::getThreadChannelById)
             .filter(Objects::nonNull)
             .forEach(threadChannel -> threadChannel.delete().queue(any -> {
-            }, failure -> logger.warn("Failed to delete thread {} from banned user.",
-                    threadChannel.getId(), failure)));
+            }, failure -> logger.warn("Failed to delete thread {} from banned user {}.",
+                    threadChannel.getId(), event.getUser().getId(), failure)));
     }
 
     private List<Long> getRecentHelpThreads(User user) {
