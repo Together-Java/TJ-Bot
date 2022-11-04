@@ -580,6 +580,8 @@ public final class JdaTester {
      *
      * @param message the message that has been received
      * @param attachments attachments of the message, empty if none
+     * @param channelType the type of the channel the message was sent in. See
+     *        {@link #mockMessage(Message, ChannelType)} for supported channel types
      * @return the event of receiving the given message
      */
     public MessageReceivedEvent createMessageReceiveEvent(MessageCreateData message,
