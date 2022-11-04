@@ -141,6 +141,8 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             throw new IllegalArgumentException("Only pagination type REMOVE should have a menu");
         }
 
+        args.currentPageIndex = ensurePageIndex(bookmarks, args.currentPageIndex);
+
         updatePagination(event, args, bookmarks);
     }
 
