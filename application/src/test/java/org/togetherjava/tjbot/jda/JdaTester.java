@@ -368,13 +368,14 @@ public final class JdaTester {
     }
 
     /**
-     * Gets the text channel spy used as universal text channel by all mocks created by this tester
-     * instance.
+     * Gets the thread channel spy used as universal thread channel by all mocks created by this
+     * tester instance.
      * <p>
-     * For example the events created by {@link #createSlashCommandInteractionEvent(SlashCommand)}
-     * will return this spy on several of their methods.
+     * For example the events created by
+     * {@link #createMessageReceiveEvent(MessageCreateData, List, ChannelType)} can return this
+     * channel spy
      *
-     * @return the text channel spy used by this tester
+     * @return the thread channel spy used by this tester
      */
     public ThreadChannel getThreadChannelSpy() {
         return threadChannel;
