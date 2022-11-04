@@ -72,9 +72,8 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     }
 
     boolean shouldIgnoreMessage(MessageReceivedEvent event) {
-        MessageChannelUnion channel = event.getChannel();
-
-        return event.getAuthor().isBot() || event.isWebhookMessage() || !isHelpThread(channel);
+        return event.getAuthor().isBot() || event.isWebhookMessage()
+                || !isHelpThread(event.getChannel());
     }
 
     boolean isHelpThread(MessageChannelUnion channel) {
