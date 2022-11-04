@@ -106,7 +106,7 @@ final class TopHelperMessageListenerTest {
 
     MessageReceivedEvent createMessageReceivedEvent(boolean isBot, boolean isWebhook,
             boolean isThread, String parentChannelName) {
-        try (MessageCreateData message = new MessageCreateBuilder().setContent("Test").build()) {
+        try (MessageCreateData message = new MessageCreateBuilder().setContent("Any").build()) {
             MessageReceivedEvent event = jdaTester.createMessageReceiveEvent(message, List.of(),
                     isThread ? ChannelType.GUILD_PUBLIC_THREAD : ChannelType.TEXT);
 
