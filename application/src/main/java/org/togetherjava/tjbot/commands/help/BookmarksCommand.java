@@ -36,7 +36,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
     private static final MessageEmbed BOOKMARK_LIMIT_USER_EMBED = BookmarksSystem
         .createFailureEmbed(
-                "You have exceeded your bookmarks limit. Please delete some of your other bookmarks.");
+                "You have exceeded your bookmarks limit of `%d`. Please delete some of your other bookmarks."
+                    .formatted(BookmarksSystem.MAX_BOOKMARK_COUNT_PER_USER));
 
     private static final MessageEmbed BOOKMARK_LIMIT_TOTAL_EMBED = BookmarksSystem
         .createWarningEmbed(
