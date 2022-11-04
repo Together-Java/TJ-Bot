@@ -50,7 +50,7 @@ final class TopHelperMessageListenerTest {
     void recognizesValidMessages() {
         // GIVEN a message by a human in a help channel
         MessageReceivedEvent event =
-                createFakeMessageReceivedEvent(false, false, true, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(false, false, true, OVERVIEW_CHANNEL_PATTERN);
 
         // WHEN checking if the message should be ignored
         boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
@@ -63,7 +63,7 @@ final class TopHelperMessageListenerTest {
     void ignoresBots() {
         // GIVEN a message from a bot
         MessageReceivedEvent event =
-                createFakeMessageReceivedEvent(true, false, true, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(true, false, true, OVERVIEW_CHANNEL_PATTERN);
 
         // WHEN checking if the message should be ignored
         boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
@@ -76,7 +76,7 @@ final class TopHelperMessageListenerTest {
     void ignoresWebhooks() {
         // GIVEN a message from a webhook
         MessageReceivedEvent event =
-                createFakeMessageReceivedEvent(false, true, true, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(false, true, true, OVERVIEW_CHANNEL_PATTERN);
 
         // WHEN checking if the message should be ignored
         boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
@@ -89,9 +89,9 @@ final class TopHelperMessageListenerTest {
     void ignoresWrongChannels() {
         // GIVEN a message outside a help thread
         MessageReceivedEvent eventNotAThread =
-                createFakeMessageReceivedEvent(false, false, false, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(false, false, false, OVERVIEW_CHANNEL_PATTERN);
         MessageReceivedEvent eventWrongParentName =
-                createFakeMessageReceivedEvent(false, false, true, "memes");
+                createMessageReceivedEvent(false, false, true, "memes");
 
         // WHEN checking if the message should be ignored
         boolean ignoresNonThreadChannels = topHelpersListener.shouldIgnoreMessage(eventNotAThread);
@@ -104,7 +104,7 @@ final class TopHelperMessageListenerTest {
     }
 
 
-    MessageReceivedEvent createFakeMessageReceivedEvent(boolean isBot, boolean isWebhook,
+    MessageReceivedEvent createMessageReceivedEvent(boolean isBot, boolean isWebhook,
             boolean isThread, String parentChannelName) {
         try (MessageCreateData message = new MessageCreateBuilder().setContent("Test").build()) {
             MessageReceivedEvent event = jdaTester.createMessageReceiveEvent(message, List.of(),
