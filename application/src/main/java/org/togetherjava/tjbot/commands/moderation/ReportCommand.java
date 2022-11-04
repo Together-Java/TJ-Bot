@@ -77,7 +77,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
         long userID = event.getUser().getIdLong();
-        String time = event.getTarget().getTimeCreated().format(DateTimeFormatter.ISO_DATE_TIME);
+        String reportedMessageTimestamp =
+                event.getTarget().getTimeCreated().format(DateTimeFormatter.ISO_DATE_TIME);
 
         if (handleIsOnCooldown(userID, event)) {
             return;
@@ -94,7 +95,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setRequiredRange(3, 200)
             .build();
 
-        String componentID = generateComponentId(reportedMessage, reportedMessageUrl, time);
+        String componentID =
+                generateComponentId(reportedMessage, reportedMessageUrl, reportedMessageTimestamp);
         Modal modal =
                 Modal.create(componentID, "Report this to a moderator").addActionRow(body).build();
 
