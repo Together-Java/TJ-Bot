@@ -43,7 +43,7 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
 
     @Override
     public void onGuildBan(GuildBanEvent event) {
-        getRecentHelpThreads(event.getUser()).stream()
+        getUsersRecentHelpThreadIDs(event.getUser()).stream()
             .map(event.getJDA()::getThreadChannelById)
             .filter(Objects::nonNull)
             .forEach(threadChannel -> threadChannel.delete().queue(any -> {
@@ -51,7 +51,7 @@ public final class UserBannedDeleteRecentThreadsListener extends ListenerAdapter
                     threadChannel.getId(), event.getUser().getId(), failure)));
     }
 
-    private List<Long> getRecentHelpThreads(User user) {
+    private List<Long> getUsersRecentHelpThreadIDs(User user) {
         Instant recentThreadThreshold = Instant.now().minus(RECENT_THREAD_DURATION);
 
         return database
