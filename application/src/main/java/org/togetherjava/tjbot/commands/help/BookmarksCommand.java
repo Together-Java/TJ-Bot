@@ -15,6 +15,13 @@ import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import java.util.Objects;
 
+/**
+ * The bookmarks command is used for managing and viewing bookmarks. A bookmark is a link to a help
+ * thread that can have a note so you can easily remember why you bookmarked a help thread. Writing
+ * to the database and showing the list/remove messages is not done by this class, that is handled
+ * by the {@link BookmarksSystem}. This class only checks if you are able to add a bookmark in the
+ * current channel and tells the {@link BookmarksSystem} to do the rest.
+ */
 public final class BookmarksCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(BookmarksCommand.class);
