@@ -34,7 +34,10 @@ import java.util.stream.Collectors;
  * This class can create a paginated message for listing or removing bookmarks. A paginated message
  * is requested by calling
  * {@link BookmarksSystem#requestListPagination(GenericCommandInteractionEvent)} or
- * {@link BookmarksSystem#requestRemovePagination(GenericCommandInteractionEvent)}
+ * {@link BookmarksSystem#requestRemovePagination(GenericCommandInteractionEvent)}. This class then
+ * generates a page embed with navigation components and if it is a remove page also the remove
+ * components. Then the paginator waits for interactions with the components. The action for
+ * interacting with the component will be taken followed by updating the page embed and components.
  */
 public final class BookmarksPaginatorInteractor implements UserInteractor {
 
