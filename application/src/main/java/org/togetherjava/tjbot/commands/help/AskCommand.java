@@ -259,7 +259,7 @@ public final class AskCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<String> mentionHelpChangeCommand(Guild guild, String subcommand) {
-        return MessageUtils.mentionGuildSlashCommand(guild, COMMAND_NAME, CHANGE_SUBCOMMAND_GROUP,
-                subcommand);
+        return MessageUtils.mentionGuildSlashCommand(guild, HelpThreadCommand.COMMAND_NAME,
+                CHANGE_SUBCOMMAND_GROUP, subcommand);
     }
 }
