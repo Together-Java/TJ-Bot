@@ -2,10 +2,7 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -16,10 +13,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
-import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
-import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
-import net.dv8tion.jda.api.utils.messages.MessageRequest;
-import net.dv8tion.jda.internal.requests.CompletedRestAction;
+import net.dv8tion.jda.api.utils.messages.*;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -30,7 +24,6 @@ import javax.annotation.Nullable;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.togetherjava.tjbot.commands.utils.Pagination.NEXT_BUTTON_EMOJI;
@@ -81,9 +74,36 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         long callerId = event.getMember().getIdLong();
 
-        auditUser(MessageCreateBuilder::new, guild, target.getIdLong(), callerId, -1)
-            .map(MessageCreateBuilder::build)
-            .flatMap(event::reply)
+        auditUser(guild, target.getIdLong(), callerId, -1).flatMap(event::reply).queue();
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        long commandUserId = Long.parseLong(args.get(1));
+        long buttonUserId = event.getMember().getIdLong();
+
+        if (commandUserId != buttonUserId) {
+            event.reply("Only the user who triggered the command can turn pages.")
+                .setEphemeral(true)
+                .queue();
+
+            return;
+        }
+
+        int pageToShow = Integer.parseInt(args.get(2));
+
+        EmojiUnion buttonEmoji = event.getButton().getEmoji();
+        if (PREVIOUS_BUTTON_EMOJI.equals(buttonEmoji)) {
+            pageToShow--;
+        } else if (NEXT_BUTTON_EMOJI.equals(buttonEmoji)) {
+            pageToShow++;
+        }
+
+        long targetId = Long.parseLong(args.get(0));
+
+        auditUser(event.getGuild(), targetId, buttonUserId, pageToShow)
+            .map(MessageEditData::fromCreateData)
+            .flatMap(event::editMessage)
             .queue();
     }
 
@@ -101,15 +121,13 @@ public final class AuditCommand extends SlashCommandAdapter {
      *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions, {@code -1} encodes the last
      *        page
      */
-    private <R extends MessageRequest<R>> RestAction<R> auditUser(
-            Supplier<R> messageBuilderSupplier, Guild guild, long targetId, long callerId,
+    private RestAction<MessageCreateData> auditUser(Guild guild, long targetId, long callerId,
             int pageNumber) {
         long guildId = guild.getIdLong();
         JDA jda = guild.getJDA();
 
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
-        List<List<ActionRecord>> groupedActions = groupActionsByPages(actions);
-        int totalPages = groupedActions.size();
+        int totalPages = Pagination.calculateTotalPage(actions, MAX_PAGE_LENGTH);
 
         int pageToShow;
         if (pageNumber == -1) {
@@ -120,23 +138,10 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         return jda.retrieveUserById(targetId)
             .map(user -> createSummaryEmbed(user, actions))
-            .flatMap(auditEmbed -> attachEmbedFields(auditEmbed, groupedActions, pageToShow,
-                    totalPages, jda))
-            .map(auditEmbed -> attachPageTurnButtons(messageBuilderSupplier, auditEmbed, pageToShow,
-                    totalPages, targetId, callerId));
-    }
-
-    private List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
-        List<List<ActionRecord>> groupedActions = new ArrayList<>();
-        for (int i = 0; i < actions.size(); i++) {
-            if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
-                groupedActions.add(new ArrayList<>(AuditCommand.MAX_PAGE_LENGTH));
-            }
-
-            groupedActions.get(groupedActions.size() - 1).add(actions.get(i));
-        }
-
-        return groupedActions;
+            .flatMap(auditEmbed -> attachEmbedFields(auditEmbed, actions, pageToShow, totalPages,
+                    jda))
+            .map(auditEmbed -> attachPageTurnButtons(auditEmbed, pageToShow, totalPages, targetId,
+                    callerId));
     }
 
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
@@ -172,14 +177,9 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private RestAction<EmbedBuilder> attachEmbedFields(EmbedBuilder auditEmbed,
-            List<? extends List<ActionRecord>> groupedActions, int pageNumber, int totalPages,
-            JDA jda) {
-        if (groupedActions.isEmpty()) {
-            return new CompletedRestAction<>(jda, auditEmbed);
-        }
-
+            List<ActionRecord> actions, int pageNumber, int totalPages, JDA jda) {
         List<RestAction<MessageEmbed.Field>> embedFieldTasks = new ArrayList<>();
-        groupedActions.get(pageNumber - 1)
+        Pagination.getPageEntries(actions, pageNumber, MAX_PAGE_LENGTH)
             .forEach(action -> embedFieldTasks.add(actionToField(action, jda)));
 
         return RestAction.allOf(embedFieldTasks).map(embedFields -> {
@@ -212,19 +212,18 @@ public final class AuditCommand extends SlashCommandAdapter {
         return TimeUtil.getDateTimeString(when.atOffset(ZoneOffset.UTC));
     }
 
-    private <R extends MessageRequest<R>> R attachPageTurnButtons(
-            Supplier<R> messageBuilderSupplier, EmbedBuilder auditEmbed, int pageNumber,
+    private MessageCreateData attachPageTurnButtons(EmbedBuilder auditEmbed, int pageNumber,
             int totalPages, long targetId, long callerId) {
-        R messageBuilder = messageBuilderSupplier.get();
+        MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
         messageBuilder.setEmbeds(auditEmbed.build());
 
         if (totalPages <= 1) {
-            return messageBuilder;
+            return messageBuilder.build();
         }
         List<Button> pageTurnButtons =
                 createPageTurnButtons(targetId, callerId, pageNumber, totalPages);
 
-        return messageBuilder.setActionRow(pageTurnButtons);
+        return messageBuilder.setActionRow(pageTurnButtons).build();
     }
 
     private List<Button> createPageTurnButtons(long targetId, long callerId, int currentPage,
@@ -248,35 +247,5 @@ public final class AuditCommand extends SlashCommandAdapter {
             long currentPage) {
         return Button.primary(generateComponentId(String.valueOf(targetId),
                 String.valueOf(callerId), String.valueOf(currentPage)), emoji);
-    }
-
-    @Override
-    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        long commandUserId = Long.parseLong(args.get(1));
-        long buttonUserId = event.getMember().getIdLong();
-
-        if (commandUserId != buttonUserId) {
-            event.reply("Only the user who triggered the command can turn pages.")
-                .setEphemeral(true)
-                .queue();
-
-            return;
-        }
-
-        int pageToShow = Integer.parseInt(args.get(2));
-
-        EmojiUnion buttonEmoji = event.getButton().getEmoji();
-        if (PREVIOUS_BUTTON_EMOJI.equals(buttonEmoji)) {
-            pageToShow--;
-        } else if (NEXT_BUTTON_EMOJI.equals(buttonEmoji)) {
-            pageToShow++;
-        }
-
-        long targetId = Long.parseLong(args.get(0));
-
-        auditUser(MessageEditBuilder::new, event.getGuild(), targetId, buttonUserId, pageToShow)
-            .map(MessageEditBuilder::build)
-            .flatMap(event::editMessage)
-            .queue();
     }
 }

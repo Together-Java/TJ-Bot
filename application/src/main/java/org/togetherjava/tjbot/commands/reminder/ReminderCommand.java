@@ -173,9 +173,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     private MessageCreateData createPendingRemindersPage(
             List<PendingRemindersRecord> pendingReminders, int pageToShow) {
-        // 12 reminders, 10 per page, ceil(12 / 10) = 2
-        int totalPages = Math.ceilDiv(pendingReminders.size(), REMINDERS_PER_PAGE);
-
+        int totalPages = Pagination.calculateTotalPage(pendingReminders, REMINDERS_PER_PAGE);
         pageToShow = Pagination.clamp(1, pageToShow, totalPages);
 
         EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
@@ -186,11 +184,11 @@ public final class ReminderCommand extends SlashCommandAdapter {
             remindersEmbed.setDescription("No pending reminders");
         } else {
             if (totalPages > 1) {
-                pendingReminders = getPageEntries(pendingReminders, pageToShow);
                 remindersEmbed.setFooter("Page: %d/%d".formatted(pageToShow, totalPages));
                 pendingRemindersPage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
             }
-            pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
+            Pagination.getPageEntries(pendingReminders, pageToShow, REMINDERS_PER_PAGE)
+                .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
         }
 
         return pendingRemindersPage.addEmbeds(remindersEmbed.build()).build();
@@ -212,14 +210,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
         }
 
         return List.of(previousButton, nextButton);
-    }
-
-    private static List<PendingRemindersRecord> getPageEntries(
-            List<PendingRemindersRecord> remindersRecords, int pageToDisplay) {
-        int start = (pageToDisplay - 1) * REMINDERS_PER_PAGE;
-        int end = Math.min(start + REMINDERS_PER_PAGE, remindersRecords.size());
-
-        return remindersRecords.subList(start, end);
     }
 
     private static void addReminderAsField(PendingRemindersRecord reminder, EmbedBuilder embed) {

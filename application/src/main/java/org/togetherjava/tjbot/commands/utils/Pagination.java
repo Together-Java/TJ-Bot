@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.commands.utils;
 
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 
+import java.util.List;
+
 /**
  * Utility for pagination.
  */
@@ -11,6 +13,32 @@ public class Pagination {
 
     private Pagination() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
+
+    /**
+     * Gets entries for the page.
+     *
+     * @param list list of all the values
+     * @param pageNumber page number to return the entries for
+     * @param entriesPerPage max number of entries in one page
+     * @return list of entries for the page number given
+     */
+    public static <T> List<T> getPageEntries(List<T> list, int pageNumber, int entriesPerPage) {
+        int start = (pageNumber - 1) * entriesPerPage;
+        int end = Math.min(start + entriesPerPage, list.size());
+
+        return list.subList(start, end);
+    }
+
+    /**
+     * Calculates the total number of pages needed to show the list of values.
+     *
+     * @param list list of all the values
+     * @param entriesPerPage entries to show on each page
+     * @return total number of pages
+     */
+    public static <T> int calculateTotalPage(List<T> list, int entriesPerPage) {
+        return Math.ceilDiv(list.size(), entriesPerPage);
     }
 
     /**
