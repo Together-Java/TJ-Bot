@@ -27,8 +27,10 @@ import javax.annotation.Nullable;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
@@ -151,23 +153,30 @@ public final class AskCommand extends SlashCommandAdapter {
             event
                 .reply("Sorry, something went wrong. Please try again after %s."
                     .formatted(cooldownDuration))
+                .setEphemeral(true)
                 .queue();
             return;
         }
 
-        String message =
-                """
-                        Sorry, you can only create a single help thread every %s. Please use your existing thread %s instead.
-                        If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
+        Function<List<String>, String> formatMessage = commandMentions -> {
+            String message =
+                    """
+                            Sorry, you can only create a single help thread every %s. Please use your existing thread %s instead.
+                            If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
+
+            String lastThreadMention =
+                    MessageUtils.mentionChannelById(lastThreadByAuthor.getChannelId());
+
+            return message.formatted(cooldownDuration, lastThreadMention, commandMentions.get(0),
+                    commandMentions.get(1));
+        };
 
         RestAction<String> changeTitle = mentionHelpChangeCommand(guild, CHANGE_TITLE_SUBCOMMAND);
         RestAction<String> changeCategory =
                 mentionHelpChangeCommand(guild, CHANGE_CATEGORY_SUBCOMMAND);
 
         RestAction.allOf(changeCategory, changeTitle)
-            .map(commandMentions -> message.formatted(cooldownDuration,
-                    MessageUtils.mentionChannelById(lastThreadByAuthor.getChannelId()),
-                    commandMentions.get(0), commandMentions.get(1)))
+            .map(formatMessage)
             .flatMap(text -> event.reply(text).setEphemeral(true))
             .queue();
     }
