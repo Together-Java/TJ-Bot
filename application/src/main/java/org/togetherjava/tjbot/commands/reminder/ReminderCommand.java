@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -31,6 +30,8 @@ import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
 
+import static org.togetherjava.tjbot.commands.utils.Pagination.NEXT_BUTTON_EMOJI;
+import static org.togetherjava.tjbot.commands.utils.Pagination.PREVIOUS_BUTTON_EMOJI;
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
 /**
@@ -65,8 +66,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
             List.of("minutes", "hours", "days", "weeks", "months", "years");
     private static final Period MAX_TIME_PERIOD = Period.ofYears(3);
     private static final int REMINDERS_PER_PAGE = 10;
-    private static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
-    private static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
     static final int MAX_PENDING_REMINDERS_PER_USER = 100;
 
     private final Database database;

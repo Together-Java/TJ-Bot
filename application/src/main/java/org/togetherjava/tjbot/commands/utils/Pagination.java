@@ -1,9 +1,14 @@
 package org.togetherjava.tjbot.commands.utils;
 
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+
 /**
  * Utility for pagination.
  */
 public class Pagination {
+    public static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
+    public static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
+
     private Pagination() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
