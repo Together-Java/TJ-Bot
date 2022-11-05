@@ -215,7 +215,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     private <R extends MessageRequest<R>> R attachPageTurnButtons(
             Supplier<R> messageBuilderSupplier, EmbedBuilder auditEmbed, int pageNumber,
             int totalPages, long targetId, long callerId) {
-        var messageBuilder = messageBuilderSupplier.get();
+        R messageBuilder = messageBuilderSupplier.get();
         messageBuilder.setEmbeds(auditEmbed.build());
 
         if (totalPages <= 1) {
@@ -252,8 +252,8 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        long commandUserId = Long.parseLong(args.get(2));
-        long buttonUserId = event.getUser().getIdLong();
+        long commandUserId = Long.parseLong(args.get(1));
+        long buttonUserId = event.getMember().getIdLong();
 
         if (commandUserId != buttonUserId) {
             event.reply("Only the user who triggered the command can turn pages.")
@@ -263,7 +263,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        int pageToShow = Integer.parseInt(args.get(3));
+        int pageToShow = Integer.parseInt(args.get(2));
 
         EmojiUnion buttonEmoji = event.getButton().getEmoji();
         if (PREVIOUS_BUTTON_EMOJI.equals(buttonEmoji)) {
@@ -272,7 +272,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             pageToShow++;
         }
 
-        long targetId = Long.parseLong(args.get(1));
+        long targetId = Long.parseLong(args.get(0));
 
         auditUser(MessageEditBuilder::new, event.getGuild(), targetId, buttonUserId, pageToShow)
             .map(MessageEditBuilder::build)
