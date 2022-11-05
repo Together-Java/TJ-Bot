@@ -12,6 +12,17 @@ final class GistResponse {
     @JsonProperty("html_url")
     private String htmlUrl;
 
+    @JsonProperty("id")
+    private String gistId;
+
+    public String getGistId() {
+        return gistId;
+    }
+
+    public void setGistId(String gistId) {
+        this.gistId = gistId;
+    }
+
     public String getHtmlUrl() {
         return htmlUrl;
     }
@@ -19,4 +30,5 @@ final class GistResponse {
     public void setHtmlUrl(String htmlUrl) {
         this.htmlUrl = htmlUrl;
     }
+
 }
