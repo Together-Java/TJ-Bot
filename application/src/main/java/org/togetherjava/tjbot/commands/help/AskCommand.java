@@ -34,7 +34,8 @@ import java.util.function.Function;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
-import static org.togetherjava.tjbot.commands.help.HelpThreadCommand.*;
+import static org.togetherjava.tjbot.commands.help.HelpThreadCommand.CHANGE_CATEGORY_SUBCOMMAND;
+import static org.togetherjava.tjbot.commands.help.HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND;
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 /**
@@ -260,6 +261,6 @@ public final class AskCommand extends SlashCommandAdapter {
 
     private static RestAction<String> mentionHelpChangeCommand(Guild guild, String subcommand) {
         return MessageUtils.mentionGuildSlashCommand(guild, HelpThreadCommand.COMMAND_NAME,
-                CHANGE_SUBCOMMAND_GROUP, subcommand);
+                HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP, subcommand);
     }
 }
