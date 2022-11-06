@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -22,11 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.BotCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.MessageContextCommand;
+import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import java.awt.*;
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
@@ -77,16 +77,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
         long userID = event.getUser().getIdLong();
-        String reportedMessageTimestamp =
-                event.getTarget().getTimeCreated().format(DateTimeFormatter.ISO_DATE_TIME);
+        String reportedMessageTimestamp = event.getTarget().getTimeCreated().toInstant().toString();
 
-        if (handleIsOnCooldown(userID, event)) {
+        if (handleIsOnCooldown(event)) {
             return;
         }
         authorToLastReportInvocation.put(userID, Instant.now());
 
         String reportedMessage = event.getTarget().getContentRaw();
-        String reportedMessageUrl = event.getTarget().getJumpUrl();
+        String authorName = event.getTarget().getAuthor().getName();
+        String authorAvatarURL = event.getTarget().getAuthor().getAvatarUrl();
+        String authorID = event.getTarget().getAuthor().getId();
 
         TextInput body = TextInput
             .create(REPORT_REASON_INPUT_ID, "Anonymous report to the moderators",
@@ -95,19 +96,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setRequiredRange(3, 200)
             .build();
 
-        String componentID =
-                generateComponentId(reportedMessage, reportedMessageUrl, reportedMessageTimestamp);
-        Modal modal =
-                Modal.create(componentID, "Report this to a moderator").addActionRow(body).build();
+        String reportModalComponentID = generateComponentId(reportedMessage,
+                reportedMessageTimestamp, authorName, authorAvatarURL, authorID);
+        Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
+            .addActionRow(body)
+            .build();
 
-        event.replyModal(modal).queue();
+        event.replyModal(reportModal).queue();
     }
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
-            .getIdLong();
-        Optional<TextChannel> modMailAuditLog = handleRequireModMailChannel(event, guildID);
+        Optional<TextChannel> modMailAuditLog = handleRequireModMailChannel(event);
 
         if (modMailAuditLog.isEmpty()) {
             return;
@@ -116,8 +116,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         sendModMessage(event, args, modMailAuditLog.orElseThrow());
     }
 
-    private Optional<TextChannel> handleRequireModMailChannel(ModalInteractionEvent event,
-            long guildID) {
+    private Optional<TextChannel> handleRequireModMailChannel(ModalInteractionEvent event) {
+        long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
+            .getIdLong();
         Optional<TextChannel> modMailAuditLog = event.getJDA()
             .getTextChannelCache()
             .stream()
@@ -127,6 +128,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             event
                 .reply("Sorry, there was an issue sending your report to the moderators. We are "
                         + "investigating.")
+                .setEphemeral(true)
                 .queue();
             logger.warn(
                     "Cannot find the designated modmail channel in server by id {} with the pattern {}",
@@ -135,8 +137,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return modMailAuditLog;
     }
 
-    private boolean handleIsOnCooldown(long userID, MessageContextInteractionEvent event) {
-        if (!isAuthorOnCooldown(userID)) {
+    private boolean handleIsOnCooldown(MessageContextInteractionEvent event) {
+        if (!isAuthorOnCooldown(event.getUser().getIdLong())) {
             return false;
         }
         event
@@ -155,15 +157,14 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .isPresent();
     }
 
-    private MessageCreateAction createModMessage(String reportReason, User author,
-            String reportedMessage, String reportedMessageUrl, String reportedMessageTimestamp,
-            TextChannel modMailAuditLog) {
+    private MessageCreateAction createModMessage(String reportReason, String authorName,
+            String authorAvatarURL, String authorID, String reportedMessage,
+            Instant reportedMessageTimestamp, TextChannel modMailAuditLog) {
         MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
-            .setDescription("""
-                    Reported Message: **%s**
-                    [Reported Message URL](%s)""".formatted(reportedMessage, reportedMessageUrl))
-            .setAuthor(author.getName(), null, author.getAvatarUrl())
-            .setTimestamp(Instant.parse(reportedMessageTimestamp))
+            .setDescription("Reported Message: **%s**".formatted(
+                    MessageUtils.abbreviate(reportedMessage, MessageEmbed.DESCRIPTION_MAX_LENGTH)))
+            .setAuthor(authorName, null, authorAvatarURL)
+            .setTimestamp(reportedMessageTimestamp)
             .setColor(AMBIENT_COLOR)
             .build();
 
@@ -171,22 +172,25 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setDescription(reportReason)
             .setColor(AMBIENT_COLOR)
             .build();
-        return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed);
+        return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+            .addActionRow(
+                    DiscordClientAction.General.USER.asLinkButton("Author Profile", authorID));
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
             TextChannel modMailAuditLog) {
         String reportedMessage = args.get(0);
-        String reportedMessageUrl = args.get(1);
-        String reportedMessageTimestamp = args.get(2);
+        Instant reportedMessageTimestamp = Instant.parse(args.get(1));
+        String authorName = args.get(2);
+        String authorAvatarURL = args.get(3);
+        String authorID = args.get(4);
 
         event.deferReply().setEphemeral(true).queue();
 
         InteractionHook hook = event.getHook();
         String reportReason = event.getValue(REPORT_REASON_INPUT_ID).getAsString();
-        User user = event.getUser();
 
-        createModMessage(reportReason, user, reportedMessage, reportedMessageUrl,
+        createModMessage(reportReason, authorName, authorAvatarURL, authorID, reportedMessage,
                 reportedMessageTimestamp, modMailAuditLog).mapToResult()
                     .map(this::createUserReply)
                     .flatMap(hook::editOriginal)
