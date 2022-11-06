@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 
 /**
  * Utility for pagination.
@@ -33,16 +34,18 @@ public class Pagination {
     }
 
     /**
-     * @param componentIdGenerator
-     * @param currentPage
-     * @param totalPages
-     * @param extraIds
-     * @return
+     * Creates the buttons for navigation between pages.
+     *
+     * @param componentIdGenerator id generator for buttons
+     * @param currentPage current page number
+     * @param totalPages total number of pages
+     * @param extraIds extra ids (default is the page to show)
+     * @return the list of buttons
      */
     public static List<Button> createPageTurnButtons(
             Function<String[], String> componentIdGenerator, int currentPage, int totalPages,
             String... extraIds) {
-        Function<Integer, String[]> getIds = pageToShow -> {
+        IntFunction<String[]> getIds = pageToShow -> {
             String[] ids = new String[extraIds.length + 1];
             ids[0] = String.valueOf(pageToShow);
             System.arraycopy(extraIds, 0, ids, 1, extraIds.length);
@@ -72,7 +75,7 @@ public class Pagination {
      * @param entriesPerPage entries to show on each page
      * @return total number of pages
      */
-    public static int calculateTotalPage(List list, int entriesPerPage) {
+    public static <T> int calculateTotalPage(List<T> list, int entriesPerPage) {
         return Math.ceilDiv(list.size(), entriesPerPage);
     }
 
