@@ -1,15 +1,17 @@
 package org.togetherjava.tjbot.commands.utils;
 
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Utility for pagination.
  */
 public class Pagination {
-    public static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
-    public static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
+    private static final Emoji PREVIOUS_BUTTON_EMOJI = Emoji.fromUnicode("⬅");
+    private static final Emoji NEXT_BUTTON_EMOJI = Emoji.fromUnicode("➡");
 
     private Pagination() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
@@ -31,13 +33,46 @@ public class Pagination {
     }
 
     /**
+     * @param componentIdGenerator
+     * @param currentPage
+     * @param totalPages
+     * @param extraIds
+     * @return
+     */
+    public static List<Button> createPageTurnButtons(
+            Function<String[], String> componentIdGenerator, int currentPage, int totalPages,
+            String... extraIds) {
+        Function<Integer, String[]> getIds = pageToShow -> {
+            String[] ids = new String[extraIds.length + 1];
+            ids[0] = String.valueOf(pageToShow);
+            System.arraycopy(extraIds, 0, ids, 1, extraIds.length);
+
+            return ids;
+        };
+
+        Button previousButton = Button.primary(
+                componentIdGenerator.apply(getIds.apply(currentPage - 1)), PREVIOUS_BUTTON_EMOJI);
+        if (currentPage <= 1) {
+            previousButton = previousButton.asDisabled();
+        }
+
+        Button nextButton = Button
+            .primary(componentIdGenerator.apply(getIds.apply(currentPage + 1)), NEXT_BUTTON_EMOJI);
+        if (currentPage >= totalPages) {
+            nextButton = nextButton.asDisabled();
+        }
+
+        return List.of(previousButton, nextButton);
+    }
+
+    /**
      * Calculates the total number of pages needed to show the list of values.
      *
      * @param list list of all the values
      * @param entriesPerPage entries to show on each page
      * @return total number of pages
      */
-    public static <T> int calculateTotalPage(List<T> list, int entriesPerPage) {
+    public static int calculateTotalPage(List list, int entriesPerPage) {
         return Math.ceilDiv(list.size(), entriesPerPage);
     }
 

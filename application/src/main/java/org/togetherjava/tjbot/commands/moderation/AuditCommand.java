@@ -3,8 +3,6 @@ package org.togetherjava.tjbot.commands.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -26,8 +24,6 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.togetherjava.tjbot.commands.utils.Pagination.NEXT_BUTTON_EMOJI;
-import static org.togetherjava.tjbot.commands.utils.Pagination.PREVIOUS_BUTTON_EMOJI;
 
 /**
  * This command lists all moderation actions that have been taken against a given user, for example
@@ -79,7 +75,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        long commandUserId = Long.parseLong(args.get(1));
+        long commandUserId = Long.parseLong(args.get(2));
         long buttonUserId = event.getMember().getIdLong();
 
         if (commandUserId != buttonUserId) {
@@ -90,16 +86,8 @@ public final class AuditCommand extends SlashCommandAdapter {
             return;
         }
 
-        int pageToShow = Integer.parseInt(args.get(2));
-
-        EmojiUnion buttonEmoji = event.getButton().getEmoji();
-        if (PREVIOUS_BUTTON_EMOJI.equals(buttonEmoji)) {
-            pageToShow--;
-        } else if (NEXT_BUTTON_EMOJI.equals(buttonEmoji)) {
-            pageToShow++;
-        }
-
-        long targetId = Long.parseLong(args.get(0));
+        int pageToShow = Integer.parseInt(args.get(0));
+        long targetId = Long.parseLong(args.get(1));
 
         auditUser(event.getGuild(), targetId, buttonUserId, pageToShow)
             .map(MessageEditData::fromCreateData)
@@ -220,32 +208,9 @@ public final class AuditCommand extends SlashCommandAdapter {
         if (totalPages <= 1) {
             return messageBuilder.build();
         }
-        List<Button> pageTurnButtons =
-                createPageTurnButtons(targetId, callerId, pageNumber, totalPages);
+        List<Button> pageTurnButtons = Pagination.createPageTurnButtons(this::generateComponentId,
+                pageNumber, totalPages, String.valueOf(targetId), String.valueOf(callerId));
 
         return messageBuilder.setActionRow(pageTurnButtons).build();
-    }
-
-    private List<Button> createPageTurnButtons(long targetId, long callerId, int currentPage,
-            int totalPages) {
-        Button previousButton =
-                createPageTurnButton(PREVIOUS_BUTTON_EMOJI, targetId, callerId, currentPage);
-        if (currentPage <= 1) {
-            previousButton = previousButton.asDisabled();
-        }
-
-        Button nextButton =
-                createPageTurnButton(NEXT_BUTTON_EMOJI, targetId, callerId, currentPage);
-        if (currentPage >= totalPages) {
-            nextButton = nextButton.asDisabled();
-        }
-
-        return List.of(previousButton, nextButton);
-    }
-
-    private Button createPageTurnButton(Emoji emoji, long targetId, long callerId,
-            long currentPage) {
-        return Button.primary(generateComponentId(String.valueOf(targetId),
-                String.valueOf(callerId), String.valueOf(currentPage)), emoji);
     }
 }

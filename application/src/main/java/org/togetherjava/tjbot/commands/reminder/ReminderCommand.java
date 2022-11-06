@@ -5,14 +5,12 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -30,8 +28,6 @@ import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
 
-import static org.togetherjava.tjbot.commands.utils.Pagination.NEXT_BUTTON_EMOJI;
-import static org.togetherjava.tjbot.commands.utils.Pagination.PREVIOUS_BUTTON_EMOJI;
 import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 
 /**
@@ -112,13 +108,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         int pageToShow = Integer.parseInt(args.get(0));
 
-        EmojiUnion emoji = event.getButton().getEmoji();
-        if (PREVIOUS_BUTTON_EMOJI.equals(emoji)) {
-            pageToShow--;
-        } else if (NEXT_BUTTON_EMOJI.equals(emoji)) {
-            pageToShow++;
-        }
-
         Result<PendingRemindersRecord> pendingReminders =
                 getPendingReminders(event.getGuild(), event.getUser());
 
@@ -185,31 +174,14 @@ public final class ReminderCommand extends SlashCommandAdapter {
         } else {
             if (totalPages > 1) {
                 remindersEmbed.setFooter("Page: %d/%d".formatted(pageToShow, totalPages));
-                pendingRemindersPage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
+                pendingRemindersPage.addActionRow(Pagination
+                    .createPageTurnButtons(this::generateComponentId, pageToShow, totalPages));
             }
             Pagination.getPageEntries(pendingReminders, pageToShow, REMINDERS_PER_PAGE)
                 .forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
         }
 
         return pendingRemindersPage.addEmbeds(remindersEmbed.build()).build();
-    }
-
-    private List<Button> createPageTurnButtons(int currentPage, int totalPages) {
-        String pageNumberString = String.valueOf(currentPage);
-
-        Button previousButton =
-                Button.primary(generateComponentId(pageNumberString), PREVIOUS_BUTTON_EMOJI);
-        if (currentPage <= 1) {
-            previousButton = previousButton.asDisabled();
-        }
-
-        Button nextButton =
-                Button.primary(generateComponentId(pageNumberString), NEXT_BUTTON_EMOJI);
-        if (currentPage >= totalPages) {
-            nextButton = nextButton.asDisabled();
-        }
-
-        return List.of(previousButton, nextButton);
     }
 
     private static void addReminderAsField(PendingRemindersRecord reminder, EmbedBuilder embed) {
