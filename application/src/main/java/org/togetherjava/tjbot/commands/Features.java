@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
@@ -94,6 +95,7 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(new CodeMessageHandler());
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

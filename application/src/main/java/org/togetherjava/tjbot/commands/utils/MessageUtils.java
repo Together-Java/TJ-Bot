@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
  */
 public class MessageUtils {
     private static final String ABBREVIATION = "...";
+    private static final String CODE_FENCE_SYMBOL = "```";
 
     private MessageUtils() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
@@ -49,7 +51,7 @@ public class MessageUtils {
      * Escapes every markdown content in the given string.
      * <p>
      * If the escaped message is sent to Discord, it will display the original message.
-     * 
+     *
      * @param text the text to escape
      * @return the escaped text
      */
@@ -152,5 +154,54 @@ public class MessageUtils {
         // Clone of JDAs Channel#getAsMention, but unfortunately channel instances can not be
         // created out of just an ID, unlike User#fromId
         return "<#%d>".formatted(channelId);
+    }
+
+    /**
+     * Attempts to extract code posted in code-fences from the given message.
+     * <p>
+     * For example, it would extract {@code "int x = 5 + 3;"} from
+     * 
+     * <pre>
+     * Look at this:
+     * ```java
+     * int x = 5 + 3;
+     * ```
+     * Nice code.
+     * </pre>
+     * 
+     * If the message contains multiple code fences, only the first is extracted.
+     *
+     * @param fullMessage the message to extract code from
+     * @return the first found code snippet, if any
+     */
+    public static Optional<CodeFence> extractCode(String fullMessage) {
+        int codeFenceStart = fullMessage.indexOf(CODE_FENCE_SYMBOL);
+        if (codeFenceStart == -1) {
+            return Optional.empty();
+        }
+
+        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, codeFenceStart + 1);
+        if (codeFenceEnd == -1) {
+            return Optional.empty();
+        }
+
+        // Language is between ``` and newline, no spaces allowed, like ```java
+        // Look for the next newline and then assert no space between
+        String language = null;
+        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
+        int languageEnd = fullMessage.indexOf('\n', codeFenceStart);
+        if (languageEnd != -1) {
+            String languageCandidate = fullMessage.substring(languageStart, languageEnd);
+            if (!languageCandidate.isEmpty() && languageCandidate.indexOf(' ') == -1) {
+                language = languageCandidate;
+            }
+        }
+        if (language == null) {
+            languageEnd = languageStart;
+        }
+
+        String code = fullMessage.substring(languageEnd, codeFenceEnd).strip();
+
+        return Optional.of(new CodeFence(language, code));
     }
 }

@@ -1,29 +1,23 @@
 package org.togetherjava.tjbot.formatter.tokenizer;
 
-import java.util.Set;
-
 /**
- * Class representing a Token with a given content and a type
+ * Single token of a code, for example an opening-brace.
+ * <p>
+ * As example, the code {@code int x = "foo";} is split into tokens:
+ * <ul>
+ * <li>("int", INT)</li>
+ * <li>("x", IDENTIFIER)</li>
+ * <li>("=", ASSIGN)</li>
+ * <li>("\"foo\"", STRING)</li>
+ * <li>(";", SEMICOLON)</li>
+ * </ul>
+ *
+ * @param content the actual text contained in the token, e.g., an identifier like {@code x}
+ * @param type the type of the token, e.g., IDENTIFIER
  */
 public record Token(String content, TokenType type) {
-    private static final Set<TokenType> displayTypes =
-            Set.of(TokenType.IDENTIFIER, TokenType.UNKNOWN, TokenType.STRING, TokenType.COMMENT);
-
     @Override
     public String toString() {
-        return type().name() + formatForDisplay();
-    }
-
-    /**
-     * Returns a non-empty string if this token has something to display
-     *
-     * @return the displayed value
-     */
-    private String formatForDisplay() {
-        if (displayTypes.contains(type())) {
-            return "(" + content() + ")";
-        }
-
-        return "";
+        return "%s(%s)".formatted(type.name(), content);
     }
 }

@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -210,6 +211,14 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         if (event.isFromGuild()) {
             getMessageReceiversSubscribedTo(event.getChannel())
                 .forEach(messageReceiver -> messageReceiver.onMessageUpdated(event));
+        }
+    }
+
+    @Override
+    public void onMessageDelete(final MessageDeleteEvent event) {
+        if (event.isFromGuild()) {
+            getMessageReceiversSubscribedTo(event.getChannel())
+                .forEach(messageReceiver -> messageReceiver.onMessageDeleted(event));
         }
     }
 
