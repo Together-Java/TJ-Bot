@@ -183,8 +183,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
             TextChannel modMailAuditLog) {
-
-
         Guild guild = event.getGuild();
         event.deferReply().setEphemeral(true).queue();
 
