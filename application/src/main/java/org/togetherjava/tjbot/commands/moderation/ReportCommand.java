@@ -189,8 +189,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         InteractionHook hook = event.getHook();
         String reportReason = event.getValue(REPORT_REASON_INPUT_ID).getAsString();
 
-        createModMessage(reportReason, ReportedMessage.ofArgs(args), guild, modMailAuditLog)
-            .mapToResult()
+        ReportedMessage reportedMessage = ReportedMessage.ofArgs(args);
+
+        createModMessage(reportReason, reportedMessage, guild, modMailAuditLog).mapToResult()
             .map(this::createUserReply)
             .flatMap(hook::editOriginal)
             .queue();
