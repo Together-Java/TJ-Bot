@@ -178,7 +178,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .build();
         return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
             .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
-                    "Go to Message", guild.getId(), reportedMessage.channelID, reportedMessage.ID));
+                    "Go to Message", guild.getId(), reportedMessage.channelID, reportedMessage.id));
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
@@ -197,16 +197,16 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .queue();
     }
 
-    private record ReportedMessage(String content, String ID, String channelID, Instant timestamp,
+    private record ReportedMessage(String content, String id, String channelID, Instant timestamp,
             String authorName, String authorAvatarUrl) {
         static ReportedMessage ofArgs(List<String> args) {
             String content = args.get(0);
-            String ID = args.get(1);
+            String id = args.get(1);
             String channelID = args.get(2);
             Instant timestamp = Instant.parse(args.get(3));
             String authorName = args.get(4);
             String authorAvatarUrl = args.get(5);
-            return new ReportedMessage(content, ID, channelID, timestamp, authorName,
+            return new ReportedMessage(content, id, channelID, timestamp, authorName,
                     authorAvatarUrl);
         }
     }
