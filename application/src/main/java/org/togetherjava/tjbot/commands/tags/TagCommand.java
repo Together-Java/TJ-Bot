@@ -4,10 +4,10 @@ import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -34,7 +34,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -68,6 +71,24 @@ public final class TagCommand extends SlashCommandAdapter {
                         true),
                 new OptionData(OptionType.USER, REPLY_TO_USER_OPTION,
                         "Optionally, the user who you want to reply to", false));
+    }
+
+    @Override
+    public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
+        AutoCompleteQuery focusedOption = event.getFocusedOption();
+
+        if (!focusedOption.getName().equals(ID_OPTION)) {
+            throw new IllegalArgumentException(
+                    "Unexpected option, was: " + focusedOption.getName());
+        }
+
+        Collection<Command.Choice> choices = StringDistances
+            .closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), MAX_SUGGESTIONS)
+            .stream()
+            .map(id -> new Command.Choice(id, id))
+            .toList();
+
+        event.replyChoices(choices).queue();
     }
 
     @Override
@@ -209,23 +230,6 @@ public final class TagCommand extends SlashCommandAdapter {
             .isPresent();
     }
 
-    @Override
-    public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        AutoCompleteQuery focusedOption = event.getFocusedOption();
-
-        if (!focusedOption.getName().equals(ID_OPTION)) {
-            throw new IllegalArgumentException(
-                    "Unexpected option, was: " + focusedOption.getName());
-        }
-
-        Collection<Command.Choice> choices = StringDistances
-            .closeMatches(focusedOption.getValue(), tagSystem.getAllIds(), MAX_SUGGESTIONS)
-            .stream()
-            .map(id -> new Command.Choice(id, id))
-            .toList();
-
-        event.replyChoices(choices).queue();
-    }
     private static CompletableFuture<Optional<LinkPreview>> parseWebsite(String link,
             String attachmentName, InputStream websiteContent) {
         Document doc;
