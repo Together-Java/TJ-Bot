@@ -161,15 +161,14 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return modMailAuditLog;
     }
 
-    private MessageCreateAction createModMessage(String reportReason, ReportMessage reportMessage,
-            Guild guild, TextChannel modMailAuditLog) {
+    private MessageCreateAction createModMessage(String reportReason,
+            ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
 
         MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
-            .setDescription(MessageUtils.abbreviate(reportMessage.reportedMessage,
+            .setDescription(MessageUtils.abbreviate(reportedMessage.content,
                     MessageEmbed.DESCRIPTION_MAX_LENGTH))
-            .setAuthor(reportMessage.reportedMessageAuthorName, null,
-                    reportMessage.reportedMessageAuthorAvatarUrl)
-            .setTimestamp(reportMessage.reportedMessageTimestamp)
+            .setAuthor(reportedMessage.authorName, null, reportedMessage.authorAvatarUrl)
+            .setTimestamp(reportedMessage.timestamp)
             .setColor(AMBIENT_COLOR)
             .build();
 
@@ -179,22 +178,12 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .build();
         return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
             .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
-                    "Reported Message", guild.getId(), reportMessage.reportedMessageChannelID,
-                    reportMessage.reportedMessageID));
+                    "Go to Message", guild.getId(), reportedMessage.channelID, reportedMessage.ID));
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
             TextChannel modMailAuditLog) {
-        String reportedMessage = args.get(0);
-        String reportedMessageID = args.get(1);
-        String reportedMessageChannelID = args.get(2);
-        Instant reportedMessageTimestamp = Instant.parse(args.get(3));
-        String reportedMessageAuthorName = args.get(4);
-        String reportedMessageAuthorAvatarUrl = args.get(5);
 
-        ReportMessage reportMessage = new ReportMessage(reportedMessage, reportedMessageID,
-                reportedMessageChannelID, reportedMessageTimestamp, reportedMessageAuthorName,
-                reportedMessageAuthorAvatarUrl);
 
         Guild guild = event.getGuild();
         event.deferReply().setEphemeral(true).queue();
@@ -202,15 +191,25 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         InteractionHook hook = event.getHook();
         String reportReason = event.getValue(REPORT_REASON_INPUT_ID).getAsString();
 
-        createModMessage(reportReason, reportMessage, guild, modMailAuditLog).mapToResult()
+        createModMessage(reportReason, ReportedMessage.ofArgs(args), guild, modMailAuditLog)
+            .mapToResult()
             .map(this::createUserReply)
             .flatMap(hook::editOriginal)
             .queue();
     }
 
-    record ReportMessage(String reportedMessage, String reportedMessageID,
-            String reportedMessageChannelID, Instant reportedMessageTimestamp,
-            String reportedMessageAuthorName, String reportedMessageAuthorAvatarUrl) {
+    private record ReportedMessage(String content, String ID, String channelID, Instant timestamp,
+            String authorName, String authorAvatarUrl) {
+        static ReportedMessage ofArgs(List<String> args) {
+            String content = args.get(0);
+            String ID = args.get(1);
+            String channelID = args.get(2);
+            Instant timestamp = Instant.parse(args.get(3));
+            String authorName = args.get(4);
+            String authorAvatarUrl = args.get(5);
+            return new ReportedMessage(content, ID, channelID, timestamp, authorName,
+                    authorAvatarUrl);
+        }
     }
 
 
