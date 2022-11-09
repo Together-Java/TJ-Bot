@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.code;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -34,6 +35,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Handler that detects code in messages and offers code actions to the user, such as formatting
@@ -44,6 +46,8 @@ import java.util.stream.Collectors;
  */
 public final class CodeMessageHandler extends MessageReceiverAdapter implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(CodeMessageHandler.class);
+
+    private static final String DELETE_CUE = "delete";
 
     static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
 
@@ -131,10 +135,19 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private List<Button> createButtons(long originalMessageId,
             @Nullable CodeAction currentlyActiveAction) {
-        return labelToCodeAction.values().stream().map(action -> {
+        Stream<Button> codeActionButtons = labelToCodeAction.values().stream().map(action -> {
             Button button = createButtonForAction(action, originalMessageId);
             return action == currentlyActiveAction ? button.asDisabled() : button;
-        }).toList();
+        });
+
+        Stream<Button> otherButtons = Stream.of(createDeleteButton(originalMessageId));
+
+        return Stream.concat(codeActionButtons, otherButtons).toList();
+    }
+
+    private Button createDeleteButton(long originalMessageId) {
+        return Button.danger(componentIdInteractor.generateComponentId(
+                Long.toString(originalMessageId), "", DELETE_CUE), Emoji.fromUnicode("🗑"));
     }
 
     private Button createButtonForAction(CodeAction action, long originalMessageId) {
@@ -146,8 +159,12 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         long originalMessageId = Long.parseLong(args.get(0));
-        CodeAction codeAction = getActionOfEvent(event);
+        if (args.size() >= 3 && DELETE_CUE.equals(args.get(2))) {
+            deleteCodeReply(event, originalMessageId);
+            return;
+        }
 
+        CodeAction codeAction = getActionOfEvent(event);
         event.deferEdit().queue();
 
         // User decided for an action, apply it to the code
@@ -181,6 +198,11 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                     .setActionRow(createButtons(originalMessageId, codeAction));
             })
             .queue();
+    }
+
+    private void deleteCodeReply(ButtonInteractionEvent event, long originalMessageId) {
+        originalMessageToCodeReply.invalidate(originalMessageId);
+        event.getMessage().delete().queue();
     }
 
     private CodeAction getActionOfEvent(ButtonInteractionEvent event) {
@@ -243,7 +265,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         // Delete the code reply as well
-        originalMessageToCodeReply.invalidate(codeReplyMessageId);
+        originalMessageToCodeReply.invalidate(originalMessageId);
 
         event.getChannel().deleteMessageById(codeReplyMessageId).queue(any -> {
         }, failure -> logger.warn(
