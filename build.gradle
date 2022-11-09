@@ -10,6 +10,7 @@ version '1.0-SNAPSHOT'
 
 ext {
     jooqVersion = '3.17.2'
+    jacksonVersion = '2.14.0'
 }
 
 // Skips sonarlint during the build, useful for testing purposes.

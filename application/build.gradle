@@ -61,10 +61,10 @@ dependencies {
     implementation 'org.scilab.forge:jlatexmath-font-greek:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-cyrillic:1.0.7'
 
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.14.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.0'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:$jacksonVersion"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
 
 	implementation 'com.github.freva:ascii-table:1.8.0'
 
