@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
@@ -68,6 +69,7 @@ public class Features {
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(jda, config, database);
+        CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -95,7 +97,8 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
-        features.add(new CodeMessageHandler());
+        features.add(codeMessageHandler);
+        features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

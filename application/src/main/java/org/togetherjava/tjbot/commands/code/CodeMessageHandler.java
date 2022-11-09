@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -38,8 +37,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Handler that detects code in messages and offers code actions to the user, such as formatting
- * their code.
+ * Handles code in registered messages and offers code actions to the user, such as formatting their
+ * code.
+ * <p>
+ * Messages can be registered by using {@link #addAndHandleCodeMessage(Message)}.
  * <p>
  * Code actions are automatically updated whenever the code in the original message is edited or
  * deleted.
@@ -105,23 +106,17 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isWebhookMessage() || event.getAuthor().isBot()) {
-            return;
-        }
-
-        Message originalMessage = event.getMessage();
-        String content = originalMessage.getContentRaw();
-
-        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
-        if (maybeCode.isEmpty()) {
-            // There is no code in the message, ignore it
-            return;
-        }
-
+    /**
+     * Adds the given message to the code messages handled by this instance. Also sends the
+     * corresponding code-reply to the author.
+     *
+     * @param originalMessage the code message to add to this handler
+     */
+    public void addAndHandleCodeMessage(Message originalMessage) {
         // Suggest code actions and remember the message <-> reply
-        originalMessage.reply(createCodeReplyMessage(originalMessage.getIdLong()))
+        MessageCreateData codeReply = createCodeReplyMessage(originalMessage.getIdLong());
+
+        originalMessage.reply(codeReply)
             .onSuccess(replyMessage -> originalMessageToCodeReply.put(originalMessage.getIdLong(),
                     replyMessage.getIdLong()))
             .queue();
