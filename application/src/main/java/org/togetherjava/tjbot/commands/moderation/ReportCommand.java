@@ -92,10 +92,10 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedAuthorAvatarURL = event.getTarget().getAuthor().getAvatarUrl();
         String reportedAuthorID = event.getTarget().getAuthor().getId();
 
-        TextInput body = TextInput
+        TextInput modalBody = TextInput
             .create(REPORT_REASON_INPUT_ID, "Anonymous report to the moderators",
                     TextInputStyle.PARAGRAPH)
-            .setPlaceholder("What is wrong with the message, why do you want to report it?")
+            .setPlaceholder("Why do you want to report this message?")
             .setRequiredRange(3, 200)
             .build();
 
@@ -103,7 +103,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 reportedMessageChannel, reportedMessageTimestamp, reportedAuthorName,
                 reportedAuthorAvatarURL, reportedAuthorID);
         Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
-            .addActionRow(body)
+            .addActionRow(modalBody)
             .build();
 
         event.replyModal(reportModal).queue();
@@ -141,7 +141,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private Optional<TextChannel> handleRequireModMailChannel(ModalInteractionEvent event) {
-        long guildID = Objects.requireNonNull(event.getGuild(), "Could not retrieve the guildId.")
+        long guildID = Objects
+            .requireNonNull(event.getGuild(),
+                    "Guild is null for ModalInteractionEvent in ReportCommand.")
             .getIdLong();
         Optional<TextChannel> modMailAuditLog = event.getJDA()
             .getTextChannelCache()
@@ -149,9 +151,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
             .findAny();
         if (modMailAuditLog.isEmpty()) {
-            event
-                .reply("Sorry, there was an issue sending your report to the moderators. We are "
-                        + "investigating.")
+            event.reply(
+                    "Sorry, there was an issue sending your report to the moderators. We are investigating.")
                 .setEphemeral(true)
                 .queue();
             logger.warn(
@@ -197,6 +198,15 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .queue();
     }
 
+    private String createUserReply(Result<Message> result) {
+        if (result.isFailure()) {
+            logger.warn("Unable to forward a message report to modmail channel.",
+                    result.getFailure());
+            return "Sorry, there was an issue sending your report to the moderators. We are investigating.";
+        }
+        return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
+    }
+
     private record ReportedMessage(String content, String id, String channelID, Instant timestamp,
             String authorName, String authorAvatarUrl) {
         static ReportedMessage ofArgs(List<String> args) {
@@ -209,16 +219,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             return new ReportedMessage(content, id, channelID, timestamp, authorName,
                     authorAvatarUrl);
         }
-    }
 
-
-    private String createUserReply(Result<Message> result) {
-        if (result.isFailure()) {
-            logger.warn("Unable to forward a message report to modmail channel.",
-                    result.getFailure());
-            return "Sorry, there was an issue sending your report to the moderators. We are investigating.";
-        }
-        return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
     }
 
 }
