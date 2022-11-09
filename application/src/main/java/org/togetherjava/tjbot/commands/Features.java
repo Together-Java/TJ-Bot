@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
+import org.togetherjava.tjbot.commands.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
@@ -99,6 +100,7 @@ public class Features {
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
         features.add(codeMessageHandler);
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
+        features.add(new CodeMessageManualDetection(codeMessageHandler));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

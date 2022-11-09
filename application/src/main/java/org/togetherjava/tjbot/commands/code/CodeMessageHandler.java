@@ -178,18 +178,11 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 // since we have the context here, we can restore that information
                 originalMessageToCodeReply.put(originalMessageId, event.getMessageIdLong());
 
-                Optional<CodeFence> maybeCode =
-                        MessageUtils.extractCode(originalMessage.get().getContentRaw());
-                if (maybeCode.isEmpty()) {
-                    return event.getHook()
-                        .sendMessage(
-                                "Sorry, I am unable to locate any code in the original message, was it removed?")
-                        .setEphemeral(true);
-                }
+                CodeFence code = extractCodeOrFallback(originalMessage.get().getContentRaw());
 
                 // Apply the selected action
                 return event.getHook()
-                    .editOriginalEmbeds(codeAction.apply(maybeCode.orElseThrow()))
+                    .editOriginalEmbeds(codeAction.apply(code))
                     .setActionRow(createButtons(originalMessageId, codeAction));
             })
             .queue();
@@ -215,13 +208,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         // Edit the code reply as well by re-applying the current action
-        String content = event.getMessage().getContentRaw();
-
-        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
-        if (maybeCode.isEmpty()) {
-            // The original message had code, but now the code was removed
-            return;
-        }
+        CodeFence code = extractCodeOrFallback(event.getMessage().getContentRaw());
 
         event.getChannel().retrieveMessageById(codeReplyMessageId).flatMap(codeReplyMessage -> {
             Optional<CodeAction> maybeCodeAction = getCurrentActionFromCodeReply(codeReplyMessage);
@@ -231,8 +218,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
             }
 
             // Re-apply the current action
-            return codeReplyMessage
-                .editMessageEmbeds(maybeCodeAction.orElseThrow().apply(maybeCode.orElseThrow()));
+            return codeReplyMessage.editMessageEmbeds(maybeCodeAction.orElseThrow().apply(code));
         }).queue(any -> {
         }, failure -> logger.warn(
                 "Attempted to update a code-reply-message ({}), but failed. The original code-message was {}",
@@ -266,5 +252,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }, failure -> logger.warn(
                 "Attempted to delete a code-reply-message ({}), but failed. The original code-message was {}",
                 codeReplyMessageId, originalMessageId, failure));
+    }
+
+    private static CodeFence extractCodeOrFallback(String content) {
+        return MessageUtils.extractCode(content).orElseGet(() -> new CodeFence("java", content));
     }
 }
