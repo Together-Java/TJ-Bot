@@ -141,8 +141,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     }
 
     private Button createDeleteButton(long originalMessageId) {
-        return Button.danger(componentIdInteractor.generateComponentId(
-                Long.toString(originalMessageId), "", DELETE_CUE), Emoji.fromUnicode("🗑"));
+        String noCodeActionLabel = "";
+        return Button.danger(componentIdInteractor
+            .generateComponentId(Long.toString(originalMessageId), noCodeActionLabel, DELETE_CUE),
+                Emoji.fromUnicode("🗑"));
     }
 
     private Button createButtonForAction(CodeAction action, long originalMessageId) {
@@ -154,6 +156,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         long originalMessageId = Long.parseLong(args.get(0));
+        // The third arg indicates a non-code-action button
         if (args.size() >= 3 && DELETE_CUE.equals(args.get(2))) {
             deleteCodeReply(event, originalMessageId);
             return;

@@ -50,21 +50,20 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         }
 
         Message originalMessage = event.getMessage();
-        String content = originalMessage.getContentRaw();
 
-        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
+        Optional<CodeFence> maybeCode = MessageUtils.extractCode(originalMessage.getContentRaw());
         if (maybeCode.isEmpty()) {
             // There is no code in the message, ignore it
             return;
         }
 
         long amountOfCodeLines =
-                maybeCode.orElseThrow().code().lines().limit(MINIMUM_LINES_OF_CODE + 1).count();
+                maybeCode.orElseThrow().code().lines().limit(MINIMUM_LINES_OF_CODE).count();
         if (amountOfCodeLines < MINIMUM_LINES_OF_CODE) {
             return;
         }
 
-        codeMessageHandler.addAndHandleCodeMessage(event.getMessage());
+        codeMessageHandler.addAndHandleCodeMessage(originalMessage);
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
