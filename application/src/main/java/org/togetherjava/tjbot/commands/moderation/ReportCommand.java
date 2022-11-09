@@ -92,7 +92,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedAuthorAvatarURL = event.getTarget().getAuthor().getAvatarUrl();
         String reportedAuthorID = event.getTarget().getAuthor().getId();
 
-        TextInput modalBody = TextInput
+        TextInput modalTextInput = TextInput
             .create(REPORT_REASON_INPUT_ID, "Anonymous report to the moderators",
                     TextInputStyle.PARAGRAPH)
             .setPlaceholder("Why do you want to report this message?")
@@ -103,7 +103,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 reportedMessageChannel, reportedMessageTimestamp, reportedAuthorName,
                 reportedAuthorAvatarURL, reportedAuthorID);
         Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
-            .addActionRow(modalBody)
+            .addActionRow(modalTextInput)
             .build();
 
         event.replyModal(reportModal).queue();
