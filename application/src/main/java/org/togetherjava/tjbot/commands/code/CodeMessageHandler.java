@@ -3,11 +3,11 @@ package org.togetherjava.tjbot.commands.code;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -34,16 +34,21 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
- * Handler that detects code in messages and offers code actions to the user, such as formatting
- * their code.
+ * Handles code in registered messages and offers code actions to the user, such as formatting their
+ * code.
+ * <p>
+ * Messages can be registered by using {@link #addAndHandleCodeMessage(Message)}.
  * <p>
  * Code actions are automatically updated whenever the code in the original message is edited or
  * deleted.
  */
 public final class CodeMessageHandler extends MessageReceiverAdapter implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(CodeMessageHandler.class);
+
+    private static final String DELETE_CUE = "delete";
 
     static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
 
@@ -101,23 +106,17 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isWebhookMessage() || event.getAuthor().isBot()) {
-            return;
-        }
-
-        Message originalMessage = event.getMessage();
-        String content = originalMessage.getContentRaw();
-
-        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
-        if (maybeCode.isEmpty()) {
-            // There is no code in the message, ignore it
-            return;
-        }
-
+    /**
+     * Adds the given message to the code messages handled by this instance. Also sends the
+     * corresponding code-reply to the author.
+     *
+     * @param originalMessage the code message to add to this handler
+     */
+    public void addAndHandleCodeMessage(Message originalMessage) {
         // Suggest code actions and remember the message <-> reply
-        originalMessage.reply(createCodeReplyMessage(originalMessage.getIdLong()))
+        MessageCreateData codeReply = createCodeReplyMessage(originalMessage.getIdLong());
+
+        originalMessage.reply(codeReply)
             .onSuccess(replyMessage -> originalMessageToCodeReply.put(originalMessage.getIdLong(),
                     replyMessage.getIdLong()))
             .queue();
@@ -131,10 +130,21 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private List<Button> createButtons(long originalMessageId,
             @Nullable CodeAction currentlyActiveAction) {
-        return labelToCodeAction.values().stream().map(action -> {
+        Stream<Button> codeActionButtons = labelToCodeAction.values().stream().map(action -> {
             Button button = createButtonForAction(action, originalMessageId);
             return action == currentlyActiveAction ? button.asDisabled() : button;
-        }).toList();
+        });
+
+        Stream<Button> otherButtons = Stream.of(createDeleteButton(originalMessageId));
+
+        return Stream.concat(codeActionButtons, otherButtons).toList();
+    }
+
+    private Button createDeleteButton(long originalMessageId) {
+        String noCodeActionLabel = "";
+        return Button.danger(componentIdInteractor
+            .generateComponentId(Long.toString(originalMessageId), noCodeActionLabel, DELETE_CUE),
+                Emoji.fromUnicode("🗑"));
     }
 
     private Button createButtonForAction(CodeAction action, long originalMessageId) {
@@ -146,8 +156,13 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         long originalMessageId = Long.parseLong(args.get(0));
-        CodeAction codeAction = getActionOfEvent(event);
+        // The third arg indicates a non-code-action button
+        if (args.size() >= 3 && DELETE_CUE.equals(args.get(2))) {
+            deleteCodeReply(event, originalMessageId);
+            return;
+        }
 
+        CodeAction codeAction = getActionOfEvent(event);
         event.deferEdit().queue();
 
         // User decided for an action, apply it to the code
@@ -166,21 +181,19 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 // since we have the context here, we can restore that information
                 originalMessageToCodeReply.put(originalMessageId, event.getMessageIdLong());
 
-                Optional<CodeFence> maybeCode =
-                        MessageUtils.extractCode(originalMessage.get().getContentRaw());
-                if (maybeCode.isEmpty()) {
-                    return event.getHook()
-                        .sendMessage(
-                                "Sorry, I am unable to locate any code in the original message, was it removed?")
-                        .setEphemeral(true);
-                }
+                CodeFence code = extractCodeOrFallback(originalMessage.get().getContentRaw());
 
                 // Apply the selected action
                 return event.getHook()
-                    .editOriginalEmbeds(codeAction.apply(maybeCode.orElseThrow()))
+                    .editOriginalEmbeds(codeAction.apply(code))
                     .setActionRow(createButtons(originalMessageId, codeAction));
             })
             .queue();
+    }
+
+    private void deleteCodeReply(ButtonInteractionEvent event, long originalMessageId) {
+        originalMessageToCodeReply.invalidate(originalMessageId);
+        event.getMessage().delete().queue();
     }
 
     private CodeAction getActionOfEvent(ButtonInteractionEvent event) {
@@ -198,13 +211,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         // Edit the code reply as well by re-applying the current action
-        String content = event.getMessage().getContentRaw();
-
-        Optional<CodeFence> maybeCode = MessageUtils.extractCode(content);
-        if (maybeCode.isEmpty()) {
-            // The original message had code, but now the code was removed
-            return;
-        }
+        CodeFence code = extractCodeOrFallback(event.getMessage().getContentRaw());
 
         event.getChannel().retrieveMessageById(codeReplyMessageId).flatMap(codeReplyMessage -> {
             Optional<CodeAction> maybeCodeAction = getCurrentActionFromCodeReply(codeReplyMessage);
@@ -214,8 +221,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
             }
 
             // Re-apply the current action
-            return codeReplyMessage
-                .editMessageEmbeds(maybeCodeAction.orElseThrow().apply(maybeCode.orElseThrow()));
+            return codeReplyMessage.editMessageEmbeds(maybeCodeAction.orElseThrow().apply(code));
         }).queue(any -> {
         }, failure -> logger.warn(
                 "Attempted to update a code-reply-message ({}), but failed. The original code-message was {}",
@@ -243,11 +249,15 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         // Delete the code reply as well
-        originalMessageToCodeReply.invalidate(codeReplyMessageId);
+        originalMessageToCodeReply.invalidate(originalMessageId);
 
         event.getChannel().deleteMessageById(codeReplyMessageId).queue(any -> {
         }, failure -> logger.warn(
                 "Attempted to delete a code-reply-message ({}), but failed. The original code-message was {}",
                 codeReplyMessageId, originalMessageId, failure));
+    }
+
+    private static CodeFence extractCodeOrFallback(String content) {
+        return MessageUtils.extractCode(content).orElseGet(() -> new CodeFence("java", content));
     }
 }
