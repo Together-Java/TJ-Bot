@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.help;
+package org.togetherjava.tjbot.commands.bookmarks;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
