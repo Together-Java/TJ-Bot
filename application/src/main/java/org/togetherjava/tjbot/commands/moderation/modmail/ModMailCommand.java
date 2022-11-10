@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 /**
  * Implements the /modmail command, which allows users to contact a moderator within the server
  * which forwards messages to moderators in a dedicated channel given by
- * {@link Config#getModAuditLogChannelPattern()}.
+ * {@link Config#getModMailChannelPattern()}.
  */
 
 public final class ModMailCommand extends SlashCommandAdapter {
