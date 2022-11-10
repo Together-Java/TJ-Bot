@@ -63,7 +63,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
             return;
         }
 
-        codeMessageHandler.addAndHandleCodeMessage(originalMessage);
+        codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
