@@ -121,6 +121,19 @@ public class MessageUtils {
     }
 
     /**
+     * Converts the id of a channel to a mentioned channel, which you can directly click on in
+     * Discord.
+     *
+     * @param channelId the id of the channel to mention
+     * @return Formatted string for the mentioned channel
+     */
+    public static String mentionChannel(long channelId) {
+        // NOTE Hardcoded until JDA offers something like User.fromId(id).getAsMention() for
+        // channels as well
+        return "<#%d>".formatted(channelId);
+    }
+
+    /**
      * Abbreviates the given text if it is too long.
      * <p>
      * Abbreviation is done by adding {@value ABBREVIATION}.

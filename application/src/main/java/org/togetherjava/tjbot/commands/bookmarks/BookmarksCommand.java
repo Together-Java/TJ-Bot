@@ -3,6 +3,8 @@ package org.togetherjava.tjbot.commands.bookmarks;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -99,6 +102,16 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         }
     }
 
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        paginatedRequestInteractor.onButtonClick(event, args);
+    }
+
+    @Override
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+        paginatedRequestInteractor.onSelectMenuSelection(event, args);
+    }
+
     private void addBookmark(SlashCommandInteractionEvent event) {
         long userID = event.getUser().getIdLong();
         long channelID = event.getChannel().getIdLong();
@@ -161,5 +174,4 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     private void sendResponse(SlashCommandInteractionEvent event, MessageEmbed embed) {
         event.replyEmbeds(embed).setEphemeral(true).queue();
     }
-
 }
