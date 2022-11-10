@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -16,92 +15,72 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 
-import org.togetherjava.tjbot.commands.UserInteractionType;
-import org.togetherjava.tjbot.commands.UserInteractor;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.commands.utils.Arraylizable;
 import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-/**
- * This class can create a paginated message for listing or removing bookmarks. A paginated message
- * is requested by calling
- * {@link BookmarksSystem#requestListPagination(GenericCommandInteractionEvent)} or
- * {@link BookmarksSystem#requestRemovePagination(GenericCommandInteractionEvent)}. This class then
- * generates a page embed with navigation components and if it is a remove page also the remove
- * components. Then the paginator waits for interactions with the components. The action for
- * interacting with the component will be taken followed by updating the page embed and components.
- */
-public final class BookmarksPaginatorInteractor implements UserInteractor {
+final class BookmarksPaginatedRequestInteractor {
 
     private static final int ENTRIES_PER_PAGE = 10;
     private static final Emoji BUTTON_PREV_EMOJI = Emoji.fromUnicode("⬅");
-    private static final String BUTTON_PREV_NAME = "button-prevoius";
+    private static final String BUTTON_PREV_NAME = "button-previous";
     private static final Emoji BUTTON_NEXT_EMOJI = Emoji.fromUnicode("➡");
     private static final String BUTTON_NEXT_NAME = "button-next";
     private static final String BUTTON_REMOVE_LABEL = "Delete selected bookmarks";
     private static final String BUTTON_REMOVE_NAME = "button-remove";
-    private static final String SELECTMENU_REMOVE_NAME = "selectmenu-remove";
+    private static final String SELECT_MENU_REMOVE_NAME = "select-menu-remove";
 
     private static final MessageEmbed NO_BOOKMARKS_EMBED =
-            BookmarksSystem.createFailureEmbed("You don't have any bookmarks!");
+            BookmarksSystem.createFailureEmbed("You don't have any bookmarks yet.");
 
     private final BookmarksSystem bookmarksSystem;
-    private final ComponentIdInteractor componentIdInteractor;
+    private final Function<String[], String> generateComponentId;
 
-    /**
-     * Creates a new instance.
-     *
-     * @param bookmarksSystem The {@link BookmarksSystem} to register the pagination consumers and
-     *        manage bookmarks
-     */
-    public BookmarksPaginatorInteractor(BookmarksSystem bookmarksSystem) {
+    BookmarksPaginatedRequestInteractor(BookmarksSystem bookmarksSystem,
+            Function<String[], String> generateComponentId) {
         this.bookmarksSystem = bookmarksSystem;
-        this.componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
-
-        bookmarksSystem.acceptPaginationConsumers(this::onListPaginationRequest,
-                this::onRemovePaginationRequest);
+        this.generateComponentId = generateComponentId;
     }
 
-    @Override
-    public String getName() {
-        return "bookmarks-paginator";
+    void handleListRequest(GenericCommandInteractionEvent event) {
+        handlePaginatedRequest(event, PaginatedRequestType.LIST);
     }
 
-    @Override
-    public UserInteractionType getInteractionType() {
-        return UserInteractionType.OTHER;
+    void handleRemoveRequest(GenericCommandInteractionEvent event) {
+        handlePaginatedRequest(event, PaginatedRequestType.REMOVE);
     }
 
-    @Override
-    public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
-        componentIdInteractor.acceptComponentIdGenerator(generator);
+    private void handlePaginatedRequest(GenericCommandInteractionEvent event,
+            PaginatedRequestType paginatedRequestType) {
+        JDA jda = event.getJDA();
+        long userID = event.getUser().getIdLong();
+        List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
+
+        if (bookmarks.isEmpty()) {
+            event.replyEmbeds(NO_BOOKMARKS_EMBED).setEphemeral(true).queue();
+            return;
+        }
+
+        MessageEmbed pageEmbed = generatePageEmbed(bookmarks, paginatedRequestType, 0);
+
+        List<LayoutComponent> components = new ArrayList<>();
+        components.add(generateNavigationComponent(paginatedRequestType, 0));
+        if (paginatedRequestType == PaginatedRequestType.REMOVE) {
+            components.addAll(generateRemoveComponents(jda, bookmarks, PaginatedRequestType.REMOVE,
+                    0, Set.of()));
+        }
+
+        event.replyEmbeds(pageEmbed).setComponents(components).setEphemeral(true).queue();
     }
 
-    /**
-     * Generates a component id with the arguments the {@link Arraylizable} class provides.
-     *
-     * @param args The {@link Arraylizable} class to get the arguments from
-     * @return The generated component ID
-     */
-    private String generateComponentId(Arraylizable<String> args) {
-        return componentIdInteractor.generateComponentId(args.toArray());
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> stringArgs) {
-        throw new UnsupportedOperationException("Not used");
-    }
-
-    @Override
-    public void onButtonClick(ButtonInteractionEvent event, List<String> stringArgs) {
+    void onButtonClick(ButtonInteractionEvent event, List<String> stringArgs) {
         ComponentArguments args = parseStringArgs(stringArgs);
         long userID = event.getUser().getIdLong();
         List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
@@ -122,17 +101,16 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         updatePagination(event, args, bookmarks);
     }
 
-    @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> stringArgs) {
+    void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> stringArgs) {
         List<SelectOption> selected = event.getSelectedOptions();
         ComponentArguments args = parseStringArgs(stringArgs);
         long userID = event.getUser().getIdLong();
         List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
 
-        if (args.paginationType == PaginationType.REMOVE) {
+        if (args.paginatedRequestType == PaginatedRequestType.REMOVE) {
             RemoveComponentArguments removeArgs = (RemoveComponentArguments) args;
 
-            if (removeArgs.componentName.equals(SELECTMENU_REMOVE_NAME)) {
+            if (removeArgs.componentName.equals(SELECT_MENU_REMOVE_NAME)) {
                 removeArgs.bookmarksToRemoveChannelIDs = selected.stream()
                     .map(o -> Long.parseLong(o.getValue()))
                     .collect(Collectors.toSet());
@@ -149,47 +127,6 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         updatePagination(event, args, bookmarks);
     }
 
-    /**
-     * Gets called when {@link BookmarksCommand} requests a list pagination.
-     * 
-     * @param event The command interaction event
-     */
-    private void onListPaginationRequest(GenericCommandInteractionEvent event) {
-        onPaginationRequest(event, PaginationType.LIST);
-    }
-
-    /**
-     * Gets called when {@link BookmarksCommand} requests a remove pagination.
-     * 
-     * @param event The command interaction event
-     */
-    private void onRemovePaginationRequest(GenericCommandInteractionEvent event) {
-        onPaginationRequest(event, PaginationType.REMOVE);
-    }
-
-    private void onPaginationRequest(GenericCommandInteractionEvent event,
-            PaginationType paginationType) {
-        JDA jda = event.getJDA();
-        long userID = event.getUser().getIdLong();
-        List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
-
-        if (bookmarks.isEmpty()) {
-            event.replyEmbeds(NO_BOOKMARKS_EMBED).setEphemeral(true).queue();
-            return;
-        }
-
-        MessageEmbed pageEmbed = generatePageEmbed(bookmarks, paginationType, 0);
-
-        List<LayoutComponent> components = new ArrayList<>();
-        components.add(generateNavigationComponent(paginationType, 0));
-        if (paginationType == PaginationType.REMOVE) {
-            components
-                .addAll(generateRemoveComponents(jda, bookmarks, paginationType, 0, Set.of()));
-        }
-
-        event.replyEmbeds(pageEmbed).setComponents(components).setEphemeral(true).queue();
-    }
-
     private void updatePagination(ComponentInteraction event, ComponentArguments args,
             List<BookmarksRecord> bookmarks) {
         JDA jda = event.getJDA();
@@ -200,29 +137,31 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         }
 
         MessageEmbed pageEmbed =
-                generatePageEmbed(bookmarks, args.paginationType, args.currentPageIndex);
+                generatePageEmbed(bookmarks, args.paginatedRequestType, args.currentPageIndex);
 
         List<LayoutComponent> components = new ArrayList<>();
 
-        components.add(generateNavigationComponent(args.paginationType, args.currentPageIndex));
+        components
+            .add(generateNavigationComponent(args.paginatedRequestType, args.currentPageIndex));
 
-        if (args.paginationType == PaginationType.REMOVE) {
+        if (args.paginatedRequestType == PaginatedRequestType.REMOVE) {
             RemoveComponentArguments removeArgs = (RemoveComponentArguments) args;
 
-            components.addAll(generateRemoveComponents(jda, bookmarks, removeArgs.paginationType,
-                    removeArgs.currentPageIndex, removeArgs.bookmarksToRemoveChannelIDs));
+            components
+                .addAll(generateRemoveComponents(jda, bookmarks, removeArgs.paginatedRequestType,
+                        removeArgs.currentPageIndex, removeArgs.bookmarksToRemoveChannelIDs));
         }
 
         event.editMessageEmbeds(pageEmbed).setComponents(components).queue();
     }
 
     private static MessageEmbed generatePageEmbed(List<BookmarksRecord> bookmarks,
-            PaginationType paginationType, int currentPageIndex) {
+            PaginatedRequestType paginatedRequestType, int currentPageIndex) {
         int lastPageIndex = getLastPageIndex(bookmarks);
 
         String title;
         Color color;
-        switch (paginationType) {
+        switch (paginatedRequestType) {
             case LIST -> {
                 title = "Bookmarks List";
                 color = BookmarksSystem.COLOR_SUCCESS;
@@ -245,7 +184,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             StringJoiner entryJoiner = new StringJoiner("\n");
 
             entryJoiner.add("**%d.** <#%d>".formatted(bookmarkNumber, channelID));
-            if (note != null && paginationType != PaginationType.REMOVE) {
+            if (note != null && paginatedRequestType != PaginatedRequestType.REMOVE) {
                 entryJoiner.add("*%s*".formatted(note));
             }
 
@@ -262,13 +201,13 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             .build();
     }
 
-    private LayoutComponent generateNavigationComponent(PaginationType paginationType,
+    private LayoutComponent generateNavigationComponent(PaginatedRequestType paginatedRequestType,
             int currentPageIndex) {
         UnaryOperator<String> generateNavigationComponentId = name -> {
             ComponentArguments args =
-                    new ComponentArguments(paginationType, name, currentPageIndex);
+                    new ComponentArguments(paginatedRequestType, name, currentPageIndex);
 
-            return generateComponentId(args);
+            return generateComponentId.apply(args.toArray());
         };
 
         String buttonPrevId = generateNavigationComponentId.apply(BUTTON_PREV_NAME);
@@ -281,15 +220,15 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     }
 
     private List<LayoutComponent> generateRemoveComponents(JDA jda, List<BookmarksRecord> bookmarks,
-            PaginationType paginationType, int currentPageIndex,
+            PaginatedRequestType paginatedRequestType, int currentPageIndex,
             Set<Long> bookmarksToRemoveChannelIDs) {
         List<PageEntry> pageEntries = getPageEntries(bookmarks, currentPageIndex);
 
         UnaryOperator<String> generateRemoveComponentId = name -> {
-            RemoveComponentArguments args = new RemoveComponentArguments(paginationType, name,
+            RemoveComponentArguments args = new RemoveComponentArguments(paginatedRequestType, name,
                     currentPageIndex, bookmarksToRemoveChannelIDs);
 
-            return generateComponentId(args);
+            return generateComponentId.apply(args.toArray());
         };
 
         List<SelectOption> selectMenuRemoveOptions = pageEntries.stream().map(pageEntry -> {
@@ -303,7 +242,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
             return SelectOption.of(label, channelIDString);
         }).toList();
 
-        String selectMenuRemoveId = generateRemoveComponentId.apply(SELECTMENU_REMOVE_NAME);
+        String selectMenuRemoveId = generateRemoveComponentId.apply(SELECT_MENU_REMOVE_NAME);
         SelectMenu selectMenuRemove = SelectMenu.create(selectMenuRemoveId)
             .setPlaceholder("Select bookmarks to delete")
             .addOptions(selectMenuRemoveOptions)
@@ -396,7 +335,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
     }
 
     private static ComponentArguments parseStringArgs(List<String> stringArgs) {
-        return stringArgs.get(0).equals(PaginationType.REMOVE.name())
+        return stringArgs.get(0).equals(PaginatedRequestType.REMOVE.name())
                 ? RemoveComponentArguments.fromStringArgs(stringArgs)
                 : ComponentArguments.fromStringArgs(stringArgs);
     }
@@ -405,7 +344,7 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
         return items.stream().map(String::valueOf).toList();
     }
 
-    private enum PaginationType {
+    private enum PaginatedRequestType {
         LIST,
         REMOVE
     }
@@ -417,28 +356,29 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
     private static class ComponentArguments implements Arraylizable<String> {
 
-        final PaginationType paginationType;
+        final PaginatedRequestType paginatedRequestType;
         final String componentName;
         int currentPageIndex;
 
-        public ComponentArguments(PaginationType paginationType, String componentName,
+        public ComponentArguments(PaginatedRequestType paginatedRequestType, String componentName,
                 int currentPageIndex) {
-            this.paginationType = paginationType;
+            this.paginatedRequestType = paginatedRequestType;
             this.currentPageIndex = currentPageIndex;
             this.componentName = componentName;
         }
 
         public static ComponentArguments fromStringArgs(List<String> stringArgs) {
-            PaginationType paginationType = PaginationType.valueOf(stringArgs.get(0));
+            PaginatedRequestType paginatedRequestType =
+                    PaginatedRequestType.valueOf(stringArgs.get(0));
             String componentName = stringArgs.get(1);
             int currentPageIndex = Integer.parseInt(stringArgs.get(2));
 
-            return new ComponentArguments(paginationType, componentName, currentPageIndex);
+            return new ComponentArguments(paginatedRequestType, componentName, currentPageIndex);
         }
 
         @Override
         public String[] toArray() {
-            return new String[] {paginationType.name(), componentName,
+            return new String[] {paginatedRequestType.name(), componentName,
                     String.valueOf(currentPageIndex)};
         }
 
@@ -449,30 +389,31 @@ public final class BookmarksPaginatorInteractor implements UserInteractor {
 
         Set<Long> bookmarksToRemoveChannelIDs;
 
-        public RemoveComponentArguments(PaginationType paginationType, String componentName,
-                int currentPageIndex, Set<Long> bookmarksToRemoveChannelIDs) {
-            super(paginationType, componentName, currentPageIndex);
+        public RemoveComponentArguments(PaginatedRequestType paginatedRequestType,
+                String componentName, int currentPageIndex, Set<Long> bookmarksToRemoveChannelIDs) {
+            super(paginatedRequestType, componentName, currentPageIndex);
             this.bookmarksToRemoveChannelIDs =
                     Collections.unmodifiableSet(bookmarksToRemoveChannelIDs);
         }
 
         public static RemoveComponentArguments fromStringArgs(List<String> stringArgs) {
-            PaginationType paginationType = PaginationType.valueOf(stringArgs.get(0));
+            PaginatedRequestType paginatedRequestType =
+                    PaginatedRequestType.valueOf(stringArgs.get(0));
             String componentName = stringArgs.get(1);
             int currentPageIndex = Integer.parseInt(stringArgs.get(2));
 
             List<String> remainingStringArgs = stringArgs.subList(3, stringArgs.size());
             Set<Long> bookmarksToRemoveChannelIDs = parseStringListToLongSet(remainingStringArgs);
 
-            return new RemoveComponentArguments(paginationType, componentName, currentPageIndex,
-                    bookmarksToRemoveChannelIDs);
+            return new RemoveComponentArguments(paginatedRequestType, componentName,
+                    currentPageIndex, bookmarksToRemoveChannelIDs);
         }
 
         @Override
         public String[] toArray() {
             List<String> argsList = new ArrayList<>();
 
-            argsList.add(paginationType.name());
+            argsList.add(paginatedRequestType.name());
             argsList.add(componentName);
             argsList.add(String.valueOf(currentPageIndex));
             argsList.addAll(parseCollectionToStringList(bookmarksToRemoveChannelIDs));

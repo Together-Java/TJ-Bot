@@ -55,6 +55,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                         """);
 
     private final BookmarksSystem bookmarksSystem;
+    private final BookmarksPaginatedRequestInteractor paginatedRequestInteractor;
 
     /**
      * Creates a new instance and registers every sub command.
@@ -65,6 +66,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Bookmark help threads so that you can easily look them up again",
                 CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
+        paginatedRequestInteractor =
+                new BookmarksPaginatedRequestInteractor(bookmarksSystem, this::generateComponentId);
 
         OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_BOOKMARK_NOTE_OPTION,
                 "Your personal comment on this bookmark")
@@ -90,8 +93,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
         switch (subCommandName) {
             case SUBCOMMAND_ADD -> addBookmark(event);
-            case SUBCOMMAND_LIST -> bookmarksSystem.requestListPagination(event);
-            case SUBCOMMAND_REMOVE -> bookmarksSystem.requestRemovePagination(event);
+            case SUBCOMMAND_LIST -> paginatedRequestInteractor.handleListRequest(event);
+            case SUBCOMMAND_REMOVE -> paginatedRequestInteractor.handleRemoveRequest(event);
             default -> throw new IllegalArgumentException("Unknown subcommand");
         }
     }
@@ -131,7 +134,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                     The bookmark limit of will be reached soon (`{}/{}` bookmarks)!
                     If the limit is reached no new bookmarks can be added!
                     Please delete some bookmarks!
-                    """, bookmarkCountTotal, BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL);
+                    """, BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL,
+                    BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL);
         }
         if (bookmarkCountTotal == BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
             logger.error("""
