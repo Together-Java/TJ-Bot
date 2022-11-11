@@ -5,6 +5,8 @@ import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 
@@ -27,6 +29,8 @@ import java.util.stream.IntStream;
  * {@link #createLinkPreviews(List)}.
  */
 public final class LinkPreviews {
+    private static final Logger logger = LoggerFactory.getLogger(LinkPreviews.class);
+
     private static final String IMAGE_CONTENT_TYPE_PREFIX = "image";
     private static final String IMAGE_META_NAME = "image";
 
@@ -71,7 +75,6 @@ public final class LinkPreviews {
             .toList();
 
         var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
-
         return allDoneTask.thenApply(any -> extractResults(tasks));
     }
 
@@ -108,6 +111,7 @@ public final class LinkPreviews {
         try {
             linkAsUri = URI.create(link);
         } catch (IllegalArgumentException e) {
+            logger.warn("Attempted to create a preview for {}, but the URL is invalid.", link, e);
             return noResult();
         }
 
@@ -119,6 +123,8 @@ public final class LinkPreviews {
             int statusCode = response.statusCode();
             if (statusCode < HttpURLConnection.HTTP_OK
                     || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
+                logger.warn("Attempted to create a preview for {}, but the site returned code {}.",
+                        link, statusCode);
                 return Optional.empty();
             }
 
@@ -136,6 +142,7 @@ public final class LinkPreviews {
         try {
             doc = Jsoup.parse(websiteContent, null, link);
         } catch (IOException e) {
+            logger.warn("Attempted to create a preview for {}, but the content invalid.", link, e);
             return noResult();
         }
 
