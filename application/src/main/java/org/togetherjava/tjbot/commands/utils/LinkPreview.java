@@ -29,7 +29,7 @@ public record LinkPreview(@Nullable FileUpload attachment, MessageEmbed embed) {
      * @return this preview, but with a thumbnail
      */
     LinkPreview withThumbnail(String thumbnailName, InputStream thumbnail) {
-        return withThumbnail(embed, thumbnailName, thumbnail);
+        return createWithThumbnail(embed, thumbnailName, thumbnail);
     }
 
     /**
@@ -40,7 +40,7 @@ public record LinkPreview(@Nullable FileUpload attachment, MessageEmbed embed) {
      * @return the thumbnail as link preview
      */
     static LinkPreview ofThumbnail(String thumbnailName, InputStream thumbnail) {
-        return withThumbnail(null, thumbnailName, thumbnail);
+        return createWithThumbnail(null, thumbnailName, thumbnail);
     }
 
     /**
@@ -61,7 +61,7 @@ public record LinkPreview(@Nullable FileUpload attachment, MessageEmbed embed) {
         return new LinkPreview(null, embed);
     }
 
-    private static LinkPreview withThumbnail(@Nullable MessageEmbed embedToDecorate,
+    private static LinkPreview createWithThumbnail(@Nullable MessageEmbed embedToDecorate,
             String thumbnailName, InputStream thumbnail) {
         FileUpload attachment = FileUpload.fromData(thumbnail, thumbnailName);
         MessageEmbed embed =
