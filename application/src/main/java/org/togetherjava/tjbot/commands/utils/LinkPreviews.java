@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +23,8 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 public final class LinkPreviews {
+    private static final String IMAGE_CONTENT_TYPE_PREFIX = "image";
+    private static final String IMAGE_META_NAME = "image";
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     private LinkPreviews() {
@@ -40,55 +43,68 @@ public final class LinkPreviews {
             return CompletableFuture.completedFuture(List.of());
         }
 
-        // TODO This stuff needs some polishing, barely readable
         List<CompletableFuture<Optional<LinkPreview>>> tasks = IntStream.range(0, links.size())
             .mapToObj(i -> createLinkPreview(links.get(i), i + ".png"))
             .toList();
 
-        return CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new))
-            .thenApply(any -> tasks.stream()
-                .filter(Predicate.not(CompletableFuture::isCompletedExceptionally))
-                .map(CompletableFuture::join)
-                .flatMap(Optional::stream)
-                .toList());
+        var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
+
+        return allDoneTask.thenApply(any -> extractResults(tasks));
+    }
+
+    private static <T> List<T> extractResults(
+            Collection<? extends CompletableFuture<Optional<T>>> tasks) {
+        return tasks.stream()
+            .filter(Predicate.not(CompletableFuture::isCompletedExceptionally))
+            .map(CompletableFuture::join)
+            .flatMap(Optional::stream)
+            .toList();
     }
 
     private static CompletableFuture<Optional<LinkPreview>> createLinkPreview(String link,
             String attachmentName) {
+        return readLinkAsync(link).thenCompose(maybeContent -> {
+            if (maybeContent.isEmpty()) {
+                return noResult();
+            }
+            HttpContent content = maybeContent.orElseThrow();
+
+            if (content.type.startsWith(IMAGE_CONTENT_TYPE_PREFIX)) {
+                return result(LinkPreview.ofThumbnail(attachmentName, content.dataStream));
+            }
+
+            if (content.type.startsWith("text/html")) {
+                return parseWebsite(link, attachmentName, content.dataStream);
+            }
+            return noResult();
+        });
+    }
+
+    private static CompletableFuture<Optional<HttpContent>> readLinkAsync(String link) {
         URI linkAsUri;
         try {
             linkAsUri = URI.create(link);
         } catch (IllegalArgumentException e) {
-            return CompletableFuture.completedFuture(Optional.empty());
+            return noResult();
         }
 
         HttpRequest request = HttpRequest.newBuilder(linkAsUri).build();
         CompletableFuture<HttpResponse<InputStream>> task =
                 CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream());
 
-        return task.thenCompose(response -> {
+        return task.thenApply(response -> {
             int statusCode = response.statusCode();
             if (statusCode < HttpURLConnection.HTTP_OK
                     || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                return CompletableFuture.completedFuture(Optional.empty());
-            }
-            if (isResponseOfType(response, "image")) {
-                return CompletableFuture.completedFuture(
-                        Optional.of(LinkPreview.ofThumbnail(attachmentName, response.body())));
-            }
-            if (isResponseOfType(response, "text/html")) {
-                return parseWebsite(link, attachmentName, response.body());
+                return Optional.empty();
             }
 
-            return CompletableFuture.completedFuture(Optional.empty());
+            String contentType = response.headers().firstValue("Content-Type").orElse("");
+            return Optional.of(new HttpContent(contentType, response.body()));
         });
     }
 
-    private static boolean isResponseOfType(HttpResponse<?> response, String type) {
-        return response.headers()
-            .firstValue("Content-Type")
-            .filter(contentType -> contentType.startsWith(type))
-            .isPresent();
+    private record HttpContent(String type, InputStream dataStream) {
     }
 
     private static CompletableFuture<Optional<LinkPreview>> parseWebsite(String link,
@@ -97,42 +113,31 @@ public final class LinkPreviews {
         try {
             doc = Jsoup.parse(websiteContent, null, link);
         } catch (IOException e) {
-            return CompletableFuture.completedFuture(Optional.empty());
+            return noResult();
         }
 
         String title = parseOpenGraphTwitterMeta(doc, "title", doc.title()).orElse(null);
         String description =
                 parseOpenGraphTwitterMeta(doc, "description", doc.title()).orElse(null);
-        String image = parseOpenGraphMeta(doc, "image").orElse(null);
 
+        LinkPreview textPreview = LinkPreview.ofContents(title, link, description);
+
+        String image = parseOpenGraphMeta(doc, IMAGE_META_NAME).orElse(null);
         if (image == null) {
-            // TODO Can still do something
-            return CompletableFuture.completedFuture(Optional.empty());
+            return result(textPreview);
         }
 
-        // TODO Massive duplication
-        URI imageAsUri;
-        try {
-            imageAsUri = URI.create(image);
-        } catch (IllegalArgumentException e) {
-            return CompletableFuture.completedFuture(Optional.empty());
-        }
-
-        HttpRequest request = HttpRequest.newBuilder(imageAsUri).build();
-        CompletableFuture<HttpResponse<InputStream>> task =
-                CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream());
-
-        return task.thenCompose(response -> {
-            int statusCode = response.statusCode();
-            if (statusCode < HttpURLConnection.HTTP_OK
-                    || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                return CompletableFuture.completedFuture(Optional.empty());
+        return readLinkAsync(image).thenCompose(maybeContent -> {
+            if (maybeContent.isEmpty()) {
+                return result(textPreview);
             }
-            if (!isResponseOfType(response, "image")) {
-                return CompletableFuture.completedFuture(Optional.empty());
+            HttpContent content = maybeContent.orElseThrow();
+
+            if (!content.type.startsWith(IMAGE_CONTENT_TYPE_PREFIX)) {
+                return result(textPreview);
             }
-            return CompletableFuture.completedFuture(Optional.of(LinkPreview.ofContents(title, link,
-                    description, attachmentName, response.body())));
+
+            return result(textPreview.withThumbnail(attachmentName, content.dataStream));
         });
     }
 
@@ -154,5 +159,13 @@ public final class LinkPreviews {
         return Optional.ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
             .map(element -> element.attr("content"))
             .filter(Predicate.not(String::isBlank));
+    }
+
+    private static <T> CompletableFuture<Optional<T>> noResult() {
+        return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    private static <T> CompletableFuture<Optional<T>> result(T content) {
+        return CompletableFuture.completedFuture(Optional.of(content));
     }
 }

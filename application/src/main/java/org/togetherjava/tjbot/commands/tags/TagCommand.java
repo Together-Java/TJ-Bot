@@ -23,10 +23,7 @@ import org.togetherjava.tjbot.commands.utils.LinkPreviews;
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Implements the {@code /tag} command which lets the bot respond content of a tag that has been
@@ -128,8 +125,10 @@ public final class TagCommand extends SlashCommandAdapter {
             embeds.add(contentEmbed);
             embeds.addAll(linkPreviews.stream().map(LinkPreview::embed).toList());
 
-            List<FileUpload> attachments =
-                    linkPreviews.stream().map(LinkPreview::attachment).toList();
+            List<FileUpload> attachments = linkPreviews.stream()
+                .map(LinkPreview::attachment)
+                .filter(Objects::nonNull)
+                .toList();
 
             MessageEditBuilder message =
                     new MessageEditBuilder().setEmbeds(embeds).setFiles(attachments);
