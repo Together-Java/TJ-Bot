@@ -56,7 +56,7 @@ public final class HelpSystemHelper {
     private static final String TITLE_GROUP = "title";
     private static final Pattern EXTRACT_HELP_NAME_PATTERN =
             Pattern.compile("(?:(?<%s>\\W) )?(?:\\[(?<%s>[^\\[]+)] )?(?<%s>.+)"
-                .formatted(ACTIVITY_GROUP, CATEGORY_GROUP, TITLE_GROUP));
+                    .formatted(ACTIVITY_GROUP, CATEGORY_GROUP, TITLE_GROUP));
 
     private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     static final int TITLE_COMPACT_LENGTH_MIN = 2;
@@ -76,8 +76,8 @@ public final class HelpSystemHelper {
     /**
      * Creates a new instance.
      *
-     * @param jda the JDA instance to use
-     * @param config the config to use
+     * @param jda      the JDA instance to use
+     * @param config   the config to use
      * @param database the database to store help thread metadata in
      */
     public HelpSystemHelper(JDA jda, Config config, Database database) {
@@ -96,14 +96,14 @@ public final class HelpSystemHelper {
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         return MessageUtils
-            .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                    HelpThreadCommand.Subcommand.CLOSE.getCommandName())
-            .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
-                    closeCommandMention));
+                .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                        HelpThreadCommand.Subcommand.CLOSE.getCommandName())
+                .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
+                        closeCommandMention));
     }
 
     private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
-            String closeCommandMention) {
+                                                       String closeCommandMention) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
@@ -115,8 +115,8 @@ public final class HelpSystemHelper {
                 "While you are waiting for getting help, here are some tips to improve your experience:";
 
         List<MessageEmbed> embeds = List.of(HelpSystemHelper.embedWith(
-                "Code is much easier to read if posted with **syntax highlighting** and proper formatting.",
-                useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
+                        "Code is much easier to read if posted with **syntax highlighting** and proper formatting.",
+                        useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
                 HelpSystemHelper.embedWith(
                         """
                                 If your code is **long**, or you have **multiple files** to share, consider posting it on sites \
@@ -129,12 +129,12 @@ public final class HelpSystemHelper {
                                     With enough info, someone knows the answer for sure."""),
                 HelpSystemHelper.embedWith(
                         "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(closeCommandMention)));
+                                .formatted(closeCommandMention)));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
             action = action
-                .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
+                    .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
         }
         return action.setEmbeds(embeds);
     }
@@ -142,9 +142,9 @@ public final class HelpSystemHelper {
     void writeHelpThreadToDatabase(Member author, ThreadChannel threadChannel) {
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
-                .setAuthorId(author.getIdLong())
-                .setChannelId(threadChannel.getIdLong())
-                .setCreatedAt(threadChannel.getTimeCreated().toInstant());
+                    .setAuthorId(author.getIdLong())
+                    .setChannelId(threadChannel.getIdLong())
+                    .setCreatedAt(threadChannel.getTimeCreated().toInstant());
             if (helpThreadsRecord.update() == 0) {
                 helpThreadsRecord.insert();
             }
@@ -157,9 +157,9 @@ public final class HelpSystemHelper {
 
     private static MessageEmbed embedWith(CharSequence message, @Nullable String imageUrl) {
         return new EmbedBuilder().setColor(AMBIENT_COLOR)
-            .setDescription(message)
-            .setImage(imageUrl)
-            .build();
+                .setDescription(message)
+                .setImage(imageUrl)
+                .build();
     }
 
     Optional<Role> handleFindRoleForCategory(String category, Guild guild) {
@@ -202,7 +202,7 @@ public final class HelpSystemHelper {
     }
 
     private RestAction<Void> renameChannel(GuildChannel channel, HelpThreadName currentName,
-            HelpThreadName nextName) {
+                                           HelpThreadName nextName) {
         if (currentName.equals(nextName)) {
             // Do not stress rate limits if no actual change is done
             return new CompletedRestAction<>(channel.getJDA(), null);
@@ -236,14 +236,14 @@ public final class HelpSystemHelper {
     }
 
     Optional<TextChannel> handleRequireOverviewChannel(Guild guild,
-            Consumer<? super String> consumeChannelPatternIfNotFound) {
+                                                       Consumer<? super String> consumeChannelPatternIfNotFound) {
         Predicate<String> isChannelName = this::isOverviewChannelName;
         String channelPattern = getOverviewChannelPattern();
 
         Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
+                .stream()
+                .filter(channel -> isChannelName.test(channel.getName()))
+                .findAny();
 
         if (maybeChannel.isEmpty()) {
             consumeChannelPatternIfNotFound.accept(channelPattern);
@@ -253,23 +253,23 @@ public final class HelpSystemHelper {
     }
 
     Optional<TextChannel> handleRequireOverviewChannelForAsk(Guild guild,
-            MessageChannel respondTo) {
+                                                             MessageChannel respondTo) {
         return handleRequireOverviewChannel(guild, channelPattern -> {
             logger.warn(
                     "Attempted to create a help thread, did not find the overview channel matching the configured pattern '{}' for guild '{}'",
                     channelPattern, guild.getName());
 
             respondTo.sendMessage(
-                    "Sorry, I was unable to locate the overview channel. The server seems wrongly configured, please contact a moderator.")
-                .queue();
+                            "Sorry, I was unable to locate the overview channel. The server seems wrongly configured, please contact a moderator.")
+                    .queue();
         });
     }
 
     List<ThreadChannel> getActiveThreadsIn(TextChannel channel) {
         return channel.getThreadChannels()
-            .stream()
-            .filter(Predicate.not(ThreadChannel::isArchived))
-            .toList();
+                .stream()
+                .filter(Predicate.not(ThreadChannel::isArchived))
+                .toList();
     }
 
     void scheduleUncategorizedAdviceCheck(long threadChannelId, long authorId) {
@@ -313,23 +313,23 @@ public final class HelpSystemHelper {
 
             // Still no category, send advice
             return MessageUtils
-                .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                        HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
-                        HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
-                .flatMap(command -> {
-                    MessageEmbed embed = HelpSystemHelper.embedWith(
-                            """
-                                    Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
-                                    Please use the %s slash-command and pick what fits best, thanks 🙂
-                                    """
-                                .formatted(command));
-                    MessageCreateData message =
-                            new MessageCreateBuilder().setContent(author.getAsMention())
-                                .setEmbeds(embed)
-                                .build();
+                    .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                            HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
+                            HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
+                    .flatMap(command -> {
+                        MessageEmbed embed = HelpSystemHelper.embedWith(
+                                """
+                                        Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
+                                        Please use the %s slash-command and pick what fits best, thanks 🙂
+                                        """
+                                        .formatted(command));
+                        MessageCreateData message =
+                                new MessageCreateBuilder().setContent(author.getAsMention())
+                                        .setEmbeds(embed)
+                                        .build();
 
-                    return threadChannel.sendMessage(message);
-                });
+                        return threadChannel.sendMessage(message);
+                    });
         }).queue();
     }
 
@@ -363,27 +363,28 @@ public final class HelpSystemHelper {
                     threadChannelId, authorId);
             return;
         }
-        if (threadChannel.getHistory()
-            .getRetrievedHistory()
-            .stream()
-            .map(Message::getAuthor)
-            .map(User::getIdLong)
-            .anyMatch(id -> id == authorId)) {
+        if (noAuthorActivity(authorId, threadChannel)) {
             MessageEmbed embed = HelpSystemHelper.embedWith(
                     """
-                            Hey there {}👋 It has been five minutes and you have not shown any activity in this thread.
-                            Please elaborate on your question, or close the thread if it was created accidentally, thanks 🙂
-                            """,
-                    User.fromId(authorId).getAsMention());
-            MessageCreateData message = new MessageCreateBuilder().setEmbeds(embed).build();
-            threadChannel.sendMessage(message).queue();
-
+                            Hey there %s👋  It has been a bit after you created this thread and you still did not share any details of your question.
+                            Helpers have seen your question already and are just waiting for you to elaborate on your problem and provide detailed information on it 👌
+                            If this thread was created accidentally, you can close it.
+                            """.formatted(User.fromId(authorId).getAsMention()));
+            threadChannel.sendMessageEmbeds(embed).queue();
         }
+    }
 
+    private static boolean noAuthorActivity(long authorId, ThreadChannel threadChannel) {
+        return threadChannel.getIterableHistory()
+                .stream()
+                .limit(10)
+                .map(Message::getAuthor)
+                .map(User::getIdLong)
+                .noneMatch(id -> id == authorId);
     }
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
-            String title) {
+                          String title) {
         static HelpThreadName ofChannelName(CharSequence channelName) {
             Matcher matcher = EXTRACT_HELP_NAME_PATTERN.matcher(channelName);
 
@@ -426,10 +427,10 @@ public final class HelpSystemHelper {
 
         static ThreadActivity ofSymbol(String symbol) {
             return Stream.of(values())
-                .filter(activity -> activity.getSymbol().equals(symbol))
-                .findAny()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown thread activity symbol: " + symbol));
+                    .filter(activity -> activity.getSymbol().equals(symbol))
+                    .findAny()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unknown thread activity symbol: " + symbol));
         }
     }
 }
