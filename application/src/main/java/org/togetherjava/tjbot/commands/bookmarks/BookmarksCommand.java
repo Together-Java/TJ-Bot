@@ -58,7 +58,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                         """);
 
     private final BookmarksSystem bookmarksSystem;
-    private final BookmarksPaginatedRequestInteractor paginatedRequestInteractor;
+    private final BookmarksPaginationHandler paginatedRequestInteractor;
 
     /**
      * Creates a new instance and registers every sub command.
@@ -70,7 +70,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                 CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
         paginatedRequestInteractor =
-                new BookmarksPaginatedRequestInteractor(bookmarksSystem, this::generateComponentId);
+                new BookmarksPaginationHandler(bookmarksSystem, this::generateComponentId);
 
         OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_BOOKMARK_NOTE_OPTION,
                 "Your personal comment on this bookmark")

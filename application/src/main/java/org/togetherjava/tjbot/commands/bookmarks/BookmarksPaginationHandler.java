@@ -26,7 +26,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-final class BookmarksPaginatedRequestInteractor {
+final class BookmarksPaginationHandler {
 
     private static final int ENTRIES_PER_PAGE = 10;
     private static final Emoji BUTTON_PREV_EMOJI = Emoji.fromUnicode("⬅");
@@ -43,22 +43,22 @@ final class BookmarksPaginatedRequestInteractor {
     private final BookmarksSystem bookmarksSystem;
     private final Function<String[], String> generateComponentId;
 
-    BookmarksPaginatedRequestInteractor(BookmarksSystem bookmarksSystem,
+    BookmarksPaginationHandler(BookmarksSystem bookmarksSystem,
             Function<String[], String> generateComponentId) {
         this.bookmarksSystem = bookmarksSystem;
         this.generateComponentId = generateComponentId;
     }
 
     void handleListRequest(GenericCommandInteractionEvent event) {
-        handlePaginatedRequest(event, PaginatedRequestType.LIST);
+        handlePaginatedRequest(event, RequestType.LIST);
     }
 
     void handleRemoveRequest(GenericCommandInteractionEvent event) {
-        handlePaginatedRequest(event, PaginatedRequestType.REMOVE);
+        handlePaginatedRequest(event, RequestType.REMOVE);
     }
 
     private void handlePaginatedRequest(GenericCommandInteractionEvent event,
-            PaginatedRequestType paginatedRequestType) {
+            RequestType requestType) {
         JDA jda = event.getJDA();
         long userID = event.getUser().getIdLong();
 
@@ -68,26 +68,26 @@ final class BookmarksPaginatedRequestInteractor {
             return;
         }
 
-        MessageEmbed pageEmbed = generatePageEmbed(bookmarks, paginatedRequestType, 0);
+        MessageEmbed pageEmbed = generatePageEmbed(bookmarks, requestType, 0);
 
         Collection<LayoutComponent> components = new ArrayList<>();
-        components.add(generateNavigationComponent(paginatedRequestType, 0));
+        components.add(generateNavigationComponent(requestType, 0));
 
-        if (paginatedRequestType == PaginatedRequestType.REMOVE) {
-            components.addAll(generateRemoveComponents(jda, bookmarks, PaginatedRequestType.REMOVE,
-                    0, Set.of()));
+        if (requestType == RequestType.REMOVE) {
+            components
+                .addAll(generateRemoveComponents(jda, bookmarks, RequestType.REMOVE, 0, Set.of()));
         }
 
         event.replyEmbeds(pageEmbed).setComponents(components).setEphemeral(true).queue();
     }
 
     private static MessageEmbed generatePageEmbed(List<BookmarksRecord> bookmarks,
-            PaginatedRequestType paginatedRequestType, int currentPageIndex) {
+            RequestType requestType, int currentPageIndex) {
         int lastPageIndex = getLastPageIndex(bookmarks);
 
         String title;
         Color color;
-        switch (paginatedRequestType) {
+        switch (requestType) {
             case LIST -> {
                 title = "Bookmarks List";
                 color = BookmarksSystem.COLOR_SUCCESS;
@@ -96,8 +96,7 @@ final class BookmarksPaginatedRequestInteractor {
                 title = "Remove Bookmarks";
                 color = BookmarksSystem.COLOR_WARNING;
             }
-            default -> throw new IllegalArgumentException(
-                    "Unknown request type: " + paginatedRequestType);
+            default -> throw new IllegalArgumentException("Unknown request type: " + requestType);
         }
 
         StringJoiner descriptionJoiner = new StringJoiner("\n\n");
@@ -111,7 +110,7 @@ final class BookmarksPaginatedRequestInteractor {
 
             entryJoiner.add(
                     "**%d.** %s".formatted(bookmarkNumber, MessageUtils.mentionChannel(channelID)));
-            if (note != null && paginatedRequestType != PaginatedRequestType.REMOVE) {
+            if (note != null && requestType != RequestType.REMOVE) {
                 entryJoiner.add("*%s*".formatted(note));
             }
 
@@ -128,20 +127,8 @@ final class BookmarksPaginatedRequestInteractor {
             .build();
     }
 
-    private static int getLastPageIndex(List<BookmarksRecord> bookmarks) {
-        if (bookmarks.isEmpty()) {
-            return 0;
-        }
-
-        return getPageOfBookmark(bookmarks.size() - 1);
-    }
-
-    private static int getPageOfBookmark(int bookmarkIndex) {
-        return Math.floorDiv(bookmarkIndex, ENTRIES_PER_PAGE);
-    }
-
     void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        BookmarksPaginatedRequest request = BookmarksPaginatedRequest.fromArgs(args);
+        RequestWithPagination request = RequestWithPagination.fromArgs(args);
         long userID = event.getUser().getIdLong();
 
         List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
@@ -160,7 +147,7 @@ final class BookmarksPaginatedRequestInteractor {
     }
 
     private void removeSelectedBookmarks(List<BookmarksRecord> bookmarks,
-            ComponentInteraction event, BookmarksPaginatedRequest request) {
+            ComponentInteraction event, RequestWithPagination request) {
         long userID = event.getUser().getIdLong();
 
         Predicate<BookmarksRecord> isBookmarkSelectedForRemoval =
@@ -170,16 +157,10 @@ final class BookmarksPaginatedRequestInteractor {
         bookmarksSystem.removeBookmarks(userID, request.bookmarkIdsToRemove);
     }
 
-    private static int clampPageIndex(List<BookmarksRecord> bookmarks, int pageIndex) {
-        int maxPageIndex = getLastPageIndex(bookmarks);
-
-        return Math.min(Math.max(0, pageIndex), maxPageIndex);
-    }
-
     void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        BookmarksPaginatedRequest request = BookmarksPaginatedRequest.fromArgs(args);
+        RequestWithPagination request = RequestWithPagination.fromArgs(args);
 
-        if (request.type != PaginatedRequestType.REMOVE) {
+        if (request.type != RequestType.REMOVE) {
             throw new IllegalArgumentException(
                     "Only remove requests must have a menu, but got " + request.type);
         }
@@ -202,7 +183,7 @@ final class BookmarksPaginatedRequestInteractor {
         updatePagination(event, request.atPage(updatedPageIndex), bookmarks);
     }
 
-    private void updatePagination(ComponentInteraction event, BookmarksPaginatedRequest request,
+    private void updatePagination(ComponentInteraction event, RequestWithPagination request,
             List<BookmarksRecord> bookmarks) {
         if (bookmarks.isEmpty()) {
             event.editMessageEmbeds(NO_BOOKMARKS_EMBED).setComponents().queue();
@@ -214,7 +195,7 @@ final class BookmarksPaginatedRequestInteractor {
 
         Collection<LayoutComponent> components = new ArrayList<>();
         components.add(generateNavigationComponent(request.type, request.pageToDisplayIndex));
-        if (request.type == PaginatedRequestType.REMOVE) {
+        if (request.type == RequestType.REMOVE) {
             components.addAll(generateRemoveComponents(event.getJDA(), bookmarks, request.type,
                     request.pageToDisplayIndex, request.bookmarkIdsToRemove));
         }
@@ -222,11 +203,11 @@ final class BookmarksPaginatedRequestInteractor {
         event.editMessageEmbeds(pageEmbed).setComponents(components).queue();
     }
 
-    private LayoutComponent generateNavigationComponent(PaginatedRequestType requestType,
+    private LayoutComponent generateNavigationComponent(RequestType requestType,
             int pageToDisplayIndex) {
         UnaryOperator<String> generateNavigationComponentId = name -> {
-            BookmarksPaginatedRequest request =
-                    new BookmarksPaginatedRequest(requestType, name, pageToDisplayIndex, Set.of());
+            RequestWithPagination request =
+                    new RequestWithPagination(requestType, name, pageToDisplayIndex, Set.of());
 
             return generateComponentId.apply(request.toArray());
         };
@@ -241,12 +222,12 @@ final class BookmarksPaginatedRequestInteractor {
     }
 
     private List<LayoutComponent> generateRemoveComponents(JDA jda, List<BookmarksRecord> bookmarks,
-            PaginatedRequestType requestType, int pageToDisplayIndex,
+            RequestType requestType, int pageToDisplayIndex,
             Set<Long> bookmarksToRemoveChannelIDs) {
         List<PageEntry> pageEntries = getPageEntries(bookmarks, pageToDisplayIndex);
 
         UnaryOperator<String> generateRemoveComponentId = name -> {
-            BookmarksPaginatedRequest request = new BookmarksPaginatedRequest(requestType, name,
+            RequestWithPagination request = new RequestWithPagination(requestType, name,
                     pageToDisplayIndex, bookmarksToRemoveChannelIDs);
 
             return generateComponentId.apply(request.toArray());
@@ -278,7 +259,8 @@ final class BookmarksPaginatedRequestInteractor {
         return List.of(ActionRow.of(selectMenuRemove), ActionRow.of(buttonRemove));
     }
 
-    private static List<PageEntry> getPageEntries(List<BookmarksRecord> bookmarks, int pageIndex) {
+    private static List<PageEntry> getPageEntries(List<? extends BookmarksRecord> bookmarks,
+            int pageIndex) {
         int indexStart = pageIndex * ENTRIES_PER_PAGE;
         int indexEndMax = bookmarks.size();
         int indexEnd = Math.min(indexStart + ENTRIES_PER_PAGE, indexEndMax);
@@ -289,7 +271,25 @@ final class BookmarksPaginatedRequestInteractor {
             .toList();
     }
 
-    private enum PaginatedRequestType {
+    private static int getLastPageIndex(List<BookmarksRecord> bookmarks) {
+        if (bookmarks.isEmpty()) {
+            return 0;
+        }
+
+        return getPageOfBookmark(bookmarks.size() - 1);
+    }
+
+    private static int getPageOfBookmark(int bookmarkIndex) {
+        return Math.floorDiv(bookmarkIndex, ENTRIES_PER_PAGE);
+    }
+
+    private static int clampPageIndex(List<BookmarksRecord> bookmarks, int pageIndex) {
+        int maxPageIndex = getLastPageIndex(bookmarks);
+
+        return Math.min(Math.max(0, pageIndex), maxPageIndex);
+    }
+
+    private enum RequestType {
         LIST,
         REMOVE
     }
@@ -297,21 +297,19 @@ final class BookmarksPaginatedRequestInteractor {
     private record PageEntry(int bookmarkNumber, BookmarksRecord bookmark) {
     }
 
-    private record BookmarksPaginatedRequest(PaginatedRequestType type, String componentName,
+    private record RequestWithPagination(RequestType type, String componentName,
             int pageToDisplayIndex, Set<Long> bookmarkIdsToRemove) {
-        BookmarksPaginatedRequest atPage(int pageIndex) {
-            return new BookmarksPaginatedRequest(type, componentName, pageIndex,
-                    bookmarkIdsToRemove);
+        RequestWithPagination atPage(int pageIndex) {
+            return new RequestWithPagination(type, componentName, pageIndex, bookmarkIdsToRemove);
         }
 
-        BookmarksPaginatedRequest withSelectedBookmarksToRemove(
-                Set<Long> selectedBookmarkIdsToRemove) {
-            return new BookmarksPaginatedRequest(type, componentName, pageToDisplayIndex,
+        RequestWithPagination withSelectedBookmarksToRemove(Set<Long> selectedBookmarkIdsToRemove) {
+            return new RequestWithPagination(type, componentName, pageToDisplayIndex,
                     selectedBookmarkIdsToRemove);
         }
 
-        static BookmarksPaginatedRequest fromArgs(List<String> args) {
-            PaginatedRequestType paginatedRequestType = PaginatedRequestType.valueOf(args.get(0));
+        static RequestWithPagination fromArgs(List<String> args) {
+            RequestType requestType = RequestType.valueOf(args.get(0));
             String componentName = args.get(1);
             int currentPageIndex = Integer.parseInt(args.get(2));
 
@@ -321,16 +319,16 @@ final class BookmarksPaginatedRequestInteractor {
                         args.stream().skip(3).map(Long::parseLong).collect(Collectors.toSet());
             }
 
-            return new BookmarksPaginatedRequest(paginatedRequestType, componentName,
-                    currentPageIndex, bookmarkIdsToRemove);
+            return new RequestWithPagination(requestType, componentName, currentPageIndex,
+                    bookmarkIdsToRemove);
         }
 
         String[] toArray() {
-            Stream<String> firstArgs =
+            Stream<String> primaryArgs =
                     Stream.of(type.name(), componentName, Integer.toString(pageToDisplayIndex));
-            Stream<String> otherArgs = bookmarkIdsToRemove.stream().map(String::valueOf);
+            Stream<String> secondaryArgs = bookmarkIdsToRemove.stream().map(String::valueOf);
 
-            return Stream.concat(firstArgs, otherArgs).toArray(String[]::new);
+            return Stream.concat(primaryArgs, secondaryArgs).toArray(String[]::new);
         }
     }
 }
