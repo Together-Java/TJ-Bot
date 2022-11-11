@@ -22,15 +22,26 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
+/**
+ * Provides means to create previews of links. See {@link #extractLinks(String)} and
+ * {@link #createLinkPreviews(List)}.
+ */
 public final class LinkPreviews {
     private static final String IMAGE_CONTENT_TYPE_PREFIX = "image";
     private static final String IMAGE_META_NAME = "image";
+
     private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     private LinkPreviews() {
         throw new UnsupportedOperationException("Utility class");
     }
 
+    /**
+     * Extracts all links from the given content.
+     * 
+     * @param content the content to search through
+     * @return a list of all found links, can be empty
+     */
     public static List<String> extractLinks(String content) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
             .stream()
@@ -38,6 +49,18 @@ public final class LinkPreviews {
             .toList();
     }
 
+    /**
+     * Attempts to create previews of all given links.
+     * <p>
+     * A link preview is a short representation of the links contents, for example a thumbnail with
+     * a description.
+     * <p>
+     * The returned result does not necessarily contain a preview for all given links. Preview
+     * creation can fail for various reasons, failed previews are omitted in the result.
+     *
+     * @param links the links to preview
+     * @return a list of all previews created successfully, can be empty
+     */
     public static CompletableFuture<List<LinkPreview>> createLinkPreviews(List<String> links) {
         if (links.isEmpty()) {
             return CompletableFuture.completedFuture(List.of());
@@ -63,7 +86,7 @@ public final class LinkPreviews {
 
     private static CompletableFuture<Optional<LinkPreview>> createLinkPreview(String link,
             String attachmentName) {
-        return readLinkAsync(link).thenCompose(maybeContent -> {
+        return readLinkContent(link).thenCompose(maybeContent -> {
             if (maybeContent.isEmpty()) {
                 return noResult();
             }
@@ -80,7 +103,7 @@ public final class LinkPreviews {
         });
     }
 
-    private static CompletableFuture<Optional<HttpContent>> readLinkAsync(String link) {
+    private static CompletableFuture<Optional<HttpContent>> readLinkContent(String link) {
         URI linkAsUri;
         try {
             linkAsUri = URI.create(link);
@@ -120,14 +143,14 @@ public final class LinkPreviews {
         String description =
                 parseOpenGraphTwitterMeta(doc, "description", doc.title()).orElse(null);
 
-        LinkPreview textPreview = LinkPreview.ofContents(title, link, description);
+        LinkPreview textPreview = LinkPreview.ofText(title, link, description);
 
         String image = parseOpenGraphMeta(doc, IMAGE_META_NAME).orElse(null);
         if (image == null) {
             return result(textPreview);
         }
 
-        return readLinkAsync(image).thenCompose(maybeContent -> {
+        return readLinkContent(image).thenCompose(maybeContent -> {
             if (maybeContent.isEmpty()) {
                 return result(textPreview);
             }
