@@ -2,10 +2,8 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
 
-import org.togetherjava.tjbot.commands.basic.PingCommand;
-import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
-import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
-import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.basic.*;
+import org.togetherjava.tjbot.commands.basic.SuggestCommand;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
@@ -20,6 +18,9 @@ import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
 import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
 import org.togetherjava.tjbot.commands.reminder.ReminderCommand;
+import org.togetherjava.tjbot.commands.sticky.StickCommand;
+import org.togetherjava.tjbot.commands.sticky.StickyMessageUpdater;
+import org.togetherjava.tjbot.commands.sticky.UnstickCommand;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.system.LogLevelCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
@@ -88,12 +89,12 @@ public class Features {
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
-        features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
         features.add(new ImplicitAskListener(config, helpSystemHelper));
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(new StickyMessageUpdater(database));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
@@ -130,6 +131,9 @@ public class Features {
         features.add(new AskCommand(config, helpSystemHelper, database));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
+        features.add(new SuggestCommand(config));
+        features.add(new StickCommand(database));
+        features.add(new UnstickCommand(database));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
