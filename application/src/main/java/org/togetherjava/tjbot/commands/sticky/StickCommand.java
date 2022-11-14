@@ -30,7 +30,7 @@ public final class StickCommand extends SlashCommandAdapter {
      * @param database the database to get Sticky data from
      */
     public StickCommand(Database database) {
-        super("stick", "keeps a message at the bottom by deleting and resending it",
+        super("stick", "Keeps a message at the bottom by deleting and resending it",
                 CommandVisibility.GUILD);
 
         this.database = database;
