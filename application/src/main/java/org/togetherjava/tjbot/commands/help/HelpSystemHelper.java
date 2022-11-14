@@ -377,10 +377,12 @@ public final class HelpSystemHelper {
     private static boolean hasNoAuthorActivity(long authorId, ThreadChannel threadChannel) {
         int count = 0;
         for (Message message : threadChannel.getIterableHistory()) {
-            if (count == 10)
+            if (count == 10) {
                 return false;
-            if (message.getAuthor().getIdLong() == authorId)
+            }
+            if (message.getAuthor().getIdLong() == authorId) {
                 return false;
+            }
             count++;
         }
         return true;
