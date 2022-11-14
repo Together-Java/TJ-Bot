@@ -13,6 +13,10 @@ import static org.togetherjava.tjbot.db.generated.Tables.STICKY_MESSAGE;
  * Utility for Sticky.
  */
 public class StickyUtils {
+    private StickyUtils() {
+        throw new IllegalStateException("Utility class");
+    }
+
     /**
      * Gets the sticky for the given channel.
      *
