@@ -375,11 +375,15 @@ public final class HelpSystemHelper {
     }
 
     private static boolean hasNoAuthorActivity(long authorId, ThreadChannel threadChannel) {
-        return threadChannel.getHistory().size() >= 10 || threadChannel.getIterableHistory()
-            .stream()
-            .map(Message::getAuthor)
-            .map(User::getIdLong)
-            .noneMatch(id -> id == authorId);
+        int count = 0;
+        for(Message message : threadChannel.getIterableHistory()){
+            if(count == 10)
+                return false;
+            if(message.getAuthor().getIdLong() == authorId)
+                return false;
+            count++;
+        }
+        return true;
     }
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
