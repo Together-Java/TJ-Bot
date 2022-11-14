@@ -363,10 +363,10 @@ public final class HelpSystemHelper {
                     threadChannelId, authorId);
             return;
         }
-        if (noAuthorActivity(authorId, threadChannel)) {
+        if (hasNoAuthorActivity(authorId, threadChannel)) {
             MessageEmbed embed = HelpSystemHelper.embedWith(
                     """
-                            Hey there %s👋  It has been a bit after you created this thread and you still did not share any details of your question.
+                            Hey there %s👋 It has been a bit after you created this thread and you still did not share any details of your question.
                             Helpers have seen your question already and are just waiting for you to elaborate on your problem and provide detailed information on it 👌
                             """
                         .formatted(User.fromId(authorId).getAsMention()));
@@ -374,8 +374,8 @@ public final class HelpSystemHelper {
         }
     }
 
-    private static boolean noAuthorActivity(long authorId, ThreadChannel threadChannel) {
-        return threadChannel.getIterableHistory()
+    private static boolean hasNoAuthorActivity(long authorId, ThreadChannel threadChannel) {
+        return threadChannel.getHistory().size() >= 10 || threadChannel.getIterableHistory()
             .stream()
             .limit(10)
             .map(Message::getAuthor)
