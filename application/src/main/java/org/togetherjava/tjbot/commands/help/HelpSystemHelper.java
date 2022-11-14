@@ -377,7 +377,6 @@ public final class HelpSystemHelper {
     private static boolean hasNoAuthorActivity(long authorId, ThreadChannel threadChannel) {
         return threadChannel.getHistory().size() >= 10 || threadChannel.getIterableHistory()
             .stream()
-            .limit(10)
             .map(Message::getAuthor)
             .map(User::getIdLong)
             .noneMatch(id -> id == authorId);
