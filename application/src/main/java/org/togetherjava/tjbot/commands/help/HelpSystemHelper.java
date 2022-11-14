@@ -368,7 +368,6 @@ public final class HelpSystemHelper {
                     """
                             Hey there %s👋  It has been a bit after you created this thread and you still did not share any details of your question.
                             Helpers have seen your question already and are just waiting for you to elaborate on your problem and provide detailed information on it 👌
-                            If this thread was created accidentally, you can close it.
                             """
                         .formatted(User.fromId(authorId).getAsMention()));
             threadChannel.sendMessageEmbeds(embed).queue();
