@@ -65,7 +65,7 @@ You can now execute commands and see the bot do its magic:
 
 # IntelliJ instead of VSC
 
-If you prefer IntelliJ, they offer a client called [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/).
+If you prefer IntelliJ, and have a license, they offer a client called [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/).
 
 While not being all-within your browser, it is essentially an IDE that you can install, which will just remote-connect to your codespace.
 
