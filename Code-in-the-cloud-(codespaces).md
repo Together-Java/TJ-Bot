@@ -52,7 +52,7 @@ On the first run, this might take around 3 minutes, because it will first have t
 
 Once the terminal reads `[main] INFO  org.togetherjava.tjbot.Application - Bot is ready`, you are done!
 
-### Have fun
+## Have fun
 
 The bot is now running and connected to your server, hurray 🎉
 
