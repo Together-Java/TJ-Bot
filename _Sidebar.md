@@ -8,6 +8,7 @@
 * [[Code Guidelines]]
 * [[Create Discord server and bot]]
 * [[Setup project locally]]
+* [[Code in the cloud (codespaces)]]
 * Features
   * [[Add a new command]]
     * [[Add days command]]
