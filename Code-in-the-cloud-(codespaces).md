@@ -2,7 +2,10 @@
 
 This tutorial shows how to code and run the project in GitHubs cloud.
 
-This service is completely free and allows you to get started in just a few seconds.
+The service is completely free and allows you to get started in just a few seconds.
+
+This approach is an alternative to setting the project up on your local machine, as explained in:
+* [[Setup project locally]]
 
 # Tutorial
 
