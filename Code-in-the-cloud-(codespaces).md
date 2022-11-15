@@ -62,3 +62,17 @@ The bot is now running and connected to your server, hurray 🎉
 You can now execute commands and see the bot do its magic:
 
 ![pong](https://i.imgur.com/0x3GsnU.png)
+
+# IntelliJ instead of VSC
+
+If you prefer IntelliJ, they offer a client called [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/).
+
+While not being all-within your browser, it is essentially an IDE that you can install, which will just remote-connect to your codespace.
+
+Once installed, you have to get the **GitHub Codespaces** plugin:
+
+![plugin](https://i.imgur.com/VKzLMd9.png)
+
+You can then login to your GitHub account and select your codespace:
+
+![select codespace](https://i.imgur.com/u9OVwXR.png)
