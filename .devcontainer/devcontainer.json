@@ -31,7 +31,6 @@
     }
   },
   "postCreateCommand": {
-    "config": "cp application/config.json.template application/config.json",
-    "gradle": "gradle build"
+    "config": "cp application/config.json.template application/config.json"
   }
 }
