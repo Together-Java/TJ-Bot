@@ -36,7 +36,7 @@ public final class UnstickCommand extends SlashCommandAdapter {
         }
 
         event.getChannel()
-            .retrieveMessageById(stickyMessageRecord.getChannelId())
+            .retrieveMessageById(stickyMessageRecord.getMessageId())
             .flatMap(Message::delete)
             .queue();
         StickyUtils.deleteSticky(database, event.getChannel());
