@@ -76,3 +76,5 @@ Once installed, you have to get the **GitHub Codespaces** plugin:
 You can then login to your GitHub account and select your codespace:
 
 ![select codespace](https://i.imgur.com/u9OVwXR.png)
+
+The initial setup takes a few minutes, since it has to install IntelliJ on the codespace first.
