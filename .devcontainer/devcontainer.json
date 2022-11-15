@@ -1,0 +1,16 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "hostRequirements": {
+    "cpus": 1,
+    "memory": "1gb",
+    "storage": "2gb"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "18",
+      "jdkDistro": "tem",
+      "installGradle": true
+    },
+    "ghcr.io/devcontainers-contrib/features/pre-commit:1": {}
+  }
+}
