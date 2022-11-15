@@ -50,13 +50,12 @@ Once done, you are good to go and can run the bot. Just enter `gradle applicatio
 
 On the first run, this might take around 3 minutes, because it will first have to download all dependencies, generate the database and compile the code.
 
+Once the terminal reads `[main] INFO  org.togetherjava.tjbot.Application - Bot is ready`, you are done!
 
 ### Have fun
 
 The bot is now running and connected to your server, hurray 🎉
 
 You can now execute commands and see the bot do its magic:
-
-Once the terminal reads `[main] INFO  org.togetherjava.tjbot.Application - Bot is ready` you can start using it! 🎉
 
 ![pong](https://i.imgur.com/0x3GsnU.png)
