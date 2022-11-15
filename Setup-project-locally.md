@@ -2,6 +2,9 @@
 
 This tutorial shows how to download, setup and start the **TJ-Bot** project locally on your machine.
 
+Alternatively, you can also work directly in the cloud, for free, and get started in just a few seconds. See:
+* [[Code in the cloud (codespaces)]]
+
 ## Prerequisites
 * [Java 18](https://adoptium.net/temurin/releases?version=18) installed
 * your favorite Java IDE or text editor, e.g. [IntelliJ](https://www.jetbrains.com/idea/download/) or [Eclipse](https://www.eclipse.org/downloads/)
