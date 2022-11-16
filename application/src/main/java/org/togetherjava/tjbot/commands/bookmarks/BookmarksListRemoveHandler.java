@@ -26,7 +26,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-final class BookmarksPaginationHandler {
+final class BookmarksListRemoveHandler {
 
     private static final int ENTRIES_PER_PAGE = 10;
     private static final Emoji BUTTON_PREV_EMOJI = Emoji.fromUnicode("⬅");
@@ -43,7 +43,7 @@ final class BookmarksPaginationHandler {
     private final BookmarksSystem bookmarksSystem;
     private final Function<String[], String> generateComponentId;
 
-    BookmarksPaginationHandler(BookmarksSystem bookmarksSystem,
+    BookmarksListRemoveHandler(BookmarksSystem bookmarksSystem,
             Function<String[], String> generateComponentId) {
         this.bookmarksSystem = bookmarksSystem;
         this.generateComponentId = generateComponentId;
@@ -128,7 +128,7 @@ final class BookmarksPaginationHandler {
     }
 
     void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        RequestWithPagination request = RequestWithPagination.fromArgs(args);
+        Request request = Request.fromArgs(args);
         long userID = event.getUser().getIdLong();
 
         List<BookmarksRecord> bookmarks = bookmarksSystem.getUsersBookmarks(userID);
@@ -147,7 +147,7 @@ final class BookmarksPaginationHandler {
     }
 
     private void removeSelectedBookmarks(List<BookmarksRecord> bookmarks,
-            ComponentInteraction event, RequestWithPagination request) {
+            ComponentInteraction event, Request request) {
         long userID = event.getUser().getIdLong();
 
         Predicate<BookmarksRecord> isBookmarkSelectedForRemoval =
@@ -158,7 +158,7 @@ final class BookmarksPaginationHandler {
     }
 
     void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        RequestWithPagination request = RequestWithPagination.fromArgs(args);
+        Request request = Request.fromArgs(args);
 
         if (request.type != RequestType.REMOVE) {
             throw new IllegalArgumentException(
@@ -183,7 +183,7 @@ final class BookmarksPaginationHandler {
         updatePagination(event, request.atPage(updatedPageIndex), bookmarks);
     }
 
-    private void updatePagination(ComponentInteraction event, RequestWithPagination request,
+    private void updatePagination(ComponentInteraction event, Request request,
             List<BookmarksRecord> bookmarks) {
         if (bookmarks.isEmpty()) {
             event.editMessageEmbeds(NO_BOOKMARKS_EMBED).setComponents().queue();
@@ -206,8 +206,7 @@ final class BookmarksPaginationHandler {
     private LayoutComponent generateNavigationComponent(RequestType requestType,
             int pageToDisplayIndex) {
         UnaryOperator<String> generateNavigationComponentId = name -> {
-            RequestWithPagination request =
-                    new RequestWithPagination(requestType, name, pageToDisplayIndex, Set.of());
+            Request request = new Request(requestType, name, pageToDisplayIndex, Set.of());
 
             return generateComponentId.apply(request.toArray());
         };
@@ -221,14 +220,14 @@ final class BookmarksPaginationHandler {
         return ActionRow.of(buttonPrev, buttonNext);
     }
 
-    private List<LayoutComponent> generateRemoveComponents(JDA jda, List<BookmarksRecord> bookmarks,
-            RequestType requestType, int pageToDisplayIndex,
-            Set<Long> bookmarksToRemoveChannelIDs) {
+    private List<LayoutComponent> generateRemoveComponents(JDA jda,
+            List<? extends BookmarksRecord> bookmarks, RequestType requestType,
+            int pageToDisplayIndex, Set<Long> bookmarksToRemoveChannelIDs) {
         List<PageEntry> pageEntries = getPageEntries(bookmarks, pageToDisplayIndex);
 
         UnaryOperator<String> generateRemoveComponentId = name -> {
-            RequestWithPagination request = new RequestWithPagination(requestType, name,
-                    pageToDisplayIndex, bookmarksToRemoveChannelIDs);
+            Request request =
+                    new Request(requestType, name, pageToDisplayIndex, bookmarksToRemoveChannelIDs);
 
             return generateComponentId.apply(request.toArray());
         };
@@ -297,18 +296,18 @@ final class BookmarksPaginationHandler {
     private record PageEntry(int bookmarkNumber, BookmarksRecord bookmark) {
     }
 
-    private record RequestWithPagination(RequestType type, String componentName,
-            int pageToDisplayIndex, Set<Long> bookmarkIdsToRemove) {
-        RequestWithPagination atPage(int pageIndex) {
-            return new RequestWithPagination(type, componentName, pageIndex, bookmarkIdsToRemove);
+    private record Request(RequestType type, String componentName, int pageToDisplayIndex,
+            Set<Long> bookmarkIdsToRemove) {
+        Request atPage(int pageIndex) {
+            return new Request(type, componentName, pageIndex, bookmarkIdsToRemove);
         }
 
-        RequestWithPagination withSelectedBookmarksToRemove(Set<Long> selectedBookmarkIdsToRemove) {
-            return new RequestWithPagination(type, componentName, pageToDisplayIndex,
+        Request withSelectedBookmarksToRemove(Set<Long> selectedBookmarkIdsToRemove) {
+            return new Request(type, componentName, pageToDisplayIndex,
                     selectedBookmarkIdsToRemove);
         }
 
-        static RequestWithPagination fromArgs(List<String> args) {
+        static Request fromArgs(List<String> args) {
             RequestType requestType = RequestType.valueOf(args.get(0));
             String componentName = args.get(1);
             int currentPageIndex = Integer.parseInt(args.get(2));
@@ -319,8 +318,7 @@ final class BookmarksPaginationHandler {
                         args.stream().skip(3).map(Long::parseLong).collect(Collectors.toSet());
             }
 
-            return new RequestWithPagination(requestType, componentName, currentPageIndex,
-                    bookmarkIdsToRemove);
+            return new Request(requestType, componentName, currentPageIndex, bookmarkIdsToRemove);
         }
 
         String[] toArray() {

@@ -58,7 +58,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                         """);
 
     private final BookmarksSystem bookmarksSystem;
-    private final BookmarksPaginationHandler paginatedRequestInteractor;
+    private final BookmarksListRemoveHandler listRemoveHandler;
 
     /**
      * Creates a new instance and registers every sub command.
@@ -69,8 +69,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Bookmark help threads so that you can easily look them up again",
                 CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
-        paginatedRequestInteractor =
-                new BookmarksPaginationHandler(bookmarksSystem, this::generateComponentId);
+        listRemoveHandler =
+                new BookmarksListRemoveHandler(bookmarksSystem, this::generateComponentId);
 
         OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_BOOKMARK_NOTE_OPTION,
                 "Your personal comment on this bookmark")
@@ -96,20 +96,20 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
         switch (subCommandName) {
             case SUBCOMMAND_ADD -> addBookmark(event);
-            case SUBCOMMAND_LIST -> paginatedRequestInteractor.handleListRequest(event);
-            case SUBCOMMAND_REMOVE -> paginatedRequestInteractor.handleRemoveRequest(event);
+            case SUBCOMMAND_LIST -> listRemoveHandler.handleListRequest(event);
+            case SUBCOMMAND_REMOVE -> listRemoveHandler.handleRemoveRequest(event);
             default -> throw new IllegalArgumentException("Unknown subcommand");
         }
     }
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        paginatedRequestInteractor.onButtonClick(event, args);
+        listRemoveHandler.onButtonClick(event, args);
     }
 
     @Override
     public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        paginatedRequestInteractor.onSelectMenuSelection(event, args);
+        listRemoveHandler.onSelectMenuSelection(event, args);
     }
 
     private void addBookmark(SlashCommandInteractionEvent event) {
