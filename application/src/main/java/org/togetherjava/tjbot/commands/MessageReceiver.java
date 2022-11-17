@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import java.util.regex.Pattern;
 
 /**
- * Receives incoming Discord guild messages from channels, which optionally match a given pattern.
+ * Receives incoming Discord guild messages from channels matching a given pattern.
  * <p>
  * All message receivers have to implement this interface. For convenience, there is a
  * {@link MessageReceiverAdapter} available that implemented most methods already. A new receiver
