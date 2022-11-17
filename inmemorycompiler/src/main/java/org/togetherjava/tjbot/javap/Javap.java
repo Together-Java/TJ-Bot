@@ -16,125 +16,132 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * A javap-interface that uses reflection to access locked-down classes of the jdk.jdeps module and
- * keep everything in-memory
+ * In-memory disassembler of raw Java bytecode (for example, as received by
+ * {@link org.togetherjava.tjbot.imc.InMemoryCompiler}, or by reading a {@code .class} file).
  */
-// Disables "Reflection should not be used to increase accessibility of classes, methods, or fields"
-// rule (Reflection is required for the Javap class to work).
-@SuppressWarnings({"java:S3011"})
+/*
+ * Sonar does not like the heavy use of reflection to access locked down internal JDK tools, but the
+ * class is designed based on this.
+ */
+@SuppressWarnings("java:S3011")
 public final class Javap {
-    // Hide constructor
-    private Javap() {}
+    // FIXME Make this a non-static class
+    private Javap() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     private static final String TEMP_FILE_NAME = "tmp";
+    // FIXME Odd name
     private static final String ANNOYING_WARNING_MESSAGE =
             "Warning: File /%s does not contain class %<s";
 
-    private static final Class<?> javapFileManagerCls;
-    private static final Class<?> javapTaskCls;
+    private static final Class<?> javapFileManagerType;
+    private static final Class<?> javapTaskType;
 
-    private static final Method javapFileManagerCreateMethod;
-    private static final Method javapTaskRunMethod;
-    private static final Method javapTaskGetDiagnosticListenerForWriterMethod;
+    private static final Method javapFileManagerCreate;
+    private static final Method javapTaskRun;
+    private static final Method javapTaskGetDiagnosticListenerForWriter;
 
-    private static final Field javapTaskDefaultFileManagerField;
-    private static final Field javapTaskLogField;
+    private static final Field javapTaskDefaultFileManager;
+    private static final Field javapTaskLog;
 
     static {
         try {
-            javapFileManagerCls = Class.forName("com.sun.tools.javap.JavapFileManager");
-            javapFileManagerCreateMethod = javapFileManagerCls.getDeclaredMethod("create",
+            javapFileManagerType = Class.forName("com.sun.tools.javap.JavapFileManager");
+            javapFileManagerCreate = javapFileManagerType.getDeclaredMethod("create",
                     DiagnosticListener.class, PrintWriter.class);
 
-            javapTaskCls = Class.forName("com.sun.tools.javap.JavapTask");
-            javapTaskDefaultFileManagerField = javapTaskCls.getDeclaredField("defaultFileManager");
-            javapTaskLogField = javapTaskCls.getDeclaredField("log");
-            javapTaskRunMethod = javapTaskCls.getDeclaredMethod("run", String[].class);
-            javapTaskGetDiagnosticListenerForWriterMethod =
-                    javapTaskCls.getDeclaredMethod("getDiagnosticListenerForWriter", Writer.class);
+            javapTaskType = Class.forName("com.sun.tools.javap.JavapTask");
+            javapTaskDefaultFileManager = javapTaskType.getDeclaredField("defaultFileManager");
+            javapTaskLog = javapTaskType.getDeclaredField("log");
+            javapTaskRun = javapTaskType.getDeclaredMethod("run", String[].class);
+            javapTaskGetDiagnosticListenerForWriter =
+                    javapTaskType.getDeclaredMethod("getDiagnosticListenerForWriter", Writer.class);
 
-            javapFileManagerCreateMethod.setAccessible(true);
-            javapTaskDefaultFileManagerField.setAccessible(true);
-            javapTaskLogField.setAccessible(true);
-            javapTaskRunMethod.setAccessible(true);
-            javapTaskGetDiagnosticListenerForWriterMethod.setAccessible(true);
-        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException ex) {
-            throw new ReflectionException(
-                    "A fatal exception has occurred while using reflection in the non-static initializer of org.togetherjava.tjbot.javap.Javap",
-                    ex);
+            javapFileManagerCreate.setAccessible(true);
+            javapTaskDefaultFileManager.setAccessible(true);
+            javapTaskLog.setAccessible(true);
+            javapTaskRun.setAccessible(true);
+            javapTaskGetDiagnosticListenerForWriter.setAccessible(true);
+        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException e) {
+            throw new IllegalStateException(
+                    "Error while attempting to access JDK internal Javap classes for the disassembler.",
+                    e);
         }
     }
 
     /**
-     * Disassembles the given classfile bytecode with given program arguments
+     * Disassembles the given bytecode with given options.
      *
-     * @param bytes classfile bytecode
-     * @param options options to give to javap
-     * @return disassembled view
-     * @throws ReflectionException if an exception occurs while doing reflection black magic
+     * @param rawBytecode the raw bytecode to disassemble
+     * @param options selectable options
+     * @return disassembled bytecode
+     * @throws RuntimeException If the given bytecode could not be disassembled, for example,
+     *         because it was invalid
      */
-    public static String disassemble(byte[] bytes, JavapOption... options)
-            throws ReflectionException {
-        StringWriter stringWriter = new StringWriter();
-        PrintWriter log = new PrintWriter(stringWriter);
+    public static String disassemble(byte[] rawBytecode, JavapOption... options) {
+        // FIXME Proper exception usage
+        StringWriter result = new StringWriter();
+        PrintWriter resultWriter = new PrintWriter(result);
 
         try {
-            Object javapTaskInstance = createJavapTaskObject();
+            Object javapTask = newJavapTask();
 
-            javapTaskDefaultFileManagerField.set(javapTaskInstance, new IMJavapFileManager(
-                    getDefaultFileManager(javapTaskInstance, log), bytes, TEMP_FILE_NAME));
+            var fileManager = new InMemoryJavaFileManager(
+                    getDefaultFileManager(javapTask, resultWriter), rawBytecode, TEMP_FILE_NAME);
+            javapTaskDefaultFileManager.set(javapTask, fileManager);
 
-            javapTaskLogField.set(javapTaskInstance, log);
+            javapTaskLog.set(javapTask, resultWriter);
 
-            List<String> invokeOptions = Arrays.stream(options)
-                .map(JavapOption::getOption)
-                .collect(Collectors.toCollection(ArrayList::new));
-
-            invokeOptions.add(TEMP_FILE_NAME);
-
-            javapTaskRunMethod.invoke(javapTaskInstance,
-                    (Object) invokeOptions.toArray(String[]::new));
+            javapTaskRun.invoke(javapTask, optionsToInvokeArgs(options));
         } catch (InvocationTargetException | NoSuchMethodException | InstantiationException
-                | IllegalAccessException ex) {
-            throw new ReflectionException("A fatal exception has occurred while using reflection",
-                    ex);
+                | IllegalAccessException e) {
+            throw new IllegalArgumentException("Failed to disassemble the given bytecode.", e);
         }
 
-        return stringWriter.toString()
-            .replace(ANNOYING_WARNING_MESSAGE.formatted(TEMP_FILE_NAME), "");
+        return result.toString().replace(ANNOYING_WARNING_MESSAGE.formatted(TEMP_FILE_NAME), "");
     }
 
     /**
-     * Gets the default file manager instance from a {@link com.sun.tools.javap.JavapTask} and a
+     * Gets the default file manager instance from a {@code com.sun.tools.javap.JavapTask} and a
      * {@link PrintWriter} using
-     * {@link com.sun.tools.javap.JavapFileManager#create(DiagnosticListener, PrintWriter)}
+     * {@code com.sun.tools.javap.JavapFileManager#create(DiagnosticListener, PrintWriter)}
      */
-    private static JavaFileManager getDefaultFileManager(Object javapTaskInstance, PrintWriter log)
+    private static JavaFileManager getDefaultFileManager(Object javapTask, PrintWriter writer)
             throws InvocationTargetException, IllegalAccessException {
-        return (JavaFileManager) javapFileManagerCreateMethod.invoke(null,
-                getDiagnosticListenerForWriter(javapTaskInstance, log), log);
+        DiagnosticListener<JavaFileObject> diagnosticListener =
+                getDiagnosticListenerForWriter(javapTask, writer);
+        return (JavaFileManager) javapFileManagerCreate.invoke(null, diagnosticListener, writer);
     }
 
     /**
-     * Creates a new {@link com.sun.tools.javap.JavapTask} instance
-     */
-    private static Object createJavapTaskObject() throws NoSuchMethodException,
-            InvocationTargetException, InstantiationException, IllegalAccessException {
-        return javapTaskCls.getConstructor().newInstance();
-    }
-
-    /**
-     * Generates a {@link DiagnosticListener} instance from a {@link com.sun.tools.javap.JavapTask}
+     * Generates a {@link DiagnosticListener} instance from a {@code com.sun.tools.javap.JavapTask}
      * and a {@link PrintWriter} using
-     * {@link com.sun.tools.javap.JavapTask#getDiagnosticListenerForWriter(Writer)}
+     * {@code com.sun.tools.javap.JavapTask#getDiagnosticListenerForWriter(Writer)}
      */
     @SuppressWarnings("unchecked")
     private static DiagnosticListener<JavaFileObject> getDiagnosticListenerForWriter(
-            Object javapTaskInstance, PrintWriter log)
+            Object javapTask, PrintWriter writer)
             throws InvocationTargetException, IllegalAccessException {
-        return (DiagnosticListener<JavaFileObject>) javapTaskGetDiagnosticListenerForWriterMethod
-            .invoke(javapTaskInstance, log); // getDiagnosticListenerForWriter's signature:
-        // DiagnosticListener<JavaFileObject>
-        // getDiagnosticListenerForWriter(Writer)
+        return (DiagnosticListener<JavaFileObject>) javapTaskGetDiagnosticListenerForWriter
+            .invoke(javapTask, writer);
+    }
+
+    /**
+     * Creates a new {@code com.sun.tools.javap.JavapTask} instance
+     */
+    private static Object newJavapTask() throws NoSuchMethodException, InvocationTargetException,
+            InstantiationException, IllegalAccessException {
+        return javapTaskType.getConstructor().newInstance();
+    }
+
+    private static Object[] optionsToInvokeArgs(JavapOption... options) {
+        List<String> invokeArgs = Arrays.stream(options)
+            .map(JavapOption::getLabel)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        invokeArgs.add(TEMP_FILE_NAME);
+
+        return invokeArgs.toArray(Object[]::new);
     }
 }

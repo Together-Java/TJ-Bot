@@ -1,3 +1,5 @@
+import java.time.Instant
+
 buildscript {
     dependencies {
         classpath 'org.xerial:sqlite-jdbc:3.39.2.0'
@@ -28,7 +30,7 @@ jib {
     }
     container {
         mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
-        setCreationTime(java.time.Instant.now().toString())
+        setCreationTime(Instant.now().toString())
     }
 }
 

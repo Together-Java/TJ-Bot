@@ -1,5 +1,7 @@
 /**
- * This package provides utility classes to compile Java code fully in memory. (IMC stands for
+ * This package provides utility classes to compile Java code fully in memory.
+ * <p>
+ * See {@link org.togetherjava.tjbot.imc.InMemoryCompiler} as entry point. (IMC stands for
  * In-Memory-Compiler)
  */
 @MethodsReturnNonnullByDefault
