@@ -8,8 +8,10 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.util.List;
 import java.util.Optional;
@@ -93,7 +95,8 @@ public final class RejoinModerationRoleListener implements EventReceiver {
 
     private static void applyModerationRole(ModerationRole moderationRole, Member member) {
         Guild guild = member.getGuild();
-        logger.info("Reapplied existing {} to user '{}' ({}) in guild '{}' after rejoining.",
+        logger.info(LogMarkers.SENSITIVE,
+                "Reapplied existing {} to user '{}' ({}) in guild '{}' after rejoining.",
                 moderationRole.actionName, member.getUser().getAsTag(), member.getId(),
                 guild.getName());
 

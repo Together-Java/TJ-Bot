@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.moderation.temp;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
+
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
 import org.togetherjava.tjbot.config.Config;
@@ -39,8 +40,7 @@ final class TemporaryMuteAction extends RevocableRoleBasedAction {
     @Override
     public RestAction<Void> revokeAction(Guild guild, User target, String reason) {
         return guild
-            .removeRoleFromMember(target.getIdLong(),
-                    ModerationUtils.getMutedRole(guild, config).orElseThrow())
+            .removeRoleFromMember(target, ModerationUtils.getMutedRole(guild, config).orElseThrow())
             .reason(reason);
     }
 }

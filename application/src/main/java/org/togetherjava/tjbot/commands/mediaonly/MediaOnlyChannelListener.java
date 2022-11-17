@@ -1,12 +1,14 @@
 package org.togetherjava.tjbot.commands.mediaonly;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 
@@ -59,10 +61,10 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                     .setColor(Color.ORANGE)
                     .build();
 
-        Message dmMessage = new MessageBuilder(
+        MessageCreateData dmMessage = new MessageCreateBuilder().setContent(
                 "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-                    .setEmbeds(originalMessageEmbed)
-                    .build();
+            .setEmbeds(originalMessageEmbed)
+            .build();
 
         return message.getAuthor()
             .openPrivateChannel()

@@ -1,9 +1,10 @@
 package org.togetherjava.tjbot.commands.tags;
 
-import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+
 import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
@@ -44,8 +45,7 @@ public final class TagSystem {
      */
     @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
     static Button createDeleteButton(String componentId) {
-        return Button.of(ButtonStyle.DANGER, componentId, "Delete",
-                Emoji.fromUnicode("\uD83D\uDDD1")); // trash bin
+        return Button.of(ButtonStyle.DANGER, componentId, "Delete", Emoji.fromUnicode("🗑"));
     }
 
     /**

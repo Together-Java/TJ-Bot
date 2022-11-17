@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.javap;
 
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Enum that represents every possible javap executable option that does not include an argument.

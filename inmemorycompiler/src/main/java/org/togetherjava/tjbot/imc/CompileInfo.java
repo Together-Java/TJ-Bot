@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.imc;
 
 import javax.tools.Diagnostic;
+
 import java.util.Objects;
 
 /**

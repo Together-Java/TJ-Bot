@@ -2,11 +2,39 @@ package org.togetherjava.tjbot.commands.utils;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 final class StringDistancesTest {
+
+    @Test
+    void closeMatches() {
+        record TestCase(String name, Collection<String> expectedSuggestions, String prefix,
+                Collection<String> candidates, int limit) {
+        }
+
+        List<String> candidates = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
+                "key", "nvim", "py", "tag", "taz", "vi", "vim");
+        final int MAX_MATCHES = 5;
+
+        List<TestCase> tests = List.of(
+                new TestCase("no_tags", List.of(), "foo", List.of(), MAX_MATCHES),
+                new TestCase("no_prefix", List.of("c", "c#", "c++", "emacs", "foo"), "", candidates,
+                        MAX_MATCHES),
+                new TestCase("both_empty", List.of(), "", List.of(), MAX_MATCHES),
+                new TestCase("withPrefix0", List.of("vi", "vim"), "v", candidates, MAX_MATCHES),
+                new TestCase("withPrefix1", List.of("java", "js"), "j", candidates, MAX_MATCHES),
+                new TestCase("withPrefix2", List.of("c", "c#", "c++"), "c", candidates,
+                        MAX_MATCHES));
+
+        for (TestCase test : tests) {
+            assertEquals(test.expectedSuggestions,
+                    StringDistances.closeMatches(test.prefix, test.candidates, test.limit),
+                    "Test '%s' failed".formatted(test.name));
+        }
+    }
 
     @Test
     void editDistance() {

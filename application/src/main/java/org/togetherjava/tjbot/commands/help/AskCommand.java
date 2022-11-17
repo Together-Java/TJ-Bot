@@ -1,6 +1,10 @@
 package org.togetherjava.tjbot.commands.help;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -11,14 +15,28 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 
+import javax.annotation.Nullable;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
 import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
+import static org.togetherjava.tjbot.commands.help.HelpThreadCommand.CHANGE_CATEGORY_SUBCOMMAND;
+import static org.togetherjava.tjbot.commands.help.HelpThreadCommand.CHANGE_TITLE_SUBCOMMAND;
+import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 /**
  * Implements the {@code /ask} command, which is the main way of asking questions. The command can
@@ -41,19 +59,27 @@ import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPAC
  * </pre>
  */
 public final class AskCommand extends SlashCommandAdapter {
+    private static final int COOLDOWN_DURATION_VALUE = 5;
+    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Logger logger = LoggerFactory.getLogger(AskCommand.class);
-
+    public static final String COMMAND_NAME = "ask";
     private static final String TITLE_OPTION = "title";
     private static final String CATEGORY_OPTION = "category";
+    private final Cache<Long, Instant> userToLastAsk = Caffeine.newBuilder()
+        .maximumSize(1_000)
+        .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
+        .build();
     private final HelpSystemHelper helper;
+    private final Database database;
 
     /**
      * Creates a new instance.
      *
      * @param config the config to use
      * @param helper the helper to use
+     * @param database the database to get help threads from
      */
-    public AskCommand(Config config, HelpSystemHelper helper) {
+    public AskCommand(Config config, HelpSystemHelper helper, Database database) {
         super("ask", "Ask a question - use this in the staging channel", CommandVisibility.GUILD);
 
         OptionData title =
@@ -67,10 +93,16 @@ public final class AskCommand extends SlashCommandAdapter {
         getData().addOptions(title, category);
 
         this.helper = helper;
+        this.database = database;
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
+        if (isUserOnCooldown(event.getUser())) {
+            sendCooldownResponse(event);
+            return;
+        }
+
         String title = event.getOption(TITLE_OPTION).getAsString();
         String category = event.getOption(CATEGORY_OPTION).getAsString();
 
@@ -96,8 +128,67 @@ public final class AskCommand extends SlashCommandAdapter {
         overviewChannel.createThreadChannel(name.toChannelName())
             .flatMap(threadChannel -> handleEvent(eventHook, threadChannel, author, title, category,
                     guild))
-            .queue(any -> {
-            }, e -> handleFailure(e, eventHook));
+            .queue(any -> userToLastAsk.put(event.getUser().getIdLong(), Instant.now()),
+                    e -> handleFailure(e, eventHook));
+    }
+
+    private boolean isUserOnCooldown(User user) {
+        return Optional.ofNullable(userToLastAsk.getIfPresent(user.getIdLong()))
+            .map(lastAction -> lastAction.plus(COOLDOWN_DURATION_VALUE, COOLDOWN_DURATION_UNIT))
+            .filter(Instant.now()::isBefore)
+            .isPresent();
+    }
+
+    private void sendCooldownResponse(SlashCommandInteractionEvent event) {
+        User user = event.getUser();
+        Guild guild = event.getGuild();
+
+        HelpThreadsRecord lastThreadByAuthor = getLatestHelpThread(user);
+
+        String cooldownDuration =
+                COOLDOWN_DURATION_VALUE + " " + COOLDOWN_DURATION_UNIT.name().toLowerCase();
+
+        if (lastThreadByAuthor == null) {
+            logger.warn("Can't find the last help thread created by the user with id ({})",
+                    user.getId());
+            event
+                .reply("Sorry, something went wrong. Please try again after %s."
+                    .formatted(cooldownDuration))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        Function<List<String>, String> formatMessage = commandMentions -> {
+            String message =
+                    """
+                            Sorry, you can only create a single help thread every %s. Please use your existing thread %s instead.
+                            If you made a typo or similar, you can adjust the title using the command %s and the category with %s 👌""";
+
+            String lastThreadMention =
+                    MessageUtils.mentionChannelById(lastThreadByAuthor.getChannelId());
+
+            return message.formatted(cooldownDuration, lastThreadMention, commandMentions.get(0),
+                    commandMentions.get(1));
+        };
+
+        RestAction<String> changeTitle = mentionHelpChangeCommand(guild, CHANGE_TITLE_SUBCOMMAND);
+        RestAction<String> changeCategory =
+                mentionHelpChangeCommand(guild, CHANGE_CATEGORY_SUBCOMMAND);
+
+        RestAction.allOf(changeCategory, changeTitle)
+            .map(formatMessage)
+            .flatMap(text -> event.reply(text).setEphemeral(true))
+            .queue();
+    }
+
+    @Nullable
+    private HelpThreadsRecord getLatestHelpThread(User user) {
+        return database.read(context -> context.selectFrom(HELP_THREADS)
+            .where(HELP_THREADS.AUTHOR_ID.eq(user.getIdLong()))
+            .orderBy(HELP_THREADS.CREATED_AT.desc())
+            .limit(1)
+            .fetchOne());
     }
 
     private boolean handleIsValidTitle(CharSequence title, IReplyCallback event) {
@@ -121,6 +212,7 @@ public final class AskCommand extends SlashCommandAdapter {
             Member author, String title, String category, Guild guild) {
         helper.writeHelpThreadToDatabase(author, threadChannel);
         return sendInitialMessage(guild, threadChannel, author, title, category)
+            .flatMap(Message::pin)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
             .flatMap(any -> helper.sendExplanationMessage(threadChannel));
     }
@@ -131,10 +223,11 @@ public final class AskCommand extends SlashCommandAdapter {
             .map(role -> " (%s)".formatted(role.getAsMention()))
             .orElse("");
 
-        String contentPattern = "%s has a question about '**%s**'%%s and will send the details now."
-            .formatted(author.getAsMention(), title);
-        String contentWithoutRole = contentPattern.formatted("");
-        String contentWithRole = contentPattern.formatted(roleMentionDescription);
+        String contentPrefix =
+                "%s has a question about '**%s**'".formatted(author.getAsMention(), title);
+        String contentSuffix = " and will send the details now.";
+        String contentWithoutRole = contentPrefix + contentSuffix;
+        String contentWithRole = contentPrefix + roleMentionDescription + contentSuffix;
 
         // We want to invite all members of a role, but without hard-pinging them. However,
         // manually inviting them is cumbersome and can hit rate limits.
@@ -164,5 +257,10 @@ public final class AskCommand extends SlashCommandAdapter {
         }
 
         logger.error("Attempted to create a help thread, but failed", exception);
+    }
+
+    private static RestAction<String> mentionHelpChangeCommand(Guild guild, String subcommand) {
+        return MessageUtils.mentionGuildSlashCommand(guild, HelpThreadCommand.COMMAND_NAME,
+                HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP, subcommand);
     }
 }

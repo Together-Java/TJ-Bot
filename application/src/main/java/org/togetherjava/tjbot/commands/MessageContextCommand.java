@@ -1,12 +1,12 @@
 package org.togetherjava.tjbot.commands;
 
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
 
 import java.util.List;
@@ -22,7 +22,6 @@ import java.util.List;
  * {@link BotCommandAdapter} available that implemented most methods already. A new command can then
  * be registered by adding it to {@link Features}.
  * <p>
- * <p>
  * Context commands can either be visible globally in Discord or just to specific guilds. Minor
  * adjustments can be made via {@link CommandData}, which is then to be returned by
  * {@link #getData()} where the system will then pick it up from.
@@ -30,13 +29,11 @@ import java.util.List;
  * After registration, the system will notify a command whenever one of its corresponding message
  * context-commands ({@link #onMessageContext(MessageContextInteractionEvent)}), buttons
  * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
- * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
- * <p>
+ * ({@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
 public interface MessageContextCommand extends BotCommand {
-
     /**
      * Triggered by the core system when a message context-command corresponding to this
      * implementation (based on {@link #getData()}) has been triggered.
@@ -50,7 +47,7 @@ public interface MessageContextCommand extends BotCommand {
      * <p>
      * Buttons or menus have to be created with a component ID (see
      * {@link ComponentInteraction#getComponentId()},
-     * {@link net.dv8tion.jda.api.interactions.components.buttons.Button#of(ButtonStyle, String, Emoji)})
+     * {@link net.dv8tion.jda.api.interactions.components.buttons.Button#of(ButtonStyle, String, String)})
      * in a very specific format, otherwise the core system will fail to identify the command that
      * corresponded to the button or menu click event and is unable to route it back.
      * <p>

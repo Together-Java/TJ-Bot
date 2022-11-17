@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import javax.annotation.Nullable;
 
 public final class PayloadSlashCommandResolved {

@@ -1,7 +1,13 @@
 package org.togetherjava.tjbot.commands.utils;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.annotation.Nullable;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,11 +16,11 @@ final class MessageUtilsTest {
 
     @Test
     void escapeMarkdown() {
-        List<TestCase> tests = List.of(new TestCase("empty", "", ""),
-                new TestCase("no markdown", "hello world", "hello world"),
-                new TestCase(
+        List<TestCaseEscape> tests = List.of(new TestCaseEscape("empty", "", ""),
+                new TestCaseEscape("no markdown", "hello world", "hello world"),
+                new TestCaseEscape(
                         "basic markdown", "\\*\\*hello\\*\\* \\_world\\_", "**hello** _world_"),
-                new TestCase("code block", """
+                new TestCaseEscape("code block", """
                         \\`\\`\\`java
                         int x = 5;
                         \\`\\`\\`
@@ -23,9 +29,9 @@ final class MessageUtilsTest {
                         int x = 5;
                         ```
                         """),
-                new TestCase("escape simple", "hello\\\\\\\\world\\\\\\\\test",
+                new TestCaseEscape("escape simple", "hello\\\\\\\\world\\\\\\\\test",
                         "hello\\\\world\\\\test"),
-                new TestCase("escape complex", """
+                new TestCaseEscape("escape complex", """
                         Hello\\\\\\\\world
                         \\`\\`\\`java
                         Hello\\\\\\\\
@@ -46,7 +52,7 @@ final class MessageUtilsTest {
                         "Hello \\" World\\\\\\"" haha
                         ```
                         """),
-                new TestCase("escape real example",
+                new TestCaseEscape("escape real example",
                         """
                                 Graph traversal can be accomplished easily using \\*\\*BFS\\*\\* or \\*\\*DFS\\*\\*. The algorithms only differ in the order in which nodes are visited: https://i.imgur.com/n9WrkQG.png
 
@@ -158,12 +164,108 @@ final class MessageUtilsTest {
                                 ```
                                 """));
 
-        for (TestCase test : tests) {
+        for (TestCaseEscape test : tests) {
             assertEquals(test.escapedMessage(), MessageUtils.escapeMarkdown(test.originalMessage()),
                     "Test failed: " + test.testName());
         }
     }
 
-    private record TestCase(String testName, String escapedMessage, String originalMessage) {
+    private record TestCaseEscape(String testName, String escapedMessage, String originalMessage) {
+    }
+
+    @Test
+    void abbreviate() {
+        List<TestCaseAbbreviate> tests =
+                List.of(new TestCaseAbbreviate("base case", "hello...", "hello world", 8),
+                        new TestCaseAbbreviate("long enough", "hello world", "hello world", 15),
+                        new TestCaseAbbreviate("exact size", "hello world", "hello world", 11),
+                        new TestCaseAbbreviate("very small limit", "he", "hello world", 2),
+                        new TestCaseAbbreviate("empty input", "", "", 0),
+                        new TestCaseAbbreviate("zero limit", "", "hello world", 0),
+                        new TestCaseAbbreviate("small limit", "h...", "hello world", 4));
+
+        for (TestCaseAbbreviate test : tests) {
+            assertEquals(test.abbreviatedMessage(),
+                    MessageUtils.abbreviate(test.originalMessage(), test.limit()),
+                    "Test failed: " + test.testName());
+        }
+    }
+
+    private record TestCaseAbbreviate(String testName, String abbreviatedMessage,
+            String originalMessage, int limit) {
+    }
+
+    private static List<Arguments> provideExtractCodeTests() {
+        List<Arguments> tests = new ArrayList<>();
+        tests.add(createExtractCodeArgumentsFor("basic", """
+                Foo
+                %s
+                Bar""", "java", """
+                public class Foo {
+                  public static void main(String[] args) {
+                    System.out.println("Hello");
+                  }
+                }"""));
+
+        tests.add(createExtractCodeArgumentsFor("code only", "%s", "java", """
+                int x = 5;"""));
+
+        tests.add(Arguments.of("fence ends on code line", """
+                ```java
+                int x = 5;```""", new CodeFence("java", "int x = 5;")));
+
+        tests.add(createExtractCodeArgumentsFor("other language", "Foo %s Bar", "kotlin", """
+                fun main() {
+                  println("Hello, World!")
+                }"""));
+
+        tests.add(createExtractCodeArgumentsFor("no language", "Foo %s Bar", null, "foo=bar"));
+
+        tests.add(Arguments.of("no language single line no spaces", "```int```",
+                new CodeFence(null, "int")));
+
+        tests.add(createExtractCodeArgumentsFor("multiple fences", """
+                Foo
+                %s
+                Bar
+                ```java
+                int x = 5;
+                ```""", "java", "System.out.println(10);"));
+
+        tests.add(Arguments.of("no code", "foo", null));
+        tests.add(Arguments.of("empty", "", null));
+
+        tests.add(Arguments.of("unclosed code block", """
+                Foo
+                ```java
+                int x = 5;""", null));
+
+        tests.add(Arguments.of("almost closed code block", """
+                ```java
+                int x = 5;
+                ``""", null));
+
+        tests.add(Arguments.of("small code fence", "Foo `int x = 5` Bar", null));
+
+        return tests;
+    }
+
+    private static Arguments createExtractCodeArgumentsFor(String testName, String textTemplate,
+            @Nullable String language, String code) {
+        String codeInFence = """
+                ```%s
+                %s
+                ```""".formatted(language == null ? "" : language, code);
+
+        String text = textTemplate.formatted(codeInFence);
+        return Arguments.of(testName, text, new CodeFence(language, code));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideExtractCodeTests")
+    void extractCode(String testName, String text, @Nullable CodeFence expectedCodeFence) {
+        CodeFence actualCodeFence = MessageUtils.extractCode(text).orElse(null);
+
+        assertEquals(expectedCodeFence, actualCodeFence, testName);
     }
 }

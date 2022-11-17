@@ -1,13 +1,15 @@
 package org.togetherjava.tjbot.commands.basic;
 
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.SuggestionsConfig;
@@ -22,8 +24,8 @@ import java.util.regex.Pattern;
 public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SuggestionsUpDownVoter.class);
     private static final int TITLE_MAX_LENGTH = 60;
-    private static final String FALLBACK_UP_VOTE = "👍";
-    private static final String FALLBACK_DOWN_VOTE = "👎";
+    private static final Emoji FALLBACK_UP_VOTE = Emoji.fromUnicode("👍");
+    private static final Emoji FALLBACK_DOWN_VOTE = Emoji.fromUnicode("👎");
 
     private final SuggestionsConfig config;
 
@@ -68,13 +70,13 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         message.createThreadChannel(title).queue();
     }
 
-    private static void reactWith(String emoteName, String fallbackUnicodeEmote, Guild guild,
+    private static void reactWith(String emojiName, Emoji fallbackEmoji, Guild guild,
             Message message) {
-        getEmoteByName(emoteName, guild).map(message::addReaction).orElseGet(() -> {
+        getEmojiByName(emojiName, guild).map(message::addReaction).orElseGet(() -> {
             logger.warn(
-                    "Unable to vote on a suggestion with the configured emote ('{}'), using fallback instead.",
-                    emoteName);
-            return message.addReaction(fallbackUnicodeEmote);
+                    "Unable to vote on a suggestion with the configured emoji ('{}'), using fallback instead.",
+                    emojiName);
+            return message.addReaction(fallbackEmoji);
         }).queue(ignored -> {
         }, exception -> {
             if (exception instanceof ErrorResponseException responseException
@@ -88,7 +90,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         });
     }
 
-    private static Optional<Emote> getEmoteByName(String name, Guild guild) {
-        return guild.getEmotesByName(name, false).stream().findAny();
+    private static Optional<RichCustomEmoji> getEmojiByName(String name, Guild guild) {
+        return guild.getEmojisByName(name, false).stream().findAny();
     }
 }

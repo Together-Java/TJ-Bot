@@ -6,15 +6,18 @@ import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
 import javax.imageio.ImageIO;
+
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -110,7 +113,8 @@ public final class TeXCommand extends SlashCommandAdapter {
             throws IOException {
         ByteArrayOutputStream renderedTextImageStream = getRenderedTextImageStream(image);
         event.getHook()
-            .editOriginal(renderedTextImageStream.toByteArray(), "tex.png")
+            .editOriginalAttachments(
+                    FileUpload.fromData(renderedTextImageStream.toByteArray(), "tex.png"))
             .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
             .queue();
     }

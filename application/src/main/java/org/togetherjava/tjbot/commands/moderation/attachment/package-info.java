@@ -1,5 +1,7 @@
 /**
- * This packages offers all the functionality for checking attachment safety.
+ * This packages offers all the functionality for checking attachment safety see
+ * {@link org.togetherjava.tjbot.commands.moderation.attachment.BlacklistedAttachmentListener
+ * BlacklistedAttachmentListener} as main entry point.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault

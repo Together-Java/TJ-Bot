@@ -1,0 +1,36 @@
+{
+  "name": "TJ-Bot",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "hostRequirements": {
+    "cpus": 1,
+    "memory": "1gb",
+    "storage": "2gb"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "18.0.2.1-tem",
+      "jdkDistro": "tem",
+      "installGradle": true
+    },
+    "ghcr.io/devcontainers-contrib/features/pre-commit:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle",
+        "alexcvzz.vscode-sqlite",
+        "richardwillis.vscode-spotless-gradle"
+      ],
+      "settings": {
+        "[java]": {
+          "spotlessGradle.format.enable": true,
+          "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
+        }
+      }
+    }
+  },
+  "postCreateCommand": {
+    "config": "cp application/config.json.template application/config.json"
+  }
+}

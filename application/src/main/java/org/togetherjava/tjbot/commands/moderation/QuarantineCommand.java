@@ -10,11 +10,14 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -60,18 +63,11 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
-        String dmMessage =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been put under quarantine in the server %s.
-                        This means you can no longer interact with anyone in the server until you have been unquarantined again.
-                        If you think this was a mistake, or the reason no longer applies, please contact a moderator or admin of the server.
-                        The reason for the quarantine is: %s
-                        """
-                    .formatted(guild.getName(), reason);
-
         return event.getJDA()
             .openPrivateChannelById(target.getIdLong())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.QUARANTINE, null,
+                    "This means you can no longer interact with anyone in the server until you have been unquarantined again.",
+                    guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -88,7 +84,8 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private AuditableRestAction<Void> quarantineUser(Member target, Member author, String reason,
             Guild guild) {
-        logger.info("'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
 

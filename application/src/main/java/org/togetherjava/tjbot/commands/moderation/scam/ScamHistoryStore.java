@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.moderation.scam;
 
 import net.dv8tion.jda.api.entities.Message;
 import org.jooq.Result;
+
 import org.togetherjava.tjbot.commands.utils.Hashing;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.ScamHistoryRecord;

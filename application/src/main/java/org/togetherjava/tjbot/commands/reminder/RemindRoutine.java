@@ -2,18 +2,20 @@ package org.togetherjava.tjbot.commands.reminder;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.db.Database;
 
 import javax.annotation.Nullable;
+
 import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
@@ -26,11 +28,11 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 /**
  * Routine that processes and sends pending reminders.
  * <p>
- * Reminders can be set by using {@link RemindCommand}.
+ * Reminders can be set by using {@link ReminderCommand}.
  */
 public final class RemindRoutine implements Routine {
     static final Logger logger = LoggerFactory.getLogger(RemindRoutine.class);
-    private static final Color AMBIENT_COLOR = Color.decode("#F7F492");
+    static final Color AMBIENT_COLOR = Color.decode("#F7F492");
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private final Database database;
 
@@ -95,9 +97,9 @@ public final class RemindRoutine implements Routine {
 
     private static void sendReminderViaRoute(RestAction<ReminderRoute> routeAction, long id,
             CharSequence content, TemporalAccessor createdAt) {
-        Function<ReminderRoute, MessageAction> sendMessage = route -> route.channel
+        Function<ReminderRoute, MessageCreateAction> sendMessage = route -> route.channel
             .sendMessageEmbeds(createReminderEmbed(content, createdAt, route.target()))
-            .content(route.description());
+            .setContent(route.description());
 
         Consumer<Throwable> logFailure = failure -> logger.warn(
                 """

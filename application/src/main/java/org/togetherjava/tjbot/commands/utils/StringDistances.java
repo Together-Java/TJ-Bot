@@ -1,15 +1,19 @@
 package org.togetherjava.tjbot.commands.utils;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Utility class for computing string distances, for example the edit distance between two words.
  */
 public class StringDistances {
+    /**
+     * Matches that are further off than this are not considered as match anymore. The value is
+     * between 0.0 (full match) and 1.0 (completely different).
+     */
+    private static final double OFF_BY_PERCENTAGE_THRESHOLD = 0.5;
+
     private StringDistances() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
@@ -49,6 +53,42 @@ public class StringDistances {
             Collection<S> candidates) {
         return candidates.stream()
             .min(Comparator.comparingInt(candidate -> prefixEditDistance(prefix, candidate)));
+    }
+
+    /**
+     * Gives sorted suggestion to autocomplete a prefix string from the given options.
+     *
+     * @param prefix the prefix to give matches for
+     * @param candidates all the possible matches
+     * @param limit number of matches to generate at max
+     * @return the matches closest to the given prefix, limited to the given limit
+     */
+    public static Collection<String> closeMatches(CharSequence prefix,
+            Collection<String> candidates, int limit) {
+        if (candidates.isEmpty()) {
+            return List.of();
+        }
+
+        Collection<MatchScore> scoredMatches = candidates.stream()
+            .map(candidate -> new MatchScore(candidate, prefixEditDistance(prefix, candidate)))
+            .toList();
+
+        Queue<MatchScore> bestMatches = new PriorityQueue<>();
+        bestMatches.addAll(scoredMatches);
+
+        return Stream.generate(bestMatches::poll)
+            .limit(Math.min(limit, bestMatches.size()))
+            .takeWhile(matchScore -> isCloseEnough(matchScore, prefix))
+            .map(MatchScore::candidate)
+            .toList();
+    }
+
+    private static boolean isCloseEnough(MatchScore matchScore, CharSequence prefix) {
+        if (prefix.isEmpty()) {
+            return true;
+        }
+
+        return matchScore.score / prefix.length() <= OFF_BY_PERCENTAGE_THRESHOLD;
     }
 
     /**
@@ -140,5 +180,18 @@ public class StringDistances {
         }
 
         return table;
+    }
+
+    private record MatchScore(String candidate, double score) implements Comparable<MatchScore> {
+        @Override
+        public int compareTo(MatchScore otherMatchScore) {
+            int compareResult = Double.compare(this.score, otherMatchScore.score);
+
+            if (compareResult == 0) {
+                return this.candidate.compareTo(otherMatchScore.candidate);
+            }
+
+            return compareResult;
+        }
     }
 }

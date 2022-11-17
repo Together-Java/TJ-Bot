@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+
 import org.togetherjava.tjbot.commands.BotCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.MessageContextCommand;
@@ -20,6 +21,7 @@ import org.togetherjava.tjbot.javap.Javap;
 import org.togetherjava.tjbot.javap.JavapOption;
 
 import javax.tools.Diagnostic;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

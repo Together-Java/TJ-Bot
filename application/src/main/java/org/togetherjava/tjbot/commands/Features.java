@@ -1,24 +1,30 @@
 package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.JDA;
+
 import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
 import org.togetherjava.tjbot.commands.bytecode.BytecodeCommand;
+import org.togetherjava.tjbot.commands.code.CodeMessageAutoDetection;
+import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
+import org.togetherjava.tjbot.commands.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.commands.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.commands.help.*;
 import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.commands.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.commands.moderation.*;
+import org.togetherjava.tjbot.commands.moderation.ReportCommand;
 import org.togetherjava.tjbot.commands.moderation.attachment.BlacklistedAttachmentListener;
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.commands.moderation.temp.TemporaryModerationRoutine;
-import org.togetherjava.tjbot.commands.reminder.RemindCommand;
 import org.togetherjava.tjbot.commands.reminder.RemindRoutine;
+import org.togetherjava.tjbot.commands.reminder.ReminderCommand;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.commands.system.LogLevelCommand;
 import org.togetherjava.tjbot.commands.tags.TagCommand;
@@ -66,6 +72,7 @@ public class Features {
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(jda, config, database);
+        CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -93,10 +100,14 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(codeMessageHandler);
+        features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
+        features.add(new CodeMessageManualDetection(codeMessageHandler));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new OnGuildLeaveCloseThreadListener(database));
+        features.add(new UserBannedDeleteRecentThreadsListener(database));
 
         // Message context commands
 
@@ -120,21 +131,19 @@ public class Features {
         features.add(new TopHelpersCommand(database));
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore));
-        features.add(new RemindCommand(database));
+        features.add(new ReminderCommand(database));
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
-        features.add(new AskCommand(config, helpSystemHelper));
-        features.add(new CloseCommand());
-        features.add(new ChangeHelpCategoryCommand(config, helpSystemHelper));
-        features.add(new ChangeHelpTitleCommand(helpSystemHelper));
-
-        // Message context commands
-        features.add(new BytecodeCommand());
+        features.add(new AskCommand(config, helpSystemHelper, database));
+        features.add(new ModMailCommand(jda, config));
+        features.add(new HelpThreadCommand(config, helpSystemHelper));
+        features.add(new ReportCommand(config));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
+        features.add(new BytecodeCommand());
 
         return features;
     }

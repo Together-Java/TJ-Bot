@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.javap;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;

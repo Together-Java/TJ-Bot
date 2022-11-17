@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Contract;
 import java.util.regex.Pattern;
 
 /**
- * Class which contains all actions a Discord client accepts.
+ * Class, which contains all actions a Discord client accepts.
  * <p>
  * This allows you to open DM's {@link Channels#DM_CHANNEL}, specific settings
  * {@link Settings.App#VOICE} and much more.
@@ -23,25 +23,25 @@ import java.util.regex.Pattern;
  * Example:
  *
  * <pre>
- * <code>
+ * {@code
  * event.reply("Open Discord's secret home page!")
  *      .addActionRow(DiscordClientAction.Guild.GUILD_HOME_CHANNEL.asLinkButton("Open home page!", event.getGuild().getId())
- * </code>
+ * }
  * </pre>
  *
  * To improve readability, one might want to use a static import like:
  *
  * <pre>
- * <code>
+ * {@code
  * event.reply(whoIsCommandOutput)
  *      .addActionRow(USER.asLinkButton("Open home page!", target.getId())
- * </code>
+ * }
  * </pre>
  */
 public final class DiscordClientAction {
 
     /**
-     * Contains some of the more general actions
+     * Contains some of the more general actions.
      */
     public enum General {
         ;
@@ -65,7 +65,7 @@ public final class DiscordClientAction {
     }
 
     /**
-     * Contains guild specific actions
+     * Contains actions related to guilds.
      */
     public enum Guild {
         ;
@@ -94,7 +94,7 @@ public final class DiscordClientAction {
     }
 
     /**
-     * Contains actions related to channels
+     * Contains actions related to channels.
      */
     public enum Channels {
         ;
@@ -110,7 +110,7 @@ public final class DiscordClientAction {
     }
 
     /**
-     * Contains actions related to the settings menu
+     * Contains actions related to the settings menu.
      */
     /*
      * The warning is about this inner class being too long, and that it should be external This
@@ -122,7 +122,7 @@ public final class DiscordClientAction {
         ;
 
         /**
-         * Contains all user settings
+         * Contains all user settings.
          */
         public enum User {
             ;
@@ -140,7 +140,7 @@ public final class DiscordClientAction {
         }
 
         /**
-         * Contains all payment settings
+         * Contains all payment settings.
          */
         public enum Payment {
             ;
@@ -156,7 +156,7 @@ public final class DiscordClientAction {
         }
 
         /**
-         * Contains all app settings
+         * Contains all app settings.
          */
         public enum App {
             ;
@@ -195,7 +195,7 @@ public final class DiscordClientAction {
         }
 
         /**
-         * Contains some of the more general settings
+         * Contains some of the more general settings.
          */
         public enum General {
             ;
@@ -211,6 +211,9 @@ public final class DiscordClientAction {
         }
     }
 
+    /**
+     * Contains actions related to game libraries.
+     */
     public enum Library {
         ;
 
@@ -227,15 +230,15 @@ public final class DiscordClientAction {
     }
 
     /**
-     * Pattern for the arguments, finds everything within brackets
+     * Pattern for the arguments, finds everything within brackets.
      */
     public static final Pattern argumentPattern = Pattern.compile("\\{[^}]*}");
 
-    private final String url;
+    private final String rawUrl;
 
     @Contract(pure = true)
     private DiscordClientAction(final String url) {
-        this.url = url;
+        rawUrl = url;
     }
 
     /**
@@ -249,7 +252,7 @@ public final class DiscordClientAction {
      * @see #formatUrl(String...)
      */
     public String getRawUrl() {
-        return url;
+        return rawUrl;
     }
 
     /**
@@ -260,7 +263,7 @@ public final class DiscordClientAction {
      * @throws IllegalArgumentException When missing arguments
      */
     public String formatUrl(final String... arguments) {
-        String localUrl = url;
+        String localUrl = rawUrl;
 
         for (final String argument : arguments) {
             localUrl = argumentPattern.matcher(localUrl).replaceFirst(argument);
@@ -288,6 +291,6 @@ public final class DiscordClientAction {
 
     @Override
     public String toString() {
-        return "DiscordClientAction{" + "url='" + url + '\'' + '}';
+        return "DiscordClientAction{" + "url='" + rawUrl + '\'' + '}';
     }
 }

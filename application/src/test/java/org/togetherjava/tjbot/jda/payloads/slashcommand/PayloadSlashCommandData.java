@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.jda.payloads.slashcommand;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

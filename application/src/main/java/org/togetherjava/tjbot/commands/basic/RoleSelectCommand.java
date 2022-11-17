@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.basic;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -15,13 +16,14 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import java.awt.*;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -183,9 +185,8 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
             .map(RoleSelectCommand::mapToSelectOption)
             .forEach(menu::addOptions);
 
-        OptionMapping titleOption = event.getOption(TITLE_OPTION);
-        String title = titleOption == null ? "Select your roles:" : titleOption.getAsString();
-
+        String title =
+                event.getOption(TITLE_OPTION, "Select your roles:", OptionMapping::getAsString);
         MessageEmbed embed = createEmbed(title, event.getOption(DESCRIPTION_OPTION).getAsString());
 
         event.replyEmbeds(embed).addActionRow(menu.build()).queue();
@@ -196,14 +197,14 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
         SelectOption option = SelectOption.of(role.getName(), role.getId());
         if (null != roleIcon && roleIcon.isEmoji()) {
-            option = option.withEmoji((Emoji.fromUnicode(roleIcon.getEmoji())));
+            option = option.withEmoji(Emoji.fromUnicode(roleIcon.getEmoji()));
         }
 
         return option;
     }
 
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
         Guild guild = event.getGuild();
         List<Role> selectedRoles = event.getSelectedOptions()
             .stream()

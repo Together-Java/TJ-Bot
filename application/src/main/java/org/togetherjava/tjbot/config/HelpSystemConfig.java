@@ -7,11 +7,11 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Configuration for the help system, see {@link org.togetherjava.tjbot.commands.help.AskCommand}.
  */
-@SuppressWarnings("ClassCanBeRecord")
 @JsonRootName("helpSystem")
 public final class HelpSystemConfig {
     private final String stagingChannelPattern;
@@ -20,14 +20,18 @@ public final class HelpSystemConfig {
     private final String categoryRoleSuffix;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private HelpSystemConfig(@JsonProperty("stagingChannelPattern") String stagingChannelPattern,
-            @JsonProperty("overviewChannelPattern") String overviewChannelPattern,
-            @JsonProperty("categories") List<String> categories,
-            @JsonProperty("categoryRoleSuffix") String categoryRoleSuffix) {
-        this.stagingChannelPattern = stagingChannelPattern;
-        this.overviewChannelPattern = overviewChannelPattern;
-        this.categories = new ArrayList<>(categories);
-        this.categoryRoleSuffix = categoryRoleSuffix;
+    private HelpSystemConfig(
+            @JsonProperty(value = "stagingChannelPattern",
+                    required = true) String stagingChannelPattern,
+            @JsonProperty(value = "overviewChannelPattern",
+                    required = true) String overviewChannelPattern,
+            @JsonProperty(value = "categories", required = true) List<String> categories,
+            @JsonProperty(value = "categoryRoleSuffix",
+                    required = true) String categoryRoleSuffix) {
+        this.stagingChannelPattern = Objects.requireNonNull(stagingChannelPattern);
+        this.overviewChannelPattern = Objects.requireNonNull(overviewChannelPattern);
+        this.categories = new ArrayList<>(Objects.requireNonNull(categories));
+        this.categoryRoleSuffix = Objects.requireNonNull(categoryRoleSuffix);
     }
 
     /**

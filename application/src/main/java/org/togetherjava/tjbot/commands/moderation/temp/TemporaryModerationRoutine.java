@@ -6,11 +6,13 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.commands.moderation.ActionRecord;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.util.Map;
 import java.util.Objects;
@@ -123,8 +125,8 @@ public final class TemporaryModerationRoutine implements Routine {
 
     private RestAction<Void> executeRevocation(Guild guild, User target,
             ModerationAction actionType) {
-        logger.info("Revoked temporary action {} against user '{}' ({}).", actionType,
-                target.getAsTag(), target.getId());
+        logger.info(LogMarkers.SENSITIVE, "Revoked temporary action {} against user '{}' ({}).",
+                actionType, target.getAsTag(), target.getId());
         RevocableModerationAction action = getRevocableActionByType(actionType);
 
         String reason = "Automatic revocation of temporary action.";
@@ -140,7 +142,7 @@ public final class TemporaryModerationRoutine implements Routine {
             return;
         }
 
-        logger.warn(
+        logger.warn(LogMarkers.SENSITIVE,
                 "Attempted to revoke a temporary moderation action for user '{}' but something unexpected went wrong.",
                 groupIdentifier.targetId, failure);
     }

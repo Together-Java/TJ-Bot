@@ -1,10 +1,13 @@
 package org.togetherjava.tjbot.commands.mathcommands;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentMatcher;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
 
@@ -35,8 +38,11 @@ final class TeXCommandTest {
     }
 
     private void verifySuccessfulResponse(SlashCommandInteractionEvent event, String query) {
+        ArgumentMatcher<FileUpload> attachmentIsTexPng =
+                attachment -> attachment != null && "tex.png".equals(attachment.getName());
+
         verify(jdaTester.getInteractionHookMock(), description("Testing query: " + query))
-            .editOriginal(any(byte[].class), eq("tex.png"));
+            .editOriginalAttachments(argThat(attachmentIsTexPng));
     }
 
     private static List<String> provideSupportedQueries() {

@@ -9,10 +9,13 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -57,19 +60,14 @@ public final class WarnCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         return event.getJDA()
             .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hey there, sorry to tell you but unfortunately you have been warned in the server %s.
-                            If you think this was a mistake, please contact a moderator or admin of the server.
-                            The reason for the warning is: %s
-                            """
-                        .formatted(guild.getName(), reason)))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.WARN, null, null,
+                    guild, reason, channel))
             .mapToResult()
             .map(Result::isSuccess);
     }
 
     private void warnUser(User target, Member author, String reason, Guild guild) {
-        logger.info("'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE, "'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                 reason);
 

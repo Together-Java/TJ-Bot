@@ -7,10 +7,13 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -77,7 +80,8 @@ public final class NoteCommand extends SlashCommandAdapter {
     }
 
     private void storeNote(User target, Member author, String content, ISnowflake guild) {
-        logger.info("'{}' ({}) wrote a note about the user '{}' ({}) with content '{}'.",
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) wrote a note about the user '{}' ({}) with content '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                 content);
 

@@ -4,6 +4,7 @@ import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.SubPod;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.api.WolframAlphaImage;
 
 import javax.imageio.ImageIO;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;

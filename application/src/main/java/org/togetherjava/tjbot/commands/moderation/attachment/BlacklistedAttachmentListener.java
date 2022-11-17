@@ -1,18 +1,24 @@
 package org.togetherjava.tjbot.commands.moderation.attachment;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
+import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.Color;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -49,39 +55,49 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
     }
 
     private RestAction<Message> dmUser(Message message) {
-        Message dmMessage = createDmMessage(message);
         return message.getAuthor()
             .openPrivateChannel()
-            .flatMap(privateChannel -> privateChannel.sendMessage(dmMessage));
+            .flatMap(privateChannel -> sendDmMessage(message, privateChannel));
     }
 
-    private Message createDmMessage(Message originalMessage) {
+    private RestAction<Message> sendDmMessage(Message originalMessage, PrivateChannel channel) {
         String contentRaw = originalMessage.getContentRaw();
         String blacklistedAttachments =
                 String.join(", ", getBlacklistedAttachmentsFromMessage(originalMessage));
 
-        String dmMessageContent =
-                """
+        UnaryOperator<String> createDmText =
+                commandMention -> """
                         Hey there, you posted a message containing a blacklisted file attachment: %s.
                         We had to delete your message for security reasons.
 
+                        To get in touch with a moderator, you can simply use the %s command here in this chat. \
+                        Your message will then be forwarded and a moderator will get back to you soon 👍
                         Feel free to repost your message without, or with a different file instead. Sorry for any inconvenience caused by this 🙇️
                         """
-                    .formatted(blacklistedAttachments);
+                    .formatted(blacklistedAttachments, commandMention);
 
-        // No embed needed if there was no message from the user
-        if (contentRaw.isEmpty()) {
-            return new MessageBuilder(dmMessageContent).build();
-        }
-        return createBaseResponse(contentRaw, dmMessageContent);
+        return MessageUtils
+            .mentionGlobalSlashCommand(originalMessage.getJDA(), ModMailCommand.COMMAND_NAME)
+            .map(createDmText)
+            .map(dmMessageContent -> {
+                // No embed needed if there was no message from the user
+                if (contentRaw.isEmpty()) {
+                    return new MessageCreateBuilder().setContent(dmMessageContent).build();
+                }
+                return createBaseResponse(contentRaw, dmMessageContent);
+            })
+            .flatMap(channel::sendMessage);
     }
 
-    private Message createBaseResponse(String originalMessageContent, String dmMessageContent) {
+    private MessageCreateData createBaseResponse(String originalMessageContent,
+            String dmMessageContent) {
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
                     .setColor(Color.ORANGE)
                     .build();
-        return new MessageBuilder(dmMessageContent).setEmbeds(originalMessageEmbed).build();
+        return new MessageCreateBuilder().setContent(dmMessageContent)
+            .setEmbeds(originalMessageEmbed)
+            .build();
     }
 
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {

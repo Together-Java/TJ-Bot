@@ -4,9 +4,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
@@ -32,9 +33,9 @@ public final class AutoPruneHelperRoutine implements Routine {
 
     private static final int ROLE_FULL_LIMIT = 100;
     private static final int ROLE_FULL_THRESHOLD = 95;
-    private static final int PRUNE_MEMBER_AMOUNT = 10;
+    private static final int PRUNE_MEMBER_AMOUNT = 7;
     private static final Period INACTIVE_AFTER = Period.ofDays(90);
-    private static final int RECENTLY_JOINED_DAYS = 7;
+    private static final int RECENTLY_JOINED_DAYS = 4;
 
     private final HelpSystemHelper helper;
     private final ModAuditLogWriter modAuditLogWriter;

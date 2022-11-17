@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.system;
 
 import org.junit.jupiter.api.Test;
+
 import org.togetherjava.tjbot.commands.componentids.ComponentId;
 
 import java.util.List;

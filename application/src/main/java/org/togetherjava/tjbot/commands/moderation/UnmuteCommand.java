@@ -10,11 +10,14 @@ import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -57,14 +60,11 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
     private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
             GenericEvent event) {
-        String dmMessage = """
-                Hey there, you have been unmuted in the server %s.
-                This means you can now send messages in the server again.
-                The reason for the unmute is: %s
-                """.formatted(guild.getName(), reason);
         return event.getJDA()
             .openPrivateChannelById(target.getId())
-            .flatMap(channel -> channel.sendMessage(dmMessage))
+            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.UNMUTE, null,
+                    "This means you can now send messages in the server again 👌", guild, reason,
+                    channel))
             .mapToResult()
             .map(Result::isSuccess);
     }
@@ -81,7 +81,8 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
     private AuditableRestAction<Void> unmuteUser(Member target, Member author, String reason,
             Guild guild) {
-        logger.info("'{}' ({}) unmuted the user '{}' ({}) in guild '{}' for reason '{}'.",
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) unmuted the user '{}' ({}) in guild '{}' for reason '{}'.",
                 author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
                 target.getId(), guild.getName(), reason);
 

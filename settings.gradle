@@ -5,8 +5,5 @@ include 'database'
 include 'formatter'
 include 'inmemorycompiler'
 include 'utils'
-// NOTE The logviewer does not properly work as of today.
-//  But it is causing major build slowdowns, so we exclude it for the time being.
-// include 'logviewer'
 include 'website'
 

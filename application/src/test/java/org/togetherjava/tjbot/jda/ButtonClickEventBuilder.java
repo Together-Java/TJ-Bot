@@ -1,22 +1,22 @@
 package org.togetherjava.tjbot.jda;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 
 import static org.mockito.Mockito.when;
 
@@ -29,12 +29,12 @@ import static org.mockito.Mockito.when;
  * Among other Discord related things, the builder optionally accepts a message
  * ({@link #setMessage(Message)}) and the user who clicked on the button
  * ({@link #setUserWhoClicked(Member)} ). As well as several ways to modify the message directly for
- * convenience, such as {@link #setContent(String)} or {@link #setActionRows(ActionRow...)}. The
+ * convenience, such as {@link #setContent(String)} or {@link #setActionRow(ItemComponent...)}. The
  * builder is by default already setup with a valid dummy message and the user who clicked the
  * button is set to the author of the message.
  * <p>
  * In order to build the event, at least one button has to be added to the message and marked as
- * <i>clicked</i>. Therefore, use {@link #setActionRows(ActionRow...)} or modify the message
+ * <i>clicked</i>. Therefore, use {@link #setActionRow(ItemComponent...)} or modify the message
  * manually using {@link #setMessage(Message)}. Then mark the desired button as clicked using
  * {@link #build(Button)} or, if the message only contains a single button,
  * {@link #buildWithSingleButton()} will automatically select the button.
@@ -68,9 +68,10 @@ import static org.mockito.Mockito.when;
  */
 public final class ButtonClickEventBuilder {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private final JdaTester jdaTester;
     private final Supplier<? extends ButtonInteractionEvent> mockEventSupplier;
     private final UnaryOperator<Message> mockMessageOperator;
-    private MessageBuilder messageBuilder;
+    private MessageCreateBuilder messageBuilder;
     private Member userWhoClicked;
 
     ButtonClickEventBuilder(Supplier<? extends ButtonInteractionEvent> mockEventSupplier,
@@ -78,23 +79,25 @@ public final class ButtonClickEventBuilder {
         this.mockEventSupplier = mockEventSupplier;
         this.mockMessageOperator = mockMessageOperator;
 
-        messageBuilder = new MessageBuilder();
+        messageBuilder = new MessageCreateBuilder();
         messageBuilder.setContent("test message");
+
+        jdaTester = new JdaTester();
     }
 
     /**
      * Sets the given message that this event is associated to. Will override any data previously
      * set with the more direct methods such as {@link #setContent(String)} or
-     * {@link #setActionRows(ActionRow...)}.
+     * {@link #setActionRow(ItemComponent...)}.
      * <p>
      * The message must contain at least one button, or the button has to be added later with
-     * {@link #setActionRows(ActionRow...)}.
+     * {@link #setActionRow(ItemComponent...)}.
      *
      * @param message the message to set
      * @return this builder instance for chaining
      */
     public ButtonClickEventBuilder setMessage(Message message) {
-        messageBuilder = new MessageBuilder(message);
+        messageBuilder = MessageCreateBuilder.fromMessage(message);
         return this;
     }
 
@@ -126,13 +129,13 @@ public final class ButtonClickEventBuilder {
      * Sets the action rows of the message that this event is associated to. Usage of
      * {@link #setMessage(Message)} will overwrite any content set by this.
      * <p>
-     * At least one of the rows must contain a button before {@link #build(Button)} is called.
+     * At least one of the components must be a button before {@link #build(Button)} is called.
      * 
-     * @param rows the action rows of the message
+     * @param components the components for this action row
      * @return this builder instance for chaining
      */
-    public ButtonClickEventBuilder setActionRows(ActionRow... rows) {
-        messageBuilder.setActionRows(rows);
+    public ButtonClickEventBuilder setActionRow(ItemComponent... components) {
+        messageBuilder.setActionRow(components);
         return this;
     }
 
@@ -176,10 +179,11 @@ public final class ButtonClickEventBuilder {
     }
 
     private ButtonInteractionEvent createEvent(@Nullable Button maybeClickedButton) {
-        Message message = mockMessageOperator.apply(messageBuilder.build());
-        Button clickedButton = determineClickedButton(maybeClickedButton, message);
+        Message receivedMessage = mockMessageOperator
+            .apply(jdaTester.clientMessageToReceivedMessageMock(messageBuilder.build()));
+        Button clickedButton = determineClickedButton(maybeClickedButton, receivedMessage);
 
-        return mockButtonClickEvent(message, clickedButton);
+        return mockButtonClickEvent(receivedMessage, clickedButton);
     }
 
     private static Button determineClickedButton(@Nullable Button maybeClickedButton,
@@ -190,12 +194,11 @@ public final class ButtonClickEventBuilder {
 
         // Otherwise, attempt to extract the button from the message. Only allow a single button in
         // this case to prevent ambiguity.
-        return requireSingleButton(getMessageButtons(message));
+        return requireSingleButton(message.getButtons());
     }
 
     private static Button requireButtonInMessage(Button clickedButton, Message message) {
-        boolean isClickedButtonUnknown =
-                getMessageButtons(message).noneMatch(clickedButton::equals);
+        boolean isClickedButtonUnknown = !message.getButtons().contains(clickedButton);
 
         if (isClickedButtonUnknown) {
             throw new IllegalArgumentException(
@@ -205,22 +208,20 @@ public final class ButtonClickEventBuilder {
         return clickedButton;
     }
 
-    private static Button requireSingleButton(Stream<? extends Button> stream) {
-        Function<String, ? extends RuntimeException> descriptionToException =
-                IllegalArgumentException::new;
+    private static Button requireSingleButton(List<? extends Button> buttons) {
+        if (buttons.isEmpty()) {
+            throw new IllegalArgumentException("The message contains no buttons,"
+                    + " unable to automatically determine the clicked button."
+                    + " Add the button to the message first.");
+        }
 
-        return stream.reduce((x, y) -> {
-            throw descriptionToException
-                .apply("The message contains more than a single button, unable to automatically determine the clicked button."
-                        + " Either only use a single button or explicitly state the clicked button");
-        })
-            .orElseThrow(() -> descriptionToException.apply(
-                    "The message contains no buttons, unable to automatically determine the clicked button."
-                            + " Add the button to the message first."));
-    }
+        if (buttons.size() > 1) {
+            throw new IllegalArgumentException("The message contains more than a single button,"
+                    + " unable to automatically determine the clicked button."
+                    + " Either only use a single button or explicitly state the clicked button");
+        }
 
-    private static Stream<Button> getMessageButtons(Message message) {
-        return message.getActionRows().stream().map(ActionRow::getButtons).flatMap(List::stream);
+        return buttons.get(0);
     }
 
     private ButtonInteractionEvent mockButtonClickEvent(Message message, Button clickedButton) {

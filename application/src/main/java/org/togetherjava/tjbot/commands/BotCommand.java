@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands;
 
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 import java.util.List;
@@ -20,21 +19,11 @@ import java.util.List;
  * <p>
  * After registration, the system will notify a command whenever one of its corresponding command
  * method, buttons ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
- * ({@link #onSelectionMenu(SelectMenuInteractionEvent, List)}) have been triggered.
+ * ({@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}) have been triggered.
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.commands.basic}.
  */
 public interface BotCommand extends UserInteractor {
-
-    /**
-     * Gets the type of this command.
-     * <p>
-     * After registration of the command, the type must not change anymore.
-     *
-     * @return the type of the command
-     */
-    Command.Type getType();
-
     /**
      * Gets the visibility of this command.
      * <p>

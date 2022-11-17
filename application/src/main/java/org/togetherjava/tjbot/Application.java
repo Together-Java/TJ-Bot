@@ -3,16 +3,19 @@ package org.togetherjava.tjbot;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.Features;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.logging.LogMarkers;
+import org.togetherjava.tjbot.logging.discord.DiscordLogging;
 
-import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -57,6 +60,7 @@ public class Application {
 
         Thread.setDefaultUncaughtExceptionHandler(Application::onUncaughtException);
         Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
+        DiscordLogging.startDiscordLogging(config);
 
         runBot(config);
     }
@@ -79,7 +83,7 @@ public class Application {
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
             JDA jda = JDABuilder.createDefault(config.getToken())
-                .enableIntents(GatewayIntent.GUILD_MEMBERS)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                 .build();
 
             jda.awaitReady();
@@ -91,8 +95,8 @@ public class Application {
             jda.addEventListener(core);
 
             logger.info("Bot is ready");
-        } catch (LoginException e) {
-            logger.error("Failed to login", e);
+        } catch (InvalidTokenException e) {
+            logger.error(LogMarkers.SENSITIVE, "Failed to login", e);
         } catch (InterruptedException e) {
             logger.error("Interrupted while waiting for setup to complete", e);
             Thread.currentThread().interrupt();

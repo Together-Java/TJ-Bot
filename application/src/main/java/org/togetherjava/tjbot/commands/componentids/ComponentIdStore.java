@@ -8,10 +8,12 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import org.jooq.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ComponentIds;
 import org.togetherjava.tjbot.db.generated.tables.records.ComponentIdsRecord;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -323,8 +325,8 @@ public final class ComponentIdStore implements AutoCloseable {
                                 ComponentIds.COMPONENT_IDS.LIFESPAN.eq(lifespan.name())))));
         int recordsCount = lifespanToCount.values().stream().mapToInt(Integer::intValue).sum();
 
-        logger.debug("The component id store consists of {} records ({})", recordsCount,
-                lifespanToCount);
+        logger.debug(LogMarkers.SENSITIVE, "The component id store consists of {} records ({})",
+                recordsCount, lifespanToCount);
     }
 
     @Override

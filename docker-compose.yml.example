@@ -1,20 +1,27 @@
 version: "3.9"
 services:
-  bot:
-    image: togetherjava/tjbot:latest
+  tjbot-develop:
+    image: "togetherjava.duckdns.org:5001/togetherjava/tjbot:develop"
+    command: ["/home/bot/config/config.json"]
     volumes:
-      - "./application/config.json:/config.json"
-      - "./application/logs/:/logs"
-    links:
-      - logs
-    environment:
-      - TJ_LOG_TARGET=logs
-  logs:
-    image: togetherjava/tjlogs:latest
+      - database:/home/bot/database
+      - ./config:/home/bot/config
+    restart: always
+    networks:
+      - develop-bot
+
+  tj-develop-website:
+    image: "togetherjava.duckdns.org:5001/togetherjava/website:develop"
     ports:
-      - "5050:5050"
-    volumes:
-      - "./logviewer/config.json:/logviewer/config.json"
-      - "./application/logs:/application/logs"
-      - "./logviewer/logs:/logviewer/logs"
-      - "./logviewer/db:/logviewer/db"
+      - "127.0.0.1:5051:5051"
+    networks:
+      - develop-bot
+    restart: always
+
+volumes:
+  database:
+    name: "tj-bot-develop-database"
+
+networks:
+  develop-bot:
+    name: "develop-bot"

@@ -1,10 +1,10 @@
 package org.togetherjava.tjbot.commands.componentids;
 
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+
 import org.togetherjava.tjbot.commands.SlashCommand;
 
 /**
@@ -26,7 +26,7 @@ public interface ComponentIdGenerator {
      * interactions, such as button or selection menus.
      * <p>
      * See {@link ComponentInteraction#getComponentId()} and
-     * {@link Button#of(ButtonStyle, String, Emoji)} for details on where the generated ID can be
+     * {@link Button#of(ButtonStyle, String, String)} for details on where the generated ID can be
      * used.
      *
      * @param componentId the component ID payload to persist and generate a valid ID for

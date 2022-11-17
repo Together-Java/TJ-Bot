@@ -1,18 +1,28 @@
 package org.togetherjava.tjbot.commands.help;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageType;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.Routine;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
+
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -32,7 +42,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadOverviewUpdater.class);
 
-    private static final String STATUS_TITLE = "## __**Active questions**__ ##";
+    private static final String STATUS_TITLE = "## Active questions ##";
     private static final int OVERVIEW_QUESTION_LIMIT = 150;
     private static final AtomicInteger FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES =
             new AtomicInteger(0);
@@ -112,8 +122,10 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
         List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(overviewChannel);
         logger.debug("Found {} active questions", activeThreads.size());
 
-        Message message = new MessageBuilder()
-            .setContent(STATUS_TITLE + "\n\n" + createDescription(activeThreads))
+        MessageEditData message = new MessageEditBuilder()
+            .setEmbeds(new EmbedBuilder().setTitle(STATUS_TITLE)
+                .setDescription(createDescription(activeThreads))
+                .build())
             .build();
 
         getStatusMessage(overviewChannel)
@@ -156,16 +168,17 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
     }
 
     private static boolean isStatusMessage(Message message) {
-        if (!message.getAuthor().equals(message.getJDA().getSelfUser())) {
+        if (message.getEmbeds().isEmpty()
+                || !message.getAuthor().equals(message.getJDA().getSelfUser())) {
             return false;
         }
 
-        String content = message.getContentRaw();
-        return content.startsWith(STATUS_TITLE);
+        String messageEmbedTitle = message.getEmbeds().get(0).getTitle();
+        return STATUS_TITLE.equals(messageEmbedTitle);
     }
 
     private RestAction<Message> sendUpdatedOverview(@Nullable Message statusMessage,
-            Message updatedStatusMessage, MessageChannel overviewChannel) {
+            MessageEditData updatedStatusMessage, MessageChannel overviewChannel) {
         logger.debug("Sending the updated question overview");
         if (statusMessage == null) {
             int currentFailures = FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.incrementAndGet();
@@ -174,7 +187,8 @@ public final class HelpThreadOverviewUpdater extends MessageReceiverAdapter impl
                         "Failed to locate the question overview too often ({} times), sending a fresh message instead.",
                         currentFailures);
                 FIND_STATUS_MESSAGE_CONSECUTIVE_FAILURES.set(0);
-                return overviewChannel.sendMessage(updatedStatusMessage);
+                return overviewChannel
+                    .sendMessage(MessageCreateData.fromEditData(updatedStatusMessage));
             }
 
             logger.info(

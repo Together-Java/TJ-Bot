@@ -2,35 +2,42 @@ package org.togetherjava.tjbot.commands.moderation.scam;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
+import org.togetherjava.tjbot.commands.UserInteractionType;
 import org.togetherjava.tjbot.commands.UserInteractor;
-import org.togetherjava.tjbot.commands.componentids.ComponentId;
 import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
-import org.togetherjava.tjbot.commands.componentids.Lifespan;
+import org.togetherjava.tjbot.commands.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.commands.moderation.ModerationAction;
 import org.togetherjava.tjbot.commands.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.commands.moderation.ModerationUtils;
+import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
-import javax.annotation.Nullable;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
@@ -56,7 +63,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final ScamHistoryStore scamHistoryStore;
     private final Predicate<String> hasRequiredRole;
 
-    private ComponentIdGenerator componentIdGenerator;
+    private final ComponentIdInteractor componentIdInteractor;
 
     /**
      * Creates a new listener to receive all message sent in any channel.
@@ -80,6 +87,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 Pattern.compile(reportChannelPattern).asMatchPredicate();
         isReportChannel = channel -> isReportChannelName.test(channel.getName());
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
+
+        componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
     }
 
     @Override
@@ -88,13 +97,23 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public void onSelectionMenu(SelectMenuInteractionEvent event, List<String> args) {
+    public UserInteractionType getInteractionType() {
+        return UserInteractionType.OTHER;
+    }
+
+    @Override
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException("Not used");
+    }
+
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
 
     @Override
     public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
-        componentIdGenerator = generator;
+        componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
     @Override
@@ -168,7 +187,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         deleteMessage(event);
         quarantineAuthor(event);
         dmUser(event);
-        reportScamMessage(event, "Detected and handled scam", null);
+        reportScamMessage(event, "Detected and handled scam", List.of());
     }
 
     private void addScamToHistory(MessageReceivedEvent event) {
@@ -176,7 +195,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void logScamMessage(MessageReceivedEvent event) {
-        logger.warn("Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
+        logger.warn(LogMarkers.SENSITIVE,
+                "Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
                 event.getMessageId(), event.getAuthor().getId(), event.getChannel().getId(),
                 event.getGuild().getId());
     }
@@ -203,7 +223,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void reportScamMessage(MessageReceivedEvent event, String reportTitle,
-            @Nullable ActionRow confirmDialog) {
+            List<? extends Button> confirmDialog) {
         Guild guild = event.getGuild();
         Optional<TextChannel> reportChannel = getReportChannel(guild);
         if (reportChannel.isEmpty()) {
@@ -222,8 +242,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())
                     .build();
-        Message message =
-                new MessageBuilder().setEmbeds(embed).setActionRows(confirmDialog).build();
+        MessageCreateData message =
+                new MessageCreateBuilder().setEmbeds(embed).setActionRow(confirmDialog).build();
 
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
@@ -233,38 +253,42 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void dmUser(Guild guild, long userId, JDA jda) {
-        String dmMessage =
-                """
+        jda.openPrivateChannelById(userId).flatMap(channel -> dmUser(guild, channel)).queue();
+    }
+
+    private RestAction<Message> dmUser(Guild guild, PrivateChannel channel) {
+        UnaryOperator<String> createDmMessage =
+                commandMention -> """
                         Hey there, we detected that you did send scam in the server %s and therefore put you under quarantine.
                         This means you can no longer interact with anyone in the server until you have been unquarantined again.
 
                         If you think this was a mistake (for example, your account was hacked, but you got back control over it),
-                        please contact a moderator or admin of the server.
+                        you can get in touch with a moderator by using the %s command. \
+                        Your message will then be forwarded and a moderator will get back to you soon 👍
                         """
-                    .formatted(guild.getName());
+                    .formatted(guild.getName(), commandMention);
 
-        jda.openPrivateChannelById(userId)
-            .flatMap(channel -> channel.sendMessage(dmMessage))
-            .queue();
+        return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
+            .map(createDmMessage)
+            .flatMap(channel::sendMessage);
     }
 
     private Optional<TextChannel> getReportChannel(Guild guild) {
         return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
     }
 
-    private ActionRow createConfirmDialog(MessageReceivedEvent event) {
+    private List<Button> createConfirmDialog(MessageReceivedEvent event) {
         ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
                 event.getChannel().getIdLong(), event.getMessageIdLong(),
                 event.getAuthor().getIdLong(),
                 ScamHistoryStore.hashMessageContent(event.getMessage()));
 
-        return ActionRow.of(Button.success(generateComponentId(args), "Yes"),
+        return List.of(Button.success(generateComponentId(args), "Yes"),
                 Button.danger(generateComponentId(args), "No"));
     }
 
     private String generateComponentId(ComponentIdArguments args) {
-        return Objects.requireNonNull(componentIdGenerator)
-            .generate(new ComponentId(getName(), args.toList()), Lifespan.REGULAR);
+        return componentIdInteractor.generateComponentId(args.toArray());
     }
 
     @Override
@@ -281,7 +305,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         MessageUtils.disableButtons(event.getMessage());
         event.deferEdit().queue();
         if (event.getButton().getStyle() == ButtonStyle.DANGER) {
-            logger.info(
+            logger.info(LogMarkers.SENSITIVE,
                     "Identified a false-positive scam (id '{}', hash '{}') in guild '{}' sent by author '{}'",
                     args.messageId, args.contentHash, args.guildId, args.authorId);
             return;
@@ -307,7 +331,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 TextChannel channel = guild.getTextChannelById(scamMessage.channelId());
                 if (channel == null) {
                     logger.debug(
-                            "Attempted to delete scam messages, bot the channel '{}' does not exist anymore, skipping deleting messages for this channel.",
+                            "Attempted to delete scam messages, but the channel '{}' does not exist anymore, skipping deleting messages for this channel.",
                             scamMessage.channelId());
                     return;
                 }
@@ -318,10 +342,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         Consumer<Throwable> onRetrieveAuthorFailure = new ErrorHandler()
             .handle(ErrorResponse.UNKNOWN_USER,
-                    failure -> logger.debug(
+                    failure -> logger.debug(LogMarkers.SENSITIVE,
                             "Attempted to handle scam, but user '{}' does not exist anymore.",
                             args.authorId))
-            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(
+            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(LogMarkers.SENSITIVE,
                     "Attempted to handle scam, but user '{}' is not a member of the guild anymore.",
                     args.authorId));
 
@@ -343,9 +367,9 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     contentHash);
         }
 
-        List<String> toList() {
-            return List.of(mode.name(), Long.toString(guildId), Long.toString(channelId),
-                    Long.toString(messageId), Long.toString(authorId), contentHash);
+        String[] toArray() {
+            return new String[] {mode.name(), Long.toString(guildId), Long.toString(channelId),
+                    Long.toString(messageId), Long.toString(authorId), contentHash};
         }
     }
 }

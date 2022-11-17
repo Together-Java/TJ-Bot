@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.junit.jupiter.api.Test;
+
 import org.togetherjava.tjbot.commands.componentids.Lifespan;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 final class SlashCommandAdapterTest {
     private static final String NAME = "foo";
+    private static final String PREFIXED_NAME =
+            UserInteractionType.SLASH_COMMAND.getPrefix() + NAME;
     private static final String DESCRIPTION = "Foo command";
     private static final CommandVisibility VISIBILITY = CommandVisibility.GUILD;
     private static final int UNIQUE_ID_ITERATIONS = 20;
@@ -71,7 +74,7 @@ final class SlashCommandAdapterTest {
         String[] elements = {"foo", "bar", "baz"};
         String[] componentIdText = adapter.generateComponentId(elements).split(";");
         assertEquals(3, componentIdText.length);
-        assertEquals(NAME, componentIdText[0]);
+        assertEquals(PREFIXED_NAME, componentIdText[0]);
         assertEquals(Integer.toString(elements.length), componentIdText[1]);
         assertEquals(Lifespan.REGULAR.toString(), componentIdText[2]);
 
@@ -79,7 +82,7 @@ final class SlashCommandAdapterTest {
         for (Lifespan lifespan : Lifespan.values()) {
             componentIdText = adapter.generateComponentId(lifespan, elements).split(";");
             assertEquals(3, componentIdText.length);
-            assertEquals(NAME, componentIdText[0]);
+            assertEquals(PREFIXED_NAME, componentIdText[0]);
             assertEquals(Integer.toString(elements.length), componentIdText[1]);
             assertEquals(lifespan.toString(), componentIdText[2]);
         }

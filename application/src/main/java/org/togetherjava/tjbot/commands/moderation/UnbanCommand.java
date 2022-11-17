@@ -9,8 +9,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.util.Objects;
 
@@ -49,7 +51,8 @@ public final class UnbanCommand extends SlashCommandAdapter {
                     ModerationAction.UNBAN, target, null, reason);
             event.replyEmbeds(message).queue();
 
-            logger.info("'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
+            logger.info(LogMarkers.SENSITIVE,
+                    "'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
                     author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
                     guild.getName(), reason);
 
@@ -63,21 +66,23 @@ public final class UnbanCommand extends SlashCommandAdapter {
         if (unbanFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
                 event.reply("The specified user does not exist.").setEphemeral(true).queue();
-                logger.debug("Unable to unban the user '{}' because they do not exist.", targetTag);
+                logger.debug(LogMarkers.SENSITIVE,
+                        "Unable to unban the user '{}' because they do not exist.", targetTag);
                 return;
             }
 
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
                 event.reply("The specified user is not banned.").setEphemeral(true).queue();
-                logger.debug("Unable to unban the user '{}' because they are not banned.",
-                        targetTag);
+                logger.debug(LogMarkers.SENSITIVE,
+                        "Unable to unban the user '{}' because they are not banned.", targetTag);
                 return;
             }
         }
 
         event.reply("Sorry, but something went wrong.").setEphemeral(true).queue();
-        logger.warn("Something unexpected went wrong while trying to unban the user '{}'.",
-                targetTag, unbanFailure);
+        logger.warn(LogMarkers.SENSITIVE,
+                "Something unexpected went wrong while trying to unban the user '{}'.", targetTag,
+                unbanFailure);
     }
 
     private boolean handleChecks(IPermissionHolder bot, Member author, CharSequence reason,

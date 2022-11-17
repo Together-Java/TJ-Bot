@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.imc;
 
 import javax.tools.SimpleJavaFileObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
