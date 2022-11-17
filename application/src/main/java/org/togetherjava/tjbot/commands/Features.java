@@ -6,7 +6,6 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
-import org.togetherjava.tjbot.commands.bytecode.BytecodeCommand;
 import org.togetherjava.tjbot.commands.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
 import org.togetherjava.tjbot.commands.code.CodeMessageManualDetection;
@@ -16,7 +15,6 @@ import org.togetherjava.tjbot.commands.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.commands.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.commands.moderation.*;
-import org.togetherjava.tjbot.commands.moderation.ReportCommand;
 import org.togetherjava.tjbot.commands.moderation.attachment.BlacklistedAttachmentListener;
 import org.togetherjava.tjbot.commands.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker;
@@ -143,7 +141,6 @@ public class Features {
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
-        features.add(new BytecodeCommand());
 
         return features;
     }

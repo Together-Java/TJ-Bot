@@ -11,7 +11,7 @@ import org.togetherjava.tjbot.formatter.Formatter;
  * <p>
  * While it will attempt formatting for any language, best results are achieved for Java code.
  */
-final class FormatCodeCommand implements CodeAction {
+final class FormatCodeAction implements CodeAction {
     private final Formatter formatter = new Formatter();
 
     @Override

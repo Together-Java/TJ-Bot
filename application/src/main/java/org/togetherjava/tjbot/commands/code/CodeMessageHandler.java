@@ -70,7 +70,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
-        List<CodeAction> codeActions = List.of(new FormatCodeCommand());
+        List<CodeAction> codeActions = List.of(new FormatCodeAction(), new BytecodeAction());
 
         labelToCodeAction = codeActions.stream()
             .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,
