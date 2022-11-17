@@ -1,11 +1,10 @@
-package org.togetherjava.tjbot.commands.help;
+package org.togetherjava.tjbot.commands.bookmarks;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
-import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
@@ -13,13 +12,11 @@ import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 
 import javax.annotation.Nullable;
 
-import java.awt.*;
+import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -27,7 +24,7 @@ import static org.togetherjava.tjbot.db.generated.tables.Bookmarks.BOOKMARKS;
 
 /**
  * The bookmarks system provides methods to interact with the database. It also enables the
- * {@link BookmarksCommand} to request paginations from the {@link BookmarksPaginatorInteractor}.
+ * {@link BookmarksCommand} to request paginations from the {@link BookmarksListRemoveHandler}.
  */
 public final class BookmarksSystem {
 
@@ -44,9 +41,6 @@ public final class BookmarksSystem {
     private final Database database;
     private final Predicate<String> isOverviewChannelName;
 
-    private Consumer<GenericCommandInteractionEvent> listPaginationConsumer = null;
-    private Consumer<GenericCommandInteractionEvent> removePaginationConsumer = null;
-
     /**
      * Creates a new instance of the bookmarks system.
      *
@@ -58,41 +52,6 @@ public final class BookmarksSystem {
 
         isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
             .asMatchPredicate();
-    }
-
-    /**
-     * Accepts the consumers for used for requesting the list and remove paginations.
-     *
-     * @param listPaginationConsumer The list pagination handler
-     * @param removePaginationConsumer The remove pagination handler
-     */
-    void acceptPaginationConsumers(Consumer<GenericCommandInteractionEvent> listPaginationConsumer,
-            Consumer<GenericCommandInteractionEvent> removePaginationConsumer) {
-        this.listPaginationConsumer = listPaginationConsumer;
-        this.removePaginationConsumer = removePaginationConsumer;
-    }
-
-    /**
-     * Requests a list pagination from the {@link BookmarksPaginatorInteractor}.
-     *
-     * @param event The command interaction event
-     */
-    void requestListPagination(GenericCommandInteractionEvent event) {
-        Objects.requireNonNull(listPaginationConsumer, "No list pagination consumer was provided");
-
-        listPaginationConsumer.accept(event);
-    }
-
-    /**
-     * Requests a remove pagination from the {@link BookmarksPaginatorInteractor}.
-     *
-     * @param event The command interaction event
-     */
-    void requestRemovePagination(GenericCommandInteractionEvent event) {
-        Objects.requireNonNull(removePaginationConsumer,
-                "No remove pagination consumer was provided");
-
-        removePaginationConsumer.accept(event);
     }
 
     boolean isHelpThread(MessageChannelUnion channel) {

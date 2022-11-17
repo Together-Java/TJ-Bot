@@ -1,8 +1,10 @@
-package org.togetherjava.tjbot.commands.help;
+package org.togetherjava.tjbot.commands.bookmarks;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -55,6 +58,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                         """);
 
     private final BookmarksSystem bookmarksSystem;
+    private final BookmarksListRemoveHandler listRemoveHandler;
 
     /**
      * Creates a new instance and registers every sub command.
@@ -65,6 +69,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Bookmark help threads so that you can easily look them up again",
                 CommandVisibility.GLOBAL);
         this.bookmarksSystem = bookmarksSystem;
+        listRemoveHandler =
+                new BookmarksListRemoveHandler(bookmarksSystem, this::generateComponentId);
 
         OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_BOOKMARK_NOTE_OPTION,
                 "Your personal comment on this bookmark")
@@ -90,10 +96,20 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
         switch (subCommandName) {
             case SUBCOMMAND_ADD -> addBookmark(event);
-            case SUBCOMMAND_LIST -> bookmarksSystem.requestListPagination(event);
-            case SUBCOMMAND_REMOVE -> bookmarksSystem.requestRemovePagination(event);
+            case SUBCOMMAND_LIST -> listRemoveHandler.handleListRequest(event);
+            case SUBCOMMAND_REMOVE -> listRemoveHandler.handleRemoveRequest(event);
             default -> throw new IllegalArgumentException("Unknown subcommand");
         }
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        listRemoveHandler.onButtonClick(event, args);
+    }
+
+    @Override
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+        listRemoveHandler.onSelectMenuSelection(event, args);
     }
 
     private void addBookmark(SlashCommandInteractionEvent event) {
@@ -131,7 +147,8 @@ public final class BookmarksCommand extends SlashCommandAdapter {
                     The bookmark limit of will be reached soon (`{}/{}` bookmarks)!
                     If the limit is reached no new bookmarks can be added!
                     Please delete some bookmarks!
-                    """, bookmarkCountTotal, BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL);
+                    """, BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL,
+                    BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL);
         }
         if (bookmarkCountTotal == BookmarksSystem.MAX_BOOKMARK_COUNT_TOTAL) {
             logger.error("""
@@ -157,5 +174,4 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     private void sendResponse(SlashCommandInteractionEvent event, MessageEmbed embed) {
         event.replyEmbeds(embed).setEphemeral(true).queue();
     }
-
 }
