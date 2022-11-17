@@ -43,6 +43,7 @@ dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
 
     implementation project(':database')
+    implementation project(':inmemorycompiler')
     implementation project(':utils')
     implementation project(':formatter')
 
@@ -82,4 +83,14 @@ dependencies {
 
 application {
     mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
+
+    applicationDefaultJvmArgs = [
+        '--add-opens=jdk.jdeps/com.sun.tools.javap=ALL-UNNAMED'
+    ]
+}
+
+run {
+    jvmArgs = [
+        '--add-opens=jdk.jdeps/com.sun.tools.javap=ALL-UNNAMED'
+    ]
 }

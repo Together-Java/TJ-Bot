@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.bytecode.BytecodeCommand;
 import org.togetherjava.tjbot.commands.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
 import org.togetherjava.tjbot.commands.code.CodeMessageManualDetection;
@@ -142,6 +143,7 @@ public class Features {
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
+        features.add(new BytecodeCommand());
 
         return features;
     }
