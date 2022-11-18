@@ -144,7 +144,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
         long bookmarkCountTotal = bookmarksSystem.getTotalBookmarkCount();
         if (bookmarkCountTotal == BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL) {
             logger.warn("""
-                    The bookmark limit of will be reached soon (`{}/{}` bookmarks)!
+                    The bookmark limit will be reached soon (`{}/{}` bookmarks)!
                     If the limit is reached no new bookmarks can be added!
                     Please delete some bookmarks!
                     """, BookmarksSystem.WARN_BOOKMARK_COUNT_TOTAL,
