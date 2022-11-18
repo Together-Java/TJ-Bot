@@ -24,6 +24,14 @@ import java.util.Objects;
  * to the database and showing the list/remove messages is not done by this class, that is handled
  * by the {@link BookmarksSystem}. This class only checks if you are able to add a bookmark in the
  * current channel and tells the {@link BookmarksSystem} to do the rest.
+ * <p>
+ * Usage:
+ * 
+ * <pre>
+ * /bookmarks add [note]
+ * /bookmarks list
+ * /bookmarks remove
+ * </pre>
  */
 public final class BookmarksCommand extends SlashCommandAdapter {
 
