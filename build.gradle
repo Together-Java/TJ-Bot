@@ -52,15 +52,11 @@ subprojects {
     }
 
     // sonarlint configuration, not to be confused with sonarqube/sonarcloud.
-    sonarlint {
-        excludes {
-            // Disables "Track uses of "TO-DO" tags" rule.
-            message 'java:S1135'
-
-            // Disables "Regular expressions should not overflow the stack" rule.
-            // https://sonarcloud.io/project/issues?id=Together-Java_TJ-Bot&issues=AXvleoajNC7zjjhmSufQ&open=AXvleoajNC7zjjhmSufQ
-            // https://sonarcloud.io/project/issues?id=Together-Java_TJ-Bot&issues=AXvleoX5NC7zjjhmSufP&open=AXvleoX5NC7zjjhmSufP
-            message 'java:S5998'
+    sonarLint {
+        rules {
+            disable(
+                    'java:S1135' // Disables "Track uses of "TO-DO" tags" rule.
+            )
         }
     }
 
