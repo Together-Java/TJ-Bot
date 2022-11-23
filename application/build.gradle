@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath 'org.xerial:sqlite-jdbc:3.39.2.0'
+        classpath 'org.xerial:sqlite-jdbc:3.40.0.0'
     }
 }
 
