@@ -52,7 +52,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
-    private final String moderatorGroup;
+    private final String configModGroupPattern;
 
 
     /**
@@ -86,7 +86,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         configModMailChannelPattern = config.getModMailChannelPattern();
 
-        moderatorGroup = config.getHeavyModerationRolePattern();
+        configModGroupPattern = config.getHeavyModerationRolePattern();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -154,7 +154,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         }
 
         Optional<Role> moderatorRole =
-                event.getGuild().getRolesByName(moderatorGroup, true).stream().findFirst();
+                event.getGuild().getRolesByName(configModGroupPattern, true).stream().findFirst();
         moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
 
         return message;
