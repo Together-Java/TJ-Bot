@@ -181,6 +181,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setDescription(reportReason)
             .setColor(AMBIENT_COLOR)
             .build();
+
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
                     .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
