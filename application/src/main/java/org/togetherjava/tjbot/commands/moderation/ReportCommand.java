@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -53,6 +54,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final String configModMailChannelPattern;
+    private final String configModGroupPattern;
 
     /**
      * Creates a new instance.
@@ -66,6 +68,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
 
         configModMailChannelPattern = config.getModMailChannelPattern();
+
+        configModGroupPattern = config.getHeavyModerationRolePattern();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -177,9 +181,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setDescription(reportReason)
             .setColor(AMBIENT_COLOR)
             .build();
-        return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-            .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
-                    "Go to Message", guild.getId(), reportedMessage.channelID, reportedMessage.id));
+        MessageCreateAction message =
+                modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+                    .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
+                            "Go to Message", guild.getId(), reportedMessage.channelID,
+                            reportedMessage.id));
+
+        Optional<Role> moderatorRole =
+                guild.getRolesByName(configModGroupPattern, true).stream().findFirst();
+        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+
+        return message;
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
