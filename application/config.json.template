@@ -8,8 +8,8 @@
     "modMailChannelPattern": "modmail",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
-    "softModerationRolePattern": "Moderator|Staff Assistant",
-    "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
+    "softModerationRolePattern": "Moderator|Community Ambassador",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
    "suggestions": {
        "channelPattern": "tj_suggestions",
        "upVoteEmoteName": "peepo_yes",

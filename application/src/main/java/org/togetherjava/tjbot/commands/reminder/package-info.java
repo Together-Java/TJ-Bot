@@ -1,6 +1,6 @@
 /**
  * This packages offers all the functionality for the remind-command. The core class is
- * {@link org.togetherjava.tjbot.commands.reminder.RemindCommand}.
+ * {@link org.togetherjava.tjbot.commands.reminder.ReminderCommand}.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault

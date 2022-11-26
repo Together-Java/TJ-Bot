@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.commands;
 
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 
@@ -46,4 +47,13 @@ public interface MessageReceiver extends Feature {
      *        message that was edited
      */
     void onMessageUpdated(MessageUpdateEvent event);
+
+    /**
+     * Triggered by the core system whenever an existing message was deleted in a text channel of a
+     * guild the bot has been added to.
+     *
+     * @param event the event that triggered this, containing information about the corresponding
+     *        message that was deleted
+     */
+    void onMessageDeleted(MessageDeleteEvent event);
 }
