@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
 import static org.togetherjava.tjbot.db.generated.tables.Bookmarks.BOOKMARKS;
 
 /**
- * The bookmarks system provides methods to interact with the database. It also enables the
- * {@link BookmarksCommand} to request paginations from the {@link BookmarksListRemoveHandler}.
+ * Maintains all bookmarks for all users and provides methods to create, query and remove them. Used
+ * by the other bookmarks classes.
  */
 public final class BookmarksSystem {
 
