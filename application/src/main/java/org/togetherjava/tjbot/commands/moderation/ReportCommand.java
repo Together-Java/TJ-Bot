@@ -53,8 +53,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
+    private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
-    private final String configModGroupPattern;
 
     /**
      * Creates a new instance.
@@ -69,7 +69,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         configModMailChannelPattern = config.getModMailChannelPattern();
 
-        configModGroupPattern = config.getHeavyModerationRolePattern();
+        configModGroupPattern =
+                Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -188,9 +189,13 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                             "Go to Message", guild.getId(), reportedMessage.channelID,
                             reportedMessage.id));
 
-        Optional<Role> moderatorRole =
-                guild.getRolesByName(configModGroupPattern, true).stream().findFirst();
-        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+        Optional<String> roleName = guild.getRoles()
+            .stream()
+            .map(Role::getName)
+            .filter(configModGroupPattern)
+            .findFirst();
+        roleName.ifPresent(
+                s -> message.setContent(guild.getRolesByName(s, false).get(0).getAsMention()));
 
         return message;
     }

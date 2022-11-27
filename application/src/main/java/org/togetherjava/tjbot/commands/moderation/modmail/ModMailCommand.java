@@ -51,8 +51,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
+    private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
-    private final String configModGroupPattern;
 
 
     /**
@@ -86,7 +86,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         configModMailChannelPattern = config.getModMailChannelPattern();
 
-        configModGroupPattern = config.getHeavyModerationRolePattern();
+        configModGroupPattern =
+                Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -153,9 +154,14 @@ public final class ModMailCommand extends SlashCommandAdapter {
                     String.valueOf(userId)));
         }
 
-        Optional<Role> moderatorRole =
-                event.getGuild().getRolesByName(configModGroupPattern, true).stream().findFirst();
-        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+        Optional<String> roleName = event.getGuild()
+            .getRoles()
+            .stream()
+            .map(Role::getName)
+            .filter(configModGroupPattern)
+            .findFirst();
+        roleName.ifPresent(s -> message
+            .setContent(event.getGuild().getRolesByName(s, false).get(0).getAsMention()));
 
         return message;
     }
