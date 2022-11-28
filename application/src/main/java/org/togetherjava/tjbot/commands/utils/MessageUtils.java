@@ -180,7 +180,8 @@ public class MessageUtils {
             return Optional.empty();
         }
 
-        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, codeFenceStart + 1);
+        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
+        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, languageStart);
         if (codeFenceEnd == -1) {
             return Optional.empty();
         }
@@ -188,7 +189,6 @@ public class MessageUtils {
         // Language is between ``` and newline, no spaces allowed, like ```java
         // Look for the next newline and then assert no space between
         String language = null;
-        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
         int languageEnd = fullMessage.indexOf('\n', codeFenceStart);
         if (languageEnd != -1) {
             String languageCandidate = fullMessage.substring(languageStart, languageEnd);
