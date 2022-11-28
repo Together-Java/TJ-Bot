@@ -70,7 +70,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         configModMailChannelPattern = config.getModMailChannelPattern();
 
         configModGroupPattern =
-                Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -189,13 +189,14 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                             "Go to Message", guild.getId(), reportedMessage.channelID,
                             reportedMessage.id));
 
-        Optional<String> roleName = guild.getRoles()
+        Optional<Role> moderatorRole = guild.getRoles()
             .stream()
             .map(Role::getName)
             .filter(configModGroupPattern)
-            .findFirst();
-        roleName.ifPresent(
-                s -> message.setContent(guild.getRolesByName(s, false).get(0).getAsMention()));
+            .findFirst()
+            .map(name -> guild.getRolesByName(name, false).get(0));
+
+        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
 
         return message;
     }
