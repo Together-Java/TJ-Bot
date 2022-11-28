@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -52,6 +53,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
+    private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
 
     /**
@@ -66,6 +68,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
 
         configModMailChannelPattern = config.getModMailChannelPattern();
+
+        configModGroupPattern =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -177,9 +182,21 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setDescription(reportReason)
             .setColor(AMBIENT_COLOR)
             .build();
-        return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-            .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
-                    "Go to Message", guild.getId(), reportedMessage.channelID, reportedMessage.id));
+
+        MessageCreateAction message =
+                modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+                    .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
+                            "Go to Message", guild.getId(), reportedMessage.channelID,
+                            reportedMessage.id));
+
+        Optional<Role> moderatorRole = guild.getRoles()
+            .stream()
+            .filter(role -> configModGroupPattern.test(role.getName()))
+            .findFirst();
+
+        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+
+        return message;
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,

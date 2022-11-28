@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -50,6 +51,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
+    private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
 
 
@@ -83,6 +85,9 @@ public final class ModMailCommand extends SlashCommandAdapter {
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
 
         configModMailChannelPattern = config.getModMailChannelPattern();
+
+        configModGroupPattern =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -148,6 +153,15 @@ public final class ModMailCommand extends SlashCommandAdapter {
             message.addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
                     String.valueOf(userId)));
         }
+
+        Optional<Role> moderatorRole = event.getGuild()
+            .getRoles()
+            .stream()
+            .filter(role -> configModGroupPattern.test(role.getName()))
+            .findFirst();
+
+        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+
         return message;
     }
 
