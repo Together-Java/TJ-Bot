@@ -15,7 +15,7 @@ import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.UnaryOperator;
@@ -103,17 +103,21 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
     private List<String> getBlacklistedAttachmentsFromMessage(Message originalMessage) {
         return originalMessage.getAttachments()
             .stream()
-            .filter(attachment -> blacklistedFileExtensions
-                .contains(attachment.getFileExtension().toLowerCase(Locale.US)))
+            .filter(this::containsBlacklistedFileExtensions)
             .map(Message.Attachment::getFileName)
             .toList();
     }
 
     private boolean doesMessageContainBlacklistedContent(Message message) {
-        return message.getAttachments()
-            .stream()
-            .anyMatch(attachment -> blacklistedFileExtensions
-                .contains(attachment.getFileExtension().toLowerCase(Locale.US)));
+        return message.getAttachments().stream().anyMatch(this::containsBlacklistedFileExtensions);
+    }
+
+    private boolean containsBlacklistedFileExtensions(Message.Attachment attachment) {
+        if (attachment.getFileExtension() == null) {
+            return true;
+        }
+        return blacklistedFileExtensions
+            .contains(attachment.getFileExtension().toLowerCase(Locale.US));
     }
 
     private void warnMods(Message sentUserMessage) {
