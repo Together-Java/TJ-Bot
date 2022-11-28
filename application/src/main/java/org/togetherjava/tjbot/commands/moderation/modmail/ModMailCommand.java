@@ -157,10 +157,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
         Optional<Role> moderatorRole = event.getGuild()
             .getRoles()
             .stream()
-            .map(Role::getName)
-            .filter(configModGroupPattern)
-            .findFirst()
-            .map(name -> event.getGuild().getRolesByName(name, false).get(0));
+            .filter(role -> configModGroupPattern.test(role.getName()))
+            .findFirst();
 
         moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
 

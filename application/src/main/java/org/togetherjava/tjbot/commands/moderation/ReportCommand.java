@@ -191,10 +191,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
-            .map(Role::getName)
-            .filter(configModGroupPattern)
-            .findFirst()
-            .map(name -> guild.getRolesByName(name, false).get(0));
+            .filter(role -> configModGroupPattern.test(role.getName()))
+            .findFirst();
 
         moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
 
