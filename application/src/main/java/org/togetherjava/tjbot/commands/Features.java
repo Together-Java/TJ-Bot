@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.commands.basic.PingCommand;
 import org.togetherjava.tjbot.commands.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.commands.basic.VcActivityCommand;
+import org.togetherjava.tjbot.commands.bookmarks.*;
 import org.togetherjava.tjbot.commands.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.commands.code.CodeMessageHandler;
 import org.togetherjava.tjbot.commands.code.CodeMessageManualDetection;
@@ -67,6 +68,7 @@ public class Features {
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
         TagSystem tagSystem = new TagSystem(database);
+        BookmarksSystem bookmarksSystem = new BookmarksSystem(config, database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
@@ -90,6 +92,7 @@ public class Features {
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
+        features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -107,6 +110,7 @@ public class Features {
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new OnGuildLeaveCloseThreadListener(database));
         features.add(new UserBannedDeleteRecentThreadsListener(database));
+        features.add(new LeftoverBookmarksListener(bookmarksSystem));
 
         // Message context commands
 
@@ -139,6 +143,7 @@ public class Features {
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
+        features.add(new BookmarksCommand(bookmarksSystem));
 
         // Mixtures
         features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
