@@ -77,7 +77,7 @@ public class StringDistances {
         bestMatches.addAll(scoredMatches);
 
         return Stream.generate(bestMatches::poll)
-            .limit(limit)
+            .limit(Math.min(limit, bestMatches.size()))
             .takeWhile(matchScore -> isCloseEnough(matchScore, prefix))
             .map(MatchScore::candidate)
             .toList();

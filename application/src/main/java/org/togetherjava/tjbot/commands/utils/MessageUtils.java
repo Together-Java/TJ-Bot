@@ -123,6 +123,19 @@ public class MessageUtils {
     }
 
     /**
+     * Converts the id of a channel to a mentioned channel, which you can directly click on in
+     * Discord.
+     *
+     * @param channelId the id of the channel to mention
+     * @return Formatted string for the mentioned channel
+     */
+    public static String mentionChannel(long channelId) {
+        // NOTE Hardcoded until JDA offers something like User.fromId(id).getAsMention() for
+        // channels as well
+        return "<#%d>".formatted(channelId);
+    }
+
+    /**
      * Abbreviates the given text if it is too long.
      * <p>
      * Abbreviation is done by adding {@value ABBREVIATION}.
@@ -180,7 +193,8 @@ public class MessageUtils {
             return Optional.empty();
         }
 
-        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, codeFenceStart + 1);
+        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
+        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, languageStart);
         if (codeFenceEnd == -1) {
             return Optional.empty();
         }
@@ -188,7 +202,6 @@ public class MessageUtils {
         // Language is between ``` and newline, no spaces allowed, like ```java
         // Look for the next newline and then assert no space between
         String language = null;
-        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
         int languageEnd = fullMessage.indexOf('\n', codeFenceStart);
         if (languageEnd != -1) {
             String languageCandidate = fullMessage.substring(languageStart, languageEnd);

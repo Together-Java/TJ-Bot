@@ -27,20 +27,16 @@ import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import javax.annotation.Nullable;
 
 import java.awt.Color;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Handles code in registered messages and offers code actions to the user, such as formatting their
  * code.
  * <p>
- * Messages can be registered by using {@link #addAndHandleCodeMessage(Message)}.
+ * Messages can be registered by using {@link #addAndHandleCodeMessage(Message, boolean)}.
  * <p>
  * Code actions are automatically updated whenever the code in the original message is edited or
  * deleted.
@@ -111,10 +107,12 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
      * corresponding code-reply to the author.
      *
      * @param originalMessage the code message to add to this handler
+     * @param showDeleteButton whether the code-actions should initially have a delete button or not
      */
-    public void addAndHandleCodeMessage(Message originalMessage) {
+    public void addAndHandleCodeMessage(Message originalMessage, boolean showDeleteButton) {
         // Suggest code actions and remember the message <-> reply
-        MessageCreateData codeReply = createCodeReplyMessage(originalMessage.getIdLong());
+        MessageCreateData codeReply =
+                createCodeReplyMessage(originalMessage.getIdLong(), showDeleteButton);
 
         originalMessage.reply(codeReply)
             .onSuccess(replyMessage -> originalMessageToCodeReply.put(originalMessage.getIdLong(),
@@ -122,22 +120,24 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
             .queue();
     }
 
-    private MessageCreateData createCodeReplyMessage(long originalMessageId) {
+    private MessageCreateData createCodeReplyMessage(long originalMessageId,
+            boolean showDeleteButton) {
+        List<Button> codeActionButtons = new ArrayList<>(createButtons(originalMessageId, null));
+        if (showDeleteButton) {
+            codeActionButtons.add(createDeleteButton(originalMessageId));
+        }
+
         return new MessageCreateBuilder().setContent("Detected code, here are some useful tools:")
-            .setActionRow(createButtons(originalMessageId, null))
+            .setActionRow(codeActionButtons)
             .build();
     }
 
     private List<Button> createButtons(long originalMessageId,
             @Nullable CodeAction currentlyActiveAction) {
-        Stream<Button> codeActionButtons = labelToCodeAction.values().stream().map(action -> {
+        return labelToCodeAction.values().stream().map(action -> {
             Button button = createButtonForAction(action, originalMessageId);
             return action == currentlyActiveAction ? button.asDisabled() : button;
-        });
-
-        Stream<Button> otherButtons = Stream.of(createDeleteButton(originalMessageId));
-
-        return Stream.concat(codeActionButtons, otherButtons).toList();
+        }).toList();
     }
 
     private Button createDeleteButton(long originalMessageId) {
@@ -192,6 +192,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     }
 
     private void deleteCodeReply(ButtonInteractionEvent event, long originalMessageId) {
+        logger.debug("User {} deleted the code-reply from original message {} in channel {}",
+                event.getUser().getId(), originalMessageId, event.getChannel().getName());
+
         originalMessageToCodeReply.invalidate(originalMessageId);
         event.getMessage().delete().queue();
     }

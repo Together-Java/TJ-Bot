@@ -32,6 +32,6 @@ public final class CodeMessageManualDetection extends BotCommandAdapter
             .setEphemeral(true)
             .queue();
 
-        codeMessageHandler.addAndHandleCodeMessage(event.getTarget());
+        codeMessageHandler.addAndHandleCodeMessage(event.getTarget(), false);
     }
 }
