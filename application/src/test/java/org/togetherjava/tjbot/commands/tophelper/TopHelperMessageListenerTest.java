@@ -25,8 +25,7 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 
 final class TopHelperMessageListenerTest {
 
-    private static final String STAGING_CHANNEL_PATTERN = "ask_here";
-    private static final String OVERVIEW_CHANNEL_PATTERN = "active_questions";
+    private static final String HELP_FORUM_PATTERN = "questions";
 
     private static JdaTester jdaTester;
     private static TopHelpersMessageListener topHelpersListener;
@@ -37,8 +36,7 @@ final class TopHelperMessageListenerTest {
         Config config = mock(Config.class);
         HelpSystemConfig helpSystemConfig = mock(HelpSystemConfig.class);
 
-        when(helpSystemConfig.getStagingChannelPattern()).thenReturn(STAGING_CHANNEL_PATTERN);
-        when(helpSystemConfig.getOverviewChannelPattern()).thenReturn(OVERVIEW_CHANNEL_PATTERN);
+        when(helpSystemConfig.getHelpForumPattern()).thenReturn(HELP_FORUM_PATTERN);
 
         when(config.getHelpSystem()).thenReturn(helpSystemConfig);
 
@@ -50,7 +48,7 @@ final class TopHelperMessageListenerTest {
     void recognizesValidMessages() {
         // GIVEN a message by a human in a help channel
         MessageReceivedEvent event =
-                createMessageReceivedEvent(false, false, true, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(false, false, true, HELP_FORUM_PATTERN);
 
         // WHEN checking if the message should be ignored
         boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
@@ -63,7 +61,7 @@ final class TopHelperMessageListenerTest {
     void ignoresBots() {
         // GIVEN a message from a bot
         MessageReceivedEvent event =
-                createMessageReceivedEvent(true, false, true, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(true, false, true, HELP_FORUM_PATTERN);
 
         // WHEN checking if the message should be ignored
         boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
@@ -76,7 +74,7 @@ final class TopHelperMessageListenerTest {
     void ignoresWebhooks() {
         // GIVEN a message from a webhook
         MessageReceivedEvent event =
-                createMessageReceivedEvent(false, true, true, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(false, true, true, HELP_FORUM_PATTERN);
 
         // WHEN checking if the message should be ignored
         boolean shouldBeIgnored = topHelpersListener.shouldIgnoreMessage(event);
@@ -89,7 +87,7 @@ final class TopHelperMessageListenerTest {
     void ignoresWrongChannels() {
         // GIVEN a message outside a help thread
         MessageReceivedEvent eventNotAThread =
-                createMessageReceivedEvent(false, false, false, OVERVIEW_CHANNEL_PATTERN);
+                createMessageReceivedEvent(false, false, false, HELP_FORUM_PATTERN);
         MessageReceivedEvent eventWrongParentName =
                 createMessageReceivedEvent(false, false, true, "memes");
 

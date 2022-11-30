@@ -39,7 +39,7 @@ public final class BookmarksSystem {
     static final Color COLOR_FAILURE = new Color(238, 153, 160);
 
     private final Database database;
-    private final Predicate<String> isOverviewChannelName;
+    private final Predicate<String> isHelpForumName;
 
     /**
      * Creates a new instance of the bookmarks system.
@@ -50,8 +50,8 @@ public final class BookmarksSystem {
     public BookmarksSystem(Config config, Database database) {
         this.database = database;
 
-        isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
-            .asMatchPredicate();
+        isHelpForumName =
+                Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
     }
 
     boolean isHelpThread(MessageChannelUnion channel) {
@@ -60,9 +60,9 @@ public final class BookmarksSystem {
         }
 
         ThreadChannel threadChannel = channel.asThreadChannel();
-        String parentChannelName = threadChannel.getParentMessageChannel().getName();
+        String parentChannelName = threadChannel.getParentChannel().getName();
 
-        return isOverviewChannelName.test(parentChannelName);
+        return isHelpForumName.test(parentChannelName);
     }
 
     boolean didUserBookmarkChannel(long userID, long channelID) {

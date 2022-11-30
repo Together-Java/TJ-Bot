@@ -27,8 +27,7 @@
    },
    "wolframAlphaAppId": "79J52T-6239TVXHR7",
    "helpSystem": {
-       "stagingChannelPattern": "ask_here",
-       "overviewChannelPattern": "active_questions",
+       "helpForumPattern": "questions",
        "categories": [
            "Java",
            "Frameworks",

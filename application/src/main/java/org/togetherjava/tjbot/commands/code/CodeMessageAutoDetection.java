@@ -23,8 +23,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     private final CodeMessageHandler codeMessageHandler;
 
-    private final Predicate<String> isStagingChannelName;
-    private final Predicate<String> isOverviewChannelName;
+    private final Predicate<String> isHelpForumName;
 
     /**
      * Creates a new instance.
@@ -37,10 +36,8 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
         this.codeMessageHandler = codeMessageHandler;
 
-        isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
-            .asMatchPredicate();
-        isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
-            .asMatchPredicate();
+        isHelpForumName =
+                Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
     }
 
     @Override
@@ -73,7 +70,6 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
         ThreadChannel thread = event.getChannel().asThreadChannel();
         String rootChannelName = thread.getParentChannel().getName();
-        return isStagingChannelName.test(rootChannelName)
-                || isOverviewChannelName.test(rootChannelName);
+        return isHelpForumName.test(rootChannelName);
     }
 }
