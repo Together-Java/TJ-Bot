@@ -52,8 +52,20 @@ public final class LinkPreviews {
     public static List<String> extractLinks(String content) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
             .stream()
+            .filter(LinkPreviews::considerUrl)
             .map(Url::getFullUrl)
             .toList();
+    }
+
+    private static boolean considerUrl(Url url) {
+        String raw = url.getOriginalUrl();
+        if (raw.contains(">")) {
+            // URL escapes, such as "<http://example.com>" should be skipped
+            return false;
+        }
+        // Not interested in other schemes, also to filter out matches without scheme.
+        // It detects a lot of such false-positives in Java snippets
+        return raw.startsWith("http");
     }
 
     /**
@@ -151,7 +163,8 @@ public final class LinkPreviews {
         try {
             doc = Jsoup.parse(websiteContent, null, link);
         } catch (IOException e) {
-            logger.warn("Attempted to create a preview for {}, but the content invalid.", link, e);
+            logger.warn("Attempted to create a preview for {}, but the content is invalid.", link,
+                    e);
             return noResult();
         }
 
