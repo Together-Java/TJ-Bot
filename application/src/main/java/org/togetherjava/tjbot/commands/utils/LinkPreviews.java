@@ -17,10 +17,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
@@ -34,7 +36,8 @@ public final class LinkPreviews {
     private static final String IMAGE_CONTENT_TYPE_PREFIX = "image";
     private static final String IMAGE_META_NAME = "image";
 
-    private static final HttpClient CLIENT = HttpClient.newHttpClient();
+    private static final HttpClient CLIENT =
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
     private LinkPreviews() {
         throw new UnsupportedOperationException("Utility class");
@@ -75,7 +78,10 @@ public final class LinkPreviews {
             .toList();
 
         var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
-        return allDoneTask.thenApply(any -> extractResults(tasks));
+        return allDoneTask.thenApply(any -> extractResults(tasks)).exceptionally(e -> {
+            logger.error("Unknown error during link preview creation", e);
+            return List.of();
+        });
     }
 
     private static <T> List<T> extractResults(
@@ -103,6 +109,9 @@ public final class LinkPreviews {
                 return parseWebsite(link, attachmentName, content.dataStream);
             }
             return noResult();
+        }).orTimeout(10, TimeUnit.SECONDS).exceptionally(e -> {
+            logger.warn("Failed to create link preview for {}", link, e);
+            return Optional.empty();
         });
     }
 
