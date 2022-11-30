@@ -176,7 +176,7 @@ public final class LinkPreviews {
         String value = Optional
             .ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
             .or(() -> Optional
-                .ofNullable(doc.selectFirst("meta[property=twitter:%s".formatted(metaProperty))))
+                .ofNullable(doc.selectFirst("meta[property=twitter:%s]".formatted(metaProperty))))
             .map(element -> element.attr("content"))
             .orElse(fallback);
         if (value == null) {
