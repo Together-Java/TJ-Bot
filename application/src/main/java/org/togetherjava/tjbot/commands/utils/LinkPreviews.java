@@ -185,7 +185,7 @@ public final class LinkPreviews {
 
         LinkPreview textPreview = LinkPreview.ofText(title, link, description);
 
-        String image = parseOpenGraphMeta(doc, IMAGE_META_NAME).orElse(null);
+        String image = parseOpenGraphTwitterMeta(doc, IMAGE_META_NAME, null).orElse(null);
         if (image == null) {
             return result(textPreview);
         }
@@ -206,28 +206,25 @@ public final class LinkPreviews {
 
     private static Optional<String> parseOpenGraphTwitterMeta(Document doc, String metaProperty,
             @Nullable String fallback) {
-        String value = Optional
-            .ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
-            .or(() -> Optional
-                .ofNullable(doc.selectFirst("meta[name=og:%s]".formatted(metaProperty))))
-            .or(() -> Optional
-                .ofNullable(doc.selectFirst("meta[property=twitter:%s]".formatted(metaProperty))))
-            .or(() -> Optional
-                .ofNullable(doc.selectFirst("meta[name=twitter:%s]".formatted(metaProperty))))
-            .map(element -> element.attr("content"))
+        String value = parseMetaProperty(doc, "og:" + metaProperty)
+            .or(() -> parseMetaProperty(doc, "twitter:" + metaProperty))
             .orElse(fallback);
+
         if (value == null) {
             return Optional.empty();
         }
         return value.isBlank() ? Optional.empty() : Optional.of(value);
     }
 
-    private static Optional<String> parseOpenGraphMeta(Document doc, String metaProperty) {
-        return Optional.ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
-            .or(() -> Optional
-                .ofNullable(doc.selectFirst("meta[name=og:%s]".formatted(metaProperty))))
-            .map(element -> element.attr("content"))
+    private static Optional<String> parseMetaProperty(Document doc, String metaProperty) {
+        return selectFirstMetaTag(doc, "property", metaProperty)
+            .or(() -> selectFirstMetaTag(doc, "name", metaProperty))
             .filter(Predicate.not(String::isBlank));
+    }
+
+    private static Optional<String> selectFirstMetaTag(Document doc, String key, String value) {
+        return Optional.ofNullable(doc.selectFirst("meta[%s=%s]".formatted(key, value)))
+            .map(element -> element.attr("content"));
     }
 
     private static <T> CompletableFuture<Optional<T>> noResult() {
