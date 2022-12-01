@@ -52,20 +52,31 @@ public final class LinkPreviews {
     public static List<String> extractLinks(String content) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
             .stream()
-            .filter(LinkPreviews::considerUrl)
-            .map(Url::getFullUrl)
+            .map(LinkPreviews::toLink)
+            .flatMap(Optional::stream)
             .toList();
     }
 
-    private static boolean considerUrl(Url url) {
+    private static Optional<String> toLink(Url url) {
         String raw = url.getOriginalUrl();
         if (raw.contains(">")) {
             // URL escapes, such as "<http://example.com>" should be skipped
-            return false;
+            return Optional.empty();
         }
         // Not interested in other schemes, also to filter out matches without scheme.
         // It detects a lot of such false-positives in Java snippets
-        return raw.startsWith("http");
+        if (!raw.startsWith("http")) {
+            return Optional.empty();
+        }
+
+        String link = url.getFullUrl();
+
+        if (link.endsWith(",") || link.endsWith(".")) {
+            // Remove trailing punctuation
+            link = link.substring(0, link.length() - 1);
+        }
+
+        return Optional.of(link);
     }
 
     /**
@@ -198,7 +209,11 @@ public final class LinkPreviews {
         String value = Optional
             .ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
             .or(() -> Optional
+                .ofNullable(doc.selectFirst("meta[name=og:%s]".formatted(metaProperty))))
+            .or(() -> Optional
                 .ofNullable(doc.selectFirst("meta[property=twitter:%s]".formatted(metaProperty))))
+            .or(() -> Optional
+                .ofNullable(doc.selectFirst("meta[name=twitter:%s]".formatted(metaProperty))))
             .map(element -> element.attr("content"))
             .orElse(fallback);
         if (value == null) {
@@ -209,6 +224,8 @@ public final class LinkPreviews {
 
     private static Optional<String> parseOpenGraphMeta(Document doc, String metaProperty) {
         return Optional.ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
+            .or(() -> Optional
+                .ofNullable(doc.selectFirst("meta[name=og:%s]".formatted(metaProperty))))
             .map(element -> element.attr("content"))
             .filter(Predicate.not(String::isBlank));
     }
