@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.Modal;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -23,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.BotCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.MessageContextCommand;
-import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
@@ -37,14 +37,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-
 /**
  * Implements the /report command, which allows users to report a selected offensive message from
  * another user. The message is then forwarded to moderators in a dedicated channel given by
  * {@link Config#getModMailChannelPattern()}.
  */
 public final class ReportCommand extends BotCommandAdapter implements MessageContextCommand {
-
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
     private static final String COMMAND_NAME = "report";
     private static final String REPORT_REASON_INPUT_ID = "reportReason";
@@ -185,9 +183,10 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
-                            "Go to Message", guild.getId(), reportedMessage.channelID,
-                            reportedMessage.id));
+                    .addActionRow(Button.link(
+                            "https://discord.com/channels/%s/%s/%s".formatted(guild.getId(),
+                                    reportedMessage.channelID, reportedMessage.id),
+                            "Go to Message"));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
@@ -236,7 +235,5 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             return new ReportedMessage(content, id, channelID, timestamp, authorName,
                     authorAvatarUrl);
         }
-
     }
-
 }
