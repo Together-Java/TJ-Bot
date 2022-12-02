@@ -17,10 +17,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
@@ -34,7 +36,8 @@ public final class LinkPreviews {
     private static final String IMAGE_CONTENT_TYPE_PREFIX = "image";
     private static final String IMAGE_META_NAME = "image";
 
-    private static final HttpClient CLIENT = HttpClient.newHttpClient();
+    private static final HttpClient CLIENT =
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
     private LinkPreviews() {
         throw new UnsupportedOperationException("Utility class");
@@ -49,8 +52,31 @@ public final class LinkPreviews {
     public static List<String> extractLinks(String content) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
             .stream()
-            .map(Url::getFullUrl)
+            .map(LinkPreviews::toLink)
+            .flatMap(Optional::stream)
             .toList();
+    }
+
+    private static Optional<String> toLink(Url url) {
+        String raw = url.getOriginalUrl();
+        if (raw.contains(">")) {
+            // URL escapes, such as "<http://example.com>" should be skipped
+            return Optional.empty();
+        }
+        // Not interested in other schemes, also to filter out matches without scheme.
+        // It detects a lot of such false-positives in Java snippets
+        if (!raw.startsWith("http")) {
+            return Optional.empty();
+        }
+
+        String link = url.getFullUrl();
+
+        if (link.endsWith(",") || link.endsWith(".")) {
+            // Remove trailing punctuation
+            link = link.substring(0, link.length() - 1);
+        }
+
+        return Optional.of(link);
     }
 
     /**
@@ -75,7 +101,10 @@ public final class LinkPreviews {
             .toList();
 
         var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
-        return allDoneTask.thenApply(any -> extractResults(tasks));
+        return allDoneTask.thenApply(any -> extractResults(tasks)).exceptionally(e -> {
+            logger.error("Unknown error during link preview creation", e);
+            return List.of();
+        });
     }
 
     private static <T> List<T> extractResults(
@@ -103,6 +132,9 @@ public final class LinkPreviews {
                 return parseWebsite(link, attachmentName, content.dataStream);
             }
             return noResult();
+        }).orTimeout(10, TimeUnit.SECONDS).exceptionally(e -> {
+            logger.warn("Failed to create link preview for {}", link, e);
+            return Optional.empty();
         });
     }
 
@@ -142,7 +174,8 @@ public final class LinkPreviews {
         try {
             doc = Jsoup.parse(websiteContent, null, link);
         } catch (IOException e) {
-            logger.warn("Attempted to create a preview for {}, but the content invalid.", link, e);
+            logger.warn("Attempted to create a preview for {}, but the content is invalid.", link,
+                    e);
             return noResult();
         }
 
@@ -152,7 +185,7 @@ public final class LinkPreviews {
 
         LinkPreview textPreview = LinkPreview.ofText(title, link, description);
 
-        String image = parseOpenGraphMeta(doc, IMAGE_META_NAME).orElse(null);
+        String image = parseOpenGraphTwitterMeta(doc, IMAGE_META_NAME, null).orElse(null);
         if (image == null) {
             return result(textPreview);
         }
@@ -173,22 +206,25 @@ public final class LinkPreviews {
 
     private static Optional<String> parseOpenGraphTwitterMeta(Document doc, String metaProperty,
             @Nullable String fallback) {
-        String value = Optional
-            .ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
-            .or(() -> Optional
-                .ofNullable(doc.selectFirst("meta[property=twitter:%s]".formatted(metaProperty))))
-            .map(element -> element.attr("content"))
+        String value = parseMetaProperty(doc, "og:" + metaProperty)
+            .or(() -> parseMetaProperty(doc, "twitter:" + metaProperty))
             .orElse(fallback);
+
         if (value == null) {
             return Optional.empty();
         }
         return value.isBlank() ? Optional.empty() : Optional.of(value);
     }
 
-    private static Optional<String> parseOpenGraphMeta(Document doc, String metaProperty) {
-        return Optional.ofNullable(doc.selectFirst("meta[property=og:%s]".formatted(metaProperty)))
-            .map(element -> element.attr("content"))
+    private static Optional<String> parseMetaProperty(Document doc, String metaProperty) {
+        return selectFirstMetaTag(doc, "property", metaProperty)
+            .or(() -> selectFirstMetaTag(doc, "name", metaProperty))
             .filter(Predicate.not(String::isBlank));
+    }
+
+    private static Optional<String> selectFirstMetaTag(Document doc, String key, String value) {
+        return Optional.ofNullable(doc.selectFirst("meta[%s=%s]".formatted(key, value)))
+            .map(element -> element.attr("content"));
     }
 
     private static <T> CompletableFuture<Optional<T>> noResult() {
