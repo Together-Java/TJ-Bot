@@ -65,6 +65,7 @@ public final class HelpSystemHelper {
     private static final ScheduledExecutorService SERVICE = Executors.newScheduledThreadPool(3);
     private static final int SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES = 5;
     private static final int SEND_NO_ACTIVITY_ADVICE_AFTER_MINUTES = 5;
+    public static final int MAX_MESSAGES_TO_LOOK_BACK = 10;
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
     private final Predicate<String> isStagingChannelName;
@@ -375,15 +376,15 @@ public final class HelpSystemHelper {
     }
 
     private static boolean hasNoAuthorActivity(long authorId, ThreadChannel threadChannel) {
-        int count = 0;
+        int messagesFromOthers = 0;
         for (Message message : threadChannel.getIterableHistory()) {
-            if (count == 10) {
+            if (messagesFromOthers == MAX_MESSAGES_TO_LOOK_BACK) {
                 return false;
             }
             if (message.getAuthor().getIdLong() == authorId) {
                 return false;
             }
-            count++;
+            messagesFromOthers++;
         }
         return true;
     }
