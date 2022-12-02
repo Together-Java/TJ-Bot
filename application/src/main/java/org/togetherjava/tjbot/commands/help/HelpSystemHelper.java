@@ -190,7 +190,7 @@ public final class HelpSystemHelper {
 
     private static RestAction<Void> changeMatchingTagOfChannel(String tagName,
             Set<String> tagNamesToMatch, ThreadChannel channel) {
-        Collection<ForumTag> tags = new ArrayList<>(channel.getAppliedTags());
+        List<ForumTag> tags = new ArrayList<>(channel.getAppliedTags());
 
         Optional<ForumTag> currentTag = getFirstMatchingTagOfChannel(tagNamesToMatch, channel);
         if (currentTag.isPresent()) {
@@ -203,10 +203,24 @@ public final class HelpSystemHelper {
         }
 
         ForumTag nextTag = requireTag(tagName, channel.getParentChannel().asForumChannel());
-        tags.add(nextTag);
+        // In case the tag was already there, but not in front, we first remove it
+        tags.remove(nextTag);
+
+        if (tags.size() >= ForumChannel.MAX_POST_TAGS) {
+            // If still at max size, remove last to make place for the new tag.
+            // The last tag is the least important.
+            // NOTE In practice, this can happen if the user selected 5 categories and
+            // the bot then tries to add the activity tag
+            tags.remove(tags.size() - 1);
+        }
+
+        Collection<ForumTag> nextTags = new ArrayList<>(tags.size());
+        // Tag should be in front, to take priority over others
+        nextTags.add(nextTag);
+        nextTags.addAll(tags);
 
         List<ForumTagSnowflake> tagSnowflakes =
-                tags.stream().map(ForumTag::getIdLong).map(ForumTagSnowflake::fromId).toList();
+                nextTags.stream().map(ForumTag::getIdLong).map(ForumTagSnowflake::fromId).toList();
         return channel.getManager().setAppliedTags(tagSnowflakes);
     }
 
