@@ -3,10 +3,7 @@ package org.togetherjava.tjbot.commands.moderation;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -16,7 +13,7 @@ import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,9 +162,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return modMailAuditLog;
     }
 
-    private MessageCreateAction createModMessage(String reportReason,
+    private RestAction<Message> createModMessage(String reportReason,
             ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
-
         MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
             .setDescription(MessageUtils.abbreviate(reportedMessage.content,
                     MessageEmbed.DESCRIPTION_MAX_LENGTH))
@@ -181,21 +177,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .build();
 
-        MessageCreateAction message =
-                modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(Button.link(
-                            "https://discord.com/channels/%s/%s/%s".formatted(guild.getId(),
-                                    reportedMessage.channelID, reportedMessage.id),
-                            "Go to Message"));
-
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
             .filter(role -> configModGroupPattern.test(role.getName()))
             .findFirst();
 
-        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
-
-        return message;
+        return guild.getTextChannelById(reportedMessage.channelID)
+            .retrieveMessageById(reportedMessage.id)
+            .map(Message::getJumpUrl)
+            .flatMap(messageUrl -> modMailAuditLog
+                .sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+                .setContent(moderatorRole.map(Role::getAsMention).orElse(""))
+                .addActionRow(Button.link(messageUrl, "Go to Message")));
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
@@ -209,12 +202,12 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         ReportedMessage reportedMessage = ReportedMessage.ofArgs(args);
 
         createModMessage(reportReason, reportedMessage, guild, modMailAuditLog).mapToResult()
-            .map(this::createUserReply)
+            .map(ReportCommand::createUserReply)
             .flatMap(hook::editOriginal)
             .queue();
     }
 
-    private String createUserReply(Result<Message> result) {
+    private static String createUserReply(Result<Message> result) {
         if (result.isFailure()) {
             logger.warn("Unable to forward a message report to modmail channel.",
                     result.getFailure());
