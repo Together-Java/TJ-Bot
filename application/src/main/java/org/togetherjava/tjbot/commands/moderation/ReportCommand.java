@@ -87,6 +87,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         String reportedMessage = event.getTarget().getContentRaw();
         String reportedMessageID = event.getTarget().getId();
+        String reportedMessageJumpUrl = event.getTarget().getJumpUrl();
         String reportedMessageChannel = event.getTarget().getChannel().getId();
         String reportedAuthorName = event.getTarget().getAuthor().getName();
         String reportedAuthorAvatarURL = event.getTarget().getAuthor().getAvatarUrl();
@@ -100,8 +101,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .build();
 
         String reportModalComponentID = generateComponentId(reportedMessage, reportedMessageID,
-                reportedMessageChannel, reportedMessageTimestamp, reportedAuthorName,
-                reportedAuthorAvatarURL, reportedAuthorID);
+                reportedMessageJumpUrl, reportedMessageChannel, reportedMessageTimestamp,
+                reportedAuthorName, reportedAuthorAvatarURL, reportedAuthorID);
         Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
             .addActionRow(modalTextInput)
             .build();
@@ -182,13 +183,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .filter(role -> configModGroupPattern.test(role.getName()))
             .findFirst();
 
-        return guild.getTextChannelById(reportedMessage.channelID)
-            .retrieveMessageById(reportedMessage.id)
-            .map(Message::getJumpUrl)
-            .flatMap(messageUrl -> modMailAuditLog
-                .sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                .setContent(moderatorRole.map(Role::getAsMention).orElse(""))
-                .addActionRow(Button.link(messageUrl, "Go to Message")));
+        return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+            .setContent(moderatorRole.map(Role::getAsMention).orElse(""))
+            .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to Message"));
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
@@ -216,16 +213,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
     }
 
-    private record ReportedMessage(String content, String id, String channelID, Instant timestamp,
-            String authorName, String authorAvatarUrl) {
+    private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
+            Instant timestamp, String authorName, String authorAvatarUrl) {
         static ReportedMessage ofArgs(List<String> args) {
             String content = args.get(0);
             String id = args.get(1);
-            String channelID = args.get(2);
-            Instant timestamp = Instant.parse(args.get(3));
-            String authorName = args.get(4);
-            String authorAvatarUrl = args.get(5);
-            return new ReportedMessage(content, id, channelID, timestamp, authorName,
+            String jumpUrl = args.get(2);
+            String channelID = args.get(3);
+            Instant timestamp = Instant.parse(args.get(4));
+            String authorName = args.get(5);
+            String authorAvatarUrl = args.get(6);
+            return new ReportedMessage(content, id, jumpUrl, channelID, timestamp, authorName,
                     authorAvatarUrl);
         }
     }
