@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,7 +163,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return modMailAuditLog;
     }
 
-    private RestAction<Message> createModMessage(String reportReason,
+    private MessageCreateAction createModMessage(String reportReason,
             ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
         MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
             .setDescription(MessageUtils.abbreviate(reportedMessage.content,
@@ -178,14 +178,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .build();
 
+        MessageCreateAction message =
+                modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"));
+
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
             .filter(role -> configModGroupPattern.test(role.getName()))
             .findFirst();
 
-        return modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-            .setContent(moderatorRole.map(Role::getAsMention).orElse(""))
-            .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to Message"));
+        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+
+        return message;
     }
 
     private void sendModMessage(ModalInteractionEvent event, List<String> args,
