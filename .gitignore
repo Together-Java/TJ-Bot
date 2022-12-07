@@ -142,6 +142,9 @@ gradle-app.setting
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
+# VSCode
+.vscode
+
 # End of https://www.toptal.com/developers/gitignore/api/netbeans,intellij,java,gradle,eclipse
 application/db/
 config.json
