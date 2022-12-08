@@ -3,16 +3,14 @@ package org.togetherjava.tjbot.commands.moderation;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.Modal;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -23,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.BotCommandAdapter;
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.MessageContextCommand;
-import org.togetherjava.tjbot.commands.utils.DiscordClientAction;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
@@ -37,14 +34,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-
 /**
  * Implements the /report command, which allows users to report a selected offensive message from
  * another user. The message is then forwarded to moderators in a dedicated channel given by
  * {@link Config#getModMailChannelPattern()}.
  */
 public final class ReportCommand extends BotCommandAdapter implements MessageContextCommand {
-
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
     private static final String COMMAND_NAME = "report";
     private static final String REPORT_REASON_INPUT_ID = "reportReason";
@@ -92,6 +87,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         String reportedMessage = event.getTarget().getContentRaw();
         String reportedMessageID = event.getTarget().getId();
+        String reportedMessageJumpUrl = event.getTarget().getJumpUrl();
         String reportedMessageChannel = event.getTarget().getChannel().getId();
         String reportedAuthorName = event.getTarget().getAuthor().getName();
         String reportedAuthorAvatarURL = event.getTarget().getAuthor().getAvatarUrl();
@@ -105,8 +101,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .build();
 
         String reportModalComponentID = generateComponentId(reportedMessage, reportedMessageID,
-                reportedMessageChannel, reportedMessageTimestamp, reportedAuthorName,
-                reportedAuthorAvatarURL, reportedAuthorID);
+                reportedMessageJumpUrl, reportedMessageChannel, reportedMessageTimestamp,
+                reportedAuthorName, reportedAuthorAvatarURL, reportedAuthorID);
         Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
             .addActionRow(modalTextInput)
             .build();
@@ -169,7 +165,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     private MessageCreateAction createModMessage(String reportReason,
             ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
-
         MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
             .setDescription(MessageUtils.abbreviate(reportedMessage.content,
                     MessageEmbed.DESCRIPTION_MAX_LENGTH))
@@ -185,9 +180,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(DiscordClientAction.Channels.GUILD_CHANNEL_MESSAGE.asLinkButton(
-                            "Go to Message", guild.getId(), reportedMessage.channelID,
-                            reportedMessage.id));
+                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
@@ -210,12 +203,12 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         ReportedMessage reportedMessage = ReportedMessage.ofArgs(args);
 
         createModMessage(reportReason, reportedMessage, guild, modMailAuditLog).mapToResult()
-            .map(this::createUserReply)
+            .map(ReportCommand::createUserReply)
             .flatMap(hook::editOriginal)
             .queue();
     }
 
-    private String createUserReply(Result<Message> result) {
+    private static String createUserReply(Result<Message> result) {
         if (result.isFailure()) {
             logger.warn("Unable to forward a message report to modmail channel.",
                     result.getFailure());
@@ -224,19 +217,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
     }
 
-    private record ReportedMessage(String content, String id, String channelID, Instant timestamp,
-            String authorName, String authorAvatarUrl) {
+    private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
+            Instant timestamp, String authorName, String authorAvatarUrl) {
         static ReportedMessage ofArgs(List<String> args) {
             String content = args.get(0);
             String id = args.get(1);
-            String channelID = args.get(2);
-            Instant timestamp = Instant.parse(args.get(3));
-            String authorName = args.get(4);
-            String authorAvatarUrl = args.get(5);
-            return new ReportedMessage(content, id, channelID, timestamp, authorName,
+            String jumpUrl = args.get(2);
+            String channelID = args.get(3);
+            Instant timestamp = Instant.parse(args.get(4));
+            String authorName = args.get(5);
+            String authorAvatarUrl = args.get(6);
+            return new ReportedMessage(content, id, jumpUrl, channelID, timestamp, authorName,
                     authorAvatarUrl);
         }
-
     }
-
 }
