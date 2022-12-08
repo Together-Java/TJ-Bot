@@ -114,18 +114,11 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .setMaxLength(1000)
             .build();
 
-        TextInput anonymous = TextInput
-            .create(OPTION_STAY_ANONYMOUS, "Do you want to be anonymous?", TextInputStyle.SHORT)
-            .setPlaceholder("Type \"yes\" if you want to stay anonymous")
-            .setMinLength(0)
-            .setMaxLength(3)
-            .setRequired(false)
-            .build();
         String modMailModalComponentId =
                 generateComponentId(event.getOption(OPTION_STAY_ANONYMOUS).getAsString(),
                         String.valueOf(event.getOption(OPTION_GUILD).getAsLong()));
         Modal modal = Modal.create(modMailModalComponentId, "Modmail")
-            .addActionRows(ActionRow.of(body), ActionRow.of(anonymous))
+            .addActionRows(ActionRow.of(body))
             .build();
 
 
