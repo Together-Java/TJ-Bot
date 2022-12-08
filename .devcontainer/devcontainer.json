@@ -19,13 +19,15 @@
       "extensions": [
         "vscjava.vscode-java-pack",
         "vscjava.vscode-gradle",
-        "alexcvzz.vscode-sqlite",
-        "richardwillis.vscode-spotless-gradle"
+        "alexcvzz.vscode-sqlite"
       ],
       "settings": {
         "[java]": {
-          "spotlessGradle.format.enable": true,
-          "editor.defaultFormatter": "richardwillis.vscode-spotless-gradle"
+          "java.compile.nullAnalysis.mode": "disabled",
+          "java.format.settings.url": "meta/formatting/google-style-eclipse.xml",
+          "editor.formatOnSave": true,
+          "editor.formatOnPaste": true,
+          "java.format.enabled": true
         }
       }
     }
