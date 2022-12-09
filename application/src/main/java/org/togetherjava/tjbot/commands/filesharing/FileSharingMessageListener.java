@@ -63,8 +63,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
-    private final Predicate<String> isStagingChannelName;
-    private final Predicate<String> isOverviewChannelName;
+    private final Predicate<String> isHelpForumName;
     private final Predicate<String> isSoftModRole;
 
     /**
@@ -77,10 +76,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
         super(Pattern.compile(".*"));
 
         gistApiKey = config.getGistApiKey();
-        isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
-            .asMatchPredicate();
-        isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
-            .asMatchPredicate();
+        isHelpForumName =
+                Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
         isSoftModRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
     }
 
@@ -245,8 +242,7 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
 
         ThreadChannel thread = event.getChannel().asThreadChannel();
         String rootChannelName = thread.getParentChannel().getName();
-        return isStagingChannelName.test(rootChannelName)
-                || isOverviewChannelName.test(rootChannelName);
+        return isHelpForumName.test(rootChannelName);
     }
 
     private void deleteGist(String gistId) {

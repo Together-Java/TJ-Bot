@@ -86,7 +86,6 @@ public class Features {
         features.add(new TopHelpersPurgeMessagesRoutine(database));
         features.add(new RemindRoutine(database));
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
-        features.add(new BotMessageCleanup(config));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
         features
@@ -98,7 +97,6 @@ public class Features {
         features.add(new TopHelpersMessageListener(database, config));
         features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
-        features.add(new ImplicitAskListener(config, helpSystemHelper));
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
@@ -111,6 +109,7 @@ public class Features {
         features.add(new OnGuildLeaveCloseThreadListener(database));
         features.add(new UserBannedDeleteRecentThreadsListener(database));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
+        features.add(new HelpThreadCreatedListener(helpSystemHelper));
 
         // Message context commands
 
@@ -139,14 +138,12 @@ public class Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
-        features.add(new AskCommand(config, helpSystemHelper, database));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
 
         // Mixtures
-        features.add(new HelpThreadOverviewUpdater(config, helpSystemHelper));
 
         return features;
     }

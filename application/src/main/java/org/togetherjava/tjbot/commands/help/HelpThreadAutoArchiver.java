@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.utils.TimeUtil;
@@ -50,19 +50,18 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     private void autoArchiveForGuild(Guild guild) {
-        Optional<TextChannel> maybeOverviewChannel = helper
-            .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
-                    "Unable to auto archive help threads, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+        Optional<ForumChannel> maybeHelpForum = helper
+            .handleRequireHelpForum(guild, channelPattern -> logger.warn(
+                    "Unable to auto archive help threads, did not find a help forum matching the configured pattern '{}' for guild '{}'",
                     channelPattern, guild.getName()));
 
-        if (maybeOverviewChannel.isEmpty()) {
+        if (maybeHelpForum.isEmpty()) {
             return;
         }
 
         logger.debug("Auto archiving of help threads");
 
-        List<ThreadChannel> activeThreads =
-                helper.getActiveThreadsIn(maybeOverviewChannel.orElseThrow());
+        List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(maybeHelpForum.orElseThrow());
         logger.debug("Found {} active questions", activeThreads.size());
 
         Instant archiveAfterMoment = computeArchiveAfterMoment();

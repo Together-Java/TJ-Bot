@@ -29,8 +29,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
     private final Database database;
 
-    private final Predicate<String> isStagingChannelName;
-    private final Predicate<String> isOverviewChannelName;
+    private final Predicate<String> isHelpForumName;
 
     /**
      * Creates a new listener to receive all message sent in help channels.
@@ -43,10 +42,8 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
         this.database = database;
 
-        isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
-            .asMatchPredicate();
-        isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
-            .asMatchPredicate();
+        isHelpForumName =
+                Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
     }
 
     @Override
@@ -83,8 +80,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
         ThreadChannel thread = channel.asThreadChannel();
         String rootChannelName = thread.getParentChannel().getName();
-        return isStagingChannelName.test(rootChannelName)
-                || isOverviewChannelName.test(rootChannelName);
+        return isHelpForumName.test(rootChannelName);
     }
 
     static long countValidCharacters(String messageContent) {

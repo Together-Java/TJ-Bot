@@ -31,15 +31,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
-import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
-
 /**
- * Implements the {@code /help-thread} command, which are contains special command for help threads
- * only
+ * Implements the {@code /help-thread} command, used to maintain certain aspects of help threads,
+ * such as renaming or closing them.
  */
 public final class HelpThreadCommand extends SlashCommandAdapter {
-    private static final int COOLDOWN_DURATION_VALUE = 30;
+    private static final int COOLDOWN_DURATION_VALUE = 2;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     public static final String CHANGE_CATEGORY_SUBCOMMAND = "category";
     private static final String CHANGE_CATEGORY_OPTION = "category";
@@ -71,8 +68,11 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         SubcommandData changeCategory =
                 Subcommand.CHANGE_CATEGORY.toSubcommandData().addOptions(categoryChoices);
 
-        SubcommandData changeTitle = Subcommand.CHANGE_TITLE.toSubcommandData()
-            .addOption(OptionType.STRING, CHANGE_TITLE_OPTION, "new title", true);
+        OptionData changeTitleOption =
+                new OptionData(OptionType.STRING, CHANGE_TITLE_OPTION, "new title", true)
+                    .setMinLength(2);
+        SubcommandData changeTitle =
+                Subcommand.CHANGE_TITLE.toSubcommandData().addOptions(changeTitleOption);
 
         SubcommandGroupData changeCommands = new SubcommandGroupData(CHANGE_SUBCOMMAND_GROUP,
                 "Change the details of this help thread").addSubcommands(changeCategory,
@@ -146,7 +146,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.deferReply().queue();
         refreshCooldownFor(Subcommand.CHANGE_CATEGORY, helpThread);
 
-        helper.renameChannelToCategory(helpThread, category)
+        helper.changeChannelCategory(helpThread, category)
             .flatMap(any -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
                     helpThread, category))
             .queue();
@@ -181,18 +181,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private void changeTitle(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
         String title = event.getOption(CHANGE_TITLE_OPTION).getAsString();
 
-        if (!HelpSystemHelper.isTitleValid(title)) {
-            event.reply(
-                    "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
-                        .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
         refreshCooldownFor(Subcommand.CHANGE_TITLE, helpThread);
 
-        helper.renameChannelToTitle(helpThread, title)
+        helper.renameChannel(helpThread, title)
             .flatMap(any -> event.reply("Changed the title to **%s**.".formatted(title)))
             .queue();
     }

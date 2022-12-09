@@ -14,44 +14,29 @@ import java.util.Objects;
  */
 @JsonRootName("helpSystem")
 public final class HelpSystemConfig {
-    private final String stagingChannelPattern;
-    private final String overviewChannelPattern;
+    private final String helpForumPattern;
     private final List<String> categories;
     private final String categoryRoleSuffix;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private HelpSystemConfig(
-            @JsonProperty(value = "stagingChannelPattern",
-                    required = true) String stagingChannelPattern,
-            @JsonProperty(value = "overviewChannelPattern",
-                    required = true) String overviewChannelPattern,
+            @JsonProperty(value = "helpForumPattern", required = true) String helpForumPattern,
             @JsonProperty(value = "categories", required = true) List<String> categories,
             @JsonProperty(value = "categoryRoleSuffix",
                     required = true) String categoryRoleSuffix) {
-        this.stagingChannelPattern = Objects.requireNonNull(stagingChannelPattern);
-        this.overviewChannelPattern = Objects.requireNonNull(overviewChannelPattern);
+        this.helpForumPattern = Objects.requireNonNull(helpForumPattern);
         this.categories = new ArrayList<>(Objects.requireNonNull(categories));
         this.categoryRoleSuffix = Objects.requireNonNull(categoryRoleSuffix);
     }
 
     /**
-     * Gets the REGEX pattern used to identify the channel that acts as the staging channel for
-     * getting help. Users ask help here and help threads are also created in this channel.
+     * Gets the REGEX pattern used to identify the forum channel that used for getting help. Users
+     * ask questions here and help threads are also created in this channel.
      *
-     * @return the channel name pattern
+     * @return the forum name pattern
      */
-    public String getStagingChannelPattern() {
-        return stagingChannelPattern;
-    }
-
-    /**
-     * Gets the REGEX pattern used to identify the channel that provides an overview of all active
-     * help threads.
-     *
-     * @return the channel name pattern
-     */
-    public String getOverviewChannelPattern() {
-        return overviewChannelPattern;
+    public String getHelpForumPattern() {
+        return helpForumPattern;
     }
 
     /**
