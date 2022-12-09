@@ -109,18 +109,19 @@ public final class ModMailCommand extends SlashCommandAdapter {
         }
 
         TextInput body = TextInput.create(MESSAGE, "Message", TextInputStyle.PARAGRAPH)
-            .setPlaceholder("Your concerns go here")
+            .setPlaceholder("What do you want to tell them?")
             .setMinLength(5)
             .setMaxLength(1000)
             .build();
 
-        String modMailModalComponentId =
-                generateComponentId(event.getOption(OPTION_STAY_ANONYMOUS).getAsString(),
-                        String.valueOf(event.getOption(OPTION_GUILD).getAsLong()));
-        Modal modal = Modal.create(modMailModalComponentId, "Modmail")
+        boolean stayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
+        long guildToContact = event.getOption(OPTION_GUILD).getAsLong();
+
+        String componentId =
+                generateComponentId(String.valueOf(stayAnonymous), String.valueOf(guildToContact));
+        Modal modal = Modal.create(componentId, "Send this to the moderators")
             .addActionRows(ActionRow.of(body))
             .build();
-
 
         event.replyModal(modal).queue();
 
@@ -129,7 +130,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-
         long userId = event.getUser().getIdLong();
 
         event.deferReply().setEphemeral(true).queue();
