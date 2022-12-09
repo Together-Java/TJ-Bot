@@ -214,7 +214,9 @@ public final class AskCommand extends SlashCommandAdapter {
         return sendInitialMessage(guild, threadChannel, author, title, category)
             .flatMap(Message::pin)
             .flatMap(any -> notifyUser(eventHook, threadChannel))
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel));
+            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
+            .onSuccess(any -> helper.scheduleNoActivityAdviceCheck(threadChannel.getIdLong(),
+                    author.getIdLong()));
     }
 
     private RestAction<Message> sendInitialMessage(Guild guild, ThreadChannel threadChannel,

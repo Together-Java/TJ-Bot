@@ -64,7 +64,8 @@ public final class HelpSystemHelper {
 
     private static final ScheduledExecutorService SERVICE = Executors.newScheduledThreadPool(3);
     private static final int SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES = 5;
-
+    private static final int SEND_NO_ACTIVITY_ADVICE_AFTER_MINUTES = 5;
+    public static final int MAX_MESSAGES_TO_LOOK_BACK = 10;
     private final Predicate<String> isOverviewChannelName;
     private final String overviewChannelPattern;
     private final Predicate<String> isStagingChannelName;
@@ -331,6 +332,61 @@ public final class HelpSystemHelper {
                     return threadChannel.sendMessage(message);
                 });
         }).queue();
+    }
+
+    void scheduleNoActivityAdviceCheck(long threadChannelId, long authorId) {
+        SERVICE.schedule(() -> {
+            try {
+                executeNoActivityAdviceCheck(threadChannelId, authorId);
+            } catch (Exception e) {
+                logger.warn(
+                        "Unknown error during a no activity advice check on thread {} by author {}.",
+                        threadChannelId, authorId, e);
+            }
+        }, SEND_NO_ACTIVITY_ADVICE_AFTER_MINUTES, TimeUnit.MINUTES);
+    }
+
+    private void executeNoActivityAdviceCheck(long threadChannelId, long authorId) {
+        logger.debug("Executing no activity advice check for thread {} by author {}.",
+                threadChannelId, authorId);
+
+        ThreadChannel threadChannel = jda.getThreadChannelById(threadChannelId);
+        if (threadChannel == null) {
+            logger.debug(
+                    "Channel for no activity advice check seems to be deleted (thread {} by author {}).",
+                    threadChannelId, authorId);
+            return;
+        }
+
+        if (threadChannel.isArchived()) {
+            logger.debug(
+                    "Channel for no activity advice check is archived already (thread {} by author {}).",
+                    threadChannelId, authorId);
+            return;
+        }
+        if (hasNoAuthorActivity(authorId, threadChannel)) {
+            MessageEmbed embed = HelpSystemHelper.embedWith(
+                    """
+                            Hey there %s👋 It has been a bit after you created this thread and you still did not share any details of your question.
+                            Helpers have seen your question already and are just waiting for you to elaborate on your problem and provide detailed information on it 👌
+                            """
+                        .formatted(User.fromId(authorId).getAsMention()));
+            threadChannel.sendMessageEmbeds(embed).queue();
+        }
+    }
+
+    private static boolean hasNoAuthorActivity(long authorId, ThreadChannel threadChannel) {
+        int messagesFromOthers = 0;
+        for (Message message : threadChannel.getIterableHistory()) {
+            if (messagesFromOthers == MAX_MESSAGES_TO_LOOK_BACK) {
+                return false;
+            }
+            if (message.getAuthor().getIdLong() == authorId) {
+                return false;
+            }
+            messagesFromOthers++;
+        }
+        return true;
     }
 
     record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
