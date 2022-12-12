@@ -9,7 +9,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 }
 
-var outputImage = 'togetherjava.duckdns.org:5001/togetherjava/website:' + System.getenv('BRANCH_NAME') ?: 'latest'
+var outputImage = 'togetherjava.org:5001/togetherjava/website:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
     from.image = 'eclipse-temurin:18'
