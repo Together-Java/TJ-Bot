@@ -1,8 +1,10 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -50,17 +52,14 @@ public final class HelpSystemHelper {
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
     private final Database database;
-    private final JDA jda;
 
     /**
      * Creates a new instance.
      *
-     * @param jda the JDA instance to use
      * @param config the config to use
      * @param database the database to store help thread metadata in
      */
-    public HelpSystemHelper(JDA jda, Config config, Database database) {
-        this.jda = jda;
+    public HelpSystemHelper(Config config, Database database) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
 

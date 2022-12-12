@@ -72,7 +72,7 @@ public class Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(jda, config, database);
+        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database);
         CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
 
         // NOTE The system can add special system relevant commands also by itself,
@@ -142,8 +142,6 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-
-        // Mixtures
 
         return features;
     }
