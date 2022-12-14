@@ -67,7 +67,7 @@ public final class HelpThreadActivityUpdater implements Routine {
     }
 
     private static HelpSystemHelper.ThreadActivity determineActivity(ThreadChannel threadChannel) {
-        if (!(threadChannel.getMemberCount() > 2)) {
+        if (threadChannel.getMemberCount() < 3) {
             return HelpSystemHelper.ThreadActivity.LOW;
         }
 
