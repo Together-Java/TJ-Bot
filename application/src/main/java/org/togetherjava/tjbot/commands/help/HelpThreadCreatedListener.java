@@ -12,8 +12,6 @@ import net.dv8tion.jda.api.requests.RestAction;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
 
-import javax.annotation.Nonnull;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +39,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
     }
 
     @Override
-    public void onChannelCreate(@Nonnull ChannelCreateEvent createEvent) {
+    public void onChannelCreate(ChannelCreateEvent createEvent) {
         if (!createEvent.getChannelType().isThread()) {
             return;
         }
