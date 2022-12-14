@@ -2,23 +2,16 @@ package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
-import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.Routine;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Routine that periodically checks all help threads and updates their activity based on heuristics.
@@ -28,8 +21,7 @@ import java.util.stream.Collectors;
  */
 public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
-    private static final int SCHEDULE_MINUTES = 30;
-    private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
+    private static final int SCHEDULE_MINUTES = 1;
 
     private final HelpSystemHelper helper;
 
@@ -71,33 +63,18 @@ public final class HelpThreadActivityUpdater implements Routine {
     }
 
     private void updateActivityForThread(ThreadChannel threadChannel) {
-        determineActivity(threadChannel)
-            .flatMap(threadActivity -> helper.changeChannelActivity(threadChannel, threadActivity))
-            .queue();
+        helper.changeChannelActivity(threadChannel, determineActivity(threadChannel)).queue();
     }
 
-    private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
-            MessageChannel channel) {
-        return channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT).map(messages -> {
-            if (messages.size() >= ACTIVITY_DETERMINE_MESSAGE_LIMIT) {
-                // There are likely even more messages, but we hit the limit
-                return HelpSystemHelper.ThreadActivity.HIGH;
-            }
+    private static HelpSystemHelper.ThreadActivity determineActivity(ThreadChannel threadChannel) {
+        if (!(threadChannel.getMemberCount() > 2)) {
+            return HelpSystemHelper.ThreadActivity.LOW;
+        }
 
-            Map<User, List<Message>> authorToMessages = messages.stream()
-                .filter(Predicate.not(HelpThreadActivityUpdater::isBotMessage))
-                .collect(Collectors.groupingBy(Message::getAuthor));
+        if (threadChannel.getMessageCount() > 15) {
+            return HelpSystemHelper.ThreadActivity.HIGH;
+        }
 
-            boolean isThereActivity = authorToMessages.size() >= 2 && authorToMessages.values()
-                .stream()
-                .anyMatch(messagesByAuthor -> messagesByAuthor.size() >= 2);
-
-            return isThereActivity ? HelpSystemHelper.ThreadActivity.MEDIUM
-                    : HelpSystemHelper.ThreadActivity.LOW;
-        });
-    }
-
-    private static boolean isBotMessage(Message message) {
-        return message.getAuthor().equals(message.getJDA().getSelfUser());
+        return HelpSystemHelper.ThreadActivity.MEDIUM;
     }
 }
