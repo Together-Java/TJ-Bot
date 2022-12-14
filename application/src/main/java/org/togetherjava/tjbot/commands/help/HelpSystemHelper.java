@@ -99,10 +99,6 @@ public final class HelpSystemHelper {
                 useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
                 HelpSystemHelper.embedWith(
                         """
-                                If your code is **long**, or you have **multiple files** to share, consider posting it on sites \
-                                    like https://pastebin.com/ and share the link instead, that is easier to browse for helpers."""),
-                HelpSystemHelper.embedWith(
-                        """
                                 If nobody is calling back, that usually means that your question was **not well asked** and \
                                     hence nobody feels confident enough answering. Try to use your time to elaborate, \
                                     **provide details**, context, more code, examples and maybe some screenshots. \
