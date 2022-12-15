@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.bookmarks;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import org.jetbrains.annotations.NotNull;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
 
@@ -25,14 +24,14 @@ public final class LeftoverBookmarksListener extends ListenerAdapter implements 
     }
 
     @Override
-    public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
+    public void onGuildMemberRemove(GuildMemberRemoveEvent event) {
         long userID = event.getUser().getIdLong();
 
         bookmarksSystem.startDeletionPeriodForUser(userID);
     }
 
     @Override
-    public void onGuildMemberJoin(@NotNull GuildMemberJoinEvent event) {
+    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         long userID = event.getUser().getIdLong();
 
         bookmarksSystem.cancelDeletionPeriodForUser(userID);
