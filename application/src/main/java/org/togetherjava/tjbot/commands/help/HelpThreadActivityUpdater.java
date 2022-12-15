@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
-    private static final int SCHEDULE_MINUTES = 1;
+    private static final int SCHEDULE_MINUTES = 10;
 
     private final HelpSystemHelper helper;
 
