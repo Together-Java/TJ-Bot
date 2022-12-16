@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
 
-import javax.annotation.Nonnull;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.Executors;
@@ -48,7 +46,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
     }
 
     @Override
-    public void onChannelCreate(@Nonnull ChannelCreateEvent createEvent) {
+    public void onChannelCreate(ChannelCreateEvent createEvent) {
         if (!createEvent.getChannelType().isThread()) {
             return;
         }
