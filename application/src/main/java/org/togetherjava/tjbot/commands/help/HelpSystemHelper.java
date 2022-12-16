@@ -32,9 +32,11 @@ import java.awt.Color;
 import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Helper class offering certain methods used by the help system.
@@ -48,6 +50,11 @@ public final class HelpSystemHelper {
 
     private final Predicate<String> isHelpForumName;
     private final String helpForumPattern;
+    /**
+     * Compares categories by how common they are, ascending. I.e., the most uncommon or specific
+     * category comes first.
+     */
+    private final Comparator<ForumTag> byCategoryCommonnessAsc;
     private final Set<String> categories;
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
@@ -66,8 +73,17 @@ public final class HelpSystemHelper {
         helpForumPattern = helpConfig.getHelpForumPattern();
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
-        categories = new HashSet<>(helpConfig.getCategories());
+        List<String> categoriesList = helpConfig.getCategories();
+        categories = new HashSet<>(categoriesList);
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
+
+        Map<String, Integer> categoryToCommonDesc = IntStream.range(0, categoriesList.size())
+            .boxed()
+            .collect(Collectors.toMap(categoriesList::get, Function.identity()));
+        byCategoryCommonnessAsc = Comparator
+            .<ForumTag>comparingInt(
+                    tag -> categoryToCommonDesc.getOrDefault(tag.getName(), categories.size()))
+            .reversed();
 
         threadActivityTagNames = Arrays.stream(ThreadActivity.values())
             .map(ThreadActivity::getTagName)
@@ -167,12 +183,12 @@ public final class HelpSystemHelper {
         return getFirstMatchingTagOfChannel(threadActivityTagNames, channel);
     }
 
-    private static Optional<ForumTag> getFirstMatchingTagOfChannel(Set<String> tagNamesToMatch,
+    private Optional<ForumTag> getFirstMatchingTagOfChannel(Set<String> tagNamesToMatch,
             ThreadChannel channel) {
         return channel.getAppliedTags()
             .stream()
             .filter(tag -> tagNamesToMatch.contains(tag.getName()))
-            .findFirst();
+            .min(byCategoryCommonnessAsc);
     }
 
     RestAction<Void> changeChannelCategory(ThreadChannel channel, String category) {
@@ -183,8 +199,8 @@ public final class HelpSystemHelper {
         return changeMatchingTagOfChannel(activity.getTagName(), threadActivityTagNames, channel);
     }
 
-    private static RestAction<Void> changeMatchingTagOfChannel(String tagName,
-            Set<String> tagNamesToMatch, ThreadChannel channel) {
+    private RestAction<Void> changeMatchingTagOfChannel(String tagName, Set<String> tagNamesToMatch,
+            ThreadChannel channel) {
         List<ForumTag> tags = new ArrayList<>(channel.getAppliedTags());
 
         Optional<ForumTag> currentTag = getFirstMatchingTagOfChannel(tagNamesToMatch, channel);
