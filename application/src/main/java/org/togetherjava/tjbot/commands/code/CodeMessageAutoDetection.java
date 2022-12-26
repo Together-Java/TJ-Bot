@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.code;
 
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -10,7 +11,7 @@ import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -27,7 +28,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param config to figure out whether a message is from a help thread
      * @param codeMessageHandler to register detected code messages at for further handling
      */
@@ -42,7 +43,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)) {
+        if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event) || isSendByTopHelper(event)) {
             return;
         }
 
@@ -61,6 +62,16 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         }
 
         codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
+    }
+
+    private boolean isSendByTopHelper(MessageReceivedEvent event) {
+        if(Objects.requireNonNull(event.getMember()).getRoles().isEmpty()) {
+            return false;
+        }
+
+        return event.getMember().getRoles().stream()
+            .map(Role::getName)
+            .anyMatch(roleName -> roleName.matches("Top Helpers .+"));
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
