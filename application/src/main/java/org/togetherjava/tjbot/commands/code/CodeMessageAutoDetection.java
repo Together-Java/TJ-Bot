@@ -1,16 +1,21 @@
 package org.togetherjava.tjbot.commands.code;
 
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
 import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -22,6 +27,8 @@ import java.util.regex.Pattern;
  */
 public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     private static final long MINIMUM_LINES_OF_CODE = 3;
+
+    private static final Logger logger = LoggerFactory.getLogger(CodeMessageAutoDetection.class);
 
     private final CodeMessageHandler codeMessageHandler;
 
@@ -45,7 +52,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)
-                || isSendByTopHelper(event)) {
+                || isSendByTopHelper(Objects.requireNonNull(event.getMember()))) {
             return;
         }
 
@@ -66,16 +73,27 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
     }
 
-    private boolean isSendByTopHelper(MessageReceivedEvent event) {
-        if (Objects.requireNonNull(event.getMember()).getRoles().isEmpty()) {
-            return false;
+    private boolean isSendByTopHelper(Member member) {
+        final Path configPath = Path.of("config.json");
+
+        try {
+            final Config config = Config.load(configPath);
+            final String[] tagManageRolePatterns = config.getTagManageRolePattern().split("\\|");
+
+            for (final String pattern : tagManageRolePatterns) {
+                for (final Role role : member.getRoles()) {
+                    if (role.getName().matches(pattern)) {
+                        return true;
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            logger.error("Unable to load the configuration file from path '{}'",
+                    configPath.toAbsolutePath(), e);
         }
 
-        return event.getMember()
-            .getRoles()
-            .stream()
-            .map(Role::getName)
-            .anyMatch(roleName -> roleName.matches("Top Helpers .+"));
+        return false;
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
