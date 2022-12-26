@@ -11,7 +11,7 @@ import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
-import java.util.*;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
