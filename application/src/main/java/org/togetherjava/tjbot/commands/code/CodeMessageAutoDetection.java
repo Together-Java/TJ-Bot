@@ -44,7 +44,8 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event) || isSendByTopHelper(event)) {
+        if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)
+                || isSendByTopHelper(event)) {
             return;
         }
 
@@ -66,11 +67,13 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     }
 
     private boolean isSendByTopHelper(MessageReceivedEvent event) {
-        if(Objects.requireNonNull(event.getMember()).getRoles().isEmpty()) {
+        if (Objects.requireNonNull(event.getMember()).getRoles().isEmpty()) {
             return false;
         }
 
-        return event.getMember().getRoles().stream()
+        return event.getMember()
+            .getRoles()
+            .stream()
             .map(Role::getName)
             .anyMatch(roleName -> roleName.matches("Top Helpers .+"));
     }
