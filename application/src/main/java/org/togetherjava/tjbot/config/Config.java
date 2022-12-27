@@ -26,6 +26,7 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
+    private final String ignoreCodeActionsForRolePattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
@@ -54,6 +55,8 @@ public final class Config {
                     required = true) String softModerationRolePattern,
             @JsonProperty(value = "tagManageRolePattern",
                     required = true) String tagManageRolePattern,
+            @JsonProperty(value = "ignoreCodeActionsForRolePattern",
+                    required = true) String ignoreCodeActionsForRolePattern,
             @JsonProperty(value = "suggestions", required = true) SuggestionsConfig suggestions,
             @JsonProperty(value = "quarantinedRolePattern",
                     required = true) String quarantinedRolePattern,
@@ -79,6 +82,8 @@ public final class Config {
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
         this.tagManageRolePattern = Objects.requireNonNull(tagManageRolePattern);
+        this.ignoreCodeActionsForRolePattern =
+                Objects.requireNonNull(ignoreCodeActionsForRolePattern);
         this.suggestions = Objects.requireNonNull(suggestions);
         this.quarantinedRolePattern = Objects.requireNonNull(quarantinedRolePattern);
         this.scamBlocker = Objects.requireNonNull(scamBlocker);
@@ -207,6 +212,16 @@ public final class Config {
      */
     public String getTagManageRolePattern() {
         return tagManageRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that will be ignored for code actions
+     * auto-detection
+     *
+     * @return the REGEX pattern
+     */
+    public String getIgnoreCodeActionsForRolePattern() {
+        return ignoreCodeActionsForRolePattern;
     }
 
     /**
