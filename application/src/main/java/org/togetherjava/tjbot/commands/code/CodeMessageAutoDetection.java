@@ -12,8 +12,6 @@ import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -27,7 +25,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     private final CodeMessageHandler codeMessageHandler;
     private final Predicate<String> isHelpForumName;
-    private final List<Predicate<String>> isIgnoreCodeActionsRole;
+    private final String ignoredRolePattern;
 
     /**
      * Creates a new instance.
@@ -43,16 +41,13 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
-        isIgnoreCodeActionsRole =
-                Arrays.stream(config.getIgnoreCodeActionsForRolePattern().split("\\|"))
-                    .map(roleName -> Pattern.compile(roleName).asMatchPredicate())
-                    .toList();
+        ignoredRolePattern = config.getIgnoreMessageAutoDetectionRolePattern();
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)
-                || isCodeActionIgnored(event.getMember())) {
+                || isSentByIgnoredMember(event.getMember())) {
             return;
         }
 
@@ -73,12 +68,11 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
     }
 
-    private boolean isCodeActionIgnored(Member member) {
-        List<Role> roles = member.getRoles();
-
-        return roles.stream()
+    private boolean isSentByIgnoredMember(Member member) {
+        return member.getRoles()
+            .stream()
             .map(Role::getName)
-            .anyMatch(role -> isIgnoreCodeActionsRole.stream().anyMatch(p -> p.test(role)));
+            .anyMatch(role -> role.matches(ignoredRolePattern));
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
