@@ -11,7 +11,6 @@ import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -26,7 +25,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     private final CodeMessageHandler codeMessageHandler;
     private final Predicate<String> isHelpForumName;
-    private final List<Predicate<String>> isIgnoredRolePattern;
+    private final Predicate<String> isIgnoredRolePattern;
 
     /**
      * Creates a new instance.
@@ -43,9 +42,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
         isIgnoredRolePattern =
-                Arrays.stream(config.getIgnoreCodeAutoDetectionRolePattern().split("\\|"))
-                    .map(role -> Pattern.compile(role).asMatchPredicate())
-                    .toList();
+                Pattern.compile(config.getIgnoreCodeAutoDetectionRolePattern()).asMatchPredicate();
     }
 
     @Override
@@ -73,10 +70,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     }
 
     private boolean isSentByExcludedRole(List<Role> roles) {
-        return roles.stream()
-            .map(Role::getName)
-            .anyMatch(role -> isIgnoredRolePattern.stream()
-                .anyMatch(rolePattern -> rolePattern.test(role)));
+        return roles.stream().map(Role::getName).anyMatch(isIgnoredRolePattern);
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
