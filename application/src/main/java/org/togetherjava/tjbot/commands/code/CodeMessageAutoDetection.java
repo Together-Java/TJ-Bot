@@ -42,7 +42,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
         isExcludedRolePattern =
-                Pattern.compile(config.getIgnoreCodeAutoDetectionRolePattern()).asMatchPredicate();
+                Pattern.compile(config.getExcludeCodeAutoDetectionRolePattern()).asMatchPredicate();
     }
 
     @Override
