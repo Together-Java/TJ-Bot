@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.code;
 
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -12,6 +11,8 @@ import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -25,7 +26,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     private final CodeMessageHandler codeMessageHandler;
     private final Predicate<String> isHelpForumName;
-    private final String ignoredRolePattern;
+    private final List<Predicate<String>> isIgnoredRolePattern;
 
     /**
      * Creates a new instance.
@@ -41,13 +42,16 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
-        ignoredRolePattern = config.getIgnoreMessageAutoDetectionRolePattern();
+        isIgnoredRolePattern =
+                Arrays.stream(config.getIgnoreCodeAutoDetectionRolePattern().split("\\|"))
+                    .map(role -> Pattern.compile(role).asMatchPredicate())
+                    .toList();
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)
-                || isSentByIgnoredMember(event.getMember())) {
+                || isSentByExcludedRole(event.getMember().getRoles())) {
             return;
         }
 
@@ -68,11 +72,11 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
     }
 
-    private boolean isSentByIgnoredMember(Member member) {
-        return member.getRoles()
-            .stream()
+    private boolean isSentByExcludedRole(List<Role> roles) {
+        return roles.stream()
             .map(Role::getName)
-            .anyMatch(role -> role.matches(ignoredRolePattern));
+            .anyMatch(role -> isIgnoredRolePattern.stream()
+                .anyMatch(rolePattern -> rolePattern.test(role)));
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
