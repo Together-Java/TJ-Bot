@@ -25,7 +25,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
     private final CodeMessageHandler codeMessageHandler;
     private final Predicate<String> isHelpForumName;
-    private final Predicate<String> isExcludedRolePattern;
+    private final Predicate<String> isExcludedRole;
 
     /**
      * Creates a new instance.
@@ -41,7 +41,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
-        isExcludedRolePattern =
+        isExcludedRole =
                 Pattern.compile(config.getExcludeCodeAutoDetectionRolePattern()).asMatchPredicate();
     }
 
@@ -70,7 +70,7 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     }
 
     private boolean isSentByExcludedRole(List<Role> roles) {
-        return roles.stream().map(Role::getName).anyMatch(isExcludedRolePattern);
+        return roles.stream().map(Role::getName).anyMatch(isExcludedRole);
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
