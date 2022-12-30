@@ -26,7 +26,7 @@ public final class Config {
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
-    private final String ignoreMessageAutoDetectionRolePattern;
+    private final String ignoreCodeAutoDetectionRolePattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
@@ -55,8 +55,8 @@ public final class Config {
                     required = true) String softModerationRolePattern,
             @JsonProperty(value = "tagManageRolePattern",
                     required = true) String tagManageRolePattern,
-            @JsonProperty(value = "ignoreMessageAutoDetectionRolePattern",
-                    required = true) String ignoreMessageAutoDetectionRolePattern,
+            @JsonProperty(value = "ignoreCodeAutoDetectionRolePattern",
+                    required = true) String ignoreCodeAutoDetectionRolePattern,
             @JsonProperty(value = "suggestions", required = true) SuggestionsConfig suggestions,
             @JsonProperty(value = "quarantinedRolePattern",
                     required = true) String quarantinedRolePattern,
@@ -82,8 +82,8 @@ public final class Config {
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
         this.tagManageRolePattern = Objects.requireNonNull(tagManageRolePattern);
-        this.ignoreMessageAutoDetectionRolePattern =
-                Objects.requireNonNull(ignoreMessageAutoDetectionRolePattern);
+        this.ignoreCodeAutoDetectionRolePattern =
+                Objects.requireNonNull(ignoreCodeAutoDetectionRolePattern);
         this.suggestions = Objects.requireNonNull(suggestions);
         this.quarantinedRolePattern = Objects.requireNonNull(quarantinedRolePattern);
         this.scamBlocker = Objects.requireNonNull(scamBlocker);
@@ -220,8 +220,8 @@ public final class Config {
      *
      * @return the REGEX pattern
      */
-    public String getIgnoreMessageAutoDetectionRolePattern() {
-        return ignoreMessageAutoDetectionRolePattern;
+    public String getIgnoreCodeAutoDetectionRolePattern() {
+        return ignoreCodeAutoDetectionRolePattern;
     }
 
     /**
