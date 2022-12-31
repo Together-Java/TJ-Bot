@@ -10,6 +10,7 @@
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Community Ambassador",
     "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
+    "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
    "suggestions": {
        "channelPattern": "tj_suggestions",
        "upVoteEmoteName": "peepo_yes",

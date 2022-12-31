@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.commands.code;
 
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -10,6 +11,7 @@ import org.togetherjava.tjbot.commands.utils.CodeFence;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.config.Config;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -22,12 +24,12 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     private static final long MINIMUM_LINES_OF_CODE = 3;
 
     private final CodeMessageHandler codeMessageHandler;
-
     private final Predicate<String> isHelpForumName;
+    private final Predicate<String> isExcludedRole;
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param config to figure out whether a message is from a help thread
      * @param codeMessageHandler to register detected code messages at for further handling
      */
@@ -38,11 +40,15 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
 
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
+
+        isExcludedRole =
+                Pattern.compile(config.getExcludeCodeAutoDetectionRolePattern()).asMatchPredicate();
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)) {
+        if (event.isWebhookMessage() || event.getAuthor().isBot() || !isHelpThread(event)
+                || isSentByExcludedRole(event.getMember().getRoles())) {
             return;
         }
 
@@ -61,6 +67,10 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
         }
 
         codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
+    }
+
+    private boolean isSentByExcludedRole(List<Role> roles) {
+        return roles.stream().map(Role::getName).anyMatch(isExcludedRole);
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {
