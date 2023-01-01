@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  * Automatically detects messages that contain code and registers them at {@link CodeMessageHandler}
  * for further processing.
  */
-public class CodeMessageAutoDetection extends MessageReceiverAdapter {
+public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
     private static final long MINIMUM_LINES_OF_CODE = 3;
 
     private final CodeMessageHandler codeMessageHandler;
@@ -63,7 +63,7 @@ public class CodeMessageAutoDetection extends MessageReceiverAdapter {
         codeMessageHandler.addAndHandleCodeMessage(originalMessage, true);
     }
 
-    protected boolean isHelpThread(MessageReceivedEvent event) {
+    private boolean isHelpThread(MessageReceivedEvent event) {
         if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
             return false;
         }
