@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.help;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -78,7 +79,20 @@ public final class HelpThreadActivityUpdater implements Routine {
 
     private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
-        return channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT).map(messages -> {
+        String mostRecentMessageId =
+                HelpThreadManuallyResetHistoryCache.getInstance().getMostRecentMessageId(channel);
+        RestAction<List<Message>> restActionMessages;
+
+        if (!mostRecentMessageId.isEmpty()) {
+            MessageHistory.MessageRetrieveAction historyAfter =
+                    channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT);
+            restActionMessages = historyAfter.map(MessageHistory::getRetrievedHistory);
+        } else {
+            restActionMessages =
+                    channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT);
+        }
+
+        return restActionMessages.map(messages -> {
             if (messages.size() >= ACTIVITY_DETERMINE_MESSAGE_LIMIT) {
                 // There are likely even more messages, but we hit the limit
                 return HelpSystemHelper.ThreadActivity.HIGH;

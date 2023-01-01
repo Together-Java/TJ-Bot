@@ -142,6 +142,7 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
+        features.add(new HelpThreadResetActivityCommand());
 
         return features;
     }
