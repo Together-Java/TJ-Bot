@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
-import net.dv8tion.jda.api.requests.restaction.pagination.MessagePaginationAction;
 
 import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
@@ -28,6 +27,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.togetherjava.tjbot.commands.help.HelpThreadActivityUpdater.resetChannelHistoryCache;
 
 /**
  * Implements the {@code /help-thread} command, used to maintain certain aspects of help threads,
@@ -196,22 +197,19 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        HelpThreadManuallyResetHistoryCache.getInstance().removeChannel(helpThread);
+        resetChannelHistoryCache.invalidate(helpThread);
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
     private void resetActivity(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
         refreshCooldownFor(Subcommand.RESET_ACTIVITY, helpThread);
 
-        var helpThreadHistoryCache = HelpThreadManuallyResetHistoryCache.getInstance();
-
-        MessagePaginationAction iterableHistory = helpThread.getIterableHistory();
-
-        List<Message> messages = iterableHistory.stream()
+        List<Message> messages = helpThread.getIterableHistory()
+            .stream()
             .sorted(Comparator.comparing(ISnowflake::getTimeCreated).reversed())
             .toList();
 
-        helpThreadHistoryCache.add(helpThread, messages.get(0).getId());
+        resetChannelHistoryCache.put(helpThread, messages.get(0).getId());
 
         event.reply("Activities have been reset.").queue();
     }

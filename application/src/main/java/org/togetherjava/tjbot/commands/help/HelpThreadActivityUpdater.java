@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.commands.help;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.Routine;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,8 +34,14 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
     private static final int SCHEDULE_MINUTES = 30;
     private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
-
+    private static final int PERSIST_DURATION_VALUE = 12;
+    private static final ChronoUnit PERSIST_DURATION_UNIT = ChronoUnit.HOURS;
     private final HelpSystemHelper helper;
+    public static final Cache<MessageChannel, String> resetChannelHistoryCache =
+            Caffeine.newBuilder()
+                .maximumSize(1_000)
+                .expireAfterAccess(PERSIST_DURATION_VALUE, TimeUnit.of(PERSIST_DURATION_UNIT))
+                .build();
 
     /**
      * Creates a new instance.
@@ -79,11 +88,10 @@ public final class HelpThreadActivityUpdater implements Routine {
 
     private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
-        String mostRecentMessageId =
-                HelpThreadManuallyResetHistoryCache.getInstance().getMostRecentMessageId(channel);
+        String mostRecentMessageId = resetChannelHistoryCache.getIfPresent(channel);
         RestAction<List<Message>> restActionMessages;
 
-        if (!mostRecentMessageId.isEmpty()) {
+        if (mostRecentMessageId != null) {
             MessageHistory.MessageRetrieveAction historyAfter =
                     channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT);
             restActionMessages = historyAfter.map(MessageHistory::getRetrievedHistory);
