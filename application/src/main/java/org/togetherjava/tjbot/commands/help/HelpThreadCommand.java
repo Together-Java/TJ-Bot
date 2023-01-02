@@ -196,10 +196,13 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
+        HelpThreadManuallyResetHistoryCache.getInstance().removeChannel(helpThread);
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
     private void resetActivity(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        refreshCooldownFor(Subcommand.RESET_ACTIVITY, helpThread);
+
         var helpThreadHistoryCache = HelpThreadManuallyResetHistoryCache.getInstance();
 
         MessagePaginationAction iterableHistory = helpThread.getIterableHistory();

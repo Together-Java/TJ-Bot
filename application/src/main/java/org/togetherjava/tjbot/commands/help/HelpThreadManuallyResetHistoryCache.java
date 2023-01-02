@@ -57,4 +57,13 @@ public final class HelpThreadManuallyResetHistoryCache {
         List<String> messageIds = messageChannelMessageIdMap.get(channel);
         return messageIds.isEmpty() ? "" : messageIds.get(messageIds.size() - 1);
     }
+
+    /**
+     * Removes a message channel from the cache.
+     *
+     * @param channel the message channel to remove
+     */
+    public void removeChannel(MessageChannel channel) {
+        messageChannelMessageIdMap.remove(channel);
+    }
 }
