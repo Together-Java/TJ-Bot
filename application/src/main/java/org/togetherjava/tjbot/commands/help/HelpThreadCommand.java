@@ -211,7 +211,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
 
         manuallyResetChannelActivityCache.put(helpThread, messages.get(0).getId());
 
-        event.reply("Activities have been reset.").queue();
+        event.reply("Activities have been reset. Updated status will be displayed in one minute.")
+            .queue();
     }
 
     private static Stream<Subcommand> streamSubcommands() {
