@@ -80,7 +80,7 @@ public final class HelpThreadActivityUpdater implements Routine {
         activeThreads.forEach(this::updateActivityForThread);
     }
 
-    private void updateActivityForThread(ThreadChannel threadChannel) {
+    void updateActivityForThread(ThreadChannel threadChannel) {
         determineActivity(threadChannel)
             .flatMap(threadActivity -> helper.changeChannelActivity(threadChannel, threadActivity))
             .queue();
