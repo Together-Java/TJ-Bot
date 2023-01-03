@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.togetherjava.tjbot.commands.help.HelpThreadActivityUpdater.resetChannelHistoryCache;
+import static org.togetherjava.tjbot.commands.help.HelpThreadActivityUpdater.manuallyResetChannelActivityCache;
 
 /**
  * Implements the {@code /help-thread} command, used to maintain certain aspects of help threads,
@@ -197,7 +197,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        resetChannelHistoryCache.invalidate(helpThread);
+        manuallyResetChannelActivityCache.invalidate(helpThread);
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
@@ -209,7 +209,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .sorted(Comparator.comparing(ISnowflake::getTimeCreated).reversed())
             .toList();
 
-        resetChannelHistoryCache.put(helpThread, messages.get(0).getId());
+        manuallyResetChannelActivityCache.put(helpThread, messages.get(0).getId());
 
         event.reply("Activities have been reset.").queue();
     }

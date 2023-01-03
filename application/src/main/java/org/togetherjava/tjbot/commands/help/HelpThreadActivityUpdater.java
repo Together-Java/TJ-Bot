@@ -37,10 +37,10 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static final int PERSIST_DURATION_VALUE = 12;
     private static final ChronoUnit PERSIST_DURATION_UNIT = ChronoUnit.HOURS;
     private final HelpSystemHelper helper;
-    public static final Cache<MessageChannel, String> resetChannelHistoryCache =
+    public static final Cache<MessageChannel, String> manuallyResetChannelActivityCache =
             Caffeine.newBuilder()
                 .maximumSize(1_000)
-                .expireAfterAccess(PERSIST_DURATION_VALUE, TimeUnit.of(PERSIST_DURATION_UNIT))
+                .expireAfterWrite(PERSIST_DURATION_VALUE, TimeUnit.of(PERSIST_DURATION_UNIT))
                 .build();
 
     /**
@@ -88,7 +88,7 @@ public final class HelpThreadActivityUpdater implements Routine {
 
     private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
-        String mostRecentMessageId = resetChannelHistoryCache.getIfPresent(channel);
+        String mostRecentMessageId = manuallyResetChannelActivityCache.getIfPresent(channel);
         RestAction<List<Message>> restActionMessages;
 
         if (mostRecentMessageId != null) {
