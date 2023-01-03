@@ -36,7 +36,9 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
     private static final int PERSIST_DURATION_VALUE = 12;
     private static final ChronoUnit PERSIST_DURATION_UNIT = ChronoUnit.HOURS;
+
     private final HelpSystemHelper helper;
+
     public static final Cache<MessageChannel, String> manuallyResetChannelActivityCache =
             Caffeine.newBuilder()
                 .maximumSize(1_000)
@@ -80,7 +82,7 @@ public final class HelpThreadActivityUpdater implements Routine {
         activeThreads.forEach(this::updateActivityForThread);
     }
 
-    void updateActivityForThread(ThreadChannel threadChannel) {
+    private void updateActivityForThread(ThreadChannel threadChannel) {
         determineActivity(threadChannel)
             .flatMap(threadActivity -> helper.changeChannelActivity(threadChannel, threadActivity))
             .queue();
