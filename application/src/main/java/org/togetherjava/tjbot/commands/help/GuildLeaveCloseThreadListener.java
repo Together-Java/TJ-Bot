@@ -12,8 +12,7 @@ import org.togetherjava.tjbot.config.Config;
 /**
  * Remove all thread channels associated to a user when they leave the guild.
  */
-public final class OnGuildLeaveCloseThreadListener extends ListenerAdapter
-        implements EventReceiver {
+public final class GuildLeaveCloseThreadListener extends ListenerAdapter implements EventReceiver {
     private final String helpForumPattern;
 
     /**
@@ -21,7 +20,7 @@ public final class OnGuildLeaveCloseThreadListener extends ListenerAdapter
      *
      * @param config the config to get help forum channel pattern from
      */
-    public OnGuildLeaveCloseThreadListener(Config config) {
+    public GuildLeaveCloseThreadListener(Config config) {
         this.helpForumPattern = config.getHelpSystem().getHelpForumPattern();
     }
 
