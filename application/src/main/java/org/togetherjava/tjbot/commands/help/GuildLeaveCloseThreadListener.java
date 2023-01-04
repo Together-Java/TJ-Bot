@@ -39,7 +39,7 @@ public final class GuildLeaveCloseThreadListener extends ListenerAdapter impleme
                 .map(thread -> thread.sendMessageEmbeds(embed)
                     .flatMap(any -> thread.getManager().setArchived(true)))
                 .toList())
-            .flatMap(list -> RestAction.allOf(list))
+            .flatMap(RestAction::allOf)
             .queue();
     }
 }
