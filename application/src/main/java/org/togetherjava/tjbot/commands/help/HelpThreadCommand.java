@@ -206,6 +206,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
 
         if (!event.getMember().equals(helpThread.getOwner())) {
             event.reply("Only the thread creator can reset activities.").queue();
+            return;
         }
 
         helpThread.getHistory().retrievePast(1).queue(messages -> {
