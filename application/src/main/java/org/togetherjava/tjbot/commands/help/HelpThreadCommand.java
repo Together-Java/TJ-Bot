@@ -224,7 +224,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                 Cooldown.YES),
         CHANGE_TITLE(CHANGE_TITLE_SUBCOMMAND, "Change the title of this help thread", Cooldown.YES),
         CLOSE(CLOSE_SUBCOMMAND, "Close this help thread", Cooldown.YES),
-        RESET_ACTIVITY(RESET_ACTIVITY_SUBCOMMAND, "resets the activity in a help thread",
+        RESET_ACTIVITY(RESET_ACTIVITY_SUBCOMMAND, "Resets the activity in a help thread",
                 Cooldown.YES);
 
         private final String commandName;
