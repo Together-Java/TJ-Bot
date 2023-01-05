@@ -204,9 +204,13 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private void resetActivity(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
         refreshCooldownFor(Subcommand.RESET_ACTIVITY, helpThread);
 
-        List<Message> messages = helpThread.getIterableHistory().stream().toList();
+        if (!event.getMember().equals(helpThread.getOwner())) {
+            event.reply("Only the thread creator can reset activities.").queue();
+        }
 
-        manuallyResetChannelActivityCache.put(helpThread, messages.get(0).getId());
+        RestAction<List<Message>> messages = helpThread.getHistory().retrievePast(1);
+
+        manuallyResetChannelActivityCache.put(helpThread, messages.complete().get(0).getId());
         helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
         event.reply("Activities have been reset.").queue();
     }
