@@ -208,11 +208,11 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             event.reply("Only the thread creator can reset activities.").queue();
         }
 
-        RestAction<List<Message>> messages = helpThread.getHistory().retrievePast(1);
-
-        manuallyResetChannelActivityCache.put(helpThread, messages.complete().get(0).getId());
-        helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
-        event.reply("Activities have been reset.").queue();
+        helpThread.getHistory().retrievePast(1).queue(messages -> {
+            manuallyResetChannelActivityCache.put(helpThread, messages.get(0).getId());
+            helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
+            event.reply("Activities have been reset.").queue();
+        });
     }
 
     private static Stream<Subcommand> streamSubcommands() {
