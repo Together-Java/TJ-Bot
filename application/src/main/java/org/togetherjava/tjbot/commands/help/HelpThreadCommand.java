@@ -204,10 +204,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private void resetActivity(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
         refreshCooldownFor(Subcommand.RESET_ACTIVITY, helpThread);
 
-        List<Message> messages = helpThread.getIterableHistory()
-            .stream()
-            .sorted(Comparator.comparing(ISnowflake::getTimeCreated).reversed())
-            .toList();
+        List<Message> messages = helpThread.getIterableHistory().stream().toList();
 
         manuallyResetChannelActivityCache.put(helpThread, messages.get(0).getId());
 
