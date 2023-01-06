@@ -197,7 +197,6 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        manuallyResetChannelActivityCache.invalidate(helpThread.getIdLong());
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
@@ -212,7 +211,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         helpThread.getHistory()
             .retrievePast(1)
             .queue(messages -> manuallyResetChannelActivityCache.put(helpThread.getIdLong(),
-                    messages.get(0).getId()));
+                    messages.get(0).getIdLong()));
 
         helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
         event.reply("Activities have been reset.").queue();
