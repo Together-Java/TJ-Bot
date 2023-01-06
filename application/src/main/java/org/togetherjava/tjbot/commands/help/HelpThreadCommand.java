@@ -209,11 +209,13 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             return;
         }
 
-        helpThread.getHistory().retrievePast(1).queue(messages -> {
-            manuallyResetChannelActivityCache.put(helpThread, messages.get(0).getId());
-            helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
-            event.reply("Activities have been reset.").queue();
-        });
+        helpThread.getHistory()
+            .retrievePast(1)
+            .queue(messages -> manuallyResetChannelActivityCache.put(helpThread,
+                    messages.get(0).getId()));
+
+        helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
+        event.reply("Activities have been reset.").queue();
     }
 
     private static Stream<Subcommand> streamSubcommands() {
