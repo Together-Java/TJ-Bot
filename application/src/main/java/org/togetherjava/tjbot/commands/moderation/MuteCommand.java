@@ -115,11 +115,13 @@ public final class MuteCommand extends SlashCommandAdapter {
     private void muteUserFlow(Member target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         sendDm(target, temporaryData, reason, guild, event)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))
-            .flatMap(event::replyEmbeds)
+            .flatMap(event.getHook()::sendMessageEmbeds)
             .queue();
     }
 
