@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.requests.RestAction;
 
 import org.togetherjava.tjbot.commands.EventReceiver;
 import org.togetherjava.tjbot.config.Config;
@@ -33,13 +32,11 @@ public final class GuildLeaveCloseThreadListener extends ListenerAdapter impleme
 
         event.getGuild()
             .retrieveActiveThreads()
-            .map(threads -> threads.stream()
+            .queue(threads -> threads.stream()
                 .filter(thread -> thread.getOwnerIdLong() == event.getUser().getIdLong())
                 .filter(thread -> thread.getParentChannel().getName().matches(helpForumPattern))
-                .map(thread -> thread.sendMessageEmbeds(embed)
-                    .flatMap(any -> thread.getManager().setArchived(true)))
-                .toList())
-            .flatMap(RestAction::allOf)
-            .queue();
+                .forEach(thread -> thread.sendMessageEmbeds(embed)
+                    .flatMap(any -> thread.getManager().setArchived(true))
+                    .queue()));
     }
 }
