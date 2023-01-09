@@ -34,14 +34,12 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
     private static final int SCHEDULE_MINUTES = 30;
     private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
-    private static final int PERSIST_DURATION_VALUE = 12;
-    private static final ChronoUnit PERSIST_DURATION_UNIT = ChronoUnit.HOURS;
-
+    private static final int CACHE_LIFETIME = 12;
+    private static final ChronoUnit CACHE_LIFETIME_UNIT = ChronoUnit.HOURS;
     private final HelpSystemHelper helper;
-
     public static final Cache<Long, Long> manuallyResetChannelActivityCache = Caffeine.newBuilder()
         .maximumSize(1_000)
-        .expireAfterWrite(PERSIST_DURATION_VALUE, TimeUnit.of(PERSIST_DURATION_UNIT))
+        .expireAfterWrite(CACHE_LIFETIME, TimeUnit.of(CACHE_LIFETIME_UNIT))
         .build();
 
     /**
@@ -89,18 +87,7 @@ public final class HelpThreadActivityUpdater implements Routine {
 
     private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
-        Long mostRecentMessageId =
-                manuallyResetChannelActivityCache.getIfPresent(channel.getIdLong());
-        RestAction<List<Message>> restActionMessages;
-
-        if (mostRecentMessageId != null) {
-            MessageHistory.MessageRetrieveAction historyAfter =
-                    channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT);
-            restActionMessages = historyAfter.map(MessageHistory::getRetrievedHistory);
-        } else {
-            restActionMessages =
-                    channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT);
-        }
+        RestAction<List<Message>> restActionMessages = getRelevantHistory(channel);
 
         return restActionMessages.map(messages -> {
             if (messages.size() >= ACTIVITY_DETERMINE_MESSAGE_LIMIT) {
@@ -119,6 +106,22 @@ public final class HelpThreadActivityUpdater implements Routine {
             return isThereActivity ? HelpSystemHelper.ThreadActivity.MEDIUM
                     : HelpSystemHelper.ThreadActivity.LOW;
         });
+    }
+
+    private static RestAction<List<Message>> getRelevantHistory(MessageChannel channel) {
+        Long mostRecentMessageId =
+                manuallyResetChannelActivityCache.getIfPresent(channel.getIdLong());
+        RestAction<List<Message>> restActionMessages;
+
+        if (mostRecentMessageId != null) {
+            MessageHistory.MessageRetrieveAction historyAfter =
+                    channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT);
+            restActionMessages = historyAfter.map(MessageHistory::getRetrievedHistory);
+        } else {
+            restActionMessages =
+                    channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT);
+        }
+        return restActionMessages;
     }
 
     private static boolean isBotMessage(Message message) {
