@@ -107,7 +107,6 @@ public class Features {
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new OnGuildLeaveCloseThreadListener(database));
-        features.add(new UserBannedDeleteRecentThreadsListener(database));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
 
