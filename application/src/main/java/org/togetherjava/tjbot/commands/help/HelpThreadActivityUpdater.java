@@ -87,9 +87,8 @@ public final class HelpThreadActivityUpdater implements Routine {
 
     private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
-        RestAction<List<Message>> restActionMessages = getRelevantHistory(channel);
 
-        return restActionMessages.map(messages -> {
+        return getRelevantHistory(channel).map(messages -> {
             if (messages.size() >= ACTIVITY_DETERMINE_MESSAGE_LIMIT) {
                 // There are likely even more messages, but we hit the limit
                 return HelpSystemHelper.ThreadActivity.HIGH;
