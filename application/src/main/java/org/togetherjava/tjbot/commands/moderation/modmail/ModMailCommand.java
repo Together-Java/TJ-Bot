@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
  */
 
 public final class ModMailCommand extends SlashCommandAdapter {
-
     private static final Logger logger = LoggerFactory.getLogger(ModMailCommand.class);
     public static final String COMMAND_NAME = "modmail";
     private static final String OPTION_MESSAGE = "message";
@@ -154,7 +153,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
                     String.valueOf(userId)));
         }
 
-        Optional<Role> moderatorRole = event.getGuild()
+        Optional<Role> moderatorRole = modMailAuditLog.getGuild()
             .getRoles()
             .stream()
             .filter(role -> configModGroupPattern.test(role.getName()))
@@ -193,5 +192,4 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .filter(Instant.now()::isBefore)
             .isPresent();
     }
-
 }
