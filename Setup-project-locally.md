@@ -35,7 +35,7 @@ https://github.com/Together-Java/TJ-Bot.git
 
 IntelliJ comes by default with a `git` plugin. You can easily clone repositories to your disk by clicking a few buttons.
 
-1. open your IntelliJ and select `Get from VSC`.
+1. open your IntelliJ and select `Get from VCS`.
 2. select `Git`, enter the `.git` link and select a directory for the project; smack that `Clone` button
 3. IntelliJ will now open the project
 
