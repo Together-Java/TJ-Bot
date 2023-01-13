@@ -34,12 +34,13 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
     private static final int SCHEDULE_MINUTES = 30;
     private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
-    private static final int CACHE_LIFETIME = 12;
-    private static final ChronoUnit CACHE_LIFETIME_UNIT = ChronoUnit.HOURS;
+    private static final int CHANNEL_ACTIVITY_CACHE_LIFETIME = 12;
+    private static final ChronoUnit CHANNEL_ACTIVITY_CACHE_LIFETIME_UNIT = ChronoUnit.HOURS;
     private final HelpSystemHelper helper;
     public static final Cache<Long, Long> manuallyResetChannelActivityCache = Caffeine.newBuilder()
         .maximumSize(1_000)
-        .expireAfterWrite(CACHE_LIFETIME, TimeUnit.of(CACHE_LIFETIME_UNIT))
+        .expireAfterWrite(CHANNEL_ACTIVITY_CACHE_LIFETIME,
+                TimeUnit.of(CHANNEL_ACTIVITY_CACHE_LIFETIME_UNIT))
         .build();
 
     /**
@@ -110,17 +111,11 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static RestAction<List<Message>> getRelevantHistory(MessageChannel channel) {
         Long mostRecentMessageId =
                 manuallyResetChannelActivityCache.getIfPresent(channel.getIdLong());
-        RestAction<List<Message>> restActionMessages;
 
-        if (mostRecentMessageId != null) {
-            MessageHistory.MessageRetrieveAction historyAfter =
-                    channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT);
-            restActionMessages = historyAfter.map(MessageHistory::getRetrievedHistory);
-        } else {
-            restActionMessages =
-                    channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT);
-        }
-        return restActionMessages;
+        return mostRecentMessageId != null
+                ? channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT)
+                    .map(MessageHistory::getRetrievedHistory)
+                : channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT);
     }
 
     private static boolean isBotMessage(Message message) {
