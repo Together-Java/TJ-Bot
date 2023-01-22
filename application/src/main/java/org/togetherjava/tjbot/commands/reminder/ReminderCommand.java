@@ -59,7 +59,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "reminder";
     private static final String LIST_SUBCOMMAND = "list";
     private static final String CANCEL_COMMAND = "cancel";
-    private static final String CANCEL_ALL_COMMAND = "cancle-all";
     private static final String CANCEL_REMINDER_OPTION = "reminder";
     static final String CREATE_SUBCOMMAND = "create";
     static final String TIME_AMOUNT_OPTION = "time-amount";
@@ -104,7 +103,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
                 new SubcommandData(CANCEL_COMMAND, "cancels a pending reminder").addOption(
                         OptionType.STRING, CANCEL_REMINDER_OPTION, "reminder to cancel", true,
                         true),
-                new SubcommandData(CANCEL_ALL_COMMAND, "cancels all your pending reminders"),
                 new SubcommandData(LIST_SUBCOMMAND, "shows all your currently pending reminders"));
 
         this.database = database;
@@ -115,7 +113,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
         switch (event.getSubcommandName()) {
             case CREATE_SUBCOMMAND -> handleCreateCommand(event);
             case CANCEL_COMMAND -> handleCancelCommand(event);
-            case CANCEL_ALL_COMMAND -> handleCancelAllCommand(event);
             case LIST_SUBCOMMAND -> handleListCommand(event);
             default -> throw new AssertionError(
                     "Unexpected Subcommand: " + event.getSubcommandName());
@@ -199,14 +196,6 @@ public final class ReminderCommand extends SlashCommandAdapter {
             .execute());
 
         event.reply("Your reminder is canceled").setEphemeral(true).queue();
-    }
-
-    private void handleCancelAllCommand(SlashCommandInteractionEvent event) {
-        database.write(context -> context.delete(PENDING_REMINDERS)
-            .where(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong()))
-            .execute());
-
-        event.reply("All your reminder are canceled").setEphemeral(true).queue();
     }
 
     private void handleListCommand(SlashCommandInteractionEvent event) {
