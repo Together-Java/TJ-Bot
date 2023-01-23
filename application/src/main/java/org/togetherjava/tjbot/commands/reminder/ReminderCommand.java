@@ -142,8 +142,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
         AutoCompleteQuery focusedOption = event.getFocusedOption();
 
         if (!focusedOption.getName().equals(CANCEL_REMINDER_OPTION)) {
-            throw new IllegalArgumentException(
-                    "Unexpected option, was : " + focusedOption.getName());
+            throw new AssertionError("Unexpected option, was : " + focusedOption.getName());
         }
 
         List<String> pendingReminders = getPendingReminders(event.getGuild(), event.getUser())
