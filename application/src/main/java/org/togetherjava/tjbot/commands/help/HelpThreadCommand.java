@@ -3,10 +3,7 @@ package org.togetherjava.tjbot.commands.help;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -31,20 +28,21 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MAX;
-import static org.togetherjava.tjbot.commands.help.HelpSystemHelper.TITLE_COMPACT_LENGTH_MIN;
+import static org.togetherjava.tjbot.commands.help.HelpThreadActivityUpdater.manuallyResetChannelActivityCache;
 
 /**
- * Implements the {@code /help-thread} command, which are contains special command for help threads
- * only
+ * Implements the {@code /help-thread} command, used to maintain certain aspects of help threads,
+ * such as renaming or closing them.
  */
 public final class HelpThreadCommand extends SlashCommandAdapter {
-    private static final int COOLDOWN_DURATION_VALUE = 30;
+    private static final int COOLDOWN_DURATION_VALUE = 2;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private static final String CHANGE_CATEGORY_SUBCOMMAND = "category";
+    public static final String CHANGE_CATEGORY_SUBCOMMAND = "category";
     private static final String CHANGE_CATEGORY_OPTION = "category";
+    public static final String CHANGE_TITLE_SUBCOMMAND = "title";
     private static final String CHANGE_TITLE_OPTION = "title";
-    private static final String CHANGE_TITLE_SUBCOMMAND = "title";
+    private static final String CLOSE_SUBCOMMAND = "close";
+    private static final String RESET_ACTIVITY_SUBCOMMAND = "reset-activity";
     public static final String CHANGE_SUBCOMMAND_GROUP = "change";
     public static final String COMMAND_NAME = "help-thread";
 
@@ -71,8 +69,11 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         SubcommandData changeCategory =
                 Subcommand.CHANGE_CATEGORY.toSubcommandData().addOptions(categoryChoices);
 
-        SubcommandData changeTitle = Subcommand.CHANGE_TITLE.toSubcommandData()
-            .addOption(OptionType.STRING, CHANGE_TITLE_OPTION, "new title", true);
+        OptionData changeTitleOption =
+                new OptionData(OptionType.STRING, CHANGE_TITLE_OPTION, "new title", true)
+                    .setMinLength(2);
+        SubcommandData changeTitle =
+                Subcommand.CHANGE_TITLE.toSubcommandData().addOptions(changeTitleOption);
 
         SubcommandGroupData changeCommands = new SubcommandGroupData(CHANGE_SUBCOMMAND_GROUP,
                 "Change the details of this help thread").addSubcommands(changeCategory,
@@ -80,6 +81,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         getData().addSubcommandGroups(changeCommands);
 
         getData().addSubcommands(Subcommand.CLOSE.toSubcommandData());
+        getData().addSubcommands(Subcommand.RESET_ACTIVITY.toSubcommandData());
 
         this.helper = helper;
 
@@ -92,9 +94,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         subcommandToCooldownCache = new EnumMap<>(streamSubcommands()
             .filter(Subcommand::hasCooldown)
             .collect(Collectors.toMap(Function.identity(), any -> createCooldownCache.get())));
-        subcommandToEventHandler = new EnumMap<>(
-                Map.of(Subcommand.CHANGE_CATEGORY, this::changeCategory, Subcommand.CHANGE_TITLE,
-                        this::changeTitle, Subcommand.CLOSE, this::closeThread));
+        subcommandToEventHandler = new EnumMap<>(Map.of(Subcommand.CHANGE_CATEGORY,
+                this::changeCategory, Subcommand.CHANGE_TITLE, this::changeTitle, Subcommand.CLOSE,
+                this::closeThread, Subcommand.RESET_ACTIVITY, this::resetActivity));
     }
 
     @Override
@@ -146,7 +148,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.deferReply().queue();
         refreshCooldownFor(Subcommand.CHANGE_CATEGORY, helpThread);
 
-        helper.renameChannelToCategory(helpThread, category)
+        helper.changeChannelCategory(helpThread, category)
             .flatMap(any -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
                     helpThread, category))
             .queue();
@@ -181,18 +183,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     private void changeTitle(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
         String title = event.getOption(CHANGE_TITLE_OPTION).getAsString();
 
-        if (!HelpSystemHelper.isTitleValid(title)) {
-            event.reply(
-                    "Sorry, but the title length (after removal of special characters) has to be between %d and %d."
-                        .formatted(TITLE_COMPACT_LENGTH_MIN, TITLE_COMPACT_LENGTH_MAX))
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-
         refreshCooldownFor(Subcommand.CHANGE_TITLE, helpThread);
 
-        helper.renameChannelToTitle(helpThread, title)
+        helper.renameChannel(helpThread, title)
             .flatMap(any -> event.reply("Changed the title to **%s**.".formatted(title)))
             .queue();
     }
@@ -207,6 +200,19 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
     }
 
+    private void resetActivity(SlashCommandInteractionEvent event, ThreadChannel helpThread) {
+        refreshCooldownFor(Subcommand.RESET_ACTIVITY, helpThread);
+
+        helpThread.getHistory()
+            .retrievePast(1)
+            .map(messages -> messages.get(0))
+            .queue(lastMessage -> manuallyResetChannelActivityCache.put(helpThread.getIdLong(),
+                    lastMessage.getIdLong()));
+
+        helper.changeChannelActivity(helpThread, HelpSystemHelper.ThreadActivity.LOW);
+        event.reply("Activities have been reset.").queue();
+    }
+
     private static Stream<Subcommand> streamSubcommands() {
         return Arrays.stream(Subcommand.values());
     }
@@ -215,7 +221,10 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         CHANGE_CATEGORY(CHANGE_CATEGORY_SUBCOMMAND, "Change the category of this help thread",
                 Cooldown.YES),
         CHANGE_TITLE(CHANGE_TITLE_SUBCOMMAND, "Change the title of this help thread", Cooldown.YES),
-        CLOSE("close", "Close this help thread", Cooldown.YES);
+        CLOSE(CLOSE_SUBCOMMAND, "Close this help thread", Cooldown.YES),
+        RESET_ACTIVITY(RESET_ACTIVITY_SUBCOMMAND,
+                "Resets the activity indicator, use if help is still needed, but the indicator shows otherwise",
+                Cooldown.YES);
 
         private final String commandName;
         private final String description;

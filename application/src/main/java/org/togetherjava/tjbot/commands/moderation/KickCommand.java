@@ -56,11 +56,13 @@ public final class KickCommand extends SlashCommandAdapter {
 
     private void kickUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
         sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> kickUser(target, author, reason, guild)
                 .map(kickResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
-            .flatMap(event::replyEmbeds)
+            .flatMap(event.getHook()::sendMessageEmbeds)
             .queue();
     }
 

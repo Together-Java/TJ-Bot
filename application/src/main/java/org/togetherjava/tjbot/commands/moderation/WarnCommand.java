@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.commands.moderation;
 
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -46,14 +45,17 @@ public final class WarnCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private RestAction<InteractionHook> warnUserFlow(User target, Member author, String reason,
-            Guild guild, SlashCommandInteractionEvent event) {
-        return sendDm(target, reason, guild).map(hasSentDm -> {
+    private void warnUserFlow(User target, Member author, String reason, Guild guild,
+            SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+
+        dmUser(target, reason, guild, event).map(hasSentDm -> {
             warnUser(target, author, reason, guild);
             return hasSentDm;
         })
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
-            .flatMap(event::replyEmbeds);
+            .flatMap(event.getHook()::sendMessageEmbeds)
+            .queue();
     }
 
     private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
@@ -98,7 +100,7 @@ public final class WarnCommand extends SlashCommandAdapter {
             return;
         }
 
-        warnUserFlow(targetOption.getAsUser(), author, reason, guild, event).queue();
+        warnUserFlow(targetOption.getAsUser(), author, reason, guild, event);
     }
 
     private boolean handleChecks(Member bot, Member author, @Nullable Member target, String reason,

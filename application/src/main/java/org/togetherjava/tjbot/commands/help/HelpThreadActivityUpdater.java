@@ -1,10 +1,13 @@
 package org.togetherjava.tjbot.commands.help;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.commands.Routine;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,8 +34,14 @@ public final class HelpThreadActivityUpdater implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadActivityUpdater.class);
     private static final int SCHEDULE_MINUTES = 30;
     private static final int ACTIVITY_DETERMINE_MESSAGE_LIMIT = 11;
-
+    private static final int CHANNEL_ACTIVITY_CACHE_LIFETIME = 12;
+    private static final ChronoUnit CHANNEL_ACTIVITY_CACHE_LIFETIME_UNIT = ChronoUnit.HOURS;
     private final HelpSystemHelper helper;
+    public static final Cache<Long, Long> manuallyResetChannelActivityCache = Caffeine.newBuilder()
+        .maximumSize(1_000)
+        .expireAfterWrite(CHANNEL_ACTIVITY_CACHE_LIFETIME,
+                TimeUnit.of(CHANNEL_ACTIVITY_CACHE_LIFETIME_UNIT))
+        .build();
 
     /**
      * Creates a new instance.
@@ -53,19 +63,18 @@ public final class HelpThreadActivityUpdater implements Routine {
     }
 
     private void updateActivityForGuild(Guild guild) {
-        Optional<TextChannel> maybeOverviewChannel = helper
-            .handleRequireOverviewChannel(guild, channelPattern -> logger.warn(
-                    "Unable to update help thread overview, did not find an overview channel matching the configured pattern '{}' for guild '{}'",
+        Optional<ForumChannel> maybeHelpForum = helper
+            .handleRequireHelpForum(guild, channelPattern -> logger.warn(
+                    "Unable to update help thread activities, did not find a help forum matching the configured pattern '{}' for guild '{}'",
                     channelPattern, guild.getName()));
 
-        if (maybeOverviewChannel.isEmpty()) {
+        if (maybeHelpForum.isEmpty()) {
             return;
         }
 
         logger.debug("Updating activities of active questions");
 
-        List<ThreadChannel> activeThreads =
-                helper.getActiveThreadsIn(maybeOverviewChannel.orElseThrow());
+        List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(maybeHelpForum.orElseThrow());
         logger.debug("Found {} active questions", activeThreads.size());
 
         activeThreads.forEach(this::updateActivityForThread);
@@ -73,17 +82,17 @@ public final class HelpThreadActivityUpdater implements Routine {
 
     private void updateActivityForThread(ThreadChannel threadChannel) {
         determineActivity(threadChannel)
-            .flatMap(
-                    threadActivity -> helper.renameChannelToActivity(threadChannel, threadActivity))
+            .flatMap(threadActivity -> helper.changeChannelActivity(threadChannel, threadActivity))
             .queue();
     }
 
     private static RestAction<HelpSystemHelper.ThreadActivity> determineActivity(
             MessageChannel channel) {
-        return channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT).map(messages -> {
+
+        return getRelevantHistory(channel).map(messages -> {
             if (messages.size() >= ACTIVITY_DETERMINE_MESSAGE_LIMIT) {
                 // There are likely even more messages, but we hit the limit
-                return HelpSystemHelper.ThreadActivity.SEEMS_GOOD;
+                return HelpSystemHelper.ThreadActivity.HIGH;
             }
 
             Map<User, List<Message>> authorToMessages = messages.stream()
@@ -94,9 +103,19 @@ public final class HelpThreadActivityUpdater implements Routine {
                 .stream()
                 .anyMatch(messagesByAuthor -> messagesByAuthor.size() >= 2);
 
-            return isThereActivity ? HelpSystemHelper.ThreadActivity.LIKELY_NEEDS_HELP
-                    : HelpSystemHelper.ThreadActivity.NEEDS_HELP;
+            return isThereActivity ? HelpSystemHelper.ThreadActivity.MEDIUM
+                    : HelpSystemHelper.ThreadActivity.LOW;
         });
+    }
+
+    private static RestAction<List<Message>> getRelevantHistory(MessageChannel channel) {
+        Long mostRecentMessageId =
+                manuallyResetChannelActivityCache.getIfPresent(channel.getIdLong());
+
+        return mostRecentMessageId != null
+                ? channel.getHistoryAfter(mostRecentMessageId, ACTIVITY_DETERMINE_MESSAGE_LIMIT)
+                    .map(MessageHistory::getRetrievedHistory)
+                : channel.getHistory().retrievePast(ACTIVITY_DETERMINE_MESSAGE_LIMIT);
     }
 
     private static boolean isBotMessage(Message message) {

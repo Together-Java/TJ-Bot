@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.verify;
 import static org.togetherjava.tjbot.db.generated.tables.PendingReminders.PENDING_REMINDERS;
 
-final class RemindCommandTest {
+final class ReminderCommandTest {
     private SlashCommand command;
     private JdaTester jdaTester;
     private RawReminderTestHelper rawReminders;
@@ -30,7 +30,7 @@ final class RemindCommandTest {
     @BeforeEach
     void setUp() {
         Database database = Database.createMemoryDatabase(PENDING_REMINDERS);
-        command = new RemindCommand(database);
+        command = new ReminderCommand(database);
         jdaTester = new JdaTester();
         rawReminders = new RawReminderTestHelper(database, jdaTester);
     }
@@ -43,9 +43,10 @@ final class RemindCommandTest {
     private SlashCommandInteractionEvent triggerSlashCommand(int timeAmount, String timeUnit,
             String content, Member author) {
         SlashCommandInteractionEvent event = jdaTester.createSlashCommandInteractionEvent(command)
-            .setOption(RemindCommand.TIME_AMOUNT_OPTION, timeAmount)
-            .setOption(RemindCommand.TIME_UNIT_OPTION, timeUnit)
-            .setOption(RemindCommand.CONTENT_OPTION, content)
+            .setSubcommand(ReminderCommand.CREATE_SUBCOMMAND)
+            .setOption(ReminderCommand.TIME_AMOUNT_OPTION, timeAmount)
+            .setOption(ReminderCommand.TIME_UNIT_OPTION, timeUnit)
+            .setOption(ReminderCommand.CONTENT_OPTION, content)
             .setUserWhoTriggered(author)
             .build();
 
@@ -82,7 +83,7 @@ final class RemindCommandTest {
     void userIsLimitedIfTooManyPendingReminders() {
         // GIVEN a user with too many reminders still pending
         Instant remindAt = Instant.now().plus(100, ChronoUnit.DAYS);
-        for (int i = 0; i < RemindCommand.MAX_PENDING_REMINDERS_PER_USER; i++) {
+        for (int i = 0; i < ReminderCommand.MAX_PENDING_REMINDERS_PER_USER; i++) {
             rawReminders.insertReminder("foo " + i, remindAt);
         }
 
@@ -92,7 +93,7 @@ final class RemindCommandTest {
         // THEN rejects and responds accordingly, no new reminder was created
         verify(event)
             .reply(startsWith("You have reached the maximum amount of pending reminders per user"));
-        assertEquals(RemindCommand.MAX_PENDING_REMINDERS_PER_USER,
+        assertEquals(ReminderCommand.MAX_PENDING_REMINDERS_PER_USER,
                 rawReminders.readReminders().size());
     }
 
@@ -103,7 +104,7 @@ final class RemindCommandTest {
         // and a second user with no reminders yet
         Member firstUser = jdaTester.createMemberSpy(1);
         Instant remindAt = Instant.now().plus(100, ChronoUnit.DAYS);
-        for (int i = 0; i < RemindCommand.MAX_PENDING_REMINDERS_PER_USER; i++) {
+        for (int i = 0; i < ReminderCommand.MAX_PENDING_REMINDERS_PER_USER; i++) {
             rawReminders.insertReminder("foo " + i, remindAt, firstUser);
         }
 

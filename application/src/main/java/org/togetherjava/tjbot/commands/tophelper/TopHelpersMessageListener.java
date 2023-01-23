@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.commands.tophelper;
 
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
@@ -18,10 +19,17 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
  * {@link TopHelpersCommand} to pick them up.
  */
 public final class TopHelpersMessageListener extends MessageReceiverAdapter {
+    /**
+     * Matches invisible control characters and unused code points
+     *
+     * @see <a href="https://www.regular-expressions.info/unicode.html#category">Unicode
+     *      Categories</a>
+     */
+    private static final Pattern INVALID_CHARACTERS = Pattern.compile("\\p{C}");
+
     private final Database database;
 
-    private final Predicate<String> isStagingChannelName;
-    private final Predicate<String> isOverviewChannelName;
+    private final Predicate<String> isHelpForumName;
 
     /**
      * Creates a new listener to receive all message sent in help channels.
@@ -34,44 +42,49 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
         this.database = database;
 
-        isStagingChannelName = Pattern.compile(config.getHelpSystem().getStagingChannelPattern())
-            .asMatchPredicate();
-        isOverviewChannelName = Pattern.compile(config.getHelpSystem().getOverviewChannelPattern())
-            .asMatchPredicate();
+        isHelpForumName =
+                Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
-            return;
-        }
-
-        if (!isHelpThread(event)) {
+        if (shouldIgnoreMessage(event)) {
             return;
         }
 
         addMessageRecord(event);
     }
 
-    private boolean isHelpThread(MessageReceivedEvent event) {
-        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
-            return false;
-        }
-
-        ThreadChannel thread = event.getChannel().asThreadChannel();
-        String rootChannelName = thread.getParentChannel().getName();
-        return isStagingChannelName.test(rootChannelName)
-                || isOverviewChannelName.test(rootChannelName);
-    }
-
     private void addMessageRecord(MessageReceivedEvent event) {
+        long messageLength = countValidCharacters(event.getMessage().getContentRaw());
+
         database.write(context -> context.newRecord(HELP_CHANNEL_MESSAGES)
             .setMessageId(event.getMessage().getIdLong())
             .setGuildId(event.getGuild().getIdLong())
             .setChannelId(event.getChannel().getIdLong())
             .setAuthorId(event.getAuthor().getIdLong())
             .setSentAt(event.getMessage().getTimeCreated().toInstant())
-            .setMessageLength((long) event.getMessage().getContentRaw().length())
+            .setMessageLength(messageLength)
             .insert());
     }
+
+    boolean shouldIgnoreMessage(MessageReceivedEvent event) {
+        return event.getAuthor().isBot() || event.isWebhookMessage()
+                || !isHelpThread(event.getChannel());
+    }
+
+    boolean isHelpThread(MessageChannelUnion channel) {
+        if (channel.getType() != ChannelType.GUILD_PUBLIC_THREAD) {
+            return false;
+        }
+
+        ThreadChannel thread = channel.asThreadChannel();
+        String rootChannelName = thread.getParentChannel().getName();
+        return isHelpForumName.test(rootChannelName);
+    }
+
+    static long countValidCharacters(String messageContent) {
+        return INVALID_CHARACTERS.matcher(messageContent).replaceAll("").length();
+    }
+
 }

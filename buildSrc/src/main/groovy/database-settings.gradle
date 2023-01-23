@@ -28,7 +28,7 @@ tasks.flywayMigrate {
 }
 
 jooq {
-    version = "3.16.0"
+    version = jooqVersion
 
     configurations {
         main {
@@ -73,7 +73,7 @@ var sqliteVersion = "3.36.0.3"
 dependencies {
     implementation "org.xerial:sqlite-jdbc:${sqliteVersion}"
     implementation 'org.flywaydb:flyway-core:8.0.0'
-    implementation 'org.jooq:jooq:3.15.3'
+    implementation "org.jooq:jooq:$jooqVersion"
 
     jooqGenerator "org.xerial:sqlite-jdbc:${sqliteVersion}"
 }

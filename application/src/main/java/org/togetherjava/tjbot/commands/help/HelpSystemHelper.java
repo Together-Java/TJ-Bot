@@ -1,19 +1,20 @@
 package org.togetherjava.tjbot.commands.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.entities.channel.Channel;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
+import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
-import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
-import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,17 +30,13 @@ import javax.annotation.Nullable;
 
 import java.awt.Color;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Helper class offering certain methods used by the help system.
@@ -51,47 +48,46 @@ public final class HelpSystemHelper {
 
     private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
 
-    private static final String ACTIVITY_GROUP = "activity";
-    private static final String CATEGORY_GROUP = "category";
-    private static final String TITLE_GROUP = "title";
-    private static final Pattern EXTRACT_HELP_NAME_PATTERN =
-            Pattern.compile("(?:(?<%s>\\W) )?(?:\\[(?<%s>[^\\[]+)] )?(?<%s>.+)"
-                .formatted(ACTIVITY_GROUP, CATEGORY_GROUP, TITLE_GROUP));
-
-    private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
-    static final int TITLE_COMPACT_LENGTH_MIN = 2;
-    static final int TITLE_COMPACT_LENGTH_MAX = 70;
-
-    private static final ScheduledExecutorService SERVICE = Executors.newScheduledThreadPool(3);
-    private static final int SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES = 5;
-
-    private final Predicate<String> isOverviewChannelName;
-    private final String overviewChannelPattern;
-    private final Predicate<String> isStagingChannelName;
-    private final String stagingChannelPattern;
+    private final Predicate<String> isHelpForumName;
+    private final String helpForumPattern;
+    /**
+     * Compares categories by how common they are, ascending. I.e., the most uncommon or specific
+     * category comes first.
+     */
+    private final Comparator<ForumTag> byCategoryCommonnessAsc;
+    private final Set<String> categories;
+    private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
     private final Database database;
-    private final JDA jda;
 
     /**
      * Creates a new instance.
      *
-     * @param jda the JDA instance to use
      * @param config the config to use
      * @param database the database to store help thread metadata in
      */
-    public HelpSystemHelper(JDA jda, Config config, Database database) {
-        this.jda = jda;
+    public HelpSystemHelper(Config config, Database database) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
 
-        overviewChannelPattern = helpConfig.getOverviewChannelPattern();
-        isOverviewChannelName = Pattern.compile(overviewChannelPattern).asMatchPredicate();
+        helpForumPattern = helpConfig.getHelpForumPattern();
+        isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
-        stagingChannelPattern = helpConfig.getStagingChannelPattern();
-        isStagingChannelName = Pattern.compile(stagingChannelPattern).asMatchPredicate();
-
+        List<String> categoriesList = helpConfig.getCategories();
+        categories = new HashSet<>(categoriesList);
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
+
+        Map<String, Integer> categoryToCommonDesc = IntStream.range(0, categoriesList.size())
+            .boxed()
+            .collect(Collectors.toMap(categoriesList::get, Function.identity()));
+        byCategoryCommonnessAsc = Comparator
+            .<ForumTag>comparingInt(
+                    tag -> categoryToCommonDesc.getOrDefault(tag.getName(), categories.size()))
+            .reversed();
+
+        threadActivityTagNames = Arrays.stream(ThreadActivity.values())
+            .map(ThreadActivity::getTagName)
+            .collect(Collectors.toSet());
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
@@ -106,7 +102,7 @@ public final class HelpSystemHelper {
             String closeCommandMention) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
-                AskCommand.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
+                HelpSystemHelper.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
         if (codeSyntaxExampleData == null) {
             useCodeSyntaxExampleImage = false;
         }
@@ -117,10 +113,6 @@ public final class HelpSystemHelper {
         List<MessageEmbed> embeds = List.of(HelpSystemHelper.embedWith(
                 "Code is much easier to read if posted with **syntax highlighting** and proper formatting.",
                 useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
-                HelpSystemHelper.embedWith(
-                        """
-                                If your code is **long**, or you have **multiple files** to share, consider posting it on sites \
-                                    like https://pastebin.com/ and share the link instead, that is easier to browse for helpers."""),
                 HelpSystemHelper.embedWith(
                         """
                                 If nobody is calling back, that usually means that your question was **not well asked** and \
@@ -139,10 +131,10 @@ public final class HelpSystemHelper {
         return action.setEmbeds(embeds);
     }
 
-    void writeHelpThreadToDatabase(Member author, ThreadChannel threadChannel) {
+    void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
-                .setAuthorId(author.getIdLong())
+                .setAuthorId(authorId)
                 .setChannelId(threadChannel.getIdLong())
                 .setCreatedAt(threadChannel.getTimeCreated().toInstant());
             if (helpThreadsRecord.update() == 0) {
@@ -173,74 +165,100 @@ public final class HelpSystemHelper {
         return maybeHelperRole;
     }
 
-    Optional<String> getCategoryOfChannel(Channel channel) {
-        return Optional.ofNullable(HelpThreadName.ofChannelName(channel.getName()).category);
-    }
-
-    RestAction<Void> renameChannelToCategory(GuildChannel channel, String category) {
-        HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
-        HelpThreadName nextName =
-                new HelpThreadName(currentName.activity, category, currentName.title);
-
-        return renameChannel(channel, currentName, nextName);
-    }
-
-    RestAction<Void> renameChannelToTitle(GuildChannel channel, String title) {
-        HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
-        HelpThreadName nextName =
-                new HelpThreadName(currentName.activity, currentName.category, title);
-
-        return renameChannel(channel, currentName, nextName);
-    }
-
-    RestAction<Void> renameChannelToActivity(GuildChannel channel, ThreadActivity activity) {
-        HelpThreadName currentName = HelpThreadName.ofChannelName(channel.getName());
-        HelpThreadName nextName =
-                new HelpThreadName(activity, currentName.category, currentName.title);
-
-        return renameChannel(channel, currentName, nextName);
-    }
-
-    private RestAction<Void> renameChannel(GuildChannel channel, HelpThreadName currentName,
-            HelpThreadName nextName) {
-        if (currentName.equals(nextName)) {
+    RestAction<Void> renameChannel(GuildChannel channel, String title) {
+        String currentTitle = channel.getName();
+        if (title.equals(currentTitle)) {
             // Do not stress rate limits if no actual change is done
             return new CompletedRestAction<>(channel.getJDA(), null);
         }
 
-        return channel.getManager().setName(nextName.toChannelName());
+        return channel.getManager().setName(title);
     }
 
-    boolean isOverviewChannelName(String channelName) {
-        return isOverviewChannelName.test(channelName);
+    Optional<ForumTag> getCategoryTagOfChannel(ThreadChannel channel) {
+        return getFirstMatchingTagOfChannel(categories, channel);
     }
 
-    String getOverviewChannelPattern() {
-        return overviewChannelPattern;
+    Optional<ForumTag> getActivityTagOfChannel(ThreadChannel channel) {
+        return getFirstMatchingTagOfChannel(threadActivityTagNames, channel);
     }
 
-    boolean isStagingChannelName(String channelName) {
-        return isStagingChannelName.test(channelName);
+    private Optional<ForumTag> getFirstMatchingTagOfChannel(Set<String> tagNamesToMatch,
+            ThreadChannel channel) {
+        return channel.getAppliedTags()
+            .stream()
+            .filter(tag -> tagNamesToMatch.contains(tag.getName()))
+            .min(byCategoryCommonnessAsc);
     }
 
-    String getStagingChannelPattern() {
-        return stagingChannelPattern;
+    RestAction<Void> changeChannelCategory(ThreadChannel channel, String category) {
+        return changeMatchingTagOfChannel(category, categories, channel);
     }
 
-    static boolean isTitleValid(CharSequence title) {
-        String titleCompact = TITLE_COMPACT_REMOVAL_PATTERN.matcher(title).replaceAll("");
-
-        return titleCompact.length() >= TITLE_COMPACT_LENGTH_MIN
-                && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX
-                && !titleCompact.toLowerCase(Locale.US).contains("help");
+    RestAction<Void> changeChannelActivity(ThreadChannel channel, ThreadActivity activity) {
+        return changeMatchingTagOfChannel(activity.getTagName(), threadActivityTagNames, channel);
     }
 
-    Optional<TextChannel> handleRequireOverviewChannel(Guild guild,
+    private RestAction<Void> changeMatchingTagOfChannel(String tagName, Set<String> tagNamesToMatch,
+            ThreadChannel channel) {
+        List<ForumTag> tags = new ArrayList<>(channel.getAppliedTags());
+
+        Optional<ForumTag> currentTag = getFirstMatchingTagOfChannel(tagNamesToMatch, channel);
+        if (currentTag.isPresent()) {
+            if (currentTag.orElseThrow().getName().equals(tagName)) {
+                // Do not stress rate limits if no actual change is done
+                return new CompletedRestAction<>(channel.getJDA(), null);
+            }
+
+            tags.remove(currentTag.orElseThrow());
+        }
+
+        ForumTag nextTag = requireTag(tagName, channel.getParentChannel().asForumChannel());
+        // In case the tag was already there, but not in front, we first remove it
+        tags.remove(nextTag);
+
+        if (tags.size() >= ForumChannel.MAX_POST_TAGS) {
+            // If still at max size, remove last to make place for the new tag.
+            // The last tag is the least important.
+            // NOTE In practice, this can happen if the user selected 5 categories and
+            // the bot then tries to add the activity tag
+            tags.remove(tags.size() - 1);
+        }
+
+        Collection<ForumTag> nextTags = new ArrayList<>(tags.size());
+        // Tag should be in front, to take priority over others
+        nextTags.add(nextTag);
+        nextTags.addAll(tags);
+
+        List<ForumTagSnowflake> tagSnowflakes =
+                nextTags.stream().map(ForumTag::getIdLong).map(ForumTagSnowflake::fromId).toList();
+        return channel.getManager().setAppliedTags(tagSnowflakes);
+    }
+
+    private static ForumTag requireTag(String tagName, ForumChannel forumChannel) {
+        List<ForumTag> matchingTags = forumChannel.getAvailableTagsByName(tagName, false);
+        if (matchingTags.isEmpty()) {
+            throw new IllegalStateException("The forum %s in guild %s is missing the tag %s."
+                .formatted(forumChannel.getName(), forumChannel.getGuild().getName(), tagName));
+        }
+
+        return matchingTags.get(0);
+    }
+
+    boolean isHelpForumName(String channelName) {
+        return isHelpForumName.test(channelName);
+    }
+
+    String getHelpForumPattern() {
+        return helpForumPattern;
+    }
+
+    Optional<ForumChannel> handleRequireHelpForum(Guild guild,
             Consumer<? super String> consumeChannelPatternIfNotFound) {
-        Predicate<String> isChannelName = this::isOverviewChannelName;
-        String channelPattern = getOverviewChannelPattern();
+        Predicate<String> isChannelName = this::isHelpForumName;
+        String channelPattern = getHelpForumPattern();
 
-        Optional<TextChannel> maybeChannel = guild.getTextChannelCache()
+        Optional<ForumChannel> maybeChannel = guild.getForumChannelCache()
             .stream()
             .filter(channel -> isChannelName.test(channel.getName()))
             .findAny();
@@ -252,135 +270,26 @@ public final class HelpSystemHelper {
         return maybeChannel;
     }
 
-    Optional<TextChannel> handleRequireOverviewChannelForAsk(Guild guild,
-            MessageChannel respondTo) {
-        return handleRequireOverviewChannel(guild, channelPattern -> {
-            logger.warn(
-                    "Attempted to create a help thread, did not find the overview channel matching the configured pattern '{}' for guild '{}'",
-                    channelPattern, guild.getName());
-
-            respondTo.sendMessage(
-                    "Sorry, I was unable to locate the overview channel. The server seems wrongly configured, please contact a moderator.")
-                .queue();
-        });
-    }
-
-    List<ThreadChannel> getActiveThreadsIn(TextChannel channel) {
+    List<ThreadChannel> getActiveThreadsIn(IThreadContainer channel) {
         return channel.getThreadChannels()
             .stream()
             .filter(Predicate.not(ThreadChannel::isArchived))
             .toList();
     }
 
-    void scheduleUncategorizedAdviceCheck(long threadChannelId, long authorId) {
-        SERVICE.schedule(() -> {
-            try {
-                executeUncategorizedAdviceCheck(threadChannelId, authorId);
-            } catch (Exception e) {
-                logger.warn(
-                        "Unknown error during an uncategorized advice check on thread {} by author {}.",
-                        threadChannelId, authorId, e);
-            }
-        }, SEND_UNCATEGORIZED_ADVICE_AFTER_MINUTES, TimeUnit.MINUTES);
-    }
-
-    private void executeUncategorizedAdviceCheck(long threadChannelId, long authorId) {
-        logger.debug("Executing uncategorized advice check for thread {} by author {}.",
-                threadChannelId, authorId);
-        jda.retrieveUserById(authorId).flatMap(author -> {
-            ThreadChannel threadChannel = jda.getThreadChannelById(threadChannelId);
-            if (threadChannel == null) {
-                logger.debug(
-                        "Channel for uncategorized advice check seems to be deleted (thread {} by author {}).",
-                        threadChannelId, authorId);
-                return new CompletedRestAction<>(jda, null);
-            }
-
-            if (threadChannel.isArchived()) {
-                logger.debug(
-                        "Channel for uncategorized advice check is archived already (thread {} by author {}).",
-                        threadChannelId, authorId);
-                return new CompletedRestAction<>(jda, null);
-            }
-
-            Optional<String> category = getCategoryOfChannel(threadChannel);
-            if (category.isPresent()) {
-                logger.debug(
-                        "Channel for uncategorized advice check seems to have a category now (thread {} by author {}).",
-                        threadChannelId, authorId);
-                return new CompletedRestAction<>(jda, null);
-            }
-
-            // Still no category, send advice
-            return MessageUtils
-                .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                        HelpThreadCommand.CHANGE_SUBCOMMAND_GROUP,
-                        HelpThreadCommand.Subcommand.CHANGE_CATEGORY.getCommandName())
-                .flatMap(command -> {
-                    MessageEmbed embed = HelpSystemHelper.embedWith(
-                            """
-                                    Hey there 👋 You have to select a category for your help thread, otherwise nobody can see your question.
-                                    Please use the %s slash-command and pick what fits best, thanks 🙂
-                                    """
-                                .formatted(command));
-                    MessageCreateData message =
-                            new MessageCreateBuilder().setContent(author.getAsMention())
-                                .setEmbeds(embed)
-                                .build();
-
-                    return threadChannel.sendMessage(message);
-                });
-        }).queue();
-    }
-
-    record HelpThreadName(@Nullable ThreadActivity activity, @Nullable String category,
-            String title) {
-        static HelpThreadName ofChannelName(CharSequence channelName) {
-            Matcher matcher = EXTRACT_HELP_NAME_PATTERN.matcher(channelName);
-
-            if (!matcher.matches()) {
-                throw new AssertionError("Pattern must match any thread name");
-            }
-
-            String activityText = matcher.group(ACTIVITY_GROUP);
-
-            ThreadActivity activity =
-                    activityText == null ? null : ThreadActivity.ofSymbol(activityText);
-            String category = matcher.group(CATEGORY_GROUP);
-            String title = matcher.group(TITLE_GROUP);
-
-            return new HelpThreadName(activity, category, title);
-        }
-
-        String toChannelName() {
-            String activityText = activity == null ? "" : activity.getSymbol() + " ";
-            String categoryText = category == null ? "" : "[%s] ".formatted(category);
-
-            return activityText + categoryText + title;
-        }
-    }
-
     enum ThreadActivity {
-        NEEDS_HELP("🔻"),
-        LIKELY_NEEDS_HELP("🔸"),
-        SEEMS_GOOD("🔹");
+        LOW("Nobody helped yet"),
+        MEDIUM("Needs attention"),
+        HIGH("Active");
 
-        private final String symbol;
+        private final String tagName;
 
-        ThreadActivity(String symbol) {
-            this.symbol = symbol;
+        ThreadActivity(String tagName) {
+            this.tagName = tagName;
         }
 
-        public String getSymbol() {
-            return symbol;
-        }
-
-        static ThreadActivity ofSymbol(String symbol) {
-            return Stream.of(values())
-                .filter(activity -> activity.getSymbol().equals(symbol))
-                .findAny()
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown thread activity symbol: " + symbol));
+        public String getTagName() {
+            return tagName;
         }
     }
 }

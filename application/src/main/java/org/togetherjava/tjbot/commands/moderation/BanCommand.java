@@ -71,15 +71,14 @@ public final class BanCommand extends SlashCommandAdapter {
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
 
-    private static RestAction<InteractionHook> handleAlreadyBanned(Guild.Ban ban,
-            IReplyCallback event) {
+    private static RestAction<Message> handleAlreadyBanned(Guild.Ban ban, InteractionHook hook) {
         String reason = ban.getReason();
         String reasonText =
                 reason == null || reason.isBlank() ? "" : " (reason: %s)".formatted(reason);
 
         String message = "The user '%s' is already banned%s.".formatted(ban.getUser().getAsTag(),
                 reasonText);
-        return event.reply(message).setEphemeral(true);
+        return hook.sendMessage(message).setEphemeral(true);
     }
 
     private static RestAction<Boolean> sendDm(User target,
@@ -104,8 +103,8 @@ public final class BanCommand extends SlashCommandAdapter {
                 durationText + dmNoticeText, reason);
     }
 
-    private static Optional<RestAction<InteractionHook>> handleNotAlreadyBannedResponse(
-            Throwable alreadyBannedFailure, IReplyCallback event, Guild guild, User target) {
+    private static Optional<RestAction<Message>> handleNotAlreadyBannedResponse(
+            Throwable alreadyBannedFailure, InteractionHook hook, Guild guild, User target) {
         if (alreadyBannedFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
                 return Optional.empty();
@@ -114,7 +113,7 @@ public final class BanCommand extends SlashCommandAdapter {
             if (errorResponseException.getErrorResponse() == ErrorResponse.MISSING_PERMISSIONS) {
                 logger.error("The bot does not have the '{}' permission on the guild '{}'.",
                         Permission.BAN_MEMBERS, guild.getName());
-                return Optional.of(event.reply(
+                return Optional.of(hook.sendMessage(
                         "I can not ban users in this guild since I do not have the %s permission."
                             .formatted(Permission.BAN_MEMBERS))
                     .setEphemeral(true));
@@ -123,18 +122,18 @@ public final class BanCommand extends SlashCommandAdapter {
         logger.warn(LogMarkers.SENSITIVE,
                 "Something unexpected went wrong while trying to ban the user '{}'.",
                 target.getAsTag(), alreadyBannedFailure);
-        return Optional.of(event.reply("Failed to ban the user due to an unexpected problem.")
+        return Optional.of(hook.sendMessage("Failed to ban the user due to an unexpected problem.")
             .setEphemeral(true));
     }
 
-    private RestAction<InteractionHook> banUserFlow(User target, Member author,
+    private RestAction<Message> banUserFlow(User target, Member author,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
             int deleteHistoryDays, Guild guild, SlashCommandInteractionEvent event) {
         return sendDm(target, temporaryData, reason, guild)
             .flatMap(hasSentDm -> banUser(target, author, temporaryData, reason, deleteHistoryDays,
                     guild).map(banResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))
-            .flatMap(event::replyEmbeds);
+            .flatMap(event.getHook()::sendMessageEmbeds);
     }
 
     private AuditableRestAction<Void> banUser(User target, Member author,
@@ -197,14 +196,16 @@ public final class BanCommand extends SlashCommandAdapter {
         int deleteHistoryDays = Math
             .toIntExact(Objects.requireNonNull(event.getOption(DELETE_HISTORY_OPTION)).getAsLong());
 
+        event.deferReply().queue();
+        InteractionHook hook = event.getHook();
         // Ban the user, but only if not already banned
         guild.retrieveBan(target).mapToResult().flatMap(alreadyBanned -> {
             if (alreadyBanned.isSuccess()) {
-                return handleAlreadyBanned(alreadyBanned.get(), event);
+                return handleAlreadyBanned(alreadyBanned.get(), hook);
             }
 
             return handleNotAlreadyBannedResponse(
-                    Objects.requireNonNull(alreadyBanned.getFailure()), event, guild, target)
+                    Objects.requireNonNull(alreadyBanned.getFailure()), hook, guild, target)
                         .orElseGet(() -> banUserFlow(target, author, temporaryData.orElse(null),
                                 reason, deleteHistoryDays, guild, event));
         }).queue();

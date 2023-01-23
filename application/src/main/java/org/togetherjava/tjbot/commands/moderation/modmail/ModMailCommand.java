@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -35,11 +36,10 @@ import java.util.regex.Pattern;
 /**
  * Implements the /modmail command, which allows users to contact a moderator within the server
  * which forwards messages to moderators in a dedicated channel given by
- * {@link Config#getModAuditLogChannelPattern()}.
+ * {@link Config#getModMailChannelPattern()}.
  */
 
 public final class ModMailCommand extends SlashCommandAdapter {
-
     private static final Logger logger = LoggerFactory.getLogger(ModMailCommand.class);
     public static final String COMMAND_NAME = "modmail";
     private static final String OPTION_MESSAGE = "message";
@@ -50,6 +50,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
+    private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
 
 
@@ -83,6 +84,9 @@ public final class ModMailCommand extends SlashCommandAdapter {
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
 
         configModMailChannelPattern = config.getModMailChannelPattern();
+
+        configModGroupPattern =
+                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
     }
 
     private Cache<Long, Instant> createCooldownCache() {
@@ -148,6 +152,15 @@ public final class ModMailCommand extends SlashCommandAdapter {
             message.addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
                     String.valueOf(userId)));
         }
+
+        Optional<Role> moderatorRole = modMailAuditLog.getGuild()
+            .getRoles()
+            .stream()
+            .filter(role -> configModGroupPattern.test(role.getName()))
+            .findFirst();
+
+        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
+
         return message;
     }
 
@@ -179,5 +192,4 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .filter(Instant.now()::isBefore)
             .isPresent();
     }
-
 }

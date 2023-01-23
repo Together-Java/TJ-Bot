@@ -1,137 +1,273 @@
 package org.togetherjava.tjbot.formatter.tokenizer;
 
+import java.nio.CharBuffer;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Represents every possible token that can be parsed by the lexer
+ * All types of tokens recognized by {@link Lexer}.
+ * <p>
+ * Token types can be used to find the next matching token (see {@link #matches(CharSequence)}). For
+ * example, for the code {@code int x = "foo"}, only {@link #INT} would match. Other participating
+ * tokens, such as {@link #IDENTIFIER} or {@link #STRING} do not match yet.
  */
+// Sonar wants Javadoc on all tokens, but they are self-explanatory based
+// on the enum description and context.
+@SuppressWarnings("squid:S1176")
 public enum TokenType {
-    // keywords
-    CLASS("class", true, false),
-    ENUM("enum", true, false),
-    RECORD("record", true, false),
-    INTERFACE("interface", true, false),
-    IMPORT("import", true, false),
-    IF("if", true, false),
-    FOR("for", true, false),
-    WHILE("while", true, false),
-    NULL("null", true, false),
-    EXTENDS("extends", true, false),
-    IMPLEMENTS("implements", true, false),
-    NEW("new", true, false),
-    RETURN("return", true, false),
-    PACKAGE("package", true, false),
-    THIS("this", true, false),
-    YIELD("yield", true, false),
-    CATCH("catch", true, false),
-    TRY("try", true, false),
-    ELSE_IF("else if", true, false), // not really a keyword but required for formatting
-    ELSE("else", true, false),
-    SUPER("super", true, false),
-    // access modifiers
-    PUBLIC("public", true, false),
-    PRIVATE("private", true, false),
-    PROTECTED("protected", true, false),
-    STATIC("static", true, false),
-    SEALED("sealed", true, false),
-    NON_SEALED("non-sealed", true, false),
-    FINAL("final", true, false),
-    ABSTRACT("abstract", true, false),
-    // primitive types
-    VOID("void", true, false),
-    INT("int", true, false),
-    LONG("long", true, false),
-    SHORT("short", true, false),
-    BYTE("byte", true, false),
-    BOOLEAN("boolean", true, false),
-    FLOAT("float", true, false),
-    DOUBLE("double", true, false),
-    CHAR("char", true, false),
-    // general tokens
+    // NOTE The entries have an order-dependency by design.
+    // Their patterns are applied from top to bottom. So entries that are not prefix-free
+    // like "--" and "-" must be ordered with "--" before "-" to correctly match.
+
+    // Keywords
+    CLASS("class", Attribute.KEYWORD),
+    ENUM("enum", Attribute.KEYWORD),
+    RECORD("record", Attribute.KEYWORD),
+    INTERFACE("interface", Attribute.KEYWORD),
+    IMPORT("import", Attribute.KEYWORD),
+    NULL("null", Attribute.KEYWORD),
+    EXTENDS("extends", Attribute.KEYWORD),
+    IMPLEMENTS("implements", Attribute.KEYWORD),
+    NEW("new", Attribute.KEYWORD),
+    RETURN("return", Attribute.KEYWORD),
+    PACKAGE("package", Attribute.KEYWORD),
+    THIS("this", Attribute.KEYWORD),
+    YIELD("yield", Attribute.KEYWORD),
+    SUPER("super", Attribute.KEYWORD),
+    ASSERT("assert", Attribute.KEYWORD),
+    CONST("const", Attribute.KEYWORD),
+    DEFAULT("default", Attribute.KEYWORD),
+    FINALLY("finally", Attribute.KEYWORD),
+    THROWS("throws", Attribute.KEYWORD),
+    THROW("throw", Attribute.KEYWORD),
+
+    // Access modifiers
+    PUBLIC("public", Attribute.KEYWORD),
+    PRIVATE("private", Attribute.KEYWORD),
+    PROTECTED("protected", Attribute.KEYWORD),
+    STATIC("static", Attribute.KEYWORD),
+    SEALED("sealed", Attribute.KEYWORD),
+    NON_SEALED("non-sealed", Attribute.KEYWORD),
+    FINAL("final", Attribute.KEYWORD),
+    ABSTRACT("abstract", Attribute.KEYWORD),
+    NATIVE("native", Attribute.KEYWORD),
+    STRICTFP("strictfp", Attribute.KEYWORD),
+    SYNCHRONIZED("synchronized", Attribute.KEYWORD),
+    TRANSIENT("transient", Attribute.KEYWORD),
+    VOLATILE("volatile", Attribute.KEYWORD),
+
+    // Primitives
+    VOID("void", Attribute.KEYWORD),
+    INT("int", Attribute.KEYWORD),
+    LONG("long", Attribute.KEYWORD),
+    SHORT("short", Attribute.KEYWORD),
+    BYTE("byte", Attribute.KEYWORD),
+    BOOLEAN("boolean", Attribute.KEYWORD),
+    FLOAT("float", Attribute.KEYWORD),
+    DOUBLE("double", Attribute.KEYWORD),
+    CHAR("char", Attribute.KEYWORD),
+
+    // Flow control
+    IF("if", Attribute.KEYWORD),
+    // Technically two keywords, but we want it to stick together when formatting
+    ELSE_IF("else if", Attribute.KEYWORD),
+    ELSE("else", Attribute.KEYWORD),
+    FOR("for", Attribute.KEYWORD),
+    WHILE("while", Attribute.KEYWORD),
+    DO("do", Attribute.KEYWORD),
+    BREAK("break", Attribute.KEYWORD),
+    CONTINUE("continue", Attribute.KEYWORD),
+    SWITCH("switch", Attribute.KEYWORD),
+    CASE("case", Attribute.KEYWORD),
+    TRY("try", Attribute.KEYWORD),
+    CATCH("catch", Attribute.KEYWORD),
+    GOTO("goto", Attribute.KEYWORD),
+
+    // Braces
     OPEN_PARENTHESIS("("),
     CLOSE_PARENTHESIS(")"),
     OPEN_BRACES("{"),
     CLOSE_BRACES("}"),
     OPEN_BRACKETS("["),
     CLOSE_BRACKETS("]"),
+
+    // General
+    DOT("."),
     SEMICOLON(";"),
     METHOD_REFERENCE("::"),
-    COLON(":", false, true), // technically not a "real" operator but used in an enhanced for loop
     COMMA(","),
-    ARROW("->", false, true), // used in lambdas
-                              // I also wouldn't count this as an operator but again, it's required
-                              // for formatting
-    PLUS_EQUALS("+=", false, true),
-    MINUS_EQUALS("-=", false, true),
-    MULTIPLY_EQUALS("*=", false, true),
-    DIVIDE_EQUALS("/=", false, true),
-    MODULO_EQUALS("%=", false, true),
-    AND_EQUALS("&=", false, true),
-    OR_EQUALS("|=", false, true),
-    EQUALS("==", false, true),
-    NOT_EQUALS("!=", false, true),
-    GREATER_THAN_OR_EQUALS(">=", false, true),
-    GREATER_THAN(">", false, true),
-    LESS_THAN_OR_EQUALS("<=", false, true),
-    LESS_THAN("<", false, true),
+    QUESTION_MARK("?", Attribute.BINARY_OPERATOR),
+
+    // Comments
+    SINGLE_LINE_COMMENT(Pattern.compile("//.*(?=\n|$)"), "// Foo"),
+    MULTI_LINE_COMMENT(Pattern.compile("""
+            /\\* #Start
+            .* #Content
+            \\*/ #End
+            """, Pattern.DOTALL | Pattern.COMMENTS), "/* Foo */"),
+
+    // Operators
+    // NOTE right shifts (<<, >>, >>>) are intentionally left out
+    // they conflict with nested generics like List<List<Foo>>
+    SMART_AND("&&", Attribute.BINARY_OPERATOR),
+    SMART_OR("||", Attribute.BINARY_OPERATOR),
+    PLUS_EQUALS("+=", Attribute.BINARY_OPERATOR),
+    MINUS_EQUALS("-=", Attribute.BINARY_OPERATOR),
+    MULTIPLY_EQUALS("*=", Attribute.BINARY_OPERATOR),
+    DIVIDE_EQUALS("/=", Attribute.BINARY_OPERATOR),
+    MODULO_EQUALS("%=", Attribute.BINARY_OPERATOR),
+    AND_EQUALS("&=", Attribute.BINARY_OPERATOR),
+    XOR_EQUALS("^=", Attribute.BINARY_OPERATOR),
+    OR_EQUALS("|=", Attribute.BINARY_OPERATOR),
+    LEFT_SHIFT_EQUALS("<<=", Attribute.BINARY_OPERATOR),
+    LOGICAL_RIGHT_SHIFT_EQUALS(">>>=", Attribute.BINARY_OPERATOR),
+    ARITHMETIC_RIGHT_SHIFT_EQUALS(">>=", Attribute.BINARY_OPERATOR),
+    EQUALS("==", Attribute.BINARY_OPERATOR),
+    NOT_EQUALS("!=", Attribute.BINARY_OPERATOR),
     NOT("!"),
-    ASSIGN("=", false, true),
-    PLUSPLUS("++"),
-    PLUS("+", false, true),
-    MINUSMINUS("--"),
-    MINUS("-", false, true),
-    BOOL_AND("&&", false, true),
-    BOOL_OR("||", false, true),
+    GREATER_THAN_OR_EQUALS(">=", Attribute.BINARY_OPERATOR),
+    GREATER_THAN(">", Attribute.BINARY_OPERATOR),
+    LESS_THAN_OR_EQUALS("<=", Attribute.BINARY_OPERATOR),
+    LEFT_SHIFT("<<", Attribute.BINARY_OPERATOR),
+    LESS_THAN("<", Attribute.BINARY_OPERATOR),
+    SINGLE_OR("|", Attribute.BINARY_OPERATOR),
+    SINGLE_AND("&", Attribute.BINARY_OPERATOR),
+    XOR("^", Attribute.BINARY_OPERATOR),
+    ASSIGN("=", Attribute.BINARY_OPERATOR),
+    // Technically not an operator, but used like one in lambdas and switch expressions
+    ARROW("->", Attribute.BINARY_OPERATOR),
+    PLUS_PLUS("++", Attribute.UNARY_OPERATOR),
+    PLUS("+", Attribute.BINARY_OPERATOR),
+    MINUS_MINUS("--", Attribute.UNARY_OPERATOR),
+    MINUS("-", Attribute.BINARY_OPERATOR),
+    DIVIDE("/", Attribute.BINARY_OPERATOR),
+    MULTIPLY("*", Attribute.BINARY_OPERATOR),
+    // Technically not an operator, but used like one in enhanced-for
+    COLON(":", Attribute.BINARY_OPERATOR),
+    COMPLEMENT("~", Attribute.UNARY_OPERATOR),
+    MODULO("%", Attribute.BINARY_OPERATOR),
+    INSTANCE_OF("instanceof", Attribute.BINARY_OPERATOR),
 
-    // this has to be over DIVIDE or else it'll be seen as 2x DIVIDE
-    COMMENT(Pattern.compile("^(//.*|/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/)")),
+    // Other
+    ANNOTATION(Pattern.compile("@[a-zA-Z]\\w*"), "@Foo"),
+    NUMBER(Pattern.compile("""
+            (0[xb])? #Different base
+            ([\\d_]+ #Integers
+            | [\\d_]+\\.[\\d_]+ #Float with both, 1.3
+            | [\\d_]+\\. #Float only left, 1.
+            | \\.[\\d_]+ #Float only right, .1
+            )
+            [dDfFlL]? #Type suffix
+            """, Pattern.COMMENTS), "1_23.4_56F"),
+    STRING(Matching::matchesString, Attribute.NONE, "\"foo\""),
+    IDENTIFIER(Pattern.compile("[a-zA-Z]\\w*"), "foo"),
+    WHITESPACE(Pattern.compile("\\s+"), " "),
 
-    DIVIDE("/", false, true),
-    MULTIPLY("*", false, true),
-    DOT("."),
-    // other
-    WILDCARD("?"),
-    ANNOTATION(Pattern.compile("^(@[a-zA-Z][a-zA-Z0-9_]*)")),
-    NUMBER(Pattern.compile("^((0[xb])?([0-9_]+|[0-9_]*(\\.\\d*))[dDfFlL]?)")),
-    STRING(Pattern.compile("^(\"[^\"]*\")")),
-    IDENTIFIER(Pattern.compile("^([a-zA-Z][a-zA-Z0-9_]*)")),
-    WHITESPACE(Pattern.compile("^(\s+)")),
-    UNKNOWN(Pattern.compile("^(.)"));
+    // Fallback for everything that has not been matched yet
+    UNKNOWN(Pattern.compile(".", Pattern.DOTALL), "°");
 
-    private final Pattern regex;
-    private final boolean isKeyword;
-    private final boolean isOperator;
+    private final Function<CharSequence, Optional<String>> matcher;
+    private final Attribute attribute;
+    private final String contentExample;
 
-    TokenType(String pattern, boolean isKeyword, boolean isOperator) {
-        if (!isKeyword) {
-            this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")");
-        } else {
-            this.regex = Pattern.compile("^(" + Pattern.quote(pattern) + ")(?![a-zA-Z])");
+    /**
+     * Gets all token types in the order they should be used for matching.
+     * <p>
+     * This is important, since not all types match prefix-free. For example, {@link #DIVIDE} hides
+     * {@link #SINGLE_LINE_COMMENT} if matched before.
+     *
+     * @return all token types in match order
+     */
+    public static TokenType[] getAllInMatchOrder() {
+        // We have an order-dependency by design here
+        return TokenType.values();
+    }
+
+    TokenType(Function<CharSequence, Optional<String>> matcher, Attribute attribute,
+            String contentExample) {
+        this.matcher = matcher;
+        this.attribute = attribute;
+        this.contentExample = contentExample;
+
+        requireMatchesExample();
+    }
+
+    private void requireMatchesExample() {
+        if (matcher.apply(contentExample).isEmpty()) {
+            throw new AssertionError(
+                    "The given content example (%s) is not matched by the token type (%s)"
+                        .formatted(contentExample, this));
         }
-
-        this.isKeyword = isKeyword;
-        this.isOperator = isOperator;
     }
 
-    TokenType(Pattern regex) {
-        this.regex = regex;
-        this.isKeyword = false;
-        this.isOperator = false;
+    TokenType(Pattern pattern, String contentExample) {
+        this(text -> Matching.matchesPattern(pattern, text), Attribute.NONE, contentExample);
     }
 
-    TokenType(String pattern) {
-        this(pattern, false, false);
+    TokenType(String symbol, Attribute attribute) {
+        this(text -> Matching.matchesSymbol(symbol, text, attribute), attribute, symbol);
     }
 
-    public Pattern getRegex() {
-        return regex;
+    TokenType(String symbol) {
+        this(symbol, Attribute.NONE);
     }
 
-    public boolean isKeyword() {
-        return isKeyword;
+    /**
+     * Attempts to match this token type against the given text and returns the matched token.
+     * <p>
+     * For example, {@code INT.matches("int x = 5")} matches and returns {@code Token("int", INT)}.
+     * <p>
+     * For performance reasons, this method should ideally be called with an instance of
+     * {@link CharSequence} that creates views only, such as {@link CharBuffer}.
+     *
+     * @param text the text to match against
+     * @return the token matched by this type, if any
+     */
+    public Optional<Token> matches(CharSequence text) {
+        return matcher.apply(text).map(content -> new Token(content, this));
     }
 
-    public boolean isOperator() {
-        return isOperator;
+    /**
+     * The attribute of the type, if it can be further specified.
+     *
+     * @return the attribute of the type
+     */
+    public Attribute getAttribute() {
+        return attribute;
+    }
+
+    /**
+     * An example token content this type would match.
+     * 
+     * @return example match
+     */
+    String getContentExample() {
+        return contentExample;
+    }
+
+    /**
+     * Attributes of token types.
+     * <p>
+     * For example, a token like {@code +} is a {@link #BINARY_OPERATOR}.
+     */
+    public enum Attribute {
+        /**
+         * A keyword in the language, has to stand alone, for example with a space left and right.
+         * Such as in {@code public final class}.
+         */
+        KEYWORD,
+        /**
+         * An operator with two arguments, one left and one right. For example {@code 5 + 3}.
+         */
+        BINARY_OPERATOR,
+        /**
+         * An operator with a single argument, for example {@code x++}.
+         */
+        UNARY_OPERATOR,
+        /**
+         * No further specification of the type.
+         */
+        NONE
     }
 }

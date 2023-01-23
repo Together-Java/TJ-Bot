@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.commands.mediaonly;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -102,7 +103,8 @@ final class MediaOnlyChannelListenerTest {
 
     private MessageReceivedEvent sendMessage(MessageCreateData message,
             List<Message.Attachment> attachments) {
-        MessageReceivedEvent event = jdaTester.createMessageReceiveEvent(message, attachments);
+        MessageReceivedEvent event =
+                jdaTester.createMessageReceiveEvent(message, attachments, ChannelType.TEXT);
         mediaOnlyChannelListener.onMessageReceived(event);
         return event;
     }

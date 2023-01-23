@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
  */
 public class MessageUtils {
     private static final String ABBREVIATION = "...";
+    private static final String CODE_FENCE_SYMBOL = "```";
 
     private MessageUtils() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
@@ -49,7 +51,7 @@ public class MessageUtils {
      * Escapes every markdown content in the given string.
      * <p>
      * If the escaped message is sent to Discord, it will display the original message.
-     * 
+     *
      * @param text the text to escape
      * @return the escaped text
      */
@@ -121,6 +123,19 @@ public class MessageUtils {
     }
 
     /**
+     * Converts the id of a channel to a mentioned channel, which you can directly click on in
+     * Discord.
+     *
+     * @param channelId the id of the channel to mention
+     * @return Formatted string for the mentioned channel
+     */
+    public static String mentionChannel(long channelId) {
+        // NOTE Hardcoded until JDA offers something like User.fromId(id).getAsMention() for
+        // channels as well
+        return "<#%d>".formatted(channelId);
+    }
+
+    /**
      * Abbreviates the given text if it is too long.
      * <p>
      * Abbreviation is done by adding {@value ABBREVIATION}.
@@ -141,4 +156,65 @@ public class MessageUtils {
         return text.substring(0, maxLength - ABBREVIATION.length()) + ABBREVIATION;
     }
 
+    /**
+     * Mentions a guild channel by its id. If the given channelId is unknown, the formatted text
+     * will say <i>#deleted-channel</i> in Discord.
+     *
+     * @param channelId the ID of the channel to mention
+     * @return the channel as formatted string which Discord interprets as clickable mention
+     */
+    public static String mentionChannelById(long channelId) {
+        // Clone of JDAs Channel#getAsMention, but unfortunately channel instances can not be
+        // created out of just an ID, unlike User#fromId
+        return "<#%d>".formatted(channelId);
+    }
+
+    /**
+     * Attempts to extract code posted in code-fences from the given message.
+     * <p>
+     * For example, it would extract {@code "int x = 5 + 3;"} from
+     * 
+     * <pre>
+     * Look at this:
+     * ```java
+     * int x = 5 + 3;
+     * ```
+     * Nice code.
+     * </pre>
+     * 
+     * If the message contains multiple code fences, only the first is extracted.
+     *
+     * @param fullMessage the message to extract code from
+     * @return the first found code snippet, if any
+     */
+    public static Optional<CodeFence> extractCode(String fullMessage) {
+        int codeFenceStart = fullMessage.indexOf(CODE_FENCE_SYMBOL);
+        if (codeFenceStart == -1) {
+            return Optional.empty();
+        }
+
+        int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
+        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, languageStart);
+        if (codeFenceEnd == -1) {
+            return Optional.empty();
+        }
+
+        // Language is between ``` and newline, no spaces allowed, like ```java
+        // Look for the next newline and then assert no space between
+        String language = null;
+        int languageEnd = fullMessage.indexOf('\n', codeFenceStart);
+        if (languageEnd != -1) {
+            String languageCandidate = fullMessage.substring(languageStart, languageEnd);
+            if (!languageCandidate.isEmpty() && languageCandidate.indexOf(' ') == -1) {
+                language = languageCandidate;
+            }
+        }
+        if (language == null) {
+            languageEnd = languageStart;
+        }
+
+        String code = fullMessage.substring(languageEnd, codeFenceEnd).strip();
+
+        return Optional.of(new CodeFence(language, code));
+    }
 }

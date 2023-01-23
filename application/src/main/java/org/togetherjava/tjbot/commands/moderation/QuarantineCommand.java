@@ -99,11 +99,13 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
     private void quarantineUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target.getUser(), reason, guild)
+        event.deferReply().queue();
+
+        sendDm(target.getUser(), reason, guild, event)
             .flatMap(hasSentDm -> quarantineUser(target, author, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
-            .flatMap(event::replyEmbeds)
+            .flatMap(event.getHook()::sendMessageEmbeds)
             .queue();
     }
 

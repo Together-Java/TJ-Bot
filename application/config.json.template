@@ -8,44 +8,45 @@
     "modMailChannelPattern": "modmail",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
-    "softModerationRolePattern": "Moderator|Staff Assistant",
-    "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
-   "suggestions": {
-       "channelPattern": "tj_suggestions",
-       "upVoteEmoteName": "peepo_yes",
-       "downVoteEmoteName": "peepo_no"
-   },
-   "quarantinedRolePattern": "Quarantined",
-   "scamBlocker": {
-       "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
-       "reportChannelPattern": "commands",
-       "hostWhitelist": ["discord.com", "discord.gg", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"],
-       "hostBlacklist": ["bit.ly"],
-       "suspiciousHostKeywords": ["discord", "nitro", "premium"],
-       "isHostSimilarToKeywordDistanceThreshold": 2
-   },
-   "wolframAlphaAppId": "79J52T-6239TVXHR7",
-   "helpSystem": {
-       "stagingChannelPattern": "ask_here",
-       "overviewChannelPattern": "active_questions",
-       "categories": [
-           "Java",
-           "Frameworks",
-           "JavaFX|Swing",
-           "IDE",
-           "Build Tools",
-           "Database",
-           "Android",
-           "C|C++",
-           "Algorithms",
-           "Math",
-           "Architecture",
-           "Code Review",
-           "Together Java Bot",
-           "Other"
-       ],
-       "categoryRoleSuffix": " - Helper"
-   },
+    "softModerationRolePattern": "Moderator|Community Ambassador",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
+    "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
+    "suggestions": {
+        "channelPattern": "tj_suggestions",
+        "upVoteEmoteName": "peepo_yes",
+        "downVoteEmoteName": "peepo_no"
+    },
+    "quarantinedRolePattern": "Quarantined",
+    "scamBlocker": {
+        "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
+        "reportChannelPattern": "commands",
+        "suspiciousKeywords": ["nitro", "boob", "sexy", "sexi", "esex"],
+        "hostWhitelist": ["discord.com", "discord.gg", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"],
+        "hostBlacklist": ["bit.ly"],
+        "suspiciousHostKeywords": ["discord", "nitro", "premium"],
+        "isHostSimilarToKeywordDistanceThreshold": 2
+    },
+    "wolframAlphaAppId": "79J52T-6239TVXHR7",
+    "helpSystem": {
+        "helpForumPattern": "questions",
+        "categories": [
+            "Java",
+            "Frameworks",
+            "JavaFX|Swing",
+            "IDE",
+            "Build Tools",
+            "Database",
+            "Android",
+            "C|C++",
+            "Algorithms",
+            "Math",
+            "Architecture",
+            "Code Review",
+            "Together Java Bot",
+            "Other"
+        ],
+        "categoryRoleSuffix": " - Helper"
+    },
     "mediaOnlyChannelPattern": "memes",
     "blacklistedFileExtension": [
         "application",
@@ -84,7 +85,7 @@
         "wsc",
         "wsf",
         "wsh"
-  ],
-  "logInfoChannelWebhook": "<put_your_webhook_here>",
-  "logErrorChannelWebhook": "<put_your_webhook_here>"
+    ],
+    "logInfoChannelWebhook": "<put_your_webhook_here>",
+    "logErrorChannelWebhook": "<put_your_webhook_here>"
 }
