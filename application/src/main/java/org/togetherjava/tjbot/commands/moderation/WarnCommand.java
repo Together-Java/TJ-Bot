@@ -49,7 +49,7 @@ public final class WarnCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        dmUser(target, reason, guild, event).map(hasSentDm -> {
+        sendDm(target, reason, guild).map(hasSentDm -> {
             warnUser(target, author, reason, guild);
             return hasSentDm;
         })

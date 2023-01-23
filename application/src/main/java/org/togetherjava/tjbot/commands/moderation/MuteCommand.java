@@ -116,7 +116,7 @@ public final class MuteCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        sendDm(target.getUser(), temporaryData, reason, guild, event)
+        sendDm(target.getUser(), temporaryData, reason, guild)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))

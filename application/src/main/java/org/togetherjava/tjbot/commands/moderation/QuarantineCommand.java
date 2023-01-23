@@ -101,7 +101,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        sendDm(target.getUser(), reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> quarantineUser(target, author, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
