@@ -50,7 +50,7 @@ public class ModerationUtils {
      * The ambient color used by moderation actions, often used to streamline the color theme of
      * embeds.
      */
-    static final Color AMBIENT_COLOR = Color.decode("#895FE8");
+    public static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
      * Actions with timely constraint, like being muted for 1 hour.
@@ -105,7 +105,7 @@ public class ModerationUtils {
      * @param event the event used to respond to the user
      * @return Whether the author and bot can interact with the target user
      */
-    static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
+    public static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
             Member target, IReplyCallback event) {
         String targetTag = target.getUser().getAsTag();
         if (!author.canInteract(target)) {

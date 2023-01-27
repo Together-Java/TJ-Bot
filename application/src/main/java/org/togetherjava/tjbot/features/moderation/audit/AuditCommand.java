@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.moderation;
+package org.togetherjava.tjbot.features.moderation.audit;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -21,6 +21,10 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.moderation.ActionRecord;
+import org.togetherjava.tjbot.features.moderation.ModerationAction;
+import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
+import org.togetherjava.tjbot.features.moderation.ModerationUtils;
 import org.togetherjava.tjbot.features.utils.Pagination;
 
 import javax.annotation.Nullable;

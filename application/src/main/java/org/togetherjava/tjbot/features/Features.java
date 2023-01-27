@@ -20,6 +20,9 @@ import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.features.moderation.*;
 import org.togetherjava.tjbot.features.moderation.ReportCommand;
 import org.togetherjava.tjbot.features.moderation.attachment.BlacklistedAttachmentListener;
+import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
+import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogRoutine;
+import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
@@ -36,8 +39,6 @@ import org.togetherjava.tjbot.features.tags.TagsCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
-import org.togetherjava.tjbot.routines.ModAuditLogRoutine;
 
 import java.util.ArrayList;
 import java.util.Collection;

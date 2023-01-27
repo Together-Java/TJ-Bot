@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.Routine;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
+import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 
 import java.time.Duration;
 import java.time.Instant;

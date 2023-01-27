@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;

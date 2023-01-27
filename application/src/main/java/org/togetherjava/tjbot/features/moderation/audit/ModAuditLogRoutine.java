@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.routines;
+package org.togetherjava.tjbot.features.moderation.audit;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -24,7 +24,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModAuditLogGuildProcess;
 import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import javax.annotation.Nullable;
 

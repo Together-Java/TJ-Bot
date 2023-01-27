@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
+import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 
 import javax.annotation.Nullable;
 

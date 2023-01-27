@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.moderation.ActionRecord;
 import org.togetherjava.tjbot.features.moderation.ModerationAction;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
+import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.util.Map;
@@ -27,8 +28,7 @@ import java.util.stream.Stream;
  * {@link ModerationActionsStore}.
  * <p>
  * Revoked actions are compatible with {@link ModerationActionsStore} and commands such as
- * {@link org.togetherjava.tjbot.features.moderation.UnbanCommand} and
- * {@link org.togetherjava.tjbot.features.moderation.AuditCommand}.
+ * {@link org.togetherjava.tjbot.features.moderation.UnbanCommand} and {@link AuditCommand}.
  */
 public final class TemporaryModerationRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(TemporaryModerationRoutine.class);

@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.moderation;
+package org.togetherjava.tjbot.features.moderation.audit;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;

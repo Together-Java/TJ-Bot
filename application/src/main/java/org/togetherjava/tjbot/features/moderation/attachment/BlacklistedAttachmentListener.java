@@ -11,9 +11,9 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.awt.*;
 import java.util.List;

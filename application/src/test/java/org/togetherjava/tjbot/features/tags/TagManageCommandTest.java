@@ -17,8 +17,8 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import org.togetherjava.tjbot.jda.JdaTester;
-import org.togetherjava.tjbot.moderation.ModAuditLogWriter;
 
 import java.io.IOException;
 import java.util.List;
