@@ -7,9 +7,12 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -24,6 +27,7 @@ import org.togetherjava.tjbot.commands.CommandVisibility;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.utils.MessageUtils;
 import org.togetherjava.tjbot.commands.utils.Pagination;
+import org.togetherjava.tjbot.commands.utils.StringDistances;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 
@@ -54,6 +58,8 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
 public final class ReminderCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "reminder";
     private static final String LIST_SUBCOMMAND = "list";
+    private static final String CANCEL_COMMAND = "cancel";
+    private static final String CANCEL_REMINDER_OPTION = "reminder";
     static final String CREATE_SUBCOMMAND = "create";
     static final String TIME_AMOUNT_OPTION = "time-amount";
     static final String TIME_UNIT_OPTION = "time-unit";
@@ -94,6 +100,9 @@ public final class ReminderCommand extends SlashCommandAdapter {
         getData().addSubcommands(
                 new SubcommandData(CREATE_SUBCOMMAND, "creates a reminder").addOptions(timeAmount,
                         timeUnit, content),
+                new SubcommandData(CANCEL_COMMAND, "cancels a pending reminder").addOption(
+                        OptionType.STRING, CANCEL_REMINDER_OPTION, "reminder to cancel", true,
+                        true),
                 new SubcommandData(LIST_SUBCOMMAND, "shows all your currently pending reminders"));
 
         this.database = database;
@@ -103,6 +112,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         switch (event.getSubcommandName()) {
             case CREATE_SUBCOMMAND -> handleCreateCommand(event);
+            case CANCEL_COMMAND -> handleCancelCommand(event);
             case LIST_SUBCOMMAND -> handleListCommand(event);
             default -> throw new AssertionError(
                     "Unexpected Subcommand: " + event.getSubcommandName());
@@ -125,6 +135,25 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
         MessageCreateData message = createPendingRemindersPage(pendingReminders, pageToShow);
         event.editMessage(MessageEditData.fromCreateData(message)).queue();
+    }
+
+    @Override
+    public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
+        AutoCompleteQuery focusedOption = event.getFocusedOption();
+
+        if (!focusedOption.getName().equals(CANCEL_REMINDER_OPTION)) {
+            throw new AssertionError("Unexpected option, was : " + focusedOption.getName());
+        }
+
+        List<String> pendingReminders = getPendingReminders(event.getGuild(), event.getUser())
+            .map(PendingRemindersRecord::getContent);
+        List<Command.Choice> choices = StringDistances
+            .closeMatches(focusedOption.getValue(), pendingReminders, REMINDERS_PER_PAGE)
+            .stream()
+            .map(content -> new Command.Choice(content, content))
+            .toList();
+
+        event.replyChoices(choices).queue();
     }
 
     private void handleCreateCommand(SlashCommandInteractionEvent event) {
@@ -155,6 +184,17 @@ public final class ReminderCommand extends SlashCommandAdapter {
             .setRemindAt(remindAt)
             .setContent(content)
             .insert());
+    }
+
+    private void handleCancelCommand(SlashCommandInteractionEvent event) {
+        String content = event.getOption(CANCEL_REMINDER_OPTION).getAsString();
+
+        database.write(context -> context.delete(PENDING_REMINDERS)
+            .where(PENDING_REMINDERS.CONTENT.eq(content)
+                .and(PENDING_REMINDERS.AUTHOR_ID.eq(event.getUser().getIdLong())))
+            .execute());
+
+        event.reply("Your reminder is canceled").setEphemeral(true).queue();
     }
 
     private void handleListCommand(SlashCommandInteractionEvent event) {
