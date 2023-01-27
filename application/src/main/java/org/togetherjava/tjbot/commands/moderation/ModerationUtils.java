@@ -375,11 +375,11 @@ public class ModerationUtils {
      * @param actionTitle the mod action as title e.g, Ban
      * @param description a short description explaining the action
      * @param reason reason for the action taken
-     * @param isPunishAction is it a punish action e.g. ban, warn
+     * @param showModmail to show mod contact details or not
      * @return the embed
      */
     static RestAction<EmbedBuilder> getModActionEmbed(Guild guild, String actionTitle,
-            String description, String reason, boolean isPunishAction) {
+            String description, String reason, boolean showModmail) {
         EmbedBuilder modActionEmbed =
                 new EmbedBuilder().setAuthor(guild.getName(), null, guild.getIconUrl())
                     .setTitle(actionTitle)
@@ -387,13 +387,13 @@ public class ModerationUtils {
                     .addField("Reason", reason, false)
                     .setColor(ModerationUtils.AMBIENT_COLOR);
 
-        if (!isPunishAction) {
+        if (!showModmail) {
             return new CompletedRestAction<>(guild.getJDA(), modActionEmbed);
         }
 
         return MessageUtils.mentionGlobalSlashCommand(guild.getJDA(), ModMailCommand.COMMAND_NAME)
             .map(commandMention -> modActionEmbed.appendDescription(
-                    "%n%nTo get in touch with a moderator, you can use the %s command here."
+                    "%n%nTo get in touch with a moderator, you can use the %s command here in this chat. Your message will then forwarded and a moderator will get back to you soon 😊"
                         .formatted(commandMention)));
     }
 
@@ -405,11 +405,12 @@ public class ModerationUtils {
      * @param description a short description explaining the action
      * @param reason reason for the action taken
      * @param duration the duration of mod action
+     * @param showModmail to show mod contact details or not
      * @return the embed
      */
     static RestAction<EmbedBuilder> getModActionEmbed(Guild guild, String actionTitle,
-            String description, String reason, String duration) {
-        return getModActionEmbed(guild, actionTitle, description, reason, true)
+            String description, String reason, String duration, boolean showModmail) {
+        return getModActionEmbed(guild, actionTitle, description, reason, showModmail)
             .map(embedBuilder -> embedBuilder.addField("Duration", duration, false));
     }
 

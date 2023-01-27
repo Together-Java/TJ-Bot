@@ -64,7 +64,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
         String description = """
                 Hey there, you have been put out of quarantine in the server.
-                This means you can now interact with others in the server again.""";
+                This means you can now interact with others in the server again 👌""";
 
         return ModerationUtils.sendModActionDm(
                 ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, false),

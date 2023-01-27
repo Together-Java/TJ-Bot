@@ -75,10 +75,11 @@ public final class MuteCommand extends SlashCommandAdapter {
         String description =
                 """
                         Hey there, sorry to tell you but unfortunately you have been muted.
-                        This means you can no longer send any messages in the server until you have been unmuted again.""";
+                        This means you can no longer send any messages in the server until you have been unmuted again.
+                        """;
 
         return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
-                ACTION_TITLE, description, reason, durationMessage), target);
+                ACTION_TITLE, description, reason, durationMessage, true), target);
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
