@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.togetherjava.tjbot.commands.utils.MessageUtils;
+import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.io.PrintWriter;

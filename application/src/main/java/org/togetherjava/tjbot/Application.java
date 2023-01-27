@@ -8,11 +8,11 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.togetherjava.tjbot.commands.Features;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.system.BotCore;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.Features;
+import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.logging.LogMarkers;
 import org.togetherjava.tjbot.logging.discord.DiscordLogging;
 

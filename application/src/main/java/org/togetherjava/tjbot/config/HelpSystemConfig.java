@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Configuration for the help system, see {@link org.togetherjava.tjbot.commands.help.AskCommand}.
+ * Configuration for the help system, see {@link org.togetherjava.tjbot.features.help.AskCommand}.
  */
 @JsonRootName("helpSystem")
 public final class HelpSystemConfig {

@@ -105,11 +105,11 @@ final class FormatterTest {
                 Arguments.of("right shifts", "x >> 1, y >>> 1", "x >> 1, y >>> 1"),
                 Arguments.of("minimized real code",
                         """
-                                package org.togetherjava.tjbot.commands.code;import com.google.common.collect.Range; \
+                                package org.togetherjava.tjbot.features.code;import com.google.common.collect.Range; \
                                 import com.google.googlejavaformat.java.FormatterException; \
                                 import com.google.googlejavaformat.java.JavaOutput;import com.google.googlejavaformat.java.Replacement; \
                                 import com.google.googlejavaformat.java.SnippetFormatter;import net.dv8tion.jda.api.EmbedBuilder; \
-                                import net.dv8tion.jda.api.entities.MessageEmbed;import org.togetherjava.tjbot.commands.utils.CodeFence; \
+                                import net.dv8tion.jda.api.entities.MessageEmbed;import org.togetherjava.tjbot.features.utils.CodeFence; \
                                 import java.util.List;final class FormatCodeCommand implements CodeAction{private final SnippetFormatter formatter \
                                 =new SnippetFormatter();@Override
                                 public String getLabel(){return"Format";}@Override
@@ -123,7 +123,7 @@ final class FormatterTest {
                                 return JavaOutput.applyReplacements(code,replacements);}catch(FormatterException e){}}
                                 return"nope...";}}""",
                         """
-                                package org.togetherjava.tjbot.commands.code;
+                                package org.togetherjava.tjbot.features.code;
 
                                 import com.google.common.collect.Range;
                                 import com.google.googlejavaformat.java.FormatterException;
@@ -132,7 +132,7 @@ final class FormatterTest {
                                 import com.google.googlejavaformat.java.SnippetFormatter;
                                 import net.dv8tion.jda.api.EmbedBuilder;
                                 import net.dv8tion.jda.api.entities.MessageEmbed;
-                                import org.togetherjava.tjbot.commands.utils.CodeFence;
+                                import org.togetherjava.tjbot.features.utils.CodeFence;
                                 import java.util.List;
 
                                 final class FormatCodeCommand implements CodeAction {
