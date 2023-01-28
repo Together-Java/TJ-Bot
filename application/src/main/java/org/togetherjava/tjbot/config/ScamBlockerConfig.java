@@ -11,7 +11,7 @@ import java.util.Set;
 
 /**
  * Configuration for the scam blocker system, see
- * {@link org.togetherjava.tjbot.commands.moderation.scam.ScamBlocker}.
+ * {@link org.togetherjava.tjbot.features.moderation.scam.ScamBlocker}.
  */
 @JsonRootName("scamBlocker")
 public final class ScamBlockerConfig {
