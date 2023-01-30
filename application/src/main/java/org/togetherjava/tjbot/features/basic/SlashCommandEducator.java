@@ -22,7 +22,7 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
     private static final String SLASH_COMMAND_POPUP_ADVICE_PATH = "slashCommandPopupAdvice.png";
     private static final Predicate<String> IS_MESSAGE_COMMAND = Pattern.compile("""
             [.!?] #Start of message command
-            [a-zA-Z]{2,} #Name of message command, e.g. 'close'
+            [a-zA-Z]{2,15} #Name of message command, e.g. 'close'
             .* #Rest of the message
             """, Pattern.COMMENTS).asMatchPredicate();
 
