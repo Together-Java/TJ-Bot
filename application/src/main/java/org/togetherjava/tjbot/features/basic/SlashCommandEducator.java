@@ -14,6 +14,10 @@ import java.io.InputStream;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/**
+ * Listens to messages that are likely supposed to be message commands, such as {@code !foo} and
+ * then educates the user about using slash commands, such as {@code /foo} instead.
+ */
 public final class SlashCommandEducator extends MessageReceiverAdapter {
     private static final String SLASH_COMMAND_POPUP_ADVICE_PATH = "slashCommandPopupAdvice.png";
     private static final Predicate<String> IS_MESSAGE_COMMAND = Pattern.compile("""
@@ -21,10 +25,6 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
             [a-zA-Z]{2,} #Name of message command, e.g. 'close'
             .* #Rest of the message
             """, Pattern.COMMENTS).asMatchPredicate();
-
-    public SlashCommandEducator() {
-        super(Pattern.compile(".*"));
-    }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {

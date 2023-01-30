@@ -15,11 +15,10 @@ import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
 
 /**
  * Reacts to blacklisted attachments being posted, upon which they are deleted.
@@ -35,7 +34,6 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
      * @param modAuditLogWriter to inform the mods about the suspicious attachment
      */
     public BlacklistedAttachmentListener(Config config, ModAuditLogWriter modAuditLogWriter) {
-        super(Pattern.compile(".*"));
         this.modAuditLogWriter = modAuditLogWriter;
         blacklistedFileExtensions = config.getBlacklistedFileExtensions();
     }

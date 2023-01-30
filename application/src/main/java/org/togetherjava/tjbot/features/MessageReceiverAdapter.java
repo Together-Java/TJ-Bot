@@ -19,6 +19,13 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
     private final Pattern channelNamePattern;
 
     /**
+     * Creates an instance of a message receiver, listening to messages of all channels.
+     */
+    protected MessageReceiverAdapter() {
+        this(Pattern.compile(".*"));
+    }
+
+    /**
      * Creates an instance of a message receiver with the given pattern.
      *
      * @param channelNamePattern the pattern matching names of channels interested in, only messages

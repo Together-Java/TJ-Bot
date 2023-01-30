@@ -34,8 +34,6 @@ public final class CodeMessageAutoDetection extends MessageReceiverAdapter {
      * @param codeMessageHandler to register detected code messages at for further handling
      */
     public CodeMessageAutoDetection(Config config, CodeMessageHandler codeMessageHandler) {
-        super(Pattern.compile(".*"));
-
         this.codeMessageHandler = codeMessageHandler;
 
         isHelpForumName =
