@@ -84,10 +84,10 @@ public final class BanCommand extends SlashCommandAdapter {
     private static RestAction<Boolean> sendDm(User target,
             @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage = temporaryData == null ? "Permanently" : temporaryData.duration();
-        String description = """
-                Hey there, sorry to tell you but unfortunately you have been banned from the server.
-                If you this this was a mistake, please contact a moderator or admin of this server
-                """;
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been banned from the server.
+                        If you think this was a mistake, please contact a moderator or admin of this server.""";
 
         return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
                 ACTION_TITLE, description, reason, durationMessage, false), target);

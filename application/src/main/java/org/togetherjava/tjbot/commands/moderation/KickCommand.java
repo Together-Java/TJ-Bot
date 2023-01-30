@@ -67,10 +67,10 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
-        String description = """
-                Hey there, sorry to tell you but unfortunately you have been kicked from the server.
-                If you this this was a mistake, please contact a moderator or admin of this server
-                """;
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been kicked from the server.
+                        If you think this was a mistake, please contact a moderator or admin of this server.""";
 
         return ModerationUtils.sendModActionDm(
                 ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, false),
