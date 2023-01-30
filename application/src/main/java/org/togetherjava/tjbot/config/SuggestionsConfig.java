@@ -8,7 +8,7 @@ import java.util.Objects;
 
 /**
  * Configuration for the suggestion system, see
- * {@link org.togetherjava.tjbot.commands.basic.SuggestionsUpDownVoter}.
+ * {@link org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter}.
  */
 @JsonRootName("suggestions")
 public final class SuggestionsConfig {

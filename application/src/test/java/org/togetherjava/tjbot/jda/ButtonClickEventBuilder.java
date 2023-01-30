@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 
-import org.togetherjava.tjbot.commands.SlashCommand;
+import org.togetherjava.tjbot.features.SlashCommand;
 
 import javax.annotation.Nullable;
 

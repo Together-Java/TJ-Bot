@@ -47,8 +47,8 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.MockingDetails;
 import org.mockito.stubbing.Answer;
 
-import org.togetherjava.tjbot.commands.SlashCommand;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 
 import javax.annotation.Nullable;
 
@@ -577,7 +577,7 @@ public final class JdaTester {
 
     /**
      * Creates a Mockito mocked message receive event, which can be used for
-     * {@link org.togetherjava.tjbot.commands.MessageReceiver#onMessageReceived(MessageReceivedEvent)}.
+     * {@link org.togetherjava.tjbot.features.MessageReceiver#onMessageReceived(MessageReceivedEvent)}.
      *
      * @param message the message that has been received
      * @param attachments attachments of the message, empty if none
