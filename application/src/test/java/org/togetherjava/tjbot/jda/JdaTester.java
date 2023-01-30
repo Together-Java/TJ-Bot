@@ -216,6 +216,8 @@ public final class JdaTester {
         doNothing().when(messageCreateAction).queue();
         when(messageCreateAction.setContent(any())).thenReturn(messageCreateAction);
         when(messageCreateAction.addContent(any())).thenReturn(messageCreateAction);
+        when(messageCreateAction.addFiles(any(FileUpload.class))).thenReturn(messageCreateAction);
+        when(messageCreateAction.addFiles(anyCollection())).thenReturn(messageCreateAction);
 
         CacheRestAction<PrivateChannel> privateChannelAction =
                 createSucceededActionMock(privateChannel, CacheRestAction.class);
