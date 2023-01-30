@@ -41,7 +41,7 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
     private void sendAdvice(Message message) {
         String content =
                 """
-                        Looks like you attempted to use a command? Please note that we only use **slash-commands** on this server 🙂.
+                        Looks like you attempted to use a command? Please note that we only use **slash-commands** on this server 🙂
 
                         Try starting your message with a forward-slash `/` and Discord should open a popup showing you all available commands.
                         A command might then look like `/foo` 👍""";
