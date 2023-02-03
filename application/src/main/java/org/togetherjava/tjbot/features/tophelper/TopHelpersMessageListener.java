@@ -70,7 +70,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
 
     boolean shouldIgnoreMessage(MessageReceivedEvent event) {
         return event.getAuthor().isBot() || event.isWebhookMessage()
-                || !isHelpThread(event.getChannel());
+                || !isHelpThread(event.getChannel()) || isSentByOp(event);
     }
 
     boolean isHelpThread(MessageChannelUnion channel) {
@@ -83,15 +83,12 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         return isHelpForumName.test(rootChannelName);
     }
 
-    boolean isSendByOp(MessageReceivedEvent event) {
-        event.getJDA()
-            .getForumChannels()
-            .stream()
-            .filter(channel -> channel.getGuild().getId().equals(event.getGuild().getId()))
-            .filter(forumChannel -> isHelpForumName.test(forumChannel.getName()))
-            .limit(1)
-            .map(ForumChannel::getThreadChannels)
-            .filter(channel -> channel.getId().equals(event.getChannel().getId()));
+    boolean isSentByOp(MessageReceivedEvent event) {
+        return event.getChannel()
+            .asThreadChannel()
+            .getOwner()
+            .getId()
+            .equals(event.getAuthor().getId());
     }
 
     static long countValidCharacters(String messageContent) {
