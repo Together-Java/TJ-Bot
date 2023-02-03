@@ -83,6 +83,17 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         return isHelpForumName.test(rootChannelName);
     }
 
+    boolean isSendByOp(MessageReceivedEvent event) {
+        event.getJDA()
+            .getForumChannels()
+            .stream()
+            .filter(channel -> channel.getGuild().getId().equals(event.getGuild().getId()))
+            .filter(forumChannel -> isHelpForumName.test(forumChannel.getName()))
+            .limit(1)
+            .map(ForumChannel::getThreadChannels)
+            .filter(channel -> channel.getId().equals(event.getChannel().getId()));
+    }
+
     static long countValidCharacters(String messageContent) {
         return INVALID_CHARACTERS.matcher(messageContent).replaceAll("").length();
     }
