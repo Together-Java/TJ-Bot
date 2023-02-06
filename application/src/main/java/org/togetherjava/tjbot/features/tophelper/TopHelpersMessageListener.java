@@ -84,11 +84,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
     }
 
     boolean isSentByOp(MessageReceivedEvent event) {
-        return event.getChannel()
-            .asThreadChannel()
-            .getOwner()
-            .getId()
-            .equals(event.getAuthor().getId());
+        return event.getChannel().asThreadChannel().getOwnerId().equals(event.getAuthor().getId());
     }
 
     static long countValidCharacters(String messageContent) {
