@@ -83,7 +83,7 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
         return isHelpForumName.test(rootChannelName);
     }
 
-    boolean isSentByOp(MessageReceivedEvent event) {
+    private boolean isSentByOp(MessageReceivedEvent event) {
         return event.getChannel().asThreadChannel().getOwnerId().equals(event.getAuthor().getId());
     }
 
