@@ -1,13 +1,11 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +31,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "unmute";
     private static final String ACTION_VERB = "unmute";
+    private static final String ACTION_TITLE = "Unmute";
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -58,15 +57,14 @@ public final class UnmuteCommand extends SlashCommandAdapter {
         event.reply("The user is not muted.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
-            GenericEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.UNMUTE, null,
-                    "This means you can now send messages in the server again 👌", guild, reason,
-                    channel))
-            .mapToResult()
-            .map(Result::isSuccess);
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description = """
+                Hey there, you have been unmuted in the server.
+                This means you can now send messages in the server again 👌""";
+
+        return ModerationUtils.sendModActionDm(
+                ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, false),
+                target);
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
@@ -96,7 +94,7 @@ public final class UnmuteCommand extends SlashCommandAdapter {
 
     private void unmuteUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
-        sendDm(target, reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(
                     hasSentDm -> unmuteUser(target, author, reason, guild).map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))

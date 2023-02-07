@@ -1,14 +1,12 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +36,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "mute";
     private static final String ACTION_VERB = "mute";
+    private static final String ACTION_TITLE = "Mute";
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS = List.of("10 minutes", "30 minutes", "1 hour",
             "3 hours", "1 day", "3 days", "7 days", ModerationUtils.PERMANENT_DURATION);
@@ -70,16 +69,16 @@ public final class MuteCommand extends SlashCommandAdapter {
         event.reply("The user is already muted.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild,
-            GenericEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.MUTE, temporaryData,
-                    "This means you can no longer send any messages in the server until you have been unmuted again.",
-                    guild, reason, channel))
-            .mapToResult()
-            .map(Result::isSuccess);
+    private static RestAction<Boolean> sendDm(User target,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
+        String durationMessage = temporaryData == null ? "Permanent" : temporaryData.duration();
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been muted.
+                        This means you can no longer send any messages in the server until you have been unmuted again.""";
+
+        return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
+                ACTION_TITLE, description, reason, durationMessage, true), target);
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
@@ -117,7 +116,7 @@ public final class MuteCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        sendDm(target, temporaryData, reason, guild, event)
+        sendDm(target.getUser(), temporaryData, reason, guild)
             .flatMap(hasSentDm -> muteUser(target, author, temporaryData, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))

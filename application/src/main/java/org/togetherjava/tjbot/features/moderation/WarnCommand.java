@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +28,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
     private static final String ACTION_VERB = "warn";
+    private static final String ACTION_TITLE = "Warning";
     private final ModerationActionsStore actionsStore;
 
     /**
@@ -49,7 +49,7 @@ public final class WarnCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        dmUser(target, reason, guild, event).map(hasSentDm -> {
+        sendDm(target, reason, guild).map(hasSentDm -> {
             warnUser(target, author, reason, guild);
             return hasSentDm;
         })
@@ -58,14 +58,13 @@ public final class WarnCommand extends SlashCommandAdapter {
             .queue();
     }
 
-    private static RestAction<Boolean> dmUser(ISnowflake target, String reason, Guild guild,
-            SlashCommandInteractionEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getId())
-            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.WARN, null, null,
-                    guild, reason, channel))
-            .mapToResult()
-            .map(Result::isSuccess);
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description =
+                "Hey there, sorry to tell you but unfortunately you have been warned in the server.";
+
+        return ModerationUtils.sendModActionDm(
+                ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true),
+                target);
     }
 
     private void warnUser(User target, Member author, String reason, Guild guild) {

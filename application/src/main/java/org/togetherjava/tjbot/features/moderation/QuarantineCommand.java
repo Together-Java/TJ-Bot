@@ -1,13 +1,11 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +32,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "quarantine";
     private static final String ACTION_VERB = "quarantine";
+    private static final String ACTION_TITLE = "Quarantine";
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -61,15 +60,15 @@ public final class QuarantineCommand extends SlashCommandAdapter {
         event.reply("The user is already quarantined.").setEphemeral(true).queue();
     }
 
-    private static RestAction<Boolean> sendDm(ISnowflake target, String reason, Guild guild,
-            GenericEvent event) {
-        return event.getJDA()
-            .openPrivateChannelById(target.getIdLong())
-            .flatMap(channel -> ModerationUtils.sendDmAdvice(ModerationAction.QUARANTINE, null,
-                    "This means you can no longer interact with anyone in the server until you have been unquarantined again.",
-                    guild, reason, channel))
-            .mapToResult()
-            .map(Result::isSuccess);
+    private static RestAction<Boolean> sendDm(User target, String reason, Guild guild) {
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been put under quarantine.
+                        This means you can no longer interact with anyone in the server until you have been unquarantined again.""";
+
+        return ModerationUtils.sendModActionDm(
+                ModerationUtils.getModActionEmbed(guild, ACTION_TITLE, description, reason, true),
+                target);
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
@@ -102,7 +101,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
-        sendDm(target, reason, guild, event)
+        sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> quarantineUser(target, author, reason, guild)
                 .map(result -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
