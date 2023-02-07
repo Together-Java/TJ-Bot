@@ -38,8 +38,6 @@ public final class TopHelpersMessageListener extends MessageReceiverAdapter {
      * @param config the config to use for this
      */
     public TopHelpersMessageListener(Database database, Config config) {
-        super(Pattern.compile(".*"));
-
         this.database = database;
 
         isHelpForumName =

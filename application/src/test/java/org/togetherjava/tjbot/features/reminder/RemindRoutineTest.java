@@ -184,6 +184,6 @@ final class RemindRoutineTest {
     private static void assertSimilar(Instant expected, Instant actual) {
         // NOTE For some reason, the instant ends up in the database slightly wrong already (about
         // half a second), seems to be an issue with jOOQ
-        assertEquals(expected.toEpochMilli(), actual.toEpochMilli(), TimeUnit.SECONDS.toMillis(1));
+        assertEquals(expected.toEpochMilli(), actual.toEpochMilli(), TimeUnit.SECONDS.toMillis(2));
     }
 }

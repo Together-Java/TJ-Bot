@@ -4,10 +4,7 @@ import net.dv8tion.jda.api.JDA;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.features.basic.PingCommand;
-import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
-import org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter;
-import org.togetherjava.tjbot.features.basic.VcActivityCommand;
+import org.togetherjava.tjbot.features.basic.*;
 import org.togetherjava.tjbot.features.bookmarks.*;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
@@ -104,6 +101,7 @@ public class Features {
         features.add(codeMessageHandler);
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
         features.add(new CodeMessageManualDetection(codeMessageHandler));
+        features.add(new SlashCommandEducator());
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

@@ -74,8 +74,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
      */
     public ScamBlocker(ModerationActionsStore actionsStore, ScamHistoryStore scamHistoryStore,
             Config config) {
-        super(Pattern.compile(".*"));
-
         this.actionsStore = actionsStore;
         this.scamHistoryStore = scamHistoryStore;
         this.config = config;

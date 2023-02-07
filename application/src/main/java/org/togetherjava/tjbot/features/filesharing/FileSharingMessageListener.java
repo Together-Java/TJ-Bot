@@ -73,8 +73,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
      * @see org.togetherjava.tjbot.features.Features
      */
     public FileSharingMessageListener(Config config) {
-        super(Pattern.compile(".*"));
-
         gistApiKey = config.getGistApiKey();
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();

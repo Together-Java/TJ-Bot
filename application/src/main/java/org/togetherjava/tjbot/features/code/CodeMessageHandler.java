@@ -29,7 +29,6 @@ import javax.annotation.Nullable;
 import java.awt.Color;
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -66,8 +65,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
      * Creates a new instance.
      */
     public CodeMessageHandler() {
-        super(Pattern.compile(".*"));
-
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
         List<CodeAction> codeActions = List.of(new FormatCodeCommand());
