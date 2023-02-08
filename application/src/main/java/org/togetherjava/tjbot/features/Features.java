@@ -120,7 +120,6 @@ public class Features {
         features.add(new TagCommand(tagSystem));
         features.add(new TagManageCommand(tagSystem, modAuditLogWriter));
         features.add(new TagsCommand(tagSystem));
-        features.add(new VcActivityCommand());
         features.add(new WarnCommand(actionsStore));
         features.add(new KickCommand(actionsStore));
         features.add(new BanCommand(actionsStore));
