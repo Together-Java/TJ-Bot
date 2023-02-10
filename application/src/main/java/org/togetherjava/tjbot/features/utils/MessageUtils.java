@@ -194,10 +194,6 @@ public class MessageUtils {
         }
 
         int languageStart = codeFenceStart + CODE_FENCE_SYMBOL.length();
-        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, languageStart);
-        if (codeFenceEnd == -1) {
-            return Optional.empty();
-        }
 
         // Language is between ``` and newline, no spaces allowed, like ```java
         // Look for the next newline and then assert no space between
@@ -211,6 +207,11 @@ public class MessageUtils {
         }
         if (language == null) {
             languageEnd = languageStart;
+        }
+
+        int codeFenceEnd = fullMessage.indexOf(CODE_FENCE_SYMBOL, languageEnd);
+        if (codeFenceEnd == -1) {
+            return Optional.empty();
         }
 
         String code = fullMessage.substring(languageEnd, codeFenceEnd).strip();
