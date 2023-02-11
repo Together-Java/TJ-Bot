@@ -13,6 +13,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.awt.Color;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -45,7 +46,12 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            message.delete().flatMap(any -> dmUser(message)).queue();
+            if (event.getAuthor().isBot()) return;
+            message.delete().flatMap(any -> warnUser(message)).queue((res)->{
+                res.delete().queueAfter(1, TimeUnit.MINUTES);
+            },(err)->{
+
+            });
         }
     }
 
@@ -54,20 +60,22 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                 && !message.getContentRaw().contains("http");
     }
 
-    private RestAction<Message> dmUser(Message message) {
+
+    private RestAction<Message> warnUser(Message message) {
         String originalMessageContent = message.getContentRaw();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
-                    .build();
+                        .setColor(Color.ORANGE)
+                        .build();
 
-        MessageCreateData dmMessage = new MessageCreateBuilder().setContent(
-                "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-            .setEmbeds(originalMessageEmbed)
-            .build();
+        long authorId=message.getAuthor().getIdLong();
 
-        return message.getAuthor()
-            .openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(dmMessage));
+        MessageCreateData pingMessage = new MessageCreateBuilder().setContent(
+                        "Hey there, you <@"+ authorId +"> posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+                .setEmbeds(originalMessageEmbed)
+                .build();
+
+        return message.getChannel()
+                .sendMessage(pingMessage);
     }
 }
