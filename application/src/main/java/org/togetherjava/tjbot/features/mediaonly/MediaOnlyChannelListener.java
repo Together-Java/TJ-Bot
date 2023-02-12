@@ -48,22 +48,18 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            message.suppressEmbeds(true).flatMap(any -> dmUser(message)).queue((res)->{
-                        message.delete().queue();
-                    },
-                    new ErrorHandler()
-                            .handle(ErrorResponse.CANNOT_SEND_TO_USER,
-                                    (err)->{
-                                        if (event.getAuthor().isBot()) {
-                                            return;
-                                        }
-                                        message.delete().flatMap(any -> warnUser(message)).queue((res)->{
-                                            res.delete().queueAfter(1, TimeUnit.MINUTES);
-                                        },(error)->{
+            message.suppressEmbeds(true).flatMap(any -> dmUser(message)).queue((res) -> {
+                message.delete().queue();
+            }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, (err) -> {
+                if (event.getAuthor().isBot()) {
+                    return;
+                }
+                message.delete().flatMap(any -> warnUser(message)).queue((res) -> {
+                    res.delete().queueAfter(1, TimeUnit.MINUTES);
+                }, (error) -> {
 
-                                        });
-                                    })
-            );
+                });
+            }));
         }
     }
 
@@ -77,34 +73,34 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         String originalMessageContent = message.getContentRaw();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
-                        .setColor(Color.ORANGE)
-                        .build();
+                    .setColor(Color.ORANGE)
+                    .build();
 
-        long authorId=message.getAuthor().getIdLong();
+        long authorId = message.getAuthor().getIdLong();
 
-        MessageCreateData pingMessage = new MessageCreateBuilder().setContent(
-                        "Hey there, you <@"+ authorId +"> posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-                .setEmbeds(originalMessageEmbed)
-                .build();
+        MessageCreateData pingMessage = new MessageCreateBuilder().setContent("Hey there, you <@"
+                + authorId
+                + "> posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+            .setEmbeds(originalMessageEmbed)
+            .build();
 
-        return message.getChannel()
-                .sendMessage(pingMessage);
+        return message.getChannel().sendMessage(pingMessage);
     }
 
     private RestAction<Message> dmUser(Message message) {
         String originalMessageContent = message.getContentRaw();
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
-                        .setColor(Color.ORANGE)
-                        .build();
+                    .setColor(Color.ORANGE)
+                    .build();
 
         MessageCreateData dmMessage = new MessageCreateBuilder().setContent(
-                        "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-                .setEmbeds(originalMessageEmbed)
-                .build();
+                "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+            .setEmbeds(originalMessageEmbed)
+            .build();
 
         return message.getAuthor()
-                .openPrivateChannel()
-                .flatMap(channel -> channel.sendMessage(dmMessage));
+            .openPrivateChannel()
+            .flatMap(channel -> channel.sendMessage(dmMessage));
     }
 }
