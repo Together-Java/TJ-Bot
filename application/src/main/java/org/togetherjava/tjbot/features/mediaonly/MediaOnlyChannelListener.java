@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -46,12 +48,22 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            if (event.getAuthor().isBot()) return;
-            message.delete().flatMap(any -> warnUser(message)).queue((res)->{
-                res.delete().queueAfter(1, TimeUnit.MINUTES);
-            },(err)->{
+            message.suppressEmbeds(true).flatMap(any -> dmUser(message)).queue((res)->{
+                        message.delete().queue();
+                    },
+                    new ErrorHandler()
+                            .handle(ErrorResponse.CANNOT_SEND_TO_USER,
+                                    (err)->{
+                                        if (event.getAuthor().isBot()) {
+                                            return;
+                                        };
+                                        message.delete().flatMap(any -> warnUser(message)).queue((res)->{
+                                            res.delete().queueAfter(1, TimeUnit.MINUTES);
+                                        },(error)->{
 
-            });
+                                        });
+                                    })
+            );
         }
     }
 
@@ -77,5 +89,22 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
         return message.getChannel()
                 .sendMessage(pingMessage);
+    }
+
+    private RestAction<Message> dmUser(Message message) {
+        String originalMessageContent = message.getContentRaw();
+        MessageEmbed originalMessageEmbed =
+                new EmbedBuilder().setDescription(originalMessageContent)
+                        .setColor(Color.ORANGE)
+                        .build();
+
+        MessageCreateData dmMessage = new MessageCreateBuilder().setContent(
+                        "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+                .setEmbeds(originalMessageEmbed)
+                .build();
+
+        return message.getAuthor()
+                .openPrivateChannel()
+                .flatMap(channel -> channel.sendMessage(dmMessage));
     }
 }
