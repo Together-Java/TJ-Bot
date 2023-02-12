@@ -10,7 +10,10 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.Application;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
@@ -36,6 +39,8 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         super(Pattern.compile(config.getMediaOnlyChannelPattern()));
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(Application.class);
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() || event.isWebhookMessage()) {
@@ -48,13 +53,16 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            message.suppressEmbeds(true).flatMap(any -> dmUser(message)).queue((res) -> {
-                message.delete().queue();
-            }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, (err) -> {
+            message.delete().flatMap(any -> dmUser(message)).queue(res -> {
+                logger.info("This is a Error handler of DM");
+            }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, err -> {
+                logger.debug(err.toString() + "\nSent Message:- " + message);
                 if (event.getAuthor().isBot()) {
+                    logger.info("Ready to handle Error is bot");
                     return;
                 }
                 message.delete().flatMap(any -> warnUser(message)).queue((res) -> {
+                    logger.info(res.toString());
                     res.delete().queueAfter(1, TimeUnit.MINUTES);
                 }, (error) -> {
 
