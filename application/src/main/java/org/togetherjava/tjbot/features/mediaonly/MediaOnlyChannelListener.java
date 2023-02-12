@@ -56,16 +56,17 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
             message.delete().flatMap(any -> dmUser(message)).queue(res -> {
                 logger.info("This is a Error handler of DM");
             }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, err -> {
-                logger.debug(err.toString() + "\nSent Message:- " + message);
+                logger.debug(err.toString());
+                logger.error(message.toString());
                 if (event.getAuthor().isBot()) {
                     logger.info("Ready to handle Error is bot");
                     return;
                 }
-                message.delete().flatMap(any -> warnUser(message)).queue((res) -> {
+                warnUser(message).queue((res) -> {
                     logger.info(res.toString());
                     res.delete().queueAfter(1, TimeUnit.MINUTES);
                 }, (error) -> {
-
+                    logger.error(error.toString());
                 });
             }));
         }
