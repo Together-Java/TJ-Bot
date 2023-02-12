@@ -56,7 +56,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                                     (err)->{
                                         if (event.getAuthor().isBot()) {
                                             return;
-                                        };
+                                        }
                                         message.delete().flatMap(any -> warnUser(message)).queue((res)->{
                                             res.delete().queueAfter(1, TimeUnit.MINUTES);
                                         },(error)->{
