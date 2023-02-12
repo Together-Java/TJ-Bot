@@ -54,19 +54,10 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
         if (messageHasNoMediaAttached(message)) {
             message.delete().flatMap(any -> dmUser(message)).queue(res -> {
-                logger.info("This is a Error handler of DM");
             }, new ErrorHandler().handle(ErrorResponse.CANNOT_SEND_TO_USER, err -> {
-                logger.debug(err.toString());
-                logger.error(message.toString());
-                if (event.getAuthor().isBot()) {
-                    logger.info("Ready to handle Error is bot");
-                    return;
-                }
                 warnUser(message).queue((res) -> {
-                    logger.info(res.toString());
                     res.delete().queueAfter(1, TimeUnit.MINUTES);
                 }, (error) -> {
-                    logger.error(error.toString());
                 });
             }));
         }
@@ -77,13 +68,15 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                 && !message.getContentRaw().contains("http");
     }
 
+    private MessageEmbed originalMessageEmbed(Message message) {
+        String originalMessageContent = message.getContentRaw();
+        return new EmbedBuilder().setDescription(originalMessageContent)
+            .setColor(Color.ORANGE)
+            .build();
+    }
 
     private RestAction<Message> warnUser(Message message) {
-        String originalMessageContent = message.getContentRaw();
-        MessageEmbed originalMessageEmbed =
-                new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
-                    .build();
+        MessageEmbed originalMessageEmbed = originalMessageEmbed(message);
 
         long authorId = message.getAuthor().getIdLong();
 
@@ -97,11 +90,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
     }
 
     private RestAction<Message> dmUser(Message message) {
-        String originalMessageContent = message.getContentRaw();
-        MessageEmbed originalMessageEmbed =
-                new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
-                    .build();
+        MessageEmbed originalMessageEmbed = originalMessageEmbed(message);
 
         MessageCreateData dmMessage = new MessageCreateBuilder().setContent(
                 "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
