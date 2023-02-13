@@ -140,6 +140,8 @@ public class Features {
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
 
+        features.add(new GamePoc());
+
         return features;
     }
 }
