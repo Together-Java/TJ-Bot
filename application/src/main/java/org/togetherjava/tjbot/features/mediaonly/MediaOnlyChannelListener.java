@@ -70,12 +70,10 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                     .setColor(Color.ORANGE)
                     .build();
 
-        MessageCreateData pingMessage = new MessageCreateBuilder().setContent("Hey there, you "
+        return new MessageCreateBuilder().setContent("Hey there, you "
                 + message.getAuthor().getAsMention()
                 + " posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
             .setEmbeds(originalMessageEmbed)
             .build();
-
-        return pingMessage;
     }
 }
