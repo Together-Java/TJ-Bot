@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
@@ -45,15 +46,10 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            message.delete()
-                .flatMap(any -> message.getAuthor()
-                    .openPrivateChannel()
-                    .flatMap(channel -> channel.sendMessage(createNotificationMessage(message))))
-                .queue(any -> {
-                }, failure -> message.getChannel()
-                    .sendMessage(createNotificationMessage(message))
-                    .queue(notificationMessage -> notificationMessage.delete()
-                        .queueAfter(1, TimeUnit.MINUTES)));
+            message.delete().flatMap(any -> dmUser(message)).queue(any -> {
+            }, failure -> tempNotifyUserInChannel(message)
+                .queue(notificationMessage -> notificationMessage.delete()
+                    .queueAfter(1, TimeUnit.MINUTES)));
         }
     }
 
@@ -71,8 +67,19 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                     .build();
 
         return new MessageCreateBuilder().setContent(message.getAuthor().getAsMention()
-                + "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+                + " Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
             .setEmbeds(originalMessageEmbed)
             .build();
+    }
+
+    private RestAction<Message> dmUser(Message message) {
+        return message.getAuthor()
+            .openPrivateChannel()
+            .flatMap(channel -> channel.sendMessage(createNotificationMessage(message)));
+    }
+
+    private RestAction<Message> tempNotifyUserInChannel(Message message) {
+        return message.getChannel().sendMessage(createNotificationMessage(message));
+
     }
 }
