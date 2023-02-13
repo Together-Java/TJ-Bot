@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
@@ -46,11 +45,15 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            message.delete().flatMap(any -> dmUser(message)).queue(any -> {
-            }, err -> {
-                pingUserAobutMedia(message)
-                    .queue(res -> res.delete().queueAfter(1, TimeUnit.MINUTES));
-            });
+            message.delete()
+                .flatMap(any -> message.getAuthor()
+                    .openPrivateChannel()
+                    .flatMap(channel -> channel.sendMessage(warningMessage(message))))
+                .queue(any -> {
+                }, failure -> message.getChannel()
+                    .sendMessage(warningMessage(message))
+                    .queue(notificationMessage -> notificationMessage.delete()
+                        .queueAfter(1, TimeUnit.MINUTES)));
         }
     }
 
@@ -59,37 +62,20 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                 && !message.getContentRaw().contains("http");
     }
 
-    private MessageEmbed originalMessageEmbed(Message message) {
+    private MessageCreateData warningMessage(Message message) {
         String originalMessageContent = message.getContentRaw();
-        return new EmbedBuilder().setDescription(originalMessageContent)
-            .setColor(Color.ORANGE)
-            .build();
-    }
 
-    private RestAction<Message> pingUserAobutMedia(Message message) {
-        MessageEmbed originalMessageEmbed = originalMessageEmbed(message);
+        MessageEmbed originalMessageEmbed =
+                new EmbedBuilder().setDescription(originalMessageContent)
+                    .setColor(Color.ORANGE)
+                    .build();
 
-        long authorId = message.getAuthor().getIdLong();
-
-        MessageCreateData pingMessage = new MessageCreateBuilder().setContent("Hey there, you <@"
-                + authorId
-                + "> posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+        MessageCreateData pingMessage = new MessageCreateBuilder().setContent("Hey there, you "
+                + message.getAuthor().getAsMention()
+                + " posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
             .setEmbeds(originalMessageEmbed)
             .build();
 
-        return message.getChannel().sendMessage(pingMessage);
-    }
-
-    private RestAction<Message> dmUser(Message message) {
-        MessageEmbed originalMessageEmbed = originalMessageEmbed(message);
-
-        MessageCreateData dmMessage = new MessageCreateBuilder().setContent(
-                "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-            .setEmbeds(originalMessageEmbed)
-            .build();
-
-        return message.getAuthor()
-            .openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(dmMessage));
+        return pingMessage;
     }
 }
