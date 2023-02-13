@@ -48,10 +48,10 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
             message.delete()
                 .flatMap(any -> message.getAuthor()
                     .openPrivateChannel()
-                    .flatMap(channel -> channel.sendMessage(warningMessage(message))))
+                    .flatMap(channel -> channel.sendMessage(createNotificationMessage(message))))
                 .queue(any -> {
                 }, failure -> message.getChannel()
-                    .sendMessage(warningMessage(message))
+                    .sendMessage(createNotificationMessage(message))
                     .queue(notificationMessage -> notificationMessage.delete()
                         .queueAfter(1, TimeUnit.MINUTES)));
         }
@@ -62,7 +62,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                 && !message.getContentRaw().contains("http");
     }
 
-    private MessageCreateData warningMessage(Message message) {
+    private MessageCreateData createNotificationMessage(Message message) {
         String originalMessageContent = message.getContentRaw();
 
         MessageEmbed originalMessageEmbed =
@@ -70,9 +70,8 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                     .setColor(Color.ORANGE)
                     .build();
 
-        return new MessageCreateBuilder().setContent("Hey there, you "
-                + message.getAuthor().getAsMention()
-                + " posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
+        return new MessageCreateBuilder().setContent(message.getAuthor().getAsMention()
+                + "Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
             .setEmbeds(originalMessageEmbed)
             .build();
     }
