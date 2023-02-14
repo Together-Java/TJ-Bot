@@ -13,6 +13,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.awt.Color;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -48,8 +49,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         if (messageHasNoMediaAttached(message)) {
             message.delete().flatMap(any -> dmUser(message)).queue(any -> {
             }, failure -> tempNotifyUserInChannel(message)
-                .queue(notificationMessage -> notificationMessage.delete()
-                    .queueAfter(1, TimeUnit.MINUTES)));
+            );
         }
     }
 
@@ -78,8 +78,8 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
             .flatMap(channel -> channel.sendMessage(createNotificationMessage(message)));
     }
 
-    private RestAction<Message> tempNotifyUserInChannel(Message message) {
-        return message.getChannel().sendMessage(createNotificationMessage(message));
-
+    private void tempNotifyUserInChannel(Message message) {
+        message.getChannel().sendMessage(createNotificationMessage(message))
+                .queue(notificationMessage -> notificationMessage.delete().queueAfter(1, TimeUnit.MINUTES));
     }
 }
