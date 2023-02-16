@@ -247,6 +247,19 @@ final class MessageUtilsTest {
 
         tests.add(Arguments.of("small code fence", "Foo `int x = 5` Bar", null));
 
+        tests.add(Arguments.of("six backticks", """
+                ``````test
+                foo```""", new CodeFence("```test", "foo")));
+
+        tests.add(Arguments.of("single line", "```java test```", new CodeFence(null, "java test")));
+
+        tests.add(Arguments.of("space in language", """
+                ```java test
+                test```
+                """, new CodeFence(null, """
+                java test
+                test""")));
+
         return tests;
     }
 
