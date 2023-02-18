@@ -252,7 +252,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     private void dmUser(Guild guild, long userId, JDA jda) {
         jda.openPrivateChannelById(userId).flatMap(channel -> dmUser(guild, channel)).queue(any -> {
-        }, failure ->logger.debug("Unable to send dm message to user {} in guild {}", userId, guild.getId()));
+        }, failure -> logger.debug("Unable to send dm message to user {} in guild {}", userId,
+                guild.getId()));
     }
 
     private RestAction<Message> dmUser(Guild guild, PrivateChannel channel) {
