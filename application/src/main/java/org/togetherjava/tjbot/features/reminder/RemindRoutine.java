@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.reminder;
 
-import com.sun.source.tree.OpensTree;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -11,17 +10,13 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 import org.togetherjava.tjbot.features.Routine;
 
 import javax.annotation.Nullable;
-
-import java.awt.Color;
+import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -38,6 +33,7 @@ public final class RemindRoutine implements Routine {
     static final Color AMBIENT_COLOR = Color.decode("#F7F492");
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private final Database database;
+    private static final int MAX_FAILURE_RETRY=3;
 
     /**
      * Creates a new instance.
@@ -61,20 +57,18 @@ public final class RemindRoutine implements Routine {
                 .where(PENDING_REMINDERS.REMIND_AT.lessOrEqual(now))
                 .stream()
                 .forEach(pendingReminder -> {
-                    sendReminder(jda, pendingReminder.getId(), pendingReminder.getChannelId(),
-                            pendingReminder.getAuthorId(), pendingReminder.getContent(),
-                            pendingReminder.getCreatedAt(), pendingReminder.getGuildId());
+                    Reminder reminder = new Reminder(pendingReminder.getId(),pendingReminder.getCreatedAt(),
+                            pendingReminder.getGuildId(),pendingReminder.getChannelId(),pendingReminder.getAuthorId(),
+                            pendingReminder.getRemindAt(),pendingReminder.getContent(),pendingReminder.getFailureAttempts());
+                    sendReminder(jda, reminder);
 
                     pendingReminder.delete();
                 }));
     }
 
-    private void sendReminder(JDA jda, int id, long channelId, long authorId,
-                              CharSequence content, TemporalAccessor createdAt, long guildId) {
-        RestAction<ReminderRoute> route = computeReminderRoute(jda, channelId, authorId);
-        int reminderFailureCount = getReminderFailureCounter(id);
-
-        sendReminderViaRoute(route, id, channelId, authorId, content, createdAt, guildId, reminderFailureCount);
+    private void sendReminder(JDA jda, Reminder reminder) {
+        RestAction<ReminderRoute> route = computeReminderRoute(jda, reminder.channelId(), reminder.authorId());
+        sendReminderViaRoute(route, reminder);
     }
 
     private static RestAction<ReminderRoute> computeReminderRoute(JDA jda, long channelId,
@@ -100,19 +94,12 @@ public final class RemindRoutine implements Routine {
         return jda.openPrivateChannelById(authorId).map(ReminderRoute::toPrivate);
     }
 
-    private void sendReminderViaRoute(RestAction<ReminderRoute> routeAction, int id,
-                                      long authorId, long channelId,
-                                      CharSequence content, TemporalAccessor createdAt, long guildId, int reminderFailureCount) {
+    private void sendReminderViaRoute(RestAction<ReminderRoute> routeAction,Reminder reminder) {
         Function<ReminderRoute, MessageCreateAction> sendMessage = route -> route.channel
-                .sendMessageEmbeds(createReminderEmbed(content, createdAt, route.target()))
+                .sendMessageEmbeds(createReminderEmbed(reminder.content(), reminder.createdAt(), route.target()))
                 .setContent(route.description());
 
-        Consumer<Throwable> logFailure = failure -> {
-            //
-            reminderFailureAction(id, channelId, authorId, content, guildId, reminderFailureCount);
-        };
-
-        routeAction.flatMap(sendMessage).queue(doNothing(), logFailure);
+        routeAction.flatMap(sendMessage).queue(doNothing(), failure-> attemptRetryReminder(reminder));
     }
 
     private static MessageEmbed createReminderEmbed(CharSequence content,
@@ -147,34 +134,29 @@ public final class RemindRoutine implements Routine {
         }
     }
 
-    private void reminderFailureAction(int id, long channelId, long authorId,
-                                       CharSequence content, long guildId, int reminderFailureCounter) {
-        if (reminderFailureCounter <= 3) {
-            Instant current = Instant.now();
-            database.write(context -> context.newRecord(PENDING_REMINDERS)
-                    .setId(id)
-                    .setCreatedAt(Instant.now())
-                    .setGuildId(guildId)
-                    .setChannelId(channelId)
-                    .setAuthorId(authorId)
-                    .setRemindAt(current.plusSeconds(60))
-                    .setContent(content.toString())
-                    .setReminderFailureCounter(reminderFailureCounter + 1)
-                    .insert());
-        } else {
+    private void attemptRetryReminder(Reminder reminder) {
+        if (!(reminder.failureAttempts() <= MAX_FAILURE_RETRY)) {
             logger.warn(
                     """
-                            Failed to send a reminder with (authorID '{}'), skipping it. This can be due to a network issue, \
+                            Failed to send a reminder with (authorID '{}') and (content '{}'), skipping it. This can be due to a network issue, \
                             but also happen if the bot disconnected from the target guild and the \
-                            user has disabled DMs or has been deleted."""+ "contents: "+content,
-                    authorId);
-        }
-    }
+                            user has disabled DMs or has been deleted.""",
+                    reminder.authorId(),reminder.content());
+            return;
 
-        private Integer getReminderFailureCounter(int id){
-            return database.read(context -> context.selectFrom(PENDING_REMINDERS).where(PENDING_REMINDERS.ID.eq(id))
-                    .stream().map(PendingRemindersRecord::getReminderFailureCounter).findFirst().get()
-            );
         }
+
+        Instant current = Instant.now().plusSeconds(60);
+        database.write(context -> context.newRecord(PENDING_REMINDERS)
+                .setId(reminder.id())
+                        .setCreatedAt(reminder.createdAt())
+                .setGuildId(reminder.guildId())
+                .setChannelId(reminder.channelId())
+                .setAuthorId(reminder.authorId())
+                .setRemindAt(current)
+                .setContent(reminder.content())
+                .setReminderFailureCounter(reminder.failureAttempts()+1)
+                .insert());
     }
+}
 

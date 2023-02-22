@@ -1,1 +1,0 @@
-ALTER TABLE pending_reminders ADD reminder_failure_counter INTEGER DEFAULT 0;
