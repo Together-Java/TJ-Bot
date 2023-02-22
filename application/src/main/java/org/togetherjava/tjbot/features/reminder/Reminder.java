@@ -1,6 +1,12 @@
 package org.togetherjava.tjbot.features.reminder;
 
-import java.time.temporal.TemporalAccessor;
+import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 
-public record Reminder(int id, TemporalAccessor createdAt,long guildId,long channelId,long authorId,TemporalAccessor remindAt,String content,int failureAttempts) {
+public record Reminder(PendingRemindersRecord pendingReminders) {
+
+    public static Reminder from(PendingRemindersRecord pendingReminders){
+        return new Reminder(pendingReminders);
+    }
+
+
 }

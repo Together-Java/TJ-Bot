@@ -14,7 +14,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.Routine;
 
 import javax.annotation.Nullable;
-import java.awt.*;
+import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.TimeUnit;
@@ -57,17 +57,15 @@ public final class RemindRoutine implements Routine {
                 .where(PENDING_REMINDERS.REMIND_AT.lessOrEqual(now))
                 .stream()
                 .forEach(pendingReminder -> {
-                    Reminder reminder = new Reminder(pendingReminder.getId(),pendingReminder.getCreatedAt(),
-                            pendingReminder.getGuildId(),pendingReminder.getChannelId(),pendingReminder.getAuthorId(),
-                            pendingReminder.getRemindAt(),pendingReminder.getContent(),pendingReminder.getFailureAttempts());
-                    sendReminder(jda, reminder);
+                    //Reminder reminder =  Reminder.from(pendingReminder);
+                    sendReminder(jda, Reminder.from(pendingReminder));
 
                     pendingReminder.delete();
                 }));
     }
 
     private void sendReminder(JDA jda, Reminder reminder) {
-        RestAction<ReminderRoute> route = computeReminderRoute(jda, reminder.channelId(), reminder.authorId());
+        RestAction<ReminderRoute> route = computeReminderRoute(jda, reminder.pendingReminders().getChannelId(), reminder.pendingReminders().getAuthorId());
         sendReminderViaRoute(route, reminder);
     }
 
@@ -96,10 +94,10 @@ public final class RemindRoutine implements Routine {
 
     private void sendReminderViaRoute(RestAction<ReminderRoute> routeAction,Reminder reminder) {
         Function<ReminderRoute, MessageCreateAction> sendMessage = route -> route.channel
-                .sendMessageEmbeds(createReminderEmbed(reminder.content(), reminder.createdAt(), route.target()))
+                .sendMessageEmbeds(createReminderEmbed(reminder.pendingReminders().getContent(), reminder.pendingReminders().getCreatedAt(), route.target()))
                 .setContent(route.description());
 
-        routeAction.flatMap(sendMessage).queue(doNothing(), failure-> attemptRetryReminder(reminder));
+        routeAction.flatMap(sendMessage).queue(doNothing(), failure-> attemptRetryReminder(reminder,failure));
     }
 
     private static MessageEmbed createReminderEmbed(CharSequence content,
@@ -134,28 +132,29 @@ public final class RemindRoutine implements Routine {
         }
     }
 
-    private void attemptRetryReminder(Reminder reminder) {
-        if (!(reminder.failureAttempts() <= MAX_FAILURE_RETRY)) {
+    private void attemptRetryReminder(Reminder reminder, Throwable failure) {
+        if (reminder.pendingReminders().getReminderFailureCounter() > MAX_FAILURE_RETRY) {
             logger.warn(
                     """
-                            Failed to send a reminder with (authorID '{}') and (content '{}'), skipping it. This can be due to a network issue, \
+                            Failed to send a reminder with (authorID '{}') with (failure '{}') skipping it. This can be due to a network issue, \
                             but also happen if the bot disconnected from the target guild and the \
-                            user has disabled DMs or has been deleted.""",
-                    reminder.authorId(),reminder.content());
+                            user has disabled DMs or has been deleted. It's (content includes '{}' with reminderId '{}')""",
+                    reminder.pendingReminders().getAuthorId(),failure,reminder.pendingReminders().getContent(),reminder.pendingReminders().getId());
             return;
 
         }
 
-        Instant current = Instant.now().plusSeconds(60);
+        int failureAttempts = reminder.pendingReminders().getReminderFailureCounter()+1;
+        Instant remindAt = Instant.now().plusSeconds(60);
         database.write(context -> context.newRecord(PENDING_REMINDERS)
-                .setId(reminder.id())
-                        .setCreatedAt(reminder.createdAt())
-                .setGuildId(reminder.guildId())
-                .setChannelId(reminder.channelId())
-                .setAuthorId(reminder.authorId())
-                .setRemindAt(current)
-                .setContent(reminder.content())
-                .setReminderFailureCounter(reminder.failureAttempts()+1)
+                .setId(reminder.pendingReminders().getId())
+                        .setCreatedAt(Instant.from(reminder.pendingReminders().getCreatedAt()))
+                .setGuildId(reminder.pendingReminders().getGuildId())
+                .setChannelId(reminder.pendingReminders().getChannelId())
+                .setAuthorId(reminder.pendingReminders().getAuthorId())
+                .setRemindAt(remindAt)
+                .setContent(reminder.pendingReminders().getContent())
+                .setReminderFailureCounter(failureAttempts)
                 .insert());
     }
 }
