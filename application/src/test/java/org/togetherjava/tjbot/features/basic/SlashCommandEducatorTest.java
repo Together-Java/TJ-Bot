@@ -65,6 +65,6 @@ final class SlashCommandEducatorTest {
     }
 
     private static Stream<String> provideOtherMessages() {
-        return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo");
+        return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo","thisIsAWordWhichLengthIsMoreThanThrityLetterSoItShouldNotReply");
     }
 }
