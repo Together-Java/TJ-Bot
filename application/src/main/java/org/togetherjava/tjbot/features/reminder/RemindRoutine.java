@@ -154,15 +154,13 @@ public final class RemindRoutine implements Routine {
 
         int failureAttempts = pendingReminder.getFailureAttempts() + 1;
         Instant remindAt = Instant.now().plus(1, ChronoUnit.MINUTES);
-        database.write(context -> context.newRecord(PENDING_REMINDERS)
-            .setId(pendingReminder.getId())
-            .setCreatedAt(Instant.from(pendingReminder.getCreatedAt()))
-            .setGuildId(pendingReminder.getGuildId())
-            .setChannelId(pendingReminder.getChannelId())
-            .setAuthorId(pendingReminder.getAuthorId())
-            .setRemindAt(remindAt)
-            .setContent(pendingReminder.getContent())
-            .setFailureAttempts(failureAttempts)
-            .insert());
+        database.write(context -> {
+            pendingReminder.setRemindAt(remindAt);
+            pendingReminder.setFailureAttempts(failureAttempts);
+            pendingReminder.insert();
+        });
+
+
+
     }
 }
