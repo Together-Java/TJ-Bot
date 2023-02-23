@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
  * then educates the user about using slash commands, such as {@code /foo} instead.
  */
 public final class SlashCommandEducator extends MessageReceiverAdapter {
+    private static final int MAX_CONTENT_LENGTH = 30;
     private static final String SLASH_COMMAND_POPUP_ADVICE_PATH = "slashCommandPopupAdvice.png";
     private static final Predicate<String> IS_MESSAGE_COMMAND = Pattern.compile("""
             [.!?] #Start of message command
@@ -33,8 +34,8 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
         }
 
         String content = event.getMessage().getContentRaw();
-        int MAX_COMMAND_LENGTH = 30;
-        if (IS_MESSAGE_COMMAND.test(content) && content.length() < MAX_COMMAND_LENGTH) {
+
+        if (IS_MESSAGE_COMMAND.test(content) && content.length() < MAX_CONTENT_LENGTH) {
             sendAdvice(event.getMessage());
         }
     }
