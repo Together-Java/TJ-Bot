@@ -61,7 +61,7 @@ final class SlashCommandEducatorTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideOtherCommands")
+    @MethodSource("provideOtherMessages")
     void ignoresMessagesWhereLengthIsGreaterThanThirty(String message) {
         // GIVEN a message's length is more than Thirty
         // WHEN the message is sent
@@ -76,11 +76,9 @@ final class SlashCommandEducatorTest {
     }
 
     private static Stream<String> provideOtherMessages() {
-        return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo");
-    }
+        return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo",
+                "thisIsAWordWhichLengthIsMoreThanThirtyLetterSoItShouldNotReply",
+                ".isLetter and .isNumber are available");
 
-    private static Stream<String> provideOtherCommands() {
-        return Stream.of("thisIsAWordWhichLengthIsMoreThanThirtyLetterSoItShouldNotReply",
-                "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde");
     }
 }
