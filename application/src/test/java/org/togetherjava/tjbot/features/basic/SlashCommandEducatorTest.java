@@ -60,11 +60,27 @@ final class SlashCommandEducatorTest {
         verify(event.getMessage(), never()).replyEmbeds(any(MessageEmbed.class));
     }
 
+    @ParameterizedTest
+    @MethodSource("provideOtherCommands")
+    void ignoresMessagesWhereLengthIsGreaterThanThirty(String message) {
+        // GIVEN a message's length is more than Thirty
+        // WHEN the message is sent
+        MessageReceivedEvent event = sendMessage(message);
+
+        // THEN the system ignores the message and does not reply to it
+        verify(event.getMessage(), never()).replyEmbeds(any(MessageEmbed.class));
+    }
+
     private static Stream<String> provideMessageCommands() {
         return Stream.of("!foo", ".foo", "?foo", ".test", "!whatever", "!this is a test");
     }
 
     private static Stream<String> provideOtherMessages() {
-        return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo","thisIsAWordWhichLengthIsMoreThanThrityLetterSoItShouldNotReply");
+        return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo");
+    }
+
+    private static Stream<String> provideOtherCommands() {
+        return Stream.of("thisIsAWordWhichLengthIsMoreThanThirtyLetterSoItShouldNotReply",
+                "abcdeabcdeabcdeabcdeabcdeabcdeabcdeabcde");
     }
 }
