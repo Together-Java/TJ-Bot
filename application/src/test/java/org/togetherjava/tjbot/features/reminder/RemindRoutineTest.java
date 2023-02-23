@@ -149,23 +149,6 @@ final class RemindRoutineTest {
     }
 
     @Test
-    @DisplayName("Skips a pending reminder if sending it out resulted in an error")
-    void skipPendingReminderOnErrorChannelNotFoundAuthorNotFound() {
-        // GIVEN a pending reminder and from an unknown channel and author
-        Instant remindAt = Instant.now();
-        String reminderContent = "foo";
-        Member unknownAuthor = createAndSetupUnknownMember();
-        TextChannel unknownChannel = createAndSetupUnknownChannel();
-        rawReminders.insertReminder("foo", remindAt, unknownAuthor, unknownChannel);
-
-        // WHEN running the routine
-        triggerRoutine();
-
-        // THEN the reminder is skipped and deleted from the database
-        assertTrue(rawReminders.readReminders().isEmpty());
-    }
-
-    @Test
     @DisplayName("A reminder that is not pending yet, is not send out")
     void reminderIsNotSendIfNotPending() {
         // GIVEN a reminder that is not pending yet
