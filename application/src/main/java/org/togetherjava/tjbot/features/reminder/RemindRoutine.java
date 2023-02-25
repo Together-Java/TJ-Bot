@@ -57,7 +57,7 @@ public final class RemindRoutine implements Routine {
     @Override
     public void runRoutine(JDA jda) {
         Instant now = Instant.now();
-        database.write(context -> context.selectFrom(PENDING_REMINDERS)
+        database.write(any -> any.selectFrom(PENDING_REMINDERS)
             .where(PENDING_REMINDERS.REMIND_AT.lessOrEqual(now))
             .stream()
             .forEach(pendingReminder -> {
@@ -154,13 +154,11 @@ public final class RemindRoutine implements Routine {
 
         int failureAttempts = pendingReminder.getFailureAttempts() + 1;
         Instant remindAt = Instant.now().plus(1, ChronoUnit.MINUTES);
-        database.write(context -> {
+        database.write(any -> {
             pendingReminder.setRemindAt(remindAt);
             pendingReminder.setFailureAttempts(failureAttempts);
             pendingReminder.insert();
         });
-
-
 
     }
 }
