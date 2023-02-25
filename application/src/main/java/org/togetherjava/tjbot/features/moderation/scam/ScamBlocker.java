@@ -240,8 +240,15 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())
                     .build();
-        MessageCreateData message =
-                new MessageCreateBuilder().setEmbeds(embed).setActionRow(confirmDialog).build();
+
+        MessageCreateBuilder messageBuilder = new MessageCreateBuilder().setEmbeds(embed);
+
+        if (!confirmDialog.isEmpty()) {
+            messageBuilder.setActionRow(confirmDialog);
+        }
+
+        MessageCreateData message = messageBuilder.build();
+
 
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
