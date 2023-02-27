@@ -242,13 +242,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     .build();
 
         MessageCreateBuilder messageBuilder = new MessageCreateBuilder().setEmbeds(embed);
-
         if (!confirmDialog.isEmpty()) {
             messageBuilder.setActionRow(confirmDialog);
         }
-
         MessageCreateData message = messageBuilder.build();
-
 
         reportChannel.orElseThrow().sendMessage(message).queue();
     }
