@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.features.code;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -139,9 +138,8 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private Button createDeleteButton(long originalMessageId) {
         String noCodeActionLabel = "";
-        return Button.danger(componentIdInteractor
-            .generateComponentId(Long.toString(originalMessageId), noCodeActionLabel, DELETE_CUE),
-                Emoji.fromUnicode("🗑"));
+        return Button.danger(componentIdInteractor.generateComponentId(
+                Long.toString(originalMessageId), noCodeActionLabel, DELETE_CUE), "Dismiss");
     }
 
     private Button createButtonForAction(CodeAction action, long originalMessageId) {
