@@ -12,12 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 import org.togetherjava.tjbot.features.Routine;
 
 import javax.annotation.Nullable;
 
 import java.awt.Color;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -35,6 +37,7 @@ public final class RemindRoutine implements Routine {
     static final Color AMBIENT_COLOR = Color.decode("#F7F492");
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private final Database database;
+    private static final int MAX_FAILURE_RETRY = 3;
 
     /**
      * Creates a new instance.
@@ -58,18 +61,16 @@ public final class RemindRoutine implements Routine {
             .where(PENDING_REMINDERS.REMIND_AT.lessOrEqual(now))
             .stream()
             .forEach(pendingReminder -> {
-                sendReminder(jda, pendingReminder.getId(), pendingReminder.getChannelId(),
-                        pendingReminder.getAuthorId(), pendingReminder.getContent(),
-                        pendingReminder.getCreatedAt());
+                sendReminder(jda, pendingReminder);
 
                 pendingReminder.delete();
             }));
     }
 
-    private static void sendReminder(JDA jda, long id, long channelId, long authorId,
-            CharSequence content, TemporalAccessor createdAt) {
-        RestAction<ReminderRoute> route = computeReminderRoute(jda, channelId, authorId);
-        sendReminderViaRoute(route, id, content, createdAt);
+    private void sendReminder(JDA jda, PendingRemindersRecord pendingReminder) {
+        RestAction<ReminderRoute> route = computeReminderRoute(jda, pendingReminder.getChannelId(),
+                pendingReminder.getAuthorId());
+        sendReminderViaRoute(route, pendingReminder);
     }
 
     private static RestAction<ReminderRoute> computeReminderRoute(JDA jda, long channelId,
@@ -95,20 +96,15 @@ public final class RemindRoutine implements Routine {
         return jda.openPrivateChannelById(authorId).map(ReminderRoute::toPrivate);
     }
 
-    private static void sendReminderViaRoute(RestAction<ReminderRoute> routeAction, long id,
-            CharSequence content, TemporalAccessor createdAt) {
+    private void sendReminderViaRoute(RestAction<ReminderRoute> routeAction,
+            PendingRemindersRecord pendingReminder) {
         Function<ReminderRoute, MessageCreateAction> sendMessage = route -> route.channel
-            .sendMessageEmbeds(createReminderEmbed(content, createdAt, route.target()))
+            .sendMessageEmbeds(createReminderEmbed(pendingReminder.getContent(),
+                    pendingReminder.getCreatedAt(), route.target()))
             .setContent(route.description());
 
-        Consumer<Throwable> logFailure = failure -> logger.warn(
-                """
-                        Failed to send a reminder (id '{}'), skipping it. This can be due to a network issue, \
-                        but also happen if the bot disconnected from the target guild and the \
-                        user has disabled DMs or has been deleted.""",
-                id);
-
-        routeAction.flatMap(sendMessage).queue(doNothing(), logFailure);
+        routeAction.flatMap(sendMessage)
+            .queue(doNothing(), failure -> attemptRetryReminder(pendingReminder, failure));
     }
 
     private static MessageEmbed createReminderEmbed(CharSequence content,
@@ -141,5 +137,28 @@ public final class RemindRoutine implements Routine {
                     "(Sending your reminder directly, because I was unable to locate"
                             + " the original channel you wanted it to be send to)");
         }
+    }
+
+    private void attemptRetryReminder(PendingRemindersRecord pendingReminder, Throwable failure) {
+        if (pendingReminder.getFailureAttempts() > MAX_FAILURE_RETRY) {
+            logger
+                .warn("""
+                        Failed to send a reminder with (authorID '{}') skipping it. This can be due to a network issue, \
+                        but also happen if the bot disconnected from the target guild and the \
+                        user has disabled DMs or has been deleted. It's reminderId '{}' content includes '{}'.""",
+                        pendingReminder.getAuthorId(), pendingReminder.getContent(),
+                        pendingReminder.getId(), failure);
+            return;
+
+        }
+
+        int failureAttempts = pendingReminder.getFailureAttempts() + 1;
+        Instant remindAt = Instant.now().plus(1, ChronoUnit.MINUTES);
+        database.write(any -> {
+            pendingReminder.setRemindAt(remindAt);
+            pendingReminder.setFailureAttempts(failureAttempts);
+            pendingReminder.insert();
+        });
+
     }
 }
