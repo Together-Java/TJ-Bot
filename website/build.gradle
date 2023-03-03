@@ -12,7 +12,7 @@ dependencies {
 var outputImage = 'togetherjava.org:5001/togetherjava/website:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
-    from.image = 'eclipse-temurin:18'
+    from.image = 'eclipse-temurin:19'
     to {
         image = outputImage
         auth {
