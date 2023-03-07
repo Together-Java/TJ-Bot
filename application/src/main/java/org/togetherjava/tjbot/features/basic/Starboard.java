@@ -6,15 +6,15 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import org.togetherjava.tjbot.config.Config;
-import org.togetherjava.tjbot.config.OofsAndLmaosConfig;
+import org.togetherjava.tjbot.config.StarboardConfig;
 import org.togetherjava.tjbot.features.EventReceiver;
 
-public class OofsAndLmaosStarboard extends ListenerAdapter implements EventReceiver {
+public class Starboard extends ListenerAdapter implements EventReceiver {
 
-    private final OofsAndLmaosConfig config;
+    private final StarboardConfig config;
 
-    public OofsAndLmaosStarboard(Config config) {
-        this.config = config.getOofsAndLmaos();
+    public Starboard(Config config) {
+        this.config = config.getStarboard();
     }
 
     @Override

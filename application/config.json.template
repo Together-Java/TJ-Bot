@@ -88,7 +88,7 @@
     ],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>"
-    "oofsAndLmaos": {
+    "starboard": {
         "oofEmojiName": ":oof:"
         "lmaoEmojiName": ":lmao"
         "starboardChannelId": <put_channel_id_here>

@@ -3,14 +3,14 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
-@JsonRootName("oofsAndLmaos")
-public final class OofsAndLmaosConfig {
+@JsonRootName("starboard")
+public final class StarboardConfig {
     private final String oofEmojiName;
     private final String lmaoEmojiName;
     private final long starboardChannelId;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public OofsAndLmaosConfig(String oofEmojiName, String lmaoEmojiName, long starboardChannelId) {
+    public StarboardConfig(String oofEmojiName, String lmaoEmojiName, long starboardChannelId) {
         this.oofEmojiName = oofEmojiName;
         this.lmaoEmojiName = lmaoEmojiName;
         this.starboardChannelId = starboardChannelId;

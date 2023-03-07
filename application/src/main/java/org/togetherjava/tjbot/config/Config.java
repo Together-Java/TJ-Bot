@@ -38,7 +38,7 @@ public final class Config {
     private final String logErrorChannelWebhook;
     private final String openaiApiKey;
 
-    private final OofsAndLmaosConfig oofsAndLmaos;
+    private final StarboardConfig starboard;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -74,8 +74,8 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "oofsAndLmaos",
-                    required = true) OofsAndLmaosConfig oofsAndLmaos) {
+            @JsonProperty(value = "starboard",
+                    required = true) StarboardConfig starboard) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -99,7 +99,7 @@ public final class Config {
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
-        this.oofsAndLmaos = Objects.requireNonNull(oofsAndLmaos);
+        this.starboard = Objects.requireNonNull(starboard);
     }
 
     /**
@@ -321,7 +321,7 @@ public final class Config {
         return openaiApiKey;
     }
 
-    public OofsAndLmaosConfig getOofsAndLmaos() {
-        return oofsAndLmaos;
+    public StarboardConfig getStarboard() {
+        return starboard;
     }
 }
