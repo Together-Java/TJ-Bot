@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.kohsuke.github.GHGist;
 import org.kohsuke.github.GHGistBuilder;
@@ -108,11 +107,6 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
             return;
         }
 
-        Message message = event.getMessage();
-        List<Button> buttons = message.getButtons();
-        event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
-            .queue();
-
         String gistId = args.get(1);
 
         try {
@@ -120,7 +114,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
             event.getMessage().delete().queue();
         } catch (IOException e) {
-            logger.error("Failed to delete gist with id {}", gistId);
+            logger.error("Failed to delete gist with id {}", gistId, e);
         }
     }
 
@@ -180,8 +174,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void sendResponse(MessageReceivedEvent event, String url, String gistId) {
         Message message = event.getMessage();
-        String messageContent =
-                "I uploaded your attachments as **gist**. That way, they are easier to read for everyone, especially mobile users 👍";
+        String messageContent = "I uploaded your attachments as **Gist**.";
 
         Button gist = Button.link(url, "Gist");
 
