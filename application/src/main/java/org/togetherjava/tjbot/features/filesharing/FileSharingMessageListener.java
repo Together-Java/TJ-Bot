@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -114,7 +115,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
             event.getMessage().delete().queue();
         } catch (IOException e) {
-            logger.error("Failed to delete gist with id {}", gistId, e);
+            logger.warn("Failed to delete gist with id {}", gistId, e);
         }
     }
 
@@ -131,14 +132,21 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
         GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(gistApiKey)
             .build()
             .createGist()
-            .public_(true)
+            .public_(false)
             .description("Uploaded by " + event.getAuthor().getAsTag());
 
-        attachments.forEach(attachment -> attachment.getProxy()
-            .download()
-            .thenApply(this::readAttachment)
-            .thenAccept(content -> gistBuilder.file(getNameOf(attachment), content))
-            .join());
+        List<CompletableFuture<Void>> tasks = new ArrayList<>();
+
+        for (Message.Attachment attachment : attachments) {
+            CompletableFuture<Void> task = attachment.getProxy()
+                .download()
+                .thenApply(this::readAttachment)
+                .thenAccept(content -> gistBuilder.file(getNameOf(attachment), content));
+
+            tasks.add(task);
+        }
+
+        tasks.forEach(CompletableFuture::join);
 
         GHGist gist = gistBuilder.create();
         sendResponse(event, gist.getHtmlUrl().toString(), gist.getGistId());
