@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 @JsonRootName("starboard")
@@ -10,7 +11,10 @@ public final class StarboardConfig {
     private final long starboardChannelId;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public StarboardConfig(String oofEmojiName, String lmaoEmojiName, long starboardChannelId) {
+    public StarboardConfig(
+            @JsonProperty(value = "oofEmojiName", required = true) String oofEmojiName,
+            @JsonProperty(value = "lmaoEmojiName", required = true) String lmaoEmojiName,
+            @JsonProperty(value = "starboardChannelId", required = true) long starboardChannelId) {
         this.oofEmojiName = oofEmojiName;
         this.lmaoEmojiName = lmaoEmojiName;
         this.starboardChannelId = starboardChannelId;
