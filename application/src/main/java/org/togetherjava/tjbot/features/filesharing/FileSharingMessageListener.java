@@ -1,20 +1,20 @@
 package org.togetherjava.tjbot.features.filesharing;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
-import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.kohsuke.github.GHGist;
+import org.kohsuke.github.GHGistBuilder;
+import org.kohsuke.github.GitHubBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,18 +28,10 @@ import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -48,16 +40,12 @@ import java.util.regex.Pattern;
  * contains a file with the given extension in the
  * {@link FileSharingMessageListener#extensionFilter}.
  */
-public class FileSharingMessageListener extends MessageReceiverAdapter implements UserInteractor {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(FileSharingMessageListener.class);
-    private static final ObjectMapper JSON = new ObjectMapper();
+public final class FileSharingMessageListener extends MessageReceiverAdapter
+        implements UserInteractor {
+    private static final Logger logger = LoggerFactory.getLogger(FileSharingMessageListener.class);
 
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
-
-    private static final String SHARE_API = "https://api.github.com/gists";
-    private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
     private final String gistApiKey;
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
@@ -82,11 +70,8 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         User author = event.getAuthor();
-        if (author.isBot() || event.isWebhookMessage()) {
-            return;
-        }
 
-        if (!isHelpThread(event)) {
+        if (author.isBot() || event.isWebhookMessage() || !isHelpThread(event)) {
             return;
         }
 
@@ -104,11 +89,39 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
             try {
                 processAttachments(event, attachments);
             } catch (Exception e) {
-                LOGGER.error(
+                logger.error(
                         "Unknown error while processing attachments. Channel: {}, Author: {}, Message ID: {}.",
                         event.getChannel().getName(), author.getId(), event.getMessageId(), e);
             }
         });
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        Member interactionUser = event.getMember();
+        String gistAuthorId = args.get(0);
+        boolean hasSoftModPermissions =
+                interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
+
+        if (!gistAuthorId.equals(interactionUser.getId()) && !hasSoftModPermissions) {
+            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
+            return;
+        }
+
+        Message message = event.getMessage();
+        List<Button> buttons = message.getButtons();
+        event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
+            .queue();
+
+        String gistId = args.get(1);
+
+        try {
+            new GitHubBuilder().withOAuthToken(gistApiKey).build().getGist(gistId).delete();
+
+            event.getMessage().delete().queue();
+        } catch (IOException e) {
+            logger.error("Failed to delete gist with id {}", gistId);
+        }
     }
 
     private boolean isAttachmentRelevant(Message.Attachment attachment) {
@@ -120,29 +133,21 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     }
 
     private void processAttachments(MessageReceivedEvent event,
-            List<Message.Attachment> attachments) {
+            List<Message.Attachment> attachments) throws IOException {
+        GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(gistApiKey)
+            .build()
+            .createGist()
+            .public_(true)
+            .description("Uploaded by " + event.getAuthor().getAsTag());
 
-        Map<String, GistFile> nameToFile = new ConcurrentHashMap<>();
+        attachments.forEach(attachment -> attachment.getProxy()
+            .download()
+            .thenApply(this::readAttachment)
+            .thenAccept(content -> gistBuilder.file(getNameOf(attachment), content))
+            .join());
 
-        List<CompletableFuture<Void>> tasks = new ArrayList<>();
-        for (Message.Attachment attachment : attachments) {
-            CompletableFuture<Void> task = attachment.getProxy()
-                .download()
-                .thenApply(this::readAttachment)
-                .thenAccept(
-                        content -> nameToFile.put(getNameOf(attachment), new GistFile(content)));
-
-            tasks.add(task);
-        }
-
-        tasks.forEach(CompletableFuture::join);
-
-        GistFiles files = new GistFiles(nameToFile);
-        GistRequest request = new GistRequest(event.getAuthor().getName(), false, files);
-        GistResponse response = uploadToGist(request);
-        String url = response.getHtmlUrl();
-        String gistId = response.getGistId();
-        sendResponse(event, url, gistId);
+        GHGist gist = gistBuilder.create();
+        sendResponse(event, gist.getHtmlUrl().toString(), gist.getGistId());
     }
 
     private String readAttachment(InputStream stream) {
@@ -173,62 +178,16 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
         return fileName;
     }
 
-    private GistResponse uploadToGist(GistRequest jsonRequest) {
-        String body;
-        try {
-            body = JSON.writeValueAsString(jsonRequest);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(
-                    "Attempting to upload a file to gist, but unable to create the JSON request.",
-                    e);
-        }
-
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(SHARE_API))
-            .header("Accept", "application/json")
-            .header("Authorization", "token " + gistApiKey)
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build();
-
-        HttpResponse<String> apiResponse;
-        try {
-            apiResponse = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(
-                    "Attempting to upload a file to gist, but the request got interrupted.", e);
-        }
-
-        int statusCode = apiResponse.statusCode();
-
-        if (statusCode < HttpURLConnection.HTTP_OK
-                || statusCode >= HttpURLConnection.HTTP_MULT_CHOICE) {
-            throw new IllegalStateException("Gist API unexpected response: %s. Request JSON: %s"
-                .formatted(apiResponse.body(), body));
-        }
-
-        GistResponse gistResponse;
-        try {
-            gistResponse = JSON.readValue(apiResponse.body(), GistResponse.class);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(
-                    "Attempting to upload file to gist, but unable to parse its JSON response.", e);
-        }
-        return gistResponse;
-    }
-
     private void sendResponse(MessageReceivedEvent event, String url, String gistId) {
         Message message = event.getMessage();
         String messageContent =
                 "I uploaded your attachments as **gist**. That way, they are easier to read for everyone, especially mobile users 👍";
 
-        Button gist = Button.link(url, "gist");
+        Button gist = Button.link(url, "Gist");
 
         Button delete = Button.danger(
                 componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
-                Emoji.fromUnicode("🗑️"));
+                "Dismiss");
 
         message.reply(messageContent).setActionRow(gist, delete).queue();
     }
@@ -241,32 +200,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
         ThreadChannel thread = event.getChannel().asThreadChannel();
         String rootChannelName = thread.getParentChannel().getName();
         return isHelpForumName.test(rootChannelName);
-    }
-
-    private void deleteGist(String gistId) {
-        HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(SHARE_API + "/" + gistId))
-            .header("Accept", "application/json")
-            .header("Authorization", "token " + gistApiKey)
-            .DELETE()
-            .build();
-
-        HttpResponse<String> apiResponse;
-        try {
-            apiResponse = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(
-                    "Attempting to delete a gist, but the request got interrupted.", e);
-        }
-
-        int status = apiResponse.statusCode();
-        if (status == 404) {
-            String responseBody = apiResponse.body();
-            LOGGER.warn("Gist API unexpected response while deleting gist: {}.", responseBody);
-        }
     }
 
     @Override
@@ -285,27 +218,6 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     }
 
     @Override
-    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        Member interactionUser = event.getMember();
-        String gistAuthorId = args.get(0);
-        boolean hasSoftModPermissions =
-                interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
-
-        if (!gistAuthorId.equals(interactionUser.getId()) && !hasSoftModPermissions) {
-            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
-            return;
-        }
-
-        Message message = event.getMessage();
-        List<Button> buttons = message.getButtons();
-        event.editComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
-            .queue();
-
-        String gistId = args.get(1);
-        deleteGist(gistId);
-    }
-
-    @Override
     public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
@@ -314,5 +226,4 @@ public class FileSharingMessageListener extends MessageReceiverAdapter implement
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
-
 }
