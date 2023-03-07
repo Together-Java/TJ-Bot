@@ -89,8 +89,8 @@
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>"
     "starboard": {
-        "oofEmojiName": ":oof:"
-        "lmaoEmojiName": ":lmao"
+        "oofEmojiName": "oof"
+        "lmaoEmojiName": "lmao"
         "starboardChannelId": <put_channel_id_here>
     }
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>"
