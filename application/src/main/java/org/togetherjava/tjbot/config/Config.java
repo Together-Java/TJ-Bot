@@ -38,6 +38,8 @@ public final class Config {
     private final String logErrorChannelWebhook;
     private final String openaiApiKey;
 
+    private final OofsAndLmaosConfig oofsAndLmaos;
+
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty(value = "token", required = true) String token,
@@ -72,7 +74,8 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey) {
+            @JsonProperty(value = "oofsAndLmaos",
+                    required = true) OofsAndLmaosConfig oofsAndLmaos) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -96,6 +99,7 @@ public final class Config {
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
+        this.oofsAndLmaos = Objects.requireNonNull(oofsAndLmaos);
     }
 
     /**
@@ -315,5 +319,9 @@ public final class Config {
      */
     public String getOpenaiApiKey() {
         return openaiApiKey;
+    }
+
+    public OofsAndLmaosConfig getOofsAndLmaos() {
+        return oofsAndLmaos;
     }
 }
