@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<profiles version="13">
-    <profile kind="CodeFormatterProfile" name="Eclipse" version="13">
+<profiles version="22">
+    <profile kind="CodeFormatterProfile" name="Eclipse" version="22">
         <setting id="org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode" value="enabled"/>
         <setting id="org.eclipse.jdt.core.compiler.codegen.targetPlatform" value="18"/>
         <setting id="org.eclipse.jdt.core.compiler.compliance" value="18"/>
