@@ -4,31 +4,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
+import java.util.List;
+
 @JsonRootName("starboard")
 public final class StarboardConfig {
-    private final String oofEmojiName;
-    private final String lmaoEmojiName;
-    private final long starboardChannelId;
+    private final List<String> emojiNames;
+    private final String starboardChannelName;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public StarboardConfig(
-            @JsonProperty(value = "oofEmojiName", required = true) String oofEmojiName,
-            @JsonProperty(value = "lmaoEmojiName", required = true) String lmaoEmojiName,
-            @JsonProperty(value = "starboardChannelId", required = true) long starboardChannelId) {
-        this.oofEmojiName = oofEmojiName;
-        this.lmaoEmojiName = lmaoEmojiName;
-        this.starboardChannelId = starboardChannelId;
+    public StarboardConfig(@JsonProperty(value = "starboardEmojiNames", required = true) List<String> emojiNames,
+                           @JsonProperty(value = "starboardChannelName", required = true) String starboardChannelName) {
+        this.emojiNames = emojiNames;
+        this.starboardChannelName = starboardChannelName;
     }
 
-    public String getOofEmojiName() {
-        return oofEmojiName;
+    public List<String> getEmojiNames() {
+        return emojiNames;
     }
 
-    public String getLmaoEmojiName() {
-        return lmaoEmojiName;
-    }
-
-    public long getStarboardChannelId() {
-        return starboardChannelId;
+    public String getStarboardChannelName() {
+        return starboardChannelName;
     }
 }
