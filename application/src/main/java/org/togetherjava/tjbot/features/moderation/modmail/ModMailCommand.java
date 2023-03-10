@@ -49,12 +49,10 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final String OPTION_MESSAGE = "message";
     private static final String OPTION_STAY_ANONYMOUS = "stay-anonymous";
     private static final String OPTION_GUILD = "server";
-    private static final int COOLDOWN_DURATION_VALUE = 0; // 30
+    private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
     private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastModMailInvocation = createCooldownCache();
-    private final Cache<Long, SlashCommandInteractionEvent> userToSlashCommandEvent =
-            createSlashCommandCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
@@ -82,7 +80,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         guildOption.addChoices(choices);
 
-        getData().addOptions(/* messageOption, */ guildOption, anonymousOption);
+        getData().addOptions(guildOption, anonymousOption);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -100,10 +98,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .build();
     }
 
-    private Cache<Long, SlashCommandInteractionEvent> createSlashCommandCache() {
-        return Caffeine.newBuilder().maximumSize(1_000).build();
-    }
-
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         long userId = event.getUser().getIdLong();
@@ -113,18 +107,23 @@ public final class ModMailCommand extends SlashCommandAdapter {
         }
         authorToLastModMailInvocation.put(userId, Instant.now());
 
-        userToSlashCommandEvent.put(userId, event);
-        createMessageModal(event);
+        sendMessageModal(event);
     }
 
-    private void createMessageModal(SlashCommandInteractionEvent event) {
+    private void sendMessageModal(SlashCommandInteractionEvent event) {
+        long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
+        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
+
         TextInput message =
                 TextInput.create(OPTION_MESSAGE, "Your message", TextInputStyle.PARAGRAPH)
                     .setPlaceholder("What do you want to tell them?")
-                    .setMinLength(10)
+                    .setMinLength(3)
                     .build();
 
-        Modal modal = Modal.create(generateComponentId(), "Send message to moderators")
+        String componentId = generateComponentId(String.valueOf(userGuildId),
+                String.valueOf(wantsToStayAnonymous));
+
+        Modal modal = Modal.create(componentId, "Send message to moderators")
             .addActionRow(message)
             .build();
 
@@ -136,11 +135,10 @@ public final class ModMailCommand extends SlashCommandAdapter {
         String userMessage = event.getValue(OPTION_MESSAGE).getAsString();
         long userId = event.getUser().getIdLong();
 
-        SlashCommandInteractionEvent slashCommandEvent =
-                userToSlashCommandEvent.getIfPresent(userId);
-        long userGuildId = slashCommandEvent.getOption(OPTION_GUILD).getAsLong();
-        Optional<TextChannel> modMailAuditLog =
-                getModMailChannel(slashCommandEvent.getJDA(), userGuildId);
+        long userGuildId = Long.parseLong(args.get(0));
+        boolean wantsToStayAnonymous = Boolean.parseBoolean(args.get(1));
+
+        Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
         if (modMailAuditLog.isEmpty()) {
             logger.warn(
                     "Cannot find the designated modmail channel in server by id {} with the pattern {}",
@@ -149,8 +147,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
         }
 
         event.deferReply().setEphemeral(true).queue();
-        MessageCreateAction message = createModMessage(slashCommandEvent, userId, userMessage,
-                modMailAuditLog.orElseThrow());
+        MessageCreateAction message = createModMessage(event, userId, userMessage,
+                wantsToStayAnonymous, modMailAuditLog.orElseThrow());
 
         sendMessage(event, message);
     }
@@ -173,10 +171,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .findAny();
     }
 
-    private MessageCreateAction createModMessage(SlashCommandInteractionEvent event, long userId,
-            String userMessage, TextChannel modMailAuditLog) {
-        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
-
+    private MessageCreateAction createModMessage(ModalInteractionEvent event, long userId,
+            String userMessage, boolean wantsToStayAnonymous, TextChannel modMailAuditLog) {
         User user = wantsToStayAnonymous ? null : event.getUser();
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
