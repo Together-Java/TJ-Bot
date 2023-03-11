@@ -162,6 +162,7 @@ logviewer/webpack.generated.js
 .DS_Store
 
 # VisualStudioCode
+.vscode
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json

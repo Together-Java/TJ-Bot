@@ -8,11 +8,15 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.Modal;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -64,8 +68,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
         super(COMMAND_NAME, "Contact the moderators of the selected guild",
                 CommandVisibility.GLOBAL);
 
-        OptionData messageOption = new OptionData(OptionType.STRING, OPTION_MESSAGE,
-                "What do you want to tell them?", true);
         OptionData guildOption = new OptionData(OptionType.STRING, OPTION_GUILD,
                 "The server to contact mods from", true);
         OptionData anonymousOption = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
@@ -78,7 +80,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         guildOption.addChoices(choices);
 
-        getData().addOptions(messageOption, guildOption, anonymousOption);
+        getData().addOptions(guildOption, anonymousOption);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -104,9 +106,38 @@ public final class ModMailCommand extends SlashCommandAdapter {
             return;
         }
         authorToLastModMailInvocation.put(userId, Instant.now());
-        event.deferReply().setEphemeral(true).queue();
 
+        sendMessageModal(event);
+    }
+
+    private void sendMessageModal(SlashCommandInteractionEvent event) {
         long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
+        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
+
+        TextInput message =
+                TextInput.create(OPTION_MESSAGE, "Your message", TextInputStyle.PARAGRAPH)
+                    .setPlaceholder("What do you want to tell them?")
+                    .setMinLength(3)
+                    .build();
+
+        String componentId = generateComponentId(String.valueOf(userGuildId),
+                String.valueOf(wantsToStayAnonymous));
+
+        Modal modal = Modal.create(componentId, "Send message to moderators")
+            .addActionRow(message)
+            .build();
+
+        event.replyModal(modal).queue();
+    }
+
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
+        String userMessage = event.getValue(OPTION_MESSAGE).getAsString();
+        long userId = event.getUser().getIdLong();
+
+        long userGuildId = Long.parseLong(args.get(0));
+        boolean wantsToStayAnonymous = Boolean.parseBoolean(args.get(1));
+
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
         if (modMailAuditLog.isEmpty()) {
             logger.warn(
@@ -115,11 +146,11 @@ public final class ModMailCommand extends SlashCommandAdapter {
             return;
         }
 
-        MessageCreateAction message =
-                createModMessage(event, userId, modMailAuditLog.orElseThrow());
+        event.deferReply().setEphemeral(true).queue();
+        MessageCreateAction message = createModMessage(event, userId, userMessage,
+                wantsToStayAnonymous, modMailAuditLog.orElseThrow());
 
         sendMessage(event, message);
-
     }
 
     private boolean handleIsOnCooldown(long userId, SlashCommandInteractionEvent event) {
@@ -140,11 +171,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .findAny();
     }
 
-    private MessageCreateAction createModMessage(SlashCommandInteractionEvent event, long userId,
-            TextChannel modMailAuditLog) {
-        String userMessage = event.getOption(OPTION_MESSAGE).getAsString();
-        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
-
+    private MessageCreateAction createModMessage(ModalInteractionEvent event, long userId,
+            String userMessage, boolean wantsToStayAnonymous, TextChannel modMailAuditLog) {
         User user = wantsToStayAnonymous ? null : event.getUser();
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
@@ -164,7 +192,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         return message;
     }
 
-    private void sendMessage(SlashCommandInteractionEvent event, MessageCreateAction message) {
+    private void sendMessage(ModalInteractionEvent event, MessageCreateAction message) {
         InteractionHook hook = event.getHook();
         message.mapToResult().map(result -> {
             if (result.isSuccess()) {
