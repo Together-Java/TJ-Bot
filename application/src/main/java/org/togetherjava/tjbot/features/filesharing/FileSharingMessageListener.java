@@ -41,8 +41,7 @@ import java.util.regex.Pattern;
  * {@link FileSharingMessageListener#extensionFilter}.
  */
 public final class FileSharingMessageListener extends MessageReceiverAdapter
-        implements
-            UserInteractor {
+        implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(FileSharingMessageListener.class);
 
     private final ComponentIdInteractor componentIdInteractor =
