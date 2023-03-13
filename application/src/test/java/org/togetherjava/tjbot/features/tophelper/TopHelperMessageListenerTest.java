@@ -101,7 +101,6 @@ final class TopHelperMessageListenerTest {
         assertTrue(ignoresWrongParentNames, "Failed to ignore wrong parent channel names");
     }
 
-
     MessageReceivedEvent createMessageReceivedEvent(boolean isBot, boolean isWebhook,
             boolean isThread, String parentChannelName) {
         try (MessageCreateData message = new MessageCreateBuilder().setContent("Any").build()) {
@@ -116,7 +115,6 @@ final class TopHelperMessageListenerTest {
         }
     }
 
-
     @ParameterizedTest
     @MethodSource("provideInvalidCharactersWithDescription")
     void excludesInvalidCharacters(String invalidChars, String description) {
@@ -129,7 +127,6 @@ final class TopHelperMessageListenerTest {
         assertEquals(0, validCharacterCount,
                 "Characters [%s] were not fully ignored".formatted(description));
     }
-
 
     @ParameterizedTest
     @MethodSource("provideValidCharacters")
@@ -144,7 +141,6 @@ final class TopHelperMessageListenerTest {
                 "Characters [%s] were not fully ignored".formatted(validChars));
     }
 
-
     private static Stream<Arguments> provideInvalidCharactersWithDescription() {
         return Stream.of( // Invalid characters
                 Arguments.of("\u061C", "Arabic Letter Mark"),
@@ -156,7 +152,6 @@ final class TopHelperMessageListenerTest {
                 Arguments.of("\u200E", "Left-to-Right Mark"),
                 Arguments.of("\u200F", "Right-to-Left Mark"));
     }
-
 
     private static List<String> provideValidCharacters() {
         return List.of( // Valid characters

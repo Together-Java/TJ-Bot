@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-
 /**
  * Implements the /modmail command, which allows users to contact a moderator within the server
  * which forwards messages to moderators in a dedicated channel given by
@@ -56,7 +55,6 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private final Predicate<String> modMailChannelNamePredicate;
     private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
-
 
     /**
      * Creates a new instance.

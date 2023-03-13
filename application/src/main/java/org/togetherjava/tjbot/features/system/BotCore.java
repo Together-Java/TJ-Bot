@@ -104,7 +104,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                                         .getPrefixedName(userInteractor.getName()),
                                     Function.identity()));
 
-
         // Component Id Store
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
@@ -409,7 +408,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         return typeToken.cast(userInteractor);
     }
-
 
     @SuppressWarnings("EmptyMethod")
     private static void onComponentIdRemoved(ComponentId componentId) {

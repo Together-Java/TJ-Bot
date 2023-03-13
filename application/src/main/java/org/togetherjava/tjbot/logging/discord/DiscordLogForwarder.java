@@ -83,7 +83,6 @@ final class DiscordLogForwarder {
         SERVICE.scheduleWithFixedDelay(this::processPendingLogs, 5, 5, TimeUnit.SECONDS);
     }
 
-
     /**
      * Forwards the given log message to Discord.
      * <p>

@@ -32,7 +32,6 @@ public interface UserInteractor extends Feature {
      */
     String getName();
 
-
     /**
      * Gets the type of interactors this interactor allows.
      * <p>
@@ -77,7 +76,6 @@ public interface UserInteractor extends Feature {
      *        these are created
      */
     void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args);
-
 
     /**
      * Triggered by the core system when a modal corresponding to this implementation (based on
