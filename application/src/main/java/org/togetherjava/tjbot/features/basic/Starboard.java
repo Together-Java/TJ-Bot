@@ -6,21 +6,21 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.internal.utils.PermissionUtil;
 import org.jetbrains.annotations.NotNull;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.StarboardConfig;
 import org.togetherjava.tjbot.features.EventReceiver;
 
-import java.awt.*;
 import java.util.Optional;
 
 public class Starboard extends ListenerAdapter implements EventReceiver {
 
+    private static final Logger logger = LoggerFactory.getLogger(Starboard.class);
     private final StarboardConfig config;
 
     public Starboard(Config config) {
@@ -37,7 +37,7 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
         }
         Optional<TextChannel> starboardChannel = guild.getTextChannelsByName(config.getStarboardChannelName(), false).stream().findFirst();
         if (starboardChannel.isEmpty()) {
-            //TODO log?
+            logger.warn("There is no channel for the starboard in the guild with the name {}", config.getStarboardChannelName());
             return;
         }
         MessageEmbed embed = new EmbedBuilder().build(); //TODO build embed
