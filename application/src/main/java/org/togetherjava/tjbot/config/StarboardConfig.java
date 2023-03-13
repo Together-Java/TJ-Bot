@@ -18,9 +18,19 @@ public final class StarboardConfig {
         this.starboardChannelName = starboardChannelName;
     }
 
+    /**
+     * Gets the names of the emojis whose users react with for it to be put on the starboard
+     *
+     * @return The names of the emojis whose users react with for it to be put on the starboard
+     * */
     public List<String> getEmojiNames() {
         return emojiNames;
     }
+    /**
+     * Gets the name of the channel with the starboard
+     *
+     * @return the name of the channel with the starboard
+     * */
 
     public String getStarboardChannelName() {
         return starboardChannelName;

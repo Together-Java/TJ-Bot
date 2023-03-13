@@ -320,6 +320,11 @@ public final class Config {
         return openaiApiKey;
     }
 
+    /**
+     * Gets the config for the Starboard
+     *
+     * @return the config of the Starboard
+     * */
     public StarboardConfig getStarboard() {
         return starboard;
     }
