@@ -12,8 +12,8 @@ public final class StarboardConfig {
     private final String starboardChannelName;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public StarboardConfig(@JsonProperty(value = "starboardEmojiNames", required = true) List<String> emojiNames,
-                           @JsonProperty(value = "starboardChannelName", required = true) String starboardChannelName) {
+    public StarboardConfig(@JsonProperty(value = "emojiNames", required = true) List<String> emojiNames,
+                           @JsonProperty(value = "channelName", required = true) String starboardChannelName) {
         this.emojiNames = emojiNames;
         this.starboardChannelName = starboardChannelName;
     }
