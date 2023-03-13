@@ -119,8 +119,7 @@ public final class TemporaryModerationRoutine implements Routine {
 
         jda.retrieveUserById(groupIdentifier.targetId)
             .flatMap(target -> executeRevocation(guild, target, groupIdentifier.type))
-            .queue(result -> {
-            }, failure -> handleFailure(failure, groupIdentifier));
+            .queue(result -> {}, failure -> handleFailure(failure, groupIdentifier));
     }
 
     private RestAction<Void> executeRevocation(Guild guild, User target,

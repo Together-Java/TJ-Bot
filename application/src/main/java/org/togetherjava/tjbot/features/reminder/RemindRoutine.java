@@ -121,8 +121,7 @@ public final class RemindRoutine implements Routine {
     }
 
     private static <T> Consumer<T> doNothing() {
-        return a -> {
-        };
+        return a -> {};
     }
 
     private record ReminderRoute(MessageChannel channel, @Nullable User target,

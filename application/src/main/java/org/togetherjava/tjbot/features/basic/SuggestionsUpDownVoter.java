@@ -77,8 +77,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
                     "Unable to vote on a suggestion with the configured emoji ('{}'), using fallback instead.",
                     emojiName);
             return message.addReaction(fallbackEmoji);
-        }).queue(ignored -> {
-        }, exception -> {
+        }).queue(ignored -> {}, exception -> {
             if (exception instanceof ErrorResponseException responseException
                     && responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
                 // User blocked the bot, hence the bot can not add reactions to their messages.

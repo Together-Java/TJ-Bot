@@ -46,8 +46,9 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
-            message.delete().flatMap(any -> dmUser(message)).queue(any -> {
-            }, failure -> tempNotifyUserInChannel(message));
+            message.delete()
+                .flatMap(any -> dmUser(message))
+                .queue(any -> {}, failure -> tempNotifyUserInChannel(message));
         }
     }
 
