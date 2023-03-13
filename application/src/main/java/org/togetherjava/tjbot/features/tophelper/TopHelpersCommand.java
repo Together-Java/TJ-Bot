@@ -188,12 +188,9 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         return AsciiTable.getTable(AsciiTable.BASIC_ASCII_NO_DATA_SEPARATORS, dataTable, columns);
     }
 
-    private record TimeRange(Instant start, Instant end, String description) {
-    }
+    private record TimeRange(Instant start, Instant end, String description) {}
 
-    private record TopHelperResult(long authorId, BigDecimal messageLengths) {
-    }
+    private record TopHelperResult(long authorId, BigDecimal messageLengths) {}
 
-    private record ColumnSetting(String headerName, HorizontalAlign alignment) {
-    }
+    private record ColumnSetting(String headerName, HorizontalAlign alignment) {}
 }

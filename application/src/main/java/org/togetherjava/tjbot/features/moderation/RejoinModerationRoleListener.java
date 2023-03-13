@@ -107,6 +107,5 @@ public final class RejoinModerationRoleListener implements EventReceiver {
     }
 
     private record ModerationRole(String actionName, ModerationAction applyAction,
-            ModerationAction revokeAction, Function<Guild, Role> guildToRole) {
-    }
+            ModerationAction revokeAction, Function<Guild, Role> guildToRole) {}
 }

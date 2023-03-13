@@ -140,7 +140,8 @@ final class BookmarksListRemoveHandler {
                 removeSelectedBookmarks(bookmarks, event, request);
                 yield clampPageIndex(bookmarks, request.pageToDisplayIndex);
             }
-            default -> throw new IllegalArgumentException("Unknown button: " + request.componentName);
+            default -> throw new IllegalArgumentException(
+                    "Unknown button: " + request.componentName);
         };
 
         updatePagination(event, request.atPage(nextPageIndex), bookmarks);
@@ -293,8 +294,7 @@ final class BookmarksListRemoveHandler {
         REMOVE
     }
 
-    private record PageEntry(int bookmarkNumber, BookmarksRecord bookmark) {
-    }
+    private record PageEntry(int bookmarkNumber, BookmarksRecord bookmark) {}
 
     private record Request(RequestType type, String componentName, int pageToDisplayIndex,
             Set<Long> bookmarkIdsToRemove) {

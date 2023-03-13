@@ -409,6 +409,5 @@ public final class SlashCommandInteractionEventBuilder {
             });
     }
 
-    private record Option<T> (String name, T value, OptionType type) {
-    }
+    private record Option<T> (String name, T value, OptionType type) {}
 }

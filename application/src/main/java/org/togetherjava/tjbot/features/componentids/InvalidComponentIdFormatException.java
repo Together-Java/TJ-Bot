@@ -14,7 +14,8 @@ public final class InvalidComponentIdFormatException extends RuntimeException {
     /**
      * Creates a new instance.
      */
-    public InvalidComponentIdFormatException() {}
+    public InvalidComponentIdFormatException() {
+    }
 
     /**
      * Creates a new instance with a given cause.

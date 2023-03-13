@@ -12,8 +12,7 @@ final class StringDistancesTest {
     @Test
     void closeMatches() {
         record TestCase(String name, Collection<String> expectedSuggestions, String prefix,
-                Collection<String> candidates, int limit) {
-        }
+                Collection<String> candidates, int limit) {}
 
         List<String> candidates = List.of("c", "c#", "c++", "emacs", "foo", "hello", "java", "js",
                 "key", "nvim", "py", "tag", "taz", "vi", "vim");
@@ -38,8 +37,7 @@ final class StringDistancesTest {
 
     @Test
     void editDistance() {
-        record TestCase(String name, int expectedDistance, String source, String destination) {
-        }
+        record TestCase(String name, int expectedDistance, String source, String destination) {}
         List<TestCase> tests = List.of(new TestCase("identity", 0, "-", "-"),
                 new TestCase("empty_identity", 0, "", ""), new TestCase("empty_remove", 1, "a", ""),
                 new TestCase("empty_add", 1, "", "a"), new TestCase("basic", 4, "bloed", "doof"),
@@ -57,8 +55,7 @@ final class StringDistancesTest {
 
     @Test
     void prefixEditDistance() {
-        record TestCase(String name, int expectedDistance, String source, String destination) {
-        }
+        record TestCase(String name, int expectedDistance, String source, String destination) {}
         List<TestCase> tests = List.of(new TestCase("identity", 0, "-", "-"),
                 new TestCase("empty_identity", 0, "", ""), new TestCase("empty_remove", 1, "a", ""),
                 new TestCase("empty_add", 0, "", "a"), new TestCase("basic", 4, "bloed", "doof"),

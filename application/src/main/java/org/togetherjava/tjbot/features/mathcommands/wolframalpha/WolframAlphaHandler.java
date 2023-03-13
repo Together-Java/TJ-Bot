@@ -230,8 +230,7 @@ final class WolframAlphaHandler {
         return query + " - " + SERVICE_NAME;
     }
 
-    record HandlerResponse(List<MessageEmbed> embeds, List<Attachment> attachments) {
-    }
+    record HandlerResponse(List<MessageEmbed> embeds, List<Attachment> attachments) {}
 
     record Attachment(String name, byte[] data) {
         @Override

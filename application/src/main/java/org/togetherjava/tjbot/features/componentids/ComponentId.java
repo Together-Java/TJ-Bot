@@ -13,5 +13,4 @@ import java.util.List;
  *        this component ID, when triggered
  * @param elements the additional elements to carry along this component ID, empty if not desired
  */
-public record ComponentId(String userInteractorName, List<String> elements) {
-}
+public record ComponentId(String userInteractorName, List<String> elements) {}

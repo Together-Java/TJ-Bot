@@ -37,7 +37,8 @@ final class DiscordLogAppender extends AbstractAppender {
 
     static final class DiscordLogAppenderBuilder
             extends AbstractAppender.Builder<DiscordLogAppenderBuilder>
-            implements org.apache.logging.log4j.core.util.Builder<DiscordLogAppender> {
+            implements
+                org.apache.logging.log4j.core.util.Builder<DiscordLogAppender> {
 
         @PluginBuilderAttribute
         @Required

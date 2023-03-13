@@ -44,8 +44,7 @@ public interface Routine extends Feature {
      * @param unit the time unit for both, {@link #initialDuration} and {@link #duration}, e.g.
      *        seconds
      */
-    record Schedule(ScheduleMode mode, long initialDuration, long duration, TimeUnit unit) {
-    }
+    record Schedule(ScheduleMode mode, long initialDuration, long duration, TimeUnit unit) {}
 
     /**
      * Whether subsequent executions of a routine are executed at a fixed rate or are delayed.

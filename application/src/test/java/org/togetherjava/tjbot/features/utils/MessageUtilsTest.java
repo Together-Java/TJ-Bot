@@ -170,8 +170,7 @@ final class MessageUtilsTest {
         }
     }
 
-    private record TestCaseEscape(String testName, String escapedMessage, String originalMessage) {
-    }
+    private record TestCaseEscape(String testName, String escapedMessage, String originalMessage) {}
 
     @Test
     void abbreviate() {
@@ -192,8 +191,7 @@ final class MessageUtilsTest {
     }
 
     private record TestCaseAbbreviate(String testName, String abbreviatedMessage,
-            String originalMessage, int limit) {
-    }
+            String originalMessage, int limit) {}
 
     private static List<Arguments> provideExtractCodeTests() {
         List<Arguments> tests = new ArrayList<>();

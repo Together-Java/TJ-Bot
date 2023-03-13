@@ -12,7 +12,8 @@ import org.togetherjava.tjbot.features.MessageContextCommand;
  * {@link CodeMessageHandler} for further processing.
  */
 public final class CodeMessageManualDetection extends BotCommandAdapter
-        implements MessageContextCommand {
+        implements
+            MessageContextCommand {
     private final CodeMessageHandler codeMessageHandler;
 
     /**
