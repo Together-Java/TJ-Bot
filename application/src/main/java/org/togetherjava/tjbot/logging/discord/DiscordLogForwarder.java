@@ -156,8 +156,8 @@ final class DiscordLogForwarder {
         return new ArrayList<>(logBatch);
     }
 
-    private record LogMessage(WebhookEmbed embed,
-            Instant timestamp) implements Comparable<LogMessage> {
+    private record LogMessage(WebhookEmbed embed, Instant timestamp)
+            implements Comparable<LogMessage> {
 
         private static LogMessage ofEvent(LogEvent event) {
             String authorName = event.getLoggerName();
