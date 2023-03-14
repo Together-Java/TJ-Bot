@@ -3,7 +3,9 @@ package org.togetherjava.tjbot.features.basic;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
@@ -40,7 +42,11 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
             logger.warn("There is no channel for the starboard in the guild with the name {}", config.getStarboardChannelName());
             return;
         }
-        MessageEmbed embed = new EmbedBuilder().build(); //TODO build embed
-        starboardChannel.get().sendMessageEmbeds(embed).queue();
+       event.getChannel().retrieveMessageById(event.getMessageId()).flatMap(message -> starboardChannel.orElseThrow().sendMessageEmbeds(formEmbed(message))).queue();
+    }
+
+    private static MessageEmbed formEmbed(Message message) {
+        User author = message.getAuthor();
+        return new EmbedBuilder().setAuthor(author.getName(), null, author.getAvatarUrl()).setDescription(message.getContentDisplay()).build(); //Maybe set footer as reacted emoji?
     }
 }
