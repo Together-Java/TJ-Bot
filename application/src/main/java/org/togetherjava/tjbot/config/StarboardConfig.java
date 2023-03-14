@@ -19,16 +19,18 @@ public final class StarboardConfig {
     }
 
     /**
-     * Gets the names of the emojis whose users react with for it to be put on the starboard
+     * Gets the list of emotes that are recognized by the starboard feature. A message that is reacted on with an emote in this list will be reposted in a special channel.
+
+     * Empty to deactivate the feature.
      *
-     * @return The names of the emojis whose users react with for it to be put on the starboard
+     * @return The List of emojis recognized by the starboard
      * */
     public List<String> getEmojiNames() {
         return emojiNames;
     }
     /**
      * Gets the name of the channel with the starboard
-     *
+     * Deactivate by using a non-existent channel name
      * @return the name of the channel with the starboard
      * */
 

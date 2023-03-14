@@ -322,7 +322,7 @@ public final class Config {
 
     /**
      * Gets the config for the Starboard
-     *
+     * Contains the List of emoji names recognized by the starboard as well as the name of the channel with the starboard.
      * @return the config of the Starboard
      * */
     public StarboardConfig getStarboard() {
