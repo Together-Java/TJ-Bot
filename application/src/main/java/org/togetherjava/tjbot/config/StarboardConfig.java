@@ -12,27 +12,31 @@ public final class StarboardConfig {
     private final String starboard;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public StarboardConfig(@JsonProperty(value = "emojiNames", required = true) List<String> emojiNames,
-                           @JsonProperty(value = "channelName", required = true) String starboard) {
+    public StarboardConfig(
+            @JsonProperty(value = "emojiNames", required = true) List<String> emojiNames,
+            @JsonProperty(value = "channelName", required = true) String starboard) {
         this.emojiNames = emojiNames;
         this.starboard = starboard;
     }
 
     /**
-     * Gets the list of emotes that are recognized by the starboard feature. A message that is reacted on with an emote in this list will be reposted in a special channel.
-
+     * Gets the list of emotes that are recognized by the starboard feature. A message that is
+     * reacted on with an emote in this list will be reposted in a special channel.
+     * 
      * Empty to deactivate the feature.
      *
      * @return The List of emojis recognized by the starboard
-     * */
+     */
     public List<String> getEmojiNames() {
         return emojiNames;
     }
+
     /**
-     * Gets the name of the channel with the starboard
-     * Deactivate by using a non-existent channel name
+     * Gets the name of the channel with the starboard Deactivate by using a non-existent channel
+     * name
+     * 
      * @return the name of the channel with the starboard
-     * */
+     */
 
     public String getStarboard() {
         return starboard;
