@@ -37,9 +37,9 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
         if (!config.getEmojiNames().contains(emojiName) || !guild.getPublicRole().hasPermission(channel, Permission.VIEW_CHANNEL)) {
             return;
         }
-        Optional<TextChannel> starboardChannel = guild.getTextChannelsByName(config.getStarboardChannelName(), false).stream().findFirst();
+        Optional<TextChannel> starboardChannel = guild.getTextChannelsByName(config.getStarboard(), false).stream().findFirst();
         if (starboardChannel.isEmpty()) {
-            logger.warn("There is no channel for the starboard in the guild with the name {}", config.getStarboardChannelName());
+            logger.warn("There is no channel for the starboard in the guild with the name {}", config.getStarboard());
             return;
         }
        event.getChannel().retrieveMessageById(event.getMessageId()).flatMap(message -> starboardChannel.orElseThrow().sendMessageEmbeds(formEmbed(message))).queue();
