@@ -43,7 +43,7 @@ Go to your SonarCloud [account security settings](https://sonarcloud.io/sessions
 2. Click on _+_, or press _Alt + Insert_
 3. Enter connection name, for example 'TJ' and click *Next* (or press *return*)
 4. Enter the token you just created and click *Next* 
-5. Select _'Together Java (togetherjava)'_, if it's not already selected, and click *Next*
+5. Click *'Select another organization..'* and enter `togetherjava`, click *OK* and then *Next*
 6. Click *Next* again if you are happy with notifications settings
 7. Click *Next* once again
 8. Go to: _File | Settings | Tools | SonarLint | Project Settings_
