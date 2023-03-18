@@ -35,7 +35,9 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
 
         String content = event.getMessage().getContentRaw();
 
-        if (IS_MESSAGE_COMMAND.test(content) && content.length() < MAX_COMMAND_LENGTH) {
+        if (IS_MESSAGE_COMMAND.test(content) &&
+            content.length() < MAX_COMMAND_LENGTH &&
+            (!content.endsWith(";") && !content.endsWith(")"))) {
             sendAdvice(event.getMessage());
         }
     }
