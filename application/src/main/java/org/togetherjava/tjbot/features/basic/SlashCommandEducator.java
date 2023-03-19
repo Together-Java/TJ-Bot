@@ -24,7 +24,7 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
     private static final Predicate<String> IS_MESSAGE_COMMAND = Pattern.compile("""
             [.!?] #Start of message command
             [a-zA-Z]{2,15} #Name of message command, e.g. 'close'
-            .* #Rest of the message
+            .*[^);] #Rest of the message (don't end with code stuff)
             """, Pattern.COMMENTS).asMatchPredicate();
 
     @Override
@@ -36,8 +36,7 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
         String content = event.getMessage().getContentRaw();
 
         if (IS_MESSAGE_COMMAND.test(content) &&
-            content.length() < MAX_COMMAND_LENGTH &&
-            (!content.endsWith(";") && !content.endsWith(")"))) {
+            content.length() < MAX_COMMAND_LENGTH) {
             sendAdvice(event.getMessage());
         }
     }
@@ -50,24 +49,23 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
                         Try starting your message with a forward-slash `/` and Discord should open a popup showing you all available commands.
                         A command might then look like `/foo` 👍""";
 
-        createReply(message, content, SLASH_COMMAND_POPUP_ADVICE_PATH).queue();
+        createReply(message, content).queue();
     }
 
-    private static MessageCreateAction createReply(Message messageToReplyTo, String content,
-            String imagePath) {
+    private static MessageCreateAction createReply(Message messageToReplyTo, String content) {
         boolean useImage = true;
-        InputStream imageData = HelpSystemHelper.class.getResourceAsStream("/" + imagePath);
+        InputStream imageData = HelpSystemHelper.class.getResourceAsStream("/" + SLASH_COMMAND_POPUP_ADVICE_PATH);
         if (imageData == null) {
             useImage = false;
         }
 
         MessageEmbed embed = new EmbedBuilder().setDescription(content)
-            .setImage(useImage ? "attachment://" + imagePath : null)
+            .setImage(useImage ? "attachment://" + SLASH_COMMAND_POPUP_ADVICE_PATH : null)
             .build();
 
         MessageCreateAction action = messageToReplyTo.replyEmbeds(embed);
         if (useImage) {
-            action = action.addFiles(FileUpload.fromData(imageData, imagePath));
+            action = action.addFiles(FileUpload.fromData(imageData, SLASH_COMMAND_POPUP_ADVICE_PATH));
         }
 
         return action;

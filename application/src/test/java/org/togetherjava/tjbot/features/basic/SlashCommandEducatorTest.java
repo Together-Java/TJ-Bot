@@ -70,6 +70,5 @@ final class SlashCommandEducatorTest {
                 "thisIsAWordWhichLengthIsMoreThanThirtyLetterSoItShouldNotReply",
                 ".isLetter and .isNumber are available",
                 ".toString()", ".toString();");
-
     }
 }
