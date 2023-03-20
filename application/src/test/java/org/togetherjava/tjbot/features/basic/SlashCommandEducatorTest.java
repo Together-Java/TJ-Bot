@@ -61,8 +61,7 @@ final class SlashCommandEducatorTest {
     }
 
     private static Stream<String> provideMessageCommands() {
-        return Stream.of("!foo", ".foo", "?foo", ".test", "!whatever", "!this is a test",
-                "this is a test;");
+        return Stream.of("!foo", ".foo", "?foo", ".test", "!whatever", "!this is a test");
     }
 
     private static Stream<String> provideOtherMessages() {

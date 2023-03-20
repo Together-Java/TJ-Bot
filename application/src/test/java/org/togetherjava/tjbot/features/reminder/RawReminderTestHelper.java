@@ -14,8 +14,8 @@ import java.util.List;
 import static org.togetherjava.tjbot.db.generated.tables.PendingReminders.PENDING_REMINDERS;
 
 final class RawReminderTestHelper {
-    private final Database database;
-    private final JdaTester jdaTester;
+    private Database database;
+    private JdaTester jdaTester;
 
     RawReminderTestHelper(Database database, JdaTester jdaTester) {
         this.database = database;
