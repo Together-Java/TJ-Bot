@@ -35,8 +35,7 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
 
         String content = event.getMessage().getContentRaw();
 
-        if (IS_MESSAGE_COMMAND.test(content) &&
-            content.length() < MAX_COMMAND_LENGTH) {
+        if (IS_MESSAGE_COMMAND.test(content) && content.length() < MAX_COMMAND_LENGTH) {
             sendAdvice(event.getMessage());
         }
     }
@@ -54,7 +53,8 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
 
     private static MessageCreateAction createReply(Message messageToReplyTo, String content) {
         boolean useImage = true;
-        InputStream imageData = HelpSystemHelper.class.getResourceAsStream("/" + SLASH_COMMAND_POPUP_ADVICE_PATH);
+        InputStream imageData =
+                HelpSystemHelper.class.getResourceAsStream("/" + SLASH_COMMAND_POPUP_ADVICE_PATH);
         if (imageData == null) {
             useImage = false;
         }
@@ -65,7 +65,8 @@ public final class SlashCommandEducator extends MessageReceiverAdapter {
 
         MessageCreateAction action = messageToReplyTo.replyEmbeds(embed);
         if (useImage) {
-            action = action.addFiles(FileUpload.fromData(imageData, SLASH_COMMAND_POPUP_ADVICE_PATH));
+            action = action
+                .addFiles(FileUpload.fromData(imageData, SLASH_COMMAND_POPUP_ADVICE_PATH));
         }
 
         return action;
