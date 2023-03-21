@@ -9,14 +9,14 @@ import java.util.List;
 @JsonRootName("starboard")
 public final class StarboardConfig {
     private final List<String> emojiNames;
-    private final String starboard;
+    private final String channelName;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public StarboardConfig(
             @JsonProperty(value = "emojiNames", required = true) List<String> emojiNames,
-            @JsonProperty(value = "channelName", required = true) String starboard) {
+            @JsonProperty(value = "channelName", required = true) String channelName) {
         this.emojiNames = emojiNames;
-        this.starboard = starboard;
+        this.channelName = channelName;
     }
 
     /**
@@ -38,7 +38,7 @@ public final class StarboardConfig {
      * @return the name of the channel with the starboard
      */
 
-    public String getStarboard() {
-        return starboard;
+    public String getChannelName() {
+        return channelName;
     }
 }

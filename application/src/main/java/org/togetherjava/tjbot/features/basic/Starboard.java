@@ -39,10 +39,10 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
             return;
         }
         Optional<TextChannel> starboardChannel =
-                guild.getTextChannelsByName(config.getStarboard(), false).stream().findFirst();
+                guild.getTextChannelsByName(config.getChannelName(), false).stream().findFirst();
         if (starboardChannel.isEmpty()) {
             logger.warn("There is no channel for the starboard in the guild with the name {}",
-                    config.getStarboard());
+                    config.getChannelName());
             return;
         }
         event.getChannel()
