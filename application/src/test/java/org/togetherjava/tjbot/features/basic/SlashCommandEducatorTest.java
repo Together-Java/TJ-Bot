@@ -67,7 +67,7 @@ final class SlashCommandEducatorTest {
     private static Stream<String> provideOtherMessages() {
         return Stream.of("  a  ", "foo", "#foo", "/foo", "!!!", "?!?!?", "?", ".,-", "!f", "! foo",
                 "thisIsAWordWhichLengthIsMoreThanThirtyLetterSoItShouldNotReply",
-                ".isLetter and .isNumber are available");
-
+                ".isLetter and .isNumber are available", ".toString()", ".toString();",
+                "this is a test;");
     }
 }
