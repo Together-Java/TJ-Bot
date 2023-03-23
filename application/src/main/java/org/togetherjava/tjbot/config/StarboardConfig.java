@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonRootName("starboard")
 public final class StarboardConfig {
@@ -15,8 +16,8 @@ public final class StarboardConfig {
     public StarboardConfig(
             @JsonProperty(value = "emojiNames", required = true) List<String> emojiNames,
             @JsonProperty(value = "channelName", required = true) String channelName) {
-        this.emojiNames = emojiNames;
-        this.channelName = channelName;
+        this.emojiNames = Objects.requireNonNull(emojiNames);
+        this.channelName = Objects.requireNonNull(channelName);
     }
 
     /**
