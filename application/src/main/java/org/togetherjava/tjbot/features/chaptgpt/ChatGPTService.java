@@ -16,16 +16,17 @@ import java.util.Objects;
  * Service used to communicate to OpenAI API to generate responses.
  */
 public class ChatGPTService {
+    private ChatGPTService() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(ChatGPTService.class);
-    private final OpenAiService openAiService;
+    private static final OpenAiService openAiService;
     private static final long TIMEOUT_DURATION = 10000L; // In milliseconds
     private static final int MAX_TOKENS = 3000;
     private static final String TOKEN = System.getenv("OPENAI_TOKEN");
 
-    /**
-     * Creates an instance of the ChatGPT Service.
-     */
-    public ChatGPTService() {
+    static {
         openAiService = new OpenAiService(TOKEN, Duration.ofMillis(TIMEOUT_DURATION));
     }
 
@@ -39,7 +40,7 @@ public class ChatGPTService {
      * @throws OpenAiHttpException - Thrown when an error occurs with the API such as a timeout or
      *         token error such as it being expired or revoked.
      */
-    public String ask(String question) throws OpenAiHttpException {
+    public static String ask(String question) throws OpenAiHttpException {
         try {
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
