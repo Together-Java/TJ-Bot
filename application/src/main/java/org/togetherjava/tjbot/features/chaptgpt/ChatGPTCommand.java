@@ -38,9 +38,11 @@ public final class ChatGPTCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(@NotNull SlashCommandInteractionEvent event) {
         try {
+            event.deferReply().queue();
             String response = chatGPTService
                 .ask(Objects.requireNonNull(event.getOption("question")).getAsString());
-            event.reply(response).queue();
+            event.getHook().sendMessage(response).queue();
+
         } catch (NullPointerException nullPointerException) {
             logger.error("Null was passed as a question in ChatGPT command");
         }

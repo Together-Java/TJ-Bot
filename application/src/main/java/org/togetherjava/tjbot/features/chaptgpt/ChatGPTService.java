@@ -8,6 +8,7 @@ import com.theokanning.openai.service.OpenAiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,14 +18,15 @@ import java.util.Objects;
 public class ChatGPTService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGPTService.class);
     private final OpenAiService openAiService;
+    private static final long TIMEOUT_DURATION = 10000L; // In milliseconds
+    private static final int MAX_TOKENS = 3000;
     private static final String TOKEN = System.getenv("OPENAI_TOKEN");
-    private static final String USER = System.getenv("OPENAI_USER");
 
     /**
      * Creates an instance of the ChatGPT Service.
      */
     public ChatGPTService() {
-        openAiService = new OpenAiService(TOKEN);
+        openAiService = new OpenAiService(TOKEN, Duration.ofMillis(TIMEOUT_DURATION));
     }
 
     /**
@@ -44,10 +46,9 @@ public class ChatGPTService {
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model("gpt-3.5-turbo")
                 .messages(List.of(chatMessage))
-                .user(USER)
                 .frequencyPenalty(0.5)
                 .temperature(0.7)
-                .maxTokens(4000)
+                .maxTokens(MAX_TOKENS)
                 .n(1)
                 .build();
             return openAiService.createChatCompletion(chatCompletionRequest)
