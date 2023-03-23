@@ -236,12 +236,11 @@ This command is simpler as we do not have any dialog. We simply have to lookup t
 Reading the database revolves around the `database.read(...)` methods and using the generated classes for the `questions` table:
 ```java
 OptionalInt response = database.read(context -> {
-    try (var select = context.selectFrom(Questions.QUESTIONS)) {
-        return Optional.ofNullable(
-                        select.where(Questions.QUESTIONS.ID.eq(id)).fetchOne())
-                .map(QuestionsRecord::getResponse)
-                .map(OptionalInt::of)
-                .orElseGet(OptionalInt::empty);
+    return Optional.ofNullable(context.selectFrom(Questions.QUESTIONS)
+        .where(Questions.QUESTIONS.ID.eq(id)).fetchOne()
+      ).map(QuestionsRecord::getResponse)
+      .map(OptionalInt::of)
+      .orElseGet(OptionalInt::empty);
     }
 });
 ```
@@ -268,12 +267,11 @@ String id = event.getOption("id").getAsString();
 
 try {
     OptionalInt response = database.read(context -> {
-        try (var select = context.selectFrom(Questions.QUESTIONS)) {
-            return Optional.ofNullable(
-                            select.where(Questions.QUESTIONS.ID.eq(id)).fetchOne())
-                    .map(QuestionsRecord::getResponse)
-                    .map(OptionalInt::of)
-                    .orElseGet(OptionalInt::empty);
+        return Optional.ofNullable(context.selectFrom(Questions.QUESTIONS)
+            .where(Questions.QUESTIONS.ID.eq(id)).fetchOne()
+          ).map(QuestionsRecord::getResponse)
+          .map(OptionalInt::of)
+          .orElseGet(OptionalInt::empty);
         }
     });
     if (response.isEmpty()) {
@@ -435,12 +433,11 @@ public final class QuestionCommand extends SlashCommandAdapter {
 
         try {
             OptionalInt response = database.read(context -> {
-                try (var select = context.selectFrom(Questions.QUESTIONS)) {
-                    return Optional
-                        .ofNullable(select.where(Questions.QUESTIONS.ID.eq(id)).fetchOne())
-                        .map(QuestionsRecord::getResponse)
-                        .map(OptionalInt::of)
-                        .orElseGet(OptionalInt::empty);
+                return Optional.ofNullable(context.selectFrom(Questions.QUESTIONS)
+                    .where(Questions.QUESTIONS.ID.eq(id)).fetchOne()
+                  ).map(QuestionsRecord::getResponse)
+                  .map(OptionalInt::of)
+                  .orElseGet(OptionalInt::empty);
                 }
             });
             if (response.isEmpty()) {
