@@ -40,8 +40,6 @@ public class ChatGPTService {
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      * @return response from ChatGPT as a String.
-     * @throws OpenAiHttpException - Thrown when an error occurs with the API such as a timeout or
-     *         token error such as it being expired or revoked.
      */
     public String ask(String question) {
         try {

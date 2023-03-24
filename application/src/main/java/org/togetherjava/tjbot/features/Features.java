@@ -7,6 +7,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.basic.*;
 import org.togetherjava.tjbot.features.bookmarks.*;
 import org.togetherjava.tjbot.features.chaptgpt.ChatGPTCommand;
+import org.togetherjava.tjbot.features.chaptgpt.ChatGPTService;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
@@ -140,7 +141,9 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGPTCommand(config));
+
+        ChatGPTService chatGPTService = new ChatGPTService(config);
+        features.add(new ChatGPTCommand(chatGPTService));
         return features;
     }
 }
