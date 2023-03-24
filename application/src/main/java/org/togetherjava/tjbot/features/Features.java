@@ -140,7 +140,7 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGPTCommand());
+        features.add(new ChatGPTCommand(config));
         return features;
     }
 }

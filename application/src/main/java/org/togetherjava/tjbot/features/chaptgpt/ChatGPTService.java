@@ -8,6 +8,8 @@ import com.theokanning.openai.service.OpenAiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.config.Config;
+
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -16,18 +18,19 @@ import java.util.Objects;
  * Service used to communicate to OpenAI API to generate responses.
  */
 public class ChatGPTService {
-    private ChatGPTService() {
-        throw new UnsupportedOperationException("Utility class, construction not supported");
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(ChatGPTService.class);
-    private static final OpenAiService openAiService;
     private static final long TIMEOUT_DURATION = 10000L; // In milliseconds
     private static final int MAX_TOKENS = 3000;
-    private static final String TOKEN = System.getenv("OPENAI_TOKEN");
+    private final OpenAiService openAiService;
 
-    static {
-        openAiService = new OpenAiService(TOKEN, Duration.ofMillis(TIMEOUT_DURATION));
+    /**
+     * Creates instance of ChatGPTService
+     * 
+     * @param config Config - needed for token to OpenAI API.
+     */
+    public ChatGPTService(Config config) {
+        String token = config.getOpenaiToken();
+        openAiService = new OpenAiService(token, Duration.ofMillis(TIMEOUT_DURATION));
     }
 
     /**
@@ -40,7 +43,7 @@ public class ChatGPTService {
      * @throws OpenAiHttpException - Thrown when an error occurs with the API such as a timeout or
      *         token error such as it being expired or revoked.
      */
-    public static String ask(String question) throws OpenAiHttpException {
+    public String ask(String question) {
         try {
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
@@ -63,7 +66,6 @@ public class ChatGPTService {
                     openAiHttpException.getMessage(), openAiHttpException.code,
                     openAiHttpException.type, openAiHttpException.statusCode));
         }
-        return "An error has occurred while trying to communication with ChatGPT. "
-                + "Please try again later";
+        return "An error has occurred while trying to communication with ChatGPT. Please try again later";
     }
 }
