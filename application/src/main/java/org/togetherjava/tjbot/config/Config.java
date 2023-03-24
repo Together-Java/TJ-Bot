@@ -36,7 +36,7 @@ public final class Config {
     private final String mediaOnlyChannelPattern;
     private final String logInfoChannelWebhook;
     private final String logErrorChannelWebhook;
-    private final String openaiToken;
+    private final String openaiApiKey;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -72,7 +72,7 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "openaiToken", required = true) String openaiToken) {
+            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -95,7 +95,7 @@ public final class Config {
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
-        this.openaiToken = openaiToken;
+        this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
     }
 
     /**
@@ -313,7 +313,7 @@ public final class Config {
      *
      * @return the OpenAI API Token
      */
-    public String getOpenaiToken() {
-        return openaiToken;
+    public String getOpenaiApiKey() {
+        return openaiApiKey;
     }
 }
