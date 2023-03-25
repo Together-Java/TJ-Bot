@@ -27,7 +27,7 @@ jib {
         }
     }
     container {
-        mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
+        mainClass = 'org.togetherjava.tjbot.Application'
         setCreationTime(java.time.Instant.now().toString())
     }
 }
