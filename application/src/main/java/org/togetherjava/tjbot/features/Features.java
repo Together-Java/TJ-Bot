@@ -6,6 +6,8 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.basic.*;
 import org.togetherjava.tjbot.features.bookmarks.*;
+import org.togetherjava.tjbot.features.chaptgpt.ChatGptCommand;
+import org.togetherjava.tjbot.features.chaptgpt.ChatGptService;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
@@ -72,6 +74,7 @@ public class Features {
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database);
         CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
+        ChatGptService chatGptService = new ChatGptService(config);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -139,7 +142,7 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-
+        features.add(new ChatGptCommand(chatGptService));
         return features;
     }
 }
