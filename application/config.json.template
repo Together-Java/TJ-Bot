@@ -88,5 +88,5 @@
     ],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>"
-    "openaiApiKey": "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"
+    "openaiApiKey": "<check pins in #tjbot_discussion for the key>"
 }
