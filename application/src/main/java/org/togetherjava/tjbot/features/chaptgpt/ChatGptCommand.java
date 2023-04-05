@@ -25,11 +25,11 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     private static final String QUESTION_INPUT = "question";
     private static final int MAX_MESSAGE_INPUT_LENGTH = 200;
     private static final int MIN_MESSAGE_INPUT_LENGTH = 4;
-    private static final Duration CACHE_DURATION = Duration.of(10, ChronoUnit.SECONDS);
+    private static final Duration COMMAND_COOLDOWN = Duration.of(10, ChronoUnit.SECONDS);
     private final ChatGptService chatGptService;
 
     private final Cache<String, Instant> userIdToAskedAtCache =
-            Caffeine.newBuilder().maximumSize(1_000).expireAfterWrite(CACHE_DURATION).build();
+            Caffeine.newBuilder().maximumSize(1_000).expireAfterWrite(COMMAND_COOLDOWN).build();
 
     /**
      * Creates an instance of the chatgpt command.
@@ -46,7 +46,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         Instant previousAskTime = userIdToAskedAtCache.getIfPresent(event.getMember().getId());
         if (previousAskTime != null) {
-            long timeRemainingUntilNextAsk = CACHE_DURATION.getSeconds()
+            long timeRemainingUntilNextAsk = COMMAND_COOLDOWN.getSeconds()
                     - Duration.between(previousAskTime, Instant.now()).get(ChronoUnit.SECONDS);
 
             event
@@ -57,17 +57,15 @@ public final class ChatGptCommand extends SlashCommandAdapter {
             return;
         }
 
-        if (event.getInteraction().getOptions().isEmpty()) {
-            TextInput body = TextInput
-                .create(QUESTION_INPUT, "Ask ChatGPT a question or get help with code",
-                        TextInputStyle.PARAGRAPH)
-                .setPlaceholder("Put your question for ChatGPT here")
-                .setRequiredRange(MIN_MESSAGE_INPUT_LENGTH, MAX_MESSAGE_INPUT_LENGTH)
-                .build();
+        TextInput body = TextInput
+            .create(QUESTION_INPUT, "Ask ChatGPT a question or get help with code",
+                    TextInputStyle.PARAGRAPH)
+            .setPlaceholder("Put your question for ChatGPT here")
+            .setRequiredRange(MIN_MESSAGE_INPUT_LENGTH, MAX_MESSAGE_INPUT_LENGTH)
+            .build();
 
-            Modal modal = Modal.create(generateComponentId(), "ChatGPT").addActionRow(body).build();
-            event.replyModal(modal).queue();
-        }
+        Modal modal = Modal.create(generateComponentId(), "ChatGPT").addActionRow(body).build();
+        event.replyModal(modal).queue();
     }
 
     @Override
