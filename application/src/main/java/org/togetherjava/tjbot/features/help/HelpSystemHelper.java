@@ -62,6 +62,8 @@ public final class HelpSystemHelper {
     private final String categoryRoleSuffix;
     private final Database database;
     private final ChatGptService chatGptService;
+    private static final int MAX_QUESTION_LENGTH = 200;
+    private static final int MIN_QUESTION_LENGTH = 20;
 
     /**
      * Creates a new instance.
@@ -136,10 +138,28 @@ public final class HelpSystemHelper {
         return action.setEmbeds(embeds);
     }
 
-    public RestAction<Message> sendChatGPTAttempt(ThreadChannel threadChannel) {
-        Optional<String> chatGPTAnswer = chatGptService.ask(threadChannel.getName());
+    public RestAction<Message> sendChatGptAttempt(ThreadChannel threadChannel) {
+        String questionTitle = threadChannel.getName();
+        String questionFirstMessage = threadChannel.getHistoryFromBeginning(1)
+            .complete()
+            .getRetrievedHistory()
+            .get(0)
+            .getContentDisplay();
 
-        String response = "While you are waiting, ChatGPT can give your question shot: ";
+        String question = questionFirstMessage;
+        if (questionFirstMessage.length() > MAX_QUESTION_LENGTH
+                || questionFirstMessage.length() < MIN_QUESTION_LENGTH) {
+            question = questionTitle;
+
+            if (questionTitle.length() < MIN_QUESTION_LENGTH || !question.contains("?")) {
+                return threadChannel.sendMessage(
+                        "Your question and title is either too short or too long to send to ChatGPT.");
+            }
+        }
+
+        String response = "Here is an AI assisted attempt to answer your question, maybe it helps!"
+                + "In any case, a human is on the way \uD83D\uDC4D";
+        Optional<String> chatGPTAnswer = chatGptService.ask(question);
         MessageCreateAction action = threadChannel.sendMessage(response);
 
         List<MessageEmbed> embedding = List.of(HelpSystemHelper
