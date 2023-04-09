@@ -20,6 +20,8 @@ import java.util.Optional;
  */
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
+    public static final String ERROR_MESSAGE =
+            "An error has occurred while trying to communicate with ChatGPT. Please try again later";
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
     private static final int MAX_TOKENS = 3_000;
     private boolean isDisabled = false;

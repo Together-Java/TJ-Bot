@@ -92,7 +92,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
 
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {
         return sendHelperHeadsUp(threadChannel).flatMap(Message::pin)
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel));
+            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
+            .flatMap(any -> helper.sendChatGPTAttempt(threadChannel));
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {

@@ -72,9 +72,9 @@ public class Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database);
-        CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
         ChatGptService chatGptService = new ChatGptService(config);
+        HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
+        CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually

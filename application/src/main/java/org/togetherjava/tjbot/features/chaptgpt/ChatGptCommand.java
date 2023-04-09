@@ -78,8 +78,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
 
-        String response = optional.orElse(
-                "An error has occurred while trying to communicate with ChatGPT. Please try again later");
+        String response = optional.orElse(ChatGptService.ERROR_MESSAGE);
         event.getHook().sendMessage(response).queue();
     }
 }
