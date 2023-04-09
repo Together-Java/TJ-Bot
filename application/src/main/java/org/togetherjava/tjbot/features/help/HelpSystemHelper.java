@@ -24,13 +24,15 @@ import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
+import org.togetherjava.tjbot.features.chaptgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.InputStream;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -59,15 +61,18 @@ public final class HelpSystemHelper {
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
     private final Database database;
+    private final ChatGptService chatGptService;
 
     /**
      * Creates a new instance.
      *
      * @param config the config to use
      * @param database the database to store help thread metadata in
+     * @param chatGptService the access point to the ChatGPT API
      */
-    public HelpSystemHelper(Config config, Database database) {
+    public HelpSystemHelper(Config config, Database database, ChatGptService chatGptService) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
+        this.chatGptService = chatGptService;
         this.database = database;
 
         helpForumPattern = helpConfig.getHelpForumPattern();
@@ -129,6 +134,19 @@ public final class HelpSystemHelper {
                 .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
         }
         return action.setEmbeds(embeds);
+    }
+
+    public RestAction<Message> sendChatGPTAttempt(ThreadChannel threadChannel) {
+        Optional<String> chatGPTAnswer = chatGptService.ask(threadChannel.getName());
+
+        String response = "While you are waiting, ChatGPT can give your question shot: ";
+        MessageCreateAction action = threadChannel.sendMessage(response);
+
+        List<MessageEmbed> embedding = List.of(HelpSystemHelper
+            .embedWith(chatGPTAnswer.orElse("We attempted to answer your question with ChatGPT but "
+                    + ChatGptService.ERROR_MESSAGE)));
+
+        return action.setEmbeds(embedding);
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
