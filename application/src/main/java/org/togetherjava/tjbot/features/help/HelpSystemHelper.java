@@ -138,26 +138,34 @@ public final class HelpSystemHelper {
         return action.setEmbeds(embeds);
     }
 
-    public RestAction<Message> sendChatGptAttempt(ThreadChannel threadChannel) {
+    public RestAction<Message> prepareChatGptAttempt(ThreadChannel threadChannel) {
         String questionTitle = threadChannel.getName();
-        String questionFirstMessage = threadChannel.getHistoryFromBeginning(1)
-            .complete()
-            .getRetrievedHistory()
-            .get(0)
-            .getContentDisplay();
+        return threadChannel.retrieveMessageById(threadChannel.getIdLong())
+            .flatMap(message -> sendChatGptAttempt(message.getContentRaw(), questionTitle,
+                    threadChannel));
+    }
 
-        String question = questionFirstMessage;
+    public RestAction<Message> sendChatGptAttempt(String questionFirstMessage, String questionTitle,
+            ThreadChannel threadChannel) {
+
+        StringBuilder sb = new StringBuilder(questionFirstMessage);
+        for (ForumTag tag : threadChannel.getAppliedTags()) {
+            sb.insert(0, String.format("%s ", tag.getName()));
+        }
         if (questionFirstMessage.length() > MAX_QUESTION_LENGTH
                 || questionFirstMessage.length() < MIN_QUESTION_LENGTH) {
-            question = questionTitle;
-
-            if (questionTitle.length() < MIN_QUESTION_LENGTH || !question.contains("?")) {
+            if (questionTitle.length() < MIN_QUESTION_LENGTH || !questionTitle.contains("?")) {
                 return threadChannel.sendMessage(
                         "Your question and title is either too short or too long to send to ChatGPT.");
             }
+            sb = new StringBuilder(questionTitle);
+            for (ForumTag tag : threadChannel.getAppliedTags()) {
+                sb.insert(0, String.format("%s ", tag.getName()));
+            }
         }
 
-        String response = "Here is an AI assisted attempt to answer your question, maybe it helps!"
+        String question = sb.toString();
+        String response = "Here is an AI assisted attempt to answer your question, maybe it helps! "
                 + "In any case, a human is on the way \uD83D\uDC4D";
         Optional<String> chatGPTAnswer = chatGptService.ask(question);
         MessageCreateAction action = threadChannel.sendMessage(response);
