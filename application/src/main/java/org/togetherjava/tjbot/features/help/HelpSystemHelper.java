@@ -139,40 +139,48 @@ public final class HelpSystemHelper {
     }
 
     public RestAction<Message> prepareChatGptAttempt(ThreadChannel threadChannel) {
-        String questionTitle = threadChannel.getName();
+
         return threadChannel.retrieveMessageById(threadChannel.getIdLong())
-            .flatMap(message -> sendChatGptAttempt(message.getContentRaw(), questionTitle,
-                    threadChannel));
+            .flatMap(message -> sendChatGptAttempt(message.getContentRaw(), threadChannel));
     }
 
-    public RestAction<Message> sendChatGptAttempt(String questionFirstMessage, String questionTitle,
+    public RestAction<Message> sendChatGptAttempt(String questionFirstMessage,
             ThreadChannel threadChannel) {
+        String questionTitle = threadChannel.getName();
+        StringBuilder stringBuilder = new StringBuilder(questionFirstMessage);
+        List<ForumTag> tags = threadChannel.getAppliedTags();
 
-        StringBuilder sb = new StringBuilder(questionFirstMessage);
-        for (ForumTag tag : threadChannel.getAppliedTags()) {
-            sb.insert(0, String.format("%s ", tag.getName()));
-        }
         if (questionFirstMessage.length() > MAX_QUESTION_LENGTH
                 || questionFirstMessage.length() < MIN_QUESTION_LENGTH) {
             if (questionTitle.length() < MIN_QUESTION_LENGTH || !questionTitle.contains("?")) {
-                return threadChannel.sendMessage(
-                        "Your question and title is either too short or too long to send to ChatGPT.");
+                return threadChannel.sendMessage(String.format(
+                        """
+                                Your first message or title did not fit the format to be sent to ChatGPT. \
+                                Your message needs to be between %s and %s characters. If your question is longer than %s \
+                                then your title needs to include a question mark."
+                                """,
+                        MIN_QUESTION_LENGTH, MAX_QUESTION_LENGTH, MAX_QUESTION_LENGTH));
             }
-            sb = new StringBuilder(questionTitle);
-            for (ForumTag tag : threadChannel.getAppliedTags()) {
-                sb.insert(0, String.format("%s ", tag.getName()));
-            }
+            stringBuilder.replace(0, stringBuilder.length(), questionTitle);
         }
 
-        String question = sb.toString();
-        String response = "Here is an AI assisted attempt to answer your question, maybe it helps! "
-                + "In any case, a human is on the way \uD83D\uDC4D";
+        for (ForumTag tag : tags) {
+            stringBuilder.insert(0, String.format("%s ", tag.getName()));
+        }
+
+        String question = stringBuilder.toString();
+        String response = """
+                Here is an AI assisted attempt to answer your question, maybe it helps! \
+                It will also the tags you selected to provide more context. \
+                In any case, a human is on the way \uD83D\uDC4D
+                """;
         Optional<String> chatGPTAnswer = chatGptService.ask(question);
         MessageCreateAction action = threadChannel.sendMessage(response);
 
-        List<MessageEmbed> embedding = List.of(HelpSystemHelper
-            .embedWith(chatGPTAnswer.orElse("We attempted to answer your question with ChatGPT but "
-                    + ChatGptService.ERROR_MESSAGE)));
+        List<MessageEmbed> embedding = List.of(HelpSystemHelper.embedWith(chatGPTAnswer.orElse("""
+                An attempt was made to answer your question with ChatGPT but \
+                an error has occurred while trying to communicate with ChatGPT.
+                """)));
 
         return action.setEmbeds(embedding);
     }
