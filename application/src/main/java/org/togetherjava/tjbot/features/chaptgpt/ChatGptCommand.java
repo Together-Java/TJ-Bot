@@ -30,8 +30,15 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
-        String response = chatGptService.ask(event.getOption(QUESTION_OPTION).getAsString())
-            .orElse("An error has occurred while trying to communication with ChatGPT. Please try again later");
-        event.getHook().sendMessage(response).queue();
+        Long id=event.getMember().getIdLong();
+        if (BotCore.getCacheMap().getIfPresent(id) != null){
+            event.getHook().sendMessage("wait 10 second for another query to gpt").queue();
+        }
+        else{
+            BotCore.getCachedMap().put(id, "call to gpt");
+            String response = chatGptService.ask(event.getOption(QUESTION_OPTION).getAsString())
+                .orElse("An error has occurred while trying to communication with ChatGPT. Please try again later");
+            event.getHook().sendMessage(response).queue();
+        }
     }
 }

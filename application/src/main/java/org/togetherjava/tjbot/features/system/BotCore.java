@@ -54,6 +54,10 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     private static final ScheduledExecutorService ROUTINE_SERVICE =
             Executors.newScheduledThreadPool(5);
     private final Config config;
+    private static Cache<Long, String> cachedMap = Caffeine.newBuilder()
+    .maximumSize(20_000)
+    .expireAfterWrite(10)
+    .build();
     private final Map<String, UserInteractor> prefixedNameToInteractor;
     private final List<Routine> routines;
     private final ComponentIdParser componentIdParser;
@@ -121,6 +125,11 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         if (logger.isInfoEnabled()) {
             logger.info("Available user interactors: {}", interactors);
         }
+    }
+
+    //getter for the static field cacheMap
+    public static Cache<Long, String> getCachedMap(){
+        return cachedMap;
     }
 
     /**

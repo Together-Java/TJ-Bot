@@ -22,6 +22,7 @@ public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
     private static final int MAX_TOKENS = 3_000;
+    private static final int MAX_MESSAGE_LENGTH=200;
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
 
@@ -51,7 +52,9 @@ public class ChatGptService {
         if (isDisabled) {
             return Optional.empty();
         }
-
+        if (question.length() >= MAX_MESSAGE_LENGTH){
+            return Optional.of("why are u trying to empty our pockets ? [max length : 200]");
+        }
         try {
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));

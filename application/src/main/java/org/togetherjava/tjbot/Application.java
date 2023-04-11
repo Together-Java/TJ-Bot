@@ -31,7 +31,7 @@ public class Application {
     private Application() {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
-
+    
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private static final String DEFAULT_CONFIG_PATH = "config.json";
 
