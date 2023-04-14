@@ -46,9 +46,8 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         Instant previousAskTime = userIdToAskedAtCache.getIfPresent(event.getMember().getId());
         if (previousAskTime != null) {
-            long timeRemainingUntilNextAsk =
-                    COMMAND_COOLDOWN.minus(Duration.between(previousAskTime, Instant.now()))
-                        .toSeconds();
+            long timeRemainingUntilNextAsk = COMMAND_COOLDOWN.getSeconds()
+                    - Duration.between(previousAskTime, Instant.now()).get(ChronoUnit.SECONDS);
 
             event
                 .reply("Sorry, you need to wait another " + timeRemainingUntilNextAsk
