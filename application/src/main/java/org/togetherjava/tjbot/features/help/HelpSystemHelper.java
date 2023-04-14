@@ -138,31 +138,13 @@ public final class HelpSystemHelper {
         return action.setEmbeds(embeds);
     }
 
-    /**
-     * Gather first message from thread and pass into asynchronous sendChatGptAttempt.
-     * 
-     * @param threadChannel - The forum thread channel where the question originated
-     * @return A response from the AI service indicating success or failure.
-     * @see HelpSystemHelper#sendChatGptAttempt
-     */
-    RestAction<Message> prepareChatGptAttempt(ThreadChannel threadChannel) {
+    public RestAction<Message> prepareChatGptAttempt(ThreadChannel threadChannel) {
+
         return threadChannel.retrieveMessageById(threadChannel.getIdLong())
             .flatMap(message -> sendChatGptAttempt(message.getContentRaw(), threadChannel));
     }
 
-    /**
-     * Determine between the title of the thread and the first message which to send to the AI. It
-     * uses a simple heuristic of length to determine if enough context exists in a question. If the
-     * title is used, it must also include a question mark since the title is often used more as an
-     * indicator of topic versus a question.
-     * 
-     * @param questionFirstMessage - The first message of the thread which originates from the
-     *        question asker.
-     * @param threadChannel - The thread in which the question was asked.
-     * @return An answer for the user from the AI service or a message indicating either an error or
-     *         why the message wasn't used.
-     */
-    private RestAction<Message> sendChatGptAttempt(String questionFirstMessage,
+    public RestAction<Message> sendChatGptAttempt(String questionFirstMessage,
             ThreadChannel threadChannel) {
         String questionTitle = threadChannel.getName();
         StringBuilder stringBuilder = new StringBuilder(questionFirstMessage);
@@ -176,7 +158,7 @@ public final class HelpSystemHelper {
                                 Your first message or title did not fit the format to be sent to ChatGPT. \
                                 Your message needs to be between %s and %s characters. If your question is longer than %s \
                                 then your title needs to include a question mark."
-                                    """,
+                                """,
                         MIN_QUESTION_LENGTH, MAX_QUESTION_LENGTH, MAX_QUESTION_LENGTH));
             }
             stringBuilder.replace(0, stringBuilder.length(), questionTitle);
