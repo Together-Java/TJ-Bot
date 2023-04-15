@@ -73,6 +73,9 @@ public class ChatGptService {
                     "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
                     openAiHttpException.getMessage(), openAiHttpException.code,
                     openAiHttpException.type, openAiHttpException.statusCode);
+        } catch (RuntimeException runtimeException) {
+            logger.warn("There was an error using the OpenAI API: {}",
+                    runtimeException.getMessage());
         }
         return Optional.empty();
     }
