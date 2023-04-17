@@ -24,21 +24,25 @@ import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
+import org.togetherjava.tjbot.features.chaptgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chaptgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.togetherjava.tjbot.features.utils.MessageUtils.mentionGuildSlashCommand;
 
 /**
  * Helper class offering certain methods used by the help system.
@@ -175,7 +179,7 @@ public final class HelpSystemHelper {
                         """
                                 Your first message or title did not fit the format to be sent to ChatGPT. \
                                 Your message needs to be between %s and %s characters. If your question is longer than %s \
-                                then your title needs to include a question mark."
+                                then your title needs to be in the form of a question and include a question mark."
                                     """,
                         MIN_QUESTION_LENGTH, MAX_QUESTION_LENGTH, MAX_QUESTION_LENGTH));
             }
@@ -187,20 +191,27 @@ public final class HelpSystemHelper {
         }
 
         String question = stringBuilder.toString();
-        String response = """
-                Here is an AI assisted attempt to answer your question, maybe it helps! \
-                It will also the tags you selected to provide more context. \
-                In any case, a human is on the way \uD83D\uDC4D
-                """;
         Optional<String> chatGPTAnswer = chatGptService.ask(question);
-        MessageCreateAction action = threadChannel.sendMessage(response);
 
-        List<MessageEmbed> embedding = List.of(HelpSystemHelper.embedWith(chatGPTAnswer.orElse("""
-                An attempt was made to answer your question with ChatGPT but \
-                an error has occurred while trying to communicate with ChatGPT.
-                """)));
+        if (chatGPTAnswer.isPresent()) {
+            UnaryOperator<String> response =
+                    """
+                            Above is an AI assisted attempt to answer your question, maybe it helps! \
+                            In any case, a human is on the way 👍. To continue talking to the AI, you can use \
+                            %s.
+                            """::formatted;
 
-        return action.setEmbeds(embedding);
+            mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+                .map(response)
+                .flatMap(threadChannel::sendMessage)
+                .queue();
+
+            return threadChannel.sendMessage(chatGPTAnswer.get());
+        }
+
+        logger.warn("Something went wrong while trying to communicate with the AI API.");
+        throw new IllegalStateException(
+                "Something went wrong while trying to communicate with the AI API.");
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {

@@ -22,6 +22,7 @@ import java.util.Optional;
  * which it will respond with an AI generated answer.
  */
 public final class ChatGptCommand extends SlashCommandAdapter {
+    public static final String COMMAND_NAME = "chatgpt";
     private static final String QUESTION_INPUT = "question";
     private static final int MAX_MESSAGE_INPUT_LENGTH = 200;
     private static final int MIN_MESSAGE_INPUT_LENGTH = 4;
@@ -37,7 +38,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
      * @param chatGptService ChatGptService - Needed to make calls to ChatGPT API
      */
     public ChatGptCommand(ChatGptService chatGptService) {
-        super("chatgpt", "Ask the ChatGPT AI a question!", CommandVisibility.GUILD);
+        super(COMMAND_NAME, "Ask the ChatGPT AI a question!", CommandVisibility.GUILD);
 
         this.chatGptService = chatGptService;
     }
