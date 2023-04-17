@@ -46,8 +46,9 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         Instant previousAskTime = userIdToAskedAtCache.getIfPresent(event.getMember().getId());
         if (previousAskTime != null) {
-            long timeRemainingUntilNextAsk = COMMAND_COOLDOWN.getSeconds()
-                    - Duration.between(previousAskTime, Instant.now()).get(ChronoUnit.SECONDS);
+            long timeRemainingUntilNextAsk =
+                    COMMAND_COOLDOWN.minus(Duration.between(previousAskTime, Instant.now()))
+                        .toSeconds();
 
             event
                 .reply("Sorry, you need to wait another " + timeRemainingUntilNextAsk
@@ -78,7 +79,8 @@ public final class ChatGptCommand extends SlashCommandAdapter {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
 
-        String response = optional.orElse(ChatGptService.ERROR_MESSAGE);
+        String response = optional.orElse(
+                "An error has occurred while trying to communicate with ChatGPT. Please try again later");
         event.getHook().sendMessage(response).queue();
     }
 }
