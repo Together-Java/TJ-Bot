@@ -196,17 +196,16 @@ public final class HelpSystemHelper {
         if (chatGPTAnswer.isPresent()) {
             UnaryOperator<String> response =
                     """
-                            Above is an AI assisted attempt to answer your question, maybe it helps! \
+                            Here is an AI assisted attempt to answer your question, maybe it helps! \
                             In any case, a human is on the way 👍. To continue talking to the AI, you can use \
                             %s.
                             """::formatted;
 
-            mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+            return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
                 .map(response)
                 .flatMap(threadChannel::sendMessage)
-                .queue();
-
-            return threadChannel.sendMessage(chatGPTAnswer.get());
+                .flatMap(embed -> threadChannel
+                    .sendMessageEmbeds(HelpSystemHelper.embedWith(chatGPTAnswer.get())));
         }
 
         logger.warn("Something went wrong while trying to communicate with the AI API.");
