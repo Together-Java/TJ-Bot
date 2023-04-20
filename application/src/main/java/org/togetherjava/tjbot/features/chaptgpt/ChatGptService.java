@@ -20,9 +20,7 @@ import java.util.Optional;
  */
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
-    public static final String ERROR_MESSAGE =
-            "An error has occurred while trying to communicate with ChatGPT. Please try again later";
-    private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration TIMEOUT = Duration.ofSeconds(20);
     private static final int MAX_TOKENS = 3_000;
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
@@ -61,7 +59,7 @@ public class ChatGptService {
                 .model("gpt-3.5-turbo")
                 .messages(List.of(chatMessage))
                 .frequencyPenalty(0.5)
-                .temperature(0.7)
+                .temperature(0.3)
                 .maxTokens(MAX_TOKENS)
                 .n(1)
                 .build();
