@@ -67,7 +67,7 @@ public final class HelpSystemHelper {
     private final Database database;
     private final ChatGptService chatGptService;
     private static final int MAX_QUESTION_LENGTH = 200;
-    private static final int MIN_QUESTION_LENGTH = 20;
+    private static final int MIN_QUESTION_LENGTH = 10;
 
     /**
      * Creates a new instance.
@@ -168,35 +168,49 @@ public final class HelpSystemHelper {
      */
     private RestAction<Message> sendChatGptAttempt(String questionFirstMessage,
             ThreadChannel threadChannel) {
+        // Will be at most 100 characters.
         String questionTitle = threadChannel.getName();
-        StringBuilder stringBuilder = new StringBuilder(questionFirstMessage);
-        List<ForumTag> tags = threadChannel.getAppliedTags();
+        StringBuilder stringBuilder = new StringBuilder();
 
-        if (questionFirstMessage.length() > MAX_QUESTION_LENGTH
-                || questionFirstMessage.length() < MIN_QUESTION_LENGTH) {
-            if (questionTitle.length() < MIN_QUESTION_LENGTH || !questionTitle.contains("?")) {
-                return threadChannel.sendMessage(String.format(
-                        """
-                                Your first message or title did not fit the format to be sent to ChatGPT. \
-                                Your message needs to be between %s and %s characters. If your question is longer than %s \
-                                then your title needs to be in the form of a question and include a question mark."
-                                    """,
-                        MIN_QUESTION_LENGTH, MAX_QUESTION_LENGTH, MAX_QUESTION_LENGTH));
-            }
-            stringBuilder.replace(0, stringBuilder.length(), questionTitle);
+        if (questionFirstMessage.length() < MIN_QUESTION_LENGTH
+                && (questionTitle.length() < MIN_QUESTION_LENGTH || !questionTitle.contains("?"))) {
+            return threadChannel.sendMessage(String.format(
+                    """
+                            Your first message or title did not fit the format to be sent to ChatGPT. \
+                            Your message needs to be between %s and %s characters. If your question is longer than %s \
+                            then your title needs to be in the form of a question and include a question mark.
+                                """,
+                    MIN_QUESTION_LENGTH, MAX_QUESTION_LENGTH, MAX_QUESTION_LENGTH));
         }
 
-        for (ForumTag tag : tags) {
+        if (questionTitle.length() + questionFirstMessage.length() > MAX_QUESTION_LENGTH) {
+            questionFirstMessage =
+                    questionFirstMessage.substring(0, MAX_QUESTION_LENGTH - questionTitle.length());
+        }
+
+        stringBuilder.append(questionTitle).append(" ").append(questionFirstMessage);
+
+        for (ForumTag tag : threadChannel.getAppliedTags()) {
+            if (stringBuilder.length() > MAX_QUESTION_LENGTH) {
+                break;
+            }
             stringBuilder.insert(0, String.format("%s ", tag.getName()));
         }
 
         String question = stringBuilder.toString();
+        logger.info("The final question sent to chatGPT: {}", question);
         Optional<String> chatGPTAnswer = chatGptService.ask(question);
 
         if (chatGPTAnswer.isPresent()) {
+            String aiResponse = chatGPTAnswer.get();
+            if (aiResponse.matches("[sS]orry") && aiResponse.contains("As an AI language model")) {
+                logger.info("Response from ChatGPT, lacks context or unable to respond?: {}",
+                        aiResponse);
+            }
+
             UnaryOperator<String> response =
                     """
-                            Here is an AI assisted attempt to answer your question, maybe it helps! \
+                            Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
                             In any case, a human is on the way 👍. To continue talking to the AI, you can use \
                             %s.
                             """::formatted;
@@ -209,8 +223,9 @@ public final class HelpSystemHelper {
         }
 
         logger.warn("Something went wrong while trying to communicate with the AI API.");
-        throw new IllegalStateException(
-                "Something went wrong while trying to communicate with the AI API.");
+        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME).map(
+                "You can use %s to ask ChatGPT about your question while you wait for a member to respond."::formatted)
+            .flatMap(threadChannel::sendMessage);
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
