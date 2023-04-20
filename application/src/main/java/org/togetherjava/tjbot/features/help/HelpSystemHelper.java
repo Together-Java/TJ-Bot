@@ -33,7 +33,6 @@ import javax.annotation.Nullable;
 import java.awt.Color;
 import java.io.InputStream;
 import java.util.*;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -68,6 +67,8 @@ public final class HelpSystemHelper {
     private final ChatGptService chatGptService;
     private static final int MAX_QUESTION_LENGTH = 200;
     private static final int MIN_QUESTION_LENGTH = 10;
+    private static final String CHATGPT_FAILURE_MESSAGE =
+            "You can use %s to ask ChatGPT about your question while you wait for a member to respond.";
 
     /**
      * Creates a new instance.
@@ -174,22 +175,16 @@ public final class HelpSystemHelper {
 
         if (questionFirstMessage.length() < MIN_QUESTION_LENGTH
                 && (questionTitle.length() < MIN_QUESTION_LENGTH || !questionTitle.contains("?"))) {
-            return threadChannel.sendMessage(String.format(
-                    """
-                            Your first message or title did not fit the format to be sent to ChatGPT. \
-                            Your message needs to be between %s and %s characters. If your question is longer than %s \
-                            then your title needs to be in the form of a question and include a question mark.
-                                """,
-                    MIN_QUESTION_LENGTH, MAX_QUESTION_LENGTH, MAX_QUESTION_LENGTH));
+            return sendChatGptFallbackMessage(threadChannel);
         }
 
         if (questionTitle.length() + questionFirstMessage.length() > MAX_QUESTION_LENGTH) {
-            questionFirstMessage =
-                    questionFirstMessage.substring(0, MAX_QUESTION_LENGTH - questionTitle.length());
+            // - 1 for the space that will be added afterward.
+            questionFirstMessage = questionFirstMessage.substring(0,
+                    (MAX_QUESTION_LENGTH - 1) - questionTitle.length());
         }
 
         stringBuilder.append(questionTitle).append(" ").append(questionFirstMessage);
-
         for (ForumTag tag : threadChannel.getAppliedTags()) {
             if (stringBuilder.length() > MAX_QUESTION_LENGTH) {
                 break;
@@ -198,14 +193,16 @@ public final class HelpSystemHelper {
         }
 
         String question = stringBuilder.toString();
-        logger.info("The final question sent to chatGPT: {}", question);
+        logger.debug("The final question sent to chatGPT: {}", question);
         Optional<String> chatGPTAnswer = chatGptService.ask(question);
 
         if (chatGPTAnswer.isPresent()) {
             String aiResponse = chatGPTAnswer.get();
-            if (aiResponse.matches("[sS]orry") && aiResponse.contains("As an AI language model")) {
-                logger.info("Response from ChatGPT, lacks context or unable to respond?: {}",
+            if (aiResponse.matches(".*[sS]orry.*")
+                    || aiResponse.matches(".*[Aa]s an AI language model.*")) {
+                logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
                         aiResponse);
+                return sendChatGptFallbackMessage(threadChannel);
             }
 
             UnaryOperator<String> response =
@@ -219,12 +216,16 @@ public final class HelpSystemHelper {
                 .map(response)
                 .flatMap(threadChannel::sendMessage)
                 .flatMap(embed -> threadChannel
-                    .sendMessageEmbeds(HelpSystemHelper.embedWith(chatGPTAnswer.get())));
+                    .sendMessageEmbeds(HelpSystemHelper.embedWith(aiResponse)));
         }
 
-        logger.warn("Something went wrong while trying to communicate with the AI API.");
-        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME).map(
-                "You can use %s to ask ChatGPT about your question while you wait for a member to respond."::formatted)
+        logger.warn("Something went wrong while trying to communicate with the ChatGpt API.");
+        return sendChatGptFallbackMessage(threadChannel);
+    }
+
+    private RestAction<Message> sendChatGptFallbackMessage(ThreadChannel threadChannel) {
+        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+            .map(CHATGPT_FAILURE_MESSAGE::formatted)
             .flatMap(threadChannel::sendMessage);
     }
 
