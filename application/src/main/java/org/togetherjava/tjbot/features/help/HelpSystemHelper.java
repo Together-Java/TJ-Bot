@@ -198,8 +198,8 @@ public final class HelpSystemHelper {
 
         if (chatGPTAnswer.isPresent()) {
             String aiResponse = chatGPTAnswer.get();
-            if (aiResponse.matches(".*[sS]orry.*")
-                    || aiResponse.matches(".*[Aa]s an AI language model.*")) {
+            String lowercaseAiResponse = aiResponse.toLowerCase();
+            if (lowercaseAiResponse.contains("as an ai language model")) {
                 logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
                         aiResponse);
                 return sendChatGptFallbackMessage(threadChannel);
