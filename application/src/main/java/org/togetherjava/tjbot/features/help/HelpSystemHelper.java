@@ -144,18 +144,6 @@ public final class HelpSystemHelper {
     }
 
     /**
-     * Gather first message from thread and pass into asynchronous sendChatGptAttempt.
-     * 
-     * @param threadChannel - The forum thread channel where the question originated
-     * @return A response from the AI service indicating success or failure.
-     * @see HelpSystemHelper#sendChatGptAttempt
-     */
-    RestAction<Message> prepareChatGptAttempt(ThreadChannel threadChannel) {
-        return threadChannel.retrieveMessageById(threadChannel.getIdLong())
-            .flatMap(message -> sendChatGptAttempt(message.getContentRaw(), threadChannel));
-    }
-
-    /**
      * Determine between the title of the thread and the first message which to send to the AI. It
      * uses a simple heuristic of length to determine if enough context exists in a question. If the
      * title is used, it must also include a question mark since the title is often used more as an
@@ -167,15 +155,15 @@ public final class HelpSystemHelper {
      * @return An answer for the user from the AI service or a message indicating either an error or
      *         why the message wasn't used.
      */
-    private RestAction<Message> sendChatGptAttempt(String questionFirstMessage,
+    RestAction<Message> constructChatGptAttempt(String questionFirstMessage,
             ThreadChannel threadChannel) {
         // Will be at most 100 characters.
         String questionTitle = threadChannel.getName();
         StringBuilder stringBuilder = new StringBuilder();
 
         if (questionFirstMessage.length() < MIN_QUESTION_LENGTH
-                && (questionTitle.length() < MIN_QUESTION_LENGTH || !questionTitle.contains("?"))) {
-            return sendChatGptFallbackMessage(threadChannel);
+                && questionTitle.length() < MIN_QUESTION_LENGTH) {
+            return useChatGptFallbackMessage(threadChannel);
         }
 
         if (questionTitle.length() + questionFirstMessage.length() > MAX_QUESTION_LENGTH) {
@@ -202,7 +190,7 @@ public final class HelpSystemHelper {
             if (lowercaseAiResponse.contains("as an ai language model")) {
                 logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
                         aiResponse);
-                return sendChatGptFallbackMessage(threadChannel);
+                return useChatGptFallbackMessage(threadChannel);
             }
 
             UnaryOperator<String> response =
@@ -220,10 +208,10 @@ public final class HelpSystemHelper {
         }
 
         logger.warn("Something went wrong while trying to communicate with the ChatGpt API.");
-        return sendChatGptFallbackMessage(threadChannel);
+        return useChatGptFallbackMessage(threadChannel);
     }
 
-    private RestAction<Message> sendChatGptFallbackMessage(ThreadChannel threadChannel) {
+    private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
         return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
             .map(CHATGPT_FAILURE_MESSAGE::formatted)
             .flatMap(threadChannel::sendMessage);
