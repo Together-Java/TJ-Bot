@@ -155,38 +155,20 @@ public final class HelpSystemHelper {
      * @return An answer for the user from the AI service or a message indicating either an error or
      *         why the message wasn't used.
      */
-    RestAction<Message> constructChatGptAttempt(String questionFirstMessage,
-            ThreadChannel threadChannel) {
-        // Will be at most 100 characters.
-        String questionTitle = threadChannel.getName();
-        StringBuilder stringBuilder = new StringBuilder();
+    RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
+            String questionFirstMessage) {
 
-        if (questionFirstMessage.length() < MIN_QUESTION_LENGTH
-                && questionTitle.length() < MIN_QUESTION_LENGTH) {
-            return useChatGptFallbackMessage(threadChannel);
-        }
+        Optional<String> questionOptional =
+                prepareChatGptQuestion(threadChannel, questionFirstMessage);
+        Optional<String> chatGPTAnswer;
 
-        if (questionTitle.length() + questionFirstMessage.length() > MAX_QUESTION_LENGTH) {
-            // - 1 for the space that will be added afterward.
-            questionFirstMessage = questionFirstMessage.substring(0,
-                    (MAX_QUESTION_LENGTH - 1) - questionTitle.length());
-        }
+        try {
+            String question = questionOptional.orElseThrow();
+            logger.debug("The final question sent to chatGPT: {}", question);
+            chatGPTAnswer = chatGptService.ask(question);
 
-        stringBuilder.append(questionTitle).append(" ").append(questionFirstMessage);
-        for (ForumTag tag : threadChannel.getAppliedTags()) {
-            if (stringBuilder.length() > MAX_QUESTION_LENGTH) {
-                break;
-            }
-            stringBuilder.insert(0, String.format("%s ", tag.getName()));
-        }
-
-        String question = stringBuilder.toString();
-        logger.debug("The final question sent to chatGPT: {}", question);
-        Optional<String> chatGPTAnswer = chatGptService.ask(question);
-
-        if (chatGPTAnswer.isPresent()) {
-            String aiResponse = chatGPTAnswer.get();
-            String lowercaseAiResponse = aiResponse.toLowerCase();
+            String aiResponse = chatGPTAnswer.orElseThrow();
+            String lowercaseAiResponse = aiResponse.toLowerCase(Locale.US);
             if (lowercaseAiResponse.contains("as an ai language model")) {
                 logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
                         aiResponse);
@@ -205,10 +187,38 @@ public final class HelpSystemHelper {
                 .flatMap(threadChannel::sendMessage)
                 .flatMap(embed -> threadChannel
                     .sendMessageEmbeds(HelpSystemHelper.embedWith(aiResponse)));
+        } catch (NoSuchElementException e) {
+            logger.warn("Something went wrong while trying to communicate with the ChatGpt API: {}",
+                    e.getMessage());
+            return useChatGptFallbackMessage(threadChannel);
+        }
+    }
+
+    private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,
+            String questionFirstMessage) {
+        String questionTitle = threadChannel.getName();
+        StringBuilder questionBuilder = new StringBuilder(MAX_QUESTION_LENGTH);
+
+        if (questionFirstMessage.length() < MIN_QUESTION_LENGTH
+                && questionTitle.length() < MIN_QUESTION_LENGTH) {
+            return Optional.empty();
         }
 
-        logger.warn("Something went wrong while trying to communicate with the ChatGpt API.");
-        return useChatGptFallbackMessage(threadChannel);
+        if (questionTitle.length() + questionFirstMessage.length() > MAX_QUESTION_LENGTH) {
+            // - 1 for the space that will be added afterward.
+            questionFirstMessage = questionFirstMessage.substring(0,
+                    (MAX_QUESTION_LENGTH - 1) - questionTitle.length());
+        }
+
+        questionBuilder.append(questionTitle).append(" ").append(questionFirstMessage);
+        for (ForumTag tag : threadChannel.getAppliedTags()) {
+            if (questionBuilder.length() > MAX_QUESTION_LENGTH) {
+                break;
+            }
+            questionBuilder.insert(0, String.format("%s ", tag.getName()));
+        }
+
+        return Optional.of(questionBuilder.toString());
     }
 
     private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {

@@ -94,8 +94,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         return sendHelperHeadsUp(threadChannel).flatMap(Message::pin)
             .flatMap(any -> helper.sendExplanationMessage(threadChannel))
             .flatMap(any -> threadChannel.retrieveMessageById(threadChannel.getIdLong())
-                .flatMap(message -> helper.constructChatGptAttempt(message.getContentRaw(),
-                        threadChannel)));
+                .flatMap(message -> helper.constructChatGptAttempt(threadChannel,
+                        message.getContentRaw())));
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
