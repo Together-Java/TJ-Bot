@@ -30,9 +30,10 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.InputStream;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -68,7 +69,7 @@ public final class HelpSystemHelper {
     private static final int MAX_QUESTION_LENGTH = 200;
     private static final int MIN_QUESTION_LENGTH = 10;
     private static final String CHATGPT_FAILURE_MESSAGE =
-            "You can use %s to ask ChatGPT about your question while you wait for a member to respond.";
+            "You can use %s to ask ChatGPT about your question while you wait for a human to respond.";
 
     /**
      * Creates a new instance.
@@ -149,74 +150,78 @@ public final class HelpSystemHelper {
      * title is used, it must also include a question mark since the title is often used more as an
      * indicator of topic versus a question.
      * 
-     * @param questionFirstMessage - The first message of the thread which originates from the
-     *        question asker.
-     * @param threadChannel - The thread in which the question was asked.
+     * @param originalQuestion The first message of the thread which originates from the question
+     *        asker.
+     * @param threadChannel The thread in which the question was asked.
      * @return An answer for the user from the AI service or a message indicating either an error or
      *         why the message wasn't used.
      */
     RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
-            String questionFirstMessage) {
+            String originalQuestion) {
 
-        Optional<String> questionOptional =
-                prepareChatGptQuestion(threadChannel, questionFirstMessage);
+        Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
         Optional<String> chatGPTAnswer;
 
-        try {
-            String question = questionOptional.orElseThrow();
-            logger.debug("The final question sent to chatGPT: {}", question);
-            chatGPTAnswer = chatGptService.ask(question);
+        String question = questionOptional.orElseThrow();
+        logger.debug("The final question sent to chatGPT: {}", question);
+        chatGPTAnswer = chatGptService.ask(question);
 
-            String aiResponse = chatGPTAnswer.orElseThrow();
-            String lowercaseAiResponse = aiResponse.toLowerCase(Locale.US);
-            if (lowercaseAiResponse.contains("as an ai language model")) {
-                logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
-                        aiResponse);
-                return useChatGptFallbackMessage(threadChannel);
-            }
-
-            UnaryOperator<String> response =
-                    """
-                            Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
-                            In any case, a human is on the way 👍. To continue talking to the AI, you can use \
-                            %s.
-                            """::formatted;
-
-            return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
-                .map(response)
-                .flatMap(threadChannel::sendMessage)
-                .flatMap(embed -> threadChannel
-                    .sendMessageEmbeds(HelpSystemHelper.embedWith(aiResponse)));
-        } catch (NoSuchElementException e) {
-            logger.warn("Something went wrong while trying to communicate with the ChatGpt API: {}",
-                    e.getMessage());
+        if (chatGPTAnswer.isEmpty()) {
+            logger.warn("Something went wrong while trying to communicate with the ChatGpt API");
             return useChatGptFallbackMessage(threadChannel);
         }
+
+        String aiResponse = chatGPTAnswer.get();
+        String lowercaseAiResponse = aiResponse.toLowerCase(Locale.US);
+        if (lowercaseAiResponse.contains("as an ai language model")) {
+            logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
+                    aiResponse);
+            return useChatGptFallbackMessage(threadChannel);
+        }
+
+        UnaryOperator<String> response = """
+                Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
+                In any case, a human is on the way 👍. To continue talking to the AI, you can use \
+                %s.
+                """::formatted;
+
+        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+            .map(response)
+            .flatMap(threadChannel::sendMessage)
+            .flatMap(embed -> threadChannel
+                .sendMessageEmbeds(HelpSystemHelper.embedWith(aiResponse)));
     }
 
     private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,
-            String questionFirstMessage) {
+            String originalQuestion) {
         String questionTitle = threadChannel.getName();
         StringBuilder questionBuilder = new StringBuilder(MAX_QUESTION_LENGTH);
 
-        if (questionFirstMessage.length() < MIN_QUESTION_LENGTH
+        if (originalQuestion.length() < MIN_QUESTION_LENGTH
                 && questionTitle.length() < MIN_QUESTION_LENGTH) {
             return Optional.empty();
         }
 
-        if (questionTitle.length() + questionFirstMessage.length() > MAX_QUESTION_LENGTH) {
-            // - 1 for the space that will be added afterward.
-            questionFirstMessage = questionFirstMessage.substring(0,
-                    (MAX_QUESTION_LENGTH - 1) - questionTitle.length());
+        questionBuilder.append(questionTitle).append(" ");
+        if (originalQuestion.length() > MAX_QUESTION_LENGTH - questionBuilder.length()) {
+            originalQuestion =
+                    originalQuestion.substring(0, MAX_QUESTION_LENGTH - questionBuilder.length());
         }
 
-        questionBuilder.append(questionTitle).append(" ").append(questionFirstMessage);
+        questionBuilder.append(originalQuestion);
+
+        StringBuilder tagBuilder = new StringBuilder();
+        int stringLength = questionBuilder.length();
         for (ForumTag tag : threadChannel.getAppliedTags()) {
-            if (questionBuilder.length() > MAX_QUESTION_LENGTH) {
+            String tagName = tag.getName();
+            stringLength += tagName.length();
+            if (stringLength > MAX_QUESTION_LENGTH) {
                 break;
             }
-            questionBuilder.insert(0, String.format("%s ", tag.getName()));
+            tagBuilder.append(String.format("%s ", tagName));
         }
+
+        questionBuilder.insert(0, tagBuilder);
 
         return Optional.of(questionBuilder.toString());
     }
