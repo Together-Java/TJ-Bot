@@ -74,6 +74,7 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
+            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "starboard", required = true) StarboardConfig starboard) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
@@ -320,6 +321,7 @@ public final class Config {
         return openaiApiKey;
     }
 
+    /**
      * Gets the config for the Starboard Contains the List of emoji names recognized by the
      * starboard as well as the name of the channel with the starboard.
      * 
