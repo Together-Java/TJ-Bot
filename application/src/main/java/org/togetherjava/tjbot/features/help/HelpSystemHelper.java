@@ -163,19 +163,11 @@ public final class HelpSystemHelper {
         Optional<String> chatGPTAnswer;
 
         String question = questionOptional.orElseThrow();
-        logger.debug("The final question sent to chatGPT: {}", question);
+        logger.info("The final question sent to chatGPT: {}", question);
         chatGPTAnswer = chatGptService.ask(question);
 
         if (chatGPTAnswer.isEmpty()) {
             logger.warn("Something went wrong while trying to communicate with the ChatGpt API");
-            return useChatGptFallbackMessage(threadChannel);
-        }
-
-        String aiResponse = chatGPTAnswer.get();
-        String lowercaseAiResponse = aiResponse.toLowerCase(Locale.US);
-        if (lowercaseAiResponse.contains("as an ai language model")) {
-            logger.debug("Response from ChatGPT, lacks context or unable to respond?: {}",
-                    aiResponse);
             return useChatGptFallbackMessage(threadChannel);
         }
 
@@ -189,7 +181,7 @@ public final class HelpSystemHelper {
             .map(response)
             .flatMap(threadChannel::sendMessage)
             .flatMap(embed -> threadChannel
-                .sendMessageEmbeds(HelpSystemHelper.embedWith(aiResponse)));
+                .sendMessageEmbeds(HelpSystemHelper.embedWith(chatGPTAnswer.get())));
     }
 
     private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,
@@ -210,20 +202,19 @@ public final class HelpSystemHelper {
 
         questionBuilder.append(originalQuestion);
 
-        StringBuilder tagBuilder = new StringBuilder();
-        int stringLength = questionBuilder.length();
-        for (ForumTag tag : threadChannel.getAppliedTags()) {
-            String tagName = tag.getName();
-            stringLength += tagName.length();
-            if (stringLength > MAX_QUESTION_LENGTH) {
-                break;
-            }
-            tagBuilder.append(String.format("%s ", tagName));
-        }
+        String tagsJoined = threadChannel.getAppliedTags()
+            .stream()
+            .map(ForumTag::getName)
+            .collect(Collectors.joining(" "))
+            .concat(" ");
 
-        questionBuilder.insert(0, tagBuilder);
+        String question = questionBuilder.insert(0, tagsJoined)
+            .toString()
+            .lines()
+            .limit(MAX_QUESTION_LENGTH)
+            .collect(Collectors.joining());
 
-        return Optional.of(questionBuilder.toString());
+        return Optional.of(question);
     }
 
     private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
