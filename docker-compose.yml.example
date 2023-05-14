@@ -10,14 +10,6 @@ services:
     networks:
       - develop-bot
 
-  tj-develop-website:
-    image: "togetherjava.org:5001/togetherjava/website:develop"
-    ports:
-      - "127.0.0.1:5051:5051"
-    networks:
-      - develop-bot
-    restart: always
-
 volumes:
   database:
     name: "tj-bot-develop-database"
