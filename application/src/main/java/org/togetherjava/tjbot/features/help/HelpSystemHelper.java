@@ -32,8 +32,15 @@ import javax.annotation.Nullable;
 
 import java.awt.*;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -163,7 +170,7 @@ public final class HelpSystemHelper {
         Optional<String> chatGPTAnswer;
 
         String question = questionOptional.orElseThrow();
-        logger.info("The final question sent to chatGPT: {}", question);
+        logger.debug("The final question sent to chatGPT: {}", question);
         chatGPTAnswer = chatGptService.ask(question);
 
         if (chatGPTAnswer.isEmpty()) {
@@ -202,19 +209,20 @@ public final class HelpSystemHelper {
 
         questionBuilder.append(originalQuestion);
 
-        String tagsJoined = threadChannel.getAppliedTags()
-            .stream()
-            .map(ForumTag::getName)
-            .collect(Collectors.joining(" "))
-            .concat(" ");
+        StringBuilder tagBuilder = new StringBuilder();
+        int stringLength = questionBuilder.length();
+        for (ForumTag tag : threadChannel.getAppliedTags()) {
+            String tagName = tag.getName();
+            stringLength += tagName.length();
+            if (stringLength > MAX_QUESTION_LENGTH) {
+                break;
+            }
+            tagBuilder.append(String.format("%s ", tagName));
+        }
 
-        String question = questionBuilder.insert(0, tagsJoined)
-            .toString()
-            .lines()
-            .limit(MAX_QUESTION_LENGTH)
-            .collect(Collectors.joining());
+        questionBuilder.insert(0, tagBuilder);
 
-        return Optional.of(question);
+        return Optional.of(questionBuilder.toString());
     }
 
     private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
