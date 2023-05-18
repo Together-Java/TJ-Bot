@@ -31,31 +31,36 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        String emojiName = event.getReaction().getEmoji().asCustom().getName();
+        String emojiName = event.getEmoji().asCustom().getName();
         Guild guild = event.getGuild();
-        GuildChannel channel = event.getGuildChannel();
-        if (!config.getEmojiNames().contains(emojiName)
-                || !guild.getPublicRole().hasPermission(channel, Permission.VIEW_CHANNEL)) {
+        if (ignoreMessage(emojiName, guild, event.getGuildChannel())) {
             return;
         }
-        Optional<TextChannel> starboardChannel =
-                guild.getTextChannelsByName(config.getChannelName(), false).stream().findFirst();
+        Optional<TextChannel> starboardChannel = getStarboardChannel(guild);
         if (starboardChannel.isEmpty()) {
             logger.warn("There is no channel for the starboard in the guild with the name {}",
                     config.getChannelName());
             return;
         }
-        event.getChannel()
-            .retrieveMessageById(event.getMessageId())
+        event.retrieveMessage()
             .flatMap(
                     message -> starboardChannel.orElseThrow().sendMessageEmbeds(formEmbed(message)))
             .queue();
+    }
+
+    private boolean ignoreMessage(String emojiName, Guild guild, GuildChannel channel) {
+        return !config.getEmojiNames().contains(emojiName)
+                || !guild.getPublicRole().hasPermission(channel, Permission.VIEW_CHANNEL);
+    }
+
+    private Optional<TextChannel> getStarboardChannel(Guild guild) {
+        return guild.getTextChannelsByName(config.getChannelName(), false).stream().findFirst();
     }
 
     private static MessageEmbed formEmbed(Message message) {
         User author = message.getAuthor();
         return new EmbedBuilder().setAuthor(author.getName(), null, author.getAvatarUrl())
             .setDescription(message.getContentDisplay())
-            .build(); // Maybe set footer as reacted emoji?
+            .build(); // TODO make footer with link and reacted emojis
     }
 }

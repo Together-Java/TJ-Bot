@@ -38,7 +38,6 @@ public final class StarboardConfig {
      * 
      * @return the name of the channel with the starboard
      */
-
     public String getChannelName() {
         return channelName;
     }
