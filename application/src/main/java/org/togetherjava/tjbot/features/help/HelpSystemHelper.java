@@ -178,14 +178,14 @@ public final class HelpSystemHelper {
             return useChatGptFallbackMessage(threadChannel);
         }
 
-        UnaryOperator<String> response = """
+        UnaryOperator<String> preambleResponse = """
                 Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
                 In any case, a human is on the way 👍. To continue talking to the AI, you can use \
                 %s.
                 """::formatted;
 
         return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
-            .map(response)
+            .map(preambleResponse)
             .flatMap(threadChannel::sendMessage)
             .flatMap(embed -> threadChannel
                 .sendMessageEmbeds(HelpSystemHelper.embedWith(chatGPTAnswer.get())));

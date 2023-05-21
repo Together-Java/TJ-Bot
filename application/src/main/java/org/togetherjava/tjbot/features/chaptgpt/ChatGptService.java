@@ -20,7 +20,7 @@ import java.util.Optional;
  */
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
-    private static final Duration TIMEOUT = Duration.ofSeconds(20);
+    private static final Duration TIMEOUT = Duration.ofSeconds(120);
     private static final int MAX_TOKENS = 3_000;
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
@@ -52,17 +52,22 @@ public class ChatGptService {
             return Optional.empty();
         }
 
+        ChatMessage setUpMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), """
+                Please answer questions in 1750 characters.
+                Please note if your answer needs more room.
+                """);
         try {
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model("gpt-3.5-turbo")
-                .messages(List.of(chatMessage))
+                .messages(List.of(setUpMessage, chatMessage))
                 .frequencyPenalty(0.5)
                 .temperature(0.3)
                 .maxTokens(MAX_TOKENS)
                 .n(1)
                 .build();
+
             return Optional.ofNullable(openAiService.createChatCompletion(chatCompletionRequest)
                 .getChoices()
                 .get(0)
