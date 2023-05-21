@@ -22,8 +22,7 @@ class ChatGptServiceTest {
     @BeforeEach
     void setUp() {
         config = mock();
-        when(config.getOpenaiApiKey())
-            .thenReturn("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");
+        when(config.getOpenaiApiKey()).thenReturn("YOUR-KEY-HERE");
         chatGptService = new ChatGptService(config);
     }
 
