@@ -52,16 +52,18 @@ public class ChatGptService {
             return Optional.empty();
         }
 
-        ChatMessage setUpMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), """
-                Please answer questions in 1750 characters.
-                Please note if your answer needs more room.
-                """);
         try {
+            question =
+                    """
+                            Please answer questions in 1500 characters or less. Remember to count spaces in the character limit.
+                            For code supplied for review, refer to the old code supplied rather than rewriting the code.
+                            Don't supply a corrected version of the code.\s"""
+                            + question;
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model("gpt-3.5-turbo")
-                .messages(List.of(setUpMessage, chatMessage))
+                .messages(List.of(chatMessage))
                 .frequencyPenalty(0.5)
                 .temperature(0.3)
                 .maxTokens(MAX_TOKENS)

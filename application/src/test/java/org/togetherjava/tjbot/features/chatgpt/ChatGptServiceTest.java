@@ -22,7 +22,8 @@ class ChatGptServiceTest {
     @BeforeEach
     void setUp() {
         config = mock();
-        when(config.getOpenaiApiKey()).thenReturn("YOUR-KEY-HERE");
+        String openaiKey = System.getenv("openai-key");
+        when(config.getOpenaiApiKey()).thenReturn(openaiKey);
         chatGptService = new ChatGptService(config);
     }
 
@@ -30,7 +31,7 @@ class ChatGptServiceTest {
     void askToGenerateLongPoem() {
         Optional<String> response = chatGptService.ask("generate a long poem");
         response.ifPresent(logger::warn);
-        response.ifPresent(this::testResponse);
+        response.ifPresent(this::testResponseLength);
     }
 
     @Test
@@ -38,14 +39,14 @@ class ChatGptServiceTest {
         Optional<String> response =
                 chatGptService.ask("How to setup jackson library with examples");
         response.ifPresent(logger::warn);
-        response.ifPresent(this::testResponse);
+        response.ifPresent(this::testResponseLength);
     }
 
     @Test
     void askDockerReverseProxyWithNginxGuide() {
         Optional<String> response = chatGptService.ask("Docker reverse proxy with nginx guide");
         response.ifPresent(logger::warn);
-        response.ifPresent(this::testResponse);
+        response.ifPresent(this::testResponseLength);
     }
 
     @Test
@@ -129,20 +130,21 @@ class ChatGptServiceTest {
                     }
                 """);
         response.ifPresent(logger::warn);
-        response.ifPresent(this::testResponse);
+        response.ifPresent(this::testResponseLength);
     }
 
     @Test
-    void askWhyDoesItTakeYouMoreThan10SeconsToAnswer() {
+    void askWhyDoesItTakeYouMoreThan10SecondsToAnswer() {
         Optional<String> response =
                 chatGptService.ask("Why does it take you more than 10 seconds to answer");
         response.ifPresent(logger::warn);
-        response.ifPresent(this::testResponse);
+        response.ifPresent(this::testResponseLength);
     }
 
-    private void testResponse(String response) {
+    private void testResponseLength(String response) {
         int AI_RESPONSE_CHARACTER_LIMIT = 2000;
         Assertions.assertTrue(response.length() < AI_RESPONSE_CHARACTER_LIMIT,
                 "Response length is NOT within character limit: " + response.length());
+        logger.warn("Response length was: {}", response.length());
     }
 }
