@@ -77,6 +77,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         Runnable createMessages = () -> {
             try {
                 createMessages(threadChannel).queue();
+                createAIResponse(threadChannel).queue();
             } catch (Exception e) {
                 logger.error(
                         "Unknown error while creating messages after help-thread ({}) creation",
@@ -90,12 +91,17 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         SERVICE.schedule(createMessages, 5, TimeUnit.SECONDS);
     }
 
+    private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
+        RestAction<Message> originalQuestion =
+                threadChannel.retrieveMessageById(threadChannel.getIdLong());
+        return originalQuestion.flatMap(
+                message -> helper.constructChatGptAttempt(threadChannel, message.getContentRaw()));
+    }
+
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {
         return sendHelperHeadsUp(threadChannel).flatMap(Message::pin)
             .flatMap(any -> helper.sendExplanationMessage(threadChannel))
-            .flatMap(any -> threadChannel.retrieveMessageById(threadChannel.getIdLong())
-                .flatMap(message -> helper.constructChatGptAttempt(threadChannel,
-                        message.getContentRaw())));
+            .flatMap(any -> threadChannel.retrieveMessageById(threadChannel.getIdLong()));
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {

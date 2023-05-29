@@ -74,18 +74,20 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferReply().queue();
 
-        Optional<String> optional =
+        Optional<String[]> optional =
                 chatGptService.ask(event.getValue(QUESTION_INPUT).getAsString());
         if (optional.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
 
-        String errorResponse = """
+        String[] errorResponse = {"""
                     An error has occurred while trying to communicate with ChatGPT.
                     Please try again later.
-                """;
+                """};
 
-        String response = optional.orElse(errorResponse);
-        event.getHook().sendMessage(response).queue();
+        String[] response = optional.orElse(errorResponse);
+        for (String message : response) {
+            event.getHook().sendMessage(message).queue();
+        }
     }
 }
