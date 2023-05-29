@@ -165,9 +165,8 @@ public final class HelpSystemHelper {
      */
     RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
             String originalQuestion) {
-
         Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
-        Optional<String> chatGPTAnswer;
+        Optional<String[]> chatGPTAnswer;
 
         String question = questionOptional.orElseThrow();
         logger.debug("The final question sent to chatGPT: {}", question);
@@ -184,11 +183,15 @@ public final class HelpSystemHelper {
                 %s.
                 """::formatted;
 
+        List<MessageEmbed> aiResponseEmbeds = new ArrayList<>();
+        for (String aiResponse : chatGPTAnswer.get()) {
+            aiResponseEmbeds.add(HelpSystemHelper.embedWith(aiResponse));
+        }
+
         return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
             .map(preambleResponse)
             .flatMap(threadChannel::sendMessage)
-            .flatMap(embed -> threadChannel
-                .sendMessageEmbeds(HelpSystemHelper.embedWith(chatGPTAnswer.get())));
+            .flatMap(embed -> threadChannel.sendMessageEmbeds(aiResponseEmbeds));
     }
 
     private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,

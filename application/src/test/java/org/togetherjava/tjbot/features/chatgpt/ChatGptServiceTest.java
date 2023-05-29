@@ -29,29 +29,29 @@ class ChatGptServiceTest {
 
     @Test
     void askToGenerateLongPoem() {
-        Optional<String> response = chatGptService.ask("generate a long poem");
-        response.ifPresent(logger::warn);
+        Optional<String[]> response = chatGptService.ask("generate a long poem");
+        response.ifPresent(this::toLog);
         response.ifPresent(this::testResponseLength);
     }
 
     @Test
     void askHowToSetupJacksonLibraryWithExamples() {
-        Optional<String> response =
+        Optional<String[]> response =
                 chatGptService.ask("How to setup jackson library with examples");
-        response.ifPresent(logger::warn);
+        response.ifPresent(this::toLog);
         response.ifPresent(this::testResponseLength);
     }
 
     @Test
     void askDockerReverseProxyWithNginxGuide() {
-        Optional<String> response = chatGptService.ask("Docker reverse proxy with nginx guide");
-        response.ifPresent(logger::warn);
+        Optional<String[]> response = chatGptService.ask("Docker reverse proxy with nginx guide");
+        response.ifPresent(this::toLog);
         response.ifPresent(this::testResponseLength);
     }
 
     @Test
     void askWhatIsWrongWithMyCode() {
-        Optional<String> response = chatGptService.ask("""
+        Optional<String[]> response = chatGptService.ask("""
                     What is wrong with my code?
 
                     package Lab13;
@@ -129,22 +129,30 @@ class ChatGptServiceTest {
                             }
                     }
                 """);
-        response.ifPresent(logger::warn);
+        response.ifPresent(this::toLog);
         response.ifPresent(this::testResponseLength);
     }
 
     @Test
     void askWhyDoesItTakeYouMoreThan10SecondsToAnswer() {
-        Optional<String> response =
+        Optional<String[]> response =
                 chatGptService.ask("Why does it take you more than 10 seconds to answer");
-        response.ifPresent(logger::warn);
+        response.ifPresent(this::toLog);
         response.ifPresent(this::testResponseLength);
     }
 
-    private void testResponseLength(String response) {
+    private void testResponseLength(String[] responses) {
         int AI_RESPONSE_CHARACTER_LIMIT = 2000;
-        Assertions.assertTrue(response.length() < AI_RESPONSE_CHARACTER_LIMIT,
-                "Response length is NOT within character limit: " + response.length());
-        logger.warn("Response length was: {}", response.length());
+        for (String response : responses) {
+            Assertions.assertTrue(response.length() <= AI_RESPONSE_CHARACTER_LIMIT,
+                    "Response length is NOT within character limit: " + response.length());
+            logger.warn("Response length was: {}", response.length());
+        }
+    }
+
+    private void toLog(String[] responses) {
+        for (String response : responses) {
+            logger.warn(response);
+        }
     }
 }
