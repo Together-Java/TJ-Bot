@@ -183,15 +183,16 @@ public final class HelpSystemHelper {
                 %s.
                 """::formatted;
 
-        List<MessageEmbed> aiResponseEmbeds = new ArrayList<>();
+        RestAction<Message> message =
+                mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+                    .map(preambleResponse)
+                    .flatMap(threadChannel::sendMessage);
+
         for (String aiResponse : chatGPTAnswer.get()) {
-            aiResponseEmbeds.add(HelpSystemHelper.embedWith(aiResponse));
+            message = message.map(aiResponse::formatted).flatMap(threadChannel::sendMessage);
         }
 
-        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
-            .map(preambleResponse)
-            .flatMap(threadChannel::sendMessage)
-            .flatMap(embed -> threadChannel.sendMessageEmbeds(aiResponseEmbeds));
+        return message;
     }
 
     private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,

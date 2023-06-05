@@ -28,7 +28,7 @@ public class ChatGptService {
 
     /**
      * Creates instance of ChatGPTService
-     * 
+     *
      * @param config needed for token to OpenAI API.
      */
     public ChatGptService(Config config) {
@@ -59,11 +59,11 @@ public class ChatGptService {
 
     /**
      * Prompt ChatGPT with a question and receive a response.
-     * 
+     *
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @return response from ChatGPT as a String.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
-     * @return response from ChatGPT as a String.
      */
     public Optional<String[]> ask(String question) {
         if (isDisabled) {
@@ -94,20 +94,7 @@ public class ChatGptService {
                         "Response from AI was longer than allowed limit. "
                                 + "The answer was cut up to max {} characters length messages",
                         RESPONSE_LENGTH_LIMIT);
-                int begin = 0;
-                int end = RESPONSE_LENGTH_LIMIT;
-                int i = 0;
-                aiResponses = new String[(response.length() / RESPONSE_LENGTH_LIMIT) + 1];
-                while (begin < response.length()) {
-                    aiResponses[i] = response.substring(begin, end);
-
-                    begin += RESPONSE_LENGTH_LIMIT;
-                    end += RESPONSE_LENGTH_LIMIT;
-                    if (end > response.length()) {
-                        end = response.length();
-                    }
-                    i++;
-                }
+                aiResponses = breakupAiResponse(response);
             } else {
                 aiResponses = new String[] {response};
             }
@@ -123,5 +110,51 @@ public class ChatGptService {
                     runtimeException.getMessage());
         }
         return Optional.empty();
+    }
+
+    private String[] breakupAiResponse(String response) {
+        String[] aiResponses;
+        int begin = 0;
+        int end = RESPONSE_LENGTH_LIMIT - 1;
+        int responseLength = response.length();
+        int aiResponsesLength =
+                responseLength % RESPONSE_LENGTH_LIMIT == 0 ? responseLength / RESPONSE_LENGTH_LIMIT
+                        : (responseLength / RESPONSE_LENGTH_LIMIT) + 1;
+        aiResponses = new String[aiResponsesLength];
+        for (int i = 0; begin < responseLength; i++) {
+            if (responseLength - begin <= RESPONSE_LENGTH_LIMIT) {
+                // No point breaking up the response more by new line if leftover bit is
+                // less than limit.
+                aiResponses[i] = response.substring(begin, end);
+                begin += RESPONSE_LENGTH_LIMIT;
+            } else {
+                int lastLineFeedIndex = response.lastIndexOf("\n", begin + end);
+                boolean looking = true;
+                char character;
+                while (looking) {
+                    character = response.charAt(lastLineFeedIndex - 1);
+                    switch (character) {
+                        case ';', '}', '{', '`' ->
+                            // Don't break up explanation in code...
+                            // Leads to decoupling with code highlights (```) and formatting
+                            // issues
+                            // in future responses.
+                            lastLineFeedIndex = response.lastIndexOf("\n", lastLineFeedIndex - 1);
+                        case '\n' -> lastLineFeedIndex--;
+                        default -> looking = false;
+                    }
+                }
+
+                aiResponses[i] = response.substring(begin, lastLineFeedIndex);
+
+                begin += lastLineFeedIndex;
+                end += RESPONSE_LENGTH_LIMIT - 1;
+                if (end > response.length() - 1) {
+                    end = response.length() - 1;
+                }
+            }
+        }
+
+        return aiResponses;
     }
 }
