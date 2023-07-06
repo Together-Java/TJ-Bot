@@ -22,7 +22,6 @@ public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(120);
     private static final int MAX_TOKENS = 3_000;
-    private static final int RESPONSE_LENGTH_LIMIT = 2_000;
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
 
@@ -88,18 +87,7 @@ public class ChatGptService {
                 .getMessage()
                 .getContent();
 
-            String[] aiResponses;
-            if (response.length() > RESPONSE_LENGTH_LIMIT) {
-                logger.warn(
-                        "Response from AI was longer than allowed limit. "
-                                + "The answer was cut up to max {} characters length messages",
-                        RESPONSE_LENGTH_LIMIT);
-                aiResponses = breakupAiResponse(response);
-            } else {
-                aiResponses = new String[] {response};
-            }
-
-            return Optional.of(aiResponses);
+            return AIResponseParser.parse(response);
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
                     "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
@@ -110,51 +98,5 @@ public class ChatGptService {
                     runtimeException.getMessage());
         }
         return Optional.empty();
-    }
-
-    private String[] breakupAiResponse(String response) {
-        String[] aiResponses;
-        int begin = 0;
-        int end = RESPONSE_LENGTH_LIMIT - 1;
-        int responseLength = response.length();
-        int aiResponsesLength =
-                responseLength % RESPONSE_LENGTH_LIMIT == 0 ? responseLength / RESPONSE_LENGTH_LIMIT
-                        : (responseLength / RESPONSE_LENGTH_LIMIT) + 1;
-        aiResponses = new String[aiResponsesLength];
-        for (int i = 0; begin < responseLength; i++) {
-            if (responseLength - begin <= RESPONSE_LENGTH_LIMIT) {
-                // No point breaking up the response more by new line if leftover bit is
-                // less than limit.
-                aiResponses[i] = response.substring(begin, end);
-                begin += RESPONSE_LENGTH_LIMIT;
-            } else {
-                int lastLineFeedIndex = response.lastIndexOf("\n", begin + end);
-                boolean looking = true;
-                char character;
-                while (looking) {
-                    character = response.charAt(lastLineFeedIndex - 1);
-                    switch (character) {
-                        case ';', '}', '{', '`' ->
-                            // Don't break up explanation in code...
-                            // Leads to decoupling with code highlights (```) and formatting
-                            // issues
-                            // in future responses.
-                            lastLineFeedIndex = response.lastIndexOf("\n", lastLineFeedIndex - 1);
-                        case '\n' -> lastLineFeedIndex--;
-                        default -> looking = false;
-                    }
-                }
-
-                aiResponses[i] = response.substring(begin, lastLineFeedIndex);
-
-                begin += lastLineFeedIndex;
-                end += RESPONSE_LENGTH_LIMIT - 1;
-                if (end > response.length() - 1) {
-                    end = response.length() - 1;
-                }
-            }
-        }
-
-        return aiResponses;
     }
 }
