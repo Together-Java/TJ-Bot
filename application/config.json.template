@@ -4,7 +4,7 @@
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
-    "modAuditLogChannelPattern": "mod_audit_log",
+    "modAuditLogChannelPattern": "mod-audit-log",
     "modMailChannelPattern": "modmail",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
@@ -12,7 +12,7 @@
     "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
     "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
     "suggestions": {
-        "channelPattern": "tj_suggestions",
+        "channelPattern": "tj-suggestions",
         "upVoteEmoteName": "peepo_yes",
         "downVoteEmoteName": "peepo_no"
     },
