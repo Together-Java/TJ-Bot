@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
+import javax.annotation.Nullable;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
@@ -70,6 +72,7 @@ final class DiscordLogForwarder {
                     0xDFDF00, Level.ERROR, 0xBF2200, Level.FATAL, 0xFF8484);
 
     private final WebhookClient webhookClient;
+    private final String sourceCodeBaseUrl;
     /**
      * Internal buffer of logs that still have to be forwarded to Discord. Actions are synchronized
      * using {@link #pendingLogsLock} to ensure thread safety.
@@ -77,8 +80,10 @@ final class DiscordLogForwarder {
     private final Queue<LogMessage> pendingLogs = new PriorityQueue<>();
     private final Object pendingLogsLock = new Object();
 
-    DiscordLogForwarder(URI webhook) {
+
+    DiscordLogForwarder(URI webhook, String sourceCodeBaseUrl) {
         webhookClient = WebhookClient.withUrl(webhook.toString());
+        this.sourceCodeBaseUrl = sourceCodeBaseUrl;
 
         SERVICE.scheduleWithFixedDelay(this::processPendingLogs, 5, 5, TimeUnit.SECONDS);
     }
@@ -110,7 +115,7 @@ final class DiscordLogForwarder {
                     """);
         }
 
-        LogMessage log = LogMessage.ofEvent(event);
+        LogMessage log = LogMessage.ofEvent(event, sourceCodeBaseUrl);
 
         synchronized (pendingLogsLock) {
             pendingLogs.add(log);
@@ -160,7 +165,9 @@ final class DiscordLogForwarder {
     private record LogMessage(WebhookEmbed embed,
             Instant timestamp) implements Comparable<LogMessage> {
 
-        private static LogMessage ofEvent(LogEvent event) {
+        private static final String BASE_PACKAGE = "org.togetherjava.tjbot.";
+
+        private static LogMessage ofEvent(LogEvent event, String sourceCodeBaseUrl) {
             String authorName = event.getLoggerName();
             String title = event.getLevel().name();
             int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
@@ -169,13 +176,13 @@ final class DiscordLogForwarder {
             Instant timestamp = Instant.ofEpochMilli(event.getInstant().getEpochMillisecond());
 
             WebhookEmbed embed = new WebhookEmbedBuilder()
-                .setAuthor(new WebhookEmbed.EmbedAuthor(authorName, null, null))
+                .setAuthor(new WebhookEmbed.EmbedAuthor(authorName, null,
+                        linkToSource(event.getSource().getClassName(), sourceCodeBaseUrl)))
                 .setTitle(new WebhookEmbed.EmbedTitle(title, null))
                 .setDescription(description)
                 .setColor(colorDecimal)
                 .setTimestamp(timestamp)
                 .build();
-
             return new LogMessage(embed, timestamp);
         }
 
@@ -191,6 +198,14 @@ final class DiscordLogForwarder {
             exception.printStackTrace(new PrintWriter(exceptionWriter));
 
             return logMessage + "\n" + exceptionWriter.toString().replace("\t", "> ");
+        }
+
+        private static @Nullable String linkToSource(String source, String sourceCodeBaseUrl) {
+            if (!source.startsWith(BASE_PACKAGE)) {
+                return null;
+            }
+
+            return sourceCodeBaseUrl + source.replace('.', '/') + ".java";
         }
 
         private LogMessage shortened() {
