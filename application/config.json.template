@@ -87,6 +87,7 @@
         "wsh"
     ],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
-    "logErrorChannelWebhook": "<put_your_webhook_here>"
-    "openaiApiKey": "<check pins in #tjbot_discussion for the key>"
+    "logErrorChannelWebhook": "<put_your_webhook_here>",
+    "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
+    "sourceCodeBaseUrl": "<put_the_source_code_base_url_here>"
 }

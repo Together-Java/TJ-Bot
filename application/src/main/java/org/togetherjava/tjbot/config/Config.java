@@ -37,6 +37,7 @@ public final class Config {
     private final String logInfoChannelWebhook;
     private final String logErrorChannelWebhook;
     private final String openaiApiKey;
+    private final String sourceCodeBaseUrl;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -72,7 +73,8 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey) {
+            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
+            @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -96,6 +98,7 @@ public final class Config {
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
+        this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
     }
 
     /**
@@ -315,5 +318,14 @@ public final class Config {
      */
     public String getOpenaiApiKey() {
         return openaiApiKey;
+    }
+
+    /**
+     * The Base URL of the Source code to link tj-bot originated logs to the GitHub file.
+     *
+     * @return the base url of the source code
+     */
+    public String getSourceCodeBaseUrl() {
+        return sourceCodeBaseUrl;
     }
 }
