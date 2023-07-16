@@ -46,7 +46,6 @@ final class DiscordLogAppender extends AbstractAppender {
         @Required
         private String sourceCodeBaseUrl;
 
-
         public DiscordLogAppenderBuilder setWebhook(URI webhook) {
             this.webhook = webhook;
             return asBuilder();

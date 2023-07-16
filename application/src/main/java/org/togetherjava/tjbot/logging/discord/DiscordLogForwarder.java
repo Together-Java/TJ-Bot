@@ -80,7 +80,6 @@ final class DiscordLogForwarder {
     private final Queue<LogMessage> pendingLogs = new PriorityQueue<>();
     private final Object pendingLogsLock = new Object();
 
-
     DiscordLogForwarder(URI webhook, String sourceCodeBaseUrl) {
         webhookClient = WebhookClient.withUrl(webhook.toString());
         this.sourceCodeBaseUrl = sourceCodeBaseUrl;
@@ -169,6 +168,7 @@ final class DiscordLogForwarder {
 
         private static LogMessage ofEvent(LogEvent event, String sourceCodeBaseUrl) {
             String authorName = event.getLoggerName();
+            String authorUrl = linkToSource(event.getSource().getClassName(), sourceCodeBaseUrl);
             String title = event.getLevel().name();
             int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
             String description =
@@ -176,8 +176,7 @@ final class DiscordLogForwarder {
             Instant timestamp = Instant.ofEpochMilli(event.getInstant().getEpochMillisecond());
 
             WebhookEmbed embed = new WebhookEmbedBuilder()
-                .setAuthor(new WebhookEmbed.EmbedAuthor(authorName, null,
-                        linkToSource(event.getSource().getClassName(), sourceCodeBaseUrl)))
+                .setAuthor(new WebhookEmbed.EmbedAuthor(authorName, null, authorUrl))
                 .setTitle(new WebhookEmbed.EmbedTitle(title, null))
                 .setDescription(description)
                 .setColor(colorDecimal)
