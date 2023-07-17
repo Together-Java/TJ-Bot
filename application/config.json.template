@@ -89,5 +89,5 @@
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>",
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
-    "sourceCodeBaseUrl": "<see explanation in https://github.com/Together-Java/TJ-Bot/pull/857>"
+    "sourceCodeBaseUrl": "<https://github.com/<your_account_here>/<your_repo_here>/blob/master/application/src/main/java/>"
 }

@@ -321,9 +321,11 @@ public final class Config {
     }
 
     /**
-     * The Base URL of the Source code to link tj-bot originated logs to the GitHub file.
+     * The base URL of the source code of this bot. E.g.
+     * {@code getSourceCodeBaseUrl() + "/org/togetherjava/tjbot/config/Config.java"} would point to
+     * this file.
      *
-     * @return the base url of the source code
+     * @return the base url of the source code of this bot
      */
     public String getSourceCodeBaseUrl() {
         return sourceCodeBaseUrl;

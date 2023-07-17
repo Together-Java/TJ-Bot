@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
-import javax.annotation.Nullable;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
@@ -168,7 +166,8 @@ final class DiscordLogForwarder {
 
         private static LogMessage ofEvent(LogEvent event, String sourceCodeBaseUrl) {
             String authorName = event.getLoggerName();
-            String authorUrl = linkToSource(event.getSource().getClassName(), sourceCodeBaseUrl);
+            String authorUrl =
+                    linkToSource(event.getSource().getClassName(), sourceCodeBaseUrl).orElse(null);
             String title = event.getLevel().name();
             int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
             String description =
@@ -199,12 +198,17 @@ final class DiscordLogForwarder {
             return logMessage + "\n" + exceptionWriter.toString().replace("\t", "> ");
         }
 
-        private static @Nullable String linkToSource(String source, String sourceCodeBaseUrl) {
+        private static Optional<String> linkToSource(String source, String sourceCodeBaseUrl) {
             if (!source.startsWith(BASE_PACKAGE)) {
-                return null;
+                return Optional.empty();
             }
 
-            return sourceCodeBaseUrl + source.replace('.', '/') + ".java";
+            if (!sourceCodeBaseUrl.endsWith("/")) {
+                sourceCodeBaseUrl += "/";
+            }
+
+            String link = sourceCodeBaseUrl + source.replace('.', '/') + ".java";
+            return Optional.of(link);
         }
 
         private LogMessage shortened() {
