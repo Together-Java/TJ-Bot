@@ -7,6 +7,7 @@ import club.minnced.discord.webhook.send.WebhookMessage;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,12 @@ final class DiscordLogForwarder {
 
     DiscordLogForwarder(URI webhook, String sourceCodeBaseUrl) {
         webhookClient = WebhookClient.withUrl(webhook.toString());
-        this.sourceCodeBaseUrl = sourceCodeBaseUrl;
+
+        if (!sourceCodeBaseUrl.endsWith("/")) {
+            this.sourceCodeBaseUrl = sourceCodeBaseUrl + "/";
+        } else {
+            this.sourceCodeBaseUrl = sourceCodeBaseUrl;
+        }
 
         SERVICE.scheduleWithFixedDelay(this::processPendingLogs, 5, 5, TimeUnit.SECONDS);
     }
@@ -166,8 +172,7 @@ final class DiscordLogForwarder {
 
         private static LogMessage ofEvent(LogEvent event, String sourceCodeBaseUrl) {
             String authorName = event.getLoggerName();
-            String authorUrl =
-                    linkToSource(event.getSource().getClassName(), sourceCodeBaseUrl).orElse(null);
+            String authorUrl = linkToSource(event.getSource(), sourceCodeBaseUrl).orElse(null);
             String title = event.getLevel().name();
             int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
             String description =
@@ -198,16 +203,18 @@ final class DiscordLogForwarder {
             return logMessage + "\n" + exceptionWriter.toString().replace("\t", "> ");
         }
 
-        private static Optional<String> linkToSource(String source, String sourceCodeBaseUrl) {
+        private static Optional<String> linkToSource(@Nullable StackTraceElement sourceElement,
+                String sourceCodeBaseUrl) {
+            if (sourceElement == null) {
+                return Optional.empty();
+            }
+
+            String source = sourceElement.getClassName();
             if (!source.startsWith(BASE_PACKAGE)) {
                 return Optional.empty();
             }
 
-            if (!sourceCodeBaseUrl.endsWith("/")) {
-                sourceCodeBaseUrl += "/";
-            }
-
-            String link = sourceCodeBaseUrl + source.replace('.', '/') + ".java";
+            String link = "%s%s.java".formatted(sourceCodeBaseUrl, source.replace('.', '/'));
             return Optional.of(link);
         }
 
