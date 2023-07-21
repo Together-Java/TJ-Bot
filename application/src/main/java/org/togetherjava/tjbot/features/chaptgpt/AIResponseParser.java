@@ -30,59 +30,39 @@ public class AIResponseParser {
     }
 
     private static String[] breakupAiResponse(String response) {
-        List<CodeBlockIndexPair> codeMarkIndexPairs = new ArrayList<>();
+        int begin = 0;
+        int end = RESPONSE_LENGTH_LIMIT - 3;
+        int occurences = 0;
+        int lastOccurence = 0;
+        boolean addedCodeMark = false;
 
-        int firstCodeBlockMarkIndex;
-        while ((firstCodeBlockMarkIndex = response.indexOf("```")) != -1) {
-            // Assuming that code marks come in pairs...
-            int secondCodeBlockMarkIndex = response.indexOf("```");
-            codeMarkIndexPairs
-                .add(new CodeBlockIndexPair(firstCodeBlockMarkIndex, secondCodeBlockMarkIndex));
-        }
+        List<String> responseChunks = new ArrayList<>();
 
-        List<String> brokenUpAiResponse = new ArrayList<>();
-        if (codeMarkIndexPairs.stream()
-            .mapToInt(CodeBlockIndexPair::getLength)
-            .allMatch(i -> i < 2000)) {
-
-            int begin = 0;
-            for (CodeBlockIndexPair codeBlockIndexPair : codeMarkIndexPairs) {
-                int end = codeBlockIndexPair.getBeginIndex();
-                brokenUpAiResponse.add(response.substring(begin, end));
-
-                begin = end;
-                // Add three because index only really captures first `.
-                end = codeBlockIndexPair.getEndIndex() + 3;
-                brokenUpAiResponse.add(response.substring(begin, end));
-
-                begin = end;
+        while (begin < response.length() - 1) {
+            String responseChunk = response.substring(begin, end);
+            if (addedCodeMark) {
+                addedCodeMark = false;
+                responseChunk = responseChunk.replaceFirst("```", "");
             }
-        } else {
-            //
+            while ((lastOccurence = responseChunk.indexOf("```", lastOccurence) + 1) != 0) {
+                occurences++;
+            }
+
+            if (responseChunk.contains("```") && occurences % 2 == 1) {
+                responseChunk = responseChunk.concat("```");
+                addedCodeMark = true;
+                responseChunks.add(responseChunk);
+            } else {
+                responseChunks.add(responseChunk);
+            }
+
+            end += RESPONSE_LENGTH_LIMIT - 3;
+            if (end > response.length() - 1) {
+                end = response.length() - 1;
+            }
+            begin += RESPONSE_LENGTH_LIMIT - 3;
         }
 
-        return brokenUpAiResponse.toArray(new String[0]);
-    }
-
-    static class CodeBlockIndexPair {
-        private final int beginIndex;
-        private final int endIndex;
-
-        public CodeBlockIndexPair(int beginIndex, int endIndex) {
-            this.beginIndex = beginIndex;
-            this.endIndex = endIndex;
-        }
-
-        public int getBeginIndex() {
-            return beginIndex;
-        }
-
-        public int getEndIndex() {
-            return endIndex;
-        }
-
-        public int getLength() {
-            return endIndex - beginIndex;
-        }
+        return responseChunks.toArray(new String[0]);
     }
 }
