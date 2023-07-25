@@ -4,11 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * Represents a class to break up long text blocks into smaller blocks which work with Discord's
+ * API. Initially constructed to break apart text from AI text generation APIs.
+ */
 public class AIResponseParser {
 
     private AIResponseParser() {}
@@ -42,38 +45,41 @@ public class AIResponseParser {
 
     private static String[] breakupAiResponse(String response) {
         List<String> responseChunks = new ArrayList<>();
-        String[] chunksOnMarks = response.split("```");
+        String[] splitResponseOnMarks = response.split("```");
 
-        for (int i = 0; i < chunksOnMarks.length; i++) {
-            // Likely to be the first occurrence in the split array if the response started with
-            // code. Don't filter zero length chunks out since code relies on 'i' to indicate when
-            // code blocks must be re-entered; If zero length chunks were removed then order of
-            // chunks lose property of text -> code -> text -> code -> ...
-            if (chunksOnMarks[i].length() == 0) {
-                continue;
-            }
+        for (int i = 0; i < splitResponseOnMarks.length; i++) {
+            String split = splitResponseOnMarks[i];
+            List<String> chunks = new ArrayList<>();
+            chunks.add(split);
 
-            String chunk = chunksOnMarks[i];
-            String[] chunks = new String[2];
-            if (chunk.length() > RESPONSE_LENGTH_LIMIT) {
-                int midpointNewline = chunk.lastIndexOf("\n", chunk.length() / 2);
-                chunks[0] = chunk.substring(0, midpointNewline);
-                chunks[1] = chunk.substring(midpointNewline);
-            } else {
-                chunks[0] = chunk;
+            // Check each chunk for correct length. If over the length, split in two and check
+            // again.
+            while (!chunks.stream().allMatch(s -> s.length() < RESPONSE_LENGTH_LIMIT)) {
+                for (int j = 0; j < chunks.size(); j++) {
+                    String chunk = chunks.get(j);
+                    if (chunk.length() > RESPONSE_LENGTH_LIMIT) {
+
+                        int midpointNewline = chunk.lastIndexOf("\n", chunk.length() / 2);
+                        chunks.set(j, chunk.substring(0, midpointNewline));
+                        chunks.add(j + 1, chunk.substring(midpointNewline));
+                    }
+                }
             }
 
             // Given the splitting on ```, the odd numbered entries need to have code marks
             // restored.
             if (i % 2 != 0) {
-                for (int j = 0; j < chunks.length; j++) {
-                    if (Objects.nonNull(chunks[j])) {
-                        chunks[j] = "```".concat(chunks[j]).concat("```");
-                    }
-                }
+                // We assume that everything after the ``` on the same line is the language
+                // declaration. Could be empty.
+                String lang = split.substring(0, split.indexOf(System.lineSeparator()));
+                chunks = chunks.stream()
+                    .map(s -> ("```" + lang).concat(s).concat("```"))
+                    // Handle case of doubling language declaration
+                    .map(s -> s.replaceFirst("```" + lang + lang, "```" + lang))
+                    .collect(Collectors.toList());
             }
 
-            List<String> list = Arrays.stream(chunks).filter(Objects::nonNull).toList();
+            List<String> list = chunks.stream().filter(string -> !string.equals("")).toList();
             responseChunks.addAll(list);
         } // end of for loop.
 
