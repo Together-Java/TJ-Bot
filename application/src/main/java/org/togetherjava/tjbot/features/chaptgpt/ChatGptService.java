@@ -20,7 +20,7 @@ import java.util.Optional;
  */
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
-    private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final Duration TIMEOUT = Duration.ofSeconds(90);
     private static final int MAX_TOKENS = 3_000;
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
