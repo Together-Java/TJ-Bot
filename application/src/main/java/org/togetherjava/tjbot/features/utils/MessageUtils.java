@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * other commands to avoid similar methods appearing everywhere.
  */
 public class MessageUtils {
-    private static final String ABBREVIATION = "...";
+    public static final String ABBREVIATION = "...";
     private static final String CODE_FENCE_SYMBOL = "```";
 
     private MessageUtils() {
