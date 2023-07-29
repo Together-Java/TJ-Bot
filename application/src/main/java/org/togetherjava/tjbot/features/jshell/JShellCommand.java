@@ -66,7 +66,10 @@ public class JShellCommand extends SlashCommandAdapter {
                         "Evaluate java code in JShell, don't fill the optional parameter to access a bigger input box.")
                             .addOption(OptionType.STRING, "code",
                                     "Code to evaluate. If not supplied, open an inout box."),
-                new SubcommandData(JSHELL_SNIPPETS_SUBCOMMAND, "Get the evaluated snippets."),
+                new SubcommandData(JSHELL_SNIPPETS_SUBCOMMAND,
+                        "Get the evaluated snippets of the user who sent the command, or the user specified user if any.")
+                            .addOption(OptionType.USER, "user",
+                                    "User to get the snippets from. If null, get the snippets of the user who sent the command."),
                 new SubcommandData(JSHELL_CLOSE_SUBCOMMAND, "Close your session."));
     }
 
@@ -134,18 +137,17 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void handleSnippetsCommand(SlashCommandInteractionEvent event) {
         event.deferReply().queue(interactionHook -> {
+            OptionMapping userOption = event.getOption("user");
+            User user = userOption == null ? event.getUser() : userOption.getAsUser();
             List<String> snippets;
             try {
-                snippets = api.snippetsSession(event.getUser().getId()).snippets();
+                snippets = api.snippetsSession(user.getId()).snippets();
             } catch (RequestFailedException e) {
                 if (e.getStatus() == JShellApi.SESSION_NOT_FOUND) {
-                    interactionHook
-                        .editOriginalEmbeds(createSessionNotFoundErrorEmbed(event.getUser()))
+                    interactionHook.editOriginalEmbeds(createSessionNotFoundErrorEmbed(user))
                         .queue();
                 } else {
-                    interactionHook
-                        .editOriginalEmbeds(createUnexpectedErrorEmbed(event.getUser(), e))
-                        .queue();
+                    interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
                 }
                 return;
             }
@@ -158,13 +160,13 @@ public class JShellCommand extends SlashCommandAdapter {
                                              * Max visible embed fields in an embed TODO replace
                                              * with constant
                                              */) {
-                sendSnippetsAsEmbed(interactionHook, event.getUser(), snippets);
+                sendSnippetsAsEmbed(interactionHook, user, snippets);
             } else if (snippets.stream()
                 .mapToInt(s -> (s + "// Snippet 10").getBytes().length)
                 .sum() < Message.MAX_FILE_SIZE) {
-                sendSnippetsAsFile(interactionHook, event.getUser(), snippets);
+                sendSnippetsAsFile(interactionHook, user, snippets);
             } else {
-                sendSnippetsTooLong(interactionHook, event.getUser());
+                sendSnippetsTooLong(interactionHook, user);
             }
         });
     }
