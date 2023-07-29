@@ -16,16 +16,19 @@ import static org.togetherjava.tjbot.features.jshell.render.Colors.*;
 
 public class ResultRenderer {
 
-    public EmbedBuilder renderToEmbed(User originator, @Nullable String originalCode,
+    public EmbedBuilder renderToEmbed(@Nullable User originator, @Nullable String originalCode,
             boolean partOfSession, JShellResult result, EmbedBuilder builder) {
-        builder.setAuthor(originator.getName() + "'s result");
+        if (originator != null) {
+            builder.setAuthor(originator.getName() + "'s result");
+        }
         builder.setColor(color(result.status()));
 
         if (originalCode != null
                 && originalCode.length() + "```\n```".length() < MessageEmbed.VALUE_MAX_LENGTH) {
             builder.setDescription("```java\n" + originalCode + "```");
-            builder.addField(originator.getName() + "'s code", "```java\n" + originalCode + "```",
-                    false);
+            builder.addField(
+                    originator == null ? "Original code" : (originator.getName() + "'s code"),
+                    "```java\n" + originalCode + "```", false);
         }
 
         if (result.result() != null && !result.result().isBlank()) {

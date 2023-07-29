@@ -3,19 +3,15 @@ package org.togetherjava.tjbot.features.utils;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Custom rate limiter.
- * 
- * @param <T> type of the key used to distinct different users to rate limit.
  */
-public class RateLimiter<T> {
+public class RateLimiter {
 
-    private final Map<T, List<Instant>> lastUses;
+    private List<Instant> lastUses;
 
     private final Duration duration;
     private final int allowedRequests;
@@ -24,34 +20,33 @@ public class RateLimiter<T> {
         this.duration = duration;
         this.allowedRequests = allowedRequests;
 
-        this.lastUses = new HashMap<>();
+        this.lastUses = List.of();
     }
 
-    public boolean allowRequest(T key, Instant time) {
-        synchronized (lastUses) {
-            List<Instant> usesInWindow = getEffectiveUses(key, time);
+    public boolean allowRequest(Instant time) {
+        synchronized (this) {
+            List<Instant> usesInWindow = getEffectiveUses(time);
 
             if (usesInWindow.size() >= allowedRequests) {
                 return false;
             }
             usesInWindow.add(time);
 
-            lastUses.put(key, usesInWindow);
+            lastUses = usesInWindow;
 
             return true;
         }
     }
 
-    private List<Instant> getEffectiveUses(T key, Instant time) {
-        return lastUses.getOrDefault(key, List.of())
-            .stream()
+    private List<Instant> getEffectiveUses(Instant time) {
+        return lastUses.stream()
             .filter(it -> Duration.between(it, time).compareTo(duration) <= 0)
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public Instant nextAllowedRequestTime(T key, Instant time) {
-        synchronized (lastUses) {
-            List<Instant> currentUses = getEffectiveUses(key, time);
+    public Instant nextAllowedRequestTime(Instant time) {
+        synchronized (this) {
+            List<Instant> currentUses = getEffectiveUses(time);
             currentUses.sort(Instant::compareTo);
 
             if (currentUses.size() < allowedRequests) {

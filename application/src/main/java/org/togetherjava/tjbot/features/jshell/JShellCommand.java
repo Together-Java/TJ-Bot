@@ -23,6 +23,8 @@ import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.jshell.render.Colors;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
+import javax.annotation.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -75,7 +77,7 @@ public class JShellCommand extends SlashCommandAdapter {
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         ModalMapping mapping = event.getValue(JSHELL_TEXT_INPUT_ID);
         if (mapping != null) {
-            handleEval(event, event.getUser(), true, false, mapping.getAsString());
+            handleEval(event, event.getUser(), true, mapping.getAsString());
         }
     }
 
@@ -87,7 +89,7 @@ public class JShellCommand extends SlashCommandAdapter {
                 System.out.println("OS:      " + System.getProperty("os.name"));
                 System.out.println("Arch:    " + System.getProperty("os.arch"));
                  System.out.println("```");""";
-        handleEval(event, event.getUser(), false, true, code);
+        handleEval(event, null, false, code);
     }
 
     private void handleEvalCommand(SlashCommandInteractionEvent event) {
@@ -95,7 +97,7 @@ public class JShellCommand extends SlashCommandAdapter {
         if (code == null) {
             sendEvalModal(event);
         } else {
-            handleEval(event, event.getUser(), true, false, code.getAsString());
+            handleEval(event, event.getUser(), true, code.getAsString());
         }
     }
 
@@ -110,13 +112,20 @@ public class JShellCommand extends SlashCommandAdapter {
         event.replyModal(modal).queue();
     }
 
-    private void handleEval(IReplyCallback replyCallback, User user, boolean showCode,
-            boolean oneOffSession, String code) {
+    /**
+     * Handle evaluation of code.
+     * 
+     * @param replyCallback the callback to reply to
+     * @param user the user, if null, will create a single use session
+     * @param showCode if the embed should contain the original code
+     * @param code the code
+     */
+    private void handleEval(IReplyCallback replyCallback, @Nullable User user, boolean showCode,
+            String code) {
         replyCallback.deferReply().queue(interactionHook -> {
             try {
                 interactionHook
-                    .editOriginalEmbeds(
-                            jshellEval.evaluateAndRespond(user, code, showCode, oneOffSession))
+                    .editOriginalEmbeds(jshellEval.evaluateAndRespond(user, code, showCode))
                     .queue();
             } catch (RequestFailedException e) {
                 interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
@@ -230,10 +239,12 @@ public class JShellCommand extends SlashCommandAdapter {
             .build();
     }
 
-    private MessageEmbed createUnexpectedErrorEmbed(User user, RequestFailedException e) {
-        return new EmbedBuilder().setAuthor(user.getName() + "'s result")
-            .setColor(Colors.ERROR_COLOR)
-            .setDescription("Request failed: " + e.getMessage())
-            .build();
+    private MessageEmbed createUnexpectedErrorEmbed(@Nullable User user, RequestFailedException e) {
+        EmbedBuilder embedBuilder = new EmbedBuilder().setColor(Colors.ERROR_COLOR)
+            .setDescription("Request failed: " + e.getMessage());
+        if (user != null) {
+            embedBuilder.setAuthor(user.getName() + "'s result");
+        }
+        return embedBuilder.build();
     }
 }

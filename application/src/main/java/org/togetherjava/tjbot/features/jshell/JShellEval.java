@@ -23,13 +23,13 @@ public class JShellEval {
     private final JShellApi api;
 
     private final ResultRenderer renderer;
-    private final RateLimiter<Long> rateLimiter;
+    private final RateLimiter rateLimiter;
 
     public JShellEval(JShellConfig config) {
         this.api = new JShellApi(new ObjectMapper(), config.baseUrl());
         this.renderer = new ResultRenderer();
 
-        this.rateLimiter = new RateLimiter<>(Duration.ofSeconds(config.rateLimitWindowSeconds()),
+        this.rateLimiter = new RateLimiter(Duration.ofSeconds(config.rateLimitWindowSeconds()),
                 config.rateLimitRequestsInWindow());
     }
 
@@ -37,36 +37,48 @@ public class JShellEval {
         return api;
     }
 
-    public MessageEmbed evaluateAndRespond(User user, String code, boolean showCode,
-            boolean oneOffSession) throws RequestFailedException {
+    /**
+     * Evaluate code and return a message containing the response.
+     * 
+     * @param user the user, if null, will create a single use session
+     * @param code the code
+     * @param showCode if the original code should be displayed
+     * @return the response
+     * @throws RequestFailedException if a http error happens
+     */
+    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode)
+            throws RequestFailedException {
+        MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
+        if (rateLimitedMessage != null) {
+            return rateLimitedMessage;
+        }
         JShellResult result;
-        if (oneOffSession) {
-            MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
-            if (rateLimitedMessage != null) {
-                return rateLimitedMessage;
-            }
+        if (user == null) {
             result = api.evalOnce(code);
         } else {
             result = api.evalSession(code, user.getId());
         }
 
         return renderer
-            .renderToEmbed(user, showCode ? code : null, !oneOffSession, result, new EmbedBuilder())
+            .renderToEmbed(user, showCode ? code : null, user != null, result, new EmbedBuilder())
             .build();
     }
 
     @Nullable
-    private MessageEmbed wasRateLimited(User user, Instant checkTime) {
-        if (rateLimiter.allowRequest(user.getIdLong(), checkTime)) {
+    private MessageEmbed wasRateLimited(@Nullable User user, Instant checkTime) {
+        if (rateLimiter.allowRequest(checkTime)) {
             return null;
         }
 
-        String nextAllowedTime = TimeFormat.RELATIVE
-            .format(rateLimiter.nextAllowedRequestTime(user.getIdLong(), checkTime));
-        return new EmbedBuilder().setAuthor(user.getName() + "'s result")
+        String nextAllowedTime =
+                TimeFormat.RELATIVE.format(rateLimiter.nextAllowedRequestTime(checkTime));
+        EmbedBuilder embedBuilder = new EmbedBuilder()
             .setDescription(
                     "You are currently rate-limited. Please try again " + nextAllowedTime + ".")
-            .setColor(Colors.ERROR_COLOR)
-            .build();
+            .setColor(Colors.ERROR_COLOR);
+        if (user != null) {
+            embedBuilder.setAuthor(user.getName() + "'s result");
+        }
+        return embedBuilder.build();
     }
 }
