@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.jshell;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -17,20 +16,13 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.api.utils.FileUpload;
-import net.dv8tion.jda.api.utils.TimeFormat;
 
-import org.togetherjava.tjbot.config.JShellConfig;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
-import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 import org.togetherjava.tjbot.features.jshell.render.Colors;
-import org.togetherjava.tjbot.features.jshell.render.ResultRenderer;
-import org.togetherjava.tjbot.features.utils.RateLimiter;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,21 +36,15 @@ public class JShellCommand extends SlashCommandAdapter {
     private static final int MIN_MESSAGE_INPUT_LENGTH = 0;
     private static final int MAX_MESSAGE_INPUT_LENGTH = TextInput.MAX_VALUE_LENGTH;
 
-    private final JShellApi api;
-    private final ResultRenderer renderer;
-    private final RateLimiter<Long> rateLimiter;
+    private final JShellEval jshellEval;
 
     /**
      * Creates an instance of the command.
      */
-    public JShellCommand(JShellConfig config) {
+    public JShellCommand(JShellEval jshellEval) {
         super(JSHELL_COMMAND, "JShell as a command.", CommandVisibility.GUILD);
 
-        this.api = new JShellApi(new ObjectMapper(), config.baseUrl());
-        this.renderer = new ResultRenderer();
-
-        this.rateLimiter = new RateLimiter<>(Duration.ofSeconds(config.rateLimitWindowSeconds()),
-                config.rateLimitRequestsInWindow());
+        this.jshellEval = jshellEval;
 
         getData().addSubcommands(
                 new SubcommandData(JSHELL_VERSION_SUBCOMMAND, "Get the version of JShell"),
@@ -128,7 +114,10 @@ public class JShellCommand extends SlashCommandAdapter {
             boolean oneOffSession, String code) {
         replyCallback.deferReply().queue(interactionHook -> {
             try {
-                evaluateAndRespond(user, code, showCode, oneOffSession, interactionHook);
+                interactionHook
+                    .editOriginalEmbeds(
+                            jshellEval.evaluateAndRespond(user, code, showCode, oneOffSession))
+                    .queue();
             } catch (RequestFailedException e) {
                 interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
             }
@@ -141,7 +130,7 @@ public class JShellCommand extends SlashCommandAdapter {
             User user = userOption == null ? event.getUser() : userOption.getAsUser();
             List<String> snippets;
             try {
-                snippets = api.snippetsSession(user.getId()).snippets();
+                snippets = jshellEval.getApi().snippetsSession(user.getId()).snippets();
             } catch (RequestFailedException e) {
                 if (e.getStatus() == JShellApi.SESSION_NOT_FOUND) {
                     interactionHook.editOriginalEmbeds(createSessionNotFoundErrorEmbed(user))
@@ -216,7 +205,7 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void handleCloseCommand(SlashCommandInteractionEvent event) {
         try {
-            api.closeSession(event.getUser().getId());
+            jshellEval.getApi().closeSession(event.getUser().getId());
         } catch (RequestFailedException e) {
             if (e.getStatus() == JShellApi.SESSION_NOT_FOUND) {
                 event.replyEmbeds(createSessionNotFoundErrorEmbed(event.getUser())).queue();
@@ -232,44 +221,6 @@ public class JShellCommand extends SlashCommandAdapter {
                 .setTitle("Session closed")
                 .build())
             .queue();
-    }
-
-
-    private void evaluateAndRespond(User user, String code, boolean showCode, boolean oneOffSession,
-            InteractionHook interactionHook) throws RequestFailedException {
-        JShellResult result;
-        if (oneOffSession) {
-            if (wasRateLimited(interactionHook, user, Instant.now())) {
-                return;
-            }
-            result = api.evalOnce(code);
-        } else {
-            result = api.evalSession(code, user.getId());
-        }
-
-        MessageEmbed embed = renderer
-            .renderToEmbed(user, showCode ? code : null, !oneOffSession, result, new EmbedBuilder())
-            .build();
-
-        interactionHook.editOriginalEmbeds(embed).queue();
-    }
-
-    private boolean wasRateLimited(InteractionHook interaction, User user, Instant checkTime) {
-        if (rateLimiter.allowRequest(user.getIdLong(), checkTime)) {
-            return false;
-        }
-
-        String nextAllowedTime = TimeFormat.RELATIVE
-            .format(rateLimiter.nextAllowedRequestTime(user.getIdLong(), checkTime));
-        interaction
-            .editOriginalEmbeds(new EmbedBuilder().setAuthor(user.getName() + "'s result")
-                .setDescription(
-                        "You are currently rate-limited. Please try again " + nextAllowedTime + ".")
-                .setColor(Colors.ERROR_COLOR)
-                .build())
-            .queue();
-
-        return true;
     }
 
     private MessageEmbed createSessionNotFoundErrorEmbed(User user) {

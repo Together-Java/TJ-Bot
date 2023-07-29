@@ -14,6 +14,7 @@ import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.help.*;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
+import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
@@ -68,6 +69,8 @@ public class Features {
      * @return a collection of all features
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
+        JShellEval jshellEval = new JShellEval(config.getJshell());
+
         TagSystem tagSystem = new TagSystem(database);
         BookmarksSystem bookmarksSystem = new BookmarksSystem(config, database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
@@ -144,7 +147,7 @@ public class Features {
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService));
-        features.add(new JShellCommand(config.getJshell()));
+        features.add(new JShellCommand(jshellEval));
         return features;
     }
 }
