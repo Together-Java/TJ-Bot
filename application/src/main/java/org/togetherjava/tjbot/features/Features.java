@@ -77,7 +77,7 @@ public class Features {
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database);
-        CodeMessageHandler codeMessageHandler = new CodeMessageHandler();
+        CodeMessageHandler codeMessageHandler = new CodeMessageHandler(jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
 
         // NOTE The system can add special system relevant commands also by itself,
