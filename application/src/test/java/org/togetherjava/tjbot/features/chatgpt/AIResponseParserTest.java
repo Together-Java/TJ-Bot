@@ -11,26 +11,20 @@ import org.togetherjava.tjbot.features.chaptgpt.AIResponseParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
-import java.util.Optional;
 
 class AIResponseParserTest {
     private static final Logger logger = LoggerFactory.getLogger(AIResponseParserTest.class);
 
     @ParameterizedTest
-    @ValueSource(strings = {"test1", "test2", "test3"})
+    @ValueSource(strings = {"test1.txt", "test2.txt", "test3.txt"})
     void correctResponseLength(String filename) {
         try (InputStream in =
                 getClass().getClassLoader().getResourceAsStream("AITestsResponses/" + filename)) {
             String response = new String(Objects.requireNonNull(in).readAllBytes());
-            Optional<String[]> aiResponse = AIResponseParser.parse(response);
+            String[] aiResponse = AIResponseParser.parse(response);
 
-            if (aiResponse.isPresent()) {
-                String[] chunks = aiResponse.get();
-                testResponseLength(chunks);
-                toLog(chunks);
-            } else {
-                Assertions.fail();
-            }
+            testResponseLength(aiResponse);
+            toLog(aiResponse);
         } catch (IOException | NullPointerException ex) {
             logger.error("{}", ex.getMessage());
             Assertions.fail();

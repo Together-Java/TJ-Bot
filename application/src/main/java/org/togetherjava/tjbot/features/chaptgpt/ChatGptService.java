@@ -20,7 +20,7 @@ import java.util.Optional;
  */
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
-    private static final Duration TIMEOUT = Duration.ofSeconds(120);
+    private static final Duration TIMEOUT = Duration.ofSeconds(90);
     private static final int MAX_TOKENS = 3_000;
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
@@ -60,7 +60,7 @@ public class ChatGptService {
      * Prompt ChatGPT with a question and receive a response.
      *
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
-     * @return response from ChatGPT as a String.
+     * @return partitioned response from ChatGPT as a String array.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      */
@@ -87,7 +87,7 @@ public class ChatGptService {
                 .getMessage()
                 .getContent();
 
-            return AIResponseParser.parse(response);
+            return Optional.of(AIResponseParser.parse(response));
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
                     "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
