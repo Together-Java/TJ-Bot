@@ -1,22 +1,18 @@
 package org.togetherjava.tjbot.features.chaptgpt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Represents a class to break up long text blocks into smaller blocks which work with Discord's
- * API. Initially constructed to break apart text from AI text generation APIs.
+ * Represents a class to partition long text blocks into smaller blocks which work with Discord's
+ * API. Initially constructed to partition text from AI text generation APIs.
  */
 public class AIResponseParser {
+    private AIResponseParser() {
+        throw new UnsupportedOperationException("Utility class, construction not supported");
+    }
 
-    private AIResponseParser() {}
-
-    private static final Logger logger = LoggerFactory.getLogger(AIResponseParser.class);
     private static final int RESPONSE_LENGTH_LIMIT = 2_000;
 
     /**
@@ -25,22 +21,16 @@ public class AIResponseParser {
      * Discords API.
      * 
      * @param response The response from the AI which we want to send over Discord.
-     * @return An optional array potentially holding the original response split up into shorter
-     *         than {@value RESPONSE_LENGTH_LIMIT} length pieces.
+     * @return An array potentially holding the original response split up into shorter than
+     *         {@value RESPONSE_LENGTH_LIMIT} length pieces.
      */
-    public static Optional<String[]> parse(String response) {
-        String[] aiResponses;
+    public static String[] parse(String response) {
+        String[] aiResponses = new String[] {response};
         if (response.length() > RESPONSE_LENGTH_LIMIT) {
-            logger.warn(
-                    "Response from AI was longer than allowed limit. "
-                            + "The answer was cut up to max {} characters length messages",
-                    RESPONSE_LENGTH_LIMIT);
             aiResponses = breakupAiResponse(response);
-        } else {
-            aiResponses = new String[] {response};
         }
 
-        return Optional.of(aiResponses);
+        return aiResponses;
     }
 
     private static String[] breakupAiResponse(String response) {
@@ -58,7 +48,6 @@ public class AIResponseParser {
                 for (int j = 0; j < chunks.size(); j++) {
                     String chunk = chunks.get(j);
                     if (chunk.length() > RESPONSE_LENGTH_LIMIT) {
-
                         int midpointNewline = chunk.lastIndexOf("\n", chunk.length() / 2);
                         chunks.set(j, chunk.substring(0, midpointNewline));
                         chunks.add(j + 1, chunk.substring(midpointNewline));
