@@ -25,15 +25,15 @@ public class AIResponseParser {
      *         {@value RESPONSE_LENGTH_LIMIT} length pieces.
      */
     public static String[] parse(String response) {
-        String[] aiResponses = new String[] {response};
+        String[] partedResponse = new String[] {response};
         if (response.length() > RESPONSE_LENGTH_LIMIT) {
-            aiResponses = breakupAiResponse(response);
+            partedResponse = partitionAiResponse(response);
         }
 
-        return aiResponses;
+        return partedResponse;
     }
 
-    private static String[] breakupAiResponse(String response) {
+    private static String[] partitionAiResponse(String response) {
         List<String> responseChunks = new ArrayList<>();
         String[] splitResponseOnMarks = response.split("```");
 
