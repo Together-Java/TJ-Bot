@@ -42,7 +42,7 @@ class AIResponseParserTest {
 
     private void toLog(String[] responses) {
         for (String response : responses) {
-            logger.warn(response);
+            logger.info(response);
         }
     }
 }

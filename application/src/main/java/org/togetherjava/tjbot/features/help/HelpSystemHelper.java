@@ -44,7 +44,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -168,24 +167,25 @@ public final class HelpSystemHelper {
         Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
         Optional<String[]> chatGPTAnswer;
 
-        String question = questionOptional.orElseThrow();
+        if (questionOptional.isEmpty()) {
+            return useChatGptFallbackMessage(threadChannel);
+        }
+        String question = questionOptional.get();
         logger.debug("The final question sent to chatGPT: {}", question);
-        chatGPTAnswer = chatGptService.ask(question);
+        logger.info("The final question sent to chatGPT: {}", question);
 
+        chatGPTAnswer = chatGptService.ask(question);
         if (chatGPTAnswer.isEmpty()) {
-            logger.warn("Something went wrong while trying to communicate with the ChatGpt API");
             return useChatGptFallbackMessage(threadChannel);
         }
 
-        UnaryOperator<String> preambleResponse = """
-                Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
-                In any case, a human is on the way 👍. To continue talking to the AI, you can use \
-                %s.
-                """::formatted;
-
         RestAction<Message> message =
                 mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
-                    .map(preambleResponse)
+                    .map("""
+                            Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
+                            In any case, a human is on the way 👍. To continue talking to the AI, you can use \
+                            %s.
+                            """::formatted)
                     .flatMap(threadChannel::sendMessage);
 
         for (String aiResponse : chatGPTAnswer.get()) {
@@ -206,10 +206,8 @@ public final class HelpSystemHelper {
         }
 
         questionBuilder.append(questionTitle).append(" ");
-        if (originalQuestion.length() > MAX_QUESTION_LENGTH - questionBuilder.length()) {
-            originalQuestion =
-                    originalQuestion.substring(0, MAX_QUESTION_LENGTH - questionBuilder.length());
-        }
+        originalQuestion = originalQuestion.substring(0, Math
+            .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
 
         questionBuilder.append(originalQuestion);
 
@@ -230,6 +228,7 @@ public final class HelpSystemHelper {
     }
 
     private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
+        logger.warn("Something went wrong while trying to communicate with the ChatGpt API");
         return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
             .map(CHATGPT_FAILURE_MESSAGE::formatted)
             .flatMap(threadChannel::sendMessage);

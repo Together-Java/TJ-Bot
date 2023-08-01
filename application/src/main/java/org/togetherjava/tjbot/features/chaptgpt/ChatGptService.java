@@ -87,6 +87,10 @@ public class ChatGptService {
                 .getMessage()
                 .getContent();
 
+            if (response == null) {
+                return Optional.empty();
+            }
+
             return Optional.of(AIResponseParser.parse(response));
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
