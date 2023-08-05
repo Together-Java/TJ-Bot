@@ -69,8 +69,11 @@ public class JShellApi {
                 throw r.toChecked();
             }
             throw new UncheckedIOException(e);
-        } catch (URISyntaxException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
         }
     }
 
