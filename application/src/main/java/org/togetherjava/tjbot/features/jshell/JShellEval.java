@@ -39,7 +39,7 @@ public class JShellEval {
 
     /**
      * Evaluate code and return a message containing the response.
-     * 
+     *
      * @param user the user, if null, will create a single use session
      * @param code the code
      * @param showCode if the original code should be displayed
@@ -47,8 +47,8 @@ public class JShellEval {
      * @return the response
      * @throws RequestFailedException if a http error happens
      */
-    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode, boolean startupScript)
-            throws RequestFailedException {
+    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode,
+            boolean startupScript) throws RequestFailedException {
         MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
         if (rateLimitedMessage != null) {
             return rateLimitedMessage;

@@ -35,19 +35,27 @@ public class JShellApi {
     }
 
     public JShellResult evalOnce(String code, boolean startupScript) throws RequestFailedException {
-        return send(baseUrl + "single-eval" + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
+        return send(
+                baseUrl + "single-eval"
+                        + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
                 HttpRequest.newBuilder().POST(BodyPublishers.ofString(code)),
                 ResponseUtils.ofJson(JShellResult.class, objectMapper)).body();
     }
 
-    public JShellResult evalSession(String code, String sessionId, boolean startupScript) throws RequestFailedException {
-        return send(baseUrl + "eval/" + sessionId + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
+    public JShellResult evalSession(String code, String sessionId, boolean startupScript)
+            throws RequestFailedException {
+        return send(
+                baseUrl + "eval/" + sessionId
+                        + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
                 HttpRequest.newBuilder().POST(BodyPublishers.ofString(code)),
                 ResponseUtils.ofJson(JShellResult.class, objectMapper)).body();
     }
 
-    public SnippetList snippetsSession(String sessionId, boolean includeStartupScript) throws RequestFailedException {
-        return send(baseUrl + "snippets/" + sessionId + "?includeStartupScript=" + includeStartupScript, HttpRequest.newBuilder().GET(),
+    public SnippetList snippetsSession(String sessionId, boolean includeStartupScript)
+            throws RequestFailedException {
+        return send(
+                baseUrl + "snippets/" + sessionId + "?includeStartupScript=" + includeStartupScript,
+                HttpRequest.newBuilder().GET(),
                 ResponseUtils.ofJson(SnippetList.class, objectMapper)).body();
     }
 
@@ -55,6 +63,7 @@ public class JShellApi {
         send(baseUrl + sessionId, HttpRequest.newBuilder().DELETE(), BodyHandlers.discarding())
             .body();
     }
+
     public String startupScript() throws RequestFailedException {
         return send(baseUrl + "startup_script/" + STARTUP_SCRIPT_ID, HttpRequest.newBuilder().GET(),
                 BodyHandlers.ofString()).body();

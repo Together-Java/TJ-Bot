@@ -69,7 +69,8 @@ public class JShellCommand extends SlashCommandAdapter {
                             .addOption(OptionType.BOOLEAN, JSHELL_INCLUDE_STARTUP_SCRIPT_PARAMETER,
                                     "if the startup script should be included, false by default."),
                 new SubcommandData(JSHELL_CLOSE_SUBCOMMAND, "Close your session."),
-                new SubcommandData(JSHELL_STARTUP_SCRIPT_SUBCOMMAND, "Display the startup script."));
+                new SubcommandData(JSHELL_STARTUP_SCRIPT_SUBCOMMAND,
+                        "Display the startup script."));
     }
 
     @Override
@@ -87,9 +88,10 @@ public class JShellCommand extends SlashCommandAdapter {
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        ModalMapping mapping = event.getValue(JSHELL_TEXT_INPUT_ID + "|" + JSHELL_STARTUP_SCRIPT_PARAMETER);
+        ModalMapping mapping =
+                event.getValue(JSHELL_TEXT_INPUT_ID + "|" + JSHELL_STARTUP_SCRIPT_PARAMETER);
         boolean startupScript = mapping != null;
-        if(mapping == null) {
+        if (mapping == null) {
             mapping = event.getValue(JSHELL_TEXT_INPUT_ID);
         }
         if (mapping != null) {
@@ -110,7 +112,9 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void handleEvalCommand(SlashCommandInteractionEvent event) {
         OptionMapping code = event.getOption(JSHELL_CODE_PARAMETER);
-        boolean startupScript = event.getOption(JSHELL_STARTUP_SCRIPT_PARAMETER) == null || Objects.requireNonNull(event.getOption(JSHELL_STARTUP_SCRIPT_PARAMETER)).getAsBoolean();
+        boolean startupScript = event.getOption(JSHELL_STARTUP_SCRIPT_PARAMETER) == null
+                || Objects.requireNonNull(event.getOption(JSHELL_STARTUP_SCRIPT_PARAMETER))
+                    .getAsBoolean();
         if (code == null) {
             sendEvalModal(event, startupScript);
         } else {
@@ -120,7 +124,9 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void sendEvalModal(SlashCommandInteractionEvent event, boolean startupScript) {
         TextInput body = TextInput
-            .create(JSHELL_TEXT_INPUT_ID + (startupScript ? "|" + JSHELL_STARTUP_SCRIPT_PARAMETER : ""), "Enter code to evaluate.", TextInputStyle.PARAGRAPH)
+            .create(JSHELL_TEXT_INPUT_ID
+                    + (startupScript ? "|" + JSHELL_STARTUP_SCRIPT_PARAMETER : ""),
+                    "Enter code to evaluate.", TextInputStyle.PARAGRAPH)
             .setPlaceholder("Put your code here.")
             .setRequiredRange(MIN_MESSAGE_INPUT_LENGTH, MAX_MESSAGE_INPUT_LENGTH)
             .build();
@@ -131,7 +137,7 @@ public class JShellCommand extends SlashCommandAdapter {
 
     /**
      * Handle evaluation of code.
-     * 
+     *
      * @param replyCallback the callback to reply to
      * @param user the user, if null, will create a single use session
      * @param showCode if the embed should contain the original code
@@ -143,7 +149,8 @@ public class JShellCommand extends SlashCommandAdapter {
         replyCallback.deferReply().queue(interactionHook -> {
             try {
                 interactionHook
-                    .editOriginalEmbeds(jshellEval.evaluateAndRespond(user, code, showCode, startupScript))
+                    .editOriginalEmbeds(
+                            jshellEval.evaluateAndRespond(user, code, showCode, startupScript))
                     .queue();
             } catch (RequestFailedException e) {
                 interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
@@ -155,11 +162,15 @@ public class JShellCommand extends SlashCommandAdapter {
         event.deferReply().queue(interactionHook -> {
             OptionMapping userOption = event.getOption(JSHELL_USER_PARAMETER);
             User user = userOption == null ? event.getUser() : userOption.getAsUser();
-            OptionMapping includeStartupScriptOption = event.getOption(JSHELL_INCLUDE_STARTUP_SCRIPT_PARAMETER);
-            boolean includeStartupScript = includeStartupScriptOption != null && includeStartupScriptOption.getAsBoolean();
+            OptionMapping includeStartupScriptOption =
+                    event.getOption(JSHELL_INCLUDE_STARTUP_SCRIPT_PARAMETER);
+            boolean includeStartupScript =
+                    includeStartupScriptOption != null && includeStartupScriptOption.getAsBoolean();
             List<String> snippets;
             try {
-                snippets = jshellEval.getApi().snippetsSession(user.getId(), includeStartupScript).snippets();
+                snippets = jshellEval.getApi()
+                    .snippetsSession(user.getId(), includeStartupScript)
+                    .snippets();
             } catch (RequestFailedException e) {
                 if (e.getStatus() == JShellApi.SESSION_NOT_FOUND) {
                     interactionHook.editOriginalEmbeds(createSessionNotFoundErrorEmbed(user))
@@ -257,12 +268,12 @@ public class JShellCommand extends SlashCommandAdapter {
             try {
                 String startupScript = jshellEval.getApi().startupScript();
                 interactionHook
-                        .editOriginalEmbeds(new EmbedBuilder().setColor(Colors.SUCCESS_COLOR)
-                                .setAuthor(event.getUser().getName())
-                                .setTitle("Startup script")
-                                .setDescription("```java\n" + startupScript + "```")
-                                .build())
-                        .queue();
+                    .editOriginalEmbeds(new EmbedBuilder().setColor(Colors.SUCCESS_COLOR)
+                        .setAuthor(event.getUser().getName())
+                        .setTitle("Startup script")
+                        .setDescription("```java\n" + startupScript + "```")
+                        .build())
+                    .queue();
             } catch (RequestFailedException e) {
                 event.replyEmbeds(createUnexpectedErrorEmbed(event.getUser(), e)).queue();
             }
