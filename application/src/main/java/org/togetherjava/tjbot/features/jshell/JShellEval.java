@@ -43,10 +43,11 @@ public class JShellEval {
      * @param user the user, if null, will create a single use session
      * @param code the code
      * @param showCode if the original code should be displayed
+     * @param startupScript if the startup script should be used or not
      * @return the response
      * @throws RequestFailedException if a http error happens
      */
-    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode)
+    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode, boolean startupScript)
             throws RequestFailedException {
         MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
         if (rateLimitedMessage != null) {
@@ -54,9 +55,9 @@ public class JShellEval {
         }
         JShellResult result;
         if (user == null) {
-            result = api.evalOnce(code);
+            result = api.evalOnce(code, startupScript);
         } else {
-            result = api.evalSession(code, user.getId());
+            result = api.evalSession(code, user.getId(), startupScript);
         }
 
         return renderer

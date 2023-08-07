@@ -31,7 +31,7 @@ final class EvalCodeCommand implements CodeAction {
                 .build();
         }
         try {
-            return jshellEval.evaluateAndRespond(null, codeFence.code(), false);
+            return jshellEval.evaluateAndRespond(null, codeFence.code(), false, false);
         } catch (RequestFailedException e) {
             return new EmbedBuilder().setColor(Colors.ERROR_COLOR)
                 .setDescription("Request failed: " + e.getMessage())

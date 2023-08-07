@@ -21,6 +21,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 
 public class JShellApi {
     public static final int SESSION_NOT_FOUND = 404;
+    private static final String STARTUP_SCRIPT_ID = "CUSTOM_DEFAULT";
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
@@ -33,26 +34,30 @@ public class JShellApi {
         this.httpClient = HttpClient.newBuilder().build();
     }
 
-    public JShellResult evalOnce(String code) throws RequestFailedException {
-        return send(baseUrl + "single-eval",
+    public JShellResult evalOnce(String code, boolean startupScript) throws RequestFailedException {
+        return send(baseUrl + "single-eval" + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
                 HttpRequest.newBuilder().POST(BodyPublishers.ofString(code)),
                 ResponseUtils.ofJson(JShellResult.class, objectMapper)).body();
     }
 
-    public JShellResult evalSession(String code, String sessionId) throws RequestFailedException {
-        return send(baseUrl + "eval/" + sessionId,
+    public JShellResult evalSession(String code, String sessionId, boolean startupScript) throws RequestFailedException {
+        return send(baseUrl + "eval/" + sessionId + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
                 HttpRequest.newBuilder().POST(BodyPublishers.ofString(code)),
                 ResponseUtils.ofJson(JShellResult.class, objectMapper)).body();
     }
 
-    public SnippetList snippetsSession(String sessionId) throws RequestFailedException {
-        return send(baseUrl + "snippets/" + sessionId, HttpRequest.newBuilder().GET(),
+    public SnippetList snippetsSession(String sessionId, boolean includeStartupScript) throws RequestFailedException {
+        return send(baseUrl + "snippets/" + sessionId + "?includeStartupScript=" + includeStartupScript, HttpRequest.newBuilder().GET(),
                 ResponseUtils.ofJson(SnippetList.class, objectMapper)).body();
     }
 
     public void closeSession(String sessionId) throws RequestFailedException {
         send(baseUrl + sessionId, HttpRequest.newBuilder().DELETE(), BodyHandlers.discarding())
             .body();
+    }
+    public String startupScript() throws RequestFailedException {
+        return send(baseUrl + "startup_script/" + STARTUP_SCRIPT_ID, HttpRequest.newBuilder().GET(),
+                BodyHandlers.ofString()).body();
     }
 
     private <T> HttpResponse<T> send(String url, HttpRequest.Builder builder, BodyHandler<T> body)
