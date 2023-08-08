@@ -1,7 +1,10 @@
-package org.togetherjava.tjbot.features.jshell.render;
+package org.togetherjava.tjbot.features.utils;
 
 import java.awt.Color;
 
+/**
+ * Provides the color of different things.
+ */
 public class Colors {
     private Colors() {
         throw new UnsupportedOperationException();

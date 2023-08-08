@@ -14,10 +14,21 @@ import java.util.Optional;
 public class ResponseUtils {
     private ResponseUtils() {}
 
-    public static <T> BodyHandler<T> ofJson(Class<T> t, ObjectMapper mapper) {
+    /**
+     * Creates a body handler which will parse the body of the request. If the parsing fails, an
+     * UncheckedIOException exception is thrown and may be wrapped in an IOException.//TODO If the
+     * request status code is not 200 or 204, a UncheckedRequestFailedException is thrown and
+     * wrapped in an IOException.
+     * 
+     * @param type the class to parse the json into
+     * @param mapper the json mapper
+     * @return the body handler
+     * @param <T> the type of the class to parse the json into
+     */
+    public static <T> BodyHandler<T> ofJson(Class<T> type, ObjectMapper mapper) {
         return responseInfo -> BodySubscribers.mapping(BodySubscribers.ofByteArray(), bytes -> {
             if (responseInfo.statusCode() == 200 || responseInfo.statusCode() == 204) {
-                return uncheckedParseJson(t, mapper, bytes);
+                return uncheckedParseJson(type, mapper, bytes);
             }
             String errorMessage = tryParseError(bytes, mapper)
                 .orElse("Request failed with status: " + responseInfo.statusCode());
@@ -25,9 +36,9 @@ public class ResponseUtils {
         });
     }
 
-    private static <T> T uncheckedParseJson(Class<T> t, ObjectMapper mapper, byte[] value) {
+    private static <T> T uncheckedParseJson(Class<T> type, ObjectMapper mapper, byte[] value) {
         try {
-            return mapper.readValue(value, t);
+            return mapper.readValue(value, type);
         } catch (IOException e) {
             throw new UncheckedIOException("Error parsing json", e);
         }

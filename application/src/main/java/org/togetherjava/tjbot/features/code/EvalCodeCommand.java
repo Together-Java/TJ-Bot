@@ -4,12 +4,14 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import org.togetherjava.tjbot.features.jshell.JShellEval;
-import org.togetherjava.tjbot.features.jshell.render.Colors;
 import org.togetherjava.tjbot.features.utils.CodeFence;
+import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
 /**
- * Evaluates the given code.
+ * Evaluates the given code with jshell.
+ * <p>
+ * It will not work of the code isn't valid java or jshell compatible code.
  */
 final class EvalCodeCommand implements CodeAction {
     private final JShellEval jshellEval;

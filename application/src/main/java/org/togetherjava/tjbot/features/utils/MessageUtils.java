@@ -20,6 +20,7 @@ import java.util.function.Supplier;
  * other commands to avoid similar methods appearing everywhere.
  */
 public class MessageUtils {
+    public static final int MAXIMUM_VISIBLE_EMBEDS = 25;
     public static final String ABBREVIATION = "...";
     private static final String CODE_FENCE_SYMBOL = "```";
 

@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.jshell.render;
+package org.togetherjava.tjbot.features.jshell;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -12,9 +12,9 @@ import javax.annotation.Nullable;
 
 import java.awt.Color;
 
-import static org.togetherjava.tjbot.features.jshell.render.Colors.*;
+import static org.togetherjava.tjbot.features.utils.Colors.*;
 
-public class ResultRenderer {
+class ResultRenderer {
 
     public EmbedBuilder renderToEmbed(@Nullable User originator, @Nullable String originalCode,
             boolean partOfSession, JShellResult result, EmbedBuilder builder) {

@@ -9,8 +9,7 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.togetherjava.tjbot.config.JShellConfig;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
-import org.togetherjava.tjbot.features.jshell.render.Colors;
-import org.togetherjava.tjbot.features.jshell.render.ResultRenderer;
+import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.RateLimiter;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
@@ -19,12 +18,21 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Provides a mid-ground between JDA and JShell API which can be used from many places in the bot,
+ * including JShell commands and JShell code actions.
+ */
 public class JShellEval {
     private final JShellApi api;
 
     private final ResultRenderer renderer;
     private final RateLimiter rateLimiter;
 
+    /**
+     * Creates a JShell evaluation instance
+     * 
+     * @param config the JShell configuration to use
+     */
     public JShellEval(JShellConfig config) {
         this.api = new JShellApi(new ObjectMapper(), config.baseUrl());
         this.renderer = new ResultRenderer();

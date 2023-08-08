@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Custom rate limiter.
+ * Rate limiter, register when requests are done and tells if a request can be done or need to be
+ * canceled.
  */
 public class RateLimiter {
 
@@ -16,6 +17,16 @@ public class RateLimiter {
     private final Duration duration;
     private final int allowedRequests;
 
+    /**
+     * Creates a rate limiter.
+     * <p>
+     * Defines a window and a number of request, for example, if 10 requests should be allowed per 5
+     * seconds, so 10/5s, the following should be called: {@snippet java: new
+     * RateLimit(Duration.of(5, TimeUnit.SECONDS), 10) }
+     * 
+     * @param duration the duration of window
+     * @param allowedRequests the number of requests to allow in the window
+     */
     public RateLimiter(Duration duration, int allowedRequests) {
         this.duration = duration;
         this.allowedRequests = allowedRequests;
@@ -23,6 +34,12 @@ public class RateLimiter {
         this.lastUses = List.of();
     }
 
+    /**
+     * Tries to allow the request. If it is allowed, the time is registered.
+     * 
+     * @param time the time of the request
+     * @return if the request was allowed
+     */
     public boolean allowRequest(Instant time) {
         synchronized (this) {
             List<Instant> usesInWindow = getEffectiveUses(time);
@@ -44,6 +61,12 @@ public class RateLimiter {
             .collect(Collectors.toCollection(ArrayList::new));
     }
 
+    /**
+     * Returns next time a request can be allowed.
+     * 
+     * @param time the time of the request
+     * @return when the next request will be allowed
+     */
     public Instant nextAllowedRequestTime(Instant time) {
         synchronized (this) {
             List<Instant> currentUses = getEffectiveUses(time);

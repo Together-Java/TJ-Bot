@@ -20,7 +20,8 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
-import org.togetherjava.tjbot.features.jshell.render.Colors;
+import org.togetherjava.tjbot.features.utils.Colors;
+import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
 import javax.annotation.Nullable;
@@ -28,18 +29,21 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * The JShell command, provide functionalities to create JShell sessions, evaluate code, etc.
+ */
 public class JShellCommand extends SlashCommandAdapter {
-    private static final String JSHELL_TEXT_INPUT_ID = "jshell";
+    private static final String TEXT_INPUT_PART_ID = "jshell";
     private static final String JSHELL_COMMAND = "jshell";
-    private static final String JSHELL_VERSION_SUBCOMMAND = "version";
-    private static final String JSHELL_EVAL_SUBCOMMAND = "eval";
-    private static final String JSHELL_SNIPPETS_SUBCOMMAND = "snippets";
-    private static final String JSHELL_CLOSE_SUBCOMMAND = "shutdown";
-    private static final String JSHELL_STARTUP_SCRIPT_SUBCOMMAND = "startup-script";
-    private static final String JSHELL_CODE_PARAMETER = "code";
-    private static final String JSHELL_STARTUP_SCRIPT_PARAMETER = "startup-script";
-    private static final String JSHELL_USER_PARAMETER = "user";
-    private static final String JSHELL_INCLUDE_STARTUP_SCRIPT_PARAMETER = "include-startup-script";
+    private static final String VERSION_SUBCOMMAND = "version";
+    private static final String EVAL_SUBCOMMAND = "eval";
+    private static final String SNIPPETS_SUBCOMMAND = "snippets";
+    private static final String CLOSE_SUBCOMMAND = "shutdown";
+    private static final String STARTUP_SCRIPT_SUBCOMMAND = "startup-script";
+    private static final String CODE_PARAMETER = "code";
+    private static final String STARTUP_SCRIPT_PARAMETER = "startup-script";
+    private static final String USER_PARAMETER = "user";
+    private static final String INCLUDE_STARTUP_SCRIPT_PARAMETER = "include-startup-script";
 
     private static final int MIN_MESSAGE_INPUT_LENGTH = 0;
     private static final int MAX_MESSAGE_INPUT_LENGTH = TextInput.MAX_VALUE_LENGTH;
@@ -48,39 +52,42 @@ public class JShellCommand extends SlashCommandAdapter {
 
     /**
      * Creates an instance of the command.
+     * 
+     * @param jshellEval the jshell evaluation instance used in the jshell command
      */
     public JShellCommand(JShellEval jshellEval) {
-        super(JSHELL_COMMAND, "JShell as a command.", CommandVisibility.GUILD);
+        super(JSHELL_COMMAND,
+                "JShell as a command, a Read–eval–print loop which allows to rapidly and simply execute java code.",
+                CommandVisibility.GUILD);
 
         this.jshellEval = jshellEval;
 
         getData().addSubcommands(
-                new SubcommandData(JSHELL_VERSION_SUBCOMMAND, "Get the version of JShell"),
-                new SubcommandData(JSHELL_EVAL_SUBCOMMAND,
-                        "Evaluate java code in JShell, don't fill the optional parameter to access a bigger input box.")
-                            .addOption(OptionType.STRING, JSHELL_CODE_PARAMETER,
-                                    "Code to evaluate. If not supplied, open an inout box.")
-                            .addOption(OptionType.BOOLEAN, JSHELL_STARTUP_SCRIPT_PARAMETER,
+                new SubcommandData(VERSION_SUBCOMMAND, "Get the version of JShell"),
+                new SubcommandData(EVAL_SUBCOMMAND,
+                        "Evaluate java code in JShell, submit the command without code for inputting longer, multi-line code.")
+                            .addOption(OptionType.STRING, CODE_PARAMETER,
+                                    "Code to evaluate. Leave empty to input longer, multi-line code.")
+                            .addOption(OptionType.BOOLEAN, STARTUP_SCRIPT_PARAMETER,
                                     "If the startup script should be loaded, true by default."),
-                new SubcommandData(JSHELL_SNIPPETS_SUBCOMMAND,
-                        "Get the evaluated snippets of the user who sent the command, or the user specified user if any.")
-                            .addOption(OptionType.USER, JSHELL_USER_PARAMETER,
-                                    "User to get the snippets from. If null, get the snippets of the user who sent the command.")
-                            .addOption(OptionType.BOOLEAN, JSHELL_INCLUDE_STARTUP_SCRIPT_PARAMETER,
+                new SubcommandData(SNIPPETS_SUBCOMMAND,
+                        "Display your snippets, or the snippets of the specified user if any.")
+                            .addOption(OptionType.USER, USER_PARAMETER,
+                                    "User to get the snippets from. If null, get your snippets.")
+                            .addOption(OptionType.BOOLEAN, INCLUDE_STARTUP_SCRIPT_PARAMETER,
                                     "if the startup script should be included, false by default."),
-                new SubcommandData(JSHELL_CLOSE_SUBCOMMAND, "Close your session."),
-                new SubcommandData(JSHELL_STARTUP_SCRIPT_SUBCOMMAND,
-                        "Display the startup script."));
+                new SubcommandData(CLOSE_SUBCOMMAND, "Close your session."),
+                new SubcommandData(STARTUP_SCRIPT_SUBCOMMAND, "Display the startup script."));
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         switch (Objects.requireNonNull(event.getSubcommandName())) {
-            case JSHELL_VERSION_SUBCOMMAND -> handleVersionCommand(event);
-            case JSHELL_EVAL_SUBCOMMAND -> handleEvalCommand(event);
-            case JSHELL_SNIPPETS_SUBCOMMAND -> handleSnippetsCommand(event);
-            case JSHELL_CLOSE_SUBCOMMAND -> handleCloseCommand(event);
-            case JSHELL_STARTUP_SCRIPT_SUBCOMMAND -> handleStartupScriptCommand(event);
+            case VERSION_SUBCOMMAND -> handleVersionCommand(event);
+            case EVAL_SUBCOMMAND -> handleEvalCommand(event);
+            case SNIPPETS_SUBCOMMAND -> handleSnippetsCommand(event);
+            case CLOSE_SUBCOMMAND -> handleCloseCommand(event);
+            case STARTUP_SCRIPT_SUBCOMMAND -> handleStartupScriptCommand(event);
             default -> throw new AssertionError(
                     "Unexpected Subcommand: " + event.getSubcommandName());
         }
@@ -88,11 +95,10 @@ public class JShellCommand extends SlashCommandAdapter {
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        ModalMapping mapping =
-                event.getValue(JSHELL_TEXT_INPUT_ID + "|" + JSHELL_STARTUP_SCRIPT_PARAMETER);
+        ModalMapping mapping = event.getValue(TEXT_INPUT_PART_ID + "|" + STARTUP_SCRIPT_PARAMETER);
         boolean startupScript = mapping != null;
         if (mapping == null) {
-            mapping = event.getValue(JSHELL_TEXT_INPUT_ID);
+            mapping = event.getValue(TEXT_INPUT_PART_ID);
         }
         if (mapping != null) {
             handleEval(event, event.getUser(), true, mapping.getAsString(), startupScript);
@@ -106,15 +112,14 @@ public class JShellCommand extends SlashCommandAdapter {
                 System.out.println("Vendor:  " + System.getProperty("java.vendor"));
                 System.out.println("OS:      " + System.getProperty("os.name"));
                 System.out.println("Arch:    " + System.getProperty("os.arch"));
-                 System.out.println("```");""";
+                System.out.println("```");""";
         handleEval(event, null, false, code, false);
     }
 
     private void handleEvalCommand(SlashCommandInteractionEvent event) {
-        OptionMapping code = event.getOption(JSHELL_CODE_PARAMETER);
-        boolean startupScript = event.getOption(JSHELL_STARTUP_SCRIPT_PARAMETER) == null
-                || Objects.requireNonNull(event.getOption(JSHELL_STARTUP_SCRIPT_PARAMETER))
-                    .getAsBoolean();
+        OptionMapping code = event.getOption(CODE_PARAMETER);
+        boolean startupScript = event.getOption(STARTUP_SCRIPT_PARAMETER) == null
+                || Objects.requireNonNull(event.getOption(STARTUP_SCRIPT_PARAMETER)).getAsBoolean();
         if (code == null) {
             sendEvalModal(event, startupScript);
         } else {
@@ -124,8 +129,7 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void sendEvalModal(SlashCommandInteractionEvent event, boolean startupScript) {
         TextInput body = TextInput
-            .create(JSHELL_TEXT_INPUT_ID
-                    + (startupScript ? "|" + JSHELL_STARTUP_SCRIPT_PARAMETER : ""),
+            .create(TEXT_INPUT_PART_ID + (startupScript ? "|" + STARTUP_SCRIPT_PARAMETER : ""),
                     "Enter code to evaluate.", TextInputStyle.PARAGRAPH)
             .setPlaceholder("Put your code here.")
             .setRequiredRange(MIN_MESSAGE_INPUT_LENGTH, MAX_MESSAGE_INPUT_LENGTH)
@@ -160,10 +164,10 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void handleSnippetsCommand(SlashCommandInteractionEvent event) {
         event.deferReply().queue(interactionHook -> {
-            OptionMapping userOption = event.getOption(JSHELL_USER_PARAMETER);
+            OptionMapping userOption = event.getOption(USER_PARAMETER);
             User user = userOption == null ? event.getUser() : userOption.getAsUser();
             OptionMapping includeStartupScriptOption =
-                    event.getOption(JSHELL_INCLUDE_STARTUP_SCRIPT_PARAMETER);
+                    event.getOption(INCLUDE_STARTUP_SCRIPT_PARAMETER);
             boolean includeStartupScript =
                     includeStartupScriptOption != null && includeStartupScriptOption.getAsBoolean();
             List<String> snippets;
@@ -185,10 +189,7 @@ public class JShellCommand extends SlashCommandAdapter {
                     && snippets.stream()
                         .mapToInt(s -> (s + "Snippet 10```java\n```").length())
                         .sum() < MessageEmbed.EMBED_MAX_LENGTH_BOT - 100
-                    && snippets.size() <= 25/*
-                                             * Max visible embed fields in an embed TODO replace
-                                             * with constant
-                                             */) {
+                    && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS) {
                 sendSnippetsAsEmbed(interactionHook, user, snippets);
             } else if (snippets.stream()
                 .mapToInt(s -> (s + "// Snippet 10").getBytes().length)
