@@ -11,8 +11,8 @@ import java.util.List;
  * @param type type of the snippet
  * @param id id of the snippet
  * @param source source code of the snippet
- * @param result result of the snippet
- * @param exception thrown exception
+ * @param result result of the snippet, nullable
+ * @param exception thrown exception, nullable
  * @param stdoutOverflow if stdout has overflowed and was truncated
  * @param stdout what was printed by the snippet
  * @param errors the compilations errors of the snippet
@@ -21,6 +21,19 @@ public record JShellResult(SnippetStatus status, SnippetType type, String id, St
         @Nullable String result, @Nullable JShellExceptionResult exception, boolean stdoutOverflow,
         String stdout, List<String> errors) {
 
+    /**
+     * The JShell result.
+     * 
+     * @param status status of the snippet
+     * @param type type of the snippet
+     * @param id id of the snippet
+     * @param source source code of the snippet
+     * @param result result of the snippet, nullable
+     * @param exception thrown exception, nullable
+     * @param stdoutOverflow if stdout has overflowed and was truncated
+     * @param stdout what was printed by the snippet
+     * @param errors the compilations errors of the snippet
+     */
     public JShellResult {
         errors = List.copyOf(errors);
     }

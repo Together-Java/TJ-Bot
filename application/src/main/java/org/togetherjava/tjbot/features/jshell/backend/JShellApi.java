@@ -74,8 +74,9 @@ public class JShellApi {
 
     /**
      * Evaluates the code in a regular session, will block until the request is over.
-     * 
+     *
      * @param code the code to evaluate
+     * @param sessionId the id of the session to get the snippets from
      * @param startupScript if the {@link JShellApi#STARTUP_SCRIPT_ID startup script} should be
      *        executed at the start of the session
      * @return the result of the evaluation

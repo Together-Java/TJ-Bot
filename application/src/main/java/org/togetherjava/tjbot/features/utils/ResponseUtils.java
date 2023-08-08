@@ -16,9 +16,8 @@ public class ResponseUtils {
 
     /**
      * Creates a body handler which will parse the body of the request. If the parsing fails, an
-     * UncheckedIOException exception is thrown and may be wrapped in an IOException.//TODO If the
-     * request status code is not 200 or 204, a UncheckedRequestFailedException is thrown and
-     * wrapped in an IOException.
+     * IOException is thrown. if the request status code is not 200 or 204, a
+     * UncheckedRequestFailedException is thrown wrapped in an IOException.
      * 
      * @param type the class to parse the json into
      * @param mapper the json mapper

@@ -335,7 +335,7 @@ public final class Config {
     }
 
     /**
-     * The configuration about jshell.
+     * The configuration about jshell REST API and command/code action settings.
      * 
      * @return the jshell configuration
      */

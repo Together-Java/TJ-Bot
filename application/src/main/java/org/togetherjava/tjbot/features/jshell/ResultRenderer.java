@@ -14,8 +14,21 @@ import java.awt.Color;
 
 import static org.togetherjava.tjbot.features.utils.Colors.*;
 
+/**
+ * Allows to render JShell results.
+ */
 class ResultRenderer {
 
+    /**
+     * Renders a JShell result to an embed.
+     * 
+     * @param originator the user from who to display snippet ownership
+     * @param originalCode the original code to display
+     * @param partOfSession if it was part of a regular session, or a one time session
+     * @param result the JShell result
+     * @param builder the embed builder
+     * @return the ember builder, for chaining
+     */
     public EmbedBuilder renderToEmbed(@Nullable User originator, @Nullable String originalCode,
             boolean partOfSession, JShellResult result, EmbedBuilder builder) {
         if (originator != null) {
