@@ -195,19 +195,21 @@ public class JShellCommand extends SlashCommandAdapter {
     }
 
     private void sendSnippets(InteractionHook interactionHook, User user, List<String> snippets) {
-        if (snippets.stream().noneMatch(s -> s.length() >= MessageEmbed.VALUE_MAX_LENGTH)
-                && snippets.stream()
-                    .mapToInt(s -> (s + "Snippet 10```java\n```").length())
-                    .sum() < MessageEmbed.EMBED_MAX_LENGTH_BOT - 100
-                && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS) {
+        if (canBeSentAsEmbed(snippets)) {
             sendSnippetsAsEmbed(interactionHook, user, snippets);
-        } else if (snippets.stream()
-            .mapToInt(s -> (s + "// Snippet 10").getBytes().length)
-            .sum() < Message.MAX_FILE_SIZE) {
+        } else if (canBeSentAsFile(snippets)) {
             sendSnippetsAsFile(interactionHook, user, snippets);
         } else {
             sendSnippetsTooLong(interactionHook, user);
         }
+    }
+
+    private boolean canBeSentAsEmbed(List<String> snippets) {
+        return snippets.stream().noneMatch(s -> s.length() >= MessageEmbed.VALUE_MAX_LENGTH)
+                && snippets.stream()
+                    .mapToInt(s -> (s + "Snippet 10```java\n```").length())
+                    .sum() < MessageEmbed.EMBED_MAX_LENGTH_BOT - 100
+                && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS;
     }
 
     private void sendSnippetsAsEmbed(InteractionHook interactionHook, User user,
@@ -221,6 +223,12 @@ public class JShellCommand extends SlashCommandAdapter {
             i++;
         }
         interactionHook.editOriginalEmbeds(builder.build()).queue();
+    }
+
+    private boolean canBeSentAsFile(List<String> snippets) {
+        return snippets.stream()
+            .mapToInt(s -> (s + "// Snippet 10").getBytes().length)
+            .sum() < Message.MAX_FILE_SIZE;
     }
 
     private void sendSnippetsAsFile(InteractionHook interactionHook, User user,
