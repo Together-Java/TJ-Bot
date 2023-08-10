@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.features.jshell.backend.dto;
 
 /**
  * The status of the snippet, see {@link jdk.jshell.Snippet.Status} for most of them, and evaluation
- * timeout of the JShell REST API for ABORTED.
+ * timeout of the JShell REST API for {@link SnippetStatus#ABORTED ABORTED}.
  */
 public enum SnippetStatus {
     /**

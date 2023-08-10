@@ -64,7 +64,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     /**
      * Creates a new instance.
      * 
-     * @param jshellEval the jshell evaluation instance used in the code actions
+     * @param jshellEval used to execute java code and build visual result
      */
     public CodeMessageHandler(JShellEval jshellEval) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());

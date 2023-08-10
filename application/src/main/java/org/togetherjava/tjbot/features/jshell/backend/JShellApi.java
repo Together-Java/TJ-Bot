@@ -20,8 +20,9 @@ import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
 
 /**
- * Allows to interact with the unofficial JShell REST API of the Together-Java JShell backend
- * project.
+ * Allows to interact with the
+ * <a href="https://github.com/Together-Java/JShellPlaygroundBackend">Together-Java's JShell REST
+ * API</a> project.
  * <p>
  * Each method may do a blocking HTTP request and may throw a RequestFailedException if status code
  * isn't 200 or 204.

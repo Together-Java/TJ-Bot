@@ -22,8 +22,8 @@ class ResultRenderer {
     /**
      * Renders a JShell result to an embed.
      * 
-     * @param originator the user from who to display snippet ownership
-     * @param originalCode the original code to display
+     * @param originator the user from who to display snippet ownership, won't be displayed if null
+     * @param originalCode the original code to display, won't be displayed if null
      * @param partOfSession if it was part of a regular session, or a one time session
      * @param result the JShell result
      * @param builder the embed builder

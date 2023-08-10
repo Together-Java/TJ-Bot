@@ -30,7 +30,10 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * The JShell command, provide functionalities to create JShell sessions, evaluate code, etc.
+ * The JShell command AKA {@code /jshell}, provide functionalities to create JShell sessions,
+ * evaluate code, etc.
+ * <p>
+ * Example: {@code /jshell eval code:2+2}
  */
 public class JShellCommand extends SlashCommandAdapter {
     private static final String TEXT_INPUT_PART_ID = "jshell";
@@ -53,12 +56,10 @@ public class JShellCommand extends SlashCommandAdapter {
     /**
      * Creates an instance of the command.
      * 
-     * @param jshellEval the jshell evaluation instance used in the jshell command
+     * @param jshellEval used to execute java code and build visual result
      */
     public JShellCommand(JShellEval jshellEval) {
-        super(JSHELL_COMMAND,
-                "JShell as a command, a Read–eval–print loop which allows to rapidly and simply execute java code.",
-                CommandVisibility.GUILD);
+        super(JSHELL_COMMAND, "Execute Java code in Discord!", CommandVisibility.GUILD);
 
         this.jshellEval = jshellEval;
 
@@ -185,20 +186,24 @@ public class JShellCommand extends SlashCommandAdapter {
                 return;
             }
 
-            if (snippets.stream().noneMatch(s -> s.length() >= MessageEmbed.VALUE_MAX_LENGTH)
-                    && snippets.stream()
-                        .mapToInt(s -> (s + "Snippet 10```java\n```").length())
-                        .sum() < MessageEmbed.EMBED_MAX_LENGTH_BOT - 100
-                    && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS) {
-                sendSnippetsAsEmbed(interactionHook, user, snippets);
-            } else if (snippets.stream()
-                .mapToInt(s -> (s + "// Snippet 10").getBytes().length)
-                .sum() < Message.MAX_FILE_SIZE) {
-                sendSnippetsAsFile(interactionHook, user, snippets);
-            } else {
-                sendSnippetsTooLong(interactionHook, user);
-            }
+            sendSnippets(interactionHook, user, snippets);
         });
+    }
+
+    private void sendSnippets(InteractionHook interactionHook, User user, List<String> snippets) {
+        if (snippets.stream().noneMatch(s -> s.length() >= MessageEmbed.VALUE_MAX_LENGTH)
+                && snippets.stream()
+                    .mapToInt(s -> (s + "Snippet 10```java\n```").length())
+                    .sum() < MessageEmbed.EMBED_MAX_LENGTH_BOT - 100
+                && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS) {
+            sendSnippetsAsEmbed(interactionHook, user, snippets);
+        } else if (snippets.stream()
+            .mapToInt(s -> (s + "// Snippet 10").getBytes().length)
+            .sum() < Message.MAX_FILE_SIZE) {
+            sendSnippetsAsFile(interactionHook, user, snippets);
+        } else {
+            sendSnippetsTooLong(interactionHook, user);
+        }
     }
 
     private void sendSnippetsAsEmbed(InteractionHook interactionHook, User user,
