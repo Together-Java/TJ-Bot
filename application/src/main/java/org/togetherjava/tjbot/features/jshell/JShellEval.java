@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.config.JShellConfig;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 import org.togetherjava.tjbot.features.utils.Colors;
+import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
 import org.togetherjava.tjbot.features.utils.RateLimiter;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
@@ -56,7 +57,7 @@ public class JShellEval {
      * @throws RequestFailedException if a http error happens
      */
     public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode,
-            boolean startupScript) throws RequestFailedException {
+            boolean startupScript) throws RequestFailedException, ConnectionFailedException {
         MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
         if (rateLimitedMessage != null) {
             return rateLimitedMessage;

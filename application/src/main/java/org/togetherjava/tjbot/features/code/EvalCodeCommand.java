@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.utils.CodeFence;
 import org.togetherjava.tjbot.features.utils.Colors;
+import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
 /**
@@ -34,7 +35,7 @@ final class EvalCodeCommand implements CodeAction {
         }
         try {
             return jshellEval.evaluateAndRespond(null, codeFence.code(), false, false);
-        } catch (RequestFailedException e) {
+        } catch (RequestFailedException | ConnectionFailedException e) {
             return new EmbedBuilder().setColor(Colors.ERROR_COLOR)
                 .setDescription("Request failed: " + e.getMessage())
                 .build();

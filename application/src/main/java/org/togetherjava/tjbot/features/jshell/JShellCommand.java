@@ -21,6 +21,7 @@ import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.utils.Colors;
+import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
@@ -157,7 +158,7 @@ public class JShellCommand extends SlashCommandAdapter {
                     .editOriginalEmbeds(
                             jshellEval.evaluateAndRespond(user, code, showCode, startupScript))
                     .queue();
-            } catch (RequestFailedException e) {
+            } catch (RequestFailedException | ConnectionFailedException e) {
                 interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
             }
         });
@@ -183,6 +184,9 @@ public class JShellCommand extends SlashCommandAdapter {
                 } else {
                     interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
                 }
+                return;
+            } catch (ConnectionFailedException e) {
+                interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
                 return;
             }
 
@@ -259,6 +263,9 @@ public class JShellCommand extends SlashCommandAdapter {
                 event.replyEmbeds(createUnexpectedErrorEmbed(event.getUser(), e)).queue();
             }
             return;
+        } catch (ConnectionFailedException e) {
+            event.replyEmbeds(createUnexpectedErrorEmbed(event.getUser(), e)).queue();
+            return;
         }
 
         event
@@ -280,7 +287,7 @@ public class JShellCommand extends SlashCommandAdapter {
                         .setDescription("```java\n" + startupScript + "```")
                         .build())
                     .queue();
-            } catch (RequestFailedException e) {
+            } catch (RequestFailedException | ConnectionFailedException e) {
                 event.replyEmbeds(createUnexpectedErrorEmbed(event.getUser(), e)).queue();
             }
         });
@@ -293,7 +300,7 @@ public class JShellCommand extends SlashCommandAdapter {
             .build();
     }
 
-    private MessageEmbed createUnexpectedErrorEmbed(@Nullable User user, RequestFailedException e) {
+    private MessageEmbed createUnexpectedErrorEmbed(@Nullable User user, Exception e) {
         EmbedBuilder embedBuilder = new EmbedBuilder().setColor(Colors.ERROR_COLOR)
             .setDescription("Request failed: " + e.getMessage());
         if (user != null) {

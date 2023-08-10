@@ -1,10 +1,9 @@
 package org.togetherjava.tjbot.config;
 
-import com.linkedin.urls.Url;
 
 import org.togetherjava.tjbot.features.utils.RateLimiter;
 
-import java.net.MalformedURLException;
+import java.util.Objects;
 
 /**
  * JShell config.
@@ -20,18 +19,14 @@ public record JShellConfig(String baseUrl, int rateLimitWindowSeconds,
     /**
      * Creates a JShell config.
      * 
-     * @param baseUrl the base url of the JShell REST API, must be valid
+     * @param baseUrl the base url of the JShell REST API, must be not null
      * @param rateLimitWindowSeconds the number of seconds of the {@link RateLimiter rate limiter}
      *        for jshell commands and code actions, must be higher than 0
      * @param rateLimitRequestsInWindow the number of requests of the {@link RateLimiter rate
      *        limiter} for jshell commands and code actions, must be higher than 0
      */
     public JShellConfig {
-        try {
-            Url.create(baseUrl);
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
+        Objects.requireNonNull(baseUrl);
         if (rateLimitWindowSeconds < 0) {
             throw new IllegalArgumentException(
                     "Illegal rateLimitWindowSeconds : " + rateLimitWindowSeconds);
