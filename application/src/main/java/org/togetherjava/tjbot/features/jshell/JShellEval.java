@@ -55,6 +55,8 @@ public class JShellEval {
      * @param startupScript if the startup script should be used or not
      * @return the response
      * @throws RequestFailedException if a http error happens
+     * @throws ConnectionFailedException if the connection to the API couldn't be made at the first
+     *         place
      */
     public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode,
             boolean startupScript) throws RequestFailedException, ConnectionFailedException {
