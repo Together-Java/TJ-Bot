@@ -38,6 +38,7 @@ public final class Config {
     private final String logErrorChannelWebhook;
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
+    private final JShellConfig jshell;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -74,7 +75,8 @@ public final class Config {
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
-            @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl) {
+            @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
+            @JsonProperty(value = "jshell", required = true) JShellConfig jshell) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -99,6 +101,7 @@ public final class Config {
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
+        this.jshell = Objects.requireNonNull(jshell);
     }
 
     /**
@@ -329,5 +332,14 @@ public final class Config {
      */
     public String getSourceCodeBaseUrl() {
         return sourceCodeBaseUrl;
+    }
+
+    /**
+     * The configuration about jshell REST API and command/code action settings.
+     * 
+     * @return the jshell configuration
+     */
+    public JShellConfig getJshell() {
+        return jshell;
     }
 }

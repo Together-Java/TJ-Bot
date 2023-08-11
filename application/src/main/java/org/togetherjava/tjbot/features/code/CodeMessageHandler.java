@@ -20,6 +20,7 @@ import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.utils.CodeFence;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
@@ -62,11 +63,14 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     /**
      * Creates a new instance.
+     * 
+     * @param jshellEval used to execute java code and build visual result
      */
-    public CodeMessageHandler() {
+    public CodeMessageHandler(JShellEval jshellEval) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
-        List<CodeAction> codeActions = List.of(new FormatCodeCommand());
+        List<CodeAction> codeActions =
+                List.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval));
 
         labelToCodeAction = codeActions.stream()
             .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,
