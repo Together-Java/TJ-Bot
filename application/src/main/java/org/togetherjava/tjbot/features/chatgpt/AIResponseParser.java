@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.chaptgpt;
+package org.togetherjava.tjbot.features.chatgpt;
 
 import java.util.ArrayList;
 import java.util.List;
