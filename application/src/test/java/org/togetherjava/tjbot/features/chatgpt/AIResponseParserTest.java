@@ -6,8 +6,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.togetherjava.tjbot.features.chaptgpt.AIResponseParser;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;

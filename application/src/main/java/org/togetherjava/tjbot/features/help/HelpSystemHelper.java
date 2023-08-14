@@ -24,8 +24,8 @@ import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
-import org.togetherjava.tjbot.features.chaptgpt.ChatGptCommand;
-import org.togetherjava.tjbot.features.chaptgpt.ChatGptService;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;

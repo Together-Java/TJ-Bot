@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.chaptgpt;
+package org.togetherjava.tjbot.features.chatgpt;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

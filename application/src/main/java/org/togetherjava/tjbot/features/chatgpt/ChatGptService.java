@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.chaptgpt;
+package org.togetherjava.tjbot.features.chatgpt;
 
 import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
@@ -22,6 +22,7 @@ public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
     private static final int MAX_TOKENS = 3_000;
+    private static final String AI_MODEL = "gpt-3.5-turbo";
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
 
@@ -44,7 +45,7 @@ public class ChatGptService {
                         character limit. For code supplied for review, refer to the old code supplied rather than
                         rewriting the code. Don't supply a corrected version of the code.\s""");
         ChatCompletionRequest systemSetupRequest = ChatCompletionRequest.builder()
-            .model("gpt-3.5-turbo")
+            .model(AI_MODEL)
             .messages(List.of(setupMessage))
             .frequencyPenalty(0.5)
             .temperature(0.3)
@@ -73,7 +74,7 @@ public class ChatGptService {
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-                .model("gpt-3.5-turbo")
+                .model(AI_MODEL)
                 .messages(List.of(chatMessage))
                 .frequencyPenalty(0.5)
                 .temperature(0.3)

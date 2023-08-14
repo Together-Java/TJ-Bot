@@ -3,7 +3,7 @@
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package org.togetherjava.tjbot.features.chaptgpt;
+package org.togetherjava.tjbot.features.chatgpt;
 
 import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
