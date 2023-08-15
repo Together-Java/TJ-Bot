@@ -47,11 +47,11 @@ public final class DiscordLogging {
     private static void addAppenders(Configuration logConfig, Config botConfig) {
         parseWebhookUri(botConfig.getLogInfoChannelWebhook())
             .ifPresent(webhookUri -> addDiscordLogAppender("DiscordInfo", createInfoRangeFilter(),
-                    webhookUri, logConfig));
+                    webhookUri, botConfig.getSourceCodeBaseUrl(), logConfig));
 
         parseWebhookUri(botConfig.getLogErrorChannelWebhook())
             .ifPresent(webhookUri -> addDiscordLogAppender("DiscordError", createErrorRangeFilter(),
-                    webhookUri, logConfig));
+                    webhookUri, botConfig.getSourceCodeBaseUrl(), logConfig));
     }
 
     private static Optional<URI> parseWebhookUri(String webhookUri) {
@@ -71,7 +71,7 @@ public final class DiscordLogging {
     // to the config.
     @SuppressWarnings("squid:S4792")
     private static void addDiscordLogAppender(String name, Filter filter, URI webhookUri,
-            Configuration logConfig) {
+            String sourceCodeBaseUrl, Configuration logConfig) {
         // NOTE The whole setup is done programmatically in order to allow the webhooks
         // to be read from the config file
         Filter[] filters = {filter, createDenyMarkerFilter(LogMarkers.NO_DISCORD.getName()),
@@ -80,6 +80,7 @@ public final class DiscordLogging {
         Appender appender = DiscordLogAppender.newBuilder()
             .setName(name)
             .setWebhook(webhookUri)
+            .setSourceCodeBaseUrl(sourceCodeBaseUrl)
             .setFilter(CompositeFilter.createFilters(filters))
             .build();
 

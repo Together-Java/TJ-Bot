@@ -1,6 +1,11 @@
 package org.togetherjava.tjbot.logging.discord;
 
-import org.apache.logging.log4j.core.*;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.Core;
+import org.apache.logging.log4j.core.Filter;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.StringLayout;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
@@ -19,10 +24,10 @@ final class DiscordLogAppender extends AbstractAppender {
     private final DiscordLogForwarder logForwarder;
 
     private DiscordLogAppender(String name, Filter filter, StringLayout layout,
-            boolean ignoreExceptions, URI webhook) {
+            boolean ignoreExceptions, URI webhook, String sourceCodeBaseUrl) {
         super(name, filter, layout, ignoreExceptions, NO_PROPERTIES);
 
-        logForwarder = new DiscordLogForwarder(webhook);
+        logForwarder = new DiscordLogForwarder(webhook, sourceCodeBaseUrl);
     }
 
     @Override
@@ -43,8 +48,16 @@ final class DiscordLogAppender extends AbstractAppender {
         @Required
         private URI webhook;
 
+        @Required
+        private String sourceCodeBaseUrl;
+
         public DiscordLogAppenderBuilder setWebhook(URI webhook) {
             this.webhook = webhook;
+            return asBuilder();
+        }
+
+        public DiscordLogAppenderBuilder setSourceCodeBaseUrl(String sourceCodeBaseUrl) {
+            this.sourceCodeBaseUrl = sourceCodeBaseUrl;
             return asBuilder();
         }
 
@@ -58,7 +71,7 @@ final class DiscordLogAppender extends AbstractAppender {
             String name = Objects.requireNonNull(getName());
 
             return new DiscordLogAppender(name, getFilter(), (StringLayout) layout,
-                    isIgnoreExceptions(), webhook);
+                    isIgnoreExceptions(), webhook, sourceCodeBaseUrl);
         }
     }
 }

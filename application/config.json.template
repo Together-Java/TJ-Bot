@@ -87,6 +87,12 @@
         "wsh"
     ],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
-    "logErrorChannelWebhook": "<put_your_webhook_here>"
-    "openaiApiKey": "<check pins in #tjbot_discussion for the key>"
+    "logErrorChannelWebhook": "<put_your_webhook_here>",
+    "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
+    "sourceCodeBaseUrl": "<https://github.com/<your_account_here>/<your_repo_here>/blob/master/application/src/main/java/>"
+    "jshell": {
+        "baseUrl": "<put_jshell_rest_api_url_here>",
+        "rateLimitWindowSeconds": 10,
+        "rateLimitRequestsInWindow": 3
+    }
 }
