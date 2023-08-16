@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.chaptgpt;
+package org.togetherjava.tjbot.features.chatgpt;
 
 import com.theokanning.openai.OpenAiHttpException;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
@@ -22,12 +22,13 @@ public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
     private static final int MAX_TOKENS = 3_000;
+    private static final String AI_MODEL = "gpt-3.5-turbo";
     private boolean isDisabled = false;
     private final OpenAiService openAiService;
 
     /**
      * Creates instance of ChatGPTService
-     * 
+     *
      * @param config needed for token to OpenAI API.
      */
     public ChatGptService(Config config) {
@@ -37,17 +38,34 @@ public class ChatGptService {
         }
 
         openAiService = new OpenAiService(apiKey, TIMEOUT);
+
+        ChatMessage setupMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(),
+                """
+                        Please answer questions in 1500 characters or less. Remember to count spaces in the
+                        character limit. For code supplied for review, refer to the old code supplied rather than
+                        rewriting the code. Don't supply a corrected version of the code.\s""");
+        ChatCompletionRequest systemSetupRequest = ChatCompletionRequest.builder()
+            .model(AI_MODEL)
+            .messages(List.of(setupMessage))
+            .frequencyPenalty(0.5)
+            .temperature(0.3)
+            .maxTokens(50)
+            .n(1)
+            .build();
+
+        // Sending the system setup message to ChatGPT.
+        openAiService.createChatCompletion(systemSetupRequest);
     }
 
     /**
      * Prompt ChatGPT with a question and receive a response.
-     * 
+     *
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @return partitioned response from ChatGPT as a String array.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
-     * @return response from ChatGPT as a String.
      */
-    public Optional<String> ask(String question) {
+    public Optional<String[]> ask(String question) {
         if (isDisabled) {
             return Optional.empty();
         }
@@ -56,18 +74,25 @@ public class ChatGptService {
             ChatMessage chatMessage =
                     new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-                .model("gpt-3.5-turbo")
+                .model(AI_MODEL)
                 .messages(List.of(chatMessage))
                 .frequencyPenalty(0.5)
-                .temperature(0.7)
+                .temperature(0.3)
                 .maxTokens(MAX_TOKENS)
                 .n(1)
                 .build();
-            return Optional.ofNullable(openAiService.createChatCompletion(chatCompletionRequest)
+
+            String response = openAiService.createChatCompletion(chatCompletionRequest)
                 .getChoices()
                 .get(0)
                 .getMessage()
-                .getContent());
+                .getContent();
+
+            if (response == null) {
+                return Optional.empty();
+            }
+
+            return Optional.of(AIResponseParser.parse(response));
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
                     "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
