@@ -14,10 +14,10 @@ class AIResponseParserTest {
     private static final Logger logger = LoggerFactory.getLogger(AIResponseParserTest.class);
 
     @ParameterizedTest
-    @ValueSource(strings = {"test1.txt", "test2.txt", "test3.txt"})
-    void correctResponseLength(String filename) {
-        try (InputStream in =
-                getClass().getClassLoader().getResourceAsStream("AITestsResponses/" + filename)) {
+    @ValueSource(ints = {1, 2, 3, 4})
+    void correctResponseLength(int fileNumber) {
+        try (InputStream in = getClass().getClassLoader()
+            .getResourceAsStream("AITestsResponses/test" + fileNumber + ".txt")) {
             String response = new String(Objects.requireNonNull(in).readAllBytes());
             String[] aiResponse = AIResponseParser.parse(response);
 
