@@ -1,5 +1,8 @@
 package org.togetherjava.tjbot.features.chatgpt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,6 +16,7 @@ public class AIResponseParser {
         throw new UnsupportedOperationException("Utility class, construction not supported");
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(AIResponseParser.class);
     private static final int RESPONSE_LENGTH_LIMIT = 2_000;
 
     /**
@@ -27,6 +31,7 @@ public class AIResponseParser {
     public static String[] parse(String response) {
         String[] partedResponse = new String[] {response};
         if (response.length() > RESPONSE_LENGTH_LIMIT) {
+            logger.debug("Response to parse:\n{}", response);
             partedResponse = partitionAiResponse(response);
         }
 
