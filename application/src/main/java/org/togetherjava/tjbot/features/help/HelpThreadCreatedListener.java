@@ -77,6 +77,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         Runnable createMessages = () -> {
             try {
                 createMessages(threadChannel).queue();
+                createAIResponse(threadChannel).queue();
             } catch (Exception e) {
                 logger.error(
                         "Unknown error while creating messages after help-thread ({}) creation",
@@ -88,6 +89,13 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         // after Discord created the thread, but before Discord send OPs initial message.
         // Sending messages at that moment is not allowed.
         SERVICE.schedule(createMessages, 5, TimeUnit.SECONDS);
+    }
+
+    private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
+        RestAction<Message> originalQuestion =
+                threadChannel.retrieveMessageById(threadChannel.getIdLong());
+        return originalQuestion.flatMap(
+                message -> helper.constructChatGptAttempt(threadChannel, message.getContentRaw()));
     }
 
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {

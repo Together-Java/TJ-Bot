@@ -24,19 +24,30 @@ import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
-import org.togetherjava.tjbot.features.utils.MessageUtils;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.togetherjava.tjbot.features.utils.MessageUtils.mentionGuildSlashCommand;
 
 /**
  * Helper class offering certain methods used by the help system.
@@ -59,16 +70,23 @@ public final class HelpSystemHelper {
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
     private final Database database;
+    private final ChatGptService chatGptService;
+    private static final int MAX_QUESTION_LENGTH = 200;
+    private static final int MIN_QUESTION_LENGTH = 10;
+    private static final String CHATGPT_FAILURE_MESSAGE =
+            "You can use %s to ask ChatGPT about your question while you wait for a human to respond.";
 
     /**
      * Creates a new instance.
      *
      * @param config the config to use
      * @param database the database to store help thread metadata in
+     * @param chatGptService the service used to ask ChatGPT questions via the API.
      */
-    public HelpSystemHelper(Config config, Database database) {
+    public HelpSystemHelper(Config config, Database database, ChatGptService chatGptService) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
+        this.chatGptService = chatGptService;
 
         helpForumPattern = helpConfig.getHelpForumPattern();
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
@@ -91,11 +109,10 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        return MessageUtils
-            .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                    HelpThreadCommand.Subcommand.CLOSE.getCommandName())
-            .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
-                    closeCommandMention));
+        return mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
+                HelpThreadCommand.Subcommand.CLOSE.getCommandName())
+                    .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
+                            closeCommandMention));
     }
 
     private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
@@ -129,6 +146,90 @@ public final class HelpSystemHelper {
                 .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
         }
         return action.setEmbeds(embeds);
+    }
+
+    /**
+     * Determine between the title of the thread and the first message which to send to the AI. It
+     * uses a simple heuristic of length to determine if enough context exists in a question. If the
+     * title is used, it must also include a question mark since the title is often used more as an
+     * indicator of topic versus a question.
+     *
+     * @param originalQuestion The first message of the thread which originates from the question
+     *        asker.
+     * @param threadChannel The thread in which the question was asked.
+     * @return An answer for the user from the AI service or a message indicating either an error or
+     *         why the message wasn't used.
+     */
+    RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
+            String originalQuestion) {
+        Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
+        Optional<String[]> chatGPTAnswer;
+
+        if (questionOptional.isEmpty()) {
+            return useChatGptFallbackMessage(threadChannel);
+        }
+        String question = questionOptional.get();
+        logger.debug("The final question sent to chatGPT: {}", question);
+        logger.info("The final question sent to chatGPT: {}", question);
+
+        chatGPTAnswer = chatGptService.ask(question);
+        if (chatGPTAnswer.isEmpty()) {
+            return useChatGptFallbackMessage(threadChannel);
+        }
+
+        RestAction<Message> message =
+                mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+                    .map("""
+                            Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
+                            In any case, a human is on the way 👍. To continue talking to the AI, you can use \
+                            %s.
+                            """::formatted)
+                    .flatMap(threadChannel::sendMessage);
+
+        for (String aiResponse : chatGPTAnswer.get()) {
+            message = message.map(aiResponse::formatted).flatMap(threadChannel::sendMessage);
+        }
+
+        return message;
+    }
+
+    private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,
+            String originalQuestion) {
+        String questionTitle = threadChannel.getName();
+        StringBuilder questionBuilder = new StringBuilder(MAX_QUESTION_LENGTH);
+
+        if (originalQuestion.length() < MIN_QUESTION_LENGTH
+                && questionTitle.length() < MIN_QUESTION_LENGTH) {
+            return Optional.empty();
+        }
+
+        questionBuilder.append(questionTitle).append(" ");
+        originalQuestion = originalQuestion.substring(0, Math
+            .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
+
+        questionBuilder.append(originalQuestion);
+
+        StringBuilder tagBuilder = new StringBuilder();
+        int stringLength = questionBuilder.length();
+        for (ForumTag tag : threadChannel.getAppliedTags()) {
+            String tagName = tag.getName();
+            stringLength += tagName.length();
+            if (stringLength > MAX_QUESTION_LENGTH) {
+                break;
+            }
+            tagBuilder.append(String.format("%s ", tagName));
+        }
+
+        questionBuilder.insert(0, tagBuilder);
+
+        return Optional.of(questionBuilder.toString());
+    }
+
+    private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
+        logger.warn("Something went wrong while trying to communicate with the ChatGpt API");
+        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+            .map(CHATGPT_FAILURE_MESSAGE::formatted)
+            .flatMap(threadChannel::sendMessage);
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
