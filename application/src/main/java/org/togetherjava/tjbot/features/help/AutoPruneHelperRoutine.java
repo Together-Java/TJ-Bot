@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.HelperPruneConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
@@ -31,11 +32,11 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HEL
 public final class AutoPruneHelperRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(AutoPruneHelperRoutine.class);
 
-    private static final int ROLE_FULL_LIMIT = 100;
-    private static final int ROLE_FULL_THRESHOLD = 95;
-    private static final int PRUNE_MEMBER_AMOUNT = 7;
-    private static final Period INACTIVE_AFTER = Period.ofDays(90);
-    private static final int RECENTLY_JOINED_DAYS = 4;
+    private final int roleFullLimit;
+    private final int roleFullThreshold;
+    private final int pruneMemberAmount;
+    private final Period inactiveAfter;
+    private final int recentlyJoinedDays;
 
     private final HelpSystemHelper helper;
     private final ModAuditLogWriter modAuditLogWriter;
@@ -56,6 +57,13 @@ public final class AutoPruneHelperRoutine implements Routine {
         this.helper = helper;
         this.modAuditLogWriter = modAuditLogWriter;
         this.database = database;
+
+        HelperPruneConfig helperPruneConfig = config.getHelperPruneConfig();
+        roleFullLimit = helperPruneConfig.roleFullLimit();
+        roleFullThreshold = helperPruneConfig.roleFullThreshold();
+        pruneMemberAmount = helperPruneConfig.pruneMemberAmount();
+        inactiveAfter = Period.ofDays(helperPruneConfig.inactivateAfterDays());
+        recentlyJoinedDays = helperPruneConfig.recentlyJoinedDays();
     }
 
     @Override
@@ -93,7 +101,7 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     private boolean isRoleFull(Collection<?> members) {
-        return members.size() >= ROLE_FULL_THRESHOLD;
+        return members.size() >= roleFullThreshold;
     }
 
     private void pruneRole(Role role, List<? extends Member> members, ForumChannel helpForum,
@@ -103,18 +111,18 @@ public final class AutoPruneHelperRoutine implements Routine {
 
         List<Member> membersToPrune = membersShuffled.stream()
             .filter(member -> isMemberInactive(member, when))
-            .limit(PRUNE_MEMBER_AMOUNT)
+            .limit(pruneMemberAmount)
             .toList();
-        if (membersToPrune.size() < PRUNE_MEMBER_AMOUNT) {
+        if (membersToPrune.size() < pruneMemberAmount) {
             warnModsAbout(
                     "Attempting to prune helpers from role **%s** (%d members), but only found %d inactive users. That is less than expected, the category might eventually grow beyond the limit."
                         .formatted(role.getName(), members.size(), membersToPrune.size()),
                     role.getGuild());
         }
-        if (members.size() - membersToPrune.size() >= ROLE_FULL_LIMIT) {
+        if (members.size() - membersToPrune.size() >= roleFullLimit) {
             warnModsAbout(
                     "The helper role **%s** went beyond its member limit (%d), despite automatic pruning. It will not function correctly anymore. Please manually prune some users."
-                        .formatted(role.getName(), ROLE_FULL_LIMIT),
+                        .formatted(role.getName(), roleFullLimit),
                     role.getGuild());
         }
 
@@ -126,14 +134,14 @@ public final class AutoPruneHelperRoutine implements Routine {
     private boolean isMemberInactive(Member member, Instant when) {
         if (member.hasTimeJoined()) {
             Instant memberJoined = member.getTimeJoined().toInstant();
-            if (Duration.between(memberJoined, when).toDays() <= RECENTLY_JOINED_DAYS) {
+            if (Duration.between(memberJoined, when).toDays() <= recentlyJoinedDays) {
                 // New users are protected from purging to not immediately kick them out of the role
                 // again
                 return false;
             }
         }
 
-        Instant latestActiveMoment = when.minus(INACTIVE_AFTER);
+        Instant latestActiveMoment = when.minus(inactiveAfter);
 
         // Has no recent help message
         return database.read(context -> context.fetchCount(HELP_CHANNEL_MESSAGES,

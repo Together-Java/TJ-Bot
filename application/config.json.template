@@ -94,5 +94,12 @@
         "baseUrl": "<put_jshell_rest_api_url_here>",
         "rateLimitWindowSeconds": 10,
         "rateLimitRequestsInWindow": 3
+    },
+    "helperPruneConfig": {
+        "roleFullLimit": 100,
+        "roleFullThreshold": 95,
+        "pruneMemberAmount": 7,
+        "inactivateAfterDays": 90,
+        "recentlyJoinedDays": 4
     }
 }

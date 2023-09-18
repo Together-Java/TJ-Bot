@@ -39,6 +39,7 @@ public final class Config {
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
+    private final HelperPruneConfig helperPruneConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -76,7 +77,9 @@ public final class Config {
                     required = true) String logErrorChannelWebhook,
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
-            @JsonProperty(value = "jshell", required = true) JShellConfig jshell) {
+            @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
+            @JsonProperty(value = "helperPruneConfig",
+                    required = true) HelperPruneConfig helperPruneConfig) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -102,6 +105,7 @@ public final class Config {
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
+        this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
     }
 
     /**
@@ -341,5 +345,14 @@ public final class Config {
      */
     public JShellConfig getJshell() {
         return jshell;
+    }
+
+    /**
+     * Gets the config for automatic pruning of helper roles.
+     *
+     * @return the configuration
+     */
+    public HelperPruneConfig getHelperPruneConfig() {
+        return helperPruneConfig;
     }
 }
