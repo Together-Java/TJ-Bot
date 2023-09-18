@@ -170,7 +170,6 @@ public final class HelpSystemHelper {
         }
         String question = questionOptional.get();
         logger.debug("The final question sent to chatGPT: {}", question);
-        logger.info("The final question sent to chatGPT: {}", question);
 
         chatGPTAnswer = chatGptService.ask(question);
         if (chatGPTAnswer.isEmpty()) {
@@ -226,7 +225,6 @@ public final class HelpSystemHelper {
     }
 
     private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
-        logger.warn("Something went wrong while trying to communicate with the ChatGpt API");
         return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
             .map(CHATGPT_FAILURE_MESSAGE::formatted)
             .flatMap(threadChannel::sendMessage);
