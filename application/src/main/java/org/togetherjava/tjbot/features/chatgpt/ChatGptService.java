@@ -23,8 +23,9 @@ public class ChatGptService {
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
     private static final int MAX_TOKENS = 3_000;
     private static final String AI_MODEL = "gpt-3.5-turbo";
+
     private boolean isDisabled = false;
-    private final OpenAiService openAiService;
+    private OpenAiService openAiService;
 
     /**
      * Creates instance of ChatGPTService
@@ -33,8 +34,10 @@ public class ChatGptService {
      */
     public ChatGptService(Config config) {
         String apiKey = config.getOpenaiApiKey();
-        if (apiKey.isBlank()) {
+        boolean keyIsDefaultDescription = apiKey.startsWith("<") && apiKey.endsWith(">");
+        if (apiKey.isBlank() || keyIsDefaultDescription) {
             isDisabled = true;
+            return;
         }
 
         openAiService = new OpenAiService(apiKey, TIMEOUT);
