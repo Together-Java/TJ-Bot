@@ -77,7 +77,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         Runnable createMessages = () -> {
             try {
                 createMessages(threadChannel).queue();
-                createAIResponse(threadChannel).queue();
             } catch (Exception e) {
                 logger.error(
                         "Unknown error while creating messages after help-thread ({}) creation",
@@ -100,7 +99,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
 
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {
         return sendHelperHeadsUp(threadChannel).flatMap(Message::pin)
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel));
+            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
+            .flatMap(any -> createAIResponse(threadChannel));
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
