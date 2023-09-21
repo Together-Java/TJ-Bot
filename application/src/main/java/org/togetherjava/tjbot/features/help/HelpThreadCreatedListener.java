@@ -9,15 +9,11 @@ import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.EventReceiver;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,8 +23,6 @@ import java.util.concurrent.TimeUnit;
  * user.
  */
 public final class HelpThreadCreatedListener extends ListenerAdapter implements EventReceiver {
-    private static final Logger logger = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
-    private static final ScheduledExecutorService SERVICE = Executors.newScheduledThreadPool(2);
 
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
@@ -74,20 +68,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
         helper.writeHelpThreadToDatabase(threadChannel.getOwnerIdLong(), threadChannel);
 
-        Runnable createMessages = () -> {
-            try {
-                createMessages(threadChannel).queue();
-            } catch (Exception e) {
-                logger.error(
-                        "Unknown error while creating messages after help-thread ({}) creation",
-                        threadChannel.getId(), e);
-            }
-        };
-
         // The creation is delayed, because otherwise it could be too fast and be executed
         // after Discord created the thread, but before Discord send OPs initial message.
         // Sending messages at that moment is not allowed.
-        SERVICE.schedule(createMessages, 5, TimeUnit.SECONDS);
+        createMessages(threadChannel).and(pinOriginalQuestion(threadChannel))
+            .queueAfter(5, TimeUnit.SECONDS);
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
@@ -97,8 +82,12 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
                 message -> helper.constructChatGptAttempt(threadChannel, message.getContentRaw()));
     }
 
+    private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
+        return threadChannel.retrieveMessageById(threadChannel.getIdLong()).flatMap(Message::pin);
+    }
+
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {
-        return sendHelperHeadsUp(threadChannel).flatMap(Message::pin)
+        return sendHelperHeadsUp(threadChannel)
             .flatMap(any -> helper.sendExplanationMessage(threadChannel))
             .flatMap(any -> createAIResponse(threadChannel));
     }
