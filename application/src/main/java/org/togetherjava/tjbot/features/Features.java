@@ -3,6 +3,8 @@ package org.togetherjava.tjbot.features;
 import net.dv8tion.jda.api.JDA;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.FeatureBlacklist;
+import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
@@ -19,6 +21,7 @@ import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.help.*;
+import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCommand;
@@ -73,6 +76,7 @@ public class Features {
      * @return a collection of all features
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
+        FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
         JShellEval jshellEval = new JShellEval(config.getJshell());
 
         TagSystem tagSystem = new TagSystem(database);
@@ -80,7 +84,8 @@ public class Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        CodeMessageHandler codeMessageHandler = new CodeMessageHandler(jshellEval);
+        CodeMessageHandler codeMessageHandler =
+                new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
 
@@ -151,7 +156,9 @@ public class Features {
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService));
-        // features.add(new JShellCommand(jshellEval));
-        return features;
+        features.add(new JShellCommand(jshellEval));
+
+        FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
+        return features.stream().filter(f -> blacklist.isEnabled(f.getClass())).toList();
     }
 }

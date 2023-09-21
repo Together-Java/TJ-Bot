@@ -15,6 +15,7 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
@@ -30,6 +31,7 @@ import java.awt.Color;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Handles code in registered messages and offers code actions to the user, such as formatting their
@@ -63,14 +65,18 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     /**
      * Creates a new instance.
-     * 
+     *
+     * @param blacklist the feature blacklist, used to test if certain code actions should be
+     *        disabled
      * @param jshellEval used to execute java code and build visual result
      */
-    public CodeMessageHandler(JShellEval jshellEval) {
+    public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
         List<CodeAction> codeActions =
-                List.of(new FormatCodeCommand()/* , new EvalCodeCommand(jshellEval) */);
+                Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval))
+                    .filter(a -> blacklist.isEnabled(a.getClass().getSimpleName()))
+                    .toList();
 
         labelToCodeAction = codeActions.stream()
             .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,

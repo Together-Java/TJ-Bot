@@ -40,6 +40,7 @@ public final class Config {
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
     private final HelperPruneConfig helperPruneConfig;
+    private final FeatureBlacklistConfig featureBlacklistConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -79,7 +80,9 @@ public final class Config {
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
             @JsonProperty(value = "helperPruneConfig",
-                    required = true) HelperPruneConfig helperPruneConfig) {
+                    required = true) HelperPruneConfig helperPruneConfig,
+            @JsonProperty(value = "featureBlacklist",
+                    required = true) FeatureBlacklistConfig featureBlacklistConfig) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -106,6 +109,7 @@ public final class Config {
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
+        this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
     }
 
     /**
@@ -354,5 +358,14 @@ public final class Config {
      */
     public HelperPruneConfig getHelperPruneConfig() {
         return helperPruneConfig;
+    }
+
+    /**
+     * The configuration of blacklisted features.
+     * 
+     * @return configuration of blacklisted features
+     */
+    public FeatureBlacklistConfig getFeatureBlacklistConfig() {
+        return featureBlacklistConfig;
     }
 }
