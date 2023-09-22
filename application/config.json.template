@@ -102,7 +102,7 @@
         "inactivateAfterDays": 90,
         "recentlyJoinedDays": 4
     },
-    "feature_blacklist": {
+    "featureBlacklist": {
         "normal": [
         ],
         "special": [
