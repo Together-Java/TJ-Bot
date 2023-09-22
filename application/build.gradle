@@ -6,7 +6,7 @@ buildscript {
 
 plugins {
     id 'application'
-    id 'com.google.cloud.tools.jib' version '3.3.0'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
     id 'com.github.johnrengelman.shadow' version '8.1.0'
     id 'database-settings'
 }
