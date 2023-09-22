@@ -101,5 +101,11 @@
         "pruneMemberAmount": 7,
         "inactivateAfterDays": 90,
         "recentlyJoinedDays": 4
+    },
+    "feature_blacklist": {
+        "normal": [
+        ],
+        "special": [
+        ]
     }
 }
