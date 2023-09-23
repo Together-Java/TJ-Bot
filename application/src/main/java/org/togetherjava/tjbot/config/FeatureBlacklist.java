@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
@@ -12,6 +14,7 @@ import java.util.Set;
  */
 public class FeatureBlacklist<T> {
     private final Set<T> featureIdentifierBlacklist;
+    private static final Logger logger = LoggerFactory.getLogger(FeatureBlacklist.class);
 
     /**
      * Creates a feature blacklist
@@ -30,6 +33,10 @@ public class FeatureBlacklist<T> {
      * @return true if a feature is enabled, false otherwise
      */
     public boolean isEnabled(T featureId) {
-        return !featureIdentifierBlacklist.contains(featureId);
+        boolean isBlackListed = featureIdentifierBlacklist.contains(featureId);
+        if (isBlackListed) {
+            logger.info(String.format("%s is blacklisted 😥", featureId));
+        }
+        return !isBlackListed;
     }
 }
