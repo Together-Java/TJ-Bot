@@ -18,7 +18,7 @@ repositories {
 var outputImage = 'togetherjava.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
-    from.image = 'eclipse-temurin:19'
+    from.image = 'eclipse-temurin:20'
     to {
         image = outputImage
         auth {

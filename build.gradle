@@ -65,8 +65,8 @@ subprojects {
         options.encoding = 'UTF-8'
 
         // Nails the Java-Version of every Subproject
-        sourceCompatibility = JavaVersion.VERSION_19
-        targetCompatibility = JavaVersion.VERSION_19
+        sourceCompatibility = JavaVersion.VERSION_20
+        targetCompatibility = JavaVersion.VERSION_20
     }
 
     compileJava(compileTasks)
