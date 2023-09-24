@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Blacklist of features, use {@link FeatureBlacklist#isEnabled(T)} to test if a feature is enabled.
@@ -35,8 +37,19 @@ public class FeatureBlacklist<T> {
     public boolean isEnabled(T featureId) {
         boolean isBlackListed = featureIdentifierBlacklist.contains(featureId);
         if (isBlackListed) {
-            logger.info(String.format("%s is blacklisted 😥", featureId));
+            logger.info("Feature {} is disabled", featureId);
         }
         return !isBlackListed;
+    }
+
+    public <F> Stream<F> disableMatching(Stream<F> features, Function<F, T> idExtractor) {
+        return features.filter(f -> {
+            T id = idExtractor.apply(f);
+            if (!this.isEnabled(id)) {
+                logger.info("Feature {} is disabled", id);
+                return false;
+            }
+            return true;
+        });
     }
 }
