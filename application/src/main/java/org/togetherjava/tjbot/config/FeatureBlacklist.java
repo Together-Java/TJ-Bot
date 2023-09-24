@@ -35,11 +35,7 @@ public class FeatureBlacklist<T> {
      * @return true if a feature is enabled, false otherwise
      */
     public boolean isEnabled(T featureId) {
-        boolean isBlackListed = featureIdentifierBlacklist.contains(featureId);
-        if (isBlackListed) {
-            logger.info("Feature {} is disabled", featureId);
-        }
-        return !isBlackListed;
+        return !featureIdentifierBlacklist.contains(featureId);
     }
 
     public <F> Stream<F> disableMatching(Stream<F> features, Function<F, T> idExtractor) {
