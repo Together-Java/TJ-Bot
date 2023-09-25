@@ -54,7 +54,7 @@ class WolframAlphaImages {
         return image;
     }
 
-    static BufferedImage renderSubPod(SubPod subPod) {
+    static BufferedImage renderSubPod(SubPod subPod) throws IOException, URISyntaxException {
         WolframAlphaImage sourceImage = subPod.getImage();
 
         int widthPx = sourceImage.getWidth() + 2 * IMAGE_MARGIN_PX;
@@ -64,12 +64,9 @@ class WolframAlphaImages {
                 new BufferedImage(widthPx, heightPx, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics graphics = destinationImage.getGraphics();
 
-        try {
-            graphics.drawImage(ImageIO.read(new URI(sourceImage.getSource()).toURL()),
-                    IMAGE_MARGIN_PX, IMAGE_MARGIN_PX, null);
-        } catch (IOException | URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
+        graphics.drawImage(ImageIO.read(new URI(sourceImage.getSource()).toURL()), IMAGE_MARGIN_PX,
+                IMAGE_MARGIN_PX, null);
+
 
         return destinationImage;
     }
