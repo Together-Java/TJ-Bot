@@ -1,10 +1,7 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -12,6 +9,7 @@ import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.FileUpload;
@@ -26,6 +24,7 @@ import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
+import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
 import javax.annotation.Nullable;
 
@@ -40,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -59,6 +59,7 @@ public final class HelpSystemHelper {
 
     private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
 
+    private final Predicate<String> hasTagManageRole;
     private final Predicate<String> isHelpForumName;
     private final String helpForumPattern;
     /**
@@ -88,6 +89,7 @@ public final class HelpSystemHelper {
         this.database = database;
         this.chatGptService = chatGptService;
 
+        hasTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
         helpForumPattern = helpConfig.getHelpForumPattern();
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
@@ -161,7 +163,7 @@ public final class HelpSystemHelper {
      *         why the message wasn't used.
      */
     RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
-            String originalQuestion) {
+            String originalQuestion, ComponentIdInteractor componentIdInteractor) {
         Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
         Optional<String[]> chatGPTAnswer;
 
@@ -176,6 +178,7 @@ public final class HelpSystemHelper {
             return useChatGptFallbackMessage(threadChannel);
         }
 
+        List<String> ids = new CopyOnWriteArrayList<>();
         RestAction<Message> message =
                 mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
                     .map("""
@@ -183,10 +186,21 @@ public final class HelpSystemHelper {
                             In any case, a human is on the way 👍. To continue talking to the AI, you can use \
                             %s.
                             """::formatted)
-                    .flatMap(threadChannel::sendMessage);
+                    .flatMap(threadChannel::sendMessage)
+                    .onSuccess(m -> ids.add(m.getId()));
 
-        for (String aiResponse : chatGPTAnswer.get()) {
-            message = message.map(aiResponse::formatted).flatMap(threadChannel::sendMessage);
+        String[] answers = chatGPTAnswer.get();
+        for (int i = 0; i < answers.length; i++) {
+            if (i == answers.length - 1) {
+                message = message.map(answers[i]::formatted)
+                    .flatMap(m -> threadChannel.sendMessage(m)
+                        .addActionRow(Button.danger(componentIdInteractor
+                            .generateComponentId(ids.toArray(String[]::new)), "Dismiss")));
+                continue;
+            }
+            message = message.map(answers[i]::formatted)
+                .flatMap(threadChannel::sendMessage)
+                .onSuccess(m -> ids.add(m.getId()));
         }
 
         return message;
@@ -342,6 +356,10 @@ public final class HelpSystemHelper {
         }
 
         return matchingTags.get(0);
+    }
+
+    boolean hasTagManageRole(Member member) {
+        return member.getRoles().stream().map(Role::getName).anyMatch(hasTagManageRole);
     }
 
     boolean isHelpForumName(String channelName) {
