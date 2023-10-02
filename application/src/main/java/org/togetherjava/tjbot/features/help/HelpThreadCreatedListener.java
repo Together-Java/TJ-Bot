@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -142,8 +143,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        // This method handles chatgpt's automatic response "dismiss" button
         ThreadChannel channel = event.getChannel().asThreadChannel();
-        Member interactionUser = event.getMember();
+        Member interactionUser = Objects.requireNonNull(event.getMember());
         if (channel.getOwnerIdLong() != interactionUser.getIdLong()
                 && !helper.hasTagManageRole(interactionUser)) {
             event.reply("You do not have permission for this action.").setEphemeral(true).queue();
