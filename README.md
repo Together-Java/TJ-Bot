@@ -1,7 +1,7 @@
 # TJ-Bot
 
 [![codefactor](https://img.shields.io/codefactor/grade/github/together-java/tj-bot)](https://www.codefactor.io/repository/github/together-java/tj-bot)
-![Java](https://img.shields.io/badge/Java-19-ff696c)
+![Java](https://img.shields.io/badge/Java-20-ff696c)
 [![license](https://img.shields.io/github/license/Together-Java/TJ-Bot)](https://github.com/Together-Java/TJ-Bot/blob/master/LICENSE)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/Together-Java/TJ-Bot?label=release)
 
