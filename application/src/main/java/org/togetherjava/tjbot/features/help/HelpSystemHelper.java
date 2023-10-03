@@ -188,19 +188,18 @@ public final class HelpSystemHelper {
                             """::formatted)
                     .flatMap(threadChannel::sendMessage)
                     .onSuccess(m -> ids.add(m.getId()));
-        String[] answers = chatGPTAnswer.get();
+        String[] answers = chatGPTAnswer.orElseThrow();
 
         for (int i = 0; i < answers.length; i++) {
-            MessageCreateAction messageCreateAction = threadChannel.sendMessage(answers[i]);
+            MessageCreateAction answer = threadChannel.sendMessage(answers[i]);
 
             if (i == answers.length - 1) {
-                message = message.flatMap(ignored -> messageCreateAction
+                message = message.flatMap(any -> answer
                     .addActionRow(generateDismissButton(componentIdInteractor, ids)));
                 continue;
             }
 
-            message = message
-                .flatMap(ignored -> messageCreateAction.onSuccess(m -> ids.add(m.getId())));
+            message = message.flatMap(ignored -> answer.onSuccess(m -> ids.add(m.getId())));
         }
 
         return message;
