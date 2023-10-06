@@ -42,11 +42,12 @@ public final class Config {
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
+    private final StarboardConfig starboard;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
-    private final OofsAndLmaosConfig oofsAndLmaos;
+
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -96,7 +97,7 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "oofsAndLmaos", required = true) OofsAndLmaosConfig oofsAndLmaos) {
+            @JsonProperty(value = "starboard", required = true) StarboardConfig starboard) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -129,7 +130,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
-        this.oofsAndLmaos = Objects.requireNonNull(oofsAndLmaos);
+        this.starboard = Objects.requireNonNull(starboard);
     }
 
     /**
@@ -383,9 +384,6 @@ public final class Config {
      */
     public JShellConfig getJshell() {
         return jshell;
-	}
-    public OofsAndLmaosConfig getOofsAndLmaos() {
-        return oofsAndLmaos;
     }
 
     /**
@@ -395,6 +393,17 @@ public final class Config {
      */
     public FeatureBlacklistConfig getFeatureBlacklistConfig() {
         return featureBlacklistConfig;
+    }
+
+    /**
+     * Gets the config for the Starboard. The starboard displays certain messages in a special
+     * emojis{@link StarboardConfig#emojiNames()}
+     * channel {@link StarboardConfig#channelPattern()} if a user reacts with one of the recognized
+     * 
+     * @return the config of the Starboard
+     */
+    public StarboardConfig getStarboard() {
+        return starboard;
     }
 
     /**

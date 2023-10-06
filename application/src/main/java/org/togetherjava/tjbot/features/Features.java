@@ -10,6 +10,7 @@ import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.features.basic.SlashCommandEducator;
+import org.togetherjava.tjbot.features.basic.Starboard;
 import org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter;
 import org.togetherjava.tjbot.features.bookmarks.BookmarksCommand;
 import org.togetherjava.tjbot.features.bookmarks.BookmarksSystem;
@@ -131,6 +132,7 @@ public class Features {
         features.add(new GuildLeaveCloseThreadListener(config));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
+        features.add(new Starboard(config, database));
 
         // Message context commands
         features.add(new TransferQuestionCommand(config));
