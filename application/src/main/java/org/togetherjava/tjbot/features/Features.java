@@ -126,6 +126,7 @@ public class Features {
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
 
         // Message context commands
+        features.add(new TransferQuestionCommand(config));
 
         // User context commands
 
