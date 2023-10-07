@@ -163,7 +163,8 @@ public final class AutoPruneHelperRoutine implements Routine {
         guild.removeRoleFromMember(member, role)
             .flatMap(any -> member.getUser().openPrivateChannel())
             .flatMap(channel -> channel.sendMessage(dmMessage))
-            .queue();
+            .queue(msg -> {
+            }, failure -> logger.debug("Tried to send a DM to a user but failed: ", failure));
     }
 
     private void warnModsAbout(String message, Guild guild) {
