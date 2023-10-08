@@ -1,8 +1,10 @@
 package org.togetherjava.tjbot.features.moderation;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
@@ -111,7 +113,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
             .flatMap(user -> dmUser(event.getChannel(), user, event.getGuild()))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), args.get(2), args.get(1)))
-            .flatMap(deletedOriginalMessage -> event.getHook().sendMessage("Question Transferred"))
+            .flatMap(deletedOriginalMessage -> event.getHook()
+                .sendMessage(String.format("Question transferred to %s",
+                        getHelperForum(event.getJDA()))))
             .queue();
     }
 
@@ -137,8 +141,15 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private RestAction<User> createForumPost(ModalInteractionEvent event, User originalUser) {
-        MessageCreateData forumMessage = MessageCreateData
-            .fromContent(event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString());
+
+        String originalMessage = event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString();
+
+        String modifiedMessageForPost = String.format("Original Post from: %s %n %n %s",
+                originalUser.getAsMention(), originalMessage);
+
+        MessageEmbed embedForPost = makeEmbedForPost(originalUser, modifiedMessageForPost);
+
+        MessageCreateData forumMessage = MessageCreateData.fromEmbeds(embedForPost);
         String forumTitle = event.getValue(TRANSFER_QUESTION_TITLE_ID).getAsString();
         ForumChannel questionsForum = getHelperForum(event.getJDA());
 
@@ -153,7 +164,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(defaultTag.getId()))
             .map(ForumPost::getMessage)
-            .flatMap(message -> message.reply("Original Post from " + originalUser.getAsMention()))
+            .flatMap(message -> message.reply(originalUser.getAsMention()))
             .map(sent -> originalUser);
     }
 
@@ -161,13 +172,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             Guild guild) {
 
         return originalUser.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(
-                    "Hi, TJ here. You are getting this message because you tried to ask a question in wrong chat, please read rules - %s"
-                        .formatted(guild.getName())))
-            .onErrorFlatMap(error -> sourceChannel.sendMessage(
-                    "Due to failed dm interaction, you are getting this message here. Please read rules about asking questions -%s%s"
-                        .formatted(guild.getName(), originalUser.getAsMention())));
-
+            .flatMap(channel -> channel.sendMessage(String.format(
+                    "Hello 👋 You have asked a question on %s in the wrong channel %n Not a big deal, but none of the experts who could help you are reading your question there 🙁 %n Your question has been automatically transferred to %s, please continue there. %n You might also want to give #welcome a quick read, thank you \uD83D\uDC4D",
+                    guild.getName(), getHelperForum(guild.getJDA()))))
+            .onErrorFlatMap(error -> sourceChannel.sendMessage(String.format(
+                    "Hello %s 👋 You have asked a question in the wrong channel %n Not a big deal, but none of the experts who could help you are reading your question there 🙁 %n Your question has been automatically transferred to %s, please continue there. %n You might also want to give #welcome a quick read, thank you \uD83D\uDC4D",
+                    originalUser.getAsMention(), getHelperForum(guild.getJDA()))));
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
@@ -187,5 +197,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static ForumTag getDefaultTagOr(List<ForumTag> tagsFoundOnForum,
             Supplier<ForumTag> defaultTag) {
         return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.get(0);
+    }
+
+    private MessageEmbed makeEmbedForPost(User originalUser, String modifiedMessage) {
+        return new EmbedBuilder().setAuthor(originalUser.getName())
+            .setThumbnail(originalUser.getAvatarUrl())
+            .setDescription(modifiedMessage)
+            .setColor(1752220)
+            .build();
     }
 }
