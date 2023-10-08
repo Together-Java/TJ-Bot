@@ -163,9 +163,9 @@ public final class AutoPruneHelperRoutine implements Routine {
         guild.removeRoleFromMember(member, role)
             .flatMap(any -> member.getUser().openPrivateChannel())
             .flatMap(channel -> channel.sendMessage(dmMessage))
-            .queue(null, failure -> logger
-                .debug("Failed sending a DM to user (%s) while pruning them from a helper role."
-                    .formatted(member.getId()), failure));
+            .queue(null, failure -> logger.debug(
+                    "Failed sending a DM to user ({}) while pruning them from a helper role.",
+                    member.getId()));
     }
 
     private void warnModsAbout(String message, Guild guild) {
