@@ -86,6 +86,7 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
         User author = message.getAuthor();
         return new EmbedBuilder().setAuthor(author.getName(), null, author.getAvatarUrl())
             .setDescription(message.getContentDisplay())
-            .build(); // TODO make footer with link and reacted emojis
+            .appendDescription(" [Link](%s)".formatted(message.getJumpUrl()))
+            .build();
     }
 }
