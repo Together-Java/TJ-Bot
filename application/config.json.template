@@ -109,7 +109,7 @@
         ],
         "special": [
         ]
-    }
+    },
     "starboard": {
         "emojiNames" : ["star"],
         "channelPattern": "starboard"
