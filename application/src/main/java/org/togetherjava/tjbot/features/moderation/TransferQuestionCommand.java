@@ -24,10 +24,12 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public final class TransferQuestionCommand extends BotCommandAdapter
@@ -43,6 +45,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int TITLE_COMPACT_LENGTH_MAX = 30;
     private final Predicate<String> isHelpForumName;
 
+    private final List<String> defaultTags;
+
 
     /**
      * Creates a new instance.
@@ -52,6 +56,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
+
+        defaultTags = config.getHelpSystem().getCategories();
     }
 
     @Override
@@ -135,15 +141,19 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .fromContent(event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString());
         String forumTitle = event.getValue(TRANSFER_QUESTION_TITLE_ID).getAsString();
         ForumChannel questionsForum = getHelperForum(event.getJDA());
-        List<ForumTag> tags = questionsForum.getAvailableTagsByName("JAVA", true);
-        ForumTag javaTag = tags.get(0);
+
+        String transferQuestionTag = event.getValue(TRANSFER_QUESTION_TAG).getAsString();
+
+        String queryTag = StringDistances.closestMatch(transferQuestionTag, defaultTags).orElse(defaultTags.get(0));
+
+        ForumTag defaultTag = getDefaultTagOr(questionsForum.getAvailableTagsByName(queryTag, true),
+                () -> questionsForum.getAvailableTagsByName(defaultTags.get(0), true).get(0));
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
-            .setTags(ForumTagSnowflake.fromId(javaTag.getId()))
+            .setTags(ForumTagSnowflake.fromId(defaultTag.getId()))
             .map(ForumPost::getMessage)
             .flatMap(message -> message.reply("Original Post from " + originalUser.getAsMention()))
             .map(sent -> originalUser);
-
     }
 
     private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, User originalUser,
@@ -163,8 +173,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         return jda.getTextChannelById(channelId).deleteMessageById(messageId);
     }
 
-
-
     private ForumChannel getHelperForum(JDA jda) {
         Optional<ForumChannel> forumChannelOptional = jda.getForumChannels()
             .stream()
@@ -173,5 +181,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         return forumChannelOptional
             .orElseThrow(() -> new RuntimeException("Helper Forum Not found"));
+    }
+
+    private static ForumTag getDefaultTagOr(List<ForumTag> tagsFoundOnForum,
+            Supplier<ForumTag> defaultTag) {
+        return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.get(0);
     }
 }
