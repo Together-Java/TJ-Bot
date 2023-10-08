@@ -144,7 +144,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         String transferQuestionTag = event.getValue(TRANSFER_QUESTION_TAG).getAsString();
 
-        String queryTag = StringDistances.closestMatch(transferQuestionTag, defaultTags).orElse(defaultTags.get(0));
+        String queryTag = StringDistances.closestMatch(transferQuestionTag, defaultTags)
+            .orElse(defaultTags.get(0));
 
         ForumTag defaultTag = getDefaultTagOr(questionsForum.getAvailableTagsByName(queryTag, true),
                 () -> questionsForum.getAvailableTagsByName(defaultTags.get(0), true).get(0));
