@@ -28,6 +28,7 @@ import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
+import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -46,7 +47,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int TITLE_COMPACT_LENGTH_MIN = 2;
     private static final int TITLE_COMPACT_LENGTH_MAX = 30;
     private final Predicate<String> isHelpForumName;
-
     private final List<String> defaultTags;
 
 
@@ -144,16 +144,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         String originalMessage = event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString();
 
-        String modifiedMessageForPost = String.format("Original Post from: %s %n %n %s",
-                originalUser.getAsMention(), originalMessage);
-
-        MessageEmbed embedForPost = makeEmbedForPost(originalUser, modifiedMessageForPost);
+        MessageEmbed embedForPost = makeEmbedForPost(originalUser, originalMessage);
 
         MessageCreateData forumMessage = MessageCreateData.fromEmbeds(embedForPost);
         String forumTitle = event.getValue(TRANSFER_QUESTION_TITLE_ID).getAsString();
-        ForumChannel questionsForum = getHelperForum(event.getJDA());
-
         String transferQuestionTag = event.getValue(TRANSFER_QUESTION_TAG).getAsString();
+
+        ForumChannel questionsForum = getHelperForum(event.getJDA());
 
         String queryTag = StringDistances.closestMatch(transferQuestionTag, defaultTags)
             .orElse(defaultTags.get(0));
@@ -172,12 +169,20 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             Guild guild) {
 
         return originalUser.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(String.format(
-                    "Hello 👋 You have asked a question on %s in the wrong channel %n Not a big deal, but none of the experts who could help you are reading your question there 🙁 %n Your question has been automatically transferred to %s, please continue there. %n You might also want to give #welcome a quick read, thank you \uD83D\uDC4D",
-                    guild.getName(), getHelperForum(guild.getJDA()))))
-            .onErrorFlatMap(error -> sourceChannel.sendMessage(String.format(
-                    "Hello %s 👋 You have asked a question in the wrong channel %n Not a big deal, but none of the experts who could help you are reading your question there 🙁 %n Your question has been automatically transferred to %s, please continue there. %n You might also want to give #welcome a quick read, thank you \uD83D\uDC4D",
-                    originalUser.getAsMention(), getHelperForum(guild.getJDA()))));
+            .flatMap(channel -> channel.sendMessage(
+                    """
+                            Hello 👋 You have asked a question on %s in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
+
+                            Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
+                            """
+                        .formatted(guild.getName(), getHelperForum(guild.getJDA()))))
+            .onErrorFlatMap(error -> sourceChannel.sendMessage(
+                    """
+                            Hello %s 👋 You have asked a question in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
+
+                            Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
+                            """
+                        .formatted(originalUser.getAsMention(), getHelperForum(guild.getJDA()))));
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
@@ -199,11 +204,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.get(0);
     }
 
-    private MessageEmbed makeEmbedForPost(User originalUser, String modifiedMessage) {
-        return new EmbedBuilder().setAuthor(originalUser.getName())
-            .setThumbnail(originalUser.getAvatarUrl())
-            .setDescription(modifiedMessage)
-            .setColor(1752220)
+    private MessageEmbed makeEmbedForPost(User originalUser, String originalMessage) {
+        return new EmbedBuilder()
+            .setAuthor(originalUser.getName(), originalUser.getAvatarUrl(),
+                    originalUser.getAvatar().getUrl())
+            .setDescription(originalMessage)
+            .setColor(new Color(50, 164, 168))
             .build();
     }
 }
