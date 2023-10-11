@@ -48,6 +48,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int TITLE_COMPACT_LENGTH_MAX = 30;
     private final Predicate<String> isHelpForumName;
     private final List<String> defaultTags;
+    private static final Color TURQUOISE = new Color(50, 164, 168);
 
 
     /**
@@ -98,7 +99,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         event.replyModal(transferModal)
             .queue(success -> logger.info(
-                    "{} with id: {}  triggered the transfer action on message with id: {}",
+                    "{} with id: {}  triggered the transfer action on forumPost with id: {}",
                     event.getUser().getName(), event.getUser().getId(), originalMessageId),
                     failed -> {
                     });
@@ -106,16 +107,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        event.deferReply().queue();
+        event.deferEdit().queue();
 
         event.getJDA()
             .retrieveUserById(args.get(0))
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
-            .flatMap(user -> dmUser(event.getChannel(), user, event.getGuild()))
+            .flatMap(postEntity -> dmUser(event.getChannel(), postEntity, event.getGuild()))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), args.get(2), args.get(1)))
-            .flatMap(deletedOriginalMessage -> event.getHook()
-                .sendMessage(String.format("Question transferred to %s",
-                        getHelperForum(event.getJDA()))))
             .queue();
     }
 
@@ -140,7 +138,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
     }
 
-    private RestAction<User> createForumPost(ModalInteractionEvent event, User originalUser) {
+    private RestAction<PostEntity> createForumPost(ModalInteractionEvent event, User originalUser) {
 
         String originalMessage = event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString();
 
@@ -162,27 +160,28 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setTags(ForumTagSnowflake.fromId(defaultTag.getId()))
             .map(ForumPost::getMessage)
             .flatMap(message -> message.reply(originalUser.getAsMention()))
-            .map(sent -> originalUser);
+            .map(sent -> new PostEntity(originalUser, sent));
     }
 
-    private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, User originalUser,
+    private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, PostEntity postEntity,
             Guild guild) {
 
-        return originalUser.openPrivateChannel()
+        return postEntity.originalUser.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hello 👋 You have asked a question on %s in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
 
                             Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
                             """
-                        .formatted(guild.getName(), getHelperForum(guild.getJDA()))))
+                        .formatted(guild.getName(), postEntity.forumPost.getJumpUrl())))
             .onErrorFlatMap(error -> sourceChannel.sendMessage(
                     """
                             Hello %s 👋 You have asked a question in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
 
                             Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
                             """
-                        .formatted(originalUser.getAsMention(), getHelperForum(guild.getJDA()))));
+                        .formatted(postEntity.originalUser.getAsMention(),
+                                postEntity.forumPost.getJumpUrl())));
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
@@ -209,7 +208,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setAuthor(originalUser.getName(), originalUser.getAvatarUrl(),
                     originalUser.getAvatar().getUrl())
             .setDescription(originalMessage)
-            .setColor(new Color(50, 164, 168))
+            .setColor(TURQUOISE)
             .build();
+    }
+
+    private record PostEntity(User originalUser, Message forumPost) {
     }
 }
