@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
-import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -18,6 +17,7 @@ import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int TITLE_COMPACT_LENGTH_MAX = 30;
     private final Predicate<String> isHelpForumName;
     private final List<String> defaultTags;
-    private static final Color TURQUOISE = new Color(50, 164, 168);
+    private static final Color EMBED_COLOR = new Color(50, 164, 168);
 
 
     /**
@@ -98,7 +98,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                     .build();
 
         event.replyModal(transferModal)
-            .queue(success -> logger.info(
+            .queue(success -> logger.debug(
                     "{} with id: {}  triggered the transfer action on forumPost with id: {}",
                     event.getUser().getName(), event.getUser().getId(), originalMessageId),
                     failed -> {
@@ -112,7 +112,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         event.getJDA()
             .retrieveUserById(args.get(0))
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
-            .flatMap(postEntity -> dmUser(event.getChannel(), postEntity, event.getGuild()))
+            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
+                    event.getGuild()))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), args.get(2), args.get(1)))
             .queue();
     }
@@ -138,13 +139,17 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
     }
 
-    private RestAction<PostEntity> createForumPost(ModalInteractionEvent event, User originalUser) {
+    private RestAction<ForumPost> createForumPost(ModalInteractionEvent event, User originalUser) {
 
         String originalMessage = event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString();
 
         MessageEmbed embedForPost = makeEmbedForPost(originalUser, originalMessage);
 
-        MessageCreateData forumMessage = MessageCreateData.fromEmbeds(embedForPost);
+        MessageCreateData forumMessage = new MessageCreateBuilder()
+            .addContent("%s has a question:".formatted(originalUser.getAsMention()))
+            .setEmbeds(embedForPost)
+            .build();
+
         String forumTitle = event.getValue(TRANSFER_QUESTION_TITLE_ID).getAsString();
         String transferQuestionTag = event.getValue(TRANSFER_QUESTION_TAG).getAsString();
 
@@ -158,30 +163,28 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(defaultTag.getId()))
-            .map(ForumPost::getMessage)
-            .flatMap(message -> message.reply(originalUser.getAsMention()))
-            .map(sent -> new PostEntity(originalUser, sent));
+            .map(createdPost -> new ForumPost(originalUser, createdPost.getMessage()));
     }
 
-    private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, PostEntity postEntity,
+    private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, ForumPost forumPost,
             Guild guild) {
 
-        return postEntity.originalUser.openPrivateChannel()
+        return forumPost.author.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(
                     """
                             Hello 👋 You have asked a question on %s in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
 
                             Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
                             """
-                        .formatted(guild.getName(), postEntity.forumPost.getJumpUrl())))
+                        .formatted(guild.getName(), forumPost.message.getJumpUrl())))
             .onErrorFlatMap(error -> sourceChannel.sendMessage(
                     """
                             Hello %s 👋 You have asked a question in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
 
                             Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
                             """
-                        .formatted(postEntity.originalUser.getAsMention(),
-                                postEntity.forumPost.getJumpUrl())));
+                        .formatted(forumPost.author.getAsMention(),
+                                forumPost.message.getJumpUrl())));
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
@@ -208,10 +211,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setAuthor(originalUser.getName(), originalUser.getAvatarUrl(),
                     originalUser.getAvatar().getUrl())
             .setDescription(originalMessage)
-            .setColor(TURQUOISE)
+            .setColor(EMBED_COLOR)
             .build();
     }
 
-    private record PostEntity(User originalUser, Message forumPost) {
+    private record ForumPost(User author, Message message) {
     }
 }
