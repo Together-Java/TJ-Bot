@@ -100,21 +100,23 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         event.replyModal(transferModal)
             .queue(success -> logger.debug(
                     "{} with id: {}  triggered the transfer action on forumPost with id: {}",
-                    event.getUser().getName(), event.getUser().getId(), originalMessageId),
-                    failed -> {
-                    });
+                    event.getUser().getName(), event.getUser().getId(), originalMessageId));
     }
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferEdit().queue();
 
+        String authorId = args.get(0);
+        String messageId = args.get(1);
+        String channelId = args.get(2);
+
         event.getJDA()
-            .retrieveUserById(args.get(0))
+            .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
             .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
                     event.getGuild()))
-            .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), args.get(2), args.get(1)))
+            .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
 
