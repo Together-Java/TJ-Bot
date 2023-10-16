@@ -69,6 +69,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalMessageId = event.getTarget().getId();
         String originalChannelId = event.getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
+        String mostCommonTag = defaultTags.get(0);
 
         TextInput transferQuestionTitle =
                 TextInput.create(TRANSFER_QUESTION_TITLE_ID, "Title", TextInputStyle.SHORT)
@@ -85,7 +86,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         TextInput transferQuestionTag = TextInput
             .create(TRANSFER_QUESTION_TAG, "Transfer question tags", TextInputStyle.SHORT)
-            .setValue("Java")
+            .setValue(mostCommonTag)
             .build();
 
         String transferQuestionModalComponentID =
