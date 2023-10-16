@@ -39,9 +39,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
     private static final Logger logger = LoggerFactory.getLogger(TransferQuestionCommand.class);
     private static final String COMMAND_NAME = "transfer-question";
-    private static final String TRANSFER_QUESTION_TITLE_ID = "transferID";
-    private static final String TRANSFER_QUESTION_INPUT_ID = "transferQuestion";
-    private static final String TRANSFER_QUESTION_TAG = "tags";
+    private static final String TITLE_ID = "transferID";
+    private static final String INPUT_ID = "transferQuestion";
+    private static final String TAG = "tags";
     private static final int TITLE_MAX_LENGTH = 50;
     private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_COMPACT_LENGTH_MIN = 2;
@@ -71,32 +71,29 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = defaultTags.get(0);
 
-        TextInput transferQuestionTitle =
-                TextInput.create(TRANSFER_QUESTION_TITLE_ID, "Title", TextInputStyle.SHORT)
-                    .setMaxLength(70)
-                    .setMinLength(8)
-                    .setValue(createTitle(originalMessage))
-                    .build();
-
-        TextInput transferQuestionInput = TextInput
-            .create(TRANSFER_QUESTION_INPUT_ID, "Transfer question menu", TextInputStyle.PARAGRAPH)
-            .setValue(originalMessage)
-            .setRequiredRange(3, 2000)
+        TextInput title = TextInput.create(TITLE_ID, "Title", TextInputStyle.SHORT)
+            .setMaxLength(70)
+            .setMinLength(4)
+            .setValue(createTitle(originalMessage))
             .build();
 
-        TextInput transferQuestionTag = TextInput
-            .create(TRANSFER_QUESTION_TAG, "Transfer question tags", TextInputStyle.SHORT)
+        TextInput input =
+                TextInput.create(INPUT_ID, "Transfer question menu", TextInputStyle.PARAGRAPH)
+                    .setValue(originalMessage)
+                    .setRequiredRange(3, 2000)
+                    .build();
+
+        TextInput tag = TextInput.create(TAG, "Transfer question tags", TextInputStyle.SHORT)
             .setValue(mostCommonTag)
             .build();
 
-        String transferQuestionModalComponentID =
+        String modalComponentID =
                 generateComponentId(authorId, originalMessageId, originalChannelId);
-        Modal transferModal =
-                Modal.create(transferQuestionModalComponentID, "transfer question menu")
-                    .addActionRow(transferQuestionTitle)
-                    .addActionRow(transferQuestionInput)
-                    .addActionRow(transferQuestionTag)
-                    .build();
+        Modal transferModal = Modal.create(modalComponentID, "transfer question menu")
+            .addActionRow(title)
+            .addActionRow(input)
+            .addActionRow(tag)
+            .build();
 
         event.replyModal(transferModal)
             .queue(success -> logger.debug(
@@ -144,7 +141,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private RestAction<ForumPost> createForumPost(ModalInteractionEvent event, User originalUser) {
 
-        String originalMessage = event.getValue(TRANSFER_QUESTION_INPUT_ID).getAsString();
+        String originalMessage = event.getValue(INPUT_ID).getAsString();
 
         MessageEmbed embedForPost = makeEmbedForPost(originalUser, originalMessage);
 
@@ -153,8 +150,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setEmbeds(embedForPost)
             .build();
 
-        String forumTitle = event.getValue(TRANSFER_QUESTION_TITLE_ID).getAsString();
-        String transferQuestionTag = event.getValue(TRANSFER_QUESTION_TAG).getAsString();
+        String forumTitle = event.getValue(TITLE_ID).getAsString();
+        String transferQuestionTag = event.getValue(TAG).getAsString();
 
         ForumChannel questionsForum = getHelperForum(event.getJDA());
         String mostCommonTag = defaultTags.get(0);
