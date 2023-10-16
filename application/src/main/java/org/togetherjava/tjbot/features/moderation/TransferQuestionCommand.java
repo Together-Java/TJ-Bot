@@ -156,12 +156,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String transferQuestionTag = event.getValue(TRANSFER_QUESTION_TAG).getAsString();
 
         ForumChannel questionsForum = getHelperForum(event.getJDA());
+        String mostCommonTag = defaultTags.get(0);
 
         String queryTag = StringDistances.closestMatch(transferQuestionTag, defaultTags)
-            .orElse(defaultTags.get(0));
+            .orElse(mostCommonTag);
 
         ForumTag defaultTag = getDefaultTagOr(questionsForum.getAvailableTagsByName(queryTag, true),
-                () -> questionsForum.getAvailableTagsByName(defaultTags.get(0), true).get(0));
+                () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).get(0));
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(defaultTag.getId()))
@@ -199,8 +200,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .filter(forumChannel -> isHelpForumName.test(forumChannel.getName()))
             .findFirst();
 
-        return forumChannelOptional
-            .orElseThrow(() -> new RuntimeException("Helper Forum Not found"));
+        return forumChannelOptional.orElseThrow(() -> new IllegalStateException(
+                "Did not find the helper-forum while trying to transfer a question. Make sure the config is setup properly."));
     }
 
     private static ForumTag getDefaultTagOr(List<ForumTag> tagsFoundOnForum,
