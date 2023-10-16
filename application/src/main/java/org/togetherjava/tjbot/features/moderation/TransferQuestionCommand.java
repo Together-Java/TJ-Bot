@@ -42,10 +42,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final String TITLE_ID = "transferID";
     private static final String INPUT_ID = "transferQuestion";
     private static final String TAG = "tags";
-    private static final int TITLE_MAX_LENGTH = 50;
-    private static final Pattern TITLE_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
-    private static final int TITLE_COMPACT_LENGTH_MIN = 2;
-    private static final int TITLE_COMPACT_LENGTH_MAX = 30;
+    private static final int TITLE_GUESS_MAX_LENGTH = 50;
+    private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
+    private static final int TITLE_GUESS_COMPACT_LENGTH_MIN = 2;
+    private static final int TITLE_GUESS_COMPACT_LENGTH_MAX = 30;
     private final Predicate<String> isHelpForumName;
     private final List<String> defaultTags;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
@@ -119,11 +119,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private static String createTitle(String message) {
-        if (message.length() >= TITLE_MAX_LENGTH) {
-            int lastWordEnd = message.lastIndexOf(' ', TITLE_MAX_LENGTH);
+        if (message.length() >= TITLE_GUESS_MAX_LENGTH) {
+            int lastWordEnd = message.lastIndexOf(' ', TITLE_GUESS_MAX_LENGTH);
 
             if (lastWordEnd == -1) {
-                lastWordEnd = TITLE_MAX_LENGTH;
+                lastWordEnd = TITLE_GUESS_MAX_LENGTH;
             }
 
             message = message.substring(0, lastWordEnd);
@@ -133,10 +133,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private static boolean isTitleValid(CharSequence title) {
-        String titleCompact = TITLE_COMPACT_REMOVAL_PATTERN.matcher(title).replaceAll("");
+        String titleCompact = TITLE_GUESS_COMPACT_REMOVAL_PATTERN.matcher(title).replaceAll("");
 
-        return titleCompact.length() >= TITLE_COMPACT_LENGTH_MIN
-                && titleCompact.length() <= TITLE_COMPACT_LENGTH_MAX;
+        return titleCompact.length() >= TITLE_GUESS_COMPACT_LENGTH_MIN
+                && titleCompact.length() <= TITLE_GUESS_COMPACT_LENGTH_MAX;
     }
 
     private RestAction<ForumPost> createForumPost(ModalInteractionEvent event, User originalUser) {
