@@ -173,22 +173,18 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, ForumPost forumPost,
             Guild guild) {
 
+        String messageTemplate =
+                """
+                        Hello %s 👋 You have asked a question in the wrong channel %s. Not a big deal, but none of the experts who could help you are reading your question there 🙁
+
+                        Your question has been automatically transferred to %s, please continue there, thank you 👍
+                        """;
+
         return forumPost.author.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(
-                    """
-                            Hello 👋 You have asked a question on %s in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
-
-                            Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
-                            """
-                        .formatted(guild.getName(), forumPost.message.getJumpUrl())))
-            .onErrorFlatMap(error -> sourceChannel.sendMessage(
-                    """
-                            Hello %s 👋 You have asked a question in the wrong channel. Not a big deal, but none of the experts who could help you are reading your question there 🙁.
-
-                            Your question has been automatically transferred to %s, please continue there. You might also want to give #welcome a quick read, thank you 👍.
-                            """
-                        .formatted(forumPost.author.getAsMention(),
-                                forumPost.message.getJumpUrl())));
+            .flatMap(channel -> channel.sendMessage(messageTemplate.formatted("",
+                    "on " + guild.getName(), forumPost.message.getJumpUrl())))
+            .onErrorFlatMap(error -> sourceChannel.sendMessage(messageTemplate
+                .formatted(forumPost.author.getAsMention(), "", forumPost.message.getJumpUrl())));
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
