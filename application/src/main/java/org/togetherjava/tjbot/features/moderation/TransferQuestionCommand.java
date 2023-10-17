@@ -6,8 +6,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.Channel;
-import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
@@ -67,11 +65,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
-
-        if (!isTextChannel(event.getChannel())) {
-            event.reply("feature can be only used in text channels").setEphemeral(true).queue();
-            return;
-        }
         String originalMessage = event.getTarget().getContentRaw();
         String originalMessageId = event.getTarget().getId();
         String originalChannelId = event.getChannel().getId();
@@ -81,7 +74,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
             .setMaxLength(70)
             .setMinLength(4)
-            .setPlaceholder("title for post")
+            .setPlaceholder("describe question in short")
             .setValue(createTitle(originalMessage))
             .build();
 
@@ -89,12 +82,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
                     .setValue(originalMessage)
                     .setRequiredRange(3, 2000)
-                    .setPlaceholder("question for post")
+                    .setPlaceholder("contents of question")
                     .build();
 
         TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
             .setValue(mostCommonTag)
-            .setPlaceholder("suitable tag for post")
+            .setPlaceholder("suitable tag for question")
             .build();
 
         String modalComponentID =
@@ -223,12 +216,5 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private record ForumPost(User author, Message message) {
-    }
-
-    private boolean isTextChannel(Channel channel) {
-        if (channel.getType().equals(ChannelType.TEXT)) {
-            return true;
-        }
-        return false;
     }
 }
