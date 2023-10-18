@@ -74,7 +74,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
             .setMaxLength(70)
             .setMinLength(4)
-            .setPlaceholder("describe question in short")
+            .setPlaceholder("Describe the question in short")
             .setValue(createTitle(originalMessage))
             .build();
 
@@ -82,17 +82,17 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
                     .setValue(originalMessage)
                     .setRequiredRange(3, 2000)
-                    .setPlaceholder("contents of question")
+                    .setPlaceholder("Contents of the question")
                     .build();
 
         TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
             .setValue(mostCommonTag)
-            .setPlaceholder("suitable tag for question")
+            .setPlaceholder("Suitable tag for the question")
             .build();
 
-        String modalComponentID =
+        String modalComponentId =
                 generateComponentId(authorId, originalMessageId, originalChannelId);
-        Modal transferModal = Modal.create(modalComponentID, "Transfer this question")
+        Modal transferModal = Modal.create(modalComponentId, "Transfer this question")
             .addActionRow(modalTitle)
             .addActionRow(modalInput)
             .addActionRow(modalTag)
@@ -175,16 +175,20 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         String messageTemplate =
                 """
-                        Hello %s 👋 You have asked a question in the wrong channel %s. Not a big deal, but none of the experts who could help you are reading your question there 🙁
+                        Hello%s 👋 You have asked a question in the wrong channel%s. Not a big deal, but none of the experts who could help you are reading your question there 🙁
 
                         Your question has been automatically transferred to %s, please continue there, thank you 👍
                         """;
 
+        String messageForDm = messageTemplate.formatted("", " on" + " " + guild.getName(),
+                forumPost.message.getJumpUrl());
+
+        String messageOnDmFailure = messageTemplate.formatted(" " + forumPost.author.getAsMention(),
+                "", forumPost.message.getJumpUrl());
+
         return forumPost.author.openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(messageTemplate.formatted("",
-                    "on " + guild.getName(), forumPost.message.getJumpUrl())))
-            .onErrorFlatMap(error -> sourceChannel.sendMessage(messageTemplate
-                .formatted(forumPost.author.getAsMention(), "", forumPost.message.getJumpUrl())));
+            .flatMap(channel -> channel.sendMessage(messageForDm))
+            .onErrorFlatMap(error -> sourceChannel.sendMessage(messageOnDmFailure));
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
