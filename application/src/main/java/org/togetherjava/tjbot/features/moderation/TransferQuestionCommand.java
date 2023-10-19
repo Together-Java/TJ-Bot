@@ -100,10 +100,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .addActionRow(modalTag)
             .build();
 
-        event.replyModal(transferModal)
-            .queue(success -> logger.debug(
-                    "{} with id: {}  triggered the transfer action on forumPost with id: {}",
-                    event.getUser().getName(), event.getUser().getId(), originalMessageId));
+        event.replyModal(transferModal).queue();
     }
 
     @Override
