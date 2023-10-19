@@ -158,7 +158,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String queryTag =
                 StringDistances.closestMatch(transferQuestionTag, tags).orElse(mostCommonTag);
 
-        ForumTag tag = getTagOr(questionsForum.getAvailableTagsByName(queryTag, true),
+        ForumTag tag = getTagOrDefault(questionsForum.getAvailableTagsByName(queryTag, true),
                 () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).get(0));
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
@@ -201,7 +201,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 "Did not find the helper-forum while trying to transfer a question. Make sure the config is setup properly."));
     }
 
-    private static ForumTag getTagOr(List<ForumTag> tagsFoundOnForum,
+    private static ForumTag getTagOrDefault(List<ForumTag> tagsFoundOnForum,
             Supplier<ForumTag> defaultTag) {
         return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.get(0);
     }
