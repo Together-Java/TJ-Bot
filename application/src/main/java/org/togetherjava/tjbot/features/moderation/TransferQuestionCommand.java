@@ -48,7 +48,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int TITLE_GUESS_COMPACT_LENGTH_MAX = 30;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
     private final Predicate<String> isHelpForumName;
-    private final List<String> defaultTags;
+    private final List<String> tags;
 
 
     /**
@@ -62,7 +62,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
-        defaultTags = config.getHelpSystem().getCategories();
+        tags = config.getHelpSystem().getCategories();
     }
 
     @Override
@@ -71,7 +71,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalMessageId = event.getTarget().getId();
         String originalChannelId = event.getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
-        String mostCommonTag = defaultTags.get(0);
+        String mostCommonTag = tags.get(0);
 
         TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
             .setMaxLength(70)
@@ -159,16 +159,16 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String transferQuestionTag = event.getValue(MODAL_TAG).getAsString();
 
         ForumChannel questionsForum = getHelperForum(event.getJDA());
-        String mostCommonTag = defaultTags.get(0);
+        String mostCommonTag = tags.get(0);
 
-        String queryTag = StringDistances.closestMatch(transferQuestionTag, defaultTags)
-            .orElse(mostCommonTag);
+        String queryTag =
+                StringDistances.closestMatch(transferQuestionTag, tags).orElse(mostCommonTag);
 
-        ForumTag defaultTag = getDefaultTagOr(questionsForum.getAvailableTagsByName(queryTag, true),
+        ForumTag tag = getTagOr(questionsForum.getAvailableTagsByName(queryTag, true),
                 () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).get(0));
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
-            .setTags(ForumTagSnowflake.fromId(defaultTag.getId()))
+            .setTags(ForumTagSnowflake.fromId(tag.getId()))
             .map(createdPost -> new ForumPost(originalUser, createdPost.getMessage()));
     }
 
@@ -207,7 +207,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 "Did not find the helper-forum while trying to transfer a question. Make sure the config is setup properly."));
     }
 
-    private static ForumTag getDefaultTagOr(List<ForumTag> tagsFoundOnForum,
+    private static ForumTag getTagOr(List<ForumTag> tagsFoundOnForum,
             Supplier<ForumTag> defaultTag) {
         return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.get(0);
     }
