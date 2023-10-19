@@ -19,8 +19,6 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
@@ -37,7 +35,6 @@ import java.util.regex.Pattern;
 
 public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
-    private static final Logger logger = LoggerFactory.getLogger(TransferQuestionCommand.class);
     private static final String COMMAND_NAME = "transfer-question";
     private static final String MODAL_TITLE_ID = "transferID";
     private static final String MODAL_INPUT_ID = "transferQuestion";
