@@ -46,13 +46,15 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_GUESS_COMPACT_LENGTH_MIN = 2;
     private static final int TITLE_GUESS_COMPACT_LENGTH_MAX = 30;
+    private static final Color EMBED_COLOR = new Color(50, 164, 168);
     private final Predicate<String> isHelpForumName;
     private final List<String> defaultTags;
-    private static final Color EMBED_COLOR = new Color(50, 164, 168);
 
 
     /**
      * Creates a new instance.
+     *
+     * @param config to get the helper forum and tags
      */
     public TransferQuestionCommand(Config config) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
