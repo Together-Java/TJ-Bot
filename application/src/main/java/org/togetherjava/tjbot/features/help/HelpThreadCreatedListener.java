@@ -78,8 +78,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
         RestAction<Message> originalQuestion =
                 threadChannel.retrieveMessageById(threadChannel.getIdLong());
-        return originalQuestion.flatMap(
-                message -> helper.constructChatGptAttempt(threadChannel, message.getContentRaw()));
+        return originalQuestion.flatMap(message -> helper.constructChatGptAttempt(threadChannel,
+                getEmbedOrRawMessage(message)));
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
@@ -111,5 +111,12 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
 
         return threadChannel.sendMessage(headsUpWithoutRole)
             .flatMap(message -> message.editMessage(headsUpWithRole));
+    }
+
+    private String getEmbedOrRawMessage(Message message) {
+        if (message.getEmbeds().isEmpty()) {
+            return message.getContentRaw();
+        }
+        return message.getEmbeds().get(0).getDescription();
     }
 }
