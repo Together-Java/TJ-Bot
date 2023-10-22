@@ -117,6 +117,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         if (message.getEmbeds().isEmpty()) {
             return message.getContentRaw();
         }
-        return message.getEmbeds().get(0).getDescription();
+
+        StringBuilder messageContent = new StringBuilder();
+        message.getEmbeds()
+            .forEach(embed -> messageContent.append("%s%n".formatted(embed.getDescription())));
+
+        return messageContent.toString();
     }
 }
