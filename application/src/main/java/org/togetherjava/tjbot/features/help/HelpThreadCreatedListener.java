@@ -2,18 +2,28 @@ package org.togetherjava.tjbot.features.help;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 
 import org.togetherjava.tjbot.features.EventReceiver;
+import org.togetherjava.tjbot.features.UserInteractionType;
+import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,13 +32,16 @@ import java.util.concurrent.TimeUnit;
  * Will for example record thread metadata in the database and send an explanation message to the
  * user.
  */
-public final class HelpThreadCreatedListener extends ListenerAdapter implements EventReceiver {
+public final class HelpThreadCreatedListener extends ListenerAdapter
+        implements EventReceiver, UserInteractor {
 
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
         .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
         .build();
+    private final ComponentIdInteractor componentIdInteractor =
+            new ComponentIdInteractor(getInteractionType(), getName());
 
     /**
      * Creates a new instance.
@@ -78,8 +91,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
         RestAction<Message> originalQuestion =
                 threadChannel.retrieveMessageById(threadChannel.getIdLong());
-        return originalQuestion.flatMap(
-                message -> helper.constructChatGptAttempt(threadChannel, message.getContentRaw()));
+        return originalQuestion.flatMap(message -> helper.constructChatGptAttempt(threadChannel,
+                message.getContentRaw(), componentIdInteractor));
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
@@ -112,4 +125,48 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
         return threadChannel.sendMessage(headsUpWithoutRole)
             .flatMap(message -> message.editMessage(headsUpWithRole));
     }
+
+    @Override
+    public String getName() {
+        return "chatpgt-answer";
+    }
+
+    @Override
+    public UserInteractionType getInteractionType() {
+        return UserInteractionType.OTHER;
+    }
+
+    @Override
+    public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
+        componentIdInteractor.acceptComponentIdGenerator(generator);
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        // This method handles chatgpt's automatic response "dismiss" button
+        ThreadChannel channel = event.getChannel().asThreadChannel();
+        Member interactionUser = Objects.requireNonNull(event.getMember());
+        if (channel.getOwnerIdLong() != interactionUser.getIdLong()
+                && !helper.hasTagManageRole(interactionUser)) {
+            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
+            return;
+        }
+
+        RestAction<Void> deleteMessages = event.getMessage().delete();
+        for (String id : args) {
+            deleteMessages = deleteMessages.and(channel.deleteMessageById(id));
+        }
+        deleteMessages.queue();
+    }
+
+    @Override
+    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException("Not used");
+    }
+
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException("Not used");
+    }
+
 }
