@@ -168,4 +168,5 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
+
 }
