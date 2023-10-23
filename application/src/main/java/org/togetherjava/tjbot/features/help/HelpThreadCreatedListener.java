@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.features.help;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
@@ -15,6 +16,7 @@ import org.togetherjava.tjbot.features.EventReceiver;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Listens for new help threads being created. That is, a user posted a question in the help forum.
@@ -118,10 +120,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter implements 
             return message.getContentRaw();
         }
 
-        StringBuilder messageContent = new StringBuilder();
-        message.getEmbeds()
-            .forEach(embed -> messageContent.append("%s%n".formatted(embed.getDescription())));
-
-        return messageContent.toString();
+        return message.getEmbeds()
+            .stream()
+            .map(MessageEmbed::getDescription)
+            .collect(Collectors.joining("\n"));
     }
 }
