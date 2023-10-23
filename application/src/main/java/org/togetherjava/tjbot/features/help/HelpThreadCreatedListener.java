@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
@@ -26,7 +25,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Listens for new help threads being created. That is, a user posted a question in the help forum.
@@ -94,7 +92,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         RestAction<Message> originalQuestion =
                 threadChannel.retrieveMessageById(threadChannel.getIdLong());
         return originalQuestion.flatMap(message -> helper.constructChatGptAttempt(threadChannel,
-                getMessageContent(message), componentIdInteractor));
+                message.getContentRaw(), componentIdInteractor));
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
@@ -170,16 +168,4 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
     }
-
-    private String getMessageContent(Message message) {
-        if (message.getEmbeds().isEmpty()) {
-            return message.getContentRaw();
-        }
-
-        return message.getEmbeds()
-            .stream()
-            .map(MessageEmbed::getDescription)
-            .collect(Collectors.joining("\n"));
-    }
-
 }
