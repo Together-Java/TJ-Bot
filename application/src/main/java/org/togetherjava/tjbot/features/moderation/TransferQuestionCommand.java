@@ -39,10 +39,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final String MODAL_TITLE_ID = "transferID";
     private static final String MODAL_INPUT_ID = "transferQuestion";
     private static final String MODAL_TAG = "tags";
-    private static final int TITLE_GUESS_MAX_LENGTH = 50;
+    private static final int TITLE_MAX_LENGTH = 50;
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
-    private static final int TITLE_GUESS_COMPACT_LENGTH_MIN = 2;
-    private static final int TITLE_GUESS_COMPACT_LENGTH_MAX = 30;
+    private static final int TITLE_MIN_LENGTH = 3;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
@@ -76,8 +75,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String mostCommonTag = tags.get(0);
 
         TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
-            .setMaxLength(70)
-            .setMinLength(4)
+            .setMaxLength(TITLE_MAX_LENGTH)
+            .setMinLength(TITLE_MIN_LENGTH)
             .setPlaceholder("Describe the question in short")
             .setValue(createTitle(originalMessage))
             .build();
@@ -123,14 +122,14 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private static String createTitle(String message) {
-        if (message.length() >= TITLE_GUESS_MAX_LENGTH) {
-            int lastWordEnd = message.lastIndexOf(' ', TITLE_GUESS_MAX_LENGTH);
+        if (message.length() >= TITLE_MAX_LENGTH) {
+            int lastWordEnd = message.lastIndexOf(' ', TITLE_MAX_LENGTH);
 
             if (lastWordEnd == -1) {
-                lastWordEnd = TITLE_GUESS_MAX_LENGTH;
+                lastWordEnd = TITLE_MAX_LENGTH;
             }
 
-            message = message.substring(0, lastWordEnd);
+            message = message.substring(0, lastWordEnd).replace('\n', ' ');
         }
 
         return isTitleValid(message) ? message : "Untitled";
@@ -139,8 +138,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static boolean isTitleValid(CharSequence title) {
         String titleCompact = TITLE_GUESS_COMPACT_REMOVAL_PATTERN.matcher(title).replaceAll("");
 
-        return titleCompact.length() >= TITLE_GUESS_COMPACT_LENGTH_MIN
-                && titleCompact.length() <= TITLE_GUESS_COMPACT_LENGTH_MAX;
+        return titleCompact.length() >= TITLE_MIN_LENGTH
+                && titleCompact.length() <= TITLE_MAX_LENGTH;
     }
 
     private RestAction<ForumPost> createForumPost(ModalInteractionEvent event, User originalUser) {
