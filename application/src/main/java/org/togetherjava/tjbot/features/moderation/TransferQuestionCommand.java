@@ -43,6 +43,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_MIN_LENGTH = 3;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
+    private static final int INPUT_MAX_LENGTH = 2000;
+    private static final int INPUT_MIN_LENGTH = 3;
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
 
@@ -64,7 +66,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
 
-        if (isBotMessageTransfer(event)) {
+        if (isInvalidForTransfer(event)) {
             return;
         }
 
@@ -84,7 +86,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         TextInput modalInput =
                 TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
                     .setValue(originalMessage)
-                    .setRequiredRange(3, 2000)
+                    .setRequiredRange(INPUT_MIN_LENGTH, INPUT_MAX_LENGTH)
                     .setPlaceholder("Contents of the question")
                     .build();
 
@@ -222,9 +224,36 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private record ForumPost(User author, Message message) {
     }
 
-    private boolean isBotMessageTransfer(MessageContextInteractionEvent event) {
-        if (event.getTarget().getAuthor().isBot()) {
-            event.reply("Cannot transfer messages from a bot.").setEphemeral(true).queue();
+    private boolean isBotMessageTransfer(User author) {
+        return author.isBot();
+    }
+
+    private void handleBotMessageTransfer(MessageContextInteractionEvent event) {
+        event.reply("Cannot transfer messages from a bot.").setEphemeral(true).queue();
+    }
+
+    private boolean isQuestionTooShort(String question) {
+        return question.length() < INPUT_MIN_LENGTH;
+    }
+
+    private void handleQuestionTooShort(MessageContextInteractionEvent event) {
+        event
+            .reply("message content should be at least %s characters long"
+                .formatted(INPUT_MIN_LENGTH))
+            .setEphemeral(true)
+            .queue();
+    }
+
+    private boolean isInvalidForTransfer(MessageContextInteractionEvent event) {
+        String question = event.getTarget().getContentRaw();
+        User author = event.getTarget().getAuthor();
+
+        if (isBotMessageTransfer(author)) {
+            handleBotMessageTransfer(event);
+            return true;
+        }
+        if (isQuestionTooShort(question)) {
+            handleQuestionTooShort(event);
             return true;
         }
         return false;
