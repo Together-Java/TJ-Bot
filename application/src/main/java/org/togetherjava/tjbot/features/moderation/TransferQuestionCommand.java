@@ -238,7 +238,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private void handleQuestionTooShort(MessageContextInteractionEvent event) {
         event
-            .reply("message content should be at least %s characters long"
+            .reply("Message content should be at least %s characters long."
                 .formatted(INPUT_MIN_LENGTH))
             .setEphemeral(true)
             .queue();
