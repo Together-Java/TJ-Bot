@@ -129,7 +129,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 lastWordEnd = TITLE_MAX_LENGTH;
             }
 
-            message = message.substring(0, lastWordEnd).replace("\n", " ");
+            message = message.substring(0, lastWordEnd).replace('\n', ' ');
         }
 
         return isTitleValid(message) ? message : "Untitled";
