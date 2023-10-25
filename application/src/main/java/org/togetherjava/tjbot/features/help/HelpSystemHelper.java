@@ -130,17 +130,11 @@ public final class HelpSystemHelper {
                 "While you are waiting for getting help, here are some tips to improve your experience:";
 
         List<MessageEmbed> embeds = List.of(HelpSystemHelper.embedWith(
-                "Code is much easier to read if posted with **syntax highlighting** and proper formatting.",
-                useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
-                HelpSystemHelper.embedWith(
-                        """
-                                If nobody is calling back, that usually means that your question was **not well asked** and \
-                                    hence nobody feels confident enough answering. Try to use your time to elaborate, \
-                                    **provide details**, context, more code, examples and maybe some screenshots. \
-                                    With enough info, someone knows the answer for sure."""),
-                HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(closeCommandMention)));
+                """
+                        If nobody is calling back, that usually means that your question was **not well asked** and \
+                            hence nobody feels confident enough answering. Try to use your time to elaborate, \
+                            **provide details**, context, more code, examples and maybe some screenshots. \
+                            With enough info, someone knows the answer for sure."""));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
         if (useCodeSyntaxExampleImage) {
