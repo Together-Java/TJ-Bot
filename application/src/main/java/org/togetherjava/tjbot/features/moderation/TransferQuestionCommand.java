@@ -33,6 +33,12 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+/**
+ * This command can be used to transfer questions asked in any channel to the helper forum. The user
+ * is given the chance to edit details of the question and upon submitting, the original message
+ * will be deleted and recreated in the helper forum. The original author is notified and redirected
+ * to the new post.
+ */
 public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
     private static final String COMMAND_NAME = "transfer-question";
