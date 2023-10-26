@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -89,12 +90,14 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setValue(createTitle(originalMessage))
             .build();
 
-        TextInput modalInput =
+        Builder modalInputBuilder =
                 TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
-                    .setValue(originalMessage)
                     .setRequiredRange(INPUT_MIN_LENGTH, INPUT_MAX_LENGTH)
-                    .setPlaceholder("Contents of the question")
-                    .build();
+                    .setPlaceholder("Contents of the question");
+
+        if (!isQuestionTooShort(originalMessage)) {
+            modalInputBuilder.setValue(originalMessage);
+        }
 
         TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
             .setValue(mostCommonTag)
@@ -105,7 +108,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 generateComponentId(authorId, originalMessageId, originalChannelId);
         Modal transferModal = Modal.create(modalComponentId, "Transfer this question")
             .addActionRow(modalTitle)
-            .addActionRow(modalInput)
+            .addActionRow(modalInputBuilder.build())
             .addActionRow(modalTag)
             .build();
 
@@ -242,24 +245,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         return question.length() < INPUT_MIN_LENGTH;
     }
 
-    private void handleQuestionTooShort(MessageContextInteractionEvent event) {
-        event
-            .reply("Message content should be at least %s characters long."
-                .formatted(INPUT_MIN_LENGTH))
-            .setEphemeral(true)
-            .queue();
-    }
-
     private boolean isInvalidForTransfer(MessageContextInteractionEvent event) {
-        String question = event.getTarget().getContentRaw();
         User author = event.getTarget().getAuthor();
 
         if (isBotMessageTransfer(author)) {
             handleBotMessageTransfer(event);
-            return true;
-        }
-        if (isQuestionTooShort(question)) {
-            handleQuestionTooShort(event);
             return true;
         }
         return false;
