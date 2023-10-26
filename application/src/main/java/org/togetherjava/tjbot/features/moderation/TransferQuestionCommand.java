@@ -34,15 +34,11 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
- * This command can be used to transfer questions asked in any channel to helper forum. Transfer
- * action generates a prefilled modal menu with title and contents of message which can be changed
- * by the user of command. On submission, it creates a new post in helper forum(also mentions the
- * author) followed by sending a dm to user and deleting the original message from chat. If dm
- * fails(user blocked tj-bot), user is notified in same channel.
- * <p>
- * The command fails if user lacks permissions, or if used on message from a bot.
+ * This command can be used to transfer questions asked in any channel to the helper forum.
+ * The user is given the chance to edit details of the question and upon submitting,
+ * the original message will be deleted and recreated in the helper forum.
+ * The original author is notified and redirected to the new post.
  */
-
 public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
     private static final String COMMAND_NAME = "transfer-question";
