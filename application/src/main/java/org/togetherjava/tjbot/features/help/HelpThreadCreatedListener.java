@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageType;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
@@ -25,6 +26,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -37,6 +39,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
 
+    private static final int FIRST_TEN = 10;
     private final HelpSystemHelper helper;
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
@@ -88,6 +91,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         // Sending messages at that moment is not allowed.
         createMessages(threadChannel).and(pinOriginalQuestion(threadChannel))
             .queueAfter(5, TimeUnit.SECONDS);
+
+        deletePinnedAnnouncement(threadChannel);
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
@@ -180,6 +185,17 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         throw new UnsupportedOperationException("Not used");
+    }
+
+    private void deletePinnedAnnouncement(ThreadChannel channel) {
+        channel.getHistoryFromBeginning(FIRST_TEN)
+            .map(historyFromBeginning -> historyFromBeginning.getRetrievedHistory().stream())
+            .map(historyStream -> historyStream
+                .filter(message -> message.getType() == MessageType.CHANNEL_PINNED_ADD)
+                .findFirst())
+            .map(Optional::get)
+            .flatMap(Message::delete)
+            .queueAfter(10, TimeUnit.SECONDS);
     }
 
 }
