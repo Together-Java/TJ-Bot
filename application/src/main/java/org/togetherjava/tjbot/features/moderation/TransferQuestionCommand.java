@@ -50,7 +50,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_MIN_LENGTH = 3;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
-    private static final int INPUT_MAX_LENGTH = 2000;
+    private static final int INPUT_MAX_LENGTH = Message.MAX_CONTENT_LENGTH;
     private static final int INPUT_MIN_LENGTH = 3;
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
@@ -96,7 +96,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                     .setPlaceholder("Contents of the question");
 
         if (!isQuestionTooShort(originalMessage)) {
-            modalInputBuilder.setValue(originalMessage);
+            String trimmedMessage = getMessageUptoMaxLimit(originalMessage);
+            modalInputBuilder.setValue(trimmedMessage);
         }
 
         TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
@@ -253,5 +254,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             return true;
         }
         return false;
+    }
+
+    private String getMessageUptoMaxLimit(String originalMessage) {
+        return originalMessage.length() > INPUT_MAX_LENGTH
+                ? originalMessage.substring(0, INPUT_MAX_LENGTH)
+                : originalMessage;
     }
 }
