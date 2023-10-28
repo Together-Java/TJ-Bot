@@ -26,7 +26,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -189,12 +188,13 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     private void deletePinnedAnnouncement(ThreadChannel channel) {
         channel.getHistoryFromBeginning(FIRST_TEN)
-            .map(historyFromBeginning -> historyFromBeginning.getRetrievedHistory().stream())
-            .map(historyStream -> historyStream
+            .map(historyFromBeginning -> historyFromBeginning.getRetrievedHistory()
+                .stream()
                 .filter(message -> message.getType() == MessageType.CHANNEL_PINNED_ADD)
                 .findFirst())
-            .map(Optional::get)
-            .flatMap(Message::delete)
+            .flatMap(message -> message
+                .orElseThrow(() -> new IllegalStateException("Unable to retrieve pinned Message"))
+                .delete())
             .queueAfter(10, TimeUnit.SECONDS);
     }
 
