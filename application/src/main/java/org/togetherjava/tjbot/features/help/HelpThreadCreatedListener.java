@@ -193,7 +193,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
                 .filter(message -> message.getType() == MessageType.CHANNEL_PINNED_ADD)
                 .findFirst())
             .flatMap(message -> message
-                .orElseThrow(() -> new IllegalStateException("Unable to retrieve pinned Message"))
+                .orElseThrow(() -> new IllegalStateException(
+                        "Unable to retrieve pinned message announcement"))
                 .delete())
             .queueAfter(10, TimeUnit.SECONDS);
     }
