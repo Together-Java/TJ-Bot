@@ -13,8 +13,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * Listener that receives all pinned announcement messages from helper forum so that it can be
- * removed
+ * Removes notification-announcements about pinned messages from the helper forum.
  */
 public final class PinnedAnnouncementListener extends MessageReceiverAdapter {
 
@@ -32,7 +31,7 @@ public final class PinnedAnnouncementListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        removePinnedAnnouncement(event);
+        handlePinnedAnnouncement(event);
     }
 
     private boolean isHelpThread(MessageChannelUnion channel) {
@@ -48,7 +47,7 @@ public final class PinnedAnnouncementListener extends MessageReceiverAdapter {
         return message.getType() == MessageType.CHANNEL_PINNED_ADD;
     }
 
-    private void removePinnedAnnouncement(MessageReceivedEvent event) {
+    private void handlePinnedAnnouncement(MessageReceivedEvent event) {
         if (isPinnedAnnouncement(event.getMessage()) && isHelpThread(event.getChannel())) {
             event.getMessage().delete().queue();
         }
