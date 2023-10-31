@@ -118,7 +118,7 @@ public class Features {
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
-        features.add(new PinnedAnnouncementListener(config));
+        features.add(new PinnedNotificationRemover(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

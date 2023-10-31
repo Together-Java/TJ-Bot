@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 /**
  * Removes notification-announcements about pinned messages from the helper forum.
  */
-public final class PinnedAnnouncementListener extends MessageReceiverAdapter {
+public final class PinnedNotificationRemover extends MessageReceiverAdapter {
 
     private final Predicate<String> isHelpForumName;
 
@@ -24,7 +24,7 @@ public final class PinnedAnnouncementListener extends MessageReceiverAdapter {
      *
      * @param config the config to use for this
      */
-    public PinnedAnnouncementListener(Config config) {
+    public PinnedNotificationRemover(Config config) {
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
     }
