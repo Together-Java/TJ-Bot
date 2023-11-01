@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -49,6 +50,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_MIN_LENGTH = 3;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
+    private static final int INPUT_MAX_LENGTH = Message.MAX_CONTENT_LENGTH;
+    private static final int INPUT_MIN_LENGTH = 3;
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
 
@@ -70,7 +73,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
 
-        if (isBotMessageTransfer(event)) {
+        if (isInvalidForTransfer(event)) {
             return;
         }
 
@@ -87,12 +90,15 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setValue(createTitle(originalMessage))
             .build();
 
-        TextInput modalInput =
+        Builder modalInputBuilder =
                 TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
-                    .setValue(originalMessage)
-                    .setRequiredRange(3, 2000)
-                    .setPlaceholder("Contents of the question")
-                    .build();
+                    .setRequiredRange(INPUT_MIN_LENGTH, INPUT_MAX_LENGTH)
+                    .setPlaceholder("Contents of the question");
+
+        if (!isQuestionTooShort(originalMessage)) {
+            String trimmedMessage = getMessageUptoMaxLimit(originalMessage);
+            modalInputBuilder.setValue(trimmedMessage);
+        }
 
         TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
             .setValue(mostCommonTag)
@@ -103,7 +109,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 generateComponentId(authorId, originalMessageId, originalChannelId);
         Modal transferModal = Modal.create(modalComponentId, "Transfer this question")
             .addActionRow(modalTitle)
-            .addActionRow(modalInput)
+            .addActionRow(modalInputBuilder.build())
             .addActionRow(modalTag)
             .build();
 
@@ -228,11 +234,31 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private record ForumPost(User author, Message message) {
     }
 
-    private boolean isBotMessageTransfer(MessageContextInteractionEvent event) {
-        if (event.getTarget().getAuthor().isBot()) {
-            event.reply("Cannot transfer messages from a bot.").setEphemeral(true).queue();
+    private boolean isBotMessageTransfer(User author) {
+        return author.isBot();
+    }
+
+    private void handleBotMessageTransfer(MessageContextInteractionEvent event) {
+        event.reply("Cannot transfer messages from a bot.").setEphemeral(true).queue();
+    }
+
+    private boolean isQuestionTooShort(String question) {
+        return question.length() < INPUT_MIN_LENGTH;
+    }
+
+    private boolean isInvalidForTransfer(MessageContextInteractionEvent event) {
+        User author = event.getTarget().getAuthor();
+
+        if (isBotMessageTransfer(author)) {
+            handleBotMessageTransfer(event);
             return true;
         }
         return false;
+    }
+
+    private String getMessageUptoMaxLimit(String originalMessage) {
+        return originalMessage.length() > INPUT_MAX_LENGTH
+                ? originalMessage.substring(0, INPUT_MAX_LENGTH)
+                : originalMessage;
     }
 }
