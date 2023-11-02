@@ -19,7 +19,6 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.utils.ImageProxy;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
@@ -229,11 +228,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private MessageEmbed makeEmbedForPost(User originalUser, String originalMessage) {
-        ImageProxy avatarOrDefault = originalUser.getEffectiveAvatar();
+        String avatarOrDefaultUrl = originalUser.getEffectiveAvatarUrl();
 
-        return new EmbedBuilder()
-            .setAuthor(originalUser.getName(), originalUser.getAvatarUrl(),
-                    avatarOrDefault.getUrl())
+        return new EmbedBuilder().setAuthor(originalUser.getName(), null, avatarOrDefaultUrl)
             .setDescription(originalMessage)
             .setColor(EMBED_COLOR)
             .build();

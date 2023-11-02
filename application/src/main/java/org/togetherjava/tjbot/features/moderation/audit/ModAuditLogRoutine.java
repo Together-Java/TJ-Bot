@@ -341,7 +341,9 @@ public final class ModAuditLogRoutine implements Routine {
                 description += "\n\nReason: " + reason;
             }
 
-            return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
+            String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
+
+            return new EmbedBuilder().setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
                 .setDescription(description)
                 .setTimestamp(timestamp)
                 .setColor(AMBIENT_COLOR)

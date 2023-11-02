@@ -136,8 +136,10 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
+        String avatarOrDefaultUrl = user.getEffectiveAvatarUrl();
+
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
-            .setAuthor(user.getName(), null, user.getAvatarUrl())
+            .setAuthor(user.getName(), null, avatarOrDefaultUrl)
             .setDescription(createSummaryMessageDescription(actions))
             .setColor(ModerationUtils.AMBIENT_COLOR);
     }
