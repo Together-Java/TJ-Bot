@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -18,6 +19,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.ImageProxy;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
@@ -29,6 +31,7 @@ import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -79,7 +82,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         String originalMessage = event.getTarget().getContentRaw();
         String originalMessageId = event.getTarget().getId();
-        String originalChannelId = event.getChannel().getId();
+        String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.get(0);
 
@@ -189,7 +192,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 """
                         Hello%s 👋 You have asked a question in the wrong channel%s. Not a big deal, but none of the experts who could help you are reading your question there 🙁
 
-                        Your question has been automatically transferred to %s, please continue there, thank you 👍
+                        Your question has been automatically transferred to %s , please continue there, thank you 👍
                         """;
 
         String messageForDm = messageTemplate.formatted("", " on" + " " + guild.getName(),
@@ -204,7 +207,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
-        return jda.getTextChannelById(channelId).deleteMessageById(messageId);
+        TextChannel sourceChannel = Objects.requireNonNull(jda.getTextChannelById(channelId),
+                "Source channel could not be found for transfer-question feature");
+
+        return sourceChannel.deleteMessageById(messageId);
     }
 
     private ForumChannel getHelperForum(JDA jda) {
@@ -223,9 +229,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private MessageEmbed makeEmbedForPost(User originalUser, String originalMessage) {
+        ImageProxy avatarOrDefault = originalUser.getEffectiveAvatar();
+
         return new EmbedBuilder()
             .setAuthor(originalUser.getName(), originalUser.getAvatarUrl(),
-                    originalUser.getAvatar().getUrl())
+                    avatarOrDefault.getUrl())
             .setDescription(originalMessage)
             .setColor(EMBED_COLOR)
             .build();
