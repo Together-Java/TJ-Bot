@@ -115,7 +115,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
 
     private boolean validateHierarchy(Member author, OptionMapping target) {
         int highestRole = 0;
-        Role targetUserRole = target.getAsRole();
+        Role targetUserRole = target.getAsMember().getRoles().get(highestRole);
         Role authorRole = author.getRoles().get(highestRole);
 
         return targetUserRole.getPosition() >= authorRole.getPosition();
