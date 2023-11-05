@@ -5,5 +5,5 @@ CREATE TABLE message_history
     guild_id     BIGINT    NOT NULL,
     channel_id   BIGINT    NOT NULL,
     message_id   BIGINT    NOT NULL,
-    author_id    BIGINT    NOT NULL,
+    author_id    BIGINT    NOT NULL
 )

@@ -32,11 +32,11 @@ public class MessageListener extends MessageReceiverAdapter {
     private void updateHistory(MessageReceivedEvent event) {
         long guildId = event.getGuild().getIdLong();
         long channelId = event.getChannel().getIdLong();
-        String messageId = event.getMessageId();
+        long messageId = event.getMessageIdLong();
         long authorId = event.getAuthor().getIdLong();
 
         database.write(context -> context.newRecord(MESSAGE_HISTORY)
-            .setCreatedAt(Instant.now())
+            .setSentAt(Instant.now())
             .setGuildId(guildId)
             .setChannelId(channelId)
             .setMessageId(messageId)
