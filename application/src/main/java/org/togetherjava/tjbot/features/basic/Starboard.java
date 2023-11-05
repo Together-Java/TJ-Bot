@@ -45,7 +45,7 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
 
     @Override
     public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
-        String emojiName = event.getEmoji().asCustom().getName();
+        String emojiName = event.getEmoji().getName();
         Guild guild = event.getGuild();
         long messageId = event.getMessageIdLong();
         if (shouldIgnoreMessage(emojiName, guild, event.getGuildChannel(), messageId)) {

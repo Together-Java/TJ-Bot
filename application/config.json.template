@@ -111,7 +111,7 @@
         ]
     },
     "starboard": {
-        "emojiNames" : ["star"],
+        "emojiNames" : ["⭐"],
         "channelPattern": "starboard"
     }
     },
