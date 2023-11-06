@@ -191,7 +191,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 """
                         Hello%s 👋 You have asked a question in the wrong channel%s. Not a big deal, but none of the experts who could help you are reading your question there 🙁
 
-                        Your question has been automatically transferred to %s, please continue there, thank you 👍
+                        Your question has been automatically transferred to %s , please continue there, thank you 👍
                         """;
 
         String messageForDm = messageTemplate.formatted("", " on" + " " + guild.getName(),
