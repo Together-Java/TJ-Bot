@@ -13,11 +13,12 @@ import java.util.concurrent.TimeUnit;
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
 /**
- * Routine that records some metadata for every message received.
+ * Routine that deletes records from message_history post expiration hours.
  */
 public class MessageHistoryRoutine implements Routine {
 
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
+    private static final int EXPIRATION_HOURS = 2;
     private final Database database;
 
     /**
@@ -39,10 +40,10 @@ public class MessageHistoryRoutine implements Routine {
     @Override
     public void runRoutine(JDA jda) {
         Instant now = Instant.now();
-        Instant twoHourBack = now.minus(2, ChronoUnit.HOURS);
+        Instant preExpirationHours = now.minus(EXPIRATION_HOURS, ChronoUnit.HOURS);
 
         database.write(context -> context.selectFrom(MESSAGE_HISTORY)
-            .where(MESSAGE_HISTORY.SENT_AT.lessThan(twoHourBack))
+            .where(MESSAGE_HISTORY.SENT_AT.lessThan(preExpirationHours))
             .stream()
             .forEach(UpdatableRecordImpl::delete));
     }
