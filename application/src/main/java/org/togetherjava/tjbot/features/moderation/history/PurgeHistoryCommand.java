@@ -123,12 +123,11 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         }
 
         int noOfMessagesToPurge = messageIdsForDeletion.size();
-
         channel.purgeMessagesById(messageIdsForDeletion);
-        hook.sendMessage(
-                "%s messages purged from user %s".formatted(noOfMessagesToPurge, targetUser))
-            .setEphemeral(true)
-            .queue();
+
+        String messageForMod = "%s messages purged from user %s".formatted(noOfMessagesToPurge,
+                targetUser.getName());
+        hook.sendMessage(messageForMod).setEphemeral(true).queue();
     }
 
     private boolean hasSingleElement(List<String> messageIdsForDeletion) {
@@ -136,8 +135,10 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
     }
 
     private void handleEmptyMessageHistory(InteractionHook hook, User targetUser) {
-        hook.sendMessage("%s has no message history in this channel within last %s hr"
-            .formatted(targetUser, PURGE_MESSAGES_AFTER_LIMIT_HOURS)).setEphemeral(true).queue();
+        String messageForMod = "%s has no message history in this channel within last %s hr"
+            .formatted(targetUser, PURGE_MESSAGES_AFTER_LIMIT_HOURS);
+
+        hook.sendMessage(messageForMod).setEphemeral(true).queue();
     }
 
     private boolean validateHierarchy(Member author, OptionMapping target) {
