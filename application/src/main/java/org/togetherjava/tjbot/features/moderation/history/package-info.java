@@ -1,5 +1,6 @@
 /**
- * This package offers moderation command to delete messages from a user within last hour.
+ * This package offers moderation command to delete messages from a user within certain hours from
+ * same channel.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
