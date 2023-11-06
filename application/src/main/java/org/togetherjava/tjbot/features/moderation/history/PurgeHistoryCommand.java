@@ -103,16 +103,18 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         }
 
         handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook(),
-                targetUser);
+                targetUser, reason);
     }
 
     private void handleDelete(List<String> messageIdsForDeletion, JDA jda,
-            MessageChannelUnion channel, InteractionHook hook, User targetUser) {
+            MessageChannelUnion channel, InteractionHook hook, User targetUser, String reason) {
 
         if (messageIdsForDeletion.isEmpty()) {
             handleEmptyMessageHistory(hook, targetUser);
             return;
         }
+
+        registerPurgeAction(reason);
 
         if (hasSingleElement(messageIdsForDeletion)) {
             String messageId = messageIdsForDeletion.get(0);
@@ -150,5 +152,9 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         Role authorRole = author.getRoles().get(highestRole);
 
         return targetUserRole.getPosition() >= authorRole.getPosition();
+    }
+
+    private void registerPurgeAction(String reason) {
+        // TODO
     }
 }
