@@ -24,7 +24,7 @@ public class MessageHistoryRoutine implements Routine {
     /**
      * Creates a new instance.
      *
-     * @param database the database that records some metadata on each message received.
+     * @param database the database that contains records of messages to be purged.
      */
     public MessageHistoryRoutine(Database database) {
         this.database = database;
