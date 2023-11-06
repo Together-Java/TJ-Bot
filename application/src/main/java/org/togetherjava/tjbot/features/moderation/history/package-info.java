@@ -5,5 +5,6 @@
 @ParametersAreNonnullByDefault
 package org.togetherjava.tjbot.features.moderation.history;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
+
+import javax.annotation.ParametersAreNonnullByDefault;

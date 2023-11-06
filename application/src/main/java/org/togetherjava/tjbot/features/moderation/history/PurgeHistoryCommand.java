@@ -1,12 +1,5 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
-import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
-
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -16,15 +9,25 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
 public class PurgeHistoryCommand extends SlashCommandAdapter {
 
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
-    private static final String COMMAND_NAME = "purge";
+    private static final String COMMAND_NAME = "purge-in-channel";
+    private static final int PURGE_MESSAGES_AFTER_LIMIT_HOURS = 1;
     private final Database database;
 
     /**
@@ -34,11 +37,15 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
      */
 
     public PurgeHistoryCommand(Database database) {
-        super(COMMAND_NAME, "delete user message history upto an hour", CommandVisibility.GUILD);
-        getData()
-            .addOption(OptionType.USER, USER_OPTION,
-                    "user who's messages you want to purge within an hour", true)
-            .addOption(OptionType.STRING, REASON_OPTION, "Reason for purging user messages", true);
+        super(COMMAND_NAME, "purge message history of user in same channel",
+                CommandVisibility.GUILD);
+
+        String optionUserDescription = "user who's message history you want to purge within %s hr"
+            .formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS);
+
+        getData().addOption(OptionType.USER, USER_OPTION, optionUserDescription, true)
+            .addOption(OptionType.STRING, REASON_OPTION,
+                    "reason for purging user's message history", true);
         this.database = database;
     }
 
@@ -58,36 +65,39 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
     private void handleHistory(SlashCommandInteractionEvent event, Member author, String reason,
             OptionMapping targetOption, InteractionHook hook) {
         Instant now = Instant.now();
-        Instant oneHourBack = now.minus(1, ChronoUnit.HOURS);
+        Instant purgeMessagesAfter = now.minus(PURGE_MESSAGES_AFTER_LIMIT_HOURS, ChronoUnit.HOURS);
 
-        User target = targetOption.getAsUser();
+        User targetUser = targetOption.getAsUser();
         String sourceChannelId = event.getChannel().getId();
 
         if (!validateHierarchy(author, targetOption)) {
-            hook.sendMessage("Target user has a higher role than you").setEphemeral(true).queue();
+            hook.sendMessage("Cannot purge history of user with a higher role than you")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
         List<String> messageIdsForDeletion = new ArrayList<>();
 
         database.write(context -> context.selectFrom(MESSAGE_HISTORY)
-            .where(MESSAGE_HISTORY.AUTHOR_ID.equal(target.getIdLong())
+            .where(MESSAGE_HISTORY.AUTHOR_ID.equal(targetUser.getIdLong())
                 .and(MESSAGE_HISTORY.CHANNEL_ID.equal(Long.valueOf(sourceChannelId)))
-                .and(MESSAGE_HISTORY.SENT_AT.greaterOrEqual(oneHourBack)))
+                .and(MESSAGE_HISTORY.SENT_AT.greaterOrEqual(purgeMessagesAfter)))
             .stream()
             .forEach(messageHistoryRecord -> {
                 messageIdsForDeletion.add(String.valueOf(messageHistoryRecord.getMessageId()));
                 messageHistoryRecord.delete();
             }));
 
-        handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook());
+        handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook(),
+                targetUser);
     }
 
     private void handleDelete(List<String> messageIdsForDeletion, JDA jda,
-            MessageChannelUnion channel, InteractionHook hook) {
+            MessageChannelUnion channel, InteractionHook hook, User targetUser) {
 
         if (messageIdsForDeletion.isEmpty()) {
-            handleEmptyMessageHistory(hook);
+            handleEmptyMessageHistory(hook, targetUser);
             return;
         }
 
@@ -99,23 +109,30 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
                 .queue();
         }
 
+        int noOfMessagesToPurge = messageIdsForDeletion.size();
+
         channel.purgeMessagesById(messageIdsForDeletion);
-        hook.sendMessage("Messages purged from user").setEphemeral(true).queue();
+        hook.sendMessage(
+                "%s messages purged from user %s".formatted(noOfMessagesToPurge, targetUser))
+            .setEphemeral(true)
+            .queue();
     }
 
     private boolean hasSingleElement(List<String> messageIdsForDeletion) {
         return messageIdsForDeletion.size() == 1;
     }
 
-    private void handleEmptyMessageHistory(InteractionHook hook) {
-        hook.sendMessage("User has no message history in this channel within last one hour")
-            .setEphemeral(true)
-            .queue();
+    private void handleEmptyMessageHistory(InteractionHook hook, User targetUser) {
+        hook.sendMessage("%s has no message history in this channel within last %s hr"
+            .formatted(targetUser, PURGE_MESSAGES_AFTER_LIMIT_HOURS)).setEphemeral(true).queue();
     }
 
     private boolean validateHierarchy(Member author, OptionMapping target) {
         int highestRole = 0;
-        Role targetUserRole = target.getAsMember().getRoles().get(highestRole);
+        Role targetUserRole = Objects
+            .requireNonNull(target.getAsMember(), "target user for purge command is not a member")
+            .getRoles()
+            .get(highestRole);
         Role authorRole = author.getRoles().get(highestRole);
 
         return targetUserRole.getPosition() >= authorRole.getPosition();

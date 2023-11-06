@@ -32,8 +32,8 @@ import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogRoutine;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import org.togetherjava.tjbot.features.moderation.history.MessageHistoryRoutine;
-import org.togetherjava.tjbot.features.moderation.history.MessageListener;
 import org.togetherjava.tjbot.features.moderation.history.PurgeHistoryCommand;
+import org.togetherjava.tjbot.features.moderation.history.PurgeMessageListener;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
@@ -123,7 +123,7 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
-        features.add(new MessageListener(database));
+        features.add(new PurgeMessageListener(database));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

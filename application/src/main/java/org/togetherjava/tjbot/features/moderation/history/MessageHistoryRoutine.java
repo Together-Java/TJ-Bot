@@ -1,14 +1,16 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
-import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
+import net.dv8tion.jda.api.JDA;
+import org.jooq.impl.UpdatableRecordImpl;
+
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.Routine;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
-import net.dv8tion.jda.api.JDA;
-import org.jooq.impl.UpdatableRecordImpl;
-import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.features.Routine;
+
+import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
 /**
  * Routine that records some metadata for every message received.
