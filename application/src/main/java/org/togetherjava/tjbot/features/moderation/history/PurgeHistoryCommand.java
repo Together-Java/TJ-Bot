@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
+import java.util.stream.Stream;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -11,6 +12,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
+import org.togetherjava.tjbot.db.generated.tables.records.MessageHistoryRecord;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 
@@ -79,15 +82,18 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
 
         List<String> messageIdsForDeletion = new ArrayList<>();
 
-        database.write(context -> context.selectFrom(MESSAGE_HISTORY)
+        Stream<MessageHistoryRecord> data = database.writeAndProvide(context -> context.selectFrom(MESSAGE_HISTORY)
             .where(MESSAGE_HISTORY.AUTHOR_ID.equal(targetUser.getIdLong())
                 .and(MESSAGE_HISTORY.CHANNEL_ID.equal(Long.valueOf(sourceChannelId)))
                 .and(MESSAGE_HISTORY.SENT_AT.greaterOrEqual(purgeMessagesAfter)))
-            .stream()
-            .forEach(messageHistoryRecord -> {
-                messageIdsForDeletion.add(String.valueOf(messageHistoryRecord.getMessageId()));
-                messageHistoryRecord.delete();
-            }));
+            .stream());
+
+        try(data){
+            data.forEach(messageHistoryRecord -> {
+                String messageId = String.valueOf(messageHistoryRecord.getMessageId());
+                messageIdsForDeletion.add(messageId);
+            });
+        }
 
         handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook(),
                 targetUser);
