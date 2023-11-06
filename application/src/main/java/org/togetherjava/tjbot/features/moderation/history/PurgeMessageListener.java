@@ -55,6 +55,6 @@ public class PurgeMessageListener extends MessageReceiverAdapter {
     }
 
     private void limitHistoryRecords() {
-
+        // TODO
     }
 }
