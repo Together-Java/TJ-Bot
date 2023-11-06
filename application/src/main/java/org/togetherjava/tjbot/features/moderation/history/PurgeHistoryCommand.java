@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
-import java.util.stream.Stream;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -10,9 +9,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
+import org.togetherjava.tjbot.db.DatabaseException;
 import org.togetherjava.tjbot.db.generated.tables.records.MessageHistoryRecord;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
@@ -22,11 +23,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
 public class PurgeHistoryCommand extends SlashCommandAdapter {
 
+    private static final Logger logger = LoggerFactory.getLogger(PurgeHistoryCommand.class);
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "purge-in-channel";
@@ -82,17 +85,21 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
 
         List<String> messageIdsForDeletion = new ArrayList<>();
 
-        Stream<MessageHistoryRecord> data = database.writeAndProvide(context -> context.selectFrom(MESSAGE_HISTORY)
-            .where(MESSAGE_HISTORY.AUTHOR_ID.equal(targetUser.getIdLong())
-                .and(MESSAGE_HISTORY.CHANNEL_ID.equal(Long.valueOf(sourceChannelId)))
-                .and(MESSAGE_HISTORY.SENT_AT.greaterOrEqual(purgeMessagesAfter)))
-            .stream());
+        Stream<MessageHistoryRecord> data =
+                database.writeAndProvide(context -> context.selectFrom(MESSAGE_HISTORY)
+                    .where(MESSAGE_HISTORY.AUTHOR_ID.equal(targetUser.getIdLong())
+                        .and(MESSAGE_HISTORY.CHANNEL_ID.equal(Long.valueOf(sourceChannelId)))
+                        .and(MESSAGE_HISTORY.SENT_AT.greaterOrEqual(purgeMessagesAfter)))
+                    .stream());
 
-        try(data){
+        try (data) {
             data.forEach(messageHistoryRecord -> {
                 String messageId = String.valueOf(messageHistoryRecord.getMessageId());
                 messageIdsForDeletion.add(messageId);
             });
+        } catch (DatabaseException exception) {
+            logger.error("unknown error during fetching message history records for {} command",
+                    COMMAND_NAME, exception);
         }
 
         handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook(),
