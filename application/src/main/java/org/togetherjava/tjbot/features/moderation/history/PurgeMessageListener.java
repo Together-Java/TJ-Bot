@@ -28,6 +28,10 @@ public class PurgeMessageListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        if (shouldIgnoreMessages(event)) {
+            return;
+        }
+
         updateHistory(event);
     }
 
@@ -44,5 +48,13 @@ public class PurgeMessageListener extends MessageReceiverAdapter {
             .setMessageId(messageId)
             .setAuthorId(authorId)
             .insert());
+    }
+
+    private boolean shouldIgnoreMessages(MessageReceivedEvent event) {
+        return event.isWebhookMessage() || event.getAuthor().isBot();
+    }
+
+    private void limitHistoryRecords() {
+
     }
 }
