@@ -94,6 +94,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
             data.forEach(messageHistoryRecord -> {
                 String messageId = String.valueOf(messageHistoryRecord.getMessageId());
                 messageIdsForDeletion.add(messageId);
+                messageHistoryRecord.delete();
             });
         } catch (DatabaseException exception) {
             logger.error("unknown error during fetching message history records for {} command",
@@ -115,15 +116,21 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
 
         if (hasSingleElement(messageIdsForDeletion)) {
             String messageId = messageIdsForDeletion.get(0);
-
+            String messageForMod =
+                    "message purged from user %s in this channel.".formatted(targetUser.getName());
             Objects.requireNonNull(jda.getTextChannelById(channel.getId()), "channel was not found")
                 .deleteMessageById(messageId)
                 .queue();
+
+            hook.sendMessage(messageForMod).queue();
+            return;
         }
 
+        int noOfMessagePurged = messageIdsForDeletion.size();
         channel.purgeMessagesById(messageIdsForDeletion);
 
-        String messageForMod = "messages purged from user %s".formatted(targetUser.getName());
+        String messageForMod = "%s messages purged from user %s in this channel."
+            .formatted(noOfMessagePurged, targetUser.getName());
         hook.sendMessage(messageForMod)
             .queue(onSuccess -> logger.info("{} purged messages from {} because: {}",
                     author.getUser(), targetUser, reason));
@@ -134,8 +141,8 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
     }
 
     private void handleEmptyMessageHistory(InteractionHook hook, User targetUser) {
-        String messageForMod = "%s has no message history in this channel within last %s hr"
-            .formatted(targetUser, PURGE_MESSAGES_AFTER_LIMIT_HOURS);
+        String messageForMod = "%s has no message history in this channel within last %s hr."
+            .formatted(targetUser.getName(), PURGE_MESSAGES_AFTER_LIMIT_HOURS);
 
         hook.sendMessage(messageForMod).queue();
     }
