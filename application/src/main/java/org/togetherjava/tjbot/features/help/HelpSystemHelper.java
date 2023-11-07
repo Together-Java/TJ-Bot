@@ -111,12 +111,6 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        return mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                HelpThreadCommand.Subcommand.CLOSE.getCommandName())
-                    .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel));
-    }
-
-    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 HelpSystemHelper.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
