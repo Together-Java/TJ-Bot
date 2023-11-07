@@ -117,8 +117,7 @@ public final class HelpSystemHelper {
                             closeCommandMention));
     }
 
-    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
-            String closeCommandMention) {
+    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         boolean useCodeSyntaxExampleImage = true;
         InputStream codeSyntaxExampleData =
                 HelpSystemHelper.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
