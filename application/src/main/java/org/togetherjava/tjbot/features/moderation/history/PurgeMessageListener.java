@@ -53,8 +53,4 @@ public class PurgeMessageListener extends MessageReceiverAdapter {
     private boolean shouldIgnoreMessages(MessageReceivedEvent event) {
         return event.isWebhookMessage() || event.getAuthor().isBot();
     }
-
-    private void limitHistoryRecords() {
-        // TODO
-    }
 }

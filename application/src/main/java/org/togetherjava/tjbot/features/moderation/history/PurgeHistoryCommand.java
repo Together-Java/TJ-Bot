@@ -57,7 +57,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
+        event.deferReply(true).queue();
 
         OptionMapping targetOption =
                 Objects.requireNonNull(event.getOption(USER_OPTION), "target is null");
@@ -77,9 +77,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         String sourceChannelId = event.getChannel().getId();
 
         if (!validateHierarchy(author, targetOption)) {
-            hook.sendMessage("Cannot purge history of user with a higher role than you")
-                .setEphemeral(true)
-                .queue();
+            hook.sendMessage("Cannot purge history of user with a higher role than you").queue();
             return;
         }
 
@@ -103,18 +101,17 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         }
 
         handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook(),
-                targetUser, reason);
+                targetUser, reason, author);
     }
 
     private void handleDelete(List<String> messageIdsForDeletion, JDA jda,
-            MessageChannelUnion channel, InteractionHook hook, User targetUser, String reason) {
+            MessageChannelUnion channel, InteractionHook hook, User targetUser, String reason,
+            Member author) {
 
         if (messageIdsForDeletion.isEmpty()) {
             handleEmptyMessageHistory(hook, targetUser);
             return;
         }
-
-        registerPurgeAction(reason);
 
         if (hasSingleElement(messageIdsForDeletion)) {
             String messageId = messageIdsForDeletion.get(0);
@@ -124,12 +121,12 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
                 .queue();
         }
 
-        int noOfMessagesToPurge = messageIdsForDeletion.size();
         channel.purgeMessagesById(messageIdsForDeletion);
 
-        String messageForMod = "%s messages purged from user %s".formatted(noOfMessagesToPurge,
-                targetUser.getName());
-        hook.sendMessage(messageForMod).setEphemeral(true).queue();
+        String messageForMod = "messages purged from user %s".formatted(targetUser.getName());
+        hook.sendMessage(messageForMod)
+            .queue(onSuccess -> logger.info("{} purged messages from {} because: {}",
+                    author.getUser(), targetUser, reason));
     }
 
     private boolean hasSingleElement(List<String> messageIdsForDeletion) {
@@ -140,7 +137,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         String messageForMod = "%s has no message history in this channel within last %s hr"
             .formatted(targetUser, PURGE_MESSAGES_AFTER_LIMIT_HOURS);
 
-        hook.sendMessage(messageForMod).setEphemeral(true).queue();
+        hook.sendMessage(messageForMod).queue();
     }
 
     private boolean validateHierarchy(Member author, OptionMapping target) {
@@ -152,9 +149,5 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         Role authorRole = author.getRoles().get(highestRole);
 
         return targetUserRole.getPosition() >= authorRole.getPosition();
-    }
-
-    private void registerPurgeAction(String reason) {
-        // TODO
     }
 }
