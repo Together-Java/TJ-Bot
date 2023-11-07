@@ -113,8 +113,7 @@ public final class HelpSystemHelper {
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
         return mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
                 HelpThreadCommand.Subcommand.CLOSE.getCommandName())
-                    .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
-                            closeCommandMention));
+                    .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel));
     }
 
     private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
