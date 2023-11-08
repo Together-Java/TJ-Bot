@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
@@ -9,6 +8,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +34,8 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "purge-in-channel";
     private static final int PURGE_MESSAGES_AFTER_LIMIT_HOURS = 1;
+    private static final String DURATION = "duration";
+    private static final int PURGE_MESSAGES_AFTER_LIMIT_MAX = 24;
     private final Database database;
 
     /**
@@ -49,9 +51,17 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         String optionUserDescription = "user who's message history you want to purge within %s hr"
             .formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS);
 
+        String optionDurationDescription = "duration in hours (default: %s, max: %s)"
+            .formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS, PURGE_MESSAGES_AFTER_LIMIT_MAX);
+
+        OptionData durationData =
+                new OptionData(OptionType.INTEGER, DURATION, optionDurationDescription, false);
+        durationData.setRequiredRange(0, PURGE_MESSAGES_AFTER_LIMIT_MAX);
+
         getData().addOption(OptionType.USER, USER_OPTION, optionUserDescription, true)
             .addOption(OptionType.STRING, REASON_OPTION,
-                    "reason for purging user's message history", true);
+                    "reason for purging user's message history", true)
+            .addOptions(durationData);
         this.database = database;
     }
 
@@ -65,13 +75,17 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         String reason = Objects.requireNonNull(event.getOption(REASON_OPTION).getAsString(),
                 "reason is null");
 
-        handleHistory(event, author, reason, targetOption, event.getHook());
+        OptionMapping durationMapping = event.getOption(DURATION);
+        int duration = durationMapping == null ? PURGE_MESSAGES_AFTER_LIMIT_HOURS
+                : durationMapping.getAsInt();
+
+        handleHistory(event, author, reason, targetOption, event.getHook(), duration);
     }
 
     private void handleHistory(SlashCommandInteractionEvent event, Member author, String reason,
-            OptionMapping targetOption, InteractionHook hook) {
+            OptionMapping targetOption, InteractionHook hook, int duration) {
         Instant now = Instant.now();
-        Instant purgeMessagesAfter = now.minus(PURGE_MESSAGES_AFTER_LIMIT_HOURS, ChronoUnit.HOURS);
+        Instant purgeMessagesAfter = now.minus(duration, ChronoUnit.HOURS);
 
         User targetUser = targetOption.getAsUser();
         String sourceChannelId = event.getChannel().getId();
@@ -101,27 +115,23 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
                     COMMAND_NAME, exception);
         }
 
-        handleDelete(messageIdsForDeletion, event.getJDA(), event.getChannel(), event.getHook(),
-                targetUser, reason, author);
+        handleDelete(messageIdsForDeletion, event.getChannel(), event.getHook(), targetUser, reason,
+                author, duration);
     }
 
-    private void handleDelete(List<String> messageIdsForDeletion, JDA jda,
-            MessageChannelUnion channel, InteractionHook hook, User targetUser, String reason,
-            Member author) {
+    private void handleDelete(List<String> messageIdsForDeletion, MessageChannelUnion channel,
+            InteractionHook hook, User targetUser, String reason, Member author, int duration) {
 
         if (messageIdsForDeletion.isEmpty()) {
-            handleEmptyMessageHistory(hook, targetUser);
+            handleEmptyMessageHistory(hook, targetUser, duration);
             return;
         }
 
         if (hasSingleElement(messageIdsForDeletion)) {
             String messageId = messageIdsForDeletion.get(0);
-            String messageForMod =
-                    "message purged from user %s in this channel.".formatted(targetUser.getName());
-            Objects.requireNonNull(jda.getTextChannelById(channel.getId()), "channel was not found")
-                .deleteMessageById(messageId)
-                .queue();
-
+            String messageForMod = "message purged from user %s in this channel in last %s hrs."
+                .formatted(targetUser.getName(), duration);
+            channel.deleteMessageById(messageId).queue();
             hook.sendMessage(messageForMod).queue();
             return;
         }
@@ -129,20 +139,20 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
         int noOfMessagePurged = messageIdsForDeletion.size();
         channel.purgeMessagesById(messageIdsForDeletion);
 
-        String messageForMod = "%s messages purged from user %s in this channel."
-            .formatted(noOfMessagePurged, targetUser.getName());
+        String messageForMod = "%s messages purged from user %s in this channel in last %s hrs."
+            .formatted(noOfMessagePurged, targetUser.getName(), duration);
         hook.sendMessage(messageForMod)
-            .queue(onSuccess -> logger.info("{} purged messages from {} because: {}",
-                    author.getUser(), targetUser, reason));
+            .queue(onSuccess -> logger.info("{} purged messages from {} in {} because: {}",
+                    author.getUser(), targetUser, channel.getName(), reason));
     }
 
     private boolean hasSingleElement(List<String> messageIdsForDeletion) {
         return messageIdsForDeletion.size() == 1;
     }
 
-    private void handleEmptyMessageHistory(InteractionHook hook, User targetUser) {
-        String messageForMod = "%s has no message history in this channel within last %s hr."
-            .formatted(targetUser.getName(), PURGE_MESSAGES_AFTER_LIMIT_HOURS);
+    private void handleEmptyMessageHistory(InteractionHook hook, User targetUser, int duration) {
+        String messageForMod = "%s has no message history in this channel within last %s hrs."
+            .formatted(targetUser.getName(), duration);
 
         hook.sendMessage(messageForMod).queue();
     }

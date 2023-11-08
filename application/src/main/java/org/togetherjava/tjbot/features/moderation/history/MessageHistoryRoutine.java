@@ -22,7 +22,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 public class MessageHistoryRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(MessageHistoryRoutine.class);
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
-    private static final int EXPIRATION_HOURS = 2;
+    private static final int EXPIRATION_HOURS = 24;
     private final Database database;
 
     /**
