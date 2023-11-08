@@ -57,8 +57,6 @@ public final class HelpSystemHelper {
 
     static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
-    private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
-
     private final Predicate<String> hasTagManageRole;
     private final Predicate<String> isHelpForumName;
     private final String helpForumPattern;
@@ -111,13 +109,6 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        boolean useCodeSyntaxExampleImage = true;
-        InputStream codeSyntaxExampleData =
-                HelpSystemHelper.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
-        if (codeSyntaxExampleData == null) {
-            useCodeSyntaxExampleImage = false;
-        }
-
         String message =
                 "While you are waiting for getting help, here are some tips to improve your experience:";
 
@@ -129,10 +120,6 @@ public final class HelpSystemHelper {
                             With enough info, someone knows the answer for sure."""));
 
         MessageCreateAction action = threadChannel.sendMessage(message);
-        if (useCodeSyntaxExampleImage) {
-            action = action
-                .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
-        }
         return action.setEmbeds(embeds);
     }
 
