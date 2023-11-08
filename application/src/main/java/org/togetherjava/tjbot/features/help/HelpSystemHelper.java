@@ -107,18 +107,16 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        String message =
-                "While you are waiting for getting help, here are some tips to improve your experience:";
+        MessageEmbed helpEmbed = new EmbedBuilder()
+            .setDescription(
+                    """
+                            If nobody is calling back, that usually means that your question was **not well asked** and \
+                                hence nobody feels confident enough answering. Try to use your time to elaborate, \
+                                **provide details**, context, more code, examples and maybe some screenshots. \
+                                With enough info, someone knows the answer for sure.""")
+            .build();
 
-        List<MessageEmbed> embeds = List.of(HelpSystemHelper.embedWith(
-                """
-                        If nobody is calling back, that usually means that your question was **not well asked** and \
-                            hence nobody feels confident enough answering. Try to use your time to elaborate, \
-                            **provide details**, context, more code, examples and maybe some screenshots. \
-                            With enough info, someone knows the answer for sure."""));
-
-        MessageCreateAction action = threadChannel.sendMessage(message);
-        return action.setEmbeds(embeds);
+        return threadChannel.sendMessageEmbeds(helpEmbed);
     }
 
     /**
