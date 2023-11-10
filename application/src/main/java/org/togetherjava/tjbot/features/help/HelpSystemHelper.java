@@ -25,8 +25,6 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
-import javax.annotation.Nullable;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -228,17 +226,6 @@ public final class HelpSystemHelper {
                 helpThreadsRecord.insert();
             }
         });
-    }
-
-    private static MessageEmbed embedWith(CharSequence message) {
-        return embedWith(message, null);
-    }
-
-    private static MessageEmbed embedWith(CharSequence message, @Nullable String imageUrl) {
-        return new EmbedBuilder().setColor(AMBIENT_COLOR)
-            .setDescription(message)
-            .setImage(imageUrl)
-            .build();
     }
 
     Optional<Role> handleFindRoleForCategory(String category, Guild guild) {
