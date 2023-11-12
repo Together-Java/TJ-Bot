@@ -18,7 +18,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
  */
 public class PurgeMessageListener extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(PurgeMessageListener.class);
-    private static final int MESSAGES_RECORDS_LIMIT = 7500;
+    private static final int MESSAGES_RECORDS_LIMIT = 7;
     static AtomicInteger recordsCounter = new AtomicInteger(0);
     private final Database database;
 
@@ -66,15 +66,15 @@ public class PurgeMessageListener extends MessageReceiverAdapter {
         return event.isWebhookMessage() || event.getAuthor().isBot();
     }
 
-    private boolean canWriteToDB() {
+    private static boolean canWriteToDB() {
         return recordsCounter.get() <= MESSAGES_RECORDS_LIMIT;
     }
 
-    private void incrementRecordsCounter() {
+    private static void incrementRecordsCounter() {
         recordsCounter.getAndIncrement();
     }
 
-    void decrementRecordsCounter() {
+    static void decrementRecordsCounter() {
         recordsCounter.decrementAndGet();
     }
 
