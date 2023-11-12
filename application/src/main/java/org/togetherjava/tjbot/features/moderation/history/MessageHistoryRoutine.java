@@ -19,7 +19,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 /**
  * Routine that deletes records from message_history post expiration hours.
  */
-public class MessageHistoryRoutine implements Routine {
+public final class MessageHistoryRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(MessageHistoryRoutine.class);
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private static final int EXPIRATION_HOURS = 24;

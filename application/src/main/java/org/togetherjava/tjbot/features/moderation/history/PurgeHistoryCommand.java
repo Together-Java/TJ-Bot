@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
-public class PurgeHistoryCommand extends SlashCommandAdapter {
+public final class PurgeHistoryCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(PurgeHistoryCommand.class);
     private static final String USER_OPTION = "user";
