@@ -19,6 +19,8 @@ import java.time.Instant;
 import java.time.Period;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HELP_CHANNEL_MESSAGES;
 
@@ -42,6 +44,7 @@ public final class AutoPruneHelperRoutine implements Routine {
     private final ModAuditLogWriter modAuditLogWriter;
     private final Database database;
     private final List<String> allCategories;
+    private final Predicate<String> selectYourRolesChannelNamePredicate;
 
     /**
      * Creates a new instance.
@@ -64,6 +67,8 @@ public final class AutoPruneHelperRoutine implements Routine {
         pruneMemberAmount = helperPruneConfig.pruneMemberAmount();
         inactiveAfter = Period.ofDays(helperPruneConfig.inactivateAfterDays());
         recentlyJoinedDays = helperPruneConfig.recentlyJoinedDays();
+        selectYourRolesChannelNamePredicate =
+                Pattern.compile(config.getSelectYourRolesChannelPatten()).asMatchPredicate();
     }
 
     @Override

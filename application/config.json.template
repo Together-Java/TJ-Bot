@@ -107,5 +107,6 @@
         ],
         "special": [
         ]
-    }
+    },
+    "selectYourRolesChannelPattern": "select-your-roles"
 }
