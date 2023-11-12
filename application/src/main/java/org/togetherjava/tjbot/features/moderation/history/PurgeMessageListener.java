@@ -1,11 +1,14 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
@@ -14,6 +17,9 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
  * database.
  */
 public class PurgeMessageListener extends MessageReceiverAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(PurgeMessageListener.class);
+    private static final int MESSAGES_RECORDS_LIMIT = 7500;
+    static AtomicInteger recordsCounter = new AtomicInteger(0);
     private final Database database;
 
     /**
@@ -41,16 +47,35 @@ public class PurgeMessageListener extends MessageReceiverAdapter {
         long messageId = event.getMessageIdLong();
         long authorId = event.getAuthor().getIdLong();
 
-        database.write(context -> context.newRecord(MESSAGE_HISTORY)
-            .setSentAt(Instant.now())
-            .setGuildId(guildId)
-            .setChannelId(channelId)
-            .setMessageId(messageId)
-            .setAuthorId(authorId)
-            .insert());
+        if (canWriteToDB()) {
+            database.write(context -> context.newRecord(MESSAGE_HISTORY)
+                .setSentAt(Instant.now())
+                .setGuildId(guildId)
+                .setChannelId(channelId)
+                .setMessageId(messageId)
+                .setAuthorId(authorId)
+                .insert());
+
+            incrementRecordsCounter();
+        } else {
+            logger.warn("purge history reached limit");
+        }
     }
 
     private boolean shouldIgnoreMessages(MessageReceivedEvent event) {
         return event.isWebhookMessage() || event.getAuthor().isBot();
     }
+
+    private boolean canWriteToDB() {
+        return recordsCounter.get() <= MESSAGES_RECORDS_LIMIT;
+    }
+
+    private void incrementRecordsCounter() {
+        recordsCounter.getAndIncrement();
+    }
+
+    void decrementRecordsCounter() {
+        recordsCounter.decrementAndGet();
+    }
+
 }

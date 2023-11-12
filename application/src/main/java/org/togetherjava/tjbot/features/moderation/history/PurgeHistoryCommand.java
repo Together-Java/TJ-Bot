@@ -37,6 +37,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
     private static final String DURATION = "duration";
     private static final int PURGE_MESSAGES_AFTER_LIMIT_MAX = 24;
     private final Database database;
+    private final PurgeMessageListener purgeMessageListener;
 
     /**
      * Creates an instance of the command.
@@ -63,6 +64,7 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
                     "reason for purging user's message history", true)
             .addOptions(durationData);
         this.database = database;
+        this.purgeMessageListener = new PurgeMessageListener(database);
     }
 
     @Override
@@ -109,6 +111,8 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
                 String messageId = String.valueOf(messageHistoryRecord.getMessageId());
                 messageIdsForDeletion.add(messageId);
                 messageHistoryRecord.delete();
+
+                purgeMessageListener.decrementRecordsCounter();
             });
         } catch (DatabaseException exception) {
             logger.error("unknown error during fetching message history records for {} command",
