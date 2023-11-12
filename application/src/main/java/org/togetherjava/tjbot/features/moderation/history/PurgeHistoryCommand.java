@@ -99,15 +99,15 @@ public class PurgeHistoryCommand extends SlashCommandAdapter {
 
         List<String> messageIdsForDeletion = new ArrayList<>();
 
-        Stream<MessageHistoryRecord> data =
+        Stream<MessageHistoryRecord> fetchedMessageHistory =
                 database.writeAndProvide(context -> context.selectFrom(MESSAGE_HISTORY)
                     .where(MESSAGE_HISTORY.AUTHOR_ID.equal(targetUser.getIdLong())
                         .and(MESSAGE_HISTORY.CHANNEL_ID.equal(Long.valueOf(sourceChannelId)))
                         .and(MESSAGE_HISTORY.SENT_AT.greaterOrEqual(purgeMessagesAfter)))
                     .stream());
 
-        try (data) {
-            data.forEach(messageHistoryRecord -> {
+        try (fetchedMessageHistory) {
+            fetchedMessageHistory.forEach(messageHistoryRecord -> {
                 String messageId = String.valueOf(messageHistoryRecord.getMessageId());
                 messageIdsForDeletion.add(messageId);
                 messageHistoryRecord.delete();
