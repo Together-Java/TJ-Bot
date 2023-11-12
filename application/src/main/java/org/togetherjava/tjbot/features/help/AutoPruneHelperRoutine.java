@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -177,5 +178,15 @@ public final class AutoPruneHelperRoutine implements Routine {
         logger.warn(message);
 
         modAuditLogWriter.write("Auto-prune helpers", message, null, Instant.now(), guild);
+    }
+
+    private TextChannel getSelectRolesChannel(JDA jda) {
+        Optional<TextChannel> selectRolesChannelOptional = jda.getTextChannels()
+            .stream()
+            .filter(textChannel -> selectYourRolesChannelNamePredicate.test(textChannel.getName()))
+            .findFirst();
+
+        return selectRolesChannelOptional.orElseThrow(() -> new IllegalStateException(
+                "Did not find the select your roles channel during AutoPruneHelper routine. Make sure the config is setup properly."));
     }
 }
