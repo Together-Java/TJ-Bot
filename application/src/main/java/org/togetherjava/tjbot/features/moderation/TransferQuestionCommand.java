@@ -191,17 +191,17 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 """
                         Hello%s 👋 You have asked a question in the wrong channel%s. Not a big deal, but none of the experts who could help you are reading your question there 🙁
 
-                        Your question has been automatically transferred to %s%s, please continue there, thank you 👍
+                        Your question has been automatically transferred to %s, please continue there, thank you 👍
                         """;
 
         // Prevents discord from creating a distracting auto-preview for the link
         String jumpUrlSuffix = " ";
 
         String messageForDm = messageTemplate.formatted("", " on " + guild.getName(),
-                forumPost.message.getJumpUrl(), jumpUrlSuffix);
+                forumPost.message.getJumpUrl() + jumpUrlSuffix);
 
         String messageOnDmFailure = messageTemplate.formatted(" " + forumPost.author.getAsMention(),
-                "", forumPost.message.getJumpUrl(), jumpUrlSuffix);
+                "", forumPost.message.getJumpUrl() + jumpUrlSuffix);
 
         return forumPost.author.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(messageForDm))
