@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
-import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +25,7 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
-import javax.annotation.Nullable;
-
 import java.awt.*;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,8 +52,6 @@ public final class HelpSystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(HelpSystemHelper.class);
 
     static final Color AMBIENT_COLOR = new Color(255, 255, 165);
-
-    private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
 
     private final Predicate<String> hasTagManageRole;
     private final Predicate<String> isHelpForumName;
@@ -111,43 +105,16 @@ public final class HelpSystemHelper {
     }
 
     RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        return mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                HelpThreadCommand.Subcommand.CLOSE.getCommandName())
-                    .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
-                            closeCommandMention));
-    }
+        MessageEmbed helpEmbed = new EmbedBuilder()
+            .setDescription(
+                    """
+                            If nobody is calling back, that usually means that your question was **not well asked** and \
+                                hence nobody feels confident enough answering. Try to use your time to elaborate, \
+                                **provide details**, context, more code, examples and maybe some screenshots. \
+                                With enough info, someone knows the answer for sure.""")
+            .build();
 
-    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
-            String closeCommandMention) {
-        boolean useCodeSyntaxExampleImage = true;
-        InputStream codeSyntaxExampleData =
-                HelpSystemHelper.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
-        if (codeSyntaxExampleData == null) {
-            useCodeSyntaxExampleImage = false;
-        }
-
-        String message =
-                "While you are waiting for getting help, here are some tips to improve your experience:";
-
-        List<MessageEmbed> embeds = List.of(HelpSystemHelper.embedWith(
-                "Code is much easier to read if posted with **syntax highlighting** and proper formatting.",
-                useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
-                HelpSystemHelper.embedWith(
-                        """
-                                If nobody is calling back, that usually means that your question was **not well asked** and \
-                                    hence nobody feels confident enough answering. Try to use your time to elaborate, \
-                                    **provide details**, context, more code, examples and maybe some screenshots. \
-                                    With enough info, someone knows the answer for sure."""),
-                HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(closeCommandMention)));
-
-        MessageCreateAction action = threadChannel.sendMessage(message);
-        if (useCodeSyntaxExampleImage) {
-            action = action
-                .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
-        }
-        return action.setEmbeds(embeds);
+        return threadChannel.sendMessageEmbeds(helpEmbed);
     }
 
     /**
@@ -259,17 +226,6 @@ public final class HelpSystemHelper {
                 helpThreadsRecord.insert();
             }
         });
-    }
-
-    private static MessageEmbed embedWith(CharSequence message) {
-        return embedWith(message, null);
-    }
-
-    private static MessageEmbed embedWith(CharSequence message, @Nullable String imageUrl) {
-        return new EmbedBuilder().setColor(AMBIENT_COLOR)
-            .setDescription(message)
-            .setImage(imageUrl)
-            .build();
     }
 
     Optional<Role> handleFindRoleForCategory(String category, Guild guild) {
