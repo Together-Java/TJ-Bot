@@ -58,7 +58,7 @@ public final class PurgeMessageListener extends MessageReceiverAdapter {
 
             incrementRecordsCounter();
         } else {
-            logger.warn("purge history reached limit");
+            logger.debug("purge history reached limit");
         }
     }
 
