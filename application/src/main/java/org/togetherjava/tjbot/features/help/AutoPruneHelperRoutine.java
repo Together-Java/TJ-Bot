@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,25 +82,21 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     private void pruneForGuild(Guild guild) {
-        ForumChannel helpForum = guild.getForumChannels()
-            .stream()
-            .filter(channel -> helper.isHelpForumName(channel.getName()))
-            .findAny()
-            .orElseThrow();
         Instant now = Instant.now();
+        JDA jda = guild.getJDA();
 
         allCategories.stream()
             .map(category -> helper.handleFindRoleForCategory(category, guild))
             .filter(Optional::isPresent)
             .map(Optional::orElseThrow)
-            .forEach(role -> pruneRoleIfFull(role, helpForum, now));
+            .forEach(role -> pruneRoleIfFull(role, jda, now));
     }
 
-    private void pruneRoleIfFull(Role role, ForumChannel helpForum, Instant when) {
+    private void pruneRoleIfFull(Role role, JDA jda, Instant when) {
         role.getGuild().findMembersWithRoles(role).onSuccess(members -> {
             if (isRoleFull(members)) {
                 logger.debug("Helper role {} is full, starting to prune.", role.getName());
-                pruneRole(role, members, helpForum, when);
+                pruneRole(role, members, jda, when);
             }
         });
     }
@@ -110,8 +105,7 @@ public final class AutoPruneHelperRoutine implements Routine {
         return members.size() >= roleFullThreshold;
     }
 
-    private void pruneRole(Role role, List<? extends Member> members, ForumChannel helpForum,
-            Instant when) {
+    private void pruneRole(Role role, List<? extends Member> members, JDA jda, Instant when) {
         List<Member> membersShuffled = new ArrayList<>(members);
         Collections.shuffle(membersShuffled);
 
@@ -134,7 +128,7 @@ public final class AutoPruneHelperRoutine implements Routine {
 
         logger.info("Pruning {} users {} from role {}", membersToPrune.size(), membersToPrune,
                 role.getName());
-        membersToPrune.forEach(member -> pruneMemberFromRole(member, role, helpForum));
+        membersToPrune.forEach(member -> pruneMemberFromRole(member, role, jda));
     }
 
     private boolean isMemberInactive(Member member, Instant when) {
@@ -156,15 +150,16 @@ public final class AutoPruneHelperRoutine implements Routine {
                     .and(HELP_CHANNEL_MESSAGES.SENT_AT.greaterThan(latestActiveMoment)))) == 0;
     }
 
-    private void pruneMemberFromRole(Member member, Role role, ForumChannel helpForum) {
+    private void pruneMemberFromRole(Member member, Role role, JDA jda) {
         Guild guild = member.getGuild();
+        TextChannel selectRolesChannel = getSelectRolesChannel(jda);
 
         String dmMessage =
                 """
                         You seem to have been inactive for some time in server **%s**, hence we removed you from the **%s** role.
                         If that was a mistake, just head back to %s and select the role again.
                         Sorry for any inconvenience caused by this 🙇"""
-                    .formatted(guild.getName(), role.getName(), helpForum.getAsMention());
+                    .formatted(guild.getName(), role.getName(), selectRolesChannel.getAsMention());
 
         guild.removeRoleFromMember(member, role)
             .flatMap(any -> member.getUser().openPrivateChannel())
@@ -187,6 +182,6 @@ public final class AutoPruneHelperRoutine implements Routine {
             .findFirst();
 
         return selectRolesChannelOptional.orElseThrow(() -> new IllegalStateException(
-                "Did not find the select your roles channel during AutoPruneHelper routine. Make sure the config is setup properly."));
+                "Could not find role selection channel during AutoPruneHelper routine. Make sure the config is setup properly."));
     }
 }
