@@ -18,7 +18,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
  */
 public class PurgeMessageListener extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(PurgeMessageListener.class);
-    private static final int MESSAGES_RECORDS_LIMIT = 7;
+    private static final int MESSAGES_RECORDS_LIMIT = 7500;
     static AtomicInteger recordsCounter = new AtomicInteger(0);
     private final Database database;
 
