@@ -68,7 +68,7 @@ public final class AutoPruneHelperRoutine implements Routine {
         inactiveAfter = Period.ofDays(helperPruneConfig.inactivateAfterDays());
         recentlyJoinedDays = helperPruneConfig.recentlyJoinedDays();
         selectYourRolesChannelNamePredicate =
-                Pattern.compile(config.getSelectYourRolesChannelPatten()).asMatchPredicate();
+                Pattern.compile(config.getSelectRolesChannelPatten()).asMatchPredicate();
     }
 
     @Override

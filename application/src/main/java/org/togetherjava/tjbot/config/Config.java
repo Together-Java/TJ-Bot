@@ -41,7 +41,7 @@ public final class Config {
     private final JShellConfig jshell;
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
-    private final String selectYourRolesChannelPatten;
+    private final String selectRolesChannelPatten;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -84,8 +84,8 @@ public final class Config {
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
-            @JsonProperty(value = "selectYourRolesChannelPattern",
-                    required = true) String selectYourRolesChannelPatten) {
+            @JsonProperty(value = "selectRolesChannelPattern",
+                    required = true) String selectRolesChannelPatten) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -113,7 +113,7 @@ public final class Config {
         this.jshell = Objects.requireNonNull(jshell);
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
-        this.selectYourRolesChannelPatten = Objects.requireNonNull(selectYourRolesChannelPatten);
+        this.selectRolesChannelPatten = Objects.requireNonNull(selectRolesChannelPatten);
     }
 
     /**
@@ -373,7 +373,7 @@ public final class Config {
         return featureBlacklistConfig;
     }
 
-    public String getSelectYourRolesChannelPatten() {
-        return selectYourRolesChannelPatten;
+    public String getSelectRolesChannelPatten() {
+        return selectRolesChannelPatten;
     }
 }
