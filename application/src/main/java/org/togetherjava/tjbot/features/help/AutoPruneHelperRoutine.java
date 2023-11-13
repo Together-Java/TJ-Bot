@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +13,8 @@ import org.togetherjava.tjbot.config.HelperPruneConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
+
+import javax.annotation.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -84,22 +85,20 @@ public final class AutoPruneHelperRoutine implements Routine {
 
     private void pruneForGuild(Guild guild) {
         Instant now = Instant.now();
-        Optional<TextChannel> selectRoleChannelOptional =
-                getSelectRolesChannelOptional(guild.getJDA());
+        TextChannel selectRoleChannel = getSelectRolesChannelOptional(guild.getJDA()).orElse(null);
 
         allCategories.stream()
             .map(category -> helper.handleFindRoleForCategory(category, guild))
             .filter(Optional::isPresent)
             .map(Optional::orElseThrow)
-            .forEach(role -> pruneRoleIfFull(role, selectRoleChannelOptional, now));
+            .forEach(role -> pruneRoleIfFull(role, selectRoleChannel, now));
     }
 
-    private void pruneRoleIfFull(Role role, Optional<TextChannel> selectRoleChannelOptional,
-            Instant when) {
+    private void pruneRoleIfFull(Role role, @Nullable TextChannel selectRoleChannel, Instant when) {
         role.getGuild().findMembersWithRoles(role).onSuccess(members -> {
             if (isRoleFull(members)) {
                 logger.debug("Helper role {} is full, starting to prune.", role.getName());
-                pruneRole(role, members, selectRoleChannelOptional, when);
+                pruneRole(role, members, selectRoleChannel, when);
             }
         });
     }
@@ -109,7 +108,7 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     private void pruneRole(Role role, List<? extends Member> members,
-            Optional<TextChannel> selectRoleChannelOptional, Instant when) {
+            @Nullable TextChannel selectRoleChannel, Instant when) {
         List<Member> membersShuffled = new ArrayList<>(members);
         Collections.shuffle(membersShuffled);
 
@@ -132,8 +131,7 @@ public final class AutoPruneHelperRoutine implements Routine {
 
         logger.info("Pruning {} users {} from role {}", membersToPrune.size(), membersToPrune,
                 role.getName());
-        membersToPrune
-            .forEach(member -> pruneMemberFromRole(member, role, selectRoleChannelOptional));
+        membersToPrune.forEach(member -> pruneMemberFromRole(member, role, selectRoleChannel));
     }
 
     private boolean isMemberInactive(Member member, Instant when) {
@@ -156,11 +154,13 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     private void pruneMemberFromRole(Member member, Role role,
-            Optional<TextChannel> selectRoleChannelOptional) {
+            @Nullable TextChannel selectRoleChannel) {
         Guild guild = member.getGuild();
 
         String channelMentionOrFallbackMessage =
-                selectRoleChannelOptional.map(Channel::getAsMention).orElse("appropriate channel");
+                selectRoleChannel == null ? "role selection channel"
+                        : selectRoleChannel.getAsMention();
+
         String dmMessage =
                 """
                         You seem to have been inactive for some time in server **%s**, hence we removed you from the **%s** role.
