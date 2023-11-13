@@ -107,5 +107,9 @@
         ],
         "special": [
         ]
+    },
+    "starboard": {
+        "emojiNames" : ["⭐"],
+        "channelPattern": "starboard"
     }
 }

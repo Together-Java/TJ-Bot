@@ -39,6 +39,7 @@ public final class Config {
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
+    private final StarboardConfig starboard;
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
 
@@ -79,6 +80,7 @@ public final class Config {
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
+            @JsonProperty(value = "starboard", required = true) StarboardConfig starboard,
             @JsonProperty(value = "helperPruneConfig",
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
@@ -108,6 +110,7 @@ public final class Config {
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
+        this.starboard = Objects.requireNonNull(starboard);
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
     }
@@ -352,6 +355,17 @@ public final class Config {
     }
 
     /**
+     * Gets the config for the Starboard. The starboard displays certain messages in a special
+     * channel {@link StarboardConfig#channelPattern()} if a user reacts with one of the recognized
+     * emojis{@link StarboardConfig#emojiNames()}
+     * 
+     * @return the config of the Starboard
+     */
+    public StarboardConfig getStarboard() {
+        return starboard;
+    }
+
+    /**
      * Gets the config for automatic pruning of helper roles.
      *
      * @return the configuration
@@ -367,5 +381,6 @@ public final class Config {
      */
     public FeatureBlacklistConfig getFeatureBlacklistConfig() {
         return featureBlacklistConfig;
+
     }
 }
