@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.requests.RestAction;
 
 import org.togetherjava.tjbot.features.EventReceiver;
@@ -157,16 +158,14 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // This method handles chatgpt's automatic response "dismiss" button
+        event.deferEdit().queue();
+
         ThreadChannel channel = event.getChannel().asThreadChannel();
         Member interactionUser = Objects.requireNonNull(event.getMember());
-        Message forumPostMessage = channel.retrieveMessageById(channel.getId()).complete();
 
-        boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
-
-        if (!isAuthorized) {
-            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
-            return;
-        }
+        channel.retrieveMessageById(channel.getId())
+            .map(forumPostMessage -> handleAuth(interactionUser, channel, forumPostMessage, event))
+            .queue();
 
         RestAction<Void> deleteMessages = event.getMessage().delete();
         for (String id : args) {
@@ -201,6 +200,16 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             Message forumPostMessage) {
         return (channel.getOwnerIdLong() == interactionUser.getIdLong())
                 || helper.hasTagManageRole(interactionUser)
-                || (isPostAuthor(interactionUser, forumPostMessage));
+                || isPostAuthor(interactionUser, forumPostMessage);
+    }
+
+    private RestAction<InteractionHook> handleAuth(Member interactionUser, ThreadChannel channel,
+            Message forumPostMessage, ButtonInteractionEvent event) {
+        boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
+        if (!isAuthorized) {
+            event.getInteraction().deferEdit().queue();
+            return event.reply("You do not have permission for this action.").setEphemeral(true);
+        }
+        return event.getInteraction().deferEdit();
     }
 }
