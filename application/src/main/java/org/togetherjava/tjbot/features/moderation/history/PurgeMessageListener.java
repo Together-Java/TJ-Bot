@@ -1,14 +1,17 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.jooq.impl.UpdatableRecordImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.MessageHistoryRecord;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
@@ -18,7 +21,9 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
  */
 public final class PurgeMessageListener extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(PurgeMessageListener.class);
-    private static final int MESSAGES_RECORDS_LIMIT = 7500;
+    private static final int MESSAGES_RECORDS_MAX_LIMIT = 7500;
+    private static final int MESSAGES_RECORDS_THRESHOLD = MESSAGES_RECORDS_MAX_LIMIT - 100;
+    private static final int RECORDS_TO_TRIM = 500;
     static AtomicInteger recordsCounter = new AtomicInteger(0);
     private final Database database;
 
@@ -47,7 +52,9 @@ public final class PurgeMessageListener extends MessageReceiverAdapter {
         long messageId = event.getMessageIdLong();
         long authorId = event.getAuthor().getIdLong();
 
-        if (canWriteToDB()) {
+        // if record count is still below threshold, normal writes otherwise some of the oldest
+        // records are trimmed.
+        if (canWriteToDB() && isBelowThreshold()) {
             database.write(context -> context.newRecord(MESSAGE_HISTORY)
                 .setSentAt(Instant.now())
                 .setGuildId(guildId)
@@ -56,7 +63,11 @@ public final class PurgeMessageListener extends MessageReceiverAdapter {
                 .setAuthorId(authorId)
                 .insert());
 
-            incrementRecordsCounter();
+            incrementRecordsCounterByOne();
+        }
+
+        else if (canWriteToDB() && !isBelowThreshold()) {
+            trimHistory();
         } else {
             logger.debug("purge history reached limit");
         }
@@ -67,15 +78,39 @@ public final class PurgeMessageListener extends MessageReceiverAdapter {
     }
 
     private static boolean canWriteToDB() {
-        return recordsCounter.get() <= MESSAGES_RECORDS_LIMIT;
+        return recordsCounter.get() <= MESSAGES_RECORDS_MAX_LIMIT;
     }
 
-    private static void incrementRecordsCounter() {
+    private static void incrementRecordsCounterByOne() {
         recordsCounter.getAndIncrement();
     }
 
-    static void decrementRecordsCounter() {
+    static void decrementRecordsCounterByOne() {
         recordsCounter.decrementAndGet();
     }
 
+    static void decrementRecordsCounterByTrimCount() {
+        recordsCounter.set(recordsCounter.get() - RECORDS_TO_TRIM);
+    }
+
+    private boolean isBelowThreshold() {
+        return recordsCounter.get() <= MESSAGES_RECORDS_THRESHOLD;
+    }
+
+    private void trimHistory() {
+        Stream<MessageHistoryRecord> messageRecords =
+                database.writeAndProvide(context -> context.selectFrom(MESSAGE_HISTORY)
+                    .orderBy(MESSAGE_HISTORY.SENT_AT)
+                    .limit(RECORDS_TO_TRIM)
+                    .stream());
+
+        try (messageRecords) {
+            messageRecords.forEach(UpdatableRecordImpl::delete);
+            decrementRecordsCounterByTrimCount();
+        } catch (Exception exception) {
+            logger.error(
+                    "Unknown error happened during delete operation during trim of records in purge message listener",
+                    exception);
+        }
+    }
 }

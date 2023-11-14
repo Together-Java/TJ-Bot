@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
 import net.dv8tion.jda.api.JDA;
-import org.jooq.impl.UpdatableRecordImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,13 +45,16 @@ public final class MessageHistoryRoutine implements Routine {
         Instant now = Instant.now();
         Instant preExpirationHours = now.minus(EXPIRATION_HOURS, ChronoUnit.HOURS);
 
-        Stream<MessageHistoryRecord> records =
+        Stream<MessageHistoryRecord> messageRecords =
                 database.writeAndProvide(context -> context.selectFrom(MESSAGE_HISTORY)
                     .where(MESSAGE_HISTORY.SENT_AT.lessThan(preExpirationHours))
                     .stream());
 
-        try (records) {
-            records.forEach(UpdatableRecordImpl::delete);
+        try (messageRecords) {
+            messageRecords.forEach(messageRecord -> {
+                messageRecord.delete();
+                PurgeMessageListener.decrementRecordsCounterByOne();
+            });
         } catch (Exception exception) {
             logger.error(
                     "Unknown error happened during delete operation during message history routine",

@@ -110,7 +110,7 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
                 messageIdsForDeletion.add(messageId);
                 messageHistoryRecord.delete();
 
-                PurgeMessageListener.decrementRecordsCounter();
+                PurgeMessageListener.decrementRecordsCounterByOne();
             });
         } catch (DatabaseException exception) {
             logger.error("unknown error during fetching message history records for {} command",
