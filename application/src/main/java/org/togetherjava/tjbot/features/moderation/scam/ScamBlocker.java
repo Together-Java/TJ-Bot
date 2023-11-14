@@ -232,10 +232,12 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         User author = event.getAuthor();
+        String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
+
         MessageEmbed embed =
                 new EmbedBuilder().setDescription(event.getMessage().getContentStripped())
                     .setTitle(reportTitle)
-                    .setAuthor(author.getAsTag(), null, author.getAvatarUrl())
+                    .setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
                     .setTimestamp(event.getMessage().getTimeCreated())
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())

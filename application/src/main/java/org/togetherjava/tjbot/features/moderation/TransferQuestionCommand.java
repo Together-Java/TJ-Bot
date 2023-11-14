@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -29,6 +30,7 @@ import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -79,7 +81,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         String originalMessage = event.getTarget().getContentRaw();
         String originalMessageId = event.getTarget().getId();
-        String originalChannelId = event.getChannel().getId();
+        String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.get(0);
 
@@ -192,11 +194,14 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                         Your question has been automatically transferred to %s, please continue there, thank you 👍
                         """;
 
-        String messageForDm = messageTemplate.formatted("", " on" + " " + guild.getName(),
-                forumPost.message.getJumpUrl());
+        // Prevents discord from creating a distracting auto-preview for the link
+        String jumpUrlSuffix = " ";
+
+        String messageForDm = messageTemplate.formatted("", " on " + guild.getName(),
+                forumPost.message.getJumpUrl() + jumpUrlSuffix);
 
         String messageOnDmFailure = messageTemplate.formatted(" " + forumPost.author.getAsMention(),
-                "", forumPost.message.getJumpUrl());
+                "", forumPost.message.getJumpUrl() + jumpUrlSuffix);
 
         return forumPost.author.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(messageForDm))
@@ -204,7 +209,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
-        return jda.getTextChannelById(channelId).deleteMessageById(messageId);
+        TextChannel sourceChannel = Objects.requireNonNull(jda.getTextChannelById(channelId),
+                "Source channel could not be found for transfer-question feature");
+
+        return sourceChannel.deleteMessageById(messageId);
     }
 
     private ForumChannel getHelperForum(JDA jda) {
@@ -223,9 +231,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private MessageEmbed makeEmbedForPost(User originalUser, String originalMessage) {
-        return new EmbedBuilder()
-            .setAuthor(originalUser.getName(), originalUser.getAvatarUrl(),
-                    originalUser.getAvatar().getUrl())
+        String avatarOrDefaultUrl = originalUser.getEffectiveAvatarUrl();
+
+        return new EmbedBuilder().setAuthor(originalUser.getName(), null, avatarOrDefaultUrl)
             .setDescription(originalMessage)
             .setColor(EMBED_COLOR)
             .build();

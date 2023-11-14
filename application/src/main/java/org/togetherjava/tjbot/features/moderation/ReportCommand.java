@@ -90,7 +90,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedMessageJumpUrl = event.getTarget().getJumpUrl();
         String reportedMessageChannel = event.getTarget().getChannel().getId();
         String reportedAuthorName = event.getTarget().getAuthor().getName();
-        String reportedAuthorAvatarURL = event.getTarget().getAuthor().getAvatarUrl();
+        String reportedAuthorAvatarUrl = event.getTarget().getAuthor().getEffectiveAvatarUrl();
         String reportedAuthorID = event.getTarget().getAuthor().getId();
 
         TextInput modalTextInput = TextInput
@@ -102,7 +102,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         String reportModalComponentID = generateComponentId(reportedMessage, reportedMessageID,
                 reportedMessageJumpUrl, reportedMessageChannel, reportedMessageTimestamp,
-                reportedAuthorName, reportedAuthorAvatarURL, reportedAuthorID);
+                reportedAuthorName, reportedAuthorAvatarUrl, reportedAuthorID);
         Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
             .addActionRow(modalTextInput)
             .build();
