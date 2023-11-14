@@ -161,9 +161,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         Member interactionUser = Objects.requireNonNull(event.getMember());
         Message forumPostMessage = channel.retrieveMessageById(channel.getId()).complete();
 
-        boolean isEmbedAuthor = isPostAuthor(interactionUser, forumPostMessage);
-        if (channel.getOwnerIdLong() != interactionUser.getIdLong()
-                && !helper.hasTagManageRole(interactionUser) && (!isEmbedAuthor)) {
+        boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
+
+        if (!isAuthorized) {
             event.reply("You do not have permission for this action.").setEphemeral(true).queue();
             return;
         }
@@ -185,13 +185,22 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         throw new UnsupportedOperationException("Not used");
     }
 
-    private boolean isPostAuthor(Member user, Message message) {
+    private boolean isPostAuthor(Member interactionUser, Message message) {
         if (message.getEmbeds().isEmpty())
             return false;
+
         String embedAuthor = Objects
             .requireNonNull(message.getEmbeds().get(0).getAuthor(),
                     "embed author for forum post is null")
             .getName();
-        return embedAuthor.equals(user.getUser().getName());
+
+        return embedAuthor.equals(interactionUser.getUser().getName());
+    }
+
+    private boolean isAuthorized(Member interactionUser, ThreadChannel channel,
+            Message forumPostMessage) {
+        return (channel.getOwnerIdLong() == interactionUser.getIdLong())
+                || helper.hasTagManageRole(interactionUser)
+                || (isPostAuthor(interactionUser, forumPostMessage));
     }
 }
