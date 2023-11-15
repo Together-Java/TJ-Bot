@@ -201,7 +201,10 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             Message forumPostMessage, ButtonInteractionEvent event, List<String> args) {
         boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
         if (!isAuthorized) {
-            event.getHook().sendMessage("Not allowed").setEphemeral(true).queue();
+            event.getHook()
+                .sendMessage("You do not have permission for this action.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 
