@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.requests.RestAction;
 
 import org.togetherjava.tjbot.features.EventReceiver;
@@ -164,14 +163,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         Member interactionUser = Objects.requireNonNull(event.getMember());
 
         channel.retrieveMessageById(channel.getId())
-            .map(forumPostMessage -> handleAuth(interactionUser, channel, forumPostMessage, event))
-            .queue();
+            .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
+                    event, args));
 
-        RestAction<Void> deleteMessages = event.getMessage().delete();
-        for (String id : args) {
-            deleteMessages = deleteMessages.and(channel.deleteMessageById(id));
-        }
-        deleteMessages.queue();
     }
 
     @Override
@@ -203,13 +197,18 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
                 || isPostAuthor(interactionUser, forumPostMessage);
     }
 
-    private RestAction<InteractionHook> handleAuth(Member interactionUser, ThreadChannel channel,
-            Message forumPostMessage, ButtonInteractionEvent event) {
+    private void handleDismiss(Member interactionUser, ThreadChannel channel,
+            Message forumPostMessage, ButtonInteractionEvent event, List<String> args) {
         boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
         if (!isAuthorized) {
-            event.getInteraction().deferEdit().queue();
-            return event.reply("You do not have permission for this action.").setEphemeral(true);
+            event.getHook().sendMessage("Not allowed").setEphemeral(true).queue();
+            return;
         }
-        return event.getInteraction().deferEdit();
+
+        RestAction<Void> deleteMessages = event.getMessage().delete();
+        for (String id : args) {
+            deleteMessages = deleteMessages.and(channel.deleteMessageById(id));
+        }
+        deleteMessages.queue();
     }
 }
