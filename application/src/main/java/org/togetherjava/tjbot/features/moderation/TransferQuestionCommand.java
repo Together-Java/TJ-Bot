@@ -32,6 +32,7 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -128,12 +129,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         ForumChannel helperForum = getHelperForum(event.getJDA());
         TextChannel sourceChannel = event.getChannel().asTextChannel();
 
-        // to avoid race condition, when multiple users do the transfer.
-        // message is retrieved, already transferred messages are deleted.
-        event.getChannel()
-            .retrieveMessageById(messageId)
-            .queue(notHandled -> transferFlow(event, channelId, authorId, messageId),
-                    handled -> alreadyHandled(sourceChannel, helperForum));
+        // Has been handled if original message was deleted by now.
+        // Deleted messages cause retrieveMessageById to fail.
+        Consumer<Message> notHandledAction =
+                any -> transferFlow(event, channelId, authorId, messageId);
+        Consumer<Throwable> handledAction = any -> alreadyHandled(sourceChannel, helperForum);
+
+        event.getChannel().retrieveMessageById(messageId).queue(notHandledAction, handledAction);
     }
 
     private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
@@ -150,7 +152,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private void alreadyHandled(TextChannel sourceChannel, ForumChannel helperForum) {
         sourceChannel.sendMessage(
-                "The question has been already forwarded to the helper forum for assistance. Kindly review %s for more information."
+                "It appears that someone else has already transferred this question. Kindly see %s for details."
                     .formatted(helperForum.getAsMention()))
             .queue();
     }
