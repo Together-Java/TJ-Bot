@@ -35,7 +35,6 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "purge-in-channel";
     private static final int PURGE_MESSAGES_AFTER_LIMIT_HOURS = 1;
     private static final String DURATION = "duration";
-    private static final int PURGE_MESSAGES_AFTER_LIMIT_MAX = 24;
     private final Database database;
 
     /**
@@ -51,12 +50,15 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
         String optionUserDescription = "user who's message history you want to purge within %s hr"
             .formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS);
 
-        String optionDurationDescription = "duration in hours (default: %s, max: %s)"
-            .formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS, PURGE_MESSAGES_AFTER_LIMIT_MAX);
+        String optionDurationDescription =
+                "duration in hours (default: %s)".formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS);
 
         OptionData durationData =
                 new OptionData(OptionType.INTEGER, DURATION, optionDurationDescription, false);
-        durationData.setRequiredRange(0, PURGE_MESSAGES_AFTER_LIMIT_MAX);
+        durationData.addChoice("last 3 hrs", 3)
+            .addChoice("last 6 hrs", 6)
+            .addChoice("last 12 hrs", 12)
+            .addChoice("last 24 hrs", 24);
 
         getData().addOption(OptionType.USER, USER_OPTION, optionUserDescription, true)
             .addOption(OptionType.STRING, REASON_OPTION,
