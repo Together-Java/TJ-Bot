@@ -179,8 +179,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private boolean isPostAuthor(Member interactionUser, Message message) {
-        if (message.getEmbeds().isEmpty())
+        if (message.getEmbeds().isEmpty()) {
             return false;
+        }
 
         String embedAuthor = Objects
             .requireNonNull(message.getEmbeds().get(0).getAuthor(),
