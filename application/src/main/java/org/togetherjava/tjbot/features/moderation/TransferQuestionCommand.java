@@ -13,11 +13,13 @@ import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -133,7 +135,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         // Deleted messages cause retrieveMessageById to fail.
         Consumer<Message> notHandledAction =
                 any -> transferFlow(event, channelId, authorId, messageId);
-        Consumer<Throwable> handledAction = any -> alreadyHandled(sourceChannel, helperForum);
+
+        Consumer<Throwable> handledAction = any -> {
+            if (any instanceof ErrorResponseException errorResponseException
+                    && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                alreadyHandled(sourceChannel, helperForum);
+            }
+        };
 
         event.getChannel().retrieveMessageById(messageId).queue(notHandledAction, handledAction);
     }
