@@ -125,6 +125,19 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
+        ForumChannel helperForum = getHelperForum(event.getJDA());
+        TextChannel sourceChannel = event.getChannel().asTextChannel();
+
+        // to avoid race condition, when multiple users do the transfer.
+        // message is retrieved, already transferred messages are deleted.
+        event.getChannel()
+            .retrieveMessageById(messageId)
+            .queue(notHandled -> transferFlow(event, channelId, authorId, messageId),
+                    handled -> alreadyHandled(sourceChannel, helperForum));
+    }
+
+    private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
+            String messageId) {
 
         event.getJDA()
             .retrieveUserById(authorId)
@@ -132,6 +145,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
                     event.getGuild()))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
+            .queue();
+    }
+
+    private void alreadyHandled(TextChannel sourceChannel, ForumChannel helperForum) {
+        sourceChannel.sendMessage(
+                "The question has been already forwarded to the helper forum for assistance. Kindly review %s for more information."
+                    .formatted(helperForum.getAsMention()))
             .queue();
     }
 
