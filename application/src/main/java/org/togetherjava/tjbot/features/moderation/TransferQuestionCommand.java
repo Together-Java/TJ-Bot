@@ -23,6 +23,8 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
@@ -47,6 +49,7 @@ import java.util.regex.Pattern;
  */
 public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
+    private static final Logger logger = LoggerFactory.getLogger(TransferQuestionCommand.class);
     private static final String COMMAND_NAME = "transfer-question";
     private static final String MODAL_TITLE_ID = "transferID";
     private static final String MODAL_INPUT_ID = "transferQuestion";
@@ -136,11 +139,14 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         Consumer<Message> notHandledAction =
                 any -> transferFlow(event, channelId, authorId, messageId);
 
-        Consumer<Throwable> handledAction = any -> {
-            if (any instanceof ErrorResponseException errorResponseException
+        Consumer<Throwable> handledAction = failure -> {
+            if (failure instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
                 alreadyHandled(sourceChannel, helperForum);
+                return;
             }
+            logger.warn("Unknown error occurred on modal submission during question transfer.",
+                    failure);
         };
 
         event.getChannel().retrieveMessageById(messageId).queue(notHandledAction, handledAction);
