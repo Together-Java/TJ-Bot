@@ -374,7 +374,8 @@ public final class Config {
     }
 
     /**
-     * Gets the REGEX pattern used to identify the role selection channel.
+     * Gets the REGEX pattern used to identify the channel in which users can select their helper
+     * roles.
      *
      * @return the channel name pattern
      */
