@@ -41,7 +41,7 @@ public final class Config {
     private final JShellConfig jshell;
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
-    private final String selectRolesChannelPatten;
+    private final String selectRolesChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -85,7 +85,7 @@ public final class Config {
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPatten) {
+                    required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -113,7 +113,7 @@ public final class Config {
         this.jshell = Objects.requireNonNull(jshell);
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
-        this.selectRolesChannelPatten = Objects.requireNonNull(selectRolesChannelPatten);
+        this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
     /**
@@ -373,7 +373,13 @@ public final class Config {
         return featureBlacklistConfig;
     }
 
-    public String getSelectRolesChannelPatten() {
-        return selectRolesChannelPatten;
+    /**
+     * Gets the REGEX pattern used to identify the channel in which users can select their helper
+     * roles.
+     *
+     * @return the channel name pattern
+     */
+    public String getSelectRolesChannelPattern() {
+        return selectRolesChannelPattern;
     }
 }
