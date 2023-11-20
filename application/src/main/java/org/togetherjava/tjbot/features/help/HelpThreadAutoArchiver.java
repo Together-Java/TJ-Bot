@@ -83,7 +83,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
                             If your question was not resolved yet, feel free to just post a message \
                             to reopen it, or create a new thread. But try to **improve the quality** of \
-                            your question by adding more information such as relevant **code snippets**, **errors**,\
+                            your question by adding more information such as relevant **code snippets**, **errors**, \
                             expected **results**, if required steps to reproduce the error for more precise help 👍""")
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
