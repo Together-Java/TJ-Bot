@@ -13,14 +13,18 @@ import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
@@ -32,6 +36,7 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -44,6 +49,7 @@ import java.util.regex.Pattern;
  */
 public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
+    private static final Logger logger = LoggerFactory.getLogger(TransferQuestionCommand.class);
     private static final String COMMAND_NAME = "transfer-question";
     private static final String MODAL_TITLE_ID = "transferID";
     private static final String MODAL_INPUT_ID = "transferQuestion";
@@ -125,6 +131,29 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
+        ForumChannel helperForum = getHelperForum(event.getJDA());
+        TextChannel sourceChannel = event.getChannel().asTextChannel();
+
+        // Has been handled if original message was deleted by now.
+        // Deleted messages cause retrieveMessageById to fail.
+        Consumer<Message> notHandledAction =
+                any -> transferFlow(event, channelId, authorId, messageId);
+
+        Consumer<Throwable> handledAction = failure -> {
+            if (failure instanceof ErrorResponseException errorResponseException
+                    && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                alreadyHandled(sourceChannel, helperForum);
+                return;
+            }
+            logger.warn("Unknown error occurred on modal submission during question transfer.",
+                    failure);
+        };
+
+        event.getChannel().retrieveMessageById(messageId).queue(notHandledAction, handledAction);
+    }
+
+    private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
+            String messageId) {
 
         event.getJDA()
             .retrieveUserById(authorId)
@@ -132,6 +161,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
                     event.getGuild()))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
+            .queue();
+    }
+
+    private void alreadyHandled(TextChannel sourceChannel, ForumChannel helperForum) {
+        sourceChannel.sendMessage(
+                "It appears that someone else has already transferred this question. Kindly see %s for details."
+                    .formatted(helperForum.getAsMention()))
             .queue();
     }
 
