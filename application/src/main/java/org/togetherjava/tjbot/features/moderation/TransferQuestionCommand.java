@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -21,6 +22,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -126,6 +129,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
+        event.deferReply(true).queue();
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
@@ -151,15 +155,17 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
             String messageId) {
+
+        Function<ForumPost, WebhookMessageCreateAction<Message>> sendMessageToMod =
+                post -> event.getHook()
+                    .sendMessage("Transferred to %s"
+                        .formatted(post.forumPost.getThreadChannel().getAsMention()));
+
         event.getJDA()
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
-            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost, event
-                .getGuild())
-                    .and(event
-                        .reply("Transferred to "
-                                + createdforumPost.forumPost().getThreadChannel().getAsMention())
-                        .setEphemeral(true)))
+            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
+                    event.getGuild()).and(sendMessageToMod.apply(createdforumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
