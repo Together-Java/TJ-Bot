@@ -165,9 +165,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private void alreadyHandled(ModalInteractionEvent event, ForumChannel helperForum) {
-        event.getHook().sendMessage(
-                "It appears that someone else has already transferred this question. Kindly see %s for details."
-                    .formatted(helperForum.getAsMention()))
+        event.getHook()
+            .sendMessage(
+                    "It appears that someone else has already transferred this question. Kindly see %s for details."
+                        .formatted(helperForum.getAsMention()))
             .queue();
     }
 
