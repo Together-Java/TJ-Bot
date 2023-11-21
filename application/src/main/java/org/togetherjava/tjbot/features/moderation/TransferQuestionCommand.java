@@ -194,7 +194,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private RestAction<ForumPost> createForumPost(ModalInteractionEvent event, User originalUser) {
-
         String originalMessage = event.getValue(MODAL_INPUT_ID).getAsString();
 
         MessageEmbed embedForPost = makeEmbedForPost(originalUser, originalMessage);
@@ -218,7 +217,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(tag.getId()))
-            .map(createdPost -> new ForumPost(createdPost, originalUser, createdPost.getMessage()));
+            .map(createdPost -> new ForumPost(createdPost, originalUser));
     }
 
     private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, ForumPost forumPost,
@@ -235,10 +234,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String jumpUrlSuffix = " ";
 
         String messageForDm = messageTemplate.formatted("", " on " + guild.getName(),
-                forumPost.message.getJumpUrl() + jumpUrlSuffix);
+                forumPost.forumPost().getMessage().getJumpUrl() + jumpUrlSuffix);
 
         String messageOnDmFailure = messageTemplate.formatted(" " + forumPost.author.getAsMention(),
-                "", forumPost.message.getJumpUrl() + jumpUrlSuffix);
+                "", forumPost.forumPost().getMessage().getJumpUrl() + jumpUrlSuffix);
 
         return forumPost.author.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(messageForDm))
@@ -277,7 +276,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private record ForumPost(net.dv8tion.jda.api.entities.channel.forums.ForumPost forumPost,
-            User author, Message message) {
+            User author) {
     }
 
     private boolean isBotMessageTransfer(User author) {
