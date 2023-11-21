@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.features.help;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -65,15 +66,16 @@ public final class HelpThreadAutoArchiver implements Routine {
         logger.debug("Found {} active questions", activeThreads.size());
 
         Instant archiveAfterMoment = computeArchiveAfterMoment();
-        activeThreads
-            .forEach(activeThread -> autoArchiveForThread(activeThread, archiveAfterMoment));
+        activeThreads.forEach(activeThread -> autoArchiveForThread(activeThread, archiveAfterMoment,
+                activeThread.getOwner()));
     }
 
     private Instant computeArchiveAfterMoment() {
         return Instant.now().minus(ARCHIVE_AFTER_INACTIVITY_OF);
     }
 
-    private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment) {
+    private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment,
+            Member author) {
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
             logger.debug("Auto archiving help thread {}", threadChannel.getId());
 
@@ -108,7 +110,8 @@ public final class HelpThreadAutoArchiver implements Routine {
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
 
-            threadChannel.sendMessageEmbeds(embed)
+            threadChannel.sendMessage(author.getAsMention())
+                .addEmbeds(embed)
                 .flatMap(any -> threadChannel.getManager().setArchived(true))
                 .queue();
         }
