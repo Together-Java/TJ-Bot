@@ -102,9 +102,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {
-        return sendHelperHeadsUp(threadChannel)
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
-            .flatMap(any -> createAIResponse(threadChannel));
+        return sendHelperHeadsUp(threadChannel).flatMap(any -> createAIResponse(threadChannel));
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
