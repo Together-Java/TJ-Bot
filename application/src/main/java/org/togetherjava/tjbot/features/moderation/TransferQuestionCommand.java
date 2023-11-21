@@ -126,13 +126,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        event.deferEdit().queue();
+        event.deferReply(true).queue();
 
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
         ForumChannel helperForum = getHelperForum(event.getJDA());
-        TextChannel sourceChannel = event.getChannel().asTextChannel();
 
         // Has been handled if original message was deleted by now.
         // Deleted messages cause retrieveMessageById to fail.
@@ -142,7 +141,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         Consumer<Throwable> handledAction = failure -> {
             if (failure instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                alreadyHandled(sourceChannel, helperForum);
+                alreadyHandled(event, helperForum);
                 return;
             }
             logger.warn("Unknown error occurred on modal submission during question transfer.",
@@ -154,7 +153,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
             String messageId) {
-
         event.getJDA()
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
@@ -162,10 +160,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                     event.getGuild()))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
+
+        event.getHook().sendMessage("Transferred 👍").queue();
     }
 
-    private void alreadyHandled(TextChannel sourceChannel, ForumChannel helperForum) {
-        sourceChannel.sendMessage(
+    private void alreadyHandled(ModalInteractionEvent event, ForumChannel helperForum) {
+        event.getHook().sendMessage(
                 "It appears that someone else has already transferred this question. Kindly see %s for details."
                     .formatted(helperForum.getAsMention()))
             .queue();
