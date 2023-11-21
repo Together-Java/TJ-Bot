@@ -238,12 +238,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         // Prevents discord from creating a distracting auto-preview for the link
         String jumpUrlSuffix = " ";
+        String postUrl = forumPost.forumPost().getMessage().getJumpUrl() + jumpUrlSuffix;
 
-        String messageForDm = messageTemplate.formatted("", " on " + guild.getName(),
-                forumPost.forumPost().getMessage().getJumpUrl() + jumpUrlSuffix);
+        String messageForDm = messageTemplate.formatted("", " on " + guild.getName(), postUrl);
 
-        String messageOnDmFailure = messageTemplate.formatted(" " + forumPost.author.getAsMention(),
-                "", forumPost.forumPost().getMessage().getJumpUrl() + jumpUrlSuffix);
+        String messageOnDmFailure =
+                messageTemplate.formatted(" " + forumPost.author.getAsMention(), "", postUrl);
 
         return forumPost.author.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(messageForDm))
