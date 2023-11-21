@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -126,8 +127,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        event.deferReply(true).queue();
-
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
@@ -156,19 +155,21 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         event.getJDA()
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
-            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
-                    event.getGuild()))
+            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost, event
+                .getGuild())
+                    .and(event
+                        .reply("Transferred to "
+                                + createdforumPost.forumPost().getThreadChannel().getAsMention())
+                        .setEphemeral(true)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
-
-        event.getHook().sendMessage("Transferred 👍").queue();
     }
 
     private void alreadyHandled(ModalInteractionEvent event, ForumChannel helperForum) {
-        event.getHook()
-            .sendMessage(
-                    "It appears that someone else has already transferred this question. Kindly see %s for details."
-                        .formatted(helperForum.getAsMention()))
+        event.reply(
+                "It appears that someone else has already transferred this question. Kindly see %s for details."
+                    .formatted(helperForum.getAsMention()))
+            .setEphemeral(true)
             .queue();
     }
 
@@ -218,7 +219,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(tag.getId()))
-            .map(createdPost -> new ForumPost(originalUser, createdPost.getMessage()));
+            .map(createdPost -> new ForumPost(createdPost, originalUser, createdPost.getMessage()));
     }
 
     private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, ForumPost forumPost,
@@ -276,7 +277,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .build();
     }
 
-    private record ForumPost(User author, Message message) {
+    private record ForumPost(net.dv8tion.jda.api.entities.channel.forums.ForumPost forumPost,
+            User author, Message message) {
     }
 
     private boolean isBotMessageTransfer(User author) {
