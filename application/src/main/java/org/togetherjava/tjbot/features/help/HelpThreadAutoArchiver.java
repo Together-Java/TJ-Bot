@@ -99,7 +99,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
                                 Also try to make the information **easily accessible** by sharing code
                                 or assignment descriptions directly on Discord, not behind a link or
-                                pdf file; provide some guidance for long code snippets and ensure
+                                PDF-file; provide some guidance for long code snippets and ensure
                                 the **code is well formatted** and has syntax highlighting. Kindly read through
                                 %s for more.
 
