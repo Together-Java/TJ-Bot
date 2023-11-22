@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -21,6 +22,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -126,13 +129,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        event.deferEdit().queue();
+        event.deferReply(true).queue();
 
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
         ForumChannel helperForum = getHelperForum(event.getJDA());
-        TextChannel sourceChannel = event.getChannel().asTextChannel();
 
         // Has been handled if original message was deleted by now.
         // Deleted messages cause retrieveMessageById to fail.
@@ -142,7 +144,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         Consumer<Throwable> handledAction = failure -> {
             if (failure instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                alreadyHandled(sourceChannel, helperForum);
+                alreadyHandled(event, helperForum);
                 return;
             }
             logger.warn("Unknown error occurred on modal submission during question transfer.",
@@ -154,20 +156,25 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
             String messageId) {
+        Function<ForumPostData, WebhookMessageCreateAction<Message>> sendMessageToTransferrer =
+                post -> event.getHook()
+                    .sendMessage("Transferred to %s"
+                        .formatted(post.forumPost.getThreadChannel().getAsMention()));
 
         event.getJDA()
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
-            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
-                    event.getGuild()))
+            .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
+                    event.getGuild()).and(sendMessageToTransferrer.apply(createdForumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
 
-    private void alreadyHandled(TextChannel sourceChannel, ForumChannel helperForum) {
-        sourceChannel.sendMessage(
-                "It appears that someone else has already transferred this question. Kindly see %s for details."
-                    .formatted(helperForum.getAsMention()))
+    private void alreadyHandled(ModalInteractionEvent event, ForumChannel helperForum) {
+        event.getHook()
+            .sendMessage(
+                    "It appears that someone else has already transferred this question. Kindly see %s for details."
+                        .formatted(helperForum.getAsMention()))
             .queue();
     }
 
@@ -192,8 +199,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 && titleCompact.length() <= TITLE_MAX_LENGTH;
     }
 
-    private RestAction<ForumPost> createForumPost(ModalInteractionEvent event, User originalUser) {
-
+    private RestAction<ForumPostData> createForumPost(ModalInteractionEvent event,
+            User originalUser) {
         String originalMessage = event.getValue(MODAL_INPUT_ID).getAsString();
 
         MessageEmbed embedForPost = makeEmbedForPost(originalUser, originalMessage);
@@ -217,11 +224,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(tag.getId()))
-            .map(createdPost -> new ForumPost(originalUser, createdPost.getMessage()));
+            .map(createdPost -> new ForumPostData(createdPost, originalUser));
     }
 
-    private RestAction<Message> dmUser(MessageChannelUnion sourceChannel, ForumPost forumPost,
-            Guild guild) {
+    private RestAction<Message> dmUser(MessageChannelUnion sourceChannel,
+            ForumPostData forumPostData, Guild guild) {
 
         String messageTemplate =
                 """
@@ -232,14 +239,14 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         // Prevents discord from creating a distracting auto-preview for the link
         String jumpUrlSuffix = " ";
+        String postUrl = forumPostData.forumPost().getMessage().getJumpUrl() + jumpUrlSuffix;
 
-        String messageForDm = messageTemplate.formatted("", " on " + guild.getName(),
-                forumPost.message.getJumpUrl() + jumpUrlSuffix);
+        String messageForDm = messageTemplate.formatted("", " on " + guild.getName(), postUrl);
 
-        String messageOnDmFailure = messageTemplate.formatted(" " + forumPost.author.getAsMention(),
-                "", forumPost.message.getJumpUrl() + jumpUrlSuffix);
+        String messageOnDmFailure =
+                messageTemplate.formatted(" " + forumPostData.author.getAsMention(), "", postUrl);
 
-        return forumPost.author.openPrivateChannel()
+        return forumPostData.author.openPrivateChannel()
             .flatMap(channel -> channel.sendMessage(messageForDm))
             .onErrorFlatMap(error -> sourceChannel.sendMessage(messageOnDmFailure));
     }
@@ -275,7 +282,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .build();
     }
 
-    private record ForumPost(User author, Message message) {
+    private record ForumPostData(ForumPost forumPost, User author) {
     }
 
     private boolean isBotMessageTransfer(User author) {
