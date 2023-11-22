@@ -130,6 +130,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferReply(true).queue();
+
         String authorId = args.get(0);
         String messageId = args.get(1);
         String channelId = args.get(2);
@@ -155,8 +156,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
             String messageId) {
-
-        Function<ForumPostData, WebhookMessageCreateAction<Message>> sendMessageToMod =
+        Function<ForumPostData, WebhookMessageCreateAction<Message>> sendMessageToTransferrer =
                 post -> event.getHook()
                     .sendMessage("Transferred to %s"
                         .formatted(post.forumPost.getThreadChannel().getAsMention()));
@@ -164,8 +164,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         event.getJDA()
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
-            .flatMap(createdforumPost -> dmUser(event.getChannel(), createdforumPost,
-                    event.getGuild()).and(sendMessageToMod.apply(createdforumPost)))
+            .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
+                    event.getGuild()).and(sendMessageToTransferrer.apply(createdForumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
