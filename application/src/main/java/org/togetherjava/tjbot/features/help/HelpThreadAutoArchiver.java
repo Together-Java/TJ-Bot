@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +27,8 @@ import java.util.function.Consumer;
  */
 public final class HelpThreadAutoArchiver implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
-    private static final int SCHEDULE_MINUTES = 60;
-    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
+    private static final int SCHEDULE_MINUTES = 9;
+    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofSeconds(20);
 
     private final HelpSystemHelper helper;
 
@@ -44,7 +43,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     @Override
     public Schedule createSchedule() {
-        return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_MINUTES, TimeUnit.MINUTES);
+        return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_MINUTES, TimeUnit.SECONDS);
     }
 
     @Override
@@ -111,28 +110,8 @@ public final class HelpThreadAutoArchiver implements Routine {
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
 
-            Consumer<Throwable> handleFailure = error -> {
-                if (error instanceof ErrorResponseException errorResponseException) {
-                    ErrorResponse errorResponse = errorResponseException.getErrorResponse();
+            handleArchiveFlow(threadChannel, embed);
 
-                    switch (errorResponse) {
-                        case UNKNOWN_MEMBER -> logger
-                            .debug("Author of thread is no longer a member", error);
-                        case UNKNOWN_CHANNEL -> logger.debug("Thread no longer exists", error);
-                        default -> logger.debug(
-                                "Unknown error occurred during help thread auto archive routine",
-                                error);
-                    }
-                }
-            };
-
-            threadChannel.getGuild()
-                .retrieveMemberById(threadChannel.getOwnerIdLong())
-                .flatMap(
-                        author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
-                .flatMap(any -> threadChannel.getManager().setArchived(true))
-                .queue(any -> {
-                }, handleFailure);
         }
     }
 
@@ -141,5 +120,21 @@ public final class HelpThreadAutoArchiver implements Routine {
                 TimeUtil.getTimeCreated(channel.getLatestMessageIdLong()).toInstant();
 
         return lastActivity.isBefore(archiveAfterMoment);
+    }
+
+    private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
+        Consumer<Throwable> handleFailure = error -> {
+            if (error instanceof ErrorResponseException) {
+                logger.warn("Unknown error occurred during help thread auto archive routine",
+                        error);
+            }
+        };
+
+        threadChannel.getGuild()
+            .retrieveMemberById(threadChannel.getOwnerIdLong())
+            .flatMap(author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
+            .flatMap(any -> threadChannel.getManager().setArchived(true))
+            .queue(any -> {
+            }, handleFailure);
     }
 }
