@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Routine, which periodically checks all help threads and archives them if there has not been any
@@ -66,16 +67,15 @@ public final class HelpThreadAutoArchiver implements Routine {
         logger.debug("Found {} active questions", activeThreads.size());
 
         Instant archiveAfterMoment = computeArchiveAfterMoment();
-        activeThreads.forEach(activeThread -> autoArchiveForThread(activeThread, archiveAfterMoment,
-                activeThread.getOwner()));
+        activeThreads
+            .forEach(activeThread -> autoArchiveForThread(activeThread, archiveAfterMoment));
     }
 
     private Instant computeArchiveAfterMoment() {
         return Instant.now().minus(ARCHIVE_AFTER_INACTIVITY_OF);
     }
 
-    private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment,
-            Member author) {
+    private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment) {
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
             logger.debug("Auto archiving help thread {}", threadChannel.getId());
 
@@ -110,10 +110,20 @@ public final class HelpThreadAutoArchiver implements Routine {
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
 
-            threadChannel.sendMessage(author.getAsMention())
-                .addEmbeds(embed)
-                .flatMap(any -> threadChannel.getManager().setArchived(true))
-                .queue();
+            Consumer<Member> messageAuthorOnArchive =
+                    author -> threadChannel.sendMessage(author.getAsMention())
+                        .addEmbeds(embed)
+                        .flatMap(any -> threadChannel.getManager().setArchived(true))
+                        .queue();
+
+            Consumer<Throwable> handleFailure =
+                    any -> logger.debug("was unable to retrieve member with id: {}",
+                            threadChannel.getOwnerIdLong(), any);
+
+            threadChannel.getGuild()
+                .retrieveMemberById(threadChannel.getOwnerIdLong())
+                .queue(messageAuthorOnArchive, handleFailure);
+
         }
     }
 
