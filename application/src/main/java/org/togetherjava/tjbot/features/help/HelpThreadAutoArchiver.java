@@ -117,8 +117,8 @@ public final class HelpThreadAutoArchiver implements Routine {
                         .queue();
 
             Consumer<Throwable> handleFailure =
-                    any -> logger.debug("was unable to retrieve member with id: {}",
-                            threadChannel.getOwnerIdLong(), any);
+                    error -> logger.debug("was unable to retrieve member with id: {}",
+                            threadChannel.getOwnerIdLong(), error);
 
             threadChannel.getGuild()
                 .retrieveMemberById(threadChannel.getOwnerIdLong())
