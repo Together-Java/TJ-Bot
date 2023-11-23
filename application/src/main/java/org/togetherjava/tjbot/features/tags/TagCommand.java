@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.features.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
@@ -43,6 +44,7 @@ public final class TagCommand extends SlashCommandAdapter {
     static final String REPLY_TO_USER_OPTION = "reply-to";
     private final Predicate<String> isHelpForum;
     private final Predicate<String> isBotsChannel;
+    private final Predicate<String> hasTagManageRole;
 
     /**
      * Creates a new instance, using the given tag system as base.
@@ -63,6 +65,8 @@ public final class TagCommand extends SlashCommandAdapter {
         this.isHelpForum =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
         this.isBotsChannel = Pattern.compile(config.getBotsChannelPattern()).asMatchPredicate();
+        this.hasTagManageRole =
+                Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
     }
 
     @Override
@@ -155,5 +159,16 @@ public final class TagCommand extends SlashCommandAdapter {
             String rootChannelName = threadChannel.getParentChannel().getName();
             return isHelpForum.test(rootChannelName);
         }
+    }
+
+    private boolean validatePerms(SlashCommandInteractionEvent event) {
+        Member commandUser = event.getMember();
+        int highestRoleIndex = 0;
+        String roleName = commandUser.getRoles().get(highestRoleIndex).getName();
+
+        if (!hasTagManageRole.test(roleName)) {
+            return false;
+        }
+        return true;
     }
 }
