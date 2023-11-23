@@ -111,7 +111,6 @@ public final class HelpThreadAutoArchiver implements Routine {
                 .build();
 
             handleArchiveFlow(threadChannel, embed);
-
         }
     }
 
