@@ -69,6 +69,7 @@ public final class TagsCommand extends SlashCommandAdapter {
                 .build())
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
+            .setEphemeral(true)
             .queue();
     }
 
