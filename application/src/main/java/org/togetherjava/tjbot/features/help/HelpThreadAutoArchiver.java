@@ -3,11 +3,12 @@ package org.togetherjava.tjbot.features.help;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,20 +111,28 @@ public final class HelpThreadAutoArchiver implements Routine {
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
 
-            Consumer<Member> messageAuthorOnArchive =
-                    author -> threadChannel.sendMessage(author.getAsMention())
-                        .addEmbeds(embed)
-                        .flatMap(any -> threadChannel.getManager().setArchived(true))
-                        .queue();
+            Consumer<Throwable> handleFailure = error -> {
+                if (error instanceof ErrorResponseException errorResponseException) {
+                    ErrorResponse errorResponse = errorResponseException.getErrorResponse();
 
-            Consumer<Throwable> handleFailure =
-                    error -> logger.debug("was unable to retrieve member with id: {}",
-                            threadChannel.getOwnerIdLong(), error);
+                    switch (errorResponse) {
+                        case UNKNOWN_MEMBER -> logger
+                            .debug("Author of thread is no longer a member", error);
+                        case UNKNOWN_CHANNEL -> logger.debug("Thread no longer exists", error);
+                        default -> logger.debug(
+                                "Unknown error occurred during help thread auto archive routine",
+                                error);
+                    }
+                }
+            };
 
             threadChannel.getGuild()
                 .retrieveMemberById(threadChannel.getOwnerIdLong())
-                .queue(messageAuthorOnArchive, handleFailure);
-
+                .flatMap(
+                        author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
+                .flatMap(any -> threadChannel.getManager().setArchived(true))
+                .queue(any -> {
+                }, handleFailure);
         }
     }
 
