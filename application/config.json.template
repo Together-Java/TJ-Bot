@@ -4,13 +4,15 @@
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
-    "modAuditLogChannelPattern": "mod_audit_log",
+    "modAuditLogChannelPattern": "mod-audit-log",
+    "modMailChannelPattern": "modmail",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
-    "softModerationRolePattern": "Moderator|Staff Assistant",
-    "tagManageRolePattern": "Moderator|Staff Assistant|Top Helpers .+",
+    "softModerationRolePattern": "Moderator|Community Ambassador",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
+    "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
     "suggestions": {
-        "channelPattern": "tj_suggestions",
+        "channelPattern": "tj-suggestions",
         "upVoteEmoteName": "peepo_yes",
         "downVoteEmoteName": "peepo_no"
     },
@@ -25,9 +27,8 @@
     },
     "wolframAlphaAppId": "79J52T-6239TVXHR7",
     "helpSystem": {
-        "stagingChannelPattern": "ask_here",
-        "overviewChannelPattern": "active_questions",
-            "categories": [
+        "helpForumPattern": "questions",
+        "categories": [
             "Java",
             "Frameworks",
             "JavaFX|Swing",
@@ -89,5 +90,26 @@
         <repository id here (e.g. 403389278)>
     ],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
-    "logErrorChannelWebhook": "<put_your_webhook_here>"
+    "logErrorChannelWebhook": "<put_your_webhook_here>",
+    "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
+    "sourceCodeBaseUrl": "https://github.com/Together-Java/TJ-Bot/blob/master/application/src/main/java/",
+    "jshell": {
+        "baseUrl": "<put_jshell_rest_api_url_here>",
+        "rateLimitWindowSeconds": 10,
+        "rateLimitRequestsInWindow": 3
+    },
+    "helperPruneConfig": {
+        "roleFullLimit": 100,
+        "roleFullThreshold": 95,
+        "pruneMemberAmount": 7,
+        "inactivateAfterDays": 90,
+        "recentlyJoinedDays": 4
+    },
+    "featureBlacklist": {
+        "normal": [
+        ],
+        "special": [
+        ]
+    },
+    "selectRolesChannelPattern": "select-your-roles"
 }

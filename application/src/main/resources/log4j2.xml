@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" monitorInterval="30" packages="org.togetherjava.tjbot.logging">
+<Configuration status="WARN" monitorInterval="30">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
@@ -13,13 +13,6 @@
                 <SizeBasedTriggeringPolicy size="10 MB"/>
             </Policies>
         </RollingFile>
-        <Http name="Http" url="http://${env:TJ_LOG_TARGET:-localhost}:5050/rest/api/logs">
-            <JsonLayout/>
-        </Http>
-        <Async name="AsyncHttp">
-            <FlaggedFilter/>
-            <AppenderRef ref="Http"/>
-        </Async>
     </Appenders>
     <Loggers>
         <!-- Change this level to see more of our logs -->
@@ -29,7 +22,6 @@
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
-            <AppenderRef ref="AsyncHttp"/>
         </Root>
     </Loggers>
 </Configuration>

@@ -1,0 +1,80 @@
+```java
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+public class Game extends JFrame implements KeyListener {
+    private int characterX = 50;
+    private int characterY = 200;
+    private int obstacleX = 600;
+    private int obstacleY = 200;
+
+    public Game() {
+        setTitle("Game");
+        setSize(800, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setResizable(false);
+        setLocationRelativeTo(null);
+
+        addKeyListener(this);
+
+        setVisible(true);
+    }
+
+    public void paint(Graphics g) {
+        super.paint(g);
+
+        g.setColor(Color.BLACK);
+        g.fillRect(characterX, characterY, 50, 50); // Draw character
+
+        g.setColor(Color.RED);
+        g.fillRect(obstacleX, obstacleY, 20, 100); // Draw obstacle
+    }
+
+    public void update() {
+        characterX += 5; // Move character horizontally
+
+        if (characterX >= obstacleX && characterX <= obstacleX + 20 && characterY >= obstacleY && characterY <= obstacleY + 100) {
+            System.out.println("Game Over!");
+            System.exit(0);
+        }
+
+        if (characterX > getWidth()) {
+            characterX = -50; // Reset character position
+            obstacleY = (int) (Math.random() * getHeight()); // Randomize obstacle position
+        }
+
+        repaint();
+    }
+
+    public static void main(String[] args) {
+        Game game = new Game();
+
+        while (true) {
+            game.update();
+
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_UP && characterY > 0) {
+            characterY -= 10; // Move character up
+        } else if (e.getKeyCode() == KeyEvent.VK_DOWN && characterY < getHeight() - 50) {
+            characterY += 10; // Move character down
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {}
+}
+```

@@ -7,7 +7,7 @@ on:
       - 'master'
 
 env:
-  JAVA_VERSION: 18
+  JAVA_VERSION: 20
 
 jobs:
   docker:
@@ -31,4 +31,4 @@ jobs:
           BRANCH_NAME: ${{ steps.extract_branch.outputs.branch }}
         run: ./gradlew jib
       - name: Re-Deploy
-        run: "curl -H 'Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}' https://togetherjava.duckdns.org:5003/v1/update"
+        run: "curl -H 'Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}' https://togetherjava.org:5003/v1/update"

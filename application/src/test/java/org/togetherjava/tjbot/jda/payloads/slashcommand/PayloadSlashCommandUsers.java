@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 
 import java.util.Collections;

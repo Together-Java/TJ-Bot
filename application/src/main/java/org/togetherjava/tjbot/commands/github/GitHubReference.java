@@ -7,21 +7,20 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.collections4.ListUtils;
 import org.kohsuke.github.*;
-import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
-import org.togetherjava.tjbot.commands.MessageReceiverAdapter;
-import org.togetherjava.tjbot.config.Config;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+
 import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.List;
 
 /**
  * GitHub Referencing feature. If someone sends #id of an issue (e.g. #207) the bot replies with an

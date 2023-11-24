@@ -11,12 +11,14 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
-import org.togetherjava.tjbot.commands.SlashCommand;
+
+import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 import org.togetherjava.tjbot.jda.payloads.slashcommand.*;
 
 import javax.annotation.Nullable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

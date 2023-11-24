@@ -4,10 +4,13 @@ import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -32,6 +35,7 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.entities.*;
 import net.dv8tion.jda.internal.entities.channel.concrete.PrivateChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
+import net.dv8tion.jda.internal.entities.channel.concrete.ThreadChannelImpl;
 import net.dv8tion.jda.internal.requests.Requester;
 import net.dv8tion.jda.internal.requests.restaction.AuditableRestActionImpl;
 import net.dv8tion.jda.internal.requests.restaction.MessageCreateActionImpl;
@@ -42,10 +46,12 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.MockingDetails;
 import org.mockito.stubbing.Answer;
-import org.togetherjava.tjbot.commands.SlashCommand;
-import org.togetherjava.tjbot.commands.componentids.ComponentIdGenerator;
+
+import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 
 import javax.annotation.Nullable;
+
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -96,6 +102,7 @@ public final class JdaTester {
     private static final long PRIVATE_CHANNEL_ID = 1;
     private static final long GUILD_ID = 1;
     private static final long TEXT_CHANNEL_ID = 1;
+    private static final long THREAD_CHANNEL_ID = 2;
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
@@ -104,6 +111,7 @@ public final class JdaTester {
     private final MessageCreateActionImpl messageCreateAction;
     private final WebhookMessageEditActionImpl webhookMessageEditAction;
     private final TextChannelImpl textChannel;
+    private final ThreadChannelImpl threadChannel;
     private final PrivateChannelImpl privateChannel;
     private final InteractionHook interactionHook;
     private final ReplyCallbackAction replyCallbackAction;
@@ -129,6 +137,8 @@ public final class JdaTester {
         Member selfMember = spy(new MemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
+        threadChannel = spy(
+                new ThreadChannelImpl(THREAD_CHANNEL_ID, guild, ChannelType.GUILD_PUBLIC_THREAD));
         privateChannel = spy(new PrivateChannelImpl(jda, PRIVATE_CHANNEL_ID, user));
         messageCreateAction = mock(MessageCreateActionImpl.class);
         webhookMessageEditAction = mock(WebhookMessageEditActionImpl.class);
@@ -149,6 +159,7 @@ public final class JdaTester {
         doReturn(selfUser).when(jda).getSelfUser();
         when(jda.getGuildChannelById(anyLong())).thenReturn(textChannel);
         when(jda.getTextChannelById(anyLong())).thenReturn(textChannel);
+        when(jda.getThreadChannelById(anyLong())).thenReturn(threadChannel);
         when(jda.getChannelById(ArgumentMatchers.<Class<MessageChannel>>any(), anyLong()))
             .thenReturn(textChannel);
         when(jda.getPrivateChannelById(anyLong())).thenReturn(privateChannel);
@@ -186,6 +197,7 @@ public final class JdaTester {
         when(jda.retrieveUserById(anyLong())).thenReturn(userAction);
 
         doReturn(null).when(textChannel).retrieveMessageById(any());
+        doReturn(null).when(threadChannel).retrieveMessageById(any());
 
         interactionHook = mock(InteractionHook.class);
         when(interactionHook.editOriginal(anyString())).thenReturn(webhookMessageEditAction);
@@ -195,12 +207,17 @@ public final class JdaTester {
             .thenReturn(webhookMessageEditAction);
 
         doReturn(messageCreateAction).when(textChannel).sendMessageEmbeds(any(), any());
+        doReturn(messageCreateAction).when(threadChannel).sendMessageEmbeds(any(), any());
         doReturn(messageCreateAction).when(textChannel).sendMessageEmbeds(any());
+        doReturn(messageCreateAction).when(threadChannel).sendMessageEmbeds(any());
         doReturn(privateChannel).when(textChannel).asPrivateChannel();
+        doReturn(textChannel).when(threadChannel).getParentChannel();
 
         doNothing().when(messageCreateAction).queue();
         when(messageCreateAction.setContent(any())).thenReturn(messageCreateAction);
         when(messageCreateAction.addContent(any())).thenReturn(messageCreateAction);
+        when(messageCreateAction.addFiles(any(FileUpload.class))).thenReturn(messageCreateAction);
+        when(messageCreateAction.addFiles(anyCollection())).thenReturn(messageCreateAction);
 
         CacheRestAction<PrivateChannel> privateChannelAction =
                 createSucceededActionMock(privateChannel, CacheRestAction.class);
@@ -263,7 +280,7 @@ public final class JdaTester {
             Message message =
                     mockingDetails.isMock() || mockingDetails.isSpy() ? event : spy(event);
 
-            mockMessage(message);
+            mockMessage(message, ChannelType.TEXT);
             return message;
         };
 
@@ -350,6 +367,20 @@ public final class JdaTester {
      */
     public TextChannel getTextChannelSpy() {
         return textChannel;
+    }
+
+    /**
+     * Gets the thread channel spy used as universal thread channel by all mocks created by this
+     * tester instance.
+     * <p>
+     * For example the events created by
+     * {@link #createMessageReceiveEvent(MessageCreateData, List, ChannelType)} can return this
+     * channel spy
+     *
+     * @return the thread channel spy used by this tester
+     */
+    public ThreadChannel getThreadChannelSpy() {
+        return threadChannel;
     }
 
     /**
@@ -548,16 +579,18 @@ public final class JdaTester {
 
     /**
      * Creates a Mockito mocked message receive event, which can be used for
-     * {@link org.togetherjava.tjbot.commands.MessageReceiver#onMessageReceived(MessageReceivedEvent)}.
+     * {@link org.togetherjava.tjbot.features.MessageReceiver#onMessageReceived(MessageReceivedEvent)}.
      *
      * @param message the message that has been received
      * @param attachments attachments of the message, empty if none
+     * @param channelType the type of the channel the message was sent in. See
+     *        {@link #mockMessage(Message, ChannelType)} for supported channel types
      * @return the event of receiving the given message
      */
     public MessageReceivedEvent createMessageReceiveEvent(MessageCreateData message,
-            List<Message.Attachment> attachments) {
+            List<Message.Attachment> attachments, ChannelType channelType) {
         Message receivedMessage = clientMessageToReceivedMessageMock(message);
-        mockMessage(receivedMessage);
+        mockMessage(receivedMessage, channelType);
         doReturn(attachments).when(receivedMessage).getAttachments();
 
         return new MessageReceivedEvent(jda, responseNumber.getAndIncrement(), receivedMessage);
@@ -636,7 +669,14 @@ public final class JdaTester {
         doReturn(replyAction).when(event).editButton(any());
     }
 
-    private void mockMessage(Message message) {
+    private void mockMessage(Message message, ChannelType channelType) {
+        MessageChannelUnion channel = switch (channelType) {
+            case TEXT -> textChannel;
+            case GUILD_PUBLIC_THREAD -> threadChannel;
+            default -> throw new IllegalArgumentException(
+                    "Unsupported channel type: " + channelType);
+        };
+
         doReturn(messageCreateAction).when(message).reply(anyString());
         doReturn(messageCreateAction).when(message)
             .replyEmbeds(ArgumentMatchers.<MessageEmbed>any());
@@ -649,7 +689,7 @@ public final class JdaTester {
         doReturn(member).when(message).getMember();
         doReturn(member.getUser()).when(message).getAuthor();
 
-        doReturn(textChannel).when(message).getChannel();
+        doReturn(channel).when(message).getChannel();
         doReturn(1L).when(message).getIdLong();
         doReturn(false).when(message).isWebhookMessage();
 

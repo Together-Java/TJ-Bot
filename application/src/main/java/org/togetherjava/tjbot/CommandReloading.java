@@ -7,9 +7,10 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.togetherjava.tjbot.commands.BotCommand;
-import org.togetherjava.tjbot.commands.CommandVisibility;
-import org.togetherjava.tjbot.commands.system.CommandProvider;
+
+import org.togetherjava.tjbot.features.BotCommand;
+import org.togetherjava.tjbot.features.CommandVisibility;
+import org.togetherjava.tjbot.features.system.CommandProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,13 +1,13 @@
 buildscript {
     dependencies {
-        classpath 'org.xerial:sqlite-jdbc:3.39.2.0'
+        classpath 'org.xerial:sqlite-jdbc:3.44.0.0'
     }
 }
 
 plugins {
     id 'application'
-    id 'com.google.cloud.tools.jib' version '3.3.0'
-    id 'com.github.johnrengelman.shadow' version '7.1.0'
+    id 'com.google.cloud.tools.jib' version '3.4.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.0'
     id 'database-settings'
 }
 
@@ -15,10 +15,10 @@ repositories {
     mavenCentral()
 }
 
-var outputImage = 'togetherjava.duckdns.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
+var outputImage = 'togetherjava.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
-    from.image = 'eclipse-temurin:18'
+    from.image = 'eclipse-temurin:20'
     to {
         image = outputImage
         auth {
@@ -27,7 +27,7 @@ jib {
         }
     }
     container {
-        mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
+        mainClass = 'org.togetherjava.tjbot.Application'
         setCreationTime(java.time.Instant.now().toString())
     }
 }
@@ -40,43 +40,53 @@ shadowJar {
 
 dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    implementation 'org.jetbrains:annotations:23.0.0'
+    implementation 'org.jetbrains:annotations:24.1.0'
 
     implementation project(':database')
     implementation project(':utils')
+    implementation project(':formatter')
 
     implementation 'net.dv8tion:JDA:5.0.0-alpha.20'
 
-    implementation 'org.apache.logging.log4j:log4j-core:2.19.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.22.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
 
     implementation 'club.minnced:discord-webhooks:0.8.2'
 
-    implementation 'org.jooq:jooq:3.17.2'
+    implementation "org.jooq:jooq:$jooqVersion"
 
     implementation 'io.mikael:urlbuilder:2.0.9'
+
+    implementation 'org.jsoup:jsoup:1.16.1'
 
     implementation 'org.scilab.forge:jlatexmath:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-greek:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-cyrillic:1.0.7'
 
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.13.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0'
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:$jacksonVersion"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
 
 	implementation 'com.github.freva:ascii-table:1.8.0'
 
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
-
-    testImplementation 'org.mockito:mockito-core:4.8.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    implementation 'io.github.url-detector:url-detector:0.1.23'
 
     implementation 'org.kohsuke:github-api:1.313'
+
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+    
+    implementation 'org.kohsuke:github-api:1.317'
+
+    testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+
+    implementation "com.theokanning.openai-gpt3-java:api:$chatGPTVersion"
+    implementation "com.theokanning.openai-gpt3-java:service:$chatGPTVersion"
 }
 
 application {
-    mainClass = 'org.togetherjava.tjbot.BootstrapLauncher'
+    mainClass = 'org.togetherjava.tjbot.Application'
 }

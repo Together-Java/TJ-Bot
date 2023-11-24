@@ -5,12 +5,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.kohsuke.github.GHIssue;
 import org.kohsuke.github.GHIssueState;
-import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
-import org.togetherjava.tjbot.commands.CommandVisibility;
-import org.togetherjava.tjbot.commands.SlashCommandAdapter;
-import org.togetherjava.tjbot.commands.utils.StringDistances;
 
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.togetherjava.tjbot.features.CommandVisibility;
+import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.utils.StringDistances;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Duration;

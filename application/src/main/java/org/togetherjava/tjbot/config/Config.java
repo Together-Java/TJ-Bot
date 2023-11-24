@@ -21,10 +21,12 @@ public final class Config {
     private final String projectWebsite;
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
+    private final String modMailChannelPattern;
     private final String mutedRolePattern;
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
     private final String tagManageRolePattern;
+    private final String excludeCodeAutoDetectionRolePattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
@@ -36,6 +38,13 @@ public final class Config {
     private final String logErrorChannelWebhook;
     private final String githubReferencingEnabledChannelPattern;
     private final List<Long> githubRepositories;
+    private final String openaiApiKey;
+    private final String sourceCodeBaseUrl;
+    private final JShellConfig jshell;
+    private final HelperPruneConfig helperPruneConfig;
+    private final FeatureBlacklistConfig featureBlacklistConfig;
+    private final String selectRolesChannelPattern;
+
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -46,6 +55,8 @@ public final class Config {
             @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
             @JsonProperty(value = "modAuditLogChannelPattern",
                     required = true) String modAuditLogChannelPattern,
+            @JsonProperty(value = "modMailChannelPattern",
+                    required = true) String modMailChannelPattern,
             @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
             @JsonProperty(value = "heavyModerationRolePattern",
                     required = true) String heavyModerationRolePattern,
@@ -53,6 +64,8 @@ public final class Config {
                     required = true) String softModerationRolePattern,
             @JsonProperty(value = "tagManageRolePattern",
                     required = true) String tagManageRolePattern,
+            @JsonProperty(value = "excludeCodeAutoDetectionRolePattern",
+                    required = true) String excludeCodeAutoDetectionRolePattern,
             @JsonProperty(value = "suggestions", required = true) SuggestionsConfig suggestions,
             @JsonProperty(value = "quarantinedRolePattern",
                     required = true) String quarantinedRolePattern,
@@ -70,17 +83,29 @@ public final class Config {
             @JsonProperty(value = "githubReferencingEnabledChannelPattern",
                     required = true) String githubReferencingEnabledChannelPattern,
             @JsonProperty(value = "githubRepositories",
-                    required = true) List<Long> githubRepositories) {
+                    required = true) List<Long> githubRepositories,
+            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
+            @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
+            @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
+            @JsonProperty(value = "helperPruneConfig",
+                    required = true) HelperPruneConfig helperPruneConfig,
+            @JsonProperty(value = "featureBlacklist",
+                    required = true) FeatureBlacklistConfig featureBlacklistConfig,
+            @JsonProperty(value = "selectRolesChannelPattern",
+                    required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
+        this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
         this.mutedRolePattern = Objects.requireNonNull(mutedRolePattern);
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
         this.tagManageRolePattern = Objects.requireNonNull(tagManageRolePattern);
+        this.excludeCodeAutoDetectionRolePattern =
+                Objects.requireNonNull(excludeCodeAutoDetectionRolePattern);
         this.suggestions = Objects.requireNonNull(suggestions);
         this.quarantinedRolePattern = Objects.requireNonNull(quarantinedRolePattern);
         this.scamBlocker = Objects.requireNonNull(scamBlocker);
@@ -93,6 +118,12 @@ public final class Config {
         this.githubReferencingEnabledChannelPattern =
                 Objects.requireNonNull(githubReferencingEnabledChannelPattern);
         this.githubRepositories = Objects.requireNonNull(githubRepositories);
+        this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
+        this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
+        this.jshell = Objects.requireNonNull(jshell);
+        this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
+        this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
+        this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
     /**
@@ -124,6 +155,16 @@ public final class Config {
      */
     public String getModAuditLogChannelPattern() {
         return modAuditLogChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain all messages
+     * from users who want to contact a moderator.
+     *
+     * @return the channel name pattern
+     */
+    public String getModMailChannelPattern() {
+        return modMailChannelPattern;
     }
 
     /**
@@ -202,6 +243,16 @@ public final class Config {
      */
     public String getTagManageRolePattern() {
         return tagManageRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that will be ignored for code actions
+     * auto-detection
+     *
+     * @return the REGEX pattern
+     */
+    public String getExcludeCodeAutoDetectionRolePattern() {
+        return excludeCodeAutoDetectionRolePattern;
     }
 
     /**
@@ -297,5 +348,62 @@ public final class Config {
      */
     public String getLogErrorChannelWebhook() {
         return logErrorChannelWebhook;
+    }
+
+    /**
+     * The OpenAI token needed for communicating with OpenAI ChatGPT.
+     *
+     * @return the OpenAI API Token
+     */
+    public String getOpenaiApiKey() {
+        return openaiApiKey;
+    }
+
+    /**
+     * The base URL of the source code of this bot. E.g.
+     * {@code getSourceCodeBaseUrl() + "/org/togetherjava/tjbot/config/Config.java"} would point to
+     * this file.
+     *
+     * @return the base url of the source code of this bot
+     */
+    public String getSourceCodeBaseUrl() {
+        return sourceCodeBaseUrl;
+    }
+
+    /**
+     * The configuration about jshell REST API and command/code action settings.
+     * 
+     * @return the jshell configuration
+     */
+    public JShellConfig getJshell() {
+        return jshell;
+    }
+
+    /**
+     * Gets the config for automatic pruning of helper roles.
+     *
+     * @return the configuration
+     */
+    public HelperPruneConfig getHelperPruneConfig() {
+        return helperPruneConfig;
+    }
+
+    /**
+     * The configuration of blacklisted features.
+     * 
+     * @return configuration of blacklisted features
+     */
+    public FeatureBlacklistConfig getFeatureBlacklistConfig() {
+        return featureBlacklistConfig;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel in which users can select their helper
+     * roles.
+     *
+     * @return the channel name pattern
+     */
+    public String getSelectRolesChannelPattern() {
+        return selectRolesChannelPattern;
     }
 }

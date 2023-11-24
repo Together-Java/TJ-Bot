@@ -8,6 +8,7 @@ import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
+
 import org.togetherjava.tjbot.db.util.CheckedConsumer;
 import org.togetherjava.tjbot.db.util.CheckedFunction;
 
@@ -24,6 +25,11 @@ import java.util.concurrent.locks.ReentrantLock;
  * Instances of this class are thread-safe and can be used to concurrently write to the database.
  */
 public final class Database {
+
+    static {
+        System.setProperty("org.jooq.no-logo", "true");
+        System.setProperty("org.jooq.no-tips", "true");
+    }
 
     private final DSLContext dslContext;
     /**
@@ -230,4 +236,3 @@ public final class Database {
         private T result;
     }
 }
-
