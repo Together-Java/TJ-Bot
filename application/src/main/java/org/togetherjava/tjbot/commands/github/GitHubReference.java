@@ -34,6 +34,8 @@ public class GitHubReference extends MessageReceiverAdapter {
     protected static final Pattern ISSUE_REFERENCE_PATTERN =
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private final Config config;
+    private final int ISSUE_OPEN = Color.green.getRGB();
+    private final int ISSUE_CLOSE = Color.red.getRGB();
 
     /**
      * The repositories that are searched when looking for an issue.
@@ -110,22 +112,30 @@ public class GitHubReference extends MessageReceiverAdapter {
      */
     protected MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
         try {
+            String title = "[#%d] %s".formatted(issue.getNumber(), issue.getTitle());
+            String titleUrl = issue.getHtmlUrl().toString();
+            String description = issue.getBody();
+
+            String labels = issue.getLabels()
+                .stream()
+                .map(GHLabel::getName)
+                .collect(Collectors.joining(", "));
+
+            String assignees = issue.getAssignees()
+                .stream()
+                .map(this::getUserNameOrThrow)
+                .collect(Collectors.joining(", "));
+
+            String createdAt = issue.getCreatedAt().toString();
+
+            String footer = "%s • %s • %s".formatted(labels, assignees, createdAt);
+
             return new EmbedBuilder()
-                .setColor(issue.getState() == GHIssueState.OPEN ? Color.green.getRGB()
-                        : Color.red.getRGB())
-                .setDescription(issue.getBody())
-                .setTitle("[#%d] %s".formatted(issue.getNumber(), issue.getTitle()),
-                        issue.getHtmlUrl().toString())
+                .setColor(issue.getState() == GHIssueState.OPEN ? ISSUE_OPEN : ISSUE_CLOSE)
+                .setTitle(title, titleUrl)
+                .setDescription(description)
                 .setAuthor(issue.getUser().getName(), null, issue.getUser().getAvatarUrl())
-                .setFooter("%s • %s".formatted(
-                        issue.getLabels()
-                            .stream()
-                            .map(GHLabel::getName)
-                            .collect(Collectors.joining(", ")),
-                        issue.getAssignees()
-                            .stream()
-                            .map(this::getUserNameOrThrow)
-                            .collect(Collectors.joining(", "))))
+                .setFooter(footer)
                 .build();
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
