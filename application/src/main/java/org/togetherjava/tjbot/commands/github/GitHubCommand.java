@@ -89,8 +89,8 @@ public class GitHubCommand extends SlashCommandAdapter {
 
             closestSuggestions.addAll(autocompleteGHIssueCache);
 
-            event.replyChoiceStrings(Stream.generate(closestSuggestions::poll).limit(25).toList())
-                .queue();
+            List<String> choices = Stream.generate(closestSuggestions::poll).limit(25).toList();
+            event.replyChoiceStrings(choices).queue();
         }
 
         if (lastCacheUpdate.isAfter(Instant.now().minus(CACHE_EXPIRES_AFTER))) {
@@ -99,6 +99,7 @@ public class GitHubCommand extends SlashCommandAdapter {
     }
 
     private ToIntFunction<String> suggestionScorer(String title) {
+        // Remove the ID [#123] and then match
         return s -> StringDistances.editDistance(title, s.replaceFirst("\\[#\\d+] ", ""));
     }
 
