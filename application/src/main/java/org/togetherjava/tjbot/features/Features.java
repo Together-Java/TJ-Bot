@@ -136,7 +136,7 @@ public class Features {
         features.add(new PingCommand());
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem, config));
-        features.add(new TagManageCommand(tagSystem, modAuditLogWriter));
+        features.add(new TagManageCommand(tagSystem, modAuditLogWriter, config));
         features.add(new TagsCommand(tagSystem));
         features.add(new WarnCommand(actionsStore));
         features.add(new KickCommand(actionsStore));
