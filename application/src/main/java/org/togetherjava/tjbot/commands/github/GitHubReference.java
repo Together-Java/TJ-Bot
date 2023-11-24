@@ -116,7 +116,7 @@ public class GitHubReference extends MessageReceiverAdapter {
                 .setDescription(issue.getBody())
                 .setTitle("[#%d] %s".formatted(issue.getNumber(), issue.getTitle()),
                         issue.getHtmlUrl().toString())
-                .setAuthor(issue.getUser().getName())
+                .setAuthor(issue.getUser().getName(), null, issue.getUser().getAvatarUrl())
                 .setFooter("%s • %s".formatted(
                         issue.getLabels()
                             .stream()
