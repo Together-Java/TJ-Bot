@@ -110,10 +110,13 @@ public final class TagCommand extends SlashCommandAdapter {
         }
 
         String tagContent = tagSystem.getTag(id).orElseThrow();
+        String tagsCommandNote = "You can use /tags in any channel now";
+
         MessageEmbed contentEmbed = new EmbedBuilder().setDescription(tagContent)
             .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
             .setTimestamp(Instant.now())
             .setColor(TagSystem.AMBIENT_COLOR)
+            .addField("Note :", tagsCommandNote, false)
             .build();
 
         Optional<String> replyToUserMention = Optional.ofNullable(replyToUserOption)
