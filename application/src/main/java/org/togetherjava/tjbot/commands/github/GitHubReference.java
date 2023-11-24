@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -35,6 +36,8 @@ public class GitHubReference extends MessageReceiverAdapter {
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
+    private static final List<String> months = List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
     private final Config config;
 
     /**
@@ -126,9 +129,15 @@ public class GitHubReference extends MessageReceiverAdapter {
                 .map(this::getUserNameOrThrow)
                 .collect(Collectors.joining(", "));
 
-            String createdAt = issue.getCreatedAt().toString();
 
-            String footer = "%s • %s • %s".formatted(labels, assignees, createdAt);
+            Calendar createdAt = Calendar.getInstance();
+            createdAt.setTime(issue.getCreatedAt());
+
+            // Format: 9 Oct, 2023
+            String dateOfCreation = "%d %s, %d".formatted(createdAt.get(Calendar.DATE),
+                    months.get(createdAt.get(Calendar.MONTH)), createdAt.get(Calendar.YEAR));
+
+            String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
 
             return new EmbedBuilder()
                 .setColor(issue.getState() == GHIssueState.OPEN ? ISSUE_OPEN : ISSUE_CLOSE)
