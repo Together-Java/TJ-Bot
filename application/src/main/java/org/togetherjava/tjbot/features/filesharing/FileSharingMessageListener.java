@@ -129,7 +129,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void processAttachments(MessageReceivedEvent event,
             List<Message.Attachment> attachments) throws IOException {
-            
+
         GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(githubApiKey)
             .build()
             .createGist()
