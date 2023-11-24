@@ -1,10 +1,12 @@
 package org.togetherjava.tjbot.features.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -92,6 +94,17 @@ public final class TagCommand extends SlashCommandAdapter {
         String id = event.getOption(ID_OPTION).getAsString();
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
+        if (!isTriggeredInAllowedChannels(event) && (!hasPerms(event))) {
+            TextChannel botsCommandChannel = getBotsCommandChannel(event.getJDA());
+
+            event.reply(
+                    "Command can only be used in %s channel or help forum, avoid spamming helper forum with usage."
+                        .formatted(botsCommandChannel))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
@@ -161,14 +174,16 @@ public final class TagCommand extends SlashCommandAdapter {
         }
     }
 
-    private boolean validatePerms(SlashCommandInteractionEvent event) {
-        Member commandUser = event.getMember();
-        int highestRoleIndex = 0;
-        String roleName = commandUser.getRoles().get(highestRoleIndex).getName();
+    private boolean hasPerms(SlashCommandInteractionEvent event) {
+        return event.getMember().getRoles().stream().map(Role::getName).anyMatch(hasTagManageRole);
+    }
 
-        if (!hasTagManageRole.test(roleName)) {
-            return false;
-        }
-        return true;
+    private TextChannel getBotsCommandChannel(JDA jda) {
+        Optional<TextChannel> botsChannelOptional = jda.getTextChannels()
+            .stream()
+            .filter(channel -> isBotsChannel.test(channel.getName()))
+            .findFirst();
+        return botsChannelOptional.orElseThrow(() -> new IllegalArgumentException(
+                "Unable to get channel used for bots command, try fixing config"));
     }
 }

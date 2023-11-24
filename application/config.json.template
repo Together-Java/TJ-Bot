@@ -109,5 +109,5 @@
         ]
     },
     "selectRolesChannelPattern": "select-your-roles",
-    "botChannelPattern":"bots"
+    "botsChannelPattern":"bots"
 }
