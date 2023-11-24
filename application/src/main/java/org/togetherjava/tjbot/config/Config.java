@@ -45,7 +45,6 @@ public final class Config {
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
 
-
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty(value = "token", required = true) String token,

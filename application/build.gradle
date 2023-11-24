@@ -71,7 +71,7 @@ dependencies {
 	implementation 'com.github.freva:ascii-table:1.8.0'
 
     implementation 'io.github.url-detector:url-detector:0.1.23'
-
+    
     implementation 'org.kohsuke:github-api:1.313'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'

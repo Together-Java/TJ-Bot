@@ -113,7 +113,6 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
         try {
             new GitHubBuilder().withOAuthToken(githubApiKey).build().getGist(gistId).delete();
-
             event.getMessage().delete().queue();
         } catch (IOException e) {
             logger.warn("Failed to delete gist with id {}", gistId, e);
@@ -130,6 +129,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void processAttachments(MessageReceivedEvent event,
             List<Message.Attachment> attachments) throws IOException {
+            
         GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(githubApiKey)
             .build()
             .createGist()

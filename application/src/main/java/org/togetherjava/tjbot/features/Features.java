@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.features;
 
 import net.dv8tion.jda.api.JDA;
-
 import org.togetherjava.tjbot.commands.github.GitHubCommand;
 import org.togetherjava.tjbot.commands.github.GitHubReference;
 import org.togetherjava.tjbot.config.Config;
