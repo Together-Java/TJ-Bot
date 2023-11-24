@@ -33,9 +33,9 @@ public class GitHubReference extends MessageReceiverAdapter {
     protected static final String ID_GROUP = "id";
     protected static final Pattern ISSUE_REFERENCE_PATTERN =
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
+    private static final int ISSUE_OPEN = Color.green.getRGB();
+    private static final int ISSUE_CLOSE = Color.red.getRGB();
     private final Config config;
-    private final int ISSUE_OPEN = Color.green.getRGB();
-    private final int ISSUE_CLOSE = Color.red.getRGB();
 
     /**
      * The repositories that are searched when looking for an issue.
@@ -137,6 +137,7 @@ public class GitHubReference extends MessageReceiverAdapter {
                 .setAuthor(issue.getUser().getName(), null, issue.getUser().getAvatarUrl())
                 .setFooter(footer)
                 .build();
+
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
