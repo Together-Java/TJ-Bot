@@ -23,12 +23,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * GitHub Referencing feature. If someone sends #id of an issue (e.g. #207) the bot replies with an
- * embed that contains info on the issue/pr
+ * GitHub Referencing feature. If someone sends #id of an issue (e.g. #207) in specified channel,
+ * the bot replies with an embed that contains info on the issue/PR.
  */
 public class GitHubReference extends MessageReceiverAdapter {
     /**
-     * The pattern used to determine whether a message is referencing an issue
+     * The pattern used to determine whether a message is referencing an issue.
      */
     protected static final String ID_GROUP = "id";
     protected static final Pattern ISSUE_REFERENCE_PATTERN =
@@ -36,7 +36,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     private final Config config;
 
     /**
-     * The repositories that are searched when looking for an issue
+     * The repositories that are searched when looking for an issue.
      */
     private List<GHRepository> repositories;
 
@@ -106,7 +106,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     }
 
     /**
-     * Generates the embed to reply with when someone references an issue
+     * Generates the embed to reply with when someone references an issue.
      */
     protected MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
         try {
@@ -133,7 +133,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     }
 
     /**
-     * Either properly gathers the name of a user or throws a UncheckedIOException
+     * Either properly gathers the name of a user or throws a UncheckedIOException.
      */
     private String getUserNameOrThrow(GHUser user) throws UncheckedIOException {
         try {
@@ -144,7 +144,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     }
 
     /**
-     * Looks through all of the given repositories for an issue/pr with the given id
+     * Looks through all of the given repositories for an issue/pr with the given id.
      */
     protected Optional<GHIssue> findIssue(int id) {
         return repositories.stream().map(repository -> {
