@@ -33,6 +33,7 @@ final class TagManageCommandTest {
     private SlashCommand command;
     private Member moderator;
     private ModAuditLogWriter modAuditLogWriter;
+    private Config config;
 
     private static MessageEmbed getResponse(SlashCommandInteractionEvent event) {
         ArgumentCaptor<MessageEmbed> responseCaptor = ArgumentCaptor.forClass(MessageEmbed.class);
@@ -46,11 +47,12 @@ final class TagManageCommandTest {
         String moderatorRoleName = "Moderator";
         when(config.getTagManageRolePattern()).thenReturn(moderatorRoleName);
         modAuditLogWriter = mock(ModAuditLogWriter.class);
+        config = mock(Config.class);
 
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagManageCommand(system, modAuditLogWriter);
+        command = new TagManageCommand(system, modAuditLogWriter, config);
 
         moderator = jdaTester.createMemberSpy(1);
         Role moderatorRole = mock(Role.class);
