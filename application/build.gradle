@@ -72,7 +72,7 @@ dependencies {
 
     implementation 'io.github.url-detector:url-detector:0.1.23'
     
-    implementation 'org.kohsuke:github-api:1.313'
+    implementation 'org.kohsuke:github-api:1.315'
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
     
