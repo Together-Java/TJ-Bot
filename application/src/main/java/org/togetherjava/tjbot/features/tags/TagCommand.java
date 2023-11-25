@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.features.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
@@ -95,7 +94,8 @@ public final class TagCommand extends SlashCommandAdapter {
         OptionMapping replyToUserOption = event.getOption(REPLY_TO_USER_OPTION);
 
         if (!isTriggeredInAllowedChannels(event) && (!hasPerms(event))) {
-            TextChannel botsCommandChannel = getBotsCommandChannel(event.getJDA());
+            TextChannel botsCommandChannel =
+                    TagUtil.getBotsCommandChannel(event.getJDA(), isBotsChannel);
 
             event.reply(
                     "Command can only be used in %s channel or help forum, avoid spamming helper forum with usage."
@@ -178,14 +178,5 @@ public final class TagCommand extends SlashCommandAdapter {
 
     private boolean hasPerms(SlashCommandInteractionEvent event) {
         return event.getMember().getRoles().stream().map(Role::getName).anyMatch(hasTagManageRole);
-    }
-
-    private TextChannel getBotsCommandChannel(JDA jda) {
-        Optional<TextChannel> botsChannelOptional = jda.getTextChannels()
-            .stream()
-            .filter(channel -> isBotsChannel.test(channel.getName()))
-            .findFirst();
-        return botsChannelOptional.orElseThrow(() -> new IllegalArgumentException(
-                "Unable to get channel used for bots command, try fixing config"));
     }
 }

@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.features.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -150,8 +149,11 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        if (!isBotsChannel(event.getChannel().asTextChannel())) {
-            TextChannel botsChannel = getBotsChannel(event.getJDA());
+        TextChannel sourceChannel = event.getChannel().asTextChannel();
+
+        if (!TagUtil.isBotsChannel(sourceChannel, isBotsCommandChannel)) {
+            TextChannel botsChannel =
+                    TagUtil.getBotsCommandChannel(event.getJDA(), isBotsCommandChannel);
 
             event
                 .reply("Command can be only used in %s channel."
@@ -440,18 +442,5 @@ public final class TagManageCommand extends SlashCommandAdapter {
         String getActionVerb() {
             return actionVerb;
         }
-    }
-
-    private boolean isBotsChannel(TextChannel textChannel) {
-        return isBotsCommandChannel.test(textChannel.getName());
-    }
-
-    private TextChannel getBotsChannel(JDA jda) {
-        Optional<TextChannel> botsChannelOptional = jda.getTextChannels()
-            .stream()
-            .filter(channel -> isBotsCommandChannel.test(channel.getName()))
-            .findFirst();
-        return botsChannelOptional.orElseThrow(() -> new IllegalStateException(
-                "Could not find bots command channel, try fixing config."));
     }
 }
