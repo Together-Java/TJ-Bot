@@ -33,7 +33,8 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
     private static final String USER_OPTION = "user";
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "purge-in-channel";
-    private static final int PURGE_MESSAGES_AFTER_LIMIT_HOURS = 1;
+    private static final int PURGE_MESSAGES_DEFAULT_DURATION =
+            Duration.PURGE_HISTORY_MIN_DURATION.getHours();
     private static final String DURATION = "duration";
     private final Database database;
 
@@ -48,17 +49,17 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
                 CommandVisibility.GUILD);
 
         String optionUserDescription = "user who's message history you want to purge within %s hr"
-            .formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS);
+            .formatted(PURGE_MESSAGES_DEFAULT_DURATION);
 
         String optionDurationDescription =
-                "duration in hours (default: %s)".formatted(PURGE_MESSAGES_AFTER_LIMIT_HOURS);
+                "duration in hours (default: %s)".formatted(PURGE_MESSAGES_DEFAULT_DURATION);
 
         OptionData durationData =
                 new OptionData(OptionType.INTEGER, DURATION, optionDurationDescription, false);
-        durationData.addChoice("last 3 hrs", 3)
-            .addChoice("last 6 hrs", 6)
-            .addChoice("last 12 hrs", 12)
-            .addChoice("last 24 hrs", 24);
+        durationData.addChoice("last 3 hrs", Duration.PURGE_HISTORY_THREE_HOURS.getHours())
+            .addChoice("last 6 hrs", Duration.PURGE_HISTORY_SIX_HOURS.getHours())
+            .addChoice("last 12 hrs", Duration.PURGE_HISTORY_TWELVE_HOURS.getHours())
+            .addChoice("last 24 hrs", Duration.PURGE_HISTORY_TWENTY_FOUR_HOURS.getHours());
 
         getData().addOption(OptionType.USER, USER_OPTION, optionUserDescription, true)
             .addOption(OptionType.STRING, REASON_OPTION,
@@ -78,7 +79,7 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
                 "reason is null");
 
         OptionMapping durationMapping = event.getOption(DURATION);
-        int duration = durationMapping == null ? PURGE_MESSAGES_AFTER_LIMIT_HOURS
+        int duration = durationMapping == null ? PURGE_MESSAGES_DEFAULT_DURATION
                 : durationMapping.getAsInt();
 
         handleHistory(event, author, reason, targetOption, event.getHook(), duration);
@@ -133,7 +134,7 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
 
         if (hasSingleElement(messageIdsForDeletion)) {
             String messageId = messageIdsForDeletion.get(0);
-            String messageForMod = "message purged from user %s in this channel in last %s hrs."
+            String messageForMod = "message purged from user %s in this channel within last %s hr."
                 .formatted(targetUser.getName(), duration);
             channel.deleteMessageById(messageId).queue();
             hook.sendMessage(messageForMod).queue();
@@ -143,7 +144,7 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
         int noOfMessagePurged = messageIdsForDeletion.size();
         channel.purgeMessagesById(messageIdsForDeletion);
 
-        String messageForMod = "%s messages purged from user %s in this channel in last %s hrs."
+        String messageForMod = "%s messages purged from user %s in this channel within last %s hrs."
             .formatted(noOfMessagePurged, targetUser.getName(), duration);
         hook.sendMessage(messageForMod)
             .queue(onSuccess -> logger.info("{} purged messages from {} in {} because: {}",
