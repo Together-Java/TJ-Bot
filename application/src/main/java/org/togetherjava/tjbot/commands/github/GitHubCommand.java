@@ -20,14 +20,14 @@ import java.util.regex.Matcher;
 import java.util.stream.Stream;
 
 /**
- * Slash command (/github) used to search for an issue in one of the repositories listed in the
- * config. It even comes with auto completion!
+ * Slash command (/github-search) used to search for an issue in one of the repositories listed in
+ * the config. It also auto suggests issues/PRs on trigger.
  */
-public class GitHubCommand extends SlashCommandAdapter {
+public final class GitHubCommand extends SlashCommandAdapter {
     private static final Duration CACHE_EXPIRES_AFTER = Duration.ofMinutes(1);
 
     /**
-     * Compares the getUpdatedAt values.
+     * Compares two GitHub Issues ascending by the time they have been updated at.
      */
     private static final Comparator<GHIssue> GITHUB_ISSUE_TIME_COMPARATOR = (i1, i2) -> {
         try {
@@ -70,7 +70,8 @@ public class GitHubCommand extends SlashCommandAdapter {
             return;
         }
 
-        reference.findIssue(Integer.parseInt(matcher.group(GitHubReference.ID_GROUP)))
+        int issueId = Integer.parseInt(matcher.group(GitHubReference.ID_GROUP));
+        reference.findIssue(issueId)
             .ifPresentOrElse(issue -> event.replyEmbeds(reference.generateReply(issue)).queue(),
                     () -> event.reply("Could not find the issue you are looking for.")
                         .setEphemeral(true)

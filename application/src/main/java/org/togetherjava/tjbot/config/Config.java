@@ -318,14 +318,14 @@ public final class Config {
     }
 
     /**
-     * The REGEX pattern used to identify the channels that support GitHub issue referencing
+     * The REGEX pattern used to identify the channels that support GitHub issue referencing.
      */
     public String getGitHubReferencingEnabledChannelPattern() {
         return githubReferencingEnabledChannelPattern;
     }
 
     /**
-     * The list of repositories that are searched when referencing a GitHub issue
+     * The list of repositories that are searched when referencing a GitHub issue.
      */
     public List<Long> getGitHubRepositories() {
         return githubRepositories;

@@ -27,16 +27,17 @@ import java.util.stream.Collectors;
  * GitHub Referencing feature. If someone sends #id of an issue (e.g. #207) in specified channel,
  * the bot replies with an embed that contains info on the issue/PR.
  */
-public class GitHubReference extends MessageReceiverAdapter {
+public final class GitHubReference extends MessageReceiverAdapter {
+    static final String ID_GROUP = "id";
+
     /**
-     * The pattern used to determine whether a message is referencing an issue.
+     * The pattern(#123) used to determine whether a message is referencing an issue.
      */
-    protected static final String ID_GROUP = "id";
-    protected static final Pattern ISSUE_REFERENCE_PATTERN =
+    static final Pattern ISSUE_REFERENCE_PATTERN =
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
-    private static final List<String> months = List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    private static final List<String> MONTHS = List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun",
             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
     private final Config config;
 
@@ -135,7 +136,7 @@ public class GitHubReference extends MessageReceiverAdapter {
 
             // Format: 9 Oct, 2023
             String dateOfCreation = "%d %s, %d".formatted(createdAt.get(Calendar.DATE),
-                    months.get(createdAt.get(Calendar.MONTH)), createdAt.get(Calendar.YEAR));
+                    MONTHS.get(createdAt.get(Calendar.MONTH)), createdAt.get(Calendar.YEAR));
 
             String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
 
@@ -166,7 +167,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     /**
      * Looks through all of the given repositories for an issue/pr with the given id.
      */
-    protected Optional<GHIssue> findIssue(int id) {
+    Optional<GHIssue> findIssue(int id) {
         return repositories.stream().map(repository -> {
             try {
                 return Optional.of(repository.getIssue(id));
@@ -181,7 +182,7 @@ public class GitHubReference extends MessageReceiverAdapter {
     /**
      * All repositories monitored by this instance.
      */
-    protected List<GHRepository> getRepositories() {
+    List<GHRepository> getRepositories() {
         return repositories;
     }
 }
