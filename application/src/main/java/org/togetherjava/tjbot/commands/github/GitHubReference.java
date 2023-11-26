@@ -114,7 +114,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Generates the embed to reply with when someone references an issue.
      */
-    protected MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
+    MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
         try {
             String title = "[#%d] %s".formatted(issue.getNumber(), issue.getTitle());
             String titleUrl = issue.getHtmlUrl().toString();
@@ -129,7 +129,6 @@ public final class GitHubReference extends MessageReceiverAdapter {
                 .stream()
                 .map(this::getUserNameOrThrow)
                 .collect(Collectors.joining(", "));
-
 
             Instant createdAt = issue.getCreatedAt().toInstant();
 
