@@ -15,8 +15,10 @@ import java.awt.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -37,8 +39,6 @@ public final class GitHubReference extends MessageReceiverAdapter {
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
-    private static final List<String> MONTHS = List.of("Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
     private final Config config;
 
     /**
@@ -131,12 +131,12 @@ public final class GitHubReference extends MessageReceiverAdapter {
                 .collect(Collectors.joining(", "));
 
 
-            Calendar createdAt = Calendar.getInstance();
-            createdAt.setTime(issue.getCreatedAt());
+            Instant createdAt = issue.getCreatedAt().toInstant();
 
-            // Format: 9 Oct, 2023
-            String dateOfCreation = "%d %s, %d".formatted(createdAt.get(Calendar.DATE),
-                    MONTHS.get(createdAt.get(Calendar.MONTH)), createdAt.get(Calendar.YEAR));
+            // Format: 09 Oct, 2023
+            DateTimeFormatter formatter =
+                    DateTimeFormatter.ofPattern("dd MMM, yyyy").withZone(ZoneOffset.UTC);
+            String dateOfCreation = formatter.format(createdAt);
 
             String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
 
