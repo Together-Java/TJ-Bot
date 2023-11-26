@@ -39,6 +39,13 @@ public final class GitHubReference extends MessageReceiverAdapter {
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
+
+    /**
+     * A constant representing the date and time formatter used for formatting the creation date of
+     * an issue. The pattern "dd MMM, yyyy" represents the format "09 Oct, 2023".
+     */
+    static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("dd MMM, yyyy").withZone(ZoneOffset.UTC);
     private final Config config;
 
     /**
@@ -131,11 +138,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
                 .collect(Collectors.joining(", "));
 
             Instant createdAt = issue.getCreatedAt().toInstant();
-
-            // Format: 09 Oct, 2023
-            DateTimeFormatter formatter =
-                    DateTimeFormatter.ofPattern("dd MMM, yyyy").withZone(ZoneOffset.UTC);
-            String dateOfCreation = formatter.format(createdAt);
+            String dateOfCreation = FORMATTER.format(createdAt);
 
             String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
 
