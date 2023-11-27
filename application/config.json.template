@@ -86,7 +86,7 @@
         "wsf",
         "wsh"
     ],
-    "githubReferencingEnabledChannelPattern": "general",
+    "githubReferencingEnabledChannelPattern": "server-suggestions|tjbot-discussion|modernjava-discussion",
     "githubRepositories": [
         <repository id here (e.g. 403389278)>
     ],

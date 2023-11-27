@@ -3,7 +3,9 @@ package org.togetherjava.tjbot.commands.github;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.collections4.ListUtils;
 import org.kohsuke.github.*;
@@ -21,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,6 +49,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
      */
     static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("dd MMM, yyyy").withZone(ZoneOffset.UTC);
+    private final Predicate<String> hasGithubIssueReferenceEnabled;
     private final Config config;
 
     /**
@@ -54,9 +58,10 @@ public final class GitHubReference extends MessageReceiverAdapter {
     private List<GHRepository> repositories;
 
     public GitHubReference(Config config) {
-        super(Pattern.compile(config.getGitHubReferencingEnabledChannelPattern()));
-
         this.config = config;
+        this.hasGithubIssueReferenceEnabled =
+                Pattern.compile(config.getGitHubReferencingEnabledChannelPattern())
+                    .asMatchPredicate();
 
         acquireRepositories();
     }
@@ -80,7 +85,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) {
+        if (event.getAuthor().isBot() || !isAllowedChannelOrChildThread(event)) {
             return;
         }
 
@@ -105,7 +110,10 @@ public final class GitHubReference extends MessageReceiverAdapter {
             boolean mentionRepliedUser) {
         List<List<MessageEmbed>> partition = ListUtils.partition(embeds, Message.MAX_EMBED_COUNT);
         boolean isFirstBatch = true;
-        TextChannel textChannel = message.getChannel().asTextChannel();
+
+        MessageChannel sourceChannel = message.getChannelType() == ChannelType.GUILD_PUBLIC_THREAD
+                ? message.getChannel().asThreadChannel()
+                : message.getChannel().asTextChannel();
 
         for (List<MessageEmbed> messageEmbeds : partition) {
             if (isFirstBatch) {
@@ -113,7 +121,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
 
                 isFirstBatch = false;
             } else {
-                textChannel.sendMessageEmbeds(messageEmbeds).queue();
+                sourceChannel.sendMessageEmbeds(messageEmbeds).queue();
             }
         }
     }
@@ -186,5 +194,16 @@ public final class GitHubReference extends MessageReceiverAdapter {
      */
     List<GHRepository> getRepositories() {
         return repositories;
+    }
+
+    private boolean isAllowedChannelOrChildThread(MessageReceivedEvent event) {
+        if (event.getChannelType().isThread()) {
+            ThreadChannel threadChannel = event.getChannel().asThreadChannel();
+            String rootChannel = threadChannel.getParentChannel().getName();
+            return this.hasGithubIssueReferenceEnabled.test(rootChannel);
+        }
+
+        String textChannel = event.getChannel().asTextChannel().getName();
+        return this.hasGithubIssueReferenceEnabled.test(textChannel);
     }
 }
