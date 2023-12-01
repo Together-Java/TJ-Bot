@@ -355,4 +355,14 @@ public final class HelpSystemHelper {
             return tagName;
         }
     }
+
+    Optional<Long> getAuthorByHelpThreadId(final long channelId) {
+
+        logger.info("Looking for thread-record using channel ID: {}", channelId);
+
+        return database.read(context -> context.select(HelpThreads.HELP_THREADS.AUTHOR_ID)
+            .from(HelpThreads.HELP_THREADS)
+            .where(HelpThreads.HELP_THREADS.CHANNEL_ID.eq(channelId))
+            .fetchOptional(HelpThreads.HELP_THREADS.AUTHOR_ID));
+    }
 }

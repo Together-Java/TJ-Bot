@@ -2,10 +2,7 @@ package org.togetherjava.tjbot.features.help;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
@@ -38,6 +35,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
 
     private final HelpSystemHelper helper;
+
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
         .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
@@ -81,13 +79,30 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
-        helper.writeHelpThreadToDatabase(threadChannel.getOwnerIdLong(), threadChannel);
+        threadChannel.retrieveMessageById(threadChannel.getIdLong()).queue(message -> {
+
+            long authorId = threadChannel.getOwnerIdLong();
+
+            if (isPostedByBot(threadChannel, message)) {
+                authorId = getMentionedAuthorByMessage(message).getIdLong();
+            }
+
+            helper.writeHelpThreadToDatabase(authorId, threadChannel);
+        });
 
         // The creation is delayed, because otherwise it could be too fast and be executed
         // after Discord created the thread, but before Discord send OPs initial message.
         // Sending messages at that moment is not allowed.
         createMessages(threadChannel).and(pinOriginalQuestion(threadChannel))
             .queueAfter(5, TimeUnit.SECONDS);
+    }
+
+    private static User getMentionedAuthorByMessage(Message message) {
+        return message.getMentions().getUsers().get(0);
+    }
+
+    private boolean isPostedByBot(ThreadChannel channel, Message message) {
+        return channel.getJDA().getSelfUser().equals(message.getAuthor());
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {

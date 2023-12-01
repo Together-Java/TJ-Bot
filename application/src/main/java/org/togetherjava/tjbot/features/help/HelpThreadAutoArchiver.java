@@ -133,20 +133,17 @@ public final class HelpThreadAutoArchiver implements Routine {
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
                 () -> threadChannel.sendMessageEmbeds(embed);
 
-        threadChannel.getGuild()
-            .retrieveMemberById(threadChannel.getOwnerIdLong())
-            .mapToResult()
-            .flatMap(foundMember -> {
-                if (foundMember.isSuccess()) {
-                    return sendEmbedWithMention.apply(foundMember);
-                }
-                logger.info(
-                        "Owner of thread with id: {} left the server, sending embed without mention",
-                        threadChannel.getId(), foundMember.getFailure());
+        long authorId = helper.getAuthorByHelpThreadId(threadChannel.getIdLong()).orElseThrow();
 
-                return sendEmbedWithoutMention.get();
-            })
-            .flatMap(any -> threadChannel.getManager().setArchived(true))
-            .queue();
+        threadChannel.getGuild().retrieveMemberById(authorId).mapToResult().flatMap(foundMember -> {
+            if (foundMember.isSuccess()) {
+                return sendEmbedWithMention.apply(foundMember);
+            }
+            logger.info(
+                    "Owner of thread with id: {} left the server, sending embed without mention",
+                    threadChannel.getId(), foundMember.getFailure());
+
+            return sendEmbedWithoutMention.get();
+        }).flatMap(any -> threadChannel.getManager().setArchived(true)).queue();
     }
 }
