@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
@@ -299,11 +300,18 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private boolean isInvalidForTransfer(MessageContextInteractionEvent event) {
         User author = event.getTarget().getAuthor();
+        ChannelType channelType = event.getChannelType();
 
         if (isBotMessageTransfer(author)) {
             handleBotMessageTransfer(event);
             return true;
         }
+
+        if (channelType != ChannelType.TEXT) {
+            handleInvalidChannel(event);
+            return true;
+        }
+
         return false;
     }
 
@@ -311,5 +319,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         return originalMessage.length() > INPUT_MAX_LENGTH
                 ? originalMessage.substring(0, INPUT_MAX_LENGTH)
                 : originalMessage;
+    }
+
+    private void handleInvalidChannel(MessageContextInteractionEvent event) {
+        event.reply("Transfer can only be done from regular chat channels.")
+            .setEphemeral(true)
+            .queue();
     }
 }
