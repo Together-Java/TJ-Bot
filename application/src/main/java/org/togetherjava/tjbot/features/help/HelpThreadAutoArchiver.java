@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Routine, which periodically checks all help threads and archives them if there has not been any
@@ -77,18 +79,38 @@ public final class HelpThreadAutoArchiver implements Routine {
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
             logger.debug("Auto archiving help thread {}", threadChannel.getId());
 
-            MessageEmbed embed = new EmbedBuilder().setDescription("""
-                    Closed the thread due to inactivity.
+            String linkHowToAsk = "https://stackoverflow.com/help/how-to-ask";
 
-                    If your question was not resolved yet, feel free to just post a message \
-                    to reopen it, or create a new thread. But try to improve the quality of \
-                    your question to make it easier to help you 👍""")
+            MessageEmbed embed = new EmbedBuilder()
+                .setDescription(
+                        """
+                                Your question has been closed due to inactivity.
+
+                                If it was not resolved yet, feel free to just post a message below
+                                to reopen it, or create a new thread.
+
+                                Note that usually the reason for nobody calling back is that your
+                                question may have been not well asked and hence no one felt confident
+                                enough answering.
+
+                                When you reopen the thread, try to use your time to **improve the quality**
+                                of the question by elaborating, providing **details**, context, all relevant code
+                                snippets, any **errors** you are getting, concrete **examples** and perhaps also some
+                                screenshots. Share your **attempt**, explain the **expected results** and compare
+                                them to the current results.
+
+                                Also try to make the information **easily accessible** by sharing code
+                                or assignment descriptions directly on Discord, not behind a link or
+                                PDF-file; provide some guidance for long code snippets and ensure
+                                the **code is well formatted** and has syntax highlighting. Kindly read through
+                                %s for more.
+
+                                With enough info, someone knows the answer for sure 👍"""
+                            .formatted(linkHowToAsk))
                 .setColor(HelpSystemHelper.AMBIENT_COLOR)
                 .build();
 
-            threadChannel.sendMessageEmbeds(embed)
-                .flatMap(any -> threadChannel.getManager().setArchived(true))
-                .queue();
+            handleArchiveFlow(threadChannel, embed);
         }
     }
 
@@ -97,5 +119,21 @@ public final class HelpThreadAutoArchiver implements Routine {
                 TimeUtil.getTimeCreated(channel.getLatestMessageIdLong()).toInstant();
 
         return lastActivity.isBefore(archiveAfterMoment);
+    }
+
+    private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
+        Consumer<Throwable> handleFailure = error -> {
+            if (error instanceof ErrorResponseException) {
+                logger.warn("Unknown error occurred during help thread auto archive routine",
+                        error);
+            }
+        };
+
+        threadChannel.getGuild()
+            .retrieveMemberById(threadChannel.getOwnerIdLong())
+            .flatMap(author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
+            .flatMap(any -> threadChannel.getManager().setArchived(true))
+            .queue(any -> {
+            }, handleFailure);
     }
 }

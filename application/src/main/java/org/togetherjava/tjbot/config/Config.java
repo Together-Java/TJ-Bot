@@ -36,6 +36,12 @@ public final class Config {
     private final String mediaOnlyChannelPattern;
     private final String logInfoChannelWebhook;
     private final String logErrorChannelWebhook;
+    private final String openaiApiKey;
+    private final String sourceCodeBaseUrl;
+    private final JShellConfig jshell;
+    private final HelperPruneConfig helperPruneConfig;
+    private final FeatureBlacklistConfig featureBlacklistConfig;
+    private final String selectRolesChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -70,7 +76,16 @@ public final class Config {
             @JsonProperty(value = "logInfoChannelWebhook",
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
-                    required = true) String logErrorChannelWebhook) {
+                    required = true) String logErrorChannelWebhook,
+            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
+            @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
+            @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
+            @JsonProperty(value = "helperPruneConfig",
+                    required = true) HelperPruneConfig helperPruneConfig,
+            @JsonProperty(value = "featureBlacklist",
+                    required = true) FeatureBlacklistConfig featureBlacklistConfig,
+            @JsonProperty(value = "selectRolesChannelPattern",
+                    required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
         this.gistApiKey = Objects.requireNonNull(gistApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -93,6 +108,12 @@ public final class Config {
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
+        this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
+        this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
+        this.jshell = Objects.requireNonNull(jshell);
+        this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
+        this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
+        this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
     /**
@@ -303,5 +324,62 @@ public final class Config {
      */
     public String getLogErrorChannelWebhook() {
         return logErrorChannelWebhook;
+    }
+
+    /**
+     * The OpenAI token needed for communicating with OpenAI ChatGPT.
+     *
+     * @return the OpenAI API Token
+     */
+    public String getOpenaiApiKey() {
+        return openaiApiKey;
+    }
+
+    /**
+     * The base URL of the source code of this bot. E.g.
+     * {@code getSourceCodeBaseUrl() + "/org/togetherjava/tjbot/config/Config.java"} would point to
+     * this file.
+     *
+     * @return the base url of the source code of this bot
+     */
+    public String getSourceCodeBaseUrl() {
+        return sourceCodeBaseUrl;
+    }
+
+    /**
+     * The configuration about jshell REST API and command/code action settings.
+     * 
+     * @return the jshell configuration
+     */
+    public JShellConfig getJshell() {
+        return jshell;
+    }
+
+    /**
+     * Gets the config for automatic pruning of helper roles.
+     *
+     * @return the configuration
+     */
+    public HelperPruneConfig getHelperPruneConfig() {
+        return helperPruneConfig;
+    }
+
+    /**
+     * The configuration of blacklisted features.
+     * 
+     * @return configuration of blacklisted features
+     */
+    public FeatureBlacklistConfig getFeatureBlacklistConfig() {
+        return featureBlacklistConfig;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel in which users can select their helper
+     * roles.
+     *
+     * @return the channel name pattern
+     */
+    public String getSelectRolesChannelPattern() {
+        return selectRolesChannelPattern;
     }
 }

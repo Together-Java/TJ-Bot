@@ -287,7 +287,10 @@ public class ModerationUtils {
         if (reason != null && !reason.isBlank()) {
             description += "\n\nReason: " + reason;
         }
-        return new EmbedBuilder().setAuthor(author.getAsTag(), null, author.getAvatarUrl())
+
+        String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
+
+        return new EmbedBuilder().setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
             .setDescription(description)
             .setTimestamp(Instant.now())
             .setColor(AMBIENT_COLOR)

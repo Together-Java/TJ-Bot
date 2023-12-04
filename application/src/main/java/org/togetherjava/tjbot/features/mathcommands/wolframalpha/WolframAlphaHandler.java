@@ -11,13 +11,14 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.*;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.Error;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -169,7 +170,7 @@ final class WolframAlphaHandler {
             for (SubPod subPod : pod.getSubPods()) {
                 try {
                     images.add(WolframAlphaImages.renderSubPod(subPod));
-                } catch (UncheckedIOException e) {
+                } catch (IOException | URISyntaxException e) {
                     LOGGER.error(
                             "Failed to render sub pod (title: '{}') from pod (title: '{}') from the WolframAlpha response (for query: '{}')",
                             subPod.getTitle(), pod.getTitle(), query, e);

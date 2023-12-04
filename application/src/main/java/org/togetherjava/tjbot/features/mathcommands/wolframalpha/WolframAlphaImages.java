@@ -5,9 +5,7 @@ import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.WolframAlph
 
 import javax.imageio.ImageIO;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
@@ -16,7 +14,8 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,7 +54,7 @@ class WolframAlphaImages {
         return image;
     }
 
-    static BufferedImage renderSubPod(SubPod subPod) {
+    static BufferedImage renderSubPod(SubPod subPod) throws IOException, URISyntaxException {
         WolframAlphaImage sourceImage = subPod.getImage();
 
         int widthPx = sourceImage.getWidth() + 2 * IMAGE_MARGIN_PX;
@@ -65,12 +64,9 @@ class WolframAlphaImages {
                 new BufferedImage(widthPx, heightPx, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics graphics = destinationImage.getGraphics();
 
-        try {
-            graphics.drawImage(ImageIO.read(new URL(sourceImage.getSource())), IMAGE_MARGIN_PX,
-                    IMAGE_MARGIN_PX, null);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        graphics.drawImage(ImageIO.read(new URI(sourceImage.getSource()).toURL()), IMAGE_MARGIN_PX,
+                IMAGE_MARGIN_PX, null);
+
 
         return destinationImage;
     }

@@ -1,20 +1,15 @@
 package org.togetherjava.tjbot.features.help;
 
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
-import net.dv8tion.jda.api.utils.FileUpload;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,19 +19,29 @@ import org.togetherjava.tjbot.config.HelpSystemConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
-import org.togetherjava.tjbot.features.utils.MessageUtils;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
+import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
-import javax.annotation.Nullable;
-
-import java.awt.Color;
-import java.io.InputStream;
-import java.util.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.togetherjava.tjbot.features.utils.MessageUtils.mentionGuildSlashCommand;
 
 /**
  * Helper class offering certain methods used by the help system.
@@ -46,8 +51,7 @@ public final class HelpSystemHelper {
 
     static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
-    private static final String CODE_SYNTAX_EXAMPLE_PATH = "codeSyntaxExample.png";
-
+    private final Predicate<String> hasTagManageRole;
     private final Predicate<String> isHelpForumName;
     private final String helpForumPattern;
     /**
@@ -59,17 +63,25 @@ public final class HelpSystemHelper {
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
     private final Database database;
+    private final ChatGptService chatGptService;
+    private static final int MAX_QUESTION_LENGTH = 200;
+    private static final int MIN_QUESTION_LENGTH = 10;
+    private static final String CHATGPT_FAILURE_MESSAGE =
+            "You can use %s to ask ChatGPT about your question while you wait for a human to respond.";
 
     /**
      * Creates a new instance.
      *
      * @param config the config to use
      * @param database the database to store help thread metadata in
+     * @param chatGptService the service used to ask ChatGPT questions via the API.
      */
-    public HelpSystemHelper(Config config, Database database) {
+    public HelpSystemHelper(Config config, Database database, ChatGptService chatGptService) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
+        this.chatGptService = chatGptService;
 
+        hasTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
         helpForumPattern = helpConfig.getHelpForumPattern();
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
@@ -90,45 +102,103 @@ public final class HelpSystemHelper {
             .collect(Collectors.toSet());
     }
 
-    RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        return MessageUtils
-            .mentionGuildSlashCommand(threadChannel.getGuild(), HelpThreadCommand.COMMAND_NAME,
-                    HelpThreadCommand.Subcommand.CLOSE.getCommandName())
-            .flatMap(closeCommandMention -> sendExplanationMessage(threadChannel,
-                    closeCommandMention));
+    /**
+     * Determine between the title of the thread and the first message which to send to the AI. It
+     * uses a simple heuristic of length to determine if enough context exists in a question. If the
+     * title is used, it must also include a question mark since the title is often used more as an
+     * indicator of topic versus a question.
+     *
+     * @param originalQuestion The first message of the thread which originates from the question
+     *        asker.
+     * @param threadChannel The thread in which the question was asked.
+     * @return An answer for the user from the AI service or a message indicating either an error or
+     *         why the message wasn't used.
+     */
+    RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
+            String originalQuestion, ComponentIdInteractor componentIdInteractor) {
+        Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
+        Optional<String[]> chatGPTAnswer;
+
+        if (questionOptional.isEmpty()) {
+            return useChatGptFallbackMessage(threadChannel);
+        }
+        String question = questionOptional.get();
+        logger.debug("The final question sent to chatGPT: {}", question);
+
+        chatGPTAnswer = chatGptService.ask(question);
+        if (chatGPTAnswer.isEmpty()) {
+            return useChatGptFallbackMessage(threadChannel);
+        }
+
+        List<String> ids = new CopyOnWriteArrayList<>();
+        RestAction<Message> message =
+                mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+                    .map("""
+                            Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
+                            In any case, a human is on the way 👍. To continue talking to the AI, you can use \
+                            %s.
+                            """::formatted)
+                    .flatMap(threadChannel::sendMessage)
+                    .onSuccess(m -> ids.add(m.getId()));
+        String[] answers = chatGPTAnswer.orElseThrow();
+
+        for (int i = 0; i < answers.length; i++) {
+            MessageCreateAction answer = threadChannel.sendMessage(answers[i]);
+
+            if (i == answers.length - 1) {
+                message = message.flatMap(any -> answer
+                    .addActionRow(generateDismissButton(componentIdInteractor, ids)));
+                continue;
+            }
+
+            message = message.flatMap(ignored -> answer.onSuccess(m -> ids.add(m.getId())));
+        }
+
+        return message;
     }
 
-    private RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel,
-            String closeCommandMention) {
-        boolean useCodeSyntaxExampleImage = true;
-        InputStream codeSyntaxExampleData =
-                HelpSystemHelper.class.getResourceAsStream("/" + CODE_SYNTAX_EXAMPLE_PATH);
-        if (codeSyntaxExampleData == null) {
-            useCodeSyntaxExampleImage = false;
+    private Button generateDismissButton(ComponentIdInteractor componentIdInteractor,
+            List<String> ids) {
+        String buttonId = componentIdInteractor.generateComponentId(ids.toArray(String[]::new));
+        return Button.danger(buttonId, "Dismiss");
+    }
+
+    private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,
+            String originalQuestion) {
+        String questionTitle = threadChannel.getName();
+        StringBuilder questionBuilder = new StringBuilder(MAX_QUESTION_LENGTH);
+
+        if (originalQuestion.length() < MIN_QUESTION_LENGTH
+                && questionTitle.length() < MIN_QUESTION_LENGTH) {
+            return Optional.empty();
         }
 
-        String message =
-                "While you are waiting for getting help, here are some tips to improve your experience:";
+        questionBuilder.append(questionTitle).append(" ");
+        originalQuestion = originalQuestion.substring(0, Math
+            .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
 
-        List<MessageEmbed> embeds = List.of(HelpSystemHelper.embedWith(
-                "Code is much easier to read if posted with **syntax highlighting** and proper formatting.",
-                useCodeSyntaxExampleImage ? "attachment://" + CODE_SYNTAX_EXAMPLE_PATH : null),
-                HelpSystemHelper.embedWith(
-                        """
-                                If nobody is calling back, that usually means that your question was **not well asked** and \
-                                    hence nobody feels confident enough answering. Try to use your time to elaborate, \
-                                    **provide details**, context, more code, examples and maybe some screenshots. \
-                                    With enough info, someone knows the answer for sure."""),
-                HelpSystemHelper.embedWith(
-                        "Don't forget to close your thread using the command %s when your question has been answered, thanks."
-                            .formatted(closeCommandMention)));
+        questionBuilder.append(originalQuestion);
 
-        MessageCreateAction action = threadChannel.sendMessage(message);
-        if (useCodeSyntaxExampleImage) {
-            action = action
-                .addFiles(FileUpload.fromData(codeSyntaxExampleData, CODE_SYNTAX_EXAMPLE_PATH));
+        StringBuilder tagBuilder = new StringBuilder();
+        int stringLength = questionBuilder.length();
+        for (ForumTag tag : threadChannel.getAppliedTags()) {
+            String tagName = tag.getName();
+            stringLength += tagName.length();
+            if (stringLength > MAX_QUESTION_LENGTH) {
+                break;
+            }
+            tagBuilder.append(String.format("%s ", tagName));
         }
-        return action.setEmbeds(embeds);
+
+        questionBuilder.insert(0, tagBuilder);
+
+        return Optional.of(questionBuilder.toString());
+    }
+
+    private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
+        return mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
+            .map(CHATGPT_FAILURE_MESSAGE::formatted)
+            .flatMap(threadChannel::sendMessage);
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
@@ -141,17 +211,6 @@ public final class HelpSystemHelper {
                 helpThreadsRecord.insert();
             }
         });
-    }
-
-    private static MessageEmbed embedWith(CharSequence message) {
-        return embedWith(message, null);
-    }
-
-    private static MessageEmbed embedWith(CharSequence message, @Nullable String imageUrl) {
-        return new EmbedBuilder().setColor(AMBIENT_COLOR)
-            .setDescription(message)
-            .setImage(imageUrl)
-            .build();
     }
 
     Optional<Role> handleFindRoleForCategory(String category, Guild guild) {
@@ -243,6 +302,10 @@ public final class HelpSystemHelper {
         }
 
         return matchingTags.get(0);
+    }
+
+    boolean hasTagManageRole(Member member) {
+        return member.getRoles().stream().map(Role::getName).anyMatch(hasTagManageRole);
     }
 
     boolean isHelpForumName(String channelName) {
