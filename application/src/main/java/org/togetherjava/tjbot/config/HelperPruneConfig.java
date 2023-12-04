@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.config;
 
-
 /**
  * Config for automatic pruning of helper roles, see
  * {@link org.togetherjava.tjbot.features.help.AutoPruneHelperRoutine}.
@@ -15,5 +14,4 @@ package org.togetherjava.tjbot.config;
  *        protected from pruning
  */
 public record HelperPruneConfig(int roleFullLimit, int roleFullThreshold, int pruneMemberAmount,
-        int inactivateAfterDays, int recentlyJoinedDays) {
-}
+        int inactivateAfterDays, int recentlyJoinedDays) {}

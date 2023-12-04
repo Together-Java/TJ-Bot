@@ -78,8 +78,9 @@ public final class WhoIsCommand extends SlashCommandAdapter {
                 + DATE_TIME_FORMAT.format(user.getTimeCreated());
 
         EmbedBuilder embedBuilder =
-                generateEmbedBuilder(event, user, profile, profile.getAccentColor()).setAuthor(
-                        user.getName(), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
+                generateEmbedBuilder(event, user, profile, profile.getAccentColor())
+                    .setAuthor(user.getName(), user.getEffectiveAvatarUrl(),
+                            user.getEffectiveAvatarUrl())
                     .setDescription(description);
 
         return sendEmbedWithProfileAction(event, embedBuilder.build(), user.getId());

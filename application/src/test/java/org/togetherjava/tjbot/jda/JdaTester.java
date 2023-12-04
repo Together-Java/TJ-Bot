@@ -673,8 +673,8 @@ public final class JdaTester {
         MessageChannelUnion channel = switch (channelType) {
             case TEXT -> textChannel;
             case GUILD_PUBLIC_THREAD -> threadChannel;
-            default -> throw new IllegalArgumentException(
-                    "Unsupported channel type: " + channelType);
+            default ->
+                throw new IllegalArgumentException("Unsupported channel type: " + channelType);
         };
 
         doReturn(messageCreateAction).when(message).reply(anyString());

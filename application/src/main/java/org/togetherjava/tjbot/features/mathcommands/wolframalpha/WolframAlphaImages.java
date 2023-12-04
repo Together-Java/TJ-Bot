@@ -67,7 +67,6 @@ class WolframAlphaImages {
         graphics.drawImage(ImageIO.read(new URI(sourceImage.getSource()).toURL()), IMAGE_MARGIN_PX,
                 IMAGE_MARGIN_PX, null);
 
-
         return destinationImage;
     }
 

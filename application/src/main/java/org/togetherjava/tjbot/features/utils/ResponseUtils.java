@@ -12,7 +12,8 @@ import java.util.Optional;
  * Handle the parsing of json in a http request.
  */
 public class ResponseUtils {
-    private ResponseUtils() {}
+    private ResponseUtils() {
+    }
 
     /**
      * Creates a body handler which will parse the body of the request. If the parsing fails, an

@@ -66,7 +66,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
 
-
     /**
      * Creates a new instance.
      *
@@ -165,7 +164,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
             .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
-                    event.getGuild()).and(sendMessageToTransferrer.apply(createdForumPost)))
+                    event.getGuild())
+                .and(sendMessageToTransferrer.apply(createdForumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
@@ -282,8 +282,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .build();
     }
 
-    private record ForumPostData(ForumPost forumPost, User author) {
-    }
+    private record ForumPostData(ForumPost forumPost, User author) {}
 
     private boolean isBotMessageTransfer(User author) {
         return author.isBot();
