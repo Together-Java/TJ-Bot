@@ -251,13 +251,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
-        MessageChannel sourceChannel = jda.getTextChannelById(channelId);
-
-        if (sourceChannel == null) {
-            sourceChannel = jda.getThreadChannelById(channelId);
-        }
-
-        return sourceChannel.deleteMessageById(messageId);
+        return jda.getChannelById(MessageChannel.class, channelId).deleteMessageById(messageId);
     }
 
     private ForumChannel getHelperForum(JDA jda) {
