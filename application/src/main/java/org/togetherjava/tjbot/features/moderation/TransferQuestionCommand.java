@@ -7,10 +7,10 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumPost;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -36,7 +36,6 @@ import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.awt.Color;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -252,10 +251,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     }
 
     private RestAction<Void> deleteOriginalMessage(JDA jda, String channelId, String messageId) {
-        TextChannel sourceChannel = Objects.requireNonNull(jda.getTextChannelById(channelId),
-                "Source channel could not be found for transfer-question feature");
-
-        return sourceChannel.deleteMessageById(messageId);
+        return jda.getChannelById(MessageChannel.class, channelId).deleteMessageById(messageId);
     }
 
     private ForumChannel getHelperForum(JDA jda) {
