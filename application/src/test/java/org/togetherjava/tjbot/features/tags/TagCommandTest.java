@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.features.SlashCommand;
@@ -21,13 +22,15 @@ final class TagCommandTest {
     private TagSystem system;
     private JdaTester jdaTester;
     private SlashCommand command;
+    private Config config;
 
     @BeforeEach
     void setUp() {
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagCommand(system);
+        config = mock(Config.class);
+        command = new TagCommand(system, config);
     }
 
     private SlashCommandInteractionEvent triggerSlashCommand(String id,

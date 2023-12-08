@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.features.tags;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.utils.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
@@ -26,6 +28,8 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Implements the {@code /tag-manage} command which allows management of tags, such as creating,
@@ -63,6 +67,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private final TagSystem tagSystem;
 
     private final ModAuditLogWriter modAuditLogWriter;
+    private final Predicate<String> isBotsCommandChannel;
 
     /**
      * Creates a new instance, using the given tag system as base.
@@ -70,12 +75,16 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param tagSystem the system providing the actual tag data
      * @param modAuditLogWriter to log tag changes for audition
      */
-    public TagManageCommand(TagSystem tagSystem, ModAuditLogWriter modAuditLogWriter) {
+    public TagManageCommand(TagSystem tagSystem, ModAuditLogWriter modAuditLogWriter,
+            Config config) {
         super("tag-manage", "Provides commands to manage all tags", CommandVisibility.GUILD);
 
         this.tagSystem = tagSystem;
 
         this.modAuditLogWriter = modAuditLogWriter;
+
+        this.isBotsCommandChannel =
+                Pattern.compile(config.getBotsChannelPattern()).asMatchPredicate();
 
         // TODO Think about adding a "Are you sure"-dialog to 'edit', 'edit-with-message' and
         // 'delete'
@@ -140,6 +149,18 @@ public final class TagManageCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
+        TextChannel sourceChannel = event.getChannel().asTextChannel();
+
+        if (!TagUtil.isBotsChannel(sourceChannel, isBotsCommandChannel)) {
+            TextChannel botsChannel =
+                    TagUtil.getBotsCommandChannel(event.getJDA(), isBotsCommandChannel);
+
+            event
+                .reply("Command can be only used in %s channel."
+                    .formatted(botsChannel.getAsMention()))
+                .queue();
+            return;
+        }
         switch (Subcommand.fromName(event.getSubcommandName())) {
             case RAW -> rawTag(event);
             case CREATE -> createTag(event);

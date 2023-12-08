@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.jda.JdaTester;
@@ -18,6 +19,7 @@ final class TagSystemTest {
     private TagSystem system;
     private Database database;
     private JdaTester jdaTester;
+    private Config config;
 
     private void insertTagRaw(String id, String content) {
         database
@@ -39,6 +41,7 @@ final class TagSystemTest {
         database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
+        config = mock(Config.class);
     }
 
     @Test
@@ -51,7 +54,8 @@ final class TagSystemTest {
     void handleIsUnknownTag() {
         insertTagRaw("known", "foo");
         SlashCommandInteractionEvent event =
-                jdaTester.createSlashCommandInteractionEvent(new TagCommand(system)).build();
+                jdaTester.createSlashCommandInteractionEvent(new TagCommand(system, config))
+                    .build();
 
         assertFalse(system.handleIsUnknownTag("known", event));
         verify(event, never()).reply(anyString());

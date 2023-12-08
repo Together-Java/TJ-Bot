@@ -108,5 +108,6 @@
         "special": [
         ]
     },
-    "selectRolesChannelPattern": "select-your-roles"
+    "selectRolesChannelPattern": "select-your-roles",
+    "botsChannelPattern":"bots"
 }
