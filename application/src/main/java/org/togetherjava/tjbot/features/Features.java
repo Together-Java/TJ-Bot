@@ -50,6 +50,8 @@ import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Utility class that offers all features that should be registered by the system, such as commands.
@@ -57,7 +59,7 @@ import java.util.Collection;
  * it with the system.
  * <p>
  * To add a new slash command, extend the commands returned by
- * {@link #createFeatures(JDA, Database, Config)}.
+ * {@link #createFeatures(JDA, Database, Config, Logger)}.
  */
 public class Features {
     private Features() {
@@ -73,9 +75,10 @@ public class Features {
      * @param jda the JDA instance commands will be registered at
      * @param database the database of the application, which features can use to persist data
      * @param config the configuration features should use
+     * @param logger the logger instance to log disabled features
      * @return a collection of all features
      */
-    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
+    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config, Logger logger) {
         FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
         JShellEval jshellEval = new JShellEval(config.getJshell());
 
@@ -89,7 +92,7 @@ public class Features {
         ChatGptService chatGptService = new ChatGptService(config);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
 
-        // NOTE The system can add special system relevant commands also by itself,
+        // NOTE The system can add special system-relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
         // available.
         Collection<Feature> features = new ArrayList<>();
@@ -102,8 +105,7 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
-        features
-            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+        features.add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
 
@@ -161,16 +163,11 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
-        List<Feature> enabledFeatures = features.stream()
-                .filter(f -> blacklist.isEnabled(f.getClass()))
-                .peek(f -> {
-                    if (!blacklist.isEnabled(f.getClass())) {
-                        // Log INFO level message for each disabled feature
-                        BotCore.log.info("Feature '{}' is disabled.", f.getClass().getSimpleName());
-                    }
-                })
-                .toList();
+        return features.stream().filter(f -> !blacklist.isEnabled(f.getClass())).peek(f -> {
+            // Log INFO level message for each disabled feature using the provided logger
+            String message = "Feature '" + f.getClass().getSimpleName() + "' is disabled.";
+            logger.info(message);
+        }).toList();
 
-        return enabledFeatures;
     }
 }
