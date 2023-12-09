@@ -161,6 +161,16 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
-        return features.stream().filter(f -> blacklist.isEnabled(f.getClass())).toList();
+        List<Feature> enabledFeatures = features.stream()
+                .filter(f -> blacklist.isEnabled(f.getClass()))
+                .peek(f -> {
+                    if (!blacklist.isEnabled(f.getClass())) {
+                        // Log INFO level message for each disabled feature
+                        BotCore.log.info("Feature '{}' is disabled.", f.getClass().getSimpleName());
+                    }
+                })
+                .toList();
+
+        return enabledFeatures;
     }
 }
