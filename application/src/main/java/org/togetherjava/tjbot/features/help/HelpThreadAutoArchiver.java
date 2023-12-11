@@ -3,11 +3,15 @@ package org.togetherjava.tjbot.features.help;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Routine, which periodically checks all help threads and archives them if there has not been any
@@ -27,8 +32,8 @@ import java.util.function.Consumer;
  */
 public final class HelpThreadAutoArchiver implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
-    private static final int SCHEDULE_MINUTES = 60;
-    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
+    private static final int SCHEDULE_MINUTES = 6;
+    private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofSeconds(12);
 
     private final HelpSystemHelper helper;
 
@@ -43,7 +48,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     @Override
     public Schedule createSchedule() {
-        return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_MINUTES, TimeUnit.MINUTES);
+        return new Schedule(ScheduleMode.FIXED_RATE, 0, SCHEDULE_MINUTES, TimeUnit.SECONDS);
     }
 
     @Override
@@ -122,6 +127,7 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
+
         Consumer<Throwable> handleFailure = error -> {
             if (error instanceof ErrorResponseException) {
                 logger.warn("Unknown error occurred during help thread auto archive routine",
@@ -129,9 +135,22 @@ public final class HelpThreadAutoArchiver implements Routine {
             }
         };
 
+        Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
+                (member) -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
+
+        Function<Result<Member>, RestAction<Message>> sendEmbedWithoutMention =
+                (member) -> threadChannel.sendMessageEmbeds(embed);
+
         threadChannel.getGuild()
             .retrieveMemberById(threadChannel.getOwnerIdLong())
-            .flatMap(author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
+            .mapToResult()
+            .flatMap(member -> {
+                if (member.isSuccess()) {
+                    return sendEmbedWithMention.apply(member);
+                }
+                logger.debug("Member already left server, archiving thread without mention");
+                return sendEmbedWithoutMention.apply(member);
+            })
             .flatMap(any -> threadChannel.getManager().setArchived(true))
             .queue(any -> {
             }, handleFailure);
