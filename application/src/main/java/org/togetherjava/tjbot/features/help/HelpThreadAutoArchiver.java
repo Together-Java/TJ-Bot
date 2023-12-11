@@ -136,10 +136,10 @@ public final class HelpThreadAutoArchiver implements Routine {
         };
 
         Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
-                (member) -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
+                member -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
 
         Function<Result<Member>, RestAction<Message>> sendEmbedWithoutMention =
-                (member) -> threadChannel.sendMessageEmbeds(embed);
+                member -> threadChannel.sendMessageEmbeds(embed);
 
         threadChannel.getGuild()
             .retrieveMemberById(threadChannel.getOwnerIdLong())
