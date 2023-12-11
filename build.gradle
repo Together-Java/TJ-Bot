@@ -51,6 +51,13 @@ subprojects {
     if (!skipSonarlint) {
         apply plugin: "name.remal.sonarlint"
     }
+    
+    java {
+        toolchain {
+            // Nails the Java-Version of every Subproject
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
     // sonarlint configuration, not to be confused with sonarqube/sonarcloud.
     sonarLint {
@@ -60,17 +67,6 @@ subprojects {
             )
         }
     }
-
-    def compileTasks = {
-        options.encoding = 'UTF-8'
-
-        // Nails the Java-Version of every Subproject
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-
-    compileJava(compileTasks)
-    compileTestJava(compileTasks)
 
     spotless {
         java {
