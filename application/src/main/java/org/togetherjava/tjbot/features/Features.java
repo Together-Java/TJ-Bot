@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.features;
 
 import net.dv8tion.jda.api.JDA;
+import org.slf4j.Logger;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
@@ -50,8 +51,7 @@ import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.logging.Logger;
+
 
 /**
  * Utility class that offers all features that should be registered by the system, such as commands.
@@ -78,7 +78,8 @@ public class Features {
      * @param logger the logger instance to log disabled features
      * @return a collection of all features
      */
-    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config, Logger logger) {
+    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config,
+            Logger logger) {
         FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
         JShellEval jshellEval = new JShellEval(config.getJshell());
 
@@ -105,7 +106,8 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
-        features.add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+        features
+            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
 

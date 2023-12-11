@@ -71,7 +71,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      */
     public BotCore(JDA jda, Database database, Config config) {
         this.config = config;
-        Collection<Feature> features = Features.createFeatures(jda, database, config);
+        Collection<Feature> features = Features.createFeatures(jda, database, config, logger);
 
         // Message receivers
         features.stream()
