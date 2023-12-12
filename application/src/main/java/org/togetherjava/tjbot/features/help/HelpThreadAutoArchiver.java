@@ -130,8 +130,11 @@ public final class HelpThreadAutoArchiver implements Routine {
 
         Consumer<Throwable> handleFailure = error -> {
             if (error instanceof ErrorResponseException) {
-                logger.warn("Unknown error occurred during help thread auto archive routine",
+                logger.warn(
+                        "Unknown error occurred during help thread auto archive routine, archiving thread",
                         error);
+
+                threadChannel.getManager().setArchived(true).queue();
             }
         };
 
@@ -148,7 +151,8 @@ public final class HelpThreadAutoArchiver implements Routine {
                 if (member.isSuccess()) {
                     return sendEmbedWithMention.apply(member);
                 }
-                logger.debug("Member already left server, archiving thread without mention");
+
+                logger.debug("Unable to mention user", member.getFailure());
                 return sendEmbedWithoutMention.apply(member);
             })
             .flatMap(any -> threadChannel.getManager().setArchived(true))
