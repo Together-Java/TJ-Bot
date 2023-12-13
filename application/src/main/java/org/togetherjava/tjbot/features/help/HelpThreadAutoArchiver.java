@@ -159,10 +159,10 @@ public final class HelpThreadAutoArchiver implements Routine {
             })
             .mapToResult()
             .flatMap(sentEmbed -> {
-                if (sentEmbed.isFailure()) {
-                    return handleFailure.apply(sentEmbed.getFailure());
+                if (sentEmbed.isSuccess()) {
+                    return archiveThread.get();
                 }
-                return archiveThread.get();
+                return handleFailure.apply(sentEmbed.getFailure());
             })
             .queue();
     }
