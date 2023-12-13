@@ -129,7 +129,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
 
-        Consumer<Throwable> handleFailure = error -> {
+        Consumer<Throwable> logFailure = error -> {
             if (error instanceof ErrorResponseException) {
                 logger.warn(
                         "Unknown error occurred during help thread auto archive routine, archiving thread",
@@ -159,7 +159,7 @@ public final class HelpThreadAutoArchiver implements Routine {
             })
             .flatMap(any -> archiveThread.get())
             .onErrorFlatMap(error -> {
-                handleFailure.accept(error);
+                logFailure.accept(error);
                 return archiveThread.get();
             })
             .queue();
