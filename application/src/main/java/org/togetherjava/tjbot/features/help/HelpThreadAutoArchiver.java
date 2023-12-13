@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -129,16 +128,17 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
 
-        Consumer<Throwable> logFailure = error -> {
+        Supplier<RestAction<Void>> archiveThread =
+                () -> threadChannel.getManager().setArchived(true);
+
+        Function<Throwable, RestAction<Void>> handleFailure = (error) -> {
             if (error instanceof ErrorResponseException) {
                 logger.warn(
                         "Unknown error occurred during help thread auto archive routine, archiving thread",
                         error);
             }
+            return archiveThread.get();
         };
-
-        Supplier<RestAction<Void>> archiveThread =
-                () -> threadChannel.getManager().setArchived(true);
 
         Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
@@ -157,9 +157,11 @@ public final class HelpThreadAutoArchiver implements Routine {
                 logger.debug("Unable to mention user", member.getFailure());
                 return sendEmbedWithoutMention.apply(member);
             })
-            .flatMap(any -> archiveThread.get())
-            .onErrorFlatMap(error -> {
-                logFailure.accept(error);
+            .mapToResult()
+            .flatMap(sentEmbed -> {
+                if (sentEmbed.isFailure()) {
+                    return handleFailure.apply(sentEmbed.getFailure());
+                }
                 return archiveThread.get();
             })
             .queue();
