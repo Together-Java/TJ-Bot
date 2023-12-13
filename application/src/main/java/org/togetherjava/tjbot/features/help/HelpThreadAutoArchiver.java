@@ -162,6 +162,7 @@ public final class HelpThreadAutoArchiver implements Routine {
                 if (sentEmbed.isSuccess()) {
                     return archiveThread.get();
                 }
+
                 return handleFailure.apply(sentEmbed.getFailure());
             })
             .queue();
