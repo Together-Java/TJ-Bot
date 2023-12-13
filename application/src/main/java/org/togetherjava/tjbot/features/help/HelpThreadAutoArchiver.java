@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Routine, which periodically checks all help threads and archives them if there has not been any
@@ -136,6 +137,9 @@ public final class HelpThreadAutoArchiver implements Routine {
             }
         };
 
+        Supplier<RestAction<Void>> archiveThread =
+                () -> threadChannel.getManager().setArchived(true);
+
         Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
 
@@ -153,10 +157,10 @@ public final class HelpThreadAutoArchiver implements Routine {
                 logger.debug("Unable to mention user", member.getFailure());
                 return sendEmbedWithoutMention.apply(member);
             })
-            .flatMap(any -> threadChannel.getManager().setArchived(true))
+            .flatMap(any -> archiveThread.get())
             .onErrorFlatMap(error -> {
                 handleFailure.accept(error);
-                return threadChannel.getManager().setArchived(true);
+                return archiveThread.get();
             })
             .queue();
     }
