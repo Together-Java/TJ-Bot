@@ -131,7 +131,7 @@ public final class HelpThreadAutoArchiver implements Routine {
         Supplier<RestAction<Void>> archiveThread =
                 () -> threadChannel.getManager().setArchived(true);
 
-        Function<Throwable, RestAction<Void>> handleFailure = (error) -> {
+        Function<Throwable, RestAction<Void>> handleFailure = error -> {
             if (error instanceof ErrorResponseException) {
                 logger.warn(
                         "Unknown error occurred during help thread auto archive routine, archiving thread",
