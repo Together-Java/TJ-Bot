@@ -133,8 +133,6 @@ public final class HelpThreadAutoArchiver implements Routine {
                 logger.warn(
                         "Unknown error occurred during help thread auto archive routine, archiving thread",
                         error);
-
-                threadChannel.getManager().setArchived(true).queue();
             }
         };
 
@@ -156,7 +154,10 @@ public final class HelpThreadAutoArchiver implements Routine {
                 return sendEmbedWithoutMention.apply(member);
             })
             .flatMap(any -> threadChannel.getManager().setArchived(true))
-            .queue(any -> {
-            }, handleFailure);
+            .onErrorFlatMap(error -> {
+                handleFailure.accept(error);
+                return threadChannel.getManager().setArchived(true);
+            })
+            .queue();
     }
 }
