@@ -78,7 +78,7 @@ public final class PurgeMessageListener extends MessageReceiverAdapter {
     }
 
     private static boolean canWriteToDB() {
-        return recordsCounter.get() <= MESSAGES_RECORDS_MAX_LIMIT;
+        return recordsCounter.get() < MESSAGES_RECORDS_MAX_LIMIT;
     }
 
     private static void incrementRecordsCounterByOne() {
