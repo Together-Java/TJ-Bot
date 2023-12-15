@@ -30,7 +30,7 @@ import java.util.function.Function;
  * recent activity.
  */
 public final class HelpThreadAutoArchiver implements Routine {
-    private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
     private static final int SCHEDULE_MINUTES = 60;
     private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
 
@@ -57,7 +57,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void autoArchiveForGuild(Guild guild) {
         Optional<ForumChannel> maybeHelpForum = helper
-            .handleRequireHelpForum(guild, channelPattern -> logger.warn(
+            .handleRequireHelpForum(guild, channelPattern -> LOGGER.warn(
                     "Unable to auto archive help threads, did not find a help forum matching the configured pattern '{}' for guild '{}'",
                     channelPattern, guild.getName()));
 
@@ -65,10 +65,10 @@ public final class HelpThreadAutoArchiver implements Routine {
             return;
         }
 
-        logger.debug("Auto archiving of help threads");
+        LOGGER.debug("Auto archiving of help threads");
 
         List<ThreadChannel> activeThreads = helper.getActiveThreadsIn(maybeHelpForum.orElseThrow());
-        logger.debug("Found {} active questions", activeThreads.size());
+        LOGGER.debug("Found {} active questions", activeThreads.size());
 
         Instant archiveAfterMoment = computeArchiveAfterMoment();
         activeThreads
@@ -81,7 +81,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment) {
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
-            logger.debug("Auto archiving help thread {}", threadChannel.getId());
+            LOGGER.debug("Auto archiving help thread {}", threadChannel.getId());
 
             String linkHowToAsk = "https://stackoverflow.com/help/how-to-ask";
 
@@ -141,13 +141,13 @@ public final class HelpThreadAutoArchiver implements Routine {
                     return sendEmbedWithMention.apply(member);
                 }
 
-                logger.debug("Unable to mention user", member.getFailure());
+                LOGGER.debug("Unable to mention user", member.getFailure());
                 return sendEmbedWithoutMention.apply(member);
             })
             .mapToResult()
             .flatMap(sentEmbed -> {
                 if (sentEmbed.getFailure() instanceof ErrorResponseException) {
-                    logger.warn(
+                    LOGGER.warn(
                             "Unknown error occurred during help thread auto archive routine, archiving thread",
                             sentEmbed.getFailure());
                 }
