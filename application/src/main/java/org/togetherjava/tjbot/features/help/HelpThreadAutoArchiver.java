@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Routine, which periodically checks all help threads and archives them if there has not been any
@@ -129,21 +130,21 @@ public final class HelpThreadAutoArchiver implements Routine {
         Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
 
-        Function<Result<Member>, RestAction<Message>> sendEmbedWithoutMention =
-                member -> threadChannel.sendMessageEmbeds(embed);
+        Supplier<RestAction<Message>> sendEmbedWithoutMention =
+                () -> threadChannel.sendMessageEmbeds(embed);
 
         threadChannel.getGuild()
             .retrieveMemberById(threadChannel.getOwnerIdLong())
             .mapToResult()
-            .flatMap(member -> {
-                if (member.isSuccess()) {
-                    return sendEmbedWithMention.apply(member);
+            .flatMap(foundMember -> {
+                if (foundMember.isSuccess()) {
+                    return sendEmbedWithMention.apply(foundMember);
                 }
                 LOGGER.info(
                         "Owner of thread with id: {} left the server, sending embed without mention",
-                        threadChannel.getId(), member.getFailure());
+                        threadChannel.getId(), foundMember.getFailure());
 
-                return sendEmbedWithoutMention.apply(member);
+                return sendEmbedWithoutMention.get();
             })
             .mapToResult()
             .flatMap(sentEmbed -> {
