@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.TimeUtil;
@@ -148,7 +147,7 @@ public final class HelpThreadAutoArchiver implements Routine {
             })
             .mapToResult()
             .flatMap(sentEmbed -> {
-                if (sentEmbed.getFailure() instanceof ErrorResponseException) {
+                if (sentEmbed.isFailure()) {
                     LOGGER.warn(
                             "Unknown error occurred during help thread auto archive routine, archiving thread",
                             sentEmbed.getFailure());
