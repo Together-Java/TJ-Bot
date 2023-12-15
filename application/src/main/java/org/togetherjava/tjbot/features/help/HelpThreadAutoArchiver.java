@@ -140,8 +140,10 @@ public final class HelpThreadAutoArchiver implements Routine {
                 if (member.isSuccess()) {
                     return sendEmbedWithMention.apply(member);
                 }
+                LOGGER.info(
+                        "Owner of thread with id: {} left the server, sending embed without mention",
+                        threadChannel.getId(), member.getFailure());
 
-                LOGGER.debug("Unable to mention user", member.getFailure());
                 return sendEmbedWithoutMention.apply(member);
             })
             .mapToResult()
