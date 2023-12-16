@@ -31,7 +31,7 @@ import org.togetherjava.tjbot.features.moderation.attachment.BlacklistedAttachme
 import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogRoutine;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
-import org.togetherjava.tjbot.features.moderation.history.MessageHistoryRoutine;
+import org.togetherjava.tjbot.features.moderation.history.PurgeExpiredMessageHistory;
 import org.togetherjava.tjbot.features.moderation.history.PurgeHistoryCommand;
 import org.togetherjava.tjbot.features.moderation.history.PurgeMessageListener;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
@@ -109,7 +109,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
-        features.add(new MessageHistoryRoutine(database));
+        features.add(new PurgeExpiredMessageHistory(database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));

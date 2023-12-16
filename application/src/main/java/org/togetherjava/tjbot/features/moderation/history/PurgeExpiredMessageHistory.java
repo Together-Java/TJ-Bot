@@ -18,8 +18,8 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 /**
  * Routine that deletes records from message_history post expiration hours.
  */
-public final class MessageHistoryRoutine implements Routine {
-    private static final Logger logger = LoggerFactory.getLogger(MessageHistoryRoutine.class);
+public final class PurgeExpiredMessageHistory implements Routine {
+    private static final Logger logger = LoggerFactory.getLogger(PurgeExpiredMessageHistory.class);
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private static final int EXPIRATION_HOURS = Duration.PURGE_HISTORY_MAX_DURATION.getHours();
     private final Database database;
@@ -29,7 +29,7 @@ public final class MessageHistoryRoutine implements Routine {
      *
      * @param database the database that contains records of messages to be purged.
      */
-    public MessageHistoryRoutine(Database database) {
+    public PurgeExpiredMessageHistory(Database database) {
         this.database = database;
     }
 
