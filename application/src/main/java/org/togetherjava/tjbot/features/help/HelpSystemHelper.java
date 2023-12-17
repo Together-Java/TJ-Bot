@@ -367,7 +367,7 @@ public final class HelpSystemHelper {
         ARCHIVED(0),
         ACTIVE(1);
 
-        private final int val;
+        final int val;
 
         TicketStatus(int val) {
             this.val = val;
