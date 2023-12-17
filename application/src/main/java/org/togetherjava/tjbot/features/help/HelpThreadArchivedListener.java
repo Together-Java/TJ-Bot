@@ -66,7 +66,7 @@ public final class HelpThreadArchivedListener extends ListenerAdapter implements
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .execute());
 
-        logger.info("Thread with id: {}, updated to active in database", threadId);
+        logger.info("Thread with id: {}, updated to archived in database", threadId);
     }
 
     private void changeStatusToActive(long threadId) {
@@ -75,6 +75,6 @@ public final class HelpThreadArchivedListener extends ListenerAdapter implements
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .execute());
 
-        logger.info("Thread with id: {}, updated to archive status in database", threadId);
+        logger.info("Thread with id: {}, updated to active status in database", threadId);
     }
 }
