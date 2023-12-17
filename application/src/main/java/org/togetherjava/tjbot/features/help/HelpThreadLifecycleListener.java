@@ -19,18 +19,19 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREAD
  * Listens for help thread events after creation of thread. Updates metadata based on those events
  * in database.
  */
-public final class HelpThreadEventsListener extends ListenerAdapter implements EventReceiver {
+public final class HelpThreadLifecycleListener extends ListenerAdapter implements EventReceiver {
 
     private final HelpSystemHelper helper;
-    private final Logger logger = LoggerFactory.getLogger(HelpThreadEventsListener.class);
+    private final Logger logger = LoggerFactory.getLogger(HelpThreadLifecycleListener.class);
     private final Database database;
 
     /**
      * Creates a new instance.
      *
      * @param helper to work with the help threads
+     * @param database the database to store help thread metadata in
      */
-    public HelpThreadEventsListener(HelpSystemHelper helper, Database database) {
+    public HelpThreadLifecycleListener(HelpSystemHelper helper, Database database) {
         this.helper = helper;
         this.database = database;
     }

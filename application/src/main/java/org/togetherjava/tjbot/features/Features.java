@@ -125,7 +125,7 @@ public class Features {
         features.add(new GuildLeaveCloseThreadListener(config));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
-        features.add(new HelpThreadEventsListener(helpSystemHelper, database));
+        features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
 
         // Message context commands
         features.add(new TransferQuestionCommand(config));
