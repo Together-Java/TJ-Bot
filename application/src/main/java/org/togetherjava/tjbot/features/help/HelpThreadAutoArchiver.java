@@ -146,15 +146,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
                 return sendEmbedWithoutMention.get();
             })
-            .mapToResult()
-            .flatMap(sentEmbed -> {
-                if (sentEmbed.isFailure()) {
-                    logger.warn(
-                            "Unknown error occurred during help thread auto archive routine, archiving thread",
-                            sentEmbed.getFailure());
-                }
-                return threadChannel.getManager().setArchived(true);
-            })
+            .flatMap(any -> threadChannel.getManager().setArchived(true))
             .queue();
     }
 }
