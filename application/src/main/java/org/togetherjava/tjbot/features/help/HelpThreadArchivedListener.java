@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.events.channel.update.ChannelUpdateAppliedTagsEvent;
 import net.dv8tion.jda.api.events.channel.update.ChannelUpdateArchivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -37,15 +38,27 @@ public final class HelpThreadArchivedListener extends ListenerAdapter implements
         }
         ThreadChannel threadChannel = event.getChannel().asThreadChannel();
 
-
         if (!helper.isHelpForumName(threadChannel.getParentChannel().getName())) {
             return;
         }
-        handleThreadStatus(threadChannel);
+        handleThreadStatus(threadChannel.getIdLong());
     }
 
-    private void handleThreadStatus(ThreadChannel threadChannel) {
+    @Override
+    public void onChannelUpdateAppliedTags(@NotNull ChannelUpdateAppliedTagsEvent event) {
+        ThreadChannel threadChannel = event.getChannel().asThreadChannel();
+
+        if(!helper.isHelpForumName(threadChannel.getParentChannel().getName())){
+            return;
+        }
+
+        String updatedTag = event.getAddedTags().getFirst().getName();
         long threadId = threadChannel.getIdLong();
+
+        handleTagsUpdate(threadId,updatedTag);
+    }
+
+    private void handleThreadStatus(long threadId) {
         Instant closedAt = Instant.now();
 
         int status = database.read(context -> context.selectFrom(HELP_THREADS)
@@ -76,5 +89,14 @@ public final class HelpThreadArchivedListener extends ListenerAdapter implements
             .execute());
 
         logger.info("Thread with id: {}, updated to active status in database", threadId);
+    }
+
+    private void handleTagsUpdate(long threadId, String updatedTag){
+        database.write(context->context.update(HELP_THREADS)
+                .set(HELP_THREADS.TAG,updatedTag)
+                .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
+                .execute());
+
+        logger.info("Updated tag for thread with id: {} in database",threadId);
     }
 }
