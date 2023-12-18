@@ -72,6 +72,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
 
         if (status == HelpSystemHelper.TicketStatus.ACTIVE.val) {
             changeStatusToArchive(closedAt, threadId);
+            return;
         }
 
         changeStatusToActive(threadId);
@@ -84,7 +85,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .execute());
 
-        logger.info("Thread with id: {}, updated to archived in database", threadId);
+        logger.info("Thread with id: {}, updated to archived status in database", threadId);
     }
 
     private void changeStatusToActive(long threadId) {
