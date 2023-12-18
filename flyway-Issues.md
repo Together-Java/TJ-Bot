@@ -3,7 +3,7 @@
 ## Context
 Whenever you make changes to state of DB, you have to write a new SQL script in `/resources/db` directory.
 
-Let's say you wanna add new table in DB, you write a script `V14__Alter_Help_Thread_Metadata.sql`.
+Let's say you wanna modify an existing table in DB, you write a script `V14__Alter_Help_Thread_Metadata.sql`.
 
 _Let's ignore commented SQL for now, say first iteration of your script only has first two entries_
 ![image](https://github.com/Together-Java/TJ-Bot/assets/61616007/1034a3ac-f7ce-45ca-b9c9-6917f5ef61ab)
