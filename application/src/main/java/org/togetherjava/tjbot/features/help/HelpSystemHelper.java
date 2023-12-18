@@ -205,7 +205,7 @@ public final class HelpSystemHelper {
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
 
         Instant createdAt = Instant.now();
-        String tag = threadChannel.getAppliedTags().get(0).getName();
+        String tag = threadChannel.getAppliedTags().getFirst().getName();
 
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
