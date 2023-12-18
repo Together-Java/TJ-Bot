@@ -87,8 +87,8 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         database.write(context -> context.update(HELP_THREADS)
             .set(HELP_THREADS.CLOSED_AT, closedAt)
             .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
-                .set(HELP_THREADS.MESSAGE_COUNT,messageCount)
-                .set(HELP_THREADS.PARTICIPANTS,participantsExceptAuthor)
+            .set(HELP_THREADS.MESSAGE_COUNT, messageCount)
+            .set(HELP_THREADS.PARTICIPANTS, participantsExceptAuthor)
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .execute());
 
