@@ -46,7 +46,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         if (!helper.isHelpForumName(threadChannel.getParentChannel().getName())) {
             return;
         }
-        handleThreadStatus(threadChannel.getIdLong());
+        handleThreadStatus(threadChannel);
     }
 
     @Override
@@ -63,25 +63,32 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         handleTagsUpdate(threadId, updatedTag);
     }
 
-    private void handleThreadStatus(long threadId) {
+    private void handleThreadStatus(ThreadChannel threadChannel) {
         Instant closedAt = Instant.now();
+        long threadId = threadChannel.getIdLong();
 
         int status = database.read(context -> context.selectFrom(HELP_THREADS)
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .fetchOne(HELP_THREADS.TICKET_STATUS));
 
         if (status == HelpSystemHelper.TicketStatus.ACTIVE.val) {
-            changeStatusToArchive(closedAt, threadId);
+            handleArchiveStatus(closedAt, threadChannel);
             return;
         }
 
         changeStatusToActive(threadId);
     }
 
-    private void changeStatusToArchive(Instant closedAt, long threadId) {
+    private void handleArchiveStatus(Instant closedAt, ThreadChannel threadChannel) {
+        long threadId = threadChannel.getIdLong();
+        int messageCount = threadChannel.getMessageCount();
+        int participantsExceptAuthor = threadChannel.getMemberCount() - 1;
+
         database.write(context -> context.update(HELP_THREADS)
             .set(HELP_THREADS.CLOSED_AT, closedAt)
             .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
+                .set(HELP_THREADS.MESSAGE_COUNT,messageCount)
+                .set(HELP_THREADS.PARTICIPANTS,participantsExceptAuthor)
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .execute());
 
