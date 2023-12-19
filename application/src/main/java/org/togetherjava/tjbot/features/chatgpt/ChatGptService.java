@@ -47,7 +47,7 @@ public class ChatGptService {
                         Please answer questions in 1500 characters or less. Remember to count spaces in the
                         character limit. For code supplied for review, refer to the old code supplied rather than
                         rewriting the code. Don't supply a corrected version of the code. If response contains any code,
-                        replace parts of it by pseudo code to strictly follow character limit.\s""");
+                        replace parts of it using pseudo code to strictly follow character limit.\s""");
         ChatCompletionRequest systemSetupRequest = ChatCompletionRequest.builder()
             .model(AI_MODEL)
             .messages(List.of(setupMessage))
@@ -75,8 +75,8 @@ public class ChatGptService {
         }
 
         try {
-            String questionWithContext =
-                    "context: Category %s on a java q/a server.  %s".formatted(context, question);
+            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s"
+                .formatted(context, question);
             ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
                     Objects.requireNonNull(questionWithContext));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
