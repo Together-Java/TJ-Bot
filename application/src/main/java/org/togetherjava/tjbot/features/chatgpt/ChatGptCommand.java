@@ -74,8 +74,9 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferReply().queue();
 
+        String context = "";
         Optional<String[]> optional =
-                chatGptService.ask(event.getValue(QUESTION_INPUT).getAsString());
+                chatGptService.ask(event.getValue(QUESTION_INPUT).getAsString(), context);
         if (optional.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }

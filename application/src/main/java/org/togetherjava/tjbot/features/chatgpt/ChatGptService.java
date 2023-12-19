@@ -68,14 +68,15 @@ public class ChatGptService {
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      */
-    public Optional<String[]> ask(String question) {
+    public Optional<String[]> ask(String question, String context) {
         if (isDisabled) {
             return Optional.empty();
         }
 
         try {
-            ChatMessage chatMessage =
-                    new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(question));
+            String questionWithContext = "context: %s  %s".formatted(context, question);
+            ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
+                    Objects.requireNonNull(questionWithContext));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model(AI_MODEL)
                 .messages(List.of(chatMessage))
