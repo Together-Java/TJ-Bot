@@ -75,7 +75,8 @@ public class ChatGptService {
         }
 
         try {
-            String questionWithContext = "context: %s  %s".formatted(context, question);
+            String questionWithContext =
+                    "context: Category %s on a java q/a server.  %s".formatted(context, question);
             ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
                     Objects.requireNonNull(questionWithContext));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
