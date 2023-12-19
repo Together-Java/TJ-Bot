@@ -133,7 +133,6 @@ public final class HelpThreadAutoArchiver implements Routine {
             .retrieveMemberById(threadChannel.getOwnerIdLong())
             .flatMap(author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
             .flatMap(any -> threadChannel.getManager().setArchived(true))
-            .queue(any -> {
-            }, handleFailure);
+            .queue(any -> {}, handleFailure);
     }
 }

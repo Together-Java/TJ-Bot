@@ -39,9 +39,9 @@ abstract class RevocableRoleBasedAction implements RevocableModerationAction {
                 case UNKNOWN_ROLE -> logger.warn(
                         "Attempted to revoke a temporary {} but the {} role can not be found.",
                         actionName, actionName);
-                case MISSING_PERMISSIONS -> logger.warn(
-                        "Attempted to revoke a temporary {} but the bot lacks permission.",
-                        actionName);
+                case MISSING_PERMISSIONS ->
+                    logger.warn("Attempted to revoke a temporary {} but the bot lacks permission.",
+                            actionName);
                 default -> {
                     return FailureIdentification.UNKNOWN;
                 }

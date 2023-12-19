@@ -6,5 +6,4 @@ package org.togetherjava.tjbot.features.jshell.backend.dto;
  * @param id the session of the id
  * @param result the JShell eval result
  */
-public record JShellResultWithId(String id, JShellResult result) {
-}
+public record JShellResultWithId(String id, JShellResult result) {}

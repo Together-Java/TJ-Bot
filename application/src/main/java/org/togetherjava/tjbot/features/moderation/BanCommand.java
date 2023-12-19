@@ -66,7 +66,10 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
                     "the amount of days of the message history to delete, none means no messages are deleted.",
-                    true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
+                    true)
+                .addChoice("none", 0)
+                .addChoice("recent", 1)
+                .addChoice("all", 7));
 
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
@@ -133,7 +136,8 @@ public final class BanCommand extends SlashCommandAdapter {
             int deleteHistoryDays, Guild guild, SlashCommandInteractionEvent event) {
         return sendDm(target, temporaryData, reason, guild)
             .flatMap(hasSentDm -> banUser(target, author, temporaryData, reason, deleteHistoryDays,
-                    guild).map(banResult -> hasSentDm))
+                    guild)
+                .map(banResult -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))
             .flatMap(event.getHook()::sendMessageEmbeds);
     }
@@ -208,8 +212,8 @@ public final class BanCommand extends SlashCommandAdapter {
 
             return handleNotAlreadyBannedResponse(
                     Objects.requireNonNull(alreadyBanned.getFailure()), hook, guild, target)
-                        .orElseGet(() -> banUserFlow(target, author, temporaryData.orElse(null),
-                                reason, deleteHistoryDays, guild, event));
+                .orElseGet(() -> banUserFlow(target, author, temporaryData.orElse(null), reason,
+                        deleteHistoryDays, guild, event));
         }).queue();
     }
 }

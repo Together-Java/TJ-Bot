@@ -21,8 +21,8 @@ public class RateLimiter {
      * Creates a rate limiter.
      * <p>
      * Defines a window and a number of request, for example, if 10 requests should be allowed per 5
-     * seconds, so 10/5s, the following should be called: {@snippet java: new
-     * RateLimit(Duration.of(5, TimeUnit.SECONDS), 10) }
+     * seconds, so 10/5s, the following should be called:
+     * {@snippet java: new RateLimit(Duration.of(5, TimeUnit.SECONDS), 10) }
      * 
      * @param duration the duration of window
      * @param allowedRequests the number of requests to allow in the window

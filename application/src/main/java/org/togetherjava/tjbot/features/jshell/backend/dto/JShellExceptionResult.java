@@ -6,5 +6,4 @@ package org.togetherjava.tjbot.features.jshell.backend.dto;
  * @param exceptionClass the class of the exception
  * @param exceptionMessage the message of the exception
  */
-public record JShellExceptionResult(String exceptionClass, String exceptionMessage) {
-}
+public record JShellExceptionResult(String exceptionClass, String exceptionMessage) {}

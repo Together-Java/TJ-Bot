@@ -437,6 +437,5 @@ public class ModerationUtils {
      * @param duration a human-readable text representing the duration of the temporary action, such
      *        as {@code "1 day"}.
      */
-    record TemporaryData(Instant expiresAt, String duration) {
-    }
+    record TemporaryData(Instant expiresAt, String duration) {}
 }

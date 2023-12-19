@@ -104,7 +104,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                                         .getPrefixedName(userInteractor.getName()),
                                     Function.identity()));
 
-
         // Component Id Store
         componentIdStore = new ComponentIdStore(database);
         componentIdStore.addComponentIdRemovedListener(BotCore::onComponentIdRemoved);
@@ -240,7 +239,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 event.getGuild());
         COMMAND_SERVICE.execute(
                 () -> requireUserInteractor(UserInteractionType.SLASH_COMMAND.getPrefixedName(name),
-                        SlashCommand.class).onSlashCommand(event));
+                        SlashCommand.class)
+                    .onSlashCommand(event));
     }
 
     @Override
@@ -251,7 +251,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 event.getCommandPath(), event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(
                 () -> requireUserInteractor(UserInteractionType.SLASH_COMMAND.getPrefixedName(name),
-                        SlashCommand.class).onAutoComplete(event));
+                        SlashCommand.class)
+                    .onAutoComplete(event));
     }
 
     @Override
@@ -300,7 +301,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(() -> requireUserInteractor(
                 UserInteractionType.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
-                MessageContextCommand.class).onMessageContext(event));
+                MessageContextCommand.class)
+            .onMessageContext(event));
     }
 
     @Override
@@ -311,7 +313,8 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
                 event.getGuild());
         COMMAND_SERVICE.execute(() -> requireUserInteractor(
                 UserInteractionType.USER_CONTEXT_COMMAND.getPrefixedName(name),
-                UserContextCommand.class).onUserContext(event));
+                UserContextCommand.class)
+            .onUserContext(event));
     }
 
     /**
@@ -409,7 +412,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         return typeToken.cast(userInteractor);
     }
-
 
     @SuppressWarnings("EmptyMethod")
     private static void onComponentIdRemoved(ComponentId componentId) {

@@ -81,23 +81,21 @@ public final class TagManageCommand extends SlashCommandAdapter {
         // 'delete'
         getData().addSubcommands(new SubcommandData(Subcommand.RAW.name,
                 "View the raw content of a tag, without Discord interpreting any of its content")
-                    .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true),
+            .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true),
                 new SubcommandData(Subcommand.CREATE.name, "Creates a new tag")
                     .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true)
                     .addOption(OptionType.STRING, CONTENT_OPTION, CONTENT_DESCRIPTION, true),
                 new SubcommandData(Subcommand.CREATE_WITH_MESSAGE.name,
                         "Creates a new tag. Content is retrieved from the given message.")
-                            .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true)
-                            .addOption(OptionType.STRING, MESSAGE_ID_OPTION, MESSAGE_ID_DESCRIPTION,
-                                    true),
+                    .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true)
+                    .addOption(OptionType.STRING, MESSAGE_ID_OPTION, MESSAGE_ID_DESCRIPTION, true),
                 new SubcommandData(Subcommand.EDIT.name, "Edits a tag, the old content is replaced")
                     .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true)
                     .addOption(OptionType.STRING, CONTENT_OPTION, CONTENT_DESCRIPTION, true),
                 new SubcommandData(Subcommand.EDIT_WITH_MESSAGE.name,
                         "Edits a tag, the old content is replaced. Content is retrieved from the given message.")
-                            .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true)
-                            .addOption(OptionType.STRING, MESSAGE_ID_OPTION, MESSAGE_ID_DESCRIPTION,
-                                    true),
+                    .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true)
+                    .addOption(OptionType.STRING, MESSAGE_ID_OPTION, MESSAGE_ID_DESCRIPTION, true),
                 new SubcommandData(Subcommand.DELETE.name, "Deletes a tag")
                     .addOption(OptionType.STRING, ID_OPTION, ID_DESCRIPTION, true));
     }

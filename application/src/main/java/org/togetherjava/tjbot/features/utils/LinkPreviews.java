@@ -165,8 +165,7 @@ public final class LinkPreviews {
         });
     }
 
-    private record HttpContent(String type, InputStream dataStream) {
-    }
+    private record HttpContent(String type, InputStream dataStream) {}
 
     private static CompletableFuture<Optional<LinkPreview>> parseWebsite(String link,
             String attachmentName, InputStream websiteContent) {

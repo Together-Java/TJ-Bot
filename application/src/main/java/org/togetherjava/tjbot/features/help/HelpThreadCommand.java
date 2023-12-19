@@ -76,8 +76,8 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
                 Subcommand.CHANGE_TITLE.toSubcommandData().addOptions(changeTitleOption);
 
         SubcommandGroupData changeCommands = new SubcommandGroupData(CHANGE_SUBCOMMAND_GROUP,
-                "Change the details of this help thread").addSubcommands(changeCategory,
-                        changeTitle);
+                "Change the details of this help thread")
+            .addSubcommands(changeCategory, changeTitle);
         getData().addSubcommandGroups(changeCommands);
 
         getData().addSubcommands(Subcommand.CLOSE.toSubcommandData());

@@ -82,12 +82,12 @@ public final class BookmarksCommand extends SlashCommandAdapter {
 
         OptionData addNoteOption = new OptionData(OptionType.STRING, ADD_BOOKMARK_NOTE_OPTION,
                 "Your personal comment on this bookmark")
-                    .setMaxLength(BookmarksSystem.MAX_NOTE_LENGTH)
-                    .setRequired(false);
+            .setMaxLength(BookmarksSystem.MAX_NOTE_LENGTH)
+            .setRequired(false);
 
         SubcommandData addSubCommand = new SubcommandData(SUBCOMMAND_ADD,
                 "Bookmark this help thread, so that you can easily look it up again")
-                    .addOptions(addNoteOption);
+            .addOptions(addNoteOption);
 
         SubcommandData listSubCommand =
                 new SubcommandData(SUBCOMMAND_LIST, "List all of your bookmarks");

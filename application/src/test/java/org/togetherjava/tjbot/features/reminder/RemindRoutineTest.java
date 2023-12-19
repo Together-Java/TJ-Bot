@@ -79,7 +79,7 @@ final class RemindRoutineTest {
         TextChannel channel = jdaTester.createTextChannelSpy(unknownChannelId);
         when(jdaTester.getJdaMock()
             .getChannelById(ArgumentMatchers.<Class<MessageChannel>>any(), eq(unknownChannelId)))
-                .thenReturn(null);
+            .thenReturn(null);
 
         return channel;
     }

@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.config;
 
-
 import org.togetherjava.tjbot.features.utils.RateLimiter;
 
 import java.util.Objects;

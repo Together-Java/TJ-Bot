@@ -77,7 +77,8 @@ public class JShellApi {
                 baseUrl + "single-eval"
                         + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
                 HttpRequest.newBuilder().POST(BodyPublishers.ofString(code)),
-                ResponseUtils.ofJson(JShellResult.class, objectMapper)).body();
+                ResponseUtils.ofJson(JShellResult.class, objectMapper))
+            .body();
     }
 
     /**
@@ -98,7 +99,8 @@ public class JShellApi {
                 baseUrl + "eval/" + sessionId
                         + (startupScript ? "?startupScriptId=" + STARTUP_SCRIPT_ID : ""),
                 HttpRequest.newBuilder().POST(BodyPublishers.ofString(code)),
-                ResponseUtils.ofJson(JShellResult.class, objectMapper)).body();
+                ResponseUtils.ofJson(JShellResult.class, objectMapper))
+            .body();
     }
 
     /**
@@ -116,7 +118,8 @@ public class JShellApi {
         return send(
                 baseUrl + "snippets/" + sessionId + "?includeStartupScript=" + includeStartupScript,
                 HttpRequest.newBuilder().GET(),
-                ResponseUtils.ofJson(SnippetList.class, objectMapper)).body();
+                ResponseUtils.ofJson(SnippetList.class, objectMapper))
+            .body();
     }
 
     /**
@@ -144,7 +147,8 @@ public class JShellApi {
      */
     public String startupScript() throws RequestFailedException, ConnectionFailedException {
         return send(baseUrl + "startup_script/" + STARTUP_SCRIPT_ID, HttpRequest.newBuilder().GET(),
-                BodyHandlers.ofString()).body();
+                BodyHandlers.ofString())
+            .body();
     }
 
     private <T> HttpResponse<T> send(String url, HttpRequest.Builder builder, BodyHandler<T> body)

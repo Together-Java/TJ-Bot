@@ -91,7 +91,6 @@ final class DiscordLogForwarder {
         SERVICE.scheduleWithFixedDelay(this::processPendingLogs, 5, 5, TimeUnit.SECONDS);
     }
 
-
     /**
      * Forwards the given log message to Discord.
      * <p>
@@ -165,8 +164,8 @@ final class DiscordLogForwarder {
         return new ArrayList<>(logBatch);
     }
 
-    private record LogMessage(WebhookEmbed embed,
-            Instant timestamp) implements Comparable<LogMessage> {
+    private record LogMessage(WebhookEmbed embed, Instant timestamp)
+            implements Comparable<LogMessage> {
 
         private static final String BASE_PACKAGE = "org.togetherjava.tjbot.";
 
