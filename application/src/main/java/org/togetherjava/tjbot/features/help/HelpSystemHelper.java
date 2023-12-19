@@ -125,7 +125,10 @@ public final class HelpSystemHelper {
         String question = questionOptional.get();
         logger.debug("The final question sent to chatGPT: {}", question);
 
-        String context = threadChannel.getAppliedTags().getFirst().getName();
+        ForumTag defaultTag = threadChannel.getAppliedTags().getFirst();
+        ForumTag matchingTag = getCategoryTagOfChannel(threadChannel).orElse(defaultTag);
+
+        String context = matchingTag.getName();
         chatGPTAnswer = chatGptService.ask(question, context);
         if (chatGPTAnswer.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
