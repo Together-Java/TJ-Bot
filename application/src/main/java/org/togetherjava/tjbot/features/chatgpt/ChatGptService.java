@@ -42,12 +42,9 @@ public class ChatGptService {
 
         openAiService = new OpenAiService(apiKey, TIMEOUT);
 
-        ChatMessage setupMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(),
-                """
-                        Please answer questions in 1500 characters or less. Remember to count spaces in the
-                        character limit. For code supplied for review, refer to the old code supplied rather than
-                        rewriting the code. Don't supply a corrected version of the code. If response contains any code,
-                        replace parts of it using pseudo code to strictly follow character limit.\s""");
+        ChatMessage setupMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), """
+                For code supplied for review, refer to the old code supplied rather than
+                rewriting the code. DON'T supply a corrected version of the code.\s""");
         ChatCompletionRequest systemSetupRequest = ChatCompletionRequest.builder()
             .model(AI_MODEL)
             .messages(List.of(setupMessage))
@@ -75,8 +72,9 @@ public class ChatGptService {
         }
 
         try {
-            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s"
-                .formatted(context, question);
+            String instructions = "KEEP IT CONCISE, NOT MORE THAN 500 WORDS";
+            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
+                .formatted(context, instructions, question);
             ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
                     Objects.requireNonNull(questionWithContext));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
@@ -90,7 +88,7 @@ public class ChatGptService {
 
             String response = openAiService.createChatCompletion(chatCompletionRequest)
                 .getChoices()
-                .get(0)
+                .getFirst()
                 .getMessage()
                 .getContent();
 
