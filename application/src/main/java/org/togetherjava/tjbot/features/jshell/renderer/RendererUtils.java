@@ -2,12 +2,14 @@ package org.togetherjava.tjbot.features.jshell.renderer;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellEvalAbortionCause;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 import org.togetherjava.tjbot.features.jshell.backend.dto.SnippetStatus;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
+
 import java.awt.*;
 import java.util.List;
 import java.util.Optional;
@@ -15,8 +17,7 @@ import java.util.Optional;
 import static org.togetherjava.tjbot.features.utils.Colors.*;
 
 class RendererUtils {
-    private RendererUtils() {
-    }
+    private RendererUtils() {}
 
     static String abortionCauseToString(JShellEvalAbortionCause abortionCause) {
         if (abortionCause instanceof JShellEvalAbortionCause.TimeoutAbortionCause) {
@@ -32,20 +33,31 @@ class RendererUtils {
     }
 
     enum GeneralStatus {
-        SUCCESS, PARTIAL_SUCCESS, ERROR
+        SUCCESS,
+        PARTIAL_SUCCESS,
+        ERROR
     }
+
     static GeneralStatus getGeneralStatus(JShellResult result) {
-        if (result.snippetsResults().isEmpty() && result.abortion() == null) return GeneralStatus.SUCCESS;   // Empty = success
+        if (result.snippetsResults().isEmpty() && result.abortion() == null)
+            return GeneralStatus.SUCCESS; // Empty = success
         if (result.snippetsResults().isEmpty())
-            return GeneralStatus.ERROR;                                  // Only abortion = failure, special case for syntax error
-        if (result.snippetsResults().size() == 1 && result.abortion() != null                        // Only abortion = failure, case for all except syntax error
-                && !(result.abortion().cause() instanceof JShellEvalAbortionCause.SyntaxErrorAbortionCause))
+            return GeneralStatus.ERROR; // Only abortion = failure, special case for syntax error
+        if (result.snippetsResults().size() == 1 && result.abortion() != null // Only abortion =
+                                                                              // failure, case for
+                                                                              // all except syntax
+                                                                              // error
+                && !(result.abortion()
+                    .cause() instanceof JShellEvalAbortionCause.SyntaxErrorAbortionCause))
             return GeneralStatus.ERROR;
 
-        if (result.abortion() != null) return GeneralStatus.PARTIAL_SUCCESS; // At least one snippet is a success
+        if (result.abortion() != null)
+            return GeneralStatus.PARTIAL_SUCCESS; // At least one snippet is a success
 
-        return getGeneralStatus(result.snippetsResults().get(result.snippetsResults().size() - 1).status());
+        return getGeneralStatus(
+                result.snippetsResults().get(result.snippetsResults().size() - 1).status());
     }
+
     static Color getStatusColor(JShellResult result) {
         return switch (RendererUtils.getGeneralStatus(result)) {
             case SUCCESS -> SUCCESS_COLOR;
@@ -64,8 +76,9 @@ class RendererUtils {
 
     static Optional<EmbedBuilder> generateEmbed(List<String> segments) {
         StringBuilder currentEmbedDescription = new StringBuilder();
-        for(String segment : segments) {
-            if(currentEmbedDescription.length() + "\n".length() + segment.length() < MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+        for (String segment : segments) {
+            if (currentEmbedDescription.length() + "\n".length()
+                    + segment.length() < MessageEmbed.DESCRIPTION_MAX_LENGTH) {
                 currentEmbedDescription.append(segment).append("\n");
             } else {
                 return Optional.empty();
@@ -74,8 +87,9 @@ class RendererUtils {
         return Optional.of(new EmbedBuilder().setDescription(currentEmbedDescription));
     }
 
-    static MessageEmbed setMetadataAndBuild(EmbedBuilder embedBuilder, @Nullable String author, Color color) {
-        if(author != null) {
+    static MessageEmbed setMetadataAndBuild(EmbedBuilder embedBuilder, @Nullable String author,
+            Color color) {
+        if (author != null) {
             embedBuilder.setAuthor(author);
         }
         embedBuilder.setColor(color);
@@ -83,7 +97,7 @@ class RendererUtils {
     }
 
     static String stdoutToMarkdownString(JShellResult result) {
-        if(result.stdout().isEmpty()) {
+        if (result.stdout().isEmpty()) {
             return "## System out\n[Nothing]\n";
         } else {
             return "## System out\n```\n" + getSdtOut(result) + "```";
@@ -92,7 +106,7 @@ class RendererUtils {
 
     static String getSdtOut(JShellResult result) {
         String stdout = result.stdout();
-        if(result.stdoutOverflow()) {
+        if (result.stdoutOverflow()) {
             stdout += MessageUtils.ABBREVIATION;
         }
         return stdout;

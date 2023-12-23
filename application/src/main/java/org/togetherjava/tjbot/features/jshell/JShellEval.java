@@ -5,13 +5,11 @@ import com.sigpwned.jackson.modules.jdk17.sealedclasses.Jdk17SealedClassesModule
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
 import org.togetherjava.tjbot.config.JShellConfig;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
-import org.togetherjava.tjbot.features.jshell.renderer.RenderResult;
 import org.togetherjava.tjbot.features.jshell.renderer.ResultRenderer;
 import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
@@ -22,7 +20,6 @@ import javax.annotation.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 
 /**
  * Provides a mid-ground between JDA and JShell API which can be used from many places in the bot,
@@ -42,7 +39,8 @@ public class JShellEval {
      */
     public JShellEval(JShellConfig config, String gistApiToken) {
         this.gistApiToken = gistApiToken;
-        this.api = new JShellApi(new ObjectMapper().registerModule(new Jdk17SealedClassesModule()), config.baseUrl());
+        this.api = new JShellApi(new ObjectMapper().registerModule(new Jdk17SealedClassesModule()),
+                config.baseUrl());
         this.renderer = new ResultRenderer();
 
         this.rateLimiter = new RateLimiter(Duration.ofSeconds(config.rateLimitWindowSeconds()),
@@ -66,7 +64,7 @@ public class JShellEval {
      *         place
      */
     public MessageEmbed evaluateAndRespond(@Nullable Member user, String code, boolean showCode,
-                                           boolean startupScript) throws RequestFailedException, ConnectionFailedException {
+            boolean startupScript) throws RequestFailedException, ConnectionFailedException {
         MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
         if (rateLimitedMessage != null) {
             return rateLimitedMessage;

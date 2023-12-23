@@ -14,10 +14,6 @@ import javax.annotation.Nullable;
  * @param result {@link SnippetEvent#value() result} of the snippet, usually null if the source code
  *        wasn't executed or if an exception happened during the execution, see related doc
  */
-public record JShellSnippetResult(
-        SnippetStatus status,
-        SnippetType type,
-        int id,
-        String source,
+public record JShellSnippetResult(SnippetStatus status, SnippetType type, int id, String source,
         @Nullable String result) {
 }

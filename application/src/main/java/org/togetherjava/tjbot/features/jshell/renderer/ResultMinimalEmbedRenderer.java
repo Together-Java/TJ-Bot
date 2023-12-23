@@ -2,9 +2,11 @@ package org.togetherjava.tjbot.features.jshell.renderer;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 
 import javax.annotation.Nullable;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,16 +32,17 @@ class ResultMinimalEmbedRenderer {
         String author = originator == null ? null : originator.getEffectiveName() + "'s result";
         Color color = RendererUtils.getStatusColor(result);
 
-        return RendererUtils.generateEmbed(builder).map(e -> RendererUtils.setMetadataAndBuild(e, author, color));
+        return RendererUtils.generateEmbed(builder)
+            .map(e -> RendererUtils.setMetadataAndBuild(e, author, color));
     }
 
     private void setResultToEmbed(List<String> builder, JShellResult result) {
-        if(result.abortion() != null) {
+        if (result.abortion() != null) {
             builder.add("""
-            ## [WARNING] The code couldn't end properly
-            Cause:
-            %s
-            """.formatted(RendererUtils.abortionCauseToString(result.abortion().cause())));
+                    ## [WARNING] The code couldn't end properly
+                    Cause:
+                    %s
+                    """.formatted(RendererUtils.abortionCauseToString(result.abortion().cause())));
         }
         builder.add(RendererUtils.stdoutToMarkdownString(result));
     }

@@ -23,6 +23,7 @@ public enum SnippetStatus {
 
     /**
      * Returns the name of the constant, with _ replaced by spaces.
+     * 
      * @return the name of the constant, with _ replaced by spaces
      */
     @Override

@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 
 /**
- * The cause of an abortion, see the implementations of this sealed interface for the possible causes.
+ * The cause of an abortion, see the implementations of this sealed interface for the possible
+ * causes.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 public sealed interface JShellEvalAbortionCause {

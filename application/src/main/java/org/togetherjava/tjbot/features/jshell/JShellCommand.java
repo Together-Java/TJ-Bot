@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import net.dv8tion.jda.api.utils.FileUpload;
+
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
@@ -25,6 +26,7 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
 import javax.annotation.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -149,10 +151,11 @@ public class JShellCommand extends SlashCommandAdapter {
      * @param code the code
      */
     private void handleEval(IReplyCallback replyCallback, @Nullable Member user, boolean showCode,
-                            String code, boolean startupScript) {
+            String code, boolean startupScript) {
         replyCallback.deferReply().queue(interactionHook -> {
             try {
-                MessageEmbed messageEmbed = jshellEval.evaluateAndRespond(user, code, showCode, startupScript);
+                MessageEmbed messageEmbed =
+                        jshellEval.evaluateAndRespond(user, code, showCode, startupScript);
                 interactionHook.sendMessageEmbeds(messageEmbed).queue();
             } catch (RequestFailedException | ConnectionFailedException e) {
                 interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
@@ -163,7 +166,8 @@ public class JShellCommand extends SlashCommandAdapter {
     private void handleSnippetsCommand(SlashCommandInteractionEvent event) {
         event.deferReply().queue(interactionHook -> {
             OptionMapping userOption = event.getOption(USER_PARAMETER);
-            Member user = Objects.requireNonNull(userOption == null ? event.getMember() : userOption.getAsMember());
+            Member user = Objects
+                .requireNonNull(userOption == null ? event.getMember() : userOption.getAsMember());
             OptionMapping includeStartupScriptOption =
                     event.getOption(INCLUDE_STARTUP_SCRIPT_PARAMETER);
             boolean includeStartupScript =
@@ -233,12 +237,15 @@ public class JShellCommand extends SlashCommandAdapter {
         int i = 1;
         for (String snippet : snippets) {
             snippet = snippet.replaceAll("^\n+", "");
-            if(!snippet.endsWith("\n")) {
+            if (!snippet.endsWith("\n")) {
                 snippet += "\n";
             }
             int idxOf = snippet.indexOf("\n");
             int insertIndex = idxOf != -1 ? idxOf : snippet.length();
-            sb.append(snippet, 0, insertIndex).append(" // Snippet ").append(i).append(snippet.substring(insertIndex));
+            sb.append(snippet, 0, insertIndex)
+                .append(" // Snippet ")
+                .append(i)
+                .append(snippet.substring(insertIndex));
             i++;
         }
         interactionHook
@@ -268,7 +275,10 @@ public class JShellCommand extends SlashCommandAdapter {
             jshellEval.getApi().closeSession(event.getUser().getId());
         } catch (RequestFailedException e) {
             if (e.getStatus() == JShellApi.SESSION_NOT_FOUND) {
-                event.replyEmbeds(createSessionNotFoundErrorEmbed(Objects.requireNonNull(event.getMember()))).queue();
+                event
+                    .replyEmbeds(createSessionNotFoundErrorEmbed(
+                            Objects.requireNonNull(event.getMember())))
+                    .queue();
             } else {
                 event.replyEmbeds(createUnexpectedErrorEmbed(event.getMember(), e)).queue();
             }
