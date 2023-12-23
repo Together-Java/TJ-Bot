@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import org.togetherjava.tjbot.features.jshell.JShellEval;
+import org.togetherjava.tjbot.features.jshell.renderer.RenderResult;
 import org.togetherjava.tjbot.features.utils.CodeFence;
 import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
@@ -34,7 +35,14 @@ final class EvalCodeCommand implements CodeAction {
                 .build();
         }
         try {
-            return jshellEval.evaluateAndRespond(null, codeFence.code(), false, false);
+            RenderResult renderResult = jshellEval.evaluateAndRespond(null, codeFence.code(), false, false);
+            if(renderResult instanceof RenderResult.EmbedResult em) {
+                return em.embeds().get(0); //TODO -_-
+            } else {
+                return new EmbedBuilder().setColor(Colors.ERROR_COLOR)
+                        .setDescription("The result was too big to be displayed")   //TODO, maybe return the description only ?
+                        .build();
+            }
         } catch (RequestFailedException | ConnectionFailedException e) {
             return new EmbedBuilder().setColor(Colors.ERROR_COLOR)
                 .setDescription("Request failed: " + e.getMessage())

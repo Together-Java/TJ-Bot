@@ -1,8 +1,7 @@
 package org.togetherjava.tjbot.features.jshell.backend.dto;
 
 /**
- * The status of the snippet, see {@link jdk.jshell.Snippet.Status} for most of them, and evaluation
- * timeout of the JShell REST API for {@link SnippetStatus#ABORTED ABORTED}.
+ * The status of the snippet, see {@link jdk.jshell.Snippet.Status}.
  */
 public enum SnippetStatus {
     /**
@@ -20,9 +19,14 @@ public enum SnippetStatus {
     /**
      * See {@link jdk.jshell.Snippet.Status#REJECTED}.
      */
-    REJECTED,
+    REJECTED;
+
     /**
-     * Used when the timeout of an evaluation is reached.
+     * Returns the name of the constant, with _ replaced by spaces.
+     * @return the name of the constant, with _ replaced by spaces
      */
-    ABORTED
+    @Override
+    public String toString() {
+        return name().replace('_', ' ');
+    }
 }

@@ -1,7 +1,9 @@
 package org.togetherjava.tjbot.features.jshell;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sigpwned.jackson.modules.jdk17.sealedclasses.Jdk17SealedClassesModule;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.utils.TimeFormat;
@@ -9,6 +11,8 @@ import net.dv8tion.jda.api.utils.TimeFormat;
 import org.togetherjava.tjbot.config.JShellConfig;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
+import org.togetherjava.tjbot.features.jshell.renderer.RenderResult;
+import org.togetherjava.tjbot.features.jshell.renderer.ResultRenderer;
 import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
 import org.togetherjava.tjbot.features.utils.RateLimiter;
@@ -18,6 +22,7 @@ import javax.annotation.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Provides a mid-ground between JDA and JShell API which can be used from many places in the bot,
@@ -35,7 +40,7 @@ public class JShellEval {
      * @param config the JShell configuration to use
      */
     public JShellEval(JShellConfig config) {
-        this.api = new JShellApi(new ObjectMapper(), config.baseUrl());
+        this.api = new JShellApi(new ObjectMapper().registerModule(new Jdk17SealedClassesModule()), config.baseUrl());
         this.renderer = new ResultRenderer();
 
         this.rateLimiter = new RateLimiter(Duration.ofSeconds(config.rateLimitWindowSeconds()),
@@ -58,11 +63,11 @@ public class JShellEval {
      * @throws ConnectionFailedException if the connection to the API couldn't be made at the first
      *         place
      */
-    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode,
-            boolean startupScript) throws RequestFailedException, ConnectionFailedException {
+    public RenderResult evaluateAndRespond(@Nullable Member user, String code, boolean showCode,
+                                           boolean startupScript) throws RequestFailedException, ConnectionFailedException {
         MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
         if (rateLimitedMessage != null) {
-            return rateLimitedMessage;
+            return new RenderResult.EmbedResult(List.of(rateLimitedMessage));
         }
         JShellResult result;
         if (user == null) {
@@ -71,13 +76,11 @@ public class JShellEval {
             result = api.evalSession(code, user.getId(), startupScript);
         }
 
-        return renderer
-            .renderToEmbed(user, showCode ? code : null, user != null, result, new EmbedBuilder())
-            .build();
+        return renderer.render(user, showCode, result);
     }
 
     @Nullable
-    private MessageEmbed wasRateLimited(@Nullable User user, Instant checkTime) {
+    private MessageEmbed wasRateLimited(@Nullable Member user, Instant checkTime) {
         if (rateLimiter.allowRequest(checkTime)) {
             return null;
         }
@@ -89,7 +92,7 @@ public class JShellEval {
                     "You are currently rate-limited. Please try again " + nextAllowedTime + ".")
             .setColor(Colors.ERROR_COLOR);
         if (user != null) {
-            embedBuilder.setAuthor(user.getName() + "'s result");
+            embedBuilder.setAuthor(user.getEffectiveName() + "'s result");
         }
         return embedBuilder.build();
     }
