@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -16,21 +15,16 @@ import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
-import net.dv8tion.jda.api.utils.AttachedFile;
 import net.dv8tion.jda.api.utils.FileUpload;
-
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
-import org.togetherjava.tjbot.features.jshell.renderer.RenderResult;
 import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.features.utils.RequestFailedException;
 
 import javax.annotation.Nullable;
-
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -158,16 +152,8 @@ public class JShellCommand extends SlashCommandAdapter {
                             String code, boolean startupScript) {
         replyCallback.deferReply().queue(interactionHook -> {
             try {
-                RenderResult renderResult = jshellEval.evaluateAndRespond(user, code, showCode, startupScript);
-                if(renderResult instanceof RenderResult.EmbedResult em) {
-                    em.embeds().forEach(e ->  interactionHook.sendMessageEmbeds(e).queue());
-                } else if(renderResult instanceof RenderResult.FileResult file) {
-                    interactionHook
-                            .editOriginalAttachments(AttachedFile.fromData(file.content().getBytes(StandardCharsets.UTF_8), "Result.java"))
-                            .queue();
-                } else {
-                    throw new AssertionError();
-                }
+                MessageEmbed messageEmbed = jshellEval.evaluateAndRespond(user, code, showCode, startupScript);
+                interactionHook.sendMessageEmbeds(messageEmbed).queue();
             } catch (RequestFailedException | ConnectionFailedException e) {
                 interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
             }

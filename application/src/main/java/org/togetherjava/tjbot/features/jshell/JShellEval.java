@@ -29,6 +29,7 @@ import java.util.List;
  * including JShell commands and JShell code actions.
  */
 public class JShellEval {
+    private final String gistApiToken;
     private final JShellApi api;
 
     private final ResultRenderer renderer;
@@ -39,7 +40,8 @@ public class JShellEval {
      * 
      * @param config the JShell configuration to use
      */
-    public JShellEval(JShellConfig config) {
+    public JShellEval(JShellConfig config, String gistApiToken) {
+        this.gistApiToken = gistApiToken;
         this.api = new JShellApi(new ObjectMapper().registerModule(new Jdk17SealedClassesModule()), config.baseUrl());
         this.renderer = new ResultRenderer();
 
@@ -63,11 +65,11 @@ public class JShellEval {
      * @throws ConnectionFailedException if the connection to the API couldn't be made at the first
      *         place
      */
-    public RenderResult evaluateAndRespond(@Nullable Member user, String code, boolean showCode,
+    public MessageEmbed evaluateAndRespond(@Nullable Member user, String code, boolean showCode,
                                            boolean startupScript) throws RequestFailedException, ConnectionFailedException {
         MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
         if (rateLimitedMessage != null) {
-            return new RenderResult.EmbedResult(List.of(rateLimitedMessage));
+            return rateLimitedMessage;
         }
         JShellResult result;
         if (user == null) {
@@ -76,7 +78,7 @@ public class JShellEval {
             result = api.evalSession(code, user.getId(), startupScript);
         }
 
-        return renderer.render(user, showCode, result);
+        return renderer.render(gistApiToken, user, showCode, result);
     }
 
     @Nullable
