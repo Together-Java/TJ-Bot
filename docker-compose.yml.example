@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  tjbot-develop:
+    image: "togetherjava.org:5001/togetherjava/tjbot:develop"
+    command: ["/home/bot/config/config.json"]
+    volumes:
+      - database:/home/bot/database
+      - ./config:/home/bot/config
+    restart: always
+    networks:
+      - develop-bot
+
+volumes:
+  database:
+    name: "tj-bot-develop-database"
+
+networks:
+  develop-bot:
+    name: "develop-bot"

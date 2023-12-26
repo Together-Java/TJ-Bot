@@ -1,0 +1,45 @@
+name: Basic checks
+
+on: [pull_request]
+
+env:
+  JAVA_VERSION: 21
+
+jobs:
+  spotless:
+    name: "Spotless"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: actions/checkout@v2
+      - name: Check
+        run: ./gradlew spotlessCheck
+
+  gradle-test:
+    name: "Gradle Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: actions/checkout@v2
+      - name: Check
+        run: ./gradlew test
+
+  sonarlint:
+    name: "Sonarlint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Check
+        run: ./gradlew sonarlintMain

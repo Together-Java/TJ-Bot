@@ -1,0 +1,1 @@
+ALTER TABLE pending_reminders ADD failure_attempts INTEGER DEFAULT 0 NOT NULL;

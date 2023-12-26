@@ -1,0 +1,36 @@
+name: Release JAR
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  JAVA_VERSION: 21
+
+jobs:
+
+  release:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: actions/checkout@v2
+
+      - name: Build shadow jar
+        run: ./gradlew shadowJar
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: application/build/libs/TJ-Bot.jar

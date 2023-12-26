@@ -1,0 +1,8 @@
+{
+    //Configure the JDK to Java 18 in settings 
+    "java.compile.nullAnalysis.mode": "disabled",
+    "java.format.settings.url": "meta/formatting/google-style-eclipse.xml",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "java.format.enabled": true,
+}
