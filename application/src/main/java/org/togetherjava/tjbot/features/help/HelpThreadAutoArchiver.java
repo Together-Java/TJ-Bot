@@ -3,11 +3,14 @@ package org.togetherjava.tjbot.features.help;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +22,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Routine, which periodically checks all help threads and archives them if there has not been any
@@ -122,18 +126,27 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
-        Consumer<Throwable> handleFailure = error -> {
-            if (error instanceof ErrorResponseException) {
-                logger.warn("Unknown error occurred during help thread auto archive routine",
-                        error);
-            }
-        };
+
+        Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
+                member -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
+
+        Supplier<RestAction<Message>> sendEmbedWithoutMention =
+                () -> threadChannel.sendMessageEmbeds(embed);
 
         threadChannel.getGuild()
             .retrieveMemberById(threadChannel.getOwnerIdLong())
-            .flatMap(author -> threadChannel.sendMessage(author.getAsMention()).addEmbeds(embed))
+            .mapToResult()
+            .flatMap(foundMember -> {
+                if (foundMember.isSuccess()) {
+                    return sendEmbedWithMention.apply(foundMember);
+                }
+                logger.info(
+                        "Owner of thread with id: {} left the server, sending embed without mention",
+                        threadChannel.getId(), foundMember.getFailure());
+
+                return sendEmbedWithoutMention.get();
+            })
             .flatMap(any -> threadChannel.getManager().setArchived(true))
-            .queue(any -> {
-            }, handleFailure);
+            .queue();
     }
 }
