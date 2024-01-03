@@ -106,6 +106,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new MarkHelpThreadCloseInDBRoutine(database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
