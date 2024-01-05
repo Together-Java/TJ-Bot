@@ -2,7 +2,11 @@ package org.togetherjava.tjbot.features.help;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
@@ -83,7 +87,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
             long authorId = threadChannel.getOwnerIdLong();
 
-            if (isPostedByBot(threadChannel, message)) {
+            if (isPostedBySelfUser(message)) {
+                // When transfer-command is used
                 authorId = getMentionedAuthorByMessage(message).getIdLong();
             }
 
@@ -98,11 +103,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private static User getMentionedAuthorByMessage(Message message) {
-        return message.getMentions().getUsers().get(0);
+        return message.getMentions().getUsers().getFirst();
     }
 
-    private boolean isPostedByBot(ThreadChannel channel, Message message) {
-        return channel.getJDA().getSelfUser().equals(message.getAuthor());
+    private static boolean isPostedBySelfUser(Message message) {
+        return message.getJDA().getSelfUser().equals(message.getAuthor());
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {

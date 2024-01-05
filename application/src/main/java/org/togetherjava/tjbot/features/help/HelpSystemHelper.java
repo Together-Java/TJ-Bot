@@ -358,7 +358,7 @@ public final class HelpSystemHelper {
 
     Optional<Long> getAuthorByHelpThreadId(final long channelId) {
 
-        logger.info("Looking for thread-record using channel ID: {}", channelId);
+        logger.debug("Looking for thread-record using channel ID: {}", channelId);
 
         return database.read(context -> context.select(HelpThreads.HELP_THREADS.AUTHOR_ID)
             .from(HelpThreads.HELP_THREADS)

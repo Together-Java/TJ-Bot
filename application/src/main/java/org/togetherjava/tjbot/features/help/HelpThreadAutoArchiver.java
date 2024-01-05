@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,23 +126,29 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
 
-        Function<Result<Member>, RestAction<Message>> sendEmbedWithMention =
-                member -> threadChannel.sendMessage(member.get().getAsMention()).addEmbeds(embed);
+        Function<Member, RestAction<Message>> sendEmbedWithMention =
+                member -> threadChannel.sendMessage(member.getAsMention()).addEmbeds(embed);
 
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
                 () -> threadChannel.sendMessageEmbeds(embed);
 
         long authorId = helper.getAuthorByHelpThreadId(threadChannel.getIdLong()).orElseThrow();
 
-        threadChannel.getGuild().retrieveMemberById(authorId).mapToResult().flatMap(foundMember -> {
-            if (foundMember.isSuccess()) {
-                return sendEmbedWithMention.apply(foundMember);
-            }
-            logger.info(
-                    "Owner of thread with id: {} left the server, sending embed without mention",
-                    threadChannel.getId(), foundMember.getFailure());
+        threadChannel.getGuild()
+            .retrieveMemberById(authorId)
+            .mapToResult()
+            .flatMap(authorResults -> {
+                if (authorResults.isFailure()) {
+                    logger.info(
+                            "Trying to archive a thread ({}), but OP ({}) left the server, sending embed without mention",
+                            threadChannel.getId(), authorId, authorResults.getFailure());
 
-            return sendEmbedWithoutMention.get();
-        }).flatMap(any -> threadChannel.getManager().setArchived(true)).queue();
+                    return sendEmbedWithoutMention.get();
+                }
+
+                return sendEmbedWithMention.apply(authorResults.get());
+            })
+            .flatMap(any -> threadChannel.getManager().setArchived(true))
+            .queue();
     }
 }
