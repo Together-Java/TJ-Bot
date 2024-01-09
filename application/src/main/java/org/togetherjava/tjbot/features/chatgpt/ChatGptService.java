@@ -72,7 +72,7 @@ public class ChatGptService {
         }
 
         try {
-            String instructions = "KEEP IT CONCISE, NOT MORE THAN 500 WORDS";
+            String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
             String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
                 .formatted(context, instructions, question);
             ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
