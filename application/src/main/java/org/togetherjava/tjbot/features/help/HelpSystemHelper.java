@@ -373,6 +373,7 @@ public final class HelpSystemHelper {
             this.val = val;
         }
     }
+
     Optional<Long> getAuthorByHelpThreadId(final long channelId) {
 
         logger.debug("Looking for thread-record using channel ID: {}", channelId);
