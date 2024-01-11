@@ -133,7 +133,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
             .build()
             .createGist()
             .public_(false)
-            .description("Uploaded by " + event.getAuthor().getAsTag());
+            .description("Uploaded by @ " + event.getAuthor().getAsTag().replace("#0000", " "));
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
 
