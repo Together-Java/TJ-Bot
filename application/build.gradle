@@ -76,7 +76,7 @@ dependencies {
     
     implementation 'org.kohsuke:github-api:1.318'
 
-    testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.mockito:mockito-core:5.9.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
