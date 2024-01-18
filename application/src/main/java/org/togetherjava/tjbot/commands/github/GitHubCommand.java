@@ -105,7 +105,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
     }
 
     private void updateCache() {
-        autocompleteGHIssueCache = reference.getRepositories().parallelStream().map(repo -> {
+        autocompleteGHIssueCache = reference.getRepositories().stream().map(repo -> {
             try {
                 return repo.getIssues(GHIssueState.ALL);
             } catch (IOException ex) {
