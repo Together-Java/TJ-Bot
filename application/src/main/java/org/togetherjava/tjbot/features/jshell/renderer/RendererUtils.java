@@ -39,20 +39,24 @@ class RendererUtils {
     }
 
     static GeneralStatus getGeneralStatus(JShellResult result) {
-        if (result.snippetsResults().isEmpty() && result.abortion() == null)
+        if (result.snippetsResults().isEmpty() && result.abortion() == null) {
             return GeneralStatus.SUCCESS; // Empty = success
-        if (result.snippetsResults().isEmpty())
+        }
+        if (result.snippetsResults().isEmpty()) {
             return GeneralStatus.ERROR; // Only abortion = failure, special case for syntax error
+        }
         if (result.snippetsResults().size() == 1 && result.abortion() != null // Only abortion =
                                                                               // failure, case for
                                                                               // all except syntax
                                                                               // error
                 && !(result.abortion()
-                    .cause() instanceof JShellEvalAbortionCause.SyntaxErrorAbortionCause))
+                    .cause() instanceof JShellEvalAbortionCause.SyntaxErrorAbortionCause)) {
             return GeneralStatus.ERROR;
+        }
 
-        if (result.abortion() != null)
+        if (result.abortion() != null) {
             return GeneralStatus.PARTIAL_SUCCESS; // At least one snippet is a success
+        }
 
         return getGeneralStatus(
                 result.snippetsResults().get(result.snippetsResults().size() - 1).status());

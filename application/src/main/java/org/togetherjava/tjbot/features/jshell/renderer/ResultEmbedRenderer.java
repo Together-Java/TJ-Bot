@@ -61,11 +61,14 @@ class ResultEmbedRenderer {
     }
 
     private String resultToString(@Nullable String result) {
-        if (result == null || result.isEmpty())
+        if (result == null || result.isEmpty()) {
             return "";
-        if (!result.contains("\n"))
+        }
+        if (!result.contains("\n")) {
             return "\njshell> `" + result + "`";
-        return "\njshell> ↓```\n" + result + "```";
+        } else {
+            return "\njshell> ↓```\n" + result + "```";
+        }
     }
 
     private String abortionToString(JShellEvalAbortion abortion) {
