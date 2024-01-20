@@ -87,9 +87,7 @@
         "wsh"
     ],
     "githubReferencingEnabledChannelPattern": "server-suggestions|tjbot-discussion|modernjava-discussion",
-    "githubRepositories": [
-        <repository id here (e.g. 403389278)>
-    ],
+    "githubRepositories": [403389278,587644974,601602394],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>",
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
