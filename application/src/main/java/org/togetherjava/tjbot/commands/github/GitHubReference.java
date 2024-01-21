@@ -193,9 +193,9 @@ public final class GitHubReference extends MessageReceiverAdapter {
         }).filter(Optional::isPresent).findFirst().orElse(Optional.empty());
     }
 
-    Optional<GHIssue> findIssue(int id, long repoId) {
+    Optional<GHIssue> findIssue(int id, long defaultRepoId) {
         return repositories.stream()
-            .filter(repositories -> repositories.getId() == repoId)
+            .filter(repository -> repository.getId() == defaultRepoId)
             .map(repository -> {
                 try {
                     return Optional.of(repository.getIssue(id));
