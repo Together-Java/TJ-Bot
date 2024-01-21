@@ -73,7 +73,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
         int issueId = Integer.parseInt(matcher.group(GitHubReference.ID_GROUP));
         // extracting issue title from "[#10] add more stuff"
         String[] issueData = titleOption.split(" ", 2);
-        String targetIssueTitle = issueData[1].strip();
+        String targetIssueTitle = issueData[1];
 
         reference.findIssue(issueId, targetIssueTitle)
             .ifPresentOrElse(issue -> event.replyEmbeds(reference.generateReply(issue)).queue(),
