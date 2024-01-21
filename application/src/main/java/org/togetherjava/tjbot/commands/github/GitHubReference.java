@@ -62,7 +62,6 @@ public final class GitHubReference extends MessageReceiverAdapter {
         this.hasGithubIssueReferenceEnabled =
                 Pattern.compile(config.getGitHubReferencingEnabledChannelPattern())
                     .asMatchPredicate();
-
         acquireRepositories();
     }
 
@@ -95,7 +94,8 @@ public final class GitHubReference extends MessageReceiverAdapter {
         List<MessageEmbed> embeds = new ArrayList<>();
 
         while (matcher.find()) {
-            findIssue(Integer.parseInt(matcher.group(ID_GROUP)))
+            long defaultRepoId = config.getGitHubRepositories().get(0);
+            findIssue(Integer.parseInt(matcher.group(ID_GROUP)), defaultRepoId)
                 .ifPresent(issue -> embeds.add(generateReply(issue)));
         }
 
@@ -177,16 +177,37 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Looks through all of the given repositories for an issue/pr with the given id.
      */
-    Optional<GHIssue> findIssue(int id) {
+    Optional<GHIssue> findIssue(int id, String targetIssueTitle) {
         return repositories.stream().map(repository -> {
             try {
-                return Optional.of(repository.getIssue(id));
+                GHIssue issue = repository.getIssue(id);
+                if (issue.getTitle().equals(targetIssueTitle)) {
+                    return Optional.of(issue);
+                }
             } catch (FileNotFoundException ignored) {
-                return Optional.<GHIssue>empty();
+
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
-        }).filter(Optional::isPresent).map(Optional::orElseThrow).findAny();
+            return Optional.<GHIssue>empty();
+        }).filter(Optional::isPresent).findFirst().orElse(Optional.empty());
+    }
+
+    Optional<GHIssue> findIssue(int id, long repoId) {
+        return repositories.stream()
+            .filter(repositories -> repositories.getId() == repoId)
+            .map(repository -> {
+                try {
+                    return Optional.of(repository.getIssue(id));
+                } catch (FileNotFoundException ignored) {
+                    return Optional.<GHIssue>empty();
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            })
+            .filter(Optional::isPresent)
+            .map(Optional::orElseThrow)
+            .findAny();
     }
 
     /**

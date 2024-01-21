@@ -58,8 +58,8 @@ public final class GitHubCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        String title = event.getOption(TITLE_OPTION).getAsString();
-        Matcher matcher = GitHubReference.ISSUE_REFERENCE_PATTERN.matcher(title);
+        String titleOption = event.getOption(TITLE_OPTION).getAsString();
+        Matcher matcher = GitHubReference.ISSUE_REFERENCE_PATTERN.matcher(titleOption);
 
         if (!matcher.find()) {
             event.reply(
@@ -71,7 +71,11 @@ public final class GitHubCommand extends SlashCommandAdapter {
         }
 
         int issueId = Integer.parseInt(matcher.group(GitHubReference.ID_GROUP));
-        reference.findIssue(issueId)
+        // extracting issue title from "[#10] add more stuff"
+        String[] issueData = titleOption.split(" ", 2);
+        String targetIssueTitle = issueData[1].strip();
+
+        reference.findIssue(issueId, targetIssueTitle)
             .ifPresentOrElse(issue -> event.replyEmbeds(reference.generateReply(issue)).queue(),
                     () -> event.reply("Could not find the issue you are looking for.")
                         .setEphemeral(true)
