@@ -57,6 +57,14 @@ public final class GitHubReference extends MessageReceiverAdapter {
      */
     private List<GHRepository> repositories;
 
+    /**
+     * Constructs an instance of GitHubReference.
+     *
+     * This constructor initializes a new GitHubReference with the specified Config. It also sets up
+     * a predicate for matching allowed channels for feature and acquires repositories.
+     *
+     * @param config The Config to get allowed channel pattern for feature.
+     */
     public GitHubReference(Config config) {
         this.config = config;
         this.hasGithubIssueReferenceEnabled =

@@ -44,6 +44,16 @@ public final class GitHubCommand extends SlashCommandAdapter {
     private Instant lastCacheUpdate;
     private List<String> autocompleteGHIssueCache;
 
+    /**
+     * Constructs an instance of GitHubCommand.
+     *
+     * This constructor initializes a new GitHubCommand with the specified GitHubReference. It also
+     * sets the command name to "github-search" and the command description to "Search configured
+     * GitHub repositories for an issue/pull request".
+     *
+     * @param reference The GitHubReference used for searching issue/pull request in configured
+     *        repositories.
+     */
     public GitHubCommand(GitHubReference reference) {
         super("github-search", "Search configured GitHub repositories for an issue/pull request",
                 CommandVisibility.GUILD);
