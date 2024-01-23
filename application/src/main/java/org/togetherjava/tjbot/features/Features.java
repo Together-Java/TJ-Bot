@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.features;
 
 import net.dv8tion.jda.api.JDA;
 
+import org.togetherjava.tjbot.commands.github.GitHubCommand;
+import org.togetherjava.tjbot.commands.github.GitHubReference;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
@@ -84,6 +86,7 @@ public class Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
+        GitHubReference githubReference = new GitHubReference(config);
         CodeMessageHandler codeMessageHandler =
                 new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
@@ -114,6 +117,7 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(githubReference);
         features.add(codeMessageHandler);
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
         features.add(new CodeMessageManualDetection(codeMessageHandler));
@@ -153,6 +157,7 @@ public class Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
+        features.add(new GitHubCommand(githubReference));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));

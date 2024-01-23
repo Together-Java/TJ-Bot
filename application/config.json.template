@@ -1,6 +1,6 @@
 {
     "token": "<put_your_token_here>",
-    "gistApiKey": "<your_gist_personal_access_token>",
+    "githubApiKey": "<your_github_personal_access_token>",
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
@@ -86,6 +86,8 @@
         "wsf",
         "wsh"
     ],
+    "githubReferencingEnabledChannelPattern": "server-suggestions|tjbot-discussion|modernjava-discussion",
+    "githubRepositories": [403389278,587644974,601602394],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>",
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
