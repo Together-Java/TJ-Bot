@@ -29,6 +29,8 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
      * Creates a new instance.
      *
      * @param database the database to store help thread metadata in
+     * @param helpThreadLifecycleListener class which offers method to update thread status in
+     *        database
      */
     public MarkHelpThreadCloseInDBRoutine(Database database,
             HelpThreadLifecycleListener helpThreadLifecycleListener) {
