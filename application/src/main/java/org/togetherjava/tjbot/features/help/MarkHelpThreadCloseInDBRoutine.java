@@ -1,12 +1,17 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import org.togetherjava.tjbot.features.Routine;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREADS;
@@ -16,17 +21,20 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREAD
  * closed.
  */
 public final class MarkHelpThreadCloseInDBRoutine implements Routine {
+    private final Logger logger = LoggerFactory.getLogger(MarkHelpThreadCloseInDBRoutine.class);
     private final Database database;
+    private final HelpThreadLifecycleListener helpThreadLifecycleListener;
 
     /**
      * Creates a new instance.
      *
      * @param database the database to store help thread metadata in
      */
-    public MarkHelpThreadCloseInDBRoutine(Database database) {
+    public MarkHelpThreadCloseInDBRoutine(Database database,
+            HelpThreadLifecycleListener helpThreadLifecycleListener) {
         this.database = database;
+        this.helpThreadLifecycleListener = helpThreadLifecycleListener;
     }
-
 
     @Override
     public Schedule createSchedule() {
@@ -35,17 +43,27 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
 
     @Override
     public void runRoutine(JDA jda) {
-        updateTicketStatus();
+        updateTicketStatus(jda);
     }
 
-    private void updateTicketStatus() {
+    private void updateTicketStatus(JDA jda) {
         Instant now = Instant.now();
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
+        List<Long> threadIdsToClose = database.read(context -> context.selectFrom(HELP_THREADS)
+            .where(HELP_THREADS.TICKET_STATUS.eq(HelpSystemHelper.TicketStatus.ACTIVE.val))
+            .and(HELP_THREADS.CREATED_AT.lessThan(threeDaysAgo))
+            .stream()
+            .map(HelpThreadsRecord::getChannelId)
+            .toList());
 
-        database.write(context -> context.update(HELP_THREADS)
-            .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
-            .where(HELP_THREADS.CREATED_AT.lessOrEqual(threeDaysAgo)
-                .and(HELP_THREADS.TICKET_STATUS.eq(HelpSystemHelper.TicketStatus.ACTIVE.val)))
-            .execute());
+
+        threadIdsToClose.forEach(id -> {
+            try {
+                ThreadChannel threadChannel = jda.getThreadChannelById(id);
+                helpThreadLifecycleListener.handleArchiveStatus(now, threadChannel);
+            } catch (Exception exception) {
+                logger.warn("unable to mark thread as close with id :{}", id, exception);
+            }
+        });
     }
 }

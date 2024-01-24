@@ -79,7 +79,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         changeStatusToActive(threadId);
     }
 
-    private void handleArchiveStatus(Instant closedAt, ThreadChannel threadChannel) {
+    void handleArchiveStatus(Instant closedAt, ThreadChannel threadChannel) {
         long threadId = threadChannel.getIdLong();
         int messageCount = threadChannel.getMessageCount();
         int participantsExceptAuthor = threadChannel.getMemberCount() - 1;

@@ -88,6 +88,8 @@ public class Features {
                 new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
+        HelpThreadLifecycleListener helpThreadLifecycleListener =
+                new HelpThreadLifecycleListener(helpSystemHelper, database);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -106,7 +108,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
-        features.add(new MarkHelpThreadCloseInDBRoutine(database));
+        features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
