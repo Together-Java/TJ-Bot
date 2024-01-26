@@ -53,7 +53,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
             logger.info(LogMarkers.SENSITIVE,
                     "'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
-                    author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                    author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                     guild.getName(), reason);
 
             actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
@@ -62,7 +62,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     private static void handleFailure(Throwable unbanFailure, User target, IReplyCallback event) {
-        String targetTag = target.getAsTag();
+        String targetTag = target.getName();
         if (unbanFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
                 event.reply("The specified user does not exist.").setEphemeral(true).queue();

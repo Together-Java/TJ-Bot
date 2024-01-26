@@ -83,7 +83,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     private void storeNote(User target, Member author, String content, ISnowflake guild) {
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) wrote a note about the user '{}' ({}) with content '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                 content);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),

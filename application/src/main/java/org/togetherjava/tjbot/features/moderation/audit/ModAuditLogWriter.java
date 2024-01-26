@@ -69,7 +69,7 @@ public final class ModAuditLogWriter {
             .setTimestamp(timestamp)
             .setColor(EMBED_COLOR);
         if (author != null) {
-            embedBuilder.setAuthor(author.getAsTag(), null, author.getAvatarUrl());
+            embedBuilder.setAuthor(author.getName(), null, author.getAvatarUrl());
         }
 
         MessageCreateAction message =

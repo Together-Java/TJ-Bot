@@ -334,7 +334,7 @@ public final class ModAuditLogRoutine implements Routine {
     private record AuditLogMessage(User author, Action action, @Nullable User target,
             @Nullable String reason, TemporalAccessor timestamp) {
         MessageEmbed toEmbed() {
-            String targetTag = target == null ? "(user unknown)" : target.getAsTag();
+            String targetTag = target == null ? "(user unknown)" : target.getName();
             String description = "%s **%s**.".formatted(action.getVerb(), targetTag);
 
             if (reason != null && !reason.isBlank()) {
@@ -343,7 +343,7 @@ public final class ModAuditLogRoutine implements Routine {
 
             String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
 
-            return new EmbedBuilder().setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
+            return new EmbedBuilder().setAuthor(author.getName(), null, avatarOrDefaultUrl)
                 .setDescription(description)
                 .setTimestamp(timestamp)
                 .setColor(AMBIENT_COLOR)

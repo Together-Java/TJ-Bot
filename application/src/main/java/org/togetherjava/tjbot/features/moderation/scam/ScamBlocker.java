@@ -237,7 +237,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         MessageEmbed embed =
                 new EmbedBuilder().setDescription(event.getMessage().getContentStripped())
                     .setTitle(reportTitle)
-                    .setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
+                    .setAuthor(author.getName(), null, avatarOrDefaultUrl)
                     .setTimestamp(event.getMessage().getTimeCreated())
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())

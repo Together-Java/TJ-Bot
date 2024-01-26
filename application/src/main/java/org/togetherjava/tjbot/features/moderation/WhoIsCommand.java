@@ -140,7 +140,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
 
         EmbedBuilder embedBuilder = new EmbedBuilder().setThumbnail(user.getEffectiveAvatarUrl())
             .setColor(effectiveColor)
-            .setFooter("Requested by " + event.getUser().getAsTag(),
+            .setFooter("Requested by " + event.getUser().getName(),
                     event.getMember().getEffectiveAvatarUrl())
             .setTimestamp(Instant.now());
 
@@ -175,8 +175,8 @@ public final class WhoIsCommand extends SlashCommandAdapter {
      * @return user readable {@link String}
      */
     private static String userIdentificationToStringItem(final User user) {
-        return "**Mention:** " + user.getAsMention() + "\n**Tag:** " + user.getAsTag()
-                + "\n**ID:** " + user.getId();
+        return "**Mention:** " + user.getAsMention() + "\n**Tag:** " + user.getName() + "\n**ID:** "
+                + user.getId();
     }
 
     /**
