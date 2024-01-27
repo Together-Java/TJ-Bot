@@ -47,7 +47,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
 
-    private final String gistApiKey;
+    private final String githubApiKey;
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
@@ -56,12 +56,13 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param config used to get api key and channel names.
      * @see org.togetherjava.tjbot.features.Features
      */
     public FileSharingMessageListener(Config config) {
-        gistApiKey = config.getGistApiKey();
+        super(Pattern.compile(".*"));
+        githubApiKey = config.getGitHubApiKey();
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
         isSoftModRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
@@ -111,8 +112,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
         String gistId = args.get(1);
 
         try {
-            new GitHubBuilder().withOAuthToken(gistApiKey).build().getGist(gistId).delete();
-
+            new GitHubBuilder().withOAuthToken(githubApiKey).build().getGist(gistId).delete();
             event.getMessage().delete().queue();
         } catch (IOException e) {
             logger.warn("Failed to delete gist with id {}", gistId, e);
@@ -129,7 +129,8 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void processAttachments(MessageReceivedEvent event,
             List<Message.Attachment> attachments) throws IOException {
-        GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(gistApiKey)
+
+        GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(githubApiKey)
             .build()
             .createGist()
             .public_(false)

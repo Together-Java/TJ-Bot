@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.help;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
@@ -8,7 +7,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -102,19 +100,6 @@ public final class HelpSystemHelper {
         threadActivityTagNames = Arrays.stream(ThreadActivity.values())
             .map(ThreadActivity::getTagName)
             .collect(Collectors.toSet());
-    }
-
-    RestAction<Message> sendExplanationMessage(GuildMessageChannel threadChannel) {
-        MessageEmbed helpEmbed = new EmbedBuilder()
-            .setDescription(
-                    """
-                            If nobody is calling back, that usually means that your question was **not well asked** and \
-                                hence nobody feels confident enough answering. Try to use your time to elaborate, \
-                                **provide details**, context, more code, examples and maybe some screenshots. \
-                                With enough info, someone knows the answer for sure.""")
-            .build();
-
-        return threadChannel.sendMessageEmbeds(helpEmbed);
     }
 
     /**
@@ -369,5 +354,15 @@ public final class HelpSystemHelper {
         public String getTagName() {
             return tagName;
         }
+    }
+
+    Optional<Long> getAuthorByHelpThreadId(final long channelId) {
+
+        logger.debug("Looking for thread-record using channel ID: {}", channelId);
+
+        return database.read(context -> context.select(HelpThreads.HELP_THREADS.AUTHOR_ID)
+            .from(HelpThreads.HELP_THREADS)
+            .where(HelpThreads.HELP_THREADS.CHANNEL_ID.eq(channelId))
+            .fetchOptional(HelpThreads.HELP_THREADS.AUTHOR_ID));
     }
 }

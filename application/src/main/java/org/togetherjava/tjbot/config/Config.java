@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public final class Config {
     private final String token;
-    private final String gistApiKey;
+    private final String githubApiKey;
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
@@ -36,16 +36,19 @@ public final class Config {
     private final String mediaOnlyChannelPattern;
     private final String logInfoChannelWebhook;
     private final String logErrorChannelWebhook;
+    private final String githubReferencingEnabledChannelPattern;
+    private final List<Long> githubRepositories;
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
+    private final String selectRolesChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty(value = "token", required = true) String token,
-            @JsonProperty(value = "gistApiKey", required = true) String gistApiKey,
+            @JsonProperty(value = "githubApiKey", required = true) String githubApiKey,
             @JsonProperty(value = "databasePath", required = true) String databasePath,
             @JsonProperty(value = "projectWebsite", required = true) String projectWebsite,
             @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
@@ -76,15 +79,21 @@ public final class Config {
                     required = true) String logInfoChannelWebhook,
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
+            @JsonProperty(value = "githubReferencingEnabledChannelPattern",
+                    required = true) String githubReferencingEnabledChannelPattern,
+            @JsonProperty(value = "githubRepositories",
+                    required = true) List<Long> githubRepositories,
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
             @JsonProperty(value = "helperPruneConfig",
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
-                    required = true) FeatureBlacklistConfig featureBlacklistConfig) {
+                    required = true) FeatureBlacklistConfig featureBlacklistConfig,
+            @JsonProperty(value = "selectRolesChannelPattern",
+                    required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
-        this.gistApiKey = Objects.requireNonNull(gistApiKey);
+        this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
@@ -105,11 +114,15 @@ public final class Config {
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
+        this.githubReferencingEnabledChannelPattern =
+                Objects.requireNonNull(githubReferencingEnabledChannelPattern);
+        this.githubRepositories = Objects.requireNonNull(githubRepositories);
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
+        this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
     /**
@@ -163,15 +176,15 @@ public final class Config {
     }
 
     /**
-     * Gets the API Key of GitHub to upload pastes via the API.
+     * Gets the API Key of GitHub.
      *
-     * @return the upload services API Key
+     * @return the API Key
      * @see <a href=
      *      "https://docs.github.com/en/enterprise-server@3.4/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token">Create
      *      a GitHub key</a>
      */
-    public String getGistApiKey() {
-        return gistApiKey;
+    public String getGitHubApiKey() {
+        return githubApiKey;
     }
 
     /**
@@ -305,6 +318,20 @@ public final class Config {
     }
 
     /**
+     * The REGEX pattern used to identify the channels that support GitHub issue referencing.
+     */
+    public String getGitHubReferencingEnabledChannelPattern() {
+        return githubReferencingEnabledChannelPattern;
+    }
+
+    /**
+     * The list of repositories that are searched when referencing a GitHub issue.
+     */
+    public List<Long> getGitHubRepositories() {
+        return githubRepositories;
+    }
+
+    /**
      * The Discord channel webhook for posting log messages with levels INFO, DEBUG and TRACE.
      *
      * @return the webhook URL
@@ -367,5 +394,15 @@ public final class Config {
      */
     public FeatureBlacklistConfig getFeatureBlacklistConfig() {
         return featureBlacklistConfig;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel in which users can select their helper
+     * roles.
+     *
+     * @return the channel name pattern
+     */
+    public String getSelectRolesChannelPattern() {
+        return selectRolesChannelPattern;
     }
 }

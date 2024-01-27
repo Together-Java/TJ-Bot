@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
@@ -38,6 +39,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
 
     private final HelpSystemHelper helper;
+
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
         .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
@@ -81,13 +83,31 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
-        helper.writeHelpThreadToDatabase(threadChannel.getOwnerIdLong(), threadChannel);
+        threadChannel.retrieveMessageById(threadChannel.getIdLong()).queue(message -> {
+
+            long authorId = threadChannel.getOwnerIdLong();
+
+            if (isPostedBySelfUser(message)) {
+                // When transfer-command is used
+                authorId = getMentionedAuthorByMessage(message).getIdLong();
+            }
+
+            helper.writeHelpThreadToDatabase(authorId, threadChannel);
+        });
 
         // The creation is delayed, because otherwise it could be too fast and be executed
         // after Discord created the thread, but before Discord send OPs initial message.
         // Sending messages at that moment is not allowed.
         createMessages(threadChannel).and(pinOriginalQuestion(threadChannel))
             .queueAfter(5, TimeUnit.SECONDS);
+    }
+
+    private static User getMentionedAuthorByMessage(Message message) {
+        return message.getMentions().getUsers().getFirst();
+    }
+
+    private static boolean isPostedBySelfUser(Message message) {
+        return message.getJDA().getSelfUser().equals(message.getAuthor());
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
@@ -102,9 +122,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private RestAction<Message> createMessages(ThreadChannel threadChannel) {
-        return sendHelperHeadsUp(threadChannel)
-            .flatMap(any -> helper.sendExplanationMessage(threadChannel))
-            .flatMap(any -> createAIResponse(threadChannel));
+        return sendHelperHeadsUp(threadChannel).flatMap(any -> createAIResponse(threadChannel));
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
@@ -157,19 +175,15 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // This method handles chatgpt's automatic response "dismiss" button
+        event.deferEdit().queue();
+
         ThreadChannel channel = event.getChannel().asThreadChannel();
         Member interactionUser = Objects.requireNonNull(event.getMember());
-        if (channel.getOwnerIdLong() != interactionUser.getIdLong()
-                && !helper.hasTagManageRole(interactionUser)) {
-            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
-            return;
-        }
 
-        RestAction<Void> deleteMessages = event.getMessage().delete();
-        for (String id : args) {
-            deleteMessages = deleteMessages.and(channel.deleteMessageById(id));
-        }
-        deleteMessages.queue();
+        channel.retrieveMessageById(channel.getId())
+            .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
+                    event, args));
+
     }
 
     @Override
@@ -182,4 +196,41 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         throw new UnsupportedOperationException("Not used");
     }
 
+    private boolean isPostAuthor(Member interactionUser, Message message) {
+        if (message.getEmbeds().isEmpty()) {
+            return false;
+        }
+
+        String embedAuthor = Objects
+            .requireNonNull(message.getEmbeds().get(0).getAuthor(),
+                    "embed author for forum post is null")
+            .getName();
+
+        return embedAuthor.equals(interactionUser.getUser().getName());
+    }
+
+    private boolean isAuthorized(Member interactionUser, ThreadChannel channel,
+            Message forumPostMessage) {
+        return (channel.getOwnerIdLong() == interactionUser.getIdLong())
+                || helper.hasTagManageRole(interactionUser)
+                || isPostAuthor(interactionUser, forumPostMessage);
+    }
+
+    private void handleDismiss(Member interactionUser, ThreadChannel channel,
+            Message forumPostMessage, ButtonInteractionEvent event, List<String> args) {
+        boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
+        if (!isAuthorized) {
+            event.getHook()
+                .sendMessage("You do not have permission for this action.")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        RestAction<Void> deleteMessages = event.getMessage().delete();
+        for (String id : args) {
+            deleteMessages = deleteMessages.and(channel.deleteMessageById(id));
+        }
+        deleteMessages.queue();
+    }
 }

@@ -1,17 +1,17 @@
 plugins {
     id 'java'
-    id "com.diffplug.spotless" version "6.22.0"
-    id "org.sonarqube" version "4.4.0.3356"
-    id "name.remal.sonarlint" version "3.3.0"
+    id "com.diffplug.spotless" version "6.24.0"
+    id "org.sonarqube" version "4.4.1.3373"
+    id "name.remal.sonarlint" version "3.4.0"
 }
 
 group 'org.togetherjava'
 version '1.0-SNAPSHOT'
 
 ext {
-    jooqVersion = '3.18.0'
-    jacksonVersion = '2.15.0'
-    chatGPTVersion = '0.17.0'
+    jooqVersion = '3.19.1'
+    jacksonVersion = '2.16.0'
+    chatGPTVersion = '0.18.0'
 }
 
 // Skips sonarlint during the build, useful for testing purposes.
@@ -51,6 +51,13 @@ subprojects {
     if (!skipSonarlint) {
         apply plugin: "name.remal.sonarlint"
     }
+    
+    java {
+        toolchain {
+            // Nails the Java-Version of every Subproject
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
 
     // sonarlint configuration, not to be confused with sonarqube/sonarcloud.
     sonarLint {
@@ -60,17 +67,6 @@ subprojects {
             )
         }
     }
-
-    def compileTasks = {
-        options.encoding = 'UTF-8'
-
-        // Nails the Java-Version of every Subproject
-        sourceCompatibility = JavaVersion.VERSION_20
-        targetCompatibility = JavaVersion.VERSION_20
-    }
-
-    compileJava(compileTasks)
-    compileTestJava(compileTasks)
 
     spotless {
         java {
@@ -83,7 +79,7 @@ subprojects {
             // '\\#` is prefix for static imports
             importOrder('','org.togetherjava', 'javax', 'java', '\\#')
             // TODO Use latest eclipse jdt formatter, issue tracking this: https://github.com/Together-Java/TJ-Bot/issues/605
-            eclipse('4.19.0').configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
+            eclipse('4.19').configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }
     }
 
