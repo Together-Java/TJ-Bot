@@ -222,6 +222,7 @@ public class MessageUtils {
 
     /**
      * Checks if a given message contains any image attachments.
+     * 
      * @param message the message to be checked
      * @return {@code true} if the message contains at least one image attachment
      *

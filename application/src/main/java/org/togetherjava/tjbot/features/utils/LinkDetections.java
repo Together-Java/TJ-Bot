@@ -24,12 +24,13 @@ public class LinkDetections {
      * @param filterNonHttpSchemes filters links that are not using http scheme
      * @return a list of all found links, can be empty
      */
-    public static List<String> extractLinks(String content, boolean filterSuppressed, boolean filterNonHttpSchemes) {
+    public static List<String> extractLinks(String content, boolean filterSuppressed,
+            boolean filterNonHttpSchemes) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
-                .stream()
-                .map(url -> toLink(url, filterSuppressed, filterNonHttpSchemes))
-                .flatMap(Optional::stream)
-                .toList();
+            .stream()
+            .map(url -> toLink(url, filterSuppressed, filterNonHttpSchemes))
+            .flatMap(Optional::stream)
+            .toList();
     }
 
     /**
@@ -42,7 +43,8 @@ public class LinkDetections {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
 
-    private static Optional<String> toLink(Url url, boolean filterSuppressed, boolean filterNonHttpSchemes) {
+    private static Optional<String> toLink(Url url, boolean filterSuppressed,
+            boolean filterNonHttpSchemes) {
         String raw = url.getOriginalUrl();
         if (filterSuppressed && raw.contains(">")) {
             // URL escapes, such as "<http://example.com>" should be skipped

@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
+
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
@@ -38,9 +39,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private final HelpSystemHelper helper;
 
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
-            .maximumSize(1_000)
-            .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
-            .build();
+        .maximumSize(1_000)
+        .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
+        .build();
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
 
@@ -96,7 +97,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         // after Discord created the thread, but before Discord send OPs initial message.
         // Sending messages at that moment is not allowed.
         createMessages(threadChannel).and(pinOriginalQuestion(threadChannel))
-                .queueAfter(5, TimeUnit.SECONDS);
+            .queueAfter(5, TimeUnit.SECONDS);
     }
 
     private static User getMentionedAuthorByMessage(Message message) {
@@ -110,8 +111,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
         RestAction<Message> originalQuestion =
                 threadChannel.retrieveMessageById(threadChannel.getIdLong());
-        return originalQuestion.flatMap(message -> !MessageUtils.containsImage(message) && !LinkDetections.containsLink(message.getContentRaw()),
-                message -> helper.constructChatGptAttempt(threadChannel, getMessageContent(message), componentIdInteractor));
+        return originalQuestion.flatMap(
+                message -> !MessageUtils.containsImage(message)
+                        && !LinkDetections.containsLink(message.getContentRaw()),
+                message -> helper.constructChatGptAttempt(threadChannel, getMessageContent(message),
+                        componentIdInteractor));
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
@@ -125,11 +129,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
         String alternativeMention = "Helper";
         String helperMention = helper.getCategoryTagOfChannel(threadChannel)
-                .map(ForumTag::getName)
-                .flatMap(category -> helper.handleFindRoleForCategory(category,
-                        threadChannel.getGuild()))
-                .map(Role::getAsMention)
-                .orElse(alternativeMention);
+            .map(ForumTag::getName)
+            .flatMap(category -> helper.handleFindRoleForCategory(category,
+                    threadChannel.getGuild()))
+            .map(Role::getAsMention)
+            .orElse(alternativeMention);
 
         // We want to invite all members of a role, but without hard-pinging them. However,
         // manually inviting them is cumbersome and can hit rate limits.
@@ -140,7 +144,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         String headsUpWithRole = headsUpPattern.formatted(helperMention);
 
         return threadChannel.sendMessage(headsUpWithoutRole)
-                .flatMap(message -> message.editMessage(headsUpWithRole));
+            .flatMap(message -> message.editMessage(headsUpWithRole));
     }
 
     private String getMessageContent(Message message) {
@@ -149,9 +153,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         }
 
         return message.getEmbeds()
-                .stream()
-                .map(MessageEmbed::getDescription)
-                .collect(Collectors.joining("\n"));
+            .stream()
+            .map(MessageEmbed::getDescription)
+            .collect(Collectors.joining("\n"));
     }
 
     @Override
@@ -178,8 +182,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         Member interactionUser = Objects.requireNonNull(event.getMember());
 
         channel.retrieveMessageById(channel.getId())
-                .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
-                        event, args));
+            .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
+                    event, args));
 
     }
 
@@ -199,28 +203,28 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         }
 
         String embedAuthor = Objects
-                .requireNonNull(message.getEmbeds().get(0).getAuthor(),
-                        "embed author for forum post is null")
-                .getName();
+            .requireNonNull(message.getEmbeds().get(0).getAuthor(),
+                    "embed author for forum post is null")
+            .getName();
 
         return embedAuthor.equals(interactionUser.getUser().getName());
     }
 
     private boolean isAuthorized(Member interactionUser, ThreadChannel channel,
-                                 Message forumPostMessage) {
+            Message forumPostMessage) {
         return (channel.getOwnerIdLong() == interactionUser.getIdLong())
                 || helper.hasTagManageRole(interactionUser)
                 || isPostAuthor(interactionUser, forumPostMessage);
     }
 
     private void handleDismiss(Member interactionUser, ThreadChannel channel,
-                               Message forumPostMessage, ButtonInteractionEvent event, List<String> args) {
+            Message forumPostMessage, ButtonInteractionEvent event, List<String> args) {
         boolean isAuthorized = isAuthorized(interactionUser, channel, forumPostMessage);
         if (!isAuthorized) {
             event.getHook()
-                    .sendMessage("You do not have permission for this action.")
-                    .setEphemeral(true)
-                    .queue();
+                .sendMessage("You do not have permission for this action.")
+                .setEphemeral(true)
+                .queue();
             return;
         }
 

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -23,7 +24,8 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 /**
- * Provides means to create previews of links. See {@link LinkDetections#extractLinks(String, boolean, boolean)} and
+ * Provides means to create previews of links. See
+ * {@link LinkDetections#extractLinks(String, boolean, boolean)} and
  * {@link #createLinkPreviews(List)}.
  */
 public final class LinkPreviews {
