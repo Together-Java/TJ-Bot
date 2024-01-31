@@ -1,15 +1,11 @@
 package org.togetherjava.tjbot.features.utils;
 
-import com.linkedin.urls.Url;
-import com.linkedin.urls.detection.UrlDetector;
-import com.linkedin.urls.detection.UrlDetectorOptions;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -41,42 +37,6 @@ public final class LinkPreviews {
 
     private LinkPreviews() {
         throw new UnsupportedOperationException("Utility class");
-    }
-
-    /**
-     * Extracts all links from the given content.
-     * 
-     * @param content the content to search through
-     * @return a list of all found links, can be empty
-     */
-    public static List<String> extractLinks(String content) {
-        return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
-            .stream()
-            .map(LinkPreviews::toLink)
-            .flatMap(Optional::stream)
-            .toList();
-    }
-
-    private static Optional<String> toLink(Url url) {
-        String raw = url.getOriginalUrl();
-        if (raw.contains(">")) {
-            // URL escapes, such as "<http://example.com>" should be skipped
-            return Optional.empty();
-        }
-        // Not interested in other schemes, also to filter out matches without scheme.
-        // It detects a lot of such false-positives in Java snippets
-        if (!raw.startsWith("http")) {
-            return Optional.empty();
-        }
-
-        String link = url.getFullUrl();
-
-        if (link.endsWith(",") || link.endsWith(".")) {
-            // Remove trailing punctuation
-            link = link.substring(0, link.length() - 1);
-        }
-
-        return Optional.of(link);
     }
 
     /**
