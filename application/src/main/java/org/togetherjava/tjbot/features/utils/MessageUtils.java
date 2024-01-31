@@ -219,4 +219,17 @@ public class MessageUtils {
 
         return Optional.of(new CodeFence(language, code));
     }
+
+    /**
+     * Checks if a given message contains any image attachments.
+     * @param message the message to be checked
+     * @return {@code true} if the message contains at least one image attachment
+     *
+     * @see Message
+     * @see Message.Attachment
+     */
+    public static boolean containsImage(Message message) {
+        return message.getAttachments().stream().anyMatch(Message.Attachment::isImage);
+    }
+
 }

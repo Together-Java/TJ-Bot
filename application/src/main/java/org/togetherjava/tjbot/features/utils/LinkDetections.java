@@ -39,7 +39,7 @@ public class LinkDetections {
      * @return true if the content contains at least one link
      */
     public static boolean containsLink(String content) {
-        return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty();
+        return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
 
     private static Optional<String> toLink(Url url, boolean filterSuppressed, boolean filterNonHttpSchemes) {
