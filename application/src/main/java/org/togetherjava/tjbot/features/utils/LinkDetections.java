@@ -17,16 +17,6 @@ public class LinkDetections {
     }
 
     /**
-     * Extracts all links from the given content, without any filters.
-     *
-     * @param content the content to search through
-     * @return a list of all found links, can be empty
-     */
-    public static List<String> extractLinks(String content) {
-        return extractLinks(content, false, false);
-    }
-
-    /**
      * Extracts all links from the given content.
      *
      * @param content the content to search through

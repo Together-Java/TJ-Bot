@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 /**
- * Provides means to create previews of links. See {@link #extractLinks(String)} and
+ * Provides means to create previews of links. See {@link LinkDetections#extractLinks(String, boolean, boolean)} and
  * {@link #createLinkPreviews(List)}.
  */
 public final class LinkPreviews {
