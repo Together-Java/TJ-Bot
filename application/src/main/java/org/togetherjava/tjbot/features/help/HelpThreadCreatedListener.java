@@ -4,9 +4,9 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
@@ -115,11 +115,14 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
         RestAction<Message> originalQuestion =
                 threadChannel.retrieveMessageById(threadChannel.getIdLong());
-        return originalQuestion.flatMap(
-                message -> !MessageUtils.containsImage(message)
-                        && !LinkDetections.containsLink(message.getContentRaw()),
+        return originalQuestion.flatMap(HelpThreadCreatedListener::isContextSufficient,
                 message -> helper.constructChatGptAttempt(threadChannel, getMessageContent(message),
                         componentIdInteractor));
+    }
+
+    private static boolean isContextSufficient(Message message) {
+        return !MessageUtils.containsImage(message)
+                && !LinkDetections.containsLink(message.getContentRaw());
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
