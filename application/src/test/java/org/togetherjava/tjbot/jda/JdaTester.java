@@ -132,7 +132,9 @@ public final class JdaTester {
         when(jda.getCacheFlags()).thenReturn(EnumSet.noneOf(CacheFlag.class));
 
         SelfUserImpl selfUser = spy(new SelfUserImpl(SELF_USER_ID, jda));
+        selfUser.setName("Self Tester");
         UserImpl user = spy(new UserImpl(USER_ID, jda));
+        user.setName("John Doe Tester");
         guild = spy(new GuildImpl(jda, GUILD_ID));
         Member selfMember = spy(new MemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
