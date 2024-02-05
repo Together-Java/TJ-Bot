@@ -6,11 +6,13 @@ import com.linkedin.urls.detection.UrlDetectorOptions;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Utility class to detect links.
  */
 public class LinkDetections {
+
 
     private LinkDetections() {
         throw new UnsupportedOperationException("Utility class");
@@ -20,15 +22,13 @@ public class LinkDetections {
      * Extracts all links from the given content.
      *
      * @param content the content to search through
-     * @param filterSuppressed filters links suppressed with {@literal <url>}
-     * @param filterNonHttpSchemes filters links that are not using http scheme
+     * @param filter the filters applied to the urls
      * @return a list of all found links, can be empty
      */
-    public static List<String> extractLinks(String content, boolean filterSuppressed,
-            boolean filterNonHttpSchemes) {
+    public static List<String> extractLinks(String content, Set<LinkFilter> filter) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
             .stream()
-            .map(url -> toLink(url, filterSuppressed, filterNonHttpSchemes))
+            .map(url -> toLink(url, filter))
             .flatMap(Optional::stream)
             .toList();
     }
@@ -43,16 +43,15 @@ public class LinkDetections {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
 
-    private static Optional<String> toLink(Url url, boolean filterSuppressed,
-            boolean filterNonHttpSchemes) {
+    private static Optional<String> toLink(Url url, Set<LinkFilter> filter) {
         String raw = url.getOriginalUrl();
-        if (filterSuppressed && raw.contains(">")) {
+        if (filter.contains(LinkFilter.SUPPRESSED) && raw.contains(">")) {
             // URL escapes, such as "<http://example.com>" should be skipped
             return Optional.empty();
         }
         // Not interested in other schemes, also to filter out matches without scheme.
         // It detects a lot of such false-positives in Java snippets
-        if (filterNonHttpSchemes && !raw.startsWith("http")) {
+        if (filter.contains(LinkFilter.NON_HTTP_SCHEME) && !raw.startsWith("http")) {
             return Optional.empty();
         }
 
