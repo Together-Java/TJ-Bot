@@ -52,6 +52,7 @@ public class Application {
         Config config;
         try {
             config = Config.load(configPath);
+            var test = "testing :)";
         } catch (IOException e) {
             logger.error("Unable to load the configuration file from path '{}'",
                     configPath.toAbsolutePath(), e);
