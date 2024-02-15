@@ -21,7 +21,7 @@ import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
-import org.togetherjava.tjbot.features.utils.LinkDetections;
+import org.togetherjava.tjbot.features.utils.LinkDetection;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.time.Instant;
@@ -122,7 +122,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     private static boolean isContextSufficient(Message message) {
         return !MessageUtils.containsImage(message)
-                && !LinkDetections.containsLink(message.getContentRaw());
+                && !LinkDetection.containsLink(message.getContentRaw());
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {

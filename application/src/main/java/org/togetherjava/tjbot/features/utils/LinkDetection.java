@@ -11,12 +11,12 @@ import java.util.Set;
 /**
  * Utility class to detect links.
  */
-public class LinkDetections {
+public class LinkDetection {
 
     /**
      * Possible ways to filter a link.
      *
-     * @see LinkDetections
+     * @see LinkDetection
      */
     public enum LinkFilter {
         /**
@@ -29,7 +29,7 @@ public class LinkDetections {
         NON_HTTP_SCHEME
     }
 
-    private LinkDetections() {
+    private LinkDetection() {
         throw new UnsupportedOperationException("Utility class");
     }
 

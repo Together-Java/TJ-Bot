@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 
 /**
  * Provides means to create previews of links. See
- * {@link LinkDetections#extractLinks(String, boolean, boolean)} and
+ * {@link LinkDetection#extractLinks(String, boolean, boolean)} and
  * {@link #createLinkPreviews(List)}.
  */
 public final class LinkPreviews {
