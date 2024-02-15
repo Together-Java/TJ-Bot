@@ -79,7 +79,7 @@ public class Features {
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
         FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
-        JShellEval jshellEval = new JShellEval(config.getJshell(), config.getGistApiKey());
+        JShellEval jshellEval = new JShellEval(config.getJshell(), config.getGitHubApiKey());
 
         TagSystem tagSystem = new TagSystem(database);
         BookmarksSystem bookmarksSystem = new BookmarksSystem(config, database);

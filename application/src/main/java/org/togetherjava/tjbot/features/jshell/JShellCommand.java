@@ -145,20 +145,20 @@ public class JShellCommand extends SlashCommandAdapter {
      * Handle evaluation of code.
      *
      * @param replyCallback the callback to reply to
-     * @param user the user, if null, will create a single use session
+     * @param member the member, if null, will create a single use session
      * @param showCode if the embed should contain the original code
      * @param startupScript if the startup script should be used or not
      * @param code the code
      */
-    private void handleEval(IReplyCallback replyCallback, @Nullable Member user, boolean showCode,
+    private void handleEval(IReplyCallback replyCallback, @Nullable Member member, boolean showCode,
             String code, boolean startupScript) {
         replyCallback.deferReply().queue(interactionHook -> {
             try {
                 MessageEmbed messageEmbed =
-                        jshellEval.evaluateAndRespond(user, code, showCode, startupScript);
+                        jshellEval.evaluateAndRespond(member, code, showCode, startupScript);
                 interactionHook.sendMessageEmbeds(messageEmbed).queue();
             } catch (RequestFailedException | ConnectionFailedException e) {
-                interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
+                interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(member, e)).queue();
             }
         });
     }
@@ -166,7 +166,7 @@ public class JShellCommand extends SlashCommandAdapter {
     private void handleSnippetsCommand(SlashCommandInteractionEvent event) {
         event.deferReply().queue(interactionHook -> {
             OptionMapping userOption = event.getOption(USER_PARAMETER);
-            Member user = Objects
+            Member member = Objects
                 .requireNonNull(userOption == null ? event.getMember() : userOption.getAsMember());
             OptionMapping includeStartupScriptOption =
                     event.getOption(INCLUDE_STARTUP_SCRIPT_PARAMETER);
@@ -175,32 +175,32 @@ public class JShellCommand extends SlashCommandAdapter {
             List<String> snippets;
             try {
                 snippets = jshellEval.getApi()
-                    .snippetsSession(user.getId(), includeStartupScript)
+                    .snippetsSession(member.getId(), includeStartupScript)
                     .snippets();
             } catch (RequestFailedException e) {
                 if (e.getStatus() == JShellApi.SESSION_NOT_FOUND) {
-                    interactionHook.editOriginalEmbeds(createSessionNotFoundErrorEmbed(user))
+                    interactionHook.editOriginalEmbeds(createSessionNotFoundErrorEmbed(member))
                         .queue();
                 } else {
-                    interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
+                    interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(member, e)).queue();
                 }
                 return;
             } catch (ConnectionFailedException e) {
-                interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(user, e)).queue();
+                interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(member, e)).queue();
                 return;
             }
 
-            sendSnippets(interactionHook, user, snippets);
+            sendSnippets(interactionHook, member, snippets);
         });
     }
 
-    private void sendSnippets(InteractionHook interactionHook, Member user, List<String> snippets) {
+    private void sendSnippets(InteractionHook interactionHook, Member member, List<String> snippets) {
         if (canBeSentAsEmbed(snippets)) {
-            sendSnippetsAsEmbed(interactionHook, user, snippets);
+            sendSnippetsAsEmbed(interactionHook, member, snippets);
         } else if (canBeSentAsFile(snippets)) {
-            sendSnippetsAsFile(interactionHook, user, snippets);
+            sendSnippetsAsFile(interactionHook, member, snippets);
         } else {
-            sendSnippetsTooLong(interactionHook, user);
+            sendSnippetsTooLong(interactionHook, member);
         }
     }
 
@@ -212,11 +212,11 @@ public class JShellCommand extends SlashCommandAdapter {
                 && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS;
     }
 
-    private void sendSnippetsAsEmbed(InteractionHook interactionHook, Member user,
+    private void sendSnippetsAsEmbed(InteractionHook interactionHook, Member member,
             List<String> snippets) {
         EmbedBuilder builder = new EmbedBuilder().setColor(Colors.SUCCESS_COLOR)
-            .setAuthor(user.getEffectiveName())
-            .setTitle(snippetsTitle(user));
+            .setAuthor(member.getEffectiveName())
+            .setTitle(snippetsTitle(member));
         int i = 1;
         for (String snippet : snippets) {
             builder.addField("Snippet " + i, "```java\n" + snippet + "```", false);
@@ -231,7 +231,7 @@ public class JShellCommand extends SlashCommandAdapter {
             .sum() < Message.MAX_FILE_SIZE;
     }
 
-    private void sendSnippetsAsFile(InteractionHook interactionHook, Member user,
+    private void sendSnippetsAsFile(InteractionHook interactionHook, Member member,
             List<String> snippets) {
         StringBuilder sb = new StringBuilder();
         int i = 1;
@@ -250,21 +250,21 @@ public class JShellCommand extends SlashCommandAdapter {
         }
         interactionHook
             .editOriginalEmbeds(new EmbedBuilder().setColor(Colors.SUCCESS_COLOR)
-                .setAuthor(user.getEffectiveName())
-                .setTitle(snippetsTitle(user))
+                .setAuthor(member.getEffectiveName())
+                .setTitle(snippetsTitle(member))
                 .build())
-            .setFiles(FileUpload.fromData(sb.toString().getBytes(), snippetsTitle(user) + ".java"))
+            .setFiles(FileUpload.fromData(sb.toString().getBytes(), snippetsTitle(member) + ".java"))
             .queue();
     }
 
-    private String snippetsTitle(Member user) {
-        return user.getEffectiveName() + "'s snippets";
+    private String snippetsTitle(Member member) {
+        return member.getEffectiveName() + "'s snippets";
     }
 
-    private void sendSnippetsTooLong(InteractionHook interactionHook, Member user) {
+    private void sendSnippetsTooLong(InteractionHook interactionHook, Member member) {
         interactionHook
             .editOriginalEmbeds(new EmbedBuilder().setColor(Colors.ERROR_COLOR)
-                .setAuthor(user.getEffectiveName())
+                .setAuthor(member.getEffectiveName())
                 .setTitle("Too much code to send...")
                 .build())
             .queue();
@@ -313,18 +313,18 @@ public class JShellCommand extends SlashCommandAdapter {
         });
     }
 
-    private MessageEmbed createSessionNotFoundErrorEmbed(Member user) {
-        return new EmbedBuilder().setAuthor(user.getEffectiveName() + "'s result")
+    private MessageEmbed createSessionNotFoundErrorEmbed(Member member) {
+        return new EmbedBuilder().setAuthor(member.getEffectiveName() + "'s result")
             .setColor(Colors.ERROR_COLOR)
-            .setDescription("Could not find session for user " + user.getEffectiveName())
+            .setDescription("Could not find session for member " + member.getEffectiveName())
             .build();
     }
 
-    private MessageEmbed createUnexpectedErrorEmbed(@Nullable Member user, Exception e) {
+    private MessageEmbed createUnexpectedErrorEmbed(@Nullable Member member, Exception e) {
         EmbedBuilder embedBuilder = new EmbedBuilder().setColor(Colors.ERROR_COLOR)
             .setDescription("Request failed: " + e.getMessage());
-        if (user != null) {
-            embedBuilder.setAuthor(user.getEffectiveName() + "'s result");
+        if (member != null) {
+            embedBuilder.setAuthor(member.getEffectiveName() + "'s result");
         }
         return embedBuilder.build();
     }

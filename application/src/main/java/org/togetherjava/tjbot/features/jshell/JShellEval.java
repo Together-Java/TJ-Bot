@@ -55,7 +55,7 @@ public class JShellEval {
     /**
      * Evaluate code and return a message containing the response.
      *
-     * @param user the user, if null, will create a single use session
+     * @param member the member, if null, will create a single use session
      * @param code the code
      * @param showCode if the original code should be displayed
      * @param startupScript if the startup script should be used or not
@@ -64,24 +64,24 @@ public class JShellEval {
      * @throws ConnectionFailedException if the connection to the API couldn't be made at the first
      *         place
      */
-    public MessageEmbed evaluateAndRespond(@Nullable Member user, String code, boolean showCode,
+    public MessageEmbed evaluateAndRespond(@Nullable Member member, String code, boolean showCode,
             boolean startupScript) throws RequestFailedException, ConnectionFailedException {
-        MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
+        MessageEmbed rateLimitedMessage = wasRateLimited(member, Instant.now());
         if (rateLimitedMessage != null) {
             return rateLimitedMessage;
         }
         JShellResult result;
-        if (user == null) {
+        if (member == null) {
             result = api.evalOnce(code, startupScript);
         } else {
-            result = api.evalSession(code, user.getId(), startupScript);
+            result = api.evalSession(code, member.getId(), startupScript);
         }
 
-        return renderer.render(gistApiToken, user, showCode, result);
+        return renderer.render(gistApiToken, member, showCode, result);
     }
 
     @Nullable
-    private MessageEmbed wasRateLimited(@Nullable Member user, Instant checkTime) {
+    private MessageEmbed wasRateLimited(@Nullable Member member, Instant checkTime) {
         if (rateLimiter.allowRequest(checkTime)) {
             return null;
         }
@@ -92,8 +92,8 @@ public class JShellEval {
             .setDescription(
                     "You are currently rate-limited. Please try again " + nextAllowedTime + ".")
             .setColor(Colors.ERROR_COLOR);
-        if (user != null) {
-            embedBuilder.setAuthor(user.getEffectiveName() + "'s result");
+        if (member != null) {
+            embedBuilder.setAuthor(member.getEffectiveName() + "'s result");
         }
         return embedBuilder.build();
     }
