@@ -45,6 +45,7 @@ import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.MockingDetails;
+import org.mockito.internal.util.MockUtil;
 import org.mockito.stubbing.Answer;
 
 import org.togetherjava.tjbot.features.SlashCommand;
@@ -245,9 +246,11 @@ public final class JdaTester {
     public SlashCommandInteractionEventBuilder createSlashCommandInteractionEvent(
             SlashCommand command) {
         UnaryOperator<SlashCommandInteractionEvent> mockOperator = event -> {
-            SlashCommandInteractionEvent SlashCommandInteractionEvent = spy(event);
-            mockInteraction(SlashCommandInteractionEvent);
-            return SlashCommandInteractionEvent;
+            if (!MockUtil.isMock(event)) {
+                event = spy(event);
+            }
+            mockInteraction(event);
+            return event;
         };
 
         return new SlashCommandInteractionEventBuilder(jda, mockOperator).setCommand(command)
