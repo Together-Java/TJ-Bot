@@ -16,8 +16,10 @@ import java.util.stream.Stream;
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
 /**
- * Listens for new message throughout the guild, then stores some metadata for each message in a
- * database.
+ * Listens for new messages throughout the guild and stores metadata for each message in a database.
+ * <p>
+ * Note: This class also trims database records if they reach a maximum records limit.
+ * </p>
  */
 public final class PurgeMessageListener extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(PurgeMessageListener.class);

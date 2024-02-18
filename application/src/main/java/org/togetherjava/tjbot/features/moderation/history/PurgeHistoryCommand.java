@@ -27,6 +27,13 @@ import java.util.stream.Stream;
 
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
+/**
+ * This command helps user to purge message history of a target user within specified
+ * {@link PurgeDuration}.
+ * <p>
+ * Note: It also verifies if user has higher privileges to purge messages.
+ * </p>
+ */
 public final class PurgeHistoryCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(PurgeHistoryCommand.class);

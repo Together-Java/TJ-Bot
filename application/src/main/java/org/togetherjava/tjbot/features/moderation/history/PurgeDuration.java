@@ -1,11 +1,10 @@
 package org.togetherjava.tjbot.features.moderation.history;
 
 /**
- * Holds duration constants used for both purge history command and message history routine.
+ * Holds duration constants used for both {@link PurgeHistoryCommand} and
+ * {@link PurgeExpiredMessageHistory}.
  */
 public enum PurgeDuration {
-    // All new/existing options for duration in PurgeHistoryCommand should be within max and min
-    // duration
     MAX_DURATION(24),
     MIN_DURATION(1),
     THREE_HOURS(3),

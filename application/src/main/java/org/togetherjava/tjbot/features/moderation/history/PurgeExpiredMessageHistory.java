@@ -16,7 +16,8 @@ import java.util.stream.Stream;
 import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 
 /**
- * Routine that deletes records from message_history post expiration hours.
+ * Routine that deletes records from message_history database past max duration
+ * {@link PurgeDuration}.
  */
 public final class PurgeExpiredMessageHistory implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(PurgeExpiredMessageHistory.class);
