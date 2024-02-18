@@ -34,7 +34,7 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "purge-in-channel";
     private static final int PURGE_MESSAGES_DEFAULT_DURATION =
-            Duration.PURGE_HISTORY_MIN_DURATION.getHours();
+            PurgeDuration.MIN_DURATION.getHours();
     private static final String DURATION = "duration";
     private final Database database;
 
@@ -56,10 +56,10 @@ public final class PurgeHistoryCommand extends SlashCommandAdapter {
 
         OptionData durationData =
                 new OptionData(OptionType.INTEGER, DURATION, optionDurationDescription, false);
-        durationData.addChoice("last 3 hrs", Duration.PURGE_HISTORY_THREE_HOURS.getHours())
-            .addChoice("last 6 hrs", Duration.PURGE_HISTORY_SIX_HOURS.getHours())
-            .addChoice("last 12 hrs", Duration.PURGE_HISTORY_TWELVE_HOURS.getHours())
-            .addChoice("last 24 hrs", Duration.PURGE_HISTORY_TWENTY_FOUR_HOURS.getHours());
+        durationData.addChoice("last 3 hrs", PurgeDuration.THREE_HOURS.getHours())
+            .addChoice("last 6 hrs", PurgeDuration.SIX_HOURS.getHours())
+            .addChoice("last 12 hrs", PurgeDuration.TWELVE_HOURS.getHours())
+            .addChoice("last 24 hrs", PurgeDuration.TWENTY_FOUR_HOURS.getHours());
 
         getData().addOption(OptionType.USER, USER_OPTION, optionUserDescription, true)
             .addOption(OptionType.STRING, REASON_OPTION,

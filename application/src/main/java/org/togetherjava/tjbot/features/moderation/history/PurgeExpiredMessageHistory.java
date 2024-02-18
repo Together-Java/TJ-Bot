@@ -21,7 +21,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.MESSAGE_HISTORY;
 public final class PurgeExpiredMessageHistory implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(PurgeExpiredMessageHistory.class);
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
-    private static final int EXPIRATION_HOURS = Duration.PURGE_HISTORY_MAX_DURATION.getHours();
+    private static final int EXPIRATION_HOURS = PurgeDuration.MAX_DURATION.getHours();
     private final Database database;
 
     /**
