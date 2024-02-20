@@ -182,7 +182,8 @@ public class JShellCommand extends SlashCommandAdapter {
                     interactionHook.editOriginalEmbeds(createSessionNotFoundErrorEmbed(member))
                         .queue();
                 } else {
-                    interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(member, e)).queue();
+                    interactionHook.editOriginalEmbeds(createUnexpectedErrorEmbed(member, e))
+                        .queue();
                 }
                 return;
             } catch (ConnectionFailedException e) {
@@ -194,7 +195,8 @@ public class JShellCommand extends SlashCommandAdapter {
         });
     }
 
-    private void sendSnippets(InteractionHook interactionHook, Member member, List<String> snippets) {
+    private void sendSnippets(InteractionHook interactionHook, Member member,
+            List<String> snippets) {
         if (canBeSentAsEmbed(snippets)) {
             sendSnippetsAsEmbed(interactionHook, member, snippets);
         } else if (canBeSentAsFile(snippets)) {
@@ -253,7 +255,8 @@ public class JShellCommand extends SlashCommandAdapter {
                 .setAuthor(member.getEffectiveName())
                 .setTitle(snippetsTitle(member))
                 .build())
-            .setFiles(FileUpload.fromData(sb.toString().getBytes(), snippetsTitle(member) + ".java"))
+            .setFiles(
+                    FileUpload.fromData(sb.toString().getBytes(), snippetsTitle(member) + ".java"))
             .queue();
     }
 
