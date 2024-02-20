@@ -52,6 +52,8 @@ public class JShellCommand extends SlashCommandAdapter {
     private static final int MIN_MESSAGE_INPUT_LENGTH = 0;
     private static final int MAX_MESSAGE_INPUT_LENGTH = TextInput.MAX_VALUE_LENGTH;
 
+    private static final String MAX_SNIPPETS_FILE_PREFIX = " // Snippet 1000";
+    private static final String MAX_SNIPPETS_EMBED_PREFIX = "Snippet 10```java\n```";
     private final JShellEval jshellEval;
 
     /**
@@ -209,7 +211,7 @@ public class JShellCommand extends SlashCommandAdapter {
     private boolean canBeSentAsEmbed(List<String> snippets) {
         return snippets.stream().noneMatch(s -> s.length() >= MessageEmbed.VALUE_MAX_LENGTH)
                 && snippets.stream()
-                    .mapToInt(s -> (s + "Snippet 10```java\n```").length())
+                    .mapToInt(s -> (s + MAX_SNIPPETS_EMBED_PREFIX).length())
                     .sum() < MessageEmbed.EMBED_MAX_LENGTH_BOT - 100
                 && snippets.size() <= MessageUtils.MAXIMUM_VISIBLE_EMBEDS;
     }
@@ -229,7 +231,7 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private boolean canBeSentAsFile(List<String> snippets) {
         return snippets.stream()
-            .mapToInt(s -> (s + " // Snippet 1000").getBytes().length)
+            .mapToInt(s -> (s + MAX_SNIPPETS_FILE_PREFIX).getBytes().length)
             .sum() < Message.MAX_FILE_SIZE;
     }
 
