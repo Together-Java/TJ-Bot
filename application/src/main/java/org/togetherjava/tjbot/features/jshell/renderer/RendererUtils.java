@@ -20,16 +20,12 @@ class RendererUtils {
     private RendererUtils() {}
 
     static String abortionCauseToString(JShellEvalAbortionCause abortionCause) {
-        if (abortionCause instanceof JShellEvalAbortionCause.TimeoutAbortionCause) {
-            return "Allowed time exceeded.";
-        } else if (abortionCause instanceof JShellEvalAbortionCause.UnhandledExceptionAbortionCause c) {
-            return "Uncaught exception:\n" + c.exceptionClass() + ":" + c.exceptionMessage();
-        } else if (abortionCause instanceof JShellEvalAbortionCause.CompileTimeErrorAbortionCause c) {
-            return "The code doesn't compile:\n" + String.join("\n", c.errors());
-        } else if (abortionCause instanceof JShellEvalAbortionCause.SyntaxErrorAbortionCause) {
-            return "The code doesn't compile, there are syntax errors in this code.";
-        }
-        throw new AssertionError();
+        return switch (abortionCause) {
+            case JShellEvalAbortionCause.TimeoutAbortionCause ignored -> "Allowed time exceeded.";
+            case JShellEvalAbortionCause.UnhandledExceptionAbortionCause c -> "Uncaught exception:\n" + c.exceptionClass() + ":" + c.exceptionMessage();
+            case JShellEvalAbortionCause.CompileTimeErrorAbortionCause c -> "The code doesn't compile:\n" + String.join("\n", c.errors());
+            case JShellEvalAbortionCause.SyntaxErrorAbortionCause ignored -> "The code doesn't compile, there are syntax errors in this code.";
+        };
     }
 
     enum GeneralStatus {
