@@ -54,11 +54,18 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
             return;
         }
 
+        // If the bot has already reacted to this message, then this means that
+        // the message has been quoted to the cool messages board, so skip it.
+        if (hasBotReacted(event.getJDA(), messageReaction)) {
+            return;
+        }
+
         if (isCoolEmoji && originalReactionsCount + 1 >= config.minimumReactions()) {
-            event.retrieveMessage()
-                .queue(message -> insertCoolMessage(boardChannel.orElseThrow(), message),
-                        e -> logger.warn("Tried to retrieve cool message but got: {}",
-                                e.getMessage()));
+            event.retrieveMessage().queue(message -> {
+                message.addReaction(REACT_EMOJI).queue();
+
+                insertCoolMessage(boardChannel.orElseThrow(), message);
+            }, e -> logger.warn("Tried to retrieve cool message but got: {}", e.getMessage()));
         }
     }
 
@@ -109,5 +116,14 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
             .setAuthor(author.getName(), null, author.getAvatarUrl())
             .setTimestamp(message.getTimeCreated())
             .build();
+    }
+
+    /**
+     * Checks a {@link MessageReaction} to see if the bot has reacted to it.
+     */
+    private static boolean hasBotReacted(JDA jda, MessageReaction messageReaction) {
+        return messageReaction.retrieveUsers()
+            .parallelStream()
+            .anyMatch(user -> jda.getSelfUser().getIdLong() == user.getIdLong());
     }
 }
