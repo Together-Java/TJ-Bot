@@ -92,15 +92,15 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
         EmbedBuilder embedBuilder = new EmbedBuilder();
 
         // If the message contains image(s), include the first one
-        var imageAttachment = message.getAttachments()
+        var firstImageAttachment = message.getAttachments()
             .stream()
             .parallel()
             .filter(Message.Attachment::isImage)
             .findAny()
             .orElse(null);
 
-        if (imageAttachment != null) {
-            embedBuilder.setThumbnail(imageAttachment.getUrl());
+        if (firstImageAttachment != null) {
+            embedBuilder.setThumbnail(firstImageAttachment.getUrl());
         }
 
         return embedBuilder.setDescription(message.getContentDisplay())
