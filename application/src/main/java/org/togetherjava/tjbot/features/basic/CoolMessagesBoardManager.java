@@ -37,7 +37,7 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
         this.config = config.getCoolMessagesConfig();
 
         boardChannelNamePredicate =
-                Pattern.compile(this.config.getBoardChannelPattern()).asMatchPredicate();
+                Pattern.compile(this.config.boardChannelPattern()).asMatchPredicate();
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
             return;
         }
 
-        if (isCoolEmoji && originalReactionsCount + 1 >= config.getMinimumReactions()) {
+        if (isCoolEmoji && originalReactionsCount + 1 >= config.minimumReactions()) {
             event.retrieveMessage()
                 .queue(message -> insertCoolMessage(boardChannel.orElseThrow(), message),
                         e -> logger.warn("Tried to retrieve cool message but got: {}",
