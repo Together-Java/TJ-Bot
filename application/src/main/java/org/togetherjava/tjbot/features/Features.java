@@ -8,10 +8,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.features.basic.PingCommand;
-import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
-import org.togetherjava.tjbot.features.basic.SlashCommandEducator;
-import org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter;
+import org.togetherjava.tjbot.features.basic.*;
 import org.togetherjava.tjbot.features.bookmarks.BookmarksCommand;
 import org.togetherjava.tjbot.features.bookmarks.BookmarksSystem;
 import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksCleanupRoutine;
@@ -109,6 +106,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new MemberCountDisplayRoutine(config));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));

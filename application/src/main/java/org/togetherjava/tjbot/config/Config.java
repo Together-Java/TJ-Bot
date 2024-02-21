@@ -44,6 +44,8 @@ public final class Config {
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
+    private final String updateMemberCountEveryHour;
+    private final String memberCountCategoryName;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -86,6 +88,8 @@ public final class Config {
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
+            @JsonProperty(value = "memberCountCategoryName") String memberCountCategoryName,
+            @JsonProperty(value = "updateMemberCountEveryHour") String updateMemberCountEveryHour,
             @JsonProperty(value = "helperPruneConfig",
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
@@ -96,6 +100,8 @@ public final class Config {
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
+        this.memberCountCategoryName = memberCountCategoryName;
+        this.updateMemberCountEveryHour = updateMemberCountEveryHour;
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
         this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
@@ -404,5 +410,18 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * Gets the categories by this name to showcase the total member count of the server.
+     *
+     * @return the categories name types
+     */
+    public String getMemberCountCategoryName() {
+        return memberCountCategoryName;
+    }
+
+    public String getupdateMemberCountEveryHour() {
+        return updateMemberCountEveryHour;
     }
 }
