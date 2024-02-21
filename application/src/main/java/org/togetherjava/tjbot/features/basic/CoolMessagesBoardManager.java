@@ -1,0 +1,113 @@
+package org.togetherjava.tjbot.features.basic;
+
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.CoolMessagesBoardConfig;
+import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+
+import java.awt.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
+/**
+ * Manager for the cool messages board. It appends highly-voted text messages to a separate channel
+ * where members of the guild can see a list of all of them.
+ */
+public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
+
+    private static final Logger logger = LoggerFactory.getLogger(CoolMessagesBoardManager.class);
+    private static final Emoji REACT_EMOJI = Emoji.fromUnicode("🌟");
+    private final Predicate<String> boardChannelNamePredicate;
+    private final CoolMessagesBoardConfig config;
+
+    public CoolMessagesBoardManager(Config config) {
+        this.config = config.getCoolMessagesConfig();
+
+        boardChannelNamePredicate =
+                Pattern.compile(this.config.getBoardChannelPattern()).asMatchPredicate();
+    }
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event) {
+        final MessageReaction messageReaction = event.getReaction();
+        int originalReactionsCount = messageReaction.hasCount() ? messageReaction.getCount() : 0;
+        boolean isCoolEmoji = messageReaction.getEmoji().getName().equals(REACT_EMOJI.getName());
+        long guildId = event.getGuild().getIdLong();
+        Optional<TextChannel> boardChannel = getBoardChannel(event.getJDA(), guildId);
+
+        if (boardChannel.isEmpty()) {
+            logger.warn("Tried to find the board channel in server {} but was unable to do so",
+                    guildId);
+            return;
+        }
+
+        if (isCoolEmoji && originalReactionsCount + 1 >= config.getMinimumReactions()) {
+            event.retrieveMessage()
+                .queue(message -> insertCoolMessage(boardChannel.orElseThrow(), message),
+                        e -> logger.warn("Tried to retrieve cool message but got: {}",
+                                e.getMessage()));
+        }
+    }
+
+    /**
+     * Gets the board text channel where the quotes go to, wrapped in an optional.
+     *
+     * @param jda the JDA
+     * @param guildId the guild ID
+     * @return the board text channel
+     */
+    private Optional<TextChannel> getBoardChannel(JDA jda, long guildId) {
+        return jda.getGuildById(guildId)
+            .getTextChannelCache()
+            .stream()
+            .filter(channel -> boardChannelNamePredicate.test(channel.getName()))
+            .findAny();
+    }
+
+    /**
+     * Inserts a message to the specified text channel
+     */
+    private static void insertCoolMessage(TextChannel boardChannel, Message message) {
+        boardChannel.sendMessageEmbeds(Collections.singleton(createQuoteEmbed(message))).queue();
+    }
+
+    /**
+     * Wraps a text message into a properly formatted quote message used for the board text channel.
+     */
+    private static MessageEmbed createQuoteEmbed(Message message) {
+        final User author = message.getAuthor();
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+
+        // If the message contains image(s), include the first one
+        var imageAttachment = message.getAttachments()
+            .stream()
+            .parallel()
+            .filter(Message.Attachment::isImage)
+            .findAny()
+            .orElse(null);
+
+        if (imageAttachment != null) {
+            embedBuilder.setThumbnail(imageAttachment.getUrl());
+        }
+
+        return embedBuilder.setDescription(message.getContentDisplay())
+            .appendDescription("%n%n[Jump to Message](%s)".formatted(message.getJumpUrl()))
+            .setColor(Color.orange)
+            .setAuthor(author.getName(), null, author.getAvatarUrl())
+            .setTimestamp(message.getTimeCreated())
+            .build();
+    }
+}
