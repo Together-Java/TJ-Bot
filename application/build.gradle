@@ -78,6 +78,8 @@ dependencies {
     implementation 'org.kohsuke:github-api:1.319'
 
     testImplementation 'org.mockito:mockito-core:5.10.0'
+    implementation 'org.apache.commons:commons-text:1.11.0'
+    implementation 'com.apptasticsoftware:rssreader:3.6.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
