@@ -424,4 +424,9 @@ public final class Config {
     public List<RSSFeed> getRssFeeds() {
         return rssFeeds;
     }
+
+    // TODO: Make JavaDocs on this
+    public int getRssPollInterval() {
+        return rssPollInterval;
+    }
 }

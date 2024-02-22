@@ -35,9 +35,11 @@ public final class JavaMailRSSRoutine implements Routine {
     private static final int MAX_CONTENTS = 300;
     private final List<RSSFeed> feeds;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
+    private final int interval;
 
     public JavaMailRSSRoutine(Config config) {
         this.feeds = config.getRssFeeds();
+        this.interval = config.getRssPollInterval();
 
         this.feeds.forEach(feed -> {
             var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
@@ -47,8 +49,7 @@ public final class JavaMailRSSRoutine implements Routine {
 
     @Override
     public Schedule createSchedule() {
-        // TODO: Make this adjustable in the future
-        return new Schedule(ScheduleMode.FIXED_DELAY, 0, 10, TimeUnit.MINUTES);
+        return new Schedule(ScheduleMode.FIXED_DELAY, 0, interval, TimeUnit.MINUTES);
     }
 
     @Override
@@ -108,14 +109,14 @@ public final class JavaMailRSSRoutine implements Routine {
     private static List<Item> getPostsAfterDate(String rssUrl, DateTime date) {
         List<Item> rssList = fetchRss(rssUrl);
         final Predicate<Item> rssListPredicate = item -> {
-            var pubDateTime = item.getPubDate();
-            if (pubDateTime.isEmpty()) {
+            var pubDateString = item.getPubDate();
+            if (pubDateString.isEmpty()) {
                 return false;
             }
+            DateTime pubDate = parseDate(pubDateString.get());
 
-            long pubDate = parseDate(pubDateTime.get());
-
-            return pubDate > date;
+            // If pubDate is after `date`, return true
+            return pubDate > date.
         };
 
         if (rssList == null) {
@@ -141,13 +142,13 @@ public final class JavaMailRSSRoutine implements Routine {
         }
     }
 
-    private static long parseDate(String date) {
+    private static long parseDateT(String date) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         try {
             return dateFormat.parse(date).getTime();
         } catch (Exception e) {
             logger.error("Could not parse date, {}", e.getMessage());
         }
-        return 0;
+        return;
     }
 }

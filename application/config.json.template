@@ -103,8 +103,9 @@
         "special": [
         ]
     },
+    "selectRolesChannelPattern": "select-your-roles",
+    "rssPollInterval": 5,
     "memberCountCategoryPattern": "Info",
-    "selectRolesChannelPattern": "select-your-roles"
     "rssFeeds": [
         {
             "url": "<rss_url_feed_here>",
