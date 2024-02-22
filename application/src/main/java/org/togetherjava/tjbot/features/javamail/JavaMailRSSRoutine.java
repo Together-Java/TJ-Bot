@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.javamail;
 
+import com.apptasticsoftware.rssreader.DateTime;
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -104,7 +105,7 @@ public final class JavaMailRSSRoutine implements Routine {
     }
 
     // TODO: make this use DateTime
-    private static List<Item> getPostsAfterDate(String rssUrl, long date) {
+    private static List<Item> getPostsAfterDate(String rssUrl, DateTime date) {
         List<Item> rssList = fetchRss(rssUrl);
         final Predicate<Item> rssListPredicate = item -> {
             var pubDateTime = item.getPubDate();
