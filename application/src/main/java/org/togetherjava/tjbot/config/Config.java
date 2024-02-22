@@ -93,9 +93,8 @@ public final class Config {
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "javaNewsChannelPattern",
-            required = true) String javaNewsChannelPattern,
-            @JsonProperty(value = "rssFeeds",
-                    required = true) List<RSSFeed> rssFeeds,
+                    required = true) String javaNewsChannelPattern,
+            @JsonProperty(value = "rssFeeds", required = true) List<RSSFeed> rssFeeds,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
