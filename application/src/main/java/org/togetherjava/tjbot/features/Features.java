@@ -24,6 +24,7 @@ import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.help.*;
+import org.togetherjava.tjbot.features.javamail.JavaMailRSSRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
@@ -110,6 +111,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new JavaMailRSSRoutine(config));
         features.add(new MemberCountDisplayRoutine(config));
 
         // Message receivers
