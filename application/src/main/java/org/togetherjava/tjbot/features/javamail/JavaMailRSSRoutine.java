@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public final class JavaMailRSSRoutine implements Routine {
         }
 
         items.forEach(item -> {
-            MessageEmbed embed = constructEmbedMessage(item, textChannel.get()).build();
+            MessageEmbed embed = constructEmbedMessage(item).build();
             textChannel.get().sendMessageEmbeds(List.of(embed)).queue();
         });
     }
@@ -76,12 +77,14 @@ public final class JavaMailRSSRoutine implements Routine {
     }
 
     @SuppressWarnings("static-access")
-    private static EmbedBuilder constructEmbedMessage(Item item, TextChannel channel) {
+    private static EmbedBuilder constructEmbedMessage(Item item) {
         final EmbedBuilder embedBuilder = new EmbedBuilder();
+        String title = item.getTitle().orElse("No title");
+        String rawDescription = item.getDescription().orElse("No description");
+        String description = StringEscapeUtils.unescapeHtml4(rawDescription);
 
-        embedBuilder.setTitle(item.getTitle().get(), item.getLink().get());
-        embedBuilder.setDescription(StringEscapeUtils
-            .unescapeHtml4(item.getDescription().get().substring(0, MAX_CONTENTS)) + "...");
+        embedBuilder.setTitle(title, item.getLink().orElse(""));
+        embedBuilder.setDescription(StringUtils.abbreviate(description, MAX_CONTENTS));
         embedBuilder
             .setFooter("%s | %d".format(item.getPubDate().get(), item.getChannel().getLink()));
         return embedBuilder;
