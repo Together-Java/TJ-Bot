@@ -111,5 +111,6 @@
             "url": "<rss_url_feed_here>",
             "targetChannelPattern", "<target_channel_pattern_here>"
         }
-    ]
+    ],
+    "rssPollInterval": 10
 }
