@@ -22,10 +22,8 @@ public class MemberCountDisplayRoutine implements Routine {
         int totalMemberCount = category.getGuild().getMemberCount();
         String baseName = category.getName();
         if (baseName.contains(" Members")) {
-            // baseName = baseName.substring(0, baseName.lastIndexOf(" Members"));
             baseName = Pattern.compile("(.+) - \\d+ Members").toString();
         }
-        System.out.println("%s - %d Members".formatted(baseName.trim(), totalMemberCount));
         category.getManager()
             .setName("%s - %d Members".formatted(baseName.trim(), totalMemberCount))
             .queue();
