@@ -42,6 +42,8 @@ public final class Config {
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
     private final FeatureBlacklistConfig featureBlacklistConfig;
+    private final List<RSSFeed> rssFeeds;
+    private final String javaNewsChannelPattern;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
 
@@ -90,6 +92,10 @@ public final class Config {
                     required = true) String memberCountCategoryPattern,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
+            @JsonProperty(value = "javaNewsChannelPattern",
+            required = true) String javaNewsChannelPattern,
+            @JsonProperty(value = "rssFeeds",
+                    required = true) List<RSSFeed> rssFeeds,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
@@ -122,6 +128,8 @@ public final class Config {
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
+        this.rssFeeds = Objects.requireNonNull(rssFeeds);
+        this.javaNewsChannelPattern = Objects.requireNonNull(javaNewsChannelPattern);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
@@ -404,5 +412,13 @@ public final class Config {
      */
     public String getMemberCountCategoryPattern() {
         return memberCountCategoryPattern;
+    }
+
+    public String getJavaNewsChannelPattern() {
+        return javaNewsChannelPattern;
+    }
+
+    public List<RSSFeed> getRssFeeds() {
+        return rssFeeds;
     }
 }
