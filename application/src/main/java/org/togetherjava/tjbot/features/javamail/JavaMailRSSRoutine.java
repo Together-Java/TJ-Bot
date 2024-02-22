@@ -89,12 +89,7 @@ public final class JavaMailRSSRoutine implements Routine {
             textChannel.get().sendMessageEmbeds(List.of(embed)).queue();
         });
 
-        String lastDate = getLatestDate(items);
-
-        if (lastDate == null) {
-            return;
-        }
-
+        String lastDate = items.getFirst().getPubDate().orElseThrow();
         if (entry == null) {
             // Insert
             database.write(context -> context.newRecord(RSS_FEED)
