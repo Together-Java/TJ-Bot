@@ -31,7 +31,7 @@ public final class JavaMailRSSRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
-    private static final int MAX_CONTENTS = 150;
+    private static final int MAX_CONTENTS = 300;
     private final List<RSSFeed> feeds;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
 
