@@ -44,7 +44,6 @@ public final class Config {
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
-    private final String updateMemberCountEveryHour;
     private final String memberCountCategoryName;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
@@ -89,7 +88,6 @@ public final class Config {
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
             @JsonProperty(value = "memberCountCategoryName") String memberCountCategoryName,
-            @JsonProperty(value = "updateMemberCountEveryHour") String updateMemberCountEveryHour,
             @JsonProperty(value = "helperPruneConfig",
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
@@ -101,7 +99,6 @@ public final class Config {
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
         this.memberCountCategoryName = memberCountCategoryName;
-        this.updateMemberCountEveryHour = updateMemberCountEveryHour;
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
         this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
@@ -419,9 +416,5 @@ public final class Config {
      */
     public String getMemberCountCategoryName() {
         return memberCountCategoryName;
-    }
-
-    public String getupdateMemberCountEveryHour() {
-        return updateMemberCountEveryHour;
     }
 }

@@ -111,6 +111,5 @@
         ]
     },
     "memberCountCategoryName": "Info",
-    "updateMemberCountEveryHour", "12",
     "selectRolesChannelPattern": "select-your-roles"
 }

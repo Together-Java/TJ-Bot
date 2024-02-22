@@ -1,27 +1,33 @@
 package org.togetherjava.tjbot.features.basic;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.Routine;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 public class MemberCountDisplayRoutine implements Routine {
-    private final String wordsInCategory;
+    private final Predicate<String> wordsInCategory;
+
 
     public MemberCountDisplayRoutine(Config config) {
-        this.wordsInCategory = config.getMemberCountCategoryName();
+        wordsInCategory = Pattern.compile(config.getMemberCountCategoryName()).asMatchPredicate();
     }
 
     private void updateCategoryName(Category category) {
         int totalMemberCount = category.getGuild().getMemberCount();
-        String basename = category.getName();
+        String baseName = category.getName();
+        if (baseName.contains(" Members")) {
+            // baseName = baseName.substring(0, baseName.lastIndexOf(" Members"));
+            baseName = Pattern.compile("(.+) - \\d+ Members").toString();
+        }
+        System.out.println("%s - %d Members".formatted(baseName.trim(), totalMemberCount));
         category.getManager()
-            .setName("%s - %d Members".formatted(basename, totalMemberCount))
+            .setName("%s - %d Members".formatted(baseName.trim(), totalMemberCount))
             .queue();
     }
 
@@ -32,11 +38,11 @@ public class MemberCountDisplayRoutine implements Routine {
 
     @Override
     public void runRoutine(JDA jda) {
-        jda.getGuilds()
-            .stream()
-            .map(Guild::getCategories)
-            .flatMap(List::stream)
-            .filter(cat -> cat.getName().equalsIgnoreCase(wordsInCategory))
-            .forEach(this::updateCategoryName);
+        jda.getGuilds().forEach(guild -> {
+            guild.getCategories()
+                .stream()
+                .filter(cat -> wordsInCategory.test(cat.getName()))
+                .forEach(this::updateCategoryName);
+        });
     }
 }
