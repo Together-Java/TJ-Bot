@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.javamail;
 
-import com.apptasticsoftware.rssreader.DateTime;
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -21,7 +20,8 @@ import org.togetherjava.tjbot.features.Routine;
 import javax.annotation.Nonnull;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -33,6 +33,8 @@ public final class JavaMailRSSRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
     private static final int MAX_CONTENTS = 300;
+    private static final DateTimeFormatter RSS_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private final List<RSSFeed> feeds;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
     private final int interval;
@@ -105,18 +107,17 @@ public final class JavaMailRSSRoutine implements Routine {
         return embedBuilder;
     }
 
-    // TODO: make this use DateTime
-    private static List<Item> getPostsAfterDate(String rssUrl, DateTime date) {
+    private static List<Item> getPostsAfterDate(String rssUrl, Date afterDate) {
         List<Item> rssList = fetchRss(rssUrl);
         final Predicate<Item> rssListPredicate = item -> {
             var pubDateString = item.getPubDate();
             if (pubDateString.isEmpty()) {
                 return false;
             }
-            DateTime pubDate = parseDate(pubDateString.get());
+            var pubDate = parseDateTime(pubDateString.get());
 
-            // If pubDate is after `date`, return true
-            return pubDate > date.
+            // If pubDate is after the afterDate, it passes
+            return pubDate.compareTo(afterDate) > 0;
         };
 
         if (rssList == null) {
@@ -142,13 +143,7 @@ public final class JavaMailRSSRoutine implements Routine {
         }
     }
 
-    private static long parseDateT(String date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        try {
-            return dateFormat.parse(date).getTime();
-        } catch (Exception e) {
-            logger.error("Could not parse date, {}", e.getMessage());
-        }
-        return;
+    private static Date parseDateTime(String date) {
+        return Date.from(RSS_DATE_FORMAT.parse(date, Instant::from));
     }
 }
