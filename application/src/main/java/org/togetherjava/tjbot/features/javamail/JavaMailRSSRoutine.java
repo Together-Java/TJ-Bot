@@ -6,8 +6,10 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jooq.tools.StringUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,20 +78,30 @@ public final class JavaMailRSSRoutine implements Routine {
             .findFirst();
     }
 
-    @SuppressWarnings("static-access")
     private static EmbedBuilder constructEmbedMessage(Item item) {
         final EmbedBuilder embedBuilder = new EmbedBuilder();
         String title = item.getTitle().orElse("No title");
-        String rawDescription = item.getDescription().orElse("No description");
-        String description = StringEscapeUtils.unescapeHtml4(rawDescription);
+        String titleLink = item.getLink().orElse("");
+        Optional<String> rawDescription = item.getDescription();
 
-        embedBuilder.setTitle(title, item.getLink().orElse(""));
-        embedBuilder.setDescription(StringUtils.abbreviate(description, MAX_CONTENTS));
-        embedBuilder
-            .setFooter("%s | %d".format(item.getPubDate().get(), item.getChannel().getLink()));
+        embedBuilder.setTitle(title, titleLink);
+
+        if (rawDescription.isPresent()) {
+            Document fullDescription =
+                    Jsoup.parse(StringEscapeUtils.unescapeHtml4(rawDescription.get()));
+            StringBuilder finalDescription = new StringBuilder();
+            fullDescription.body().select("p").forEach(p -> {
+                finalDescription.append(p.text()).append(". ");
+            });
+
+            embedBuilder
+                .setDescription(StringUtils.abbreviate(finalDescription.toString(), MAX_CONTENTS));
+            return embedBuilder;
+        }
+
+        embedBuilder.setDescription("No description");
         return embedBuilder;
     }
-
 
     // TODO: make this use DateTime
     private static List<Item> getPostsAfterDate(String rssUrl, long date) {
