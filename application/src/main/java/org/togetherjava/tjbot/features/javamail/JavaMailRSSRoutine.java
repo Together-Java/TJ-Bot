@@ -15,18 +15,20 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.RSSFeed;
+import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.records.RssFeedRecord;
 import org.togetherjava.tjbot.features.Routine;
 
 import javax.annotation.Nonnull;
 
-import java.io.IOException;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
+import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
 
 public final class JavaMailRSSRoutine implements Routine {
 
@@ -38,11 +40,12 @@ public final class JavaMailRSSRoutine implements Routine {
     private final List<RSSFeed> feeds;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
     private final int interval;
+    private final Database database;
 
-    public JavaMailRSSRoutine(Config config) {
+    public JavaMailRSSRoutine(Config config, Database database) {
         this.feeds = config.getRssFeeds();
         this.interval = config.getRssPollInterval();
-
+        this.database = database;
         this.feeds.forEach(feed -> {
             var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
             targetChannelPatterns.put(feed, predicate);
@@ -61,7 +64,18 @@ public final class JavaMailRSSRoutine implements Routine {
 
     private void sendRSS(JDA jda, RSSFeed feed) {
         var textChannel = getTextChannelFromFeed(jda, feed);
-        var items = fetchRss(feed.url());
+
+        RssFeedRecord entry = database.read(context -> context.selectFrom(RSS_FEED)
+            .where(RSS_FEED.URL.eq(feed.url()))
+            .limit(1)
+            .fetchOne());
+
+        List<Item> items;
+        if (entry == null) {
+            items = fetchRss(feed.url());
+        } else {
+            items = fetchRssAfterDate(feed.url(), entry.getLastDate());
+        }
 
         if (textChannel.isEmpty()) {
             logger.warn("Tried to sendRss, got empty response (channel {} not found)",
@@ -73,6 +87,21 @@ public final class JavaMailRSSRoutine implements Routine {
             MessageEmbed embed = constructEmbedMessage(item).build();
             textChannel.get().sendMessageEmbeds(List.of(embed)).queue();
         });
+
+        String lastDate = items.getFirst().getPubDate().orElseThrow();
+        if (entry == null) {
+            // Insert
+            database.write(context -> context.newRecord(RSS_FEED)
+                .setUrl(feed.url())
+                .setLastDate(lastDate)
+                .insert());
+            return;
+        }
+
+        database.write(context -> context.update(RSS_FEED)
+            .set(RSS_FEED.LAST_DATE, lastDate)
+            .where(RSS_FEED.URL.eq(feed.url()))
+            .executeAsync());
     }
 
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
@@ -88,15 +117,17 @@ public final class JavaMailRSSRoutine implements Routine {
         String titleLink = item.getLink().orElse("");
         Optional<String> rawDescription = item.getDescription();
 
+        item.getPubDate().ifPresent(date -> embedBuilder.setTimestamp(getLocalDateTime(date)));
+
         embedBuilder.setTitle(title, titleLink);
 
         if (rawDescription.isPresent()) {
             Document fullDescription =
                     Jsoup.parse(StringEscapeUtils.unescapeHtml4(rawDescription.get()));
             StringBuilder finalDescription = new StringBuilder();
-            fullDescription.body().select("p").forEach(p -> {
-                finalDescription.append(p.text()).append(". ");
-            });
+            fullDescription.body()
+                .select("p")
+                .forEach(p -> finalDescription.append(p.text()).append(". "));
 
             embedBuilder
                 .setDescription(StringUtils.abbreviate(finalDescription.toString(), MAX_CONTENTS));
@@ -107,28 +138,24 @@ public final class JavaMailRSSRoutine implements Routine {
         return embedBuilder;
     }
 
-    private static List<Item> getPostsAfterDate(String rssUrl, Date afterDate) {
+    private static List<Item> fetchRssAfterDate(String rssUrl, String afterDate) {
+        final LocalDateTime afterDateTime = getLocalDateTime(afterDate);
         List<Item> rssList = fetchRss(rssUrl);
-        final Predicate<Item> rssListPredicate = item -> {
+        final Predicate<Item> itemAfterDate = item -> {
             var pubDateString = item.getPubDate();
             if (pubDateString.isEmpty()) {
                 return false;
             }
-            var pubDate = parseDateTime(pubDateString.get());
+            var pubDate = getLocalDateTime(pubDateString.get());
 
-            // If pubDate is after the afterDate, it passes
-            return pubDate.compareTo(afterDate) > 0;
+            return pubDate.isAfter(afterDateTime);
         };
 
         if (rssList == null) {
             return List.of();
         }
 
-        return rssList.stream().filter(rssListPredicate).collect(Collectors.toList());
-    }
-
-    private static Optional<Item> getLatest(String rssUrl) throws IOException {
-        return fetchRss(rssUrl).stream().findFirst();
+        return rssList.stream().filter(itemAfterDate).toList();
     }
 
     /**
@@ -136,14 +163,14 @@ public final class JavaMailRSSRoutine implements Routine {
      */
     private static List<Item> fetchRss(String rssUrl) {
         try {
-            return RSS_READER.read(rssUrl).collect(Collectors.toList());
+            return RSS_READER.read(rssUrl).toList();
         } catch (Exception e) {
             logger.warn("Could not fetch RSS from URL ({})", rssUrl);
             return List.of();
         }
     }
 
-    private static Date parseDateTime(String date) {
-        return Date.from(RSS_DATE_FORMAT.parse(date, Instant::from));
+    private static LocalDateTime getLocalDateTime(String date) {
+        return LocalDateTime.parse(date, RSS_DATE_FORMAT);
     }
 }
