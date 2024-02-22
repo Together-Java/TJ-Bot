@@ -4,6 +4,7 @@ import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.apache.commons.text.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -13,9 +14,11 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.RSSFeed;
 import org.togetherjava.tjbot.features.Routine;
 
+import javax.annotation.Nonnull;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -27,14 +30,16 @@ public final class JavaMailRSSRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
-    private static Predicate<String> javaNewsChannelPredicate;
     private final List<RSSFeed> feeds;
+    private final List<Predicate<String>> targetChannelPatterns = new ArrayList<>();
 
     public JavaMailRSSRoutine(Config config) {
         this.feeds = config.getRssFeeds();
 
-        javaNewsChannelPredicate =
-                Pattern.compile(config.getJavaNewsChannelPattern()).asPredicate();
+        this.feeds.forEach(feed -> {
+            var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
+            targetChannelPatterns.add(predicate);
+        });
     }
 
     @Override
@@ -44,69 +49,39 @@ public final class JavaMailRSSRoutine implements Routine {
     }
 
     @Override
-    public void runRoutine(JDA jda) {
-        // TODO: REMOVE ME
-        // 1. make http request and check if the latest rss feed id matches last saved RSS feed id
-        // 2. if it doesn't then post the new one and store it in db.
+    public void runRoutine(@Nonnull JDA jda) {
+        feeds.forEach(feed -> sendRSS(jda, feed));
+    }
 
-        final TextChannel channel = jda.getTextChannelCache()
-            .stream()
-            .filter(c -> javaNewsChannelPredicate.test(c.getName()))
-            .findFirst()
-            .orElse(null);
+    private void sendRSS(JDA jda, RSSFeed feed) {
+        var textChannel = getTextChannelFromFeed(jda, feed);
+        var items = fetchRss(feed.url());
 
-        if (channel == null) {
-            logger.warn("Could not find the Java news channel");
+        if (textChannel.isEmpty()) {
+            logger.warn("Tried to sendRss, got empty response (channel {} not found)",
+                    feed.targetChannelPattern());
             return;
         }
 
-        // parse latest channel message and get the date that the rss feed from that is from.
-        // footer format is {DATE} | https://wiki.openjdk.org (RSS CHANNEL ID)
-        List<String[]> lastDates = channel.getIterableHistory()
-            .stream()
-            .filter(message -> message.getAuthor().getId().equals(jda.getSelfUser().getId()))
-            .map(message -> message.getEmbeds().getFirst().getFooter().getText().split(" | "))
-            .filter(footer -> Arrays.stream(footer).findAny().isPresent())
-            .collect(Collectors.toList());
-
-        // loop through lastDates and check if we are still tracking that rss feed and then call
-        // getAfter
-        for (String[] footer : lastDates) {
-            RSSFeed feed = null;
-            if (footer.length != 2) {
-                continue;
-            }
-
-            // check if we are still tracking
-            long date = parseDate(footer[0]);
-            for (RSSFeed trackedFeed : feeds) {
-                // they likely won't match exactly.
-                if (trackedFeed.url().contains(footer[1])) {
-                    feed = trackedFeed;
-                }
-            }
-
-            if (feed == null) {
-                continue;
-            }
-
-            // now we can handle all posts for this specific rss feed
-            List<Item> posts = getAfter(feed.url(), date);
-        }
-
-
+        items.forEach(item -> {
+            MessageEmbed embed = constructEmbedMessage(item, textChannel.get()).build();
+            textChannel.get().sendMessageEmbeds(List.of(embed)).queue();
+        });
     }
 
-    private static void sendRSSPost() {
-
+    private static Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
+        return jda.getTextChannelCache()
+            .stream()
+            .filter(c -> feed.targetChannelPattern().equals(c.getName()))
+            .findFirst();
     }
 
     @SuppressWarnings("static-access")
     private static EmbedBuilder constructEmbedMessage(Item item, TextChannel channel) {
         final EmbedBuilder embedBuilder = new EmbedBuilder();
 
-        // TODO: You do this stuff
         embedBuilder.setTitle(item.getTitle().get(), item.getLink().get());
+        // TODO: don't hardcode substring to 150
         embedBuilder.setDescription(
                 StringEscapeUtils.unescapeHtml4(item.getDescription().get().substring(0, 150))
                         + "...");
@@ -116,8 +91,9 @@ public final class JavaMailRSSRoutine implements Routine {
     }
 
 
-    private static List<Item> getAfter(String rssUrl, long date) {
-        List<Item> rssList = fetchRss(rssUrl).orElse(null);
+    // TODO: make this use DateTime
+    private static List<Item> getPostsAfterDate(String rssUrl, long date) {
+        List<Item> rssList = fetchRss(rssUrl);
         final Predicate<Item> rssListPredicate = item -> {
             var pubDateTime = item.getPubDate();
             if (pubDateTime.isEmpty()) {
@@ -137,18 +113,18 @@ public final class JavaMailRSSRoutine implements Routine {
     }
 
     private static Optional<Item> getLatest(String rssUrl) throws IOException {
-        return fetchRss(rssUrl).orElseThrow().stream().findFirst();
+        return fetchRss(rssUrl).stream().findFirst();
     }
 
     /**
      * Fetches new items from a given RSS url.
      */
-    private static Optional<List<Item>> fetchRss(String rssUrl) {
+    private static List<Item> fetchRss(String rssUrl) {
         try {
-            return Optional.of(RSS_READER.read(rssUrl).collect(Collectors.toList()));
+            return RSS_READER.read(rssUrl).collect(Collectors.toList());
         } catch (Exception e) {
             logger.warn("Could not fetch RSS from URL ({})", rssUrl);
-            return Optional.empty();
+            return List.of();
         }
     }
 
