@@ -18,9 +18,7 @@ import javax.annotation.Nonnull;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -31,14 +29,14 @@ public final class JavaMailRSSRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
     private final List<RSSFeed> feeds;
-    private final List<Predicate<String>> targetChannelPatterns = new ArrayList<>();
+    private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
 
     public JavaMailRSSRoutine(Config config) {
         this.feeds = config.getRssFeeds();
 
         this.feeds.forEach(feed -> {
             var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
-            targetChannelPatterns.add(predicate);
+            targetChannelPatterns.put(feed, predicate);
         });
     }
 
@@ -69,10 +67,10 @@ public final class JavaMailRSSRoutine implements Routine {
         });
     }
 
-    private static Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
+    private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
         return jda.getTextChannelCache()
             .stream()
-            .filter(c -> feed.targetChannelPattern().equals(c.getName()))
+            .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
             .findFirst();
     }
 
