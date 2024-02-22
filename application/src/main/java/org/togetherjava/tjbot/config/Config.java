@@ -430,10 +430,6 @@ public final class Config {
         return memberCountCategoryPattern;
     }
 
-    public String getJavaNewsChannelPattern() {
-        return javaNewsChannelPattern;
-    }
-
     public List<RSSFeed> getRssFeeds() {
         return rssFeeds;
     }
@@ -441,5 +437,9 @@ public final class Config {
     // TODO: Make JavaDocs on this
     public int getRssPollInterval() {
         return rssPollInterval;
+    }
+
+    public String getJavaNewsChannelPattern() {
+        return javaNewsChannelPattern;
     }
 }
