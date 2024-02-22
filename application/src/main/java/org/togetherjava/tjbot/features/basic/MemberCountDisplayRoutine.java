@@ -15,7 +15,8 @@ public class MemberCountDisplayRoutine implements Routine {
 
 
     public MemberCountDisplayRoutine(Config config) {
-        wordsInCategory = Pattern.compile(config.getMemberCountCategoryName()).asMatchPredicate();
+        wordsInCategory =
+                Pattern.compile(config.getMemberCountCategoryPattern()).asMatchPredicate();
     }
 
     private void updateCategoryName(Category category) {
