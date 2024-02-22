@@ -28,6 +28,7 @@ public final class JavaMailRSSRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
+    private static final int MAX_CONTENTS = 150;
     private final List<RSSFeed> feeds;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
 
@@ -79,10 +80,8 @@ public final class JavaMailRSSRoutine implements Routine {
         final EmbedBuilder embedBuilder = new EmbedBuilder();
 
         embedBuilder.setTitle(item.getTitle().get(), item.getLink().get());
-        // TODO: don't hardcode substring to 150
-        embedBuilder.setDescription(
-                StringEscapeUtils.unescapeHtml4(item.getDescription().get().substring(0, 150))
-                        + "...");
+        embedBuilder.setDescription(StringEscapeUtils
+            .unescapeHtml4(item.getDescription().get().substring(0, MAX_CONTENTS)) + "...");
         embedBuilder
             .setFooter("%s | %d".format(item.getPubDate().get(), item.getChannel().getLink()));
         return embedBuilder;
