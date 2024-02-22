@@ -112,4 +112,6 @@
     },
     "memberCountCategoryPattern": "Info",
     "selectRolesChannelPattern": "select-your-roles"
+    "javaNewsChannelPattern": "java-news-and-changes",
+    "rssFeeds": []
 }
