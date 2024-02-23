@@ -125,7 +125,11 @@ public final class HelpSystemHelper {
         String question = questionOptional.get();
         logger.debug("The final question sent to chatGPT: {}", question);
 
-        chatGPTAnswer = chatGptService.ask(question);
+        ForumTag defaultTag = threadChannel.getAppliedTags().getFirst();
+        ForumTag matchingTag = getCategoryTagOfChannel(threadChannel).orElse(defaultTag);
+
+        String context = matchingTag.getName();
+        chatGPTAnswer = chatGptService.ask(question, context);
         if (chatGPTAnswer.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
         }
@@ -178,20 +182,6 @@ public final class HelpSystemHelper {
             .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
 
         questionBuilder.append(originalQuestion);
-
-        StringBuilder tagBuilder = new StringBuilder();
-        int stringLength = questionBuilder.length();
-        for (ForumTag tag : threadChannel.getAppliedTags()) {
-            String tagName = tag.getName();
-            stringLength += tagName.length();
-            if (stringLength > MAX_QUESTION_LENGTH) {
-                break;
-            }
-            tagBuilder.append(String.format("%s ", tagName));
-        }
-
-        questionBuilder.insert(0, tagBuilder);
-
         return Optional.of(questionBuilder.toString());
     }
 
