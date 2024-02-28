@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.Nullable;
 import org.jooq.tools.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -88,7 +89,12 @@ public final class JavaMailRSSRoutine implements Routine {
             textChannel.get().sendMessageEmbeds(List.of(embed)).queue();
         });
 
-        String lastDate = items.getFirst().getPubDate().orElseThrow();
+        String lastDate = getLatestDate(items);
+
+        if (lastDate == null) {
+            return;
+        }
+
         if (entry == null) {
             // Insert
             database.write(context -> context.newRecord(RSS_FEED)
@@ -102,6 +108,26 @@ public final class JavaMailRSSRoutine implements Routine {
             .set(RSS_FEED.LAST_DATE, lastDate)
             .where(RSS_FEED.URL.eq(feed.url()))
             .executeAsync());
+    }
+
+    @Nullable
+    private static String getLatestDate(List<Item> items) {
+        String lastDate = null;
+
+        for (Item item : items) {
+            if (lastDate == null) {
+                lastDate = item.getPubDate().orElseThrow();
+                continue;
+            }
+
+            LocalDateTime formattedLastDate = getLocalDateTime(lastDate);
+            LocalDateTime itemDate = getLocalDateTime(item.getPubDate().orElseThrow());
+
+            if (itemDate.isAfter(formattedLastDate)) {
+                lastDate = item.getPubDate().orElseThrow();
+            }
+        }
+        return lastDate;
     }
 
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
