@@ -104,12 +104,11 @@
         ]
     },
     "selectRolesChannelPattern": "select-your-roles",
-    "rssPollInterval": 5,
     "memberCountCategoryPattern": "Info",
     "rssFeeds": [
         {
             "url": "<rss_url_feed_here>",
-            "targetChannelPattern", "<target_channel_pattern_here>"
+            "targetChannelPattern": "<target_channel_pattern_here>"
         }
     ],
     "rssPollInterval": 10
