@@ -167,9 +167,6 @@ public final class RSSHandlerRoutine implements Routine {
             }
         });
 
-        // Don't write anything to the database if there were no RSS items
-        if (rssItems.isEmpty()) {
-            return;
         }
 
         // Finally, save the last posted date to the database.
