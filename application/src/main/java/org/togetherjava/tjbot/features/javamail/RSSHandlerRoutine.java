@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jooq.Result;
 import org.jooq.tools.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -137,12 +136,12 @@ public final class RSSHandlerRoutine implements Routine {
         }
 
         // Attempt to find any stored information regarding the provided RSS URL
-        Result<RssFeedRecord> dateResult = database.read(context -> context.selectFrom(RSS_FEED)
+        RssFeedRecord dateResult = database.read(context -> context.selectFrom(RSS_FEED)
             .where(RSS_FEED.URL.eq(feedConfig.url()))
             .limit(1)
-            .fetch());
+            .fetchAny());
 
-        String dateStr = dateResult.isEmpty() ? null : dateResult.getFirst().getLastDate();
+        String dateStr = dateResult == null ? null : dateResult.getLastDate();
         ZonedDateTime lastSavedDate = getLocalDateTime(dateStr, feedConfig.dateFormatterPattern());
 
         final Predicate<Item> shouldItemBePosted = item -> {
@@ -177,7 +176,7 @@ public final class RSSHandlerRoutine implements Routine {
         DateTimeFormatter dateTimeFormatter =
                 DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
         String lastDateStr = lastPostedDate.get().format(dateTimeFormatter);
-        if (dateResult.isEmpty()) {
+        if (dateResult == null) {
             database.write(context -> context.newRecord(RSS_FEED)
                 .setUrl(feedConfig.url())
                 .setLastDate(lastDateStr)
