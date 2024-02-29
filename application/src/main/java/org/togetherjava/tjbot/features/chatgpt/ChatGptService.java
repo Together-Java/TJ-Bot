@@ -85,6 +85,8 @@ public class ChatGptService {
      * Prompt ChatGPT with a question and receive a response.
      *
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @param context The category of asked question, to set the context(eg. Java, Database, Other
+     *        etc).
      * @return partitioned response from ChatGPT as a String array.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
