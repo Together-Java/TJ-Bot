@@ -41,7 +41,7 @@ public final class JavaMailRSSRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
-    private static final int MAX_CONTENTS = 300;
+    private static final int MAX_CONTENTS = 1000;
     private static final ZonedDateTime ZONED_TIME_MIN =
             ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
     private final List<RSSFeed> feeds;
