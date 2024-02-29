@@ -153,9 +153,10 @@ public final class RSSHandlerRoutine implements Routine {
         // Date that will be stored in the database at the end
         AtomicReference<ZonedDateTime> lastPostedDate = new AtomicReference<>(lastSavedDate);
 
+
         // Send each item that should be posted and concurrently
         // find the post with the latest date
-        rssItems.stream().filter(shouldItemBePosted).forEach(item -> {
+        rssItems.reversed().stream().filter(shouldItemBePosted).forEach(item -> {
             MessageEmbed embed = constructEmbedMessage(item, feedConfig).build();
             textChannel.sendMessageEmbeds(List.of(embed)).queue();
 
