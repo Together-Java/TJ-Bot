@@ -39,6 +39,7 @@ public final class JavaMailRSSRoutine implements Routine {
     private static final DateTimeFormatter RSS_DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private final List<RSSFeed> feeds;
+    private final Predicate<String> defaultChannelPattern;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
     private final int interval;
     private final Database database;
@@ -47,9 +48,13 @@ public final class JavaMailRSSRoutine implements Routine {
         this.feeds = config.getRssFeeds();
         this.interval = config.getRssPollInterval();
         this.database = database;
+        this.defaultChannelPattern =
+                Pattern.compile(config.getJavaNewsChannelPattern()).asMatchPredicate();
         this.feeds.forEach(feed -> {
-            var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
-            targetChannelPatterns.put(feed, predicate);
+            if (feed.targetChannelPattern() != null) {
+                var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
+                targetChannelPatterns.put(feed, predicate);
+            }
         });
     }
 
@@ -131,9 +136,16 @@ public final class JavaMailRSSRoutine implements Routine {
     }
 
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
+        if (feed.targetChannelPattern() != null) {
+            return jda.getTextChannelCache()
+                .stream()
+                .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
+                .findFirst();
+        }
+
         return jda.getTextChannelCache()
             .stream()
-            .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
+            .filter(channel -> defaultChannelPattern.test(channel.getName()))
             .findFirst();
     }
 
