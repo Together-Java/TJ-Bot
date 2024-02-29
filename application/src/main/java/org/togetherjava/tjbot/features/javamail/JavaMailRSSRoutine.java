@@ -158,6 +158,7 @@ public final class JavaMailRSSRoutine implements Routine {
         item.getPubDate().ifPresent(date -> embedBuilder.setTimestamp(getLocalDateTime(date)));
 
         embedBuilder.setTitle(title, titleLink);
+        embedBuilder.setAuthor(item.getChannel().getLink());
 
         if (rawDescription.isPresent()) {
             Document fullDescription =
