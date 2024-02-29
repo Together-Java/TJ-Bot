@@ -90,7 +90,8 @@ public final class RSSHandlerRoutine implements Routine {
                 Pattern.compile(config.getJavaNewsChannelPattern()).asMatchPredicate();
         this.feeds.forEach(feed -> {
             if (feed.targetChannelPattern() != null) {
-                var predicate = Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
+                Predicate<String> predicate =
+                        Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
                 targetChannelPatterns.put(feed, predicate);
             }
         });
@@ -115,7 +116,7 @@ public final class RSSHandlerRoutine implements Routine {
      */
     private void sendRSS(JDA jda, RSSFeed feedConfig) throws DateTimeParseException {
         // Don't proceed if the text channel was not found
-        var textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
+        TextChannel textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
         if (textChannel == null) {
             logger.warn("Tried to sendRss, got empty response (channel {} not found)",
                     feedConfig.targetChannelPattern());
@@ -173,7 +174,8 @@ public final class RSSHandlerRoutine implements Routine {
         }
 
         // Finally, save the last posted date to the database.
-        var dateTimeFormatter = DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
+        DateTimeFormatter dateTimeFormatter =
+                DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
         String lastDateStr = lastPostedDate.get().format(dateTimeFormatter);
         if (dateResult.isEmpty()) {
             database.write(context -> context.newRecord(RSS_FEED)
@@ -201,7 +203,7 @@ public final class RSSHandlerRoutine implements Routine {
      * @return The computed {@link ZonedDateTime}
      */
     private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat) {
-        var pubDate = item.getPubDate().orElse(null);
+        String pubDate = item.getPubDate().orElse(null);
 
         if (pubDate == null || dateTimeFormat == null) {
             return ZONED_TIME_MIN;
@@ -218,7 +220,7 @@ public final class RSSHandlerRoutine implements Routine {
      */
     private static boolean isValidDateFormat(List<Item> rssFeeds, RSSFeed feedConfig) {
         try {
-            final var firstRssFeed = rssFeeds.getFirst();
+            final Item firstRssFeed = rssFeeds.getFirst();
             String firstRssFeedPubDate = firstRssFeed.getPubDate().orElse(null);
 
             if (firstRssFeedPubDate == null) {
