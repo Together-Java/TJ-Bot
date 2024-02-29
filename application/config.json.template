@@ -108,7 +108,8 @@
     "rssFeeds": [
         {
             "url": "<rss_url_feed_here>",
-            "targetChannelPattern": "<target_channel_pattern_here>"
+            "targetChannelPattern": "<target_channel_pattern_here>",
+            "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss zzz"
         }
     ],
     "rssPollInterval": 10
