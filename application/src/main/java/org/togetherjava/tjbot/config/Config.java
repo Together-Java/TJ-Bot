@@ -132,7 +132,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeeds = Objects.requireNonNull(rssFeeds);
         this.javaNewsChannelPattern = Objects.requireNonNull(javaNewsChannelPattern);
-        this.rssPollInterval = Objects.requireNonNull(rssPollInterval);
+        this.rssPollInterval = rssPollInterval;
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
