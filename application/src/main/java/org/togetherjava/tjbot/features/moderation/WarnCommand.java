@@ -69,7 +69,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
     private void warnUser(User target, Member author, String reason, Guild guild) {
         logger.info(LogMarkers.SENSITIVE, "'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                 reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),

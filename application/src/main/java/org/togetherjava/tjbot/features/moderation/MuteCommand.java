@@ -99,7 +99,7 @@ public final class MuteCommand extends SlashCommandAdapter {
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) muted the user '{}' ({}) {} in guild '{}' for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
+                author.getUser().getName(), author.getId(), target.getUser().getName(),
                 target.getId(), durationMessage, guild.getName(), reason);
 
         Instant expiresAt = temporaryData == null ? null : temporaryData.expiresAt();

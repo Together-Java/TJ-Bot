@@ -97,7 +97,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
         Guild guild = member.getGuild();
         logger.info(LogMarkers.SENSITIVE,
                 "Reapplied existing {} to user '{}' ({}) in guild '{}' after rejoining.",
-                moderationRole.actionName, member.getUser().getAsTag(), member.getId(),
+                moderationRole.actionName, member.getUser().getName(), member.getId(),
                 guild.getName());
 
         guild.addRoleToMember(member, moderationRole.guildToRole.apply(guild))

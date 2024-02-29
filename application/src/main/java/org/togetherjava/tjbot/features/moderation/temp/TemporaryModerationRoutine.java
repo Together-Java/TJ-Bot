@@ -126,7 +126,7 @@ public final class TemporaryModerationRoutine implements Routine {
     private RestAction<Void> executeRevocation(Guild guild, User target,
             ModerationAction actionType) {
         logger.info(LogMarkers.SENSITIVE, "Revoked temporary action {} against user '{}' ({}).",
-                actionType, target.getAsTag(), target.getId());
+                actionType, target.getName(), target.getId());
         RevocableModerationAction action = getRevocableActionByType(actionType);
 
         String reason = "Automatic revocation of temporary action.";

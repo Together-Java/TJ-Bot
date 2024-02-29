@@ -102,7 +102,7 @@ final class RemindRoutineTest {
         MessageEmbed lastMessage = getLastMessageFrom(jdaTester.getTextChannelSpy());
         assertEquals(reminderContent, lastMessage.getDescription());
         assertSimilar(remindAt, lastMessage.getTimestamp().toInstant());
-        assertEquals(author.getUser().getAsTag(), lastMessage.getAuthor().getName());
+        assertEquals(author.getUser().getName(), lastMessage.getAuthor().getName());
     }
 
     @Test
@@ -145,7 +145,7 @@ final class RemindRoutineTest {
         MessageEmbed lastMessage = getLastMessageFrom(jdaTester.getPrivateChannelSpy());
         assertEquals(reminderContent, lastMessage.getDescription());
         assertSimilar(remindAt, lastMessage.getTimestamp().toInstant());
-        assertEquals(author.getUser().getAsTag(), lastMessage.getAuthor().getName());
+        assertEquals(author.getUser().getName(), lastMessage.getAuthor().getName());
     }
 
     @Test

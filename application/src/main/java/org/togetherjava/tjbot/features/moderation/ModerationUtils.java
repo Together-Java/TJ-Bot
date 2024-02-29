@@ -86,7 +86,7 @@ public class ModerationUtils {
      */
     public static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
             Member target, IReplyCallback event) {
-        String targetTag = target.getUser().getAsTag();
+        String targetTag = target.getUser().getName();
         if (!author.canInteract(target)) {
             event
                 .reply("The user %s is too powerful for you to %s.".formatted(targetTag,
@@ -279,8 +279,8 @@ public class ModerationUtils {
      */
     static MessageEmbed createActionResponse(User author, ModerationAction action, User target,
             @Nullable String extraMessage, @Nullable String reason) {
-        String description = "%s **%s** (id: %s).".formatted(action.getVerb(), target.getAsTag(),
-                target.getId());
+        String description =
+                "%s **%s** (id: %s).".formatted(action.getVerb(), target.getName(), target.getId());
         if (extraMessage != null && !extraMessage.isBlank()) {
             description += "\n" + extraMessage;
         }
@@ -290,7 +290,7 @@ public class ModerationUtils {
 
         String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
 
-        return new EmbedBuilder().setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
+        return new EmbedBuilder().setAuthor(author.getName(), null, avatarOrDefaultUrl)
             .setDescription(description)
             .setTimestamp(Instant.now())
             .setColor(AMBIENT_COLOR)

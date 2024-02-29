@@ -81,7 +81,7 @@ public final class KickCommand extends SlashCommandAdapter {
             Guild guild) {
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) kicked the user '{}' ({}) from guild '{}' for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
+                author.getUser().getName(), author.getId(), target.getUser().getName(),
                 target.getId(), guild.getName(), reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
