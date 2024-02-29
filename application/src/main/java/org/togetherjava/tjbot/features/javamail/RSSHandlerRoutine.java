@@ -265,6 +265,7 @@ public final class RSSHandlerRoutine implements Routine {
                 .setTimestamp(getLocalDateTime(date, feedConfig.dateFormatterPattern())));
 
         embedBuilder.setTitle(title, titleLink);
+        embedBuilder.setAuthor(item.getChannel().getLink());
 
         // Process embed's description if a raw description was provided
         if (rawDescription.isPresent() && !rawDescription.get().isEmpty()) {
