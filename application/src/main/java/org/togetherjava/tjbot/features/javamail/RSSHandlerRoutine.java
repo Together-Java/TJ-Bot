@@ -97,6 +97,7 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     @Override
+    @NotNull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_DELAY, 0, interval, TimeUnit.MINUTES);
     }
