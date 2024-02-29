@@ -30,7 +30,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -151,28 +150,29 @@ public final class RSSHandlerRoutine implements Routine {
         };
 
         // Date that will be stored in the database at the end
-        AtomicReference<ZonedDateTime> lastPostedDate = new AtomicReference<>(lastSavedDate);
-
+        ZonedDateTime lastPostedDate = lastSavedDate;
 
         // Send each item that should be posted and concurrently
         // find the post with the latest date
-        rssItems.reversed().stream().filter(shouldItemBePosted).forEach(item -> {
+        for (Item item : rssItems.reversed()) {
+            if (!shouldItemBePosted.test(item)) {
+                continue;
+            }
+
             MessageEmbed embed = constructEmbedMessage(item, feedConfig).build();
             textChannel.sendMessageEmbeds(List.of(embed)).queue();
 
             // Get the last posted date so that we update the database
             ZonedDateTime pubDate = getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
-            if (pubDate.isAfter(lastPostedDate.get())) {
-                lastPostedDate.set(pubDate);
+            if (pubDate.isAfter(lastPostedDate)) {
+                lastPostedDate = pubDate;
             }
-        });
-
         }
 
         // Finally, save the last posted date to the database.
         DateTimeFormatter dateTimeFormatter =
                 DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
-        String lastDateStr = lastPostedDate.get().format(dateTimeFormatter);
+        String lastDateStr = lastPostedDate.format(dateTimeFormatter);
         if (dateResult == null) {
             database.write(context -> context.newRecord(RSS_FEED)
                 .setUrl(feedConfig.url())
