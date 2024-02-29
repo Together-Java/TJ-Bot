@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.utils.LinkDetection;
 import org.togetherjava.tjbot.features.utils.LinkPreview;
 import org.togetherjava.tjbot.features.utils.LinkPreviews;
 import org.togetherjava.tjbot.features.utils.StringDistances;
@@ -93,7 +94,10 @@ public final class TagCommand extends SlashCommandAdapter {
             .map(OptionMapping::getAsUser)
             .map(User::getAsMention);
 
-        List<String> links = LinkPreviews.extractLinks(tagContent)
+        List<String> links = LinkDetection
+            .extractLinks(tagContent,
+                    Set.of(LinkDetection.LinkFilter.SUPPRESSED,
+                            LinkDetection.LinkFilter.NON_HTTP_SCHEME))
             .stream()
             .limit(Message.MAX_EMBED_COUNT - 1L)
             .toList();
