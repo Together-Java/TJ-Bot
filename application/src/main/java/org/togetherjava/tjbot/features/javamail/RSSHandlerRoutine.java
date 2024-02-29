@@ -37,6 +37,32 @@ import java.util.regex.Pattern;
 
 import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
 
+/**
+ * This class orchestrates the retrieval, organization, and distribution of RSS feed posts sourced
+ * from various channels, all of which can be easily configured via the {@code config.json}
+ * <p>
+ * To include a new RSS feed, simply define an {@link RSSFeed} entry in the {@code "rssFeeds"} array
+ * within the configuration file, adhering to the format shown below:
+ * 
+ * <pre>
+ * {@code
+ * {
+ *     "url": "https://example.com/feed",
+ *     "targetChannelPattern": "example",
+ *     "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss Z"
+ * }
+ * }
+ * </pre>
+ * 
+ * Where:
+ * <ul>
+ * <li>{@code url} represents the URL of the RSS feed.</li>
+ * <li>{@code targetChannelPattern} specifies the pattern to identify the target channel for the
+ * feed posts.</li>
+ * <li>{@code dateFormatterPattern} denotes the pattern for parsing the date and time information in
+ * the feed.</li>
+ * </ul>
+ */
 public final class RSSHandlerRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(RSSHandlerRoutine.class);
@@ -50,6 +76,12 @@ public final class RSSHandlerRoutine implements Routine {
     private final int interval;
     private final Database database;
 
+    /**
+     * Constructs an RSSHandlerRoutine with the provided configuration and database.
+     *
+     * @param config The configuration containing RSS feed details.
+     * @param database The database for storing RSS feed data.
+     */
     public RSSHandlerRoutine(Config config, Database database) {
         this.feeds = config.getRssFeeds();
         this.interval = config.getRssPollInterval();
