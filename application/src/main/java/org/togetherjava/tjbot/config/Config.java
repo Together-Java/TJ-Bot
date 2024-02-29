@@ -417,15 +417,27 @@ public final class Config {
         return memberCountCategoryPattern;
     }
 
+    /**
+     * @return A list of all currently tracked RSS feeds
+     */
     public List<RSSFeed> getRssFeeds() {
         return rssFeeds;
     }
 
-    // TODO: Make JavaDocs on this
+    /**
+     * Gets the interval in which RSS feeds will be polled from the source.
+     *
+     * @return The interval in seconds
+     */
     public int getRssPollInterval() {
         return rssPollInterval;
     }
 
+    /**
+     * The channel name that rss feeds will be sent to if they are not specified.
+     *
+     * @return The channel name pattern
+     */
     public String getJavaNewsChannelPattern() {
         return javaNewsChannelPattern;
     }
