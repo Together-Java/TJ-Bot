@@ -37,9 +37,9 @@ import java.util.regex.Pattern;
 
 import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
 
-public final class JavaMailRSSRoutine implements Routine {
+public final class RSSHandlerRoutine implements Routine {
 
-    private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
+    private static final Logger logger = LoggerFactory.getLogger(RSSHandlerRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
     private static final int MAX_CONTENTS = 1000;
     private static final ZonedDateTime ZONED_TIME_MIN =
@@ -50,7 +50,7 @@ public final class JavaMailRSSRoutine implements Routine {
     private final int interval;
     private final Database database;
 
-    public JavaMailRSSRoutine(Config config, Database database) {
+    public RSSHandlerRoutine(Config config, Database database) {
         this.feeds = config.getRssFeeds();
         this.interval = config.getRssPollInterval();
         this.database = database;
