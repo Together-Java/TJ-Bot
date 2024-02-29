@@ -67,6 +67,7 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    implementation "com.sigpwned:jackson-modules-java17-sealed-classes:0.0.0"
 
 	implementation 'com.github.freva:ascii-table:1.8.0'
 
