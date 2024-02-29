@@ -7,7 +7,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jooq.Result;
 import org.jooq.tools.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -23,9 +25,13 @@ import org.togetherjava.tjbot.features.Routine;
 import javax.annotation.Nonnull;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -36,8 +42,8 @@ public final class JavaMailRSSRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(JavaMailRSSRoutine.class);
     private static final RssReader RSS_READER = new RssReader();
     private static final int MAX_CONTENTS = 300;
-    private static final DateTimeFormatter RSS_DATE_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final ZonedDateTime ZONED_TIME_MIN =
+            ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
     private final List<RSSFeed> feeds;
     private final Predicate<String> defaultChannelPattern;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
@@ -68,74 +74,135 @@ public final class JavaMailRSSRoutine implements Routine {
         feeds.forEach(feed -> sendRSS(jda, feed));
     }
 
-    private void sendRSS(JDA jda, RSSFeed feed) {
-        var textChannel = getTextChannelFromFeed(jda, feed);
-
-        RssFeedRecord entry = database.read(context -> context.selectFrom(RSS_FEED)
-            .where(RSS_FEED.URL.eq(feed.url()))
-            .limit(1)
-            .fetchOne());
-
-        List<Item> items;
-        if (entry == null) {
-            items = fetchRss(feed.url());
-        } else {
-            items = fetchRssAfterDate(feed.url(), entry.getLastDate());
-        }
-
-        if (textChannel.isEmpty()) {
+    /**
+     * Sends all the necessary posts from a given RSS feed.
+     * <p>
+     * This handles fetching the latest posts from the given URL, checking which ones have already
+     * been posted by reading information from the database and updating the last posted date.
+     */
+    private void sendRSS(JDA jda, RSSFeed feedConfig) throws DateTimeParseException {
+        // Don't proceed if the text channel was not found
+        var textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
+        if (textChannel == null) {
             logger.warn("Tried to sendRss, got empty response (channel {} not found)",
-                    feed.targetChannelPattern());
+                    feedConfig.targetChannelPattern());
             return;
         }
 
-        items.forEach(item -> {
-            MessageEmbed embed = constructEmbedMessage(item).build();
-            textChannel.get().sendMessageEmbeds(List.of(embed)).queue();
+        // Acquire the list of RSS items from the configured URL
+        List<Item> rssItems = fetchRss(feedConfig.url());
+        if (rssItems.isEmpty()) {
+            return;
+        }
+
+        // Do not proceed if the configured date format does not match
+        // the actual date format provided by the feed's contents
+        if (!isValidDateFormat(rssItems, feedConfig)) {
+            logger.warn("Could not find valid date format for RSS feed {}", feedConfig.url());
+            return;
+        }
+
+        // Attempt to find any stored information regarding the provided RSS URL
+        Result<RssFeedRecord> dateResult = database.read(context -> context.selectFrom(RSS_FEED)
+            .where(RSS_FEED.URL.eq(feedConfig.url()))
+            .limit(1)
+            .fetch());
+
+        String dateStr = dateResult.isEmpty() ? null : dateResult.getFirst().getLastDate();
+        ZonedDateTime lastSavedDate = getLocalDateTime(dateStr, feedConfig.dateFormatterPattern());
+
+        final Predicate<Item> shouldItemBePosted = item -> {
+            ZonedDateTime itemPubDate =
+                    getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
+            return itemPubDate.isAfter(lastSavedDate);
+        };
+
+        // Date that will be stored in the database at the end
+        AtomicReference<ZonedDateTime> lastPostedDate = new AtomicReference<>(lastSavedDate);
+
+        // Send each item that should be posted and concurrently
+        // find the post with the latest date
+        rssItems.stream().filter(shouldItemBePosted).forEach(item -> {
+            MessageEmbed embed = constructEmbedMessage(item, feedConfig).build();
+            textChannel.sendMessageEmbeds(List.of(embed)).queue();
+
+            // Get the last posted date so that we update the database
+            ZonedDateTime pubDate = getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
+            if (pubDate.isAfter(lastPostedDate.get())) {
+                lastPostedDate.set(pubDate);
+            }
         });
 
-        String lastDate = getLatestDate(items);
-
-        if (lastDate == null) {
+        // Don't write anything to the database if there were no RSS items
+        if (rssItems.isEmpty()) {
             return;
         }
 
-        if (entry == null) {
-            // Insert
+        // Finally, save the last posted date to the database.
+        var dateTimeFormatter = DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
+        String lastDateStr = lastPostedDate.get().format(dateTimeFormatter);
+        if (dateResult.isEmpty()) {
             database.write(context -> context.newRecord(RSS_FEED)
-                .setUrl(feed.url())
-                .setLastDate(lastDate)
+                .setUrl(feedConfig.url())
+                .setLastDate(lastDateStr)
                 .insert());
             return;
         }
 
+        // If we already have an existing record with the given URL,
+        // now is the time to update it
         database.write(context -> context.update(RSS_FEED)
-            .set(RSS_FEED.LAST_DATE, lastDate)
-            .where(RSS_FEED.URL.eq(feed.url()))
+            .set(RSS_FEED.LAST_DATE, lastDateStr)
+            .where(RSS_FEED.URL.eq(feedConfig.url()))
             .executeAsync());
     }
 
-    @Nullable
-    private static String getLatestDate(List<Item> items) {
-        String lastDate = null;
+    /**
+     * Attempts to get a {@link ZonedDateTime} from an {@link Item} with a provided string date time
+     * format.
+     * <p>
+     * If either of the function inputs are null, the oldest-possible {@link ZonedDateTime} will get
+     * returned instead.
+     *
+     * @return The computed {@link ZonedDateTime}
+     */
+    private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat) {
+        var pubDate = item.getPubDate().orElse(null);
 
-        for (Item item : items) {
-            if (lastDate == null) {
-                lastDate = item.getPubDate().orElseThrow();
-                continue;
-            }
-
-            LocalDateTime formattedLastDate = getLocalDateTime(lastDate);
-            LocalDateTime itemDate = getLocalDateTime(item.getPubDate().orElseThrow());
-
-            if (itemDate.isAfter(formattedLastDate)) {
-                lastDate = item.getPubDate().orElseThrow();
-            }
+        if (pubDate == null || dateTimeFormat == null) {
+            return ZONED_TIME_MIN;
         }
-        return lastDate;
+
+        return getLocalDateTime(pubDate, dateTimeFormat);
     }
 
+    /**
+     * Given a list of RSS feed items, this function checks if the dates are valid
+     * <p>
+     * This assumes that all items share the same date format (as is usual in an RSS feed response),
+     * therefore it only checks the first item's date for the final result.
+     */
+    private static boolean isValidDateFormat(List<Item> rssFeeds, RSSFeed feedConfig) {
+        try {
+            final var firstRssFeed = rssFeeds.getFirst();
+            String firstRssFeedPubDate = firstRssFeed.getPubDate().orElse(null);
+
+            if (firstRssFeedPubDate == null) {
+                return false;
+            }
+
+            getLocalDateTime(firstRssFeedPubDate, feedConfig.dateFormatterPattern());
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Attempts to find a text channel from a given RSS feed configuration.
+     */
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
+        // Attempt to find the target channel
         if (feed.targetChannelPattern() != null) {
             return jda.getTextChannelCache()
                 .stream()
@@ -143,29 +210,36 @@ public final class JavaMailRSSRoutine implements Routine {
                 .findFirst();
         }
 
+        // If the target channel was not found, use the fallback
         return jda.getTextChannelCache()
             .stream()
             .filter(channel -> defaultChannelPattern.test(channel.getName()))
             .findFirst();
     }
 
-    private static EmbedBuilder constructEmbedMessage(Item item) {
+    /**
+     * Provides the {@link EmbedBuilder} from an RSS item used for sending RSS posts.
+     */
+    private static EmbedBuilder constructEmbedMessage(Item item, RSSFeed feedConfig) {
         final EmbedBuilder embedBuilder = new EmbedBuilder();
         String title = item.getTitle().orElse("No title");
         String titleLink = item.getLink().orElse("");
         Optional<String> rawDescription = item.getDescription();
 
-        item.getPubDate().ifPresent(date -> embedBuilder.setTimestamp(getLocalDateTime(date)));
+        // Set the item's timestamp to the embed if found
+        item.getPubDate()
+            .ifPresent(date -> embedBuilder
+                .setTimestamp(getLocalDateTime(date, feedConfig.dateFormatterPattern())));
 
         embedBuilder.setTitle(title, titleLink);
-        embedBuilder.setAuthor(item.getChannel().getLink());
 
-        if (rawDescription.isPresent()) {
+        // Process embed's description if a raw description was provided
+        if (rawDescription.isPresent() && !rawDescription.get().isEmpty()) {
             Document fullDescription =
                     Jsoup.parse(StringEscapeUtils.unescapeHtml4(rawDescription.get()));
             StringBuilder finalDescription = new StringBuilder();
             fullDescription.body()
-                .select("p")
+                .select("*")
                 .forEach(p -> finalDescription.append(p.text()).append(". "));
 
             embedBuilder
@@ -173,32 +247,13 @@ public final class JavaMailRSSRoutine implements Routine {
             return embedBuilder;
         }
 
+        // Fill the description with a placeholder if the description was empty
         embedBuilder.setDescription("No description");
         return embedBuilder;
     }
 
-    private static List<Item> fetchRssAfterDate(String rssUrl, String afterDate) {
-        final LocalDateTime afterDateTime = getLocalDateTime(afterDate);
-        List<Item> rssList = fetchRss(rssUrl);
-        final Predicate<Item> itemAfterDate = item -> {
-            var pubDateString = item.getPubDate();
-            if (pubDateString.isEmpty()) {
-                return false;
-            }
-            var pubDate = getLocalDateTime(pubDateString.get());
-
-            return pubDate.isAfter(afterDateTime);
-        };
-
-        if (rssList == null) {
-            return List.of();
-        }
-
-        return rssList.stream().filter(itemAfterDate).toList();
-    }
-
     /**
-     * Fetches new items from a given RSS url.
+     * Fetches a list of {@link Item} from a given RSS url.
      */
     private static List<Item> fetchRss(String rssUrl) {
         try {
@@ -209,7 +264,15 @@ public final class JavaMailRSSRoutine implements Routine {
         }
     }
 
-    private static LocalDateTime getLocalDateTime(String date) {
-        return LocalDateTime.parse(date, RSS_DATE_FORMAT);
+    /**
+     * Helper function for parsing a given date value to a {@link ZonedDateTime} with a given
+     * format.
+     */
+    private static ZonedDateTime getLocalDateTime(@Nullable String date, @NotNull String format) {
+        if (date == null) {
+            return ZONED_TIME_MIN;
+        }
+
+        return ZonedDateTime.parse(date, DateTimeFormatter.ofPattern(format));
     }
 }
