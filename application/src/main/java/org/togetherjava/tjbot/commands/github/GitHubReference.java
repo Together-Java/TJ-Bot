@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.collections4.ListUtils;
 import org.kohsuke.github.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
@@ -34,6 +36,7 @@ import java.util.stream.Collectors;
  */
 public final class GitHubReference extends MessageReceiverAdapter {
     static final String ID_GROUP = "id";
+    private static final Logger logger = LoggerFactory.getLogger(GitHubReference.class);
 
     /**
      * The pattern(#123) used to determine whether a message is referencing an issue.
@@ -86,7 +89,9 @@ public final class GitHubReference extends MessageReceiverAdapter {
                 repositories.add(githubApi.getRepositoryById(repoId));
             }
         } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
+            logger.warn(
+                    "The GitHub key ({}) used in this config is invalid. Skipping GitHubReference feature – {}",
+                    config.getGitHubApiKey(), ex.getMessage());
         }
     }
 
