@@ -228,16 +228,19 @@ public final class RSSHandlerRoutine implements Routine {
      * @return true if the date format is valid, false otherwise
      */
     private static boolean isValidDateFormat(List<Item> rssFeeds, RSSFeed feedConfig) {
+        final Item firstRssFeed = rssFeeds.getFirst();
+        String firstRssFeedPubDate = firstRssFeed.getPubDate().orElse(null);
+
+        if (firstRssFeedPubDate == null) {
+            return false;
+        }
+
         try {
-            final Item firstRssFeed = rssFeeds.getFirst();
-            String firstRssFeedPubDate = firstRssFeed.getPubDate().orElse(null);
-
-            if (firstRssFeedPubDate == null) {
-                return false;
-            }
-
+            // If this throws a DateTimeParseException then it's certain
+            // that the format pattern defined in the config and the
+            // feed's actual format differ.
             getZonedDateTime(firstRssFeedPubDate, feedConfig.dateFormatterPattern());
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             return false;
         }
         return true;
