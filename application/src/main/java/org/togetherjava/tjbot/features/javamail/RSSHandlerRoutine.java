@@ -257,7 +257,7 @@ public final class RSSHandlerRoutine implements Routine {
      */
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
         // Attempt to find the target channel, use the fallback otherwise
-        if (feed.targetChannelPattern() != null) {
+        if (targetChannelPatterns.containsKey(feed)) {
             return jda.getTextChannelCache()
                 .stream()
                 .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
