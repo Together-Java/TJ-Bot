@@ -41,7 +41,8 @@ public class MemberCountDisplayRoutine implements Routine {
             guild.getCategories()
                 .stream()
                 .filter(category -> wordsInCategory.test(category.getName()))
-                .forEach(this::updateCategoryName);
+                .findAny()
+                .ifPresent(this::updateCategoryName);
         });
     }
 }
