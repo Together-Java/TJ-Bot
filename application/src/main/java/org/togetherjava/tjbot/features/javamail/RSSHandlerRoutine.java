@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.RSSFeed;
+import org.togetherjava.tjbot.config.RSSFeedsConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.RssFeedRecord;
 import org.togetherjava.tjbot.features.Routine;
@@ -69,7 +70,7 @@ public final class RSSHandlerRoutine implements Routine {
     private static final ZonedDateTime ZONED_TIME_MIN =
             ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
     private final RssReader rssReader;
-    private final List<RSSFeed> feeds;
+    private final RSSFeedsConfig config;
     private final Predicate<String> defaultChannelPattern;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns;
     private final int interval;
@@ -82,13 +83,13 @@ public final class RSSHandlerRoutine implements Routine {
      * @param database The database for storing RSS feed data.
      */
     public RSSHandlerRoutine(Config config, Database database) {
-        this.feeds = config.getRssFeeds();
-        this.interval = config.getRssPollInterval();
+        this.config = config.getRSSFeedsConfig();
+        this.interval = this.config.rssPollInterval();
         this.database = database;
         this.defaultChannelPattern =
-                Pattern.compile(config.getJavaNewsChannelPattern()).asMatchPredicate();
+                Pattern.compile(this.config.javaNewsChannelPattern()).asMatchPredicate();
         this.targetChannelPatterns = new HashMap<>();
-        this.feeds.forEach(feed -> {
+        this.config.feeds().forEach(feed -> {
             if (feed.targetChannelPattern() != null) {
                 Predicate<String> predicate =
                         Pattern.compile(feed.targetChannelPattern()).asMatchPredicate();
@@ -106,7 +107,7 @@ public final class RSSHandlerRoutine implements Routine {
 
     @Override
     public void runRoutine(@Nonnull JDA jda) {
-        feeds.forEach(feed -> sendRSS(jda, feed));
+        this.config.feeds().forEach(feed -> sendRSS(jda, feed));
     }
 
     /**
@@ -305,7 +306,8 @@ public final class RSSHandlerRoutine implements Routine {
      * format.
      *
      */
-    private static ZonedDateTime getZonedDateTime(@Nullable String date, @NotNull String format) throws DateTimeParseException {
+    private static ZonedDateTime getZonedDateTime(@Nullable String date, @NotNull String format)
+            throws DateTimeParseException {
         if (date == null) {
             return ZONED_TIME_MIN;
         }
