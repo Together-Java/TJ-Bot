@@ -112,7 +112,7 @@
                 "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss zzz"
             }
         ],
-        "javaNewsChannelPattern": "<java_news_channel_pattern>",
+        "fallbackChannelPattern": "<fallback_channel_pattern>",
         "rssPollInterval": 10
     }
     "memberCountCategoryPattern": "Info"

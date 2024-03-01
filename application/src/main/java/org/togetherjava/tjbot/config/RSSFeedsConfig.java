@@ -10,22 +10,21 @@ import java.util.Objects;
  * pattern for identifying Java news channels, and the interval (in minutes) for polling the feeds.
  */
 public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) List<RSSFeed> feeds,
-        @JsonProperty(value = "javaNewsChannelPattern",
-                required = true) String javaNewsChannelPattern,
+        @JsonProperty(value = "fallbackChannelPattern",
+                required = true) String fallbackChannelPattern,
         @JsonProperty(value = "rssPollInterval", required = true) int rssPollInterval) {
 
     /**
      * Constructs a new {@link RSSFeedsConfig}.
      *
      * @param feeds The list of RSS feeds to subscribe to.
-     * @param javaNewsChannelPattern The pattern used to identify Java news channels within the RSS
-     *        feeds.
+     * @param fallbackChannelPattern The pattern used to identify the fallback text channel to use.
      * @param rssPollInterval The interval (in minutes) for polling the RSS feeds for updates.
-     * @throws NullPointerException if any of the parameters (feeds or javaNewsChannelPattern) are
+     * @throws NullPointerException if any of the parameters (feeds or fallbackChannelPattern) are
      *         null
      */
     public RSSFeedsConfig {
         Objects.requireNonNull(feeds);
-        Objects.requireNonNull(javaNewsChannelPattern);
+        Objects.requireNonNull(fallbackChannelPattern);
     }
 }

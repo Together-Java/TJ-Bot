@@ -71,7 +71,7 @@ public final class RSSHandlerRoutine implements Routine {
             ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
     private final RssReader rssReader;
     private final RSSFeedsConfig config;
-    private final Predicate<String> defaultChannelPattern;
+    private final Predicate<String> fallbackChannelPattern;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns;
     private final int interval;
     private final Database database;
@@ -86,8 +86,8 @@ public final class RSSHandlerRoutine implements Routine {
         this.config = config.getRSSFeedsConfig();
         this.interval = this.config.rssPollInterval();
         this.database = database;
-        this.defaultChannelPattern =
-                Pattern.compile(this.config.javaNewsChannelPattern()).asMatchPredicate();
+        this.fallbackChannelPattern =
+                Pattern.compile(this.config.fallbackChannelPattern()).asMatchPredicate();
         this.targetChannelPatterns = new HashMap<>();
         this.config.feeds().forEach(feed -> {
             if (feed.targetChannelPattern() != null) {
@@ -249,7 +249,7 @@ public final class RSSHandlerRoutine implements Routine {
         // If the target channel was not found, use the fallback
         return jda.getTextChannelCache()
             .stream()
-            .filter(channel -> defaultChannelPattern.test(channel.getName()))
+            .filter(channel -> fallbackChannelPattern.test(channel.getName()))
             .findFirst();
     }
 
