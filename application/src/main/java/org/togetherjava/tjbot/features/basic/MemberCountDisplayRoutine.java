@@ -40,7 +40,7 @@ public class MemberCountDisplayRoutine implements Routine {
         jda.getGuilds().forEach(guild -> {
             guild.getCategories()
                 .stream()
-                .filter(cat -> wordsInCategory.test(cat.getName()))
+                .filter(category -> wordsInCategory.test(category.getName()))
                 .forEach(this::updateCategoryName);
         });
     }
