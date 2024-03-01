@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 public class MemberCountDisplayRoutine implements Routine {
     private final Predicate<String> wordsInCategory;
-
+    private static final Pattern baseNamePattern = Pattern.compile("(.+) - \\d+ Members");
 
     public MemberCountDisplayRoutine(Config config) {
         wordsInCategory =
@@ -23,7 +23,7 @@ public class MemberCountDisplayRoutine implements Routine {
         int totalMemberCount = category.getGuild().getMemberCount();
         String baseName = category.getName();
         if (baseName.contains(" Members")) {
-            baseName = Pattern.compile("(.+) - \\d+ Members").toString();
+            baseName = baseNamePattern.toString();
         }
         category.getManager()
             .setName("%s - %d Members".formatted(baseName.trim(), totalMemberCount))
