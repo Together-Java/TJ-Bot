@@ -122,7 +122,6 @@ public final class RSSHandlerRoutine implements Routine {
      * @param feedConfig The configuration object for the RSS feed.
      */
     private void sendRSS(JDA jda, RSSFeed feedConfig) {
-        // Don't proceed if the text channel was not found
         TextChannel textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
         if (textChannel == null) {
             logger.warn("Tried to sendRss, got empty response (channel {} not found)",
@@ -130,59 +129,130 @@ public final class RSSHandlerRoutine implements Routine {
             return;
         }
 
-        // Acquire the list of RSS items from the configured URL
-        List<Item> rssItems = fetchRss(feedConfig.url());
+        List<Item> rssItems = fetchRSSItemsFromURL(feedConfig.url());
         if (rssItems.isEmpty()) {
             return;
         }
 
-        // Do not proceed if the configured date format does not match
-        // the actual date format provided by the feed's contents
-        if (!isValidDateFormat(rssItems, feedConfig)) {
+        // We only get the first RSS item from the list since we are
+        // assuming that the whole RSS feed uses the same format
+        if (!isValidDateFormat(rssItems.getFirst(), feedConfig)) {
             logger.warn("Could not find valid date format for RSS feed {}", feedConfig.url());
             return;
         }
 
-        // Attempt to find any stored information regarding the provided RSS URL
-        RssFeedRecord dateResult = database.read(context -> context.selectFrom(RSS_FEED)
-            .where(RSS_FEED.URL.eq(feedConfig.url()))
-            .limit(1)
-            .fetchAny());
+        RssFeedRecord rssFeedRecord = getRssFeedRecordFromDatabase(feedConfig);
+        Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(rssFeedRecord,
+                feedConfig.dateFormatterPattern());
 
-        String dateStr = dateResult == null ? null : dateResult.getLastDate();
-        ZonedDateTime lastSavedDate = getZonedDateTime(dateStr, feedConfig.dateFormatterPattern());
+        ZonedDateTime lastPostedDate =
+                getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
+        updateLastDateToDatabase(feedConfig, rssFeedRecord, lastPostedDate);
+
+        if (lastSavedDate.isEmpty()) {
+            return;
+        }
 
         final Predicate<Item> shouldItemBePosted = item -> {
             ZonedDateTime itemPubDate =
                     getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
-            return itemPubDate.isAfter(lastSavedDate);
+            return itemPubDate.isAfter(lastSavedDate.get());
         };
 
-        // Date that will be stored in the database at the end
-        ZonedDateTime lastPostedDate = lastSavedDate;
+        rssItems.reversed()
+            .stream()
+            .filter(shouldItemBePosted)
+            .forEach(item -> postItem(textChannel, item, feedConfig));
+    }
 
-        // Send each item that should be posted and concurrently
-        // find the post with the latest date
-        for (Item item : rssItems.reversed()) {
-            if (!shouldItemBePosted.test(item)) {
-                continue;
-            }
+    /**
+     * Retrieves an RSS feed record from the database based on the provided RSS feed configuration.
+     *
+     * @param feedConfig the RSS feed configuration to retrieve the record for
+     * @return the RSS feed record retrieved from the database
+     */
+    private RssFeedRecord getRssFeedRecordFromDatabase(RSSFeed feedConfig) {
+        return database.read(context -> context.selectFrom(RSS_FEED)
+            .where(RSS_FEED.URL.eq(feedConfig.url()))
+            .limit(1)
+            .fetchAny());
+    }
 
-            MessageEmbed embed = constructEmbedMessage(item, feedConfig).build();
-            textChannel.sendMessageEmbeds(List.of(embed)).queue();
-
-            // Get the last posted date so that we update the database
-            ZonedDateTime pubDate = getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
-            if (pubDate.isAfter(lastPostedDate)) {
-                lastPostedDate = pubDate;
-            }
+    /**
+     * Retrieves the last saved date from the database record associated with the given RSS feed
+     * record.
+     * <p>
+     * If the RSS feed record is null, returns an empty {@link Optional}.
+     *
+     * @param rssRecord the RSS feed record to retrieve the last saved date from
+     * @param dateFormatterPattern the pattern used to parse the date from the database record
+     * @return An {@link Optional} containing the last saved date if it could be retrieved and
+     *         parsed successfully, otherwise an empty {@link Optional}
+     */
+    private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord,
+            String dateFormatterPattern) {
+        if (rssRecord == null) {
+            return Optional.empty();
         }
 
-        // Finally, save the last posted date to the database.
+        try {
+            ZonedDateTime savedDate =
+                    getZonedDateTime(rssRecord.getLastDate(), dateFormatterPattern);
+            return Optional.of(savedDate);
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Retrieves the latest post date from the given list of items.
+     *
+     * @param items the list of items to retrieve the latest post date from
+     * @param dateFormatterPattern the pattern used to parse the date from the database record
+     * @return the latest post date as a {@link ZonedDateTime} object, or null if the list is empty
+     */
+    private ZonedDateTime getLatestPostDateFromItems(List<Item> items,
+            String dateFormatterPattern) {
+        return items.stream()
+            .map(item -> getDateTimeFromItem(item, dateFormatterPattern))
+            .max(ZonedDateTime::compareTo)
+            .orElse(null);
+    }
+
+    /**
+     * Posts an RSS item to a text channel.
+     *
+     * @param textChannel the text channel to which the item will be posted
+     * @param rssItem the RSS item to post
+     * @param feedConfig the RSS feed configuration
+     */
+    private void postItem(TextChannel textChannel, Item rssItem, RSSFeed feedConfig) {
+        MessageEmbed embed = constructEmbedMessage(rssItem, feedConfig).build();
+        textChannel.sendMessageEmbeds(List.of(embed)).queue();
+    }
+
+    /**
+     * Updates the last posted date to the database for the specified RSS feed configuration.
+     * <p>
+     * This will insert a <b>new</b> entry to the database if the provided {@link RssFeedRecord} is
+     * null.
+     *
+     * @param feedConfig the RSS feed configuration
+     * @param rssFeedRecord the record representing the RSS feed. can be null if not found in the
+     *        database
+     * @param lastPostedDate the last posted date to be updated
+     */
+    private void updateLastDateToDatabase(RSSFeed feedConfig, @Nullable RssFeedRecord rssFeedRecord,
+            ZonedDateTime lastPostedDate) {
+        if (lastPostedDate == null) {
+            return;
+        }
+
         DateTimeFormatter dateTimeFormatter =
                 DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
         String lastDateStr = lastPostedDate.format(dateTimeFormatter);
-        if (dateResult == null) {
+
+        if (rssFeedRecord == null) {
             database.write(context -> context.newRecord(RSS_FEED)
                 .setUrl(feedConfig.url())
                 .setLastDate(lastDateStr)
@@ -190,8 +260,6 @@ public final class RSSHandlerRoutine implements Routine {
             return;
         }
 
-        // If we already have an existing record with the given URL,
-        // now is the time to update it
         database.write(context -> context.update(RSS_FEED)
             .set(RSS_FEED.LAST_DATE, lastDateStr)
             .where(RSS_FEED.URL.eq(feedConfig.url()))
@@ -220,18 +288,14 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     /**
-     * Given a list of RSS feed items, this function checks if the dates are valid.
-     * <p>
-     * This assumes that all items share the same date format (as is usual in an RSS feed response),
-     * therefore it only checks the first item's date for the final result.
+     * Checks if the dates between an RSS item and the provided config match.
      *
-     * @param rssFeeds the list of RSS feed items
-     * @param feedConfig the RSS feed configuration containing date formatter pattern
+     * @param rssItem the RSS feed item
+     * @param feedConfig the RSS feed configuration containing the date formatter pattern
      * @return true if the date format is valid, false otherwise
      */
-    private static boolean isValidDateFormat(List<Item> rssFeeds, RSSFeed feedConfig) {
-        final Item firstRssFeed = rssFeeds.getFirst();
-        String firstRssFeedPubDate = firstRssFeed.getPubDate().orElse(null);
+    private static boolean isValidDateFormat(Item rssItem, RSSFeed feedConfig) {
+        String firstRssFeedPubDate = rssItem.getPubDate().orElse(null);
 
         if (firstRssFeedPubDate == null) {
             return false;
@@ -316,7 +380,7 @@ public final class RSSHandlerRoutine implements Routine {
      * @param rssUrl the URL of the RSS feed to fetch
      * @return a list of {@link Item} parsed from the RSS feed
      */
-    private List<Item> fetchRss(String rssUrl) {
+    private List<Item> fetchRSSItemsFromURL(String rssUrl) {
         try {
             return rssReader.read(rssUrl).toList();
         } catch (IOException e) {
