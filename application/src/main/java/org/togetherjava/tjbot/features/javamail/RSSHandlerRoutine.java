@@ -116,7 +116,7 @@ public final class RSSHandlerRoutine implements Routine {
      * This handles fetching the latest posts from the given URL, checking which ones have already
      * been posted by reading information from the database and updating the last posted date.
      */
-    private void sendRSS(JDA jda, RSSFeed feedConfig) throws DateTimeParseException {
+    private void sendRSS(JDA jda, RSSFeed feedConfig) {
         // Don't proceed if the text channel was not found
         TextChannel textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
         if (textChannel == null) {
