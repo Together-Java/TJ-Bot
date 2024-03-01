@@ -115,6 +115,9 @@ public final class RSSHandlerRoutine implements Routine {
      * <p>
      * This handles fetching the latest posts from the given URL, checking which ones have already
      * been posted by reading information from the database and updating the last posted date.
+     *
+     * @param jda The JDA instance.
+     * @param feedConfig The configuration object for the RSS feed.
      */
     private void sendRSS(JDA jda, RSSFeed feedConfig) {
         // Don't proceed if the text channel was not found
@@ -200,6 +203,8 @@ public final class RSSHandlerRoutine implements Routine {
      * If either of the function inputs are null, the oldest-possible {@link ZonedDateTime} will get
      * returned instead.
      *
+     * @param item The {@link Item} from which to extract the date.
+     * @param dateTimeFormat The format of the date time string.
      * @return The computed {@link ZonedDateTime}
      */
     private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat) {
@@ -213,10 +218,14 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     /**
-     * Given a list of RSS feed items, this function checks if the dates are valid
+     * Given a list of RSS feed items, this function checks if the dates are valid.
      * <p>
      * This assumes that all items share the same date format (as is usual in an RSS feed response),
      * therefore it only checks the first item's date for the final result.
+     *
+     * @param rssFeeds the list of RSS feed items
+     * @param feedConfig the RSS feed configuration containing date formatter pattern
+     * @return true if the date format is valid, false otherwise
      */
     private static boolean isValidDateFormat(List<Item> rssFeeds, RSSFeed feedConfig) {
         try {
@@ -236,6 +245,10 @@ public final class RSSHandlerRoutine implements Routine {
 
     /**
      * Attempts to find a text channel from a given RSS feed configuration.
+     *
+     * @param jda the JDA instance
+     * @param feed the RSS feed configuration to search for a text channel
+     * @return an {@link Optional} containing the found text channel if it exists, otherwise empty
      */
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
         // Attempt to find the target channel
@@ -255,6 +268,10 @@ public final class RSSHandlerRoutine implements Routine {
 
     /**
      * Provides the {@link EmbedBuilder} from an RSS item used for sending RSS posts.
+     *
+     * @param item the RSS item to construct the embed message from
+     * @param feedConfig the configuration of the RSS feed
+     * @return the constructed {@link EmbedBuilder} containing information from the RSS item
      */
     private static EmbedBuilder constructEmbedMessage(Item item, RSSFeed feedConfig) {
         final EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -291,6 +308,9 @@ public final class RSSHandlerRoutine implements Routine {
 
     /**
      * Fetches a list of {@link Item} from a given RSS url.
+     *
+     * @param rssUrl the URL of the RSS feed to fetch
+     * @return a list of {@link Item} parsed from the RSS feed
      */
     private List<Item> fetchRss(String rssUrl) {
         try {
@@ -305,6 +325,10 @@ public final class RSSHandlerRoutine implements Routine {
      * Helper function for parsing a given date value to a {@link ZonedDateTime} with a given
      * format.
      *
+     * @param date the date value to parse, can be null
+     * @param format the format pattern to use for parsing
+     * @return the parsed {@link ZonedDateTime} object
+     * @throws DateTimeParseException if the date cannot be parsed
      */
     private static ZonedDateTime getZonedDateTime(@Nullable String date, @NotNull String format)
             throws DateTimeParseException {
