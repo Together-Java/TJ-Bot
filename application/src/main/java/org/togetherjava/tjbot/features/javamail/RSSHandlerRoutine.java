@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.features.Routine;
 
 import javax.annotation.Nonnull;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -64,13 +65,13 @@ import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
 public final class RSSHandlerRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(RSSHandlerRoutine.class);
-    private static final RssReader RSS_READER = new RssReader();
     private static final int MAX_CONTENTS = 1000;
     private static final ZonedDateTime ZONED_TIME_MIN =
             ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
+    private final RssReader rssReader;
     private final List<RSSFeed> feeds;
     private final Predicate<String> defaultChannelPattern;
-    private final Map<RSSFeed, Predicate<String>> targetChannelPatterns = new HashMap<>();
+    private final Map<RSSFeed, Predicate<String>> targetChannelPatterns;
     private final int interval;
     private final Database database;
 
@@ -86,6 +87,7 @@ public final class RSSHandlerRoutine implements Routine {
         this.database = database;
         this.defaultChannelPattern =
                 Pattern.compile(config.getJavaNewsChannelPattern()).asMatchPredicate();
+        this.targetChannelPatterns = new HashMap<>();
         this.feeds.forEach(feed -> {
             if (feed.targetChannelPattern() != null) {
                 Predicate<String> predicate =
@@ -93,6 +95,7 @@ public final class RSSHandlerRoutine implements Routine {
                 targetChannelPatterns.put(feed, predicate);
             }
         });
+        this.rssReader = new RssReader();
     }
 
     @Override
@@ -141,7 +144,7 @@ public final class RSSHandlerRoutine implements Routine {
             .fetchAny());
 
         String dateStr = dateResult == null ? null : dateResult.getLastDate();
-        ZonedDateTime lastSavedDate = getLocalDateTime(dateStr, feedConfig.dateFormatterPattern());
+        ZonedDateTime lastSavedDate = getZonedDateTime(dateStr, feedConfig.dateFormatterPattern());
 
         final Predicate<Item> shouldItemBePosted = item -> {
             ZonedDateTime itemPubDate =
@@ -205,7 +208,7 @@ public final class RSSHandlerRoutine implements Routine {
             return ZONED_TIME_MIN;
         }
 
-        return getLocalDateTime(pubDate, dateTimeFormat);
+        return getZonedDateTime(pubDate, dateTimeFormat);
     }
 
     /**
@@ -223,7 +226,7 @@ public final class RSSHandlerRoutine implements Routine {
                 return false;
             }
 
-            getLocalDateTime(firstRssFeedPubDate, feedConfig.dateFormatterPattern());
+            getZonedDateTime(firstRssFeedPubDate, feedConfig.dateFormatterPattern());
         } catch (Exception e) {
             return false;
         }
@@ -261,7 +264,7 @@ public final class RSSHandlerRoutine implements Routine {
         // Set the item's timestamp to the embed if found
         item.getPubDate()
             .ifPresent(date -> embedBuilder
-                .setTimestamp(getLocalDateTime(date, feedConfig.dateFormatterPattern())));
+                .setTimestamp(getZonedDateTime(date, feedConfig.dateFormatterPattern())));
 
         embedBuilder.setTitle(title, titleLink);
         embedBuilder.setAuthor(item.getChannel().getLink());
@@ -288,10 +291,10 @@ public final class RSSHandlerRoutine implements Routine {
     /**
      * Fetches a list of {@link Item} from a given RSS url.
      */
-    private static List<Item> fetchRss(String rssUrl) {
+    private List<Item> fetchRss(String rssUrl) {
         try {
-            return RSS_READER.read(rssUrl).toList();
-        } catch (Exception e) {
+            return rssReader.read(rssUrl).toList();
+        } catch (IOException e) {
             logger.warn("Could not fetch RSS from URL ({})", rssUrl);
             return List.of();
         }
@@ -300,8 +303,9 @@ public final class RSSHandlerRoutine implements Routine {
     /**
      * Helper function for parsing a given date value to a {@link ZonedDateTime} with a given
      * format.
+     *
      */
-    private static ZonedDateTime getLocalDateTime(@Nullable String date, @NotNull String format) {
+    private static ZonedDateTime getZonedDateTime(@Nullable String date, @NotNull String format) throws DateTimeParseException {
         if (date == null) {
             return ZONED_TIME_MIN;
         }
