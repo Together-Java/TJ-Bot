@@ -256,19 +256,18 @@ public final class RSSHandlerRoutine implements Routine {
      * @return an {@link Optional} containing the found text channel if it exists, otherwise empty
      */
     private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
-        // Attempt to find the target channel
+        // Attempt to find the target channel, use the fallback otherwise
         if (feed.targetChannelPattern() != null) {
             return jda.getTextChannelCache()
                 .stream()
                 .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
                 .findFirst();
+        } else {
+            return jda.getTextChannelCache()
+                .stream()
+                .filter(channel -> fallbackChannelPattern.test(channel.getName()))
+                .findFirst();
         }
-
-        // If the target channel was not found, use the fallback
-        return jda.getTextChannelCache()
-            .stream()
-            .filter(channel -> fallbackChannelPattern.test(channel.getName()))
-            .findFirst();
     }
 
     /**
