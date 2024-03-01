@@ -104,13 +104,16 @@
         ]
     },
     "selectRolesChannelPattern": "select-your-roles",
-    "memberCountCategoryPattern": "Info",
-    "rssFeeds": [
-        {
-            "url": "<rss_url_feed_here>",
-            "targetChannelPattern": "<target_channel_pattern_here>",
-            "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss zzz"
-        }
-    ],
-    "rssPollInterval": 10
+    "rssConfig": {
+        "feeds": [
+            {
+                "url": "<rss_feed_url>",
+                "targetChannelPattern": "<target_channel_pattern>",
+                "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss zzz"
+            }
+        ],
+        "javaNewsChannelPattern": "<java_news_channel_pattern>",
+        "rssPollInterval": 10
+    }
+    "memberCountCategoryPattern": "Info"
 }

@@ -43,9 +43,7 @@ public final class Config {
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
     private final FeatureBlacklistConfig featureBlacklistConfig;
-    private final List<RSSFeed> rssFeeds;
-    private final String javaNewsChannelPattern;
-    private final int rssPollInterval;
+    private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
 
@@ -94,10 +92,7 @@ public final class Config {
                     required = true) String memberCountCategoryPattern,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
-            @JsonProperty(value = "javaNewsChannelPattern",
-                    required = true) String javaNewsChannelPattern,
-            @JsonProperty(value = "rssFeeds", required = true) List<RSSFeed> rssFeeds,
-            @JsonProperty(value = "rssPollInterval", required = true) int rssPollInterval,
+            @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
@@ -130,9 +125,7 @@ public final class Config {
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
-        this.rssFeeds = Objects.requireNonNull(rssFeeds);
-        this.javaNewsChannelPattern = Objects.requireNonNull(javaNewsChannelPattern);
-        this.rssPollInterval = rssPollInterval;
+        this.rssFeedsConfig = rssFeedsConfig;
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
@@ -418,27 +411,9 @@ public final class Config {
     }
 
     /**
-     * @return A list of all currently tracked RSS feeds
+     * @return the RSS feeds configuration
      */
-    public List<RSSFeed> getRssFeeds() {
-        return rssFeeds;
-    }
-
-    /**
-     * Gets the interval in which RSS feeds will be polled from the source.
-     *
-     * @return The interval in seconds
-     */
-    public int getRssPollInterval() {
-        return rssPollInterval;
-    }
-
-    /**
-     * The channel name that rss feeds will be sent to if they are not specified.
-     *
-     * @return The channel name pattern
-     */
-    public String getJavaNewsChannelPattern() {
-        return javaNewsChannelPattern;
+    public RSSFeedsConfig getRSSFeedsConfig() {
+        return rssFeedsConfig;
     }
 }
