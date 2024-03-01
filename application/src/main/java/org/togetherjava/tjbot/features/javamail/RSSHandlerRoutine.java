@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.jooq.tools.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
 
@@ -294,13 +296,13 @@ public final class RSSHandlerRoutine implements Routine {
         if (rawDescription.isPresent() && !rawDescription.get().isEmpty()) {
             Document fullDescription =
                     Jsoup.parse(StringEscapeUtils.unescapeHtml4(rawDescription.get()));
-            StringBuilder finalDescription = new StringBuilder();
-            fullDescription.body()
+            String finalDescription = fullDescription.body()
                 .select("*")
-                .forEach(p -> finalDescription.append(p.text()).append(". "));
+                .stream()
+                .map(Element::text)
+                .collect(Collectors.joining(". "));
 
-            embedBuilder
-                .setDescription(StringUtils.abbreviate(finalDescription.toString(), MAX_CONTENTS));
+            embedBuilder.setDescription(StringUtils.abbreviate(finalDescription, MAX_CONTENTS));
             return embedBuilder;
         }
 
