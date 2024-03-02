@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.basic.CakeDayRoutine;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
@@ -111,6 +112,7 @@ public class Features {
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MemberCountDisplayRoutine(config));
+        features.add(new CakeDayRoutine(config, database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
