@@ -8,6 +8,7 @@ import org.kohsuke.github.GHIssueState;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.github.GitHubReference;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.io.IOException;

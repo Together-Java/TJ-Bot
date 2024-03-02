@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.github;
+package org.togetherjava.tjbot.features.github;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -35,13 +35,13 @@ import java.util.stream.Collectors;
  * the bot replies with an embed that contains info on the issue/PR.
  */
 public final class GitHubReference extends MessageReceiverAdapter {
-    static final String ID_GROUP = "id";
+    public static final String ID_GROUP = "id";
     private static final Logger logger = LoggerFactory.getLogger(GitHubReference.class);
 
     /**
      * The pattern(#123) used to determine whether a message is referencing an issue.
      */
-    static final Pattern ISSUE_REFERENCE_PATTERN =
+    public static final Pattern ISSUE_REFERENCE_PATTERN =
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
@@ -142,7 +142,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Generates the embed to reply with when someone references an issue.
      */
-    MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
+    public MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
         try {
             String title = "[#%d] %s".formatted(issue.getNumber(), issue.getTitle());
             String titleUrl = issue.getHtmlUrl().toString();
@@ -190,7 +190,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Looks through all of the given repositories for an issue/pr with the given id.
      */
-    Optional<GHIssue> findIssue(int id, String targetIssueTitle) {
+    public Optional<GHIssue> findIssue(int id, String targetIssueTitle) {
         return repositories.stream().map(repository -> {
             try {
                 GHIssue issue = repository.getIssue(id);
@@ -226,7 +226,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * All repositories monitored by this instance.
      */
-    List<GHRepository> getRepositories() {
+    public List<GHRepository> getRepositories() {
         return repositories;
     }
 
