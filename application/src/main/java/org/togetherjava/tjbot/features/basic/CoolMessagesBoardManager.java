@@ -61,7 +61,8 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
             return;
         }
 
-        if (isCoolEmoji && originalReactionsCount + 1 >= config.minimumReactions()) {
+        final int newReactionsCount = originalReactionsCount + 1;
+        if (isCoolEmoji && newReactionsCount >= config.minimumReactions()) {
             event.retrieveMessage().queue(message -> {
                 message.addReaction(REACT_EMOJI).queue();
 
