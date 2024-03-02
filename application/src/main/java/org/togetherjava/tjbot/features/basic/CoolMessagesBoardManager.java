@@ -123,6 +123,10 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
      * Checks a {@link MessageReaction} to see if the bot has reacted to it.
      */
     private static boolean hasBotReacted(JDA jda, MessageReaction messageReaction) {
+        if (!REACT_EMOJI.equals(messageReaction.getEmoji())) {
+            return false;
+        }
+
         return messageReaction.retrieveUsers()
             .parallelStream()
             .anyMatch(user -> jda.getSelfUser().getIdLong() == user.getIdLong());
