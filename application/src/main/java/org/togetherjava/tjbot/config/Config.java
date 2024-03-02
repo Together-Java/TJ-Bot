@@ -49,6 +49,7 @@ public final class Config {
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
     private final TopHelpersConfig topHelpers;
+    private final CakeDayConfig cakeDayConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -102,7 +103,10 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers) {
+            @JsonProperty(value = "topHelpers",
+                    required = true) TopHelpersConfig topHelpers,
+            @JsonProperty(value = "cakeDayConfig",
+                    required = true) CakeDayConfig cakeDayConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -138,6 +142,7 @@ public final class Config {
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
         this.topHelpers = Objects.requireNonNull(topHelpers);
+        this.cakeDayConfig = cakeDayConfig;
     }
 
     /**
@@ -429,6 +434,15 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * Gets the cake day configuration file.
+     *
+     * @return the cake day configuration file
+     */
+    public CakeDayConfig getCakeDayConfig() {
+        return cakeDayConfig;
     }
 
     /**

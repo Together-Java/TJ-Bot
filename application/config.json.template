@@ -200,4 +200,7 @@
         "assignmentChannelPattern": "community-commands",
         "announcementChannelPattern": "hall-of-fame"
     }
+    "cakeDayConfig": {
+        "rolePattern": "cakeDayRolePattern"
+    }
 }
