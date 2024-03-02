@@ -49,8 +49,9 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
         Optional<TextChannel> boardChannel = getBoardChannel(event.getJDA(), guildId);
 
         if (boardChannel.isEmpty()) {
-            logger.warn("Tried to find the board channel in server {} but was unable to do so",
-                    guildId);
+            logger.warn(
+                    "Could not find board channel with pattern '{}' in server with ID '{}'. Skipping reaction handling...",
+                    this.config.boardChannelPattern(), guildId);
             return;
         }
 
