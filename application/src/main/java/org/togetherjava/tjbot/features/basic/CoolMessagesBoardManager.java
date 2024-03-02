@@ -16,7 +16,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.CoolMessagesBoardConfig;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Predicate;
