@@ -65,7 +65,7 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
             event.retrieveMessage().queue(message -> {
                 message.addReaction(REACT_EMOJI).queue();
 
-                insertCoolMessage(boardChannel.orElseThrow(), message);
+                insertCoolMessage(boardChannel.get(), message);
             }, e -> logger.warn("Tried to retrieve cool message but got: {}", e.getMessage()));
         }
     }
