@@ -413,7 +413,11 @@ public final class Config {
         return selectRolesChannelPattern;
     }
 
-    // TODO: Add JavaDoc
+    /**
+     * Retrieves the Cake Day configuration.
+     *
+     * @return the cake-day feature configuration
+     */
     public CakeDayConfig getCakeDayConfig() {
         return cakeDayConfig;
     }
