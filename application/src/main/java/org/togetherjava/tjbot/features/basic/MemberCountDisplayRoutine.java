@@ -37,12 +37,11 @@ public class MemberCountDisplayRoutine implements Routine {
 
     @Override
     public void runRoutine(JDA jda) {
-        jda.getGuilds().forEach(guild -> {
-            guild.getCategories()
+        jda.getGuilds()
+            .forEach(guild -> guild.getCategories()
                 .stream()
                 .filter(category -> wordsInCategory.test(category.getName()))
                 .findAny()
-                .ifPresent(this::updateCategoryName);
-        });
+                .ifPresent(this::updateCategoryName));
     }
 }
