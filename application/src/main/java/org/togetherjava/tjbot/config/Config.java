@@ -437,9 +437,9 @@ public final class Config {
     }
 
     /**
-     * Gets the cake day configuration file.
+     * Retrieves the Cake Day configuration.
      *
-     * @return the cake day configuration file
+     * @return the cake-day feature configuration
      */
     public CakeDayConfig getCakeDayConfig() {
         return cakeDayConfig;
