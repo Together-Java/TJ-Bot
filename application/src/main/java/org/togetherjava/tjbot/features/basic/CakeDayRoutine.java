@@ -3,6 +3,8 @@ package org.togetherjava.tjbot.features.basic;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.UserSnowflake;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -21,6 +23,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.togetherjava.tjbot.db.generated.tables.CakeDays.CAKE_DAYS;
@@ -31,12 +35,15 @@ public class CakeDayRoutine implements Routine {
     private static final DateTimeFormatter MONTH_DAY_FORMATTER =
             DateTimeFormatter.ofPattern("MM-dd");
     private static final int BULK_INSERT_SIZE = 500;
+    private final Predicate<String> cakeDayRolePredicate;
     private final CakeDayConfig config;
     private final Database database;
 
     public CakeDayRoutine(Config config, Database database) {
         this.config = config.getCakeDayConfig();
         this.database = database;
+
+        this.cakeDayRolePredicate = Pattern.compile(this.config.rolePattern()).asPredicate();
     }
 
     /**
@@ -75,7 +82,49 @@ public class CakeDayRoutine implements Routine {
 
                     return result;
                 });
+
+            return;
         }
+
+        jda.getGuilds().forEach(this::reassignCakeDayRole);
+    }
+
+    private void reassignCakeDayRole(Guild guild) {
+        Role cakeDayRole = getCakeDayRoleFromGuild(guild).orElse(null);
+
+        if (cakeDayRole == null) {
+            logger.warn("Cake day role with pattern {} not found for guild: {}",
+                    config.rolePattern(), guild.getName());
+            return;
+        }
+
+        removeMembersCakeDayRole(cakeDayRole, guild)
+            .thenCompose(result -> addTodayMembersCakeDayRole(cakeDayRole, guild))
+            .join();
+    }
+
+    private CompletableFuture<Void> addTodayMembersCakeDayRole(Role cakeDayRole, Guild guild) {
+        return CompletableFuture
+            .runAsync(() -> findCakeDaysTodayFromDatabase().forEach(cakeDayRecord -> {
+                UserSnowflake snowflake = UserSnowflake.fromId(cakeDayRecord.getUserId());
+
+                int anniversary = OffsetDateTime.now().getYear() - cakeDayRecord.getJoinedYear();
+                if (anniversary > 0) {
+                    guild.addRoleToMember(snowflake, cakeDayRole).complete();
+                }
+            }));
+    }
+
+    private CompletableFuture<Void> removeMembersCakeDayRole(Role cakeDayRole, Guild guild) {
+        return CompletableFuture.runAsync(() -> guild.findMembersWithRoles(cakeDayRole)
+            .onSuccess(members -> removeRoleFromMembers(guild, cakeDayRole, members)));
+    }
+
+    private void removeRoleFromMembers(Guild guild, Role role, List<Member> members) {
+        members.forEach(member -> {
+            UserSnowflake snowflake = UserSnowflake.fromId(member.getIdLong());
+            guild.removeRoleFromMember(snowflake, role).complete();
+        });
     }
 
     private int getCakeDayCount(Database database) {
@@ -119,6 +168,13 @@ public class CakeDayRoutine implements Routine {
             .set(CAKE_DAYS.JOINED_YEAR, cakeDay.getYear())
             .set(CAKE_DAYS.GUILD_ID, guildId)
             .set(CAKE_DAYS.USER_ID, member.getIdLong()));
+    }
+
+    private Optional<Role> getCakeDayRoleFromGuild(Guild guild) {
+        return guild.getRoles()
+            .stream()
+            .filter(role -> cakeDayRolePredicate.test(role.getName()))
+            .findFirst();
     }
 
     private List<CakeDaysRecord> findCakeDaysTodayFromDatabase() {
