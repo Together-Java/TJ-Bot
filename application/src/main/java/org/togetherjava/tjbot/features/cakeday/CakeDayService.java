@@ -131,19 +131,6 @@ public class CakeDayService {
     }
 
     /**
-     * Removes the specified cake day role from all members who possess it in the given guild
-     * asynchronously.
-     *
-     * @param cakeDayRole the cake day role to be removed from members
-     * @param guild the guild from which to remove the cake day role
-     */
-    private synchronized void removeMembersCakeDayRole(Role cakeDayRole, Guild guild) {
-        guild.findMembersWithRoles(cakeDayRole)
-            .onSuccess(members -> removeRoleFromMembers(guild, cakeDayRole, members));
-    }
-
-
-    /**
      * Removes a specified role from a list of members in a guild.
      *
      * @param guild the guild from which to remove the role from members
