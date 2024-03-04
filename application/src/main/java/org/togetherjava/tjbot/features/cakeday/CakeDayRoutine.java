@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.basic;
+package org.togetherjava.tjbot.features.cakeday;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
