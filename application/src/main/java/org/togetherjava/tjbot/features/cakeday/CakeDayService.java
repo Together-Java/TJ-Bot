@@ -82,6 +82,12 @@ public class CakeDayService {
         refreshMembersCakeDayRoles(cakeDayRole, guild);
     }
 
+    /**
+     * Refreshes the Cake Day roles for members in the specified guild.
+     *
+     * @param cakeDayRole the Cake Day role to refresh
+     * @param guild the guild in which to refresh Cake Day roles
+     */
     private void refreshMembersCakeDayRoles(Role cakeDayRole, Guild guild) {
         guild.findMembersWithRoles(cakeDayRole).onSuccess(members -> {
             removeRoleFromMembers(guild, cakeDayRole, members);
@@ -108,6 +114,13 @@ public class CakeDayService {
         });
     }
 
+
+    /**
+     * Adds the cake day role to the specified user in the given guild, if available.
+     *
+     * @param snowflake the snowflake ID of the user to whom the cake day role will be added
+     * @param guild the guild in which the cake day role will be added to the user
+     */
     protected void addCakeDayRole(UserSnowflake snowflake, Guild guild) {
         Role cakeDayRole = getCakeDayRole(guild).orElse(null);
 
@@ -118,6 +131,11 @@ public class CakeDayService {
         guild.addRoleToMember(snowflake, cakeDayRole).complete();
     }
 
+    /**
+     * Adds the cake day role to the specified member if the cake day role exists in the guild.
+     *
+     * @param member the {@link Member} to whom the cake day role will be added
+     */
     protected void addCakeDayRole(Member member) {
         Guild guild = member.getGuild();
         UserSnowflake snowflake = UserSnowflake.fromId(member.getId());
@@ -266,6 +284,13 @@ public class CakeDayService {
         return cakeDaysCache.contains(user.getId());
     }
 
+
+    /**
+     * Checks if the provided {@link Member} has their "cake day" today.
+     * 
+     * @param member the {@link Member} whose cake day is to be checked
+     * @return true if the member has their cake day today; otherwise, false
+     */
     protected boolean hasMemberCakeDayToday(Member member) {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime joinMonthDate = member.getTimeJoined();
