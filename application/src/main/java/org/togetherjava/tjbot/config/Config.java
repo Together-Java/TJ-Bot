@@ -142,7 +142,7 @@ public final class Config {
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
         this.topHelpers = Objects.requireNonNull(topHelpers);
-        this.cakeDayConfig = cakeDayConfig;
+        this.cakeDayConfig = Objects.requireNonNull(cakeDayConfig);
     }
 
     /**
