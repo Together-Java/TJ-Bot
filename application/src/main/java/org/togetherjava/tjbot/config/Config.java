@@ -129,7 +129,7 @@ public final class Config {
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
-        this.cakeDayConfig = cakeDayConfig;
+        this.cakeDayConfig = Objects.requireNonNull(cakeDayConfig);
     }
 
     /**
