@@ -129,7 +129,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
-        this.cakeDayConfig = cakeDayConfig;
+        this.cakeDayConfig = Objects.requireNonNull(cakeDayConfig);
     }
 
     /**
