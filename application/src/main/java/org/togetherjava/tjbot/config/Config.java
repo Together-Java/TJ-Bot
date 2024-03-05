@@ -129,7 +129,7 @@ public final class Config {
         this.jshell = Objects.requireNonNull(jshell);
         this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
-        this.rssFeedsConfig = rssFeedsConfig;
+        this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
