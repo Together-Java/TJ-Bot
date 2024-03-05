@@ -294,8 +294,9 @@ public class CakeDayService {
     protected boolean hasMemberCakeDayToday(Member member) {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime joinMonthDate = member.getTimeJoined();
+        int anniversary = now.getYear() - joinMonthDate.getYear();
 
-        return now.getMonth() == joinMonthDate.getMonth()
+        return anniversary > 0 && now.getMonth() == joinMonthDate.getMonth()
                 && now.getDayOfMonth() == joinMonthDate.getDayOfMonth();
     }
 
