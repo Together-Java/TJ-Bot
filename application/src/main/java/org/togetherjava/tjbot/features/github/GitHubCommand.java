@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.github;
+package org.togetherjava.tjbot.features.github;
 
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -8,7 +8,6 @@ import org.kohsuke.github.GHIssueState;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
-import org.togetherjava.tjbot.features.github.GitHubReference;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.io.IOException;

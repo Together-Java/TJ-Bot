@@ -2,7 +2,7 @@ package org.togetherjava.tjbot.features;
 
 import net.dv8tion.jda.api.JDA;
 
-import org.togetherjava.tjbot.commands.github.GitHubCommand;
+import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
@@ -72,9 +72,9 @@ public class Features {
      * Calling this method multiple times will result in multiple features being created, which
      * generally should be avoided.
      *
-     * @param jda the JDA instance commands will be registered at
+     * @param jda      the JDA instance commands will be registered at
      * @param database the database of the application, which features can use to persist data
-     * @param config the configuration features should use
+     * @param config   the configuration features should use
      * @return a collection of all features
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
@@ -105,8 +105,7 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
-        features
-            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+        features.add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
 
