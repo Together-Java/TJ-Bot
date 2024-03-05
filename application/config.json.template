@@ -201,6 +201,6 @@
         "announcementChannelPattern": "hall-of-fame"
     }
     "cakeDayConfig": {
-        "rolePattern": "cakeDayRolePattern"
+        "rolePattern": "Cake Day"
     }
 }
