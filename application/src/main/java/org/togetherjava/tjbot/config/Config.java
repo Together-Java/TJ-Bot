@@ -125,7 +125,7 @@ public final class Config {
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
-        this.rssFeedsConfig = rssFeedsConfig;
+        this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
