@@ -55,15 +55,14 @@ public class CakeDayService {
     }
 
     private Optional<Role> getCakeDayRole(Guild guild) {
-        Role cakeDayRole = getCakeDayRoleFromGuild(guild).orElse(null);
+        Optional<Role> cakeDayRole = getCakeDayRoleFromGuild(guild);
 
-        if (cakeDayRole == null) {
+        if (cakeDayRole.isEmpty()) {
             logger.warn("Cake day role with pattern {} not found for guild: {}",
                     config.rolePattern(), guild.getName());
-            return Optional.empty();
         }
 
-        return Optional.of(cakeDayRole);
+        return cakeDayRole;
     }
 
     /**
@@ -132,13 +131,13 @@ public class CakeDayService {
     protected void addCakeDayRole(Member member) {
         Guild guild = member.getGuild();
         UserSnowflake snowflake = UserSnowflake.fromId(member.getId());
-        Role cakeDayRole = getCakeDayRole(guild).orElse(null);
+        Optional<Role> cakeDayRole = getCakeDayRole(guild);
 
-        if (cakeDayRole == null) {
+        if (cakeDayRole.isEmpty()) {
             return;
         }
 
-        guild.addRoleToMember(snowflake, cakeDayRole).complete();
+        guild.addRoleToMember(snowflake, cakeDayRole.get()).complete();
     }
 
     /**
