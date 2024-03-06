@@ -148,9 +148,9 @@ public final class HelpSystemHelper {
         String answer = chatGPTAnswer.orElseThrow();
         SelfUser selfUser = threadChannel.getJDA().getSelfUser();
 
-        int MESSAGE_CHARACTER_LIMIT = MessageEmbed.DESCRIPTION_MAX_LENGTH;
-        if (answer.length() > MESSAGE_CHARACTER_LIMIT) {
-            answer = answer.substring(0, MESSAGE_CHARACTER_LIMIT);
+        int responseCharLimit = MessageEmbed.DESCRIPTION_MAX_LENGTH;
+        if (answer.length() > responseCharLimit) {
+            answer = answer.substring(0, responseCharLimit);
         }
 
         MessageEmbed responseEmbed = generateGptResponseEmbed(answer, selfUser, originalQuestion);
@@ -162,11 +162,11 @@ public final class HelpSystemHelper {
     public MessageEmbed generateGptResponseEmbed(String answer, SelfUser selfUser, String title) {
         String responseByGptFooter = "- AI generated response";
 
-        int TITLE_EMBED_LIMIT = MessageEmbed.TITLE_MAX_LENGTH;
+        int embedTitleLimit = MessageEmbed.TITLE_MAX_LENGTH;
         String capitalizedTitle = Character.toUpperCase(title.charAt(0)) + title.substring(1);
 
-        String titleForEmbed = capitalizedTitle.length() > TITLE_EMBED_LIMIT
-                ? capitalizedTitle.substring(0, TITLE_EMBED_LIMIT)
+        String titleForEmbed = capitalizedTitle.length() > embedTitleLimit
+                ? capitalizedTitle.substring(0, embedTitleLimit)
                 : capitalizedTitle;
 
         return new EmbedBuilder()
