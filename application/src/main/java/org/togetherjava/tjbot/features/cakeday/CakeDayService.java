@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.UserSnowflake;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.Result;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -149,17 +151,22 @@ public class CakeDayService {
     }
 
     /**
-     * Removes a specified role from a list of members in a guild.
+     * Removes a specified role from a list of members in a {@link Guild}.
      *
-     * @param guild the guild from which to remove the role from members
-     * @param role the role to be removed from the members
-     * @param members the list of members from which the role will be removed
+     * @param guild the {@link Guild} from which to remove the role from members
+     * @param role the {@link Role} to be removed from the members
+     * @param members the {@link List} of members from which the {@link Role} will be removed
      */
     private void removeRoleFromMembers(Guild guild, Role role, List<Member> members) {
-        members.forEach(member -> {
-            UserSnowflake snowflake = UserSnowflake.fromId(member.getIdLong());
-            guild.removeRoleFromMember(snowflake, role).complete();
-        });
+        List<RestAction<Result<Void>>> chain = members.stream()
+            .map(member -> guild.removeRoleFromMember(member, role).mapToResult())
+            .toList();
+
+        if (chain.isEmpty()) {
+            return;
+        }
+
+        RestAction.allOf(chain).queue();
     }
 
     /**
