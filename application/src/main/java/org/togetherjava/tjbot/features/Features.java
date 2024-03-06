@@ -162,7 +162,7 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGptCommand(chatGptService));
+        features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
