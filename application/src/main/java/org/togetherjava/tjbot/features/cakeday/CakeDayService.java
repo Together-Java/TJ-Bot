@@ -98,39 +98,30 @@ public class CakeDayService {
     }
 
     /**
-     * Asynchronously adds the specified cake day role to guild members who are celebrating their
-     * cake day today.
+     * Assigns a special role to members whose cake day (anniversary of joining) is today, but only
+     * if they have been a member for at least one year.
      * <p>
-     * The cake day role is added to members who have been in the guild for at least one year.
+     * This method checks the current date against the cake day records in the database for each
+     * member of the given guild. If the member's cake day is today, and they have been a member for
+     * at least one year, the method assigns them a special role.
      *
-     * @param guild the guild in which to add the cake day role to members
+     * @param guild the guild to check for members celebrating their cake day today
      */
     private void addTodayMembersCakeDayRole(Guild guild) {
-        findCakeDaysTodayFromDatabase().forEach(cakeDayRecord -> {
-            UserSnowflake userSnowflake = UserSnowflake.fromId(cakeDayRecord.getUserId());
+        findCakeDaysTodayFromDatabase(guild).forEach(cakeDayRecord -> {
+            Member member = guild.getMemberById(cakeDayRecord.getUserId());
 
-            int anniversary = OffsetDateTime.now().getYear() - cakeDayRecord.getJoinedYear();
-            if (anniversary > 0) {
-                addCakeDayRole(userSnowflake, guild);
+            if (member == null) {
+                return;
+            }
+
+            boolean isAnniversaryDay = hasMemberCakeDayToday(member);
+            int yearsSinceJoin = OffsetDateTime.now().getYear() - cakeDayRecord.getJoinedYear();
+
+            if (yearsSinceJoin > 0 && isAnniversaryDay) {
+                addCakeDayRole(member);
             }
         });
-    }
-
-
-    /**
-     * Adds the cake day role to the specified user in the given guild, if available.
-     *
-     * @param snowflake the snowflake ID of the user to whom the cake day role will be added
-     * @param guild the guild in which the cake day role will be added to the user
-     */
-    protected void addCakeDayRole(UserSnowflake snowflake, Guild guild) {
-        Role cakeDayRole = getCakeDayRole(guild).orElse(null);
-
-        if (cakeDayRole == null) {
-            return;
-        }
-
-        guild.addRoleToMember(snowflake, cakeDayRole).complete();
     }
 
     /**
@@ -254,12 +245,13 @@ public class CakeDayService {
      *
      * @return a list of {@link CakeDaysRecord} objects representing cake days for today
      */
-    private List<CakeDaysRecord> findCakeDaysTodayFromDatabase() {
+    private List<CakeDaysRecord> findCakeDaysTodayFromDatabase(Guild guild) {
         String todayMonthDay = OffsetDateTime.now().format(MONTH_DAY_FORMATTER);
 
         return database
             .read(context -> context.selectFrom(CAKE_DAYS)
                 .where(CAKE_DAYS.JOINED_MONTH_DAY.eq(todayMonthDay))
+                .and(CAKE_DAYS.GUILD_ID.eq(guild.getIdLong()))
                 .fetch())
             .collect(Collectors.toList());
     }
