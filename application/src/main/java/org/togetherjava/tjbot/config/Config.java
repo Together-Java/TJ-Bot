@@ -87,7 +87,8 @@ public final class Config {
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
-            @JsonProperty(value = "memberCountCategoryPattern") String memberCountCategoryPattern,
+            @JsonProperty(value = "memberCountCategoryPattern",
+                    required = true) String memberCountCategoryPattern,
             @JsonProperty(value = "helperPruneConfig",
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
@@ -98,7 +99,7 @@ public final class Config {
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
-        this.memberCountCategoryPattern = memberCountCategoryPattern;
+        this.memberCountCategoryPattern = Objects.requireNonNull(memberCountCategoryPattern);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
         this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);

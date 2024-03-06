@@ -11,11 +11,11 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class MemberCountDisplayRoutine implements Routine {
-    private final Predicate<String> wordsInCategory;
+    private final Predicate<String> memberCountCategoryPredicate;
     private static final Pattern baseNamePattern = Pattern.compile("(.+) - \\d+ Members");
 
     public MemberCountDisplayRoutine(Config config) {
-        wordsInCategory =
+        memberCountCategoryPredicate =
                 Pattern.compile(config.getMemberCountCategoryPattern()).asMatchPredicate();
     }
 
@@ -40,7 +40,7 @@ public class MemberCountDisplayRoutine implements Routine {
         jda.getGuilds()
             .forEach(guild -> guild.getCategories()
                 .stream()
-                .filter(category -> wordsInCategory.test(category.getName()))
+                .filter(category -> memberCountCategoryPredicate.test(category.getName()))
                 .findAny()
                 .ifPresent(this::updateCategoryName));
     }
