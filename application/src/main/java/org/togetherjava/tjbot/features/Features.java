@@ -166,6 +166,6 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
-        return blacklist.disableMatching(features.stream(), Object::getClass).toList();
+        return blacklist.filterStream(features.stream(), Object::getClass).toList();
     }
 }

@@ -40,13 +40,14 @@ public class FeatureBlacklist<T> {
     }
 
     /**
-     * Filters features stream to only having enabled features and logs any disabled features
+     * Filters features stream to only having enabled features and logs any disabled features.
      *
      * @param features the feature stream to be filtered
      * @param idExtractor function to get the class name of an object
      * @return stream of features that are enabled
      */
-    public <F> Stream<F> disableMatching(Stream<F> features, Function<? super F, ? extends T> idExtractor) {
+    public <F> Stream<F> filterStream(Stream<F> features,
+            Function<? super F, ? extends T> idExtractor) {
         return features.filter(f -> {
             T id = idExtractor.apply(f);
             if (!this.isEnabled(id)) {

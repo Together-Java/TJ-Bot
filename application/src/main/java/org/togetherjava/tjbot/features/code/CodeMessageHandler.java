@@ -74,9 +74,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
         List<CodeAction> codeActions = blacklist
-                .disableMatching(Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval)),
-                        e -> e.getClass().getName())
-                .toList();
+            .filterStream(Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval)),
+                    codeAction -> codeAction.getClass().getName())
+            .toList();
 
         labelToCodeAction = codeActions.stream()
             .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,
