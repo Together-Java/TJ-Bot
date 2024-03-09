@@ -39,6 +39,12 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/**
+ * Represents a command to create an application form for members to apply for roles.
+ * <p>
+ * This command is designed to generate an application form for members to apply for roles within a
+ * guild.
+ */
 public class ApplicationCreateCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ApplicationCreateCommand.class);
 
@@ -50,6 +56,13 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private final Predicate<String> applicationChannelPattern;
     private final ApplicationFormConfig config;
 
+    /**
+     * Constructs a new {@code ApplicationCreateCommand} with the specified configuration.
+     * <p>
+     * This command is designed to generate an application form for members to apply for roles.
+     *
+     * @param config the configuration containing the settings for the application form
+     */
     public ApplicationCreateCommand(Config config) {
         super("application-form", "Generates an application form for members to apply for roles.",
                 CommandVisibility.GUILD);
@@ -83,6 +96,17 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         event.reply("").addActionRow(menu.build()).setEphemeral(true).queue();
     }
 
+    /**
+     * Maps a user and an {@link ApplyRoleConfig} option to a SelectOption object.
+     * <p>
+     * This method is used to create a SelectOption object that represents a role configuration
+     * option for a user, including a unique component ID generated based on the user's ID and the
+     * option's name, a description, and an emoji.
+     *
+     * @param user the user for whom the role configuration option is being mapped
+     * @param option the {@link ApplyRoleConfig} option to be mapped to a SelectOption
+     * @return a {@link SelectOption} object with the specified details
+     */
     private SelectOption mapToSelectOption(User user, ApplyRoleConfig option) {
         return SelectOption.of(option.name(), generateComponentId(user.getId(), option.name()))
             .withDescription(option.description())
@@ -140,6 +164,13 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             .queue();
     }
 
+    /**
+     * Retrieves the application channel from the given {@link Guild}.
+     *
+     * @param guild the guild from which to retrieve the application channel
+     * @return an {@link Optional} containing the {@code TextChannel} representing the application
+     *         channel, or an empty {@link Optional} if no such channel is found
+     */
     private Optional<TextChannel> getApplicationChannel(Guild guild) {
         return guild.getChannels()
             .stream()
@@ -176,6 +207,17 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         return true;
     }
 
+    /**
+     * Sends the result of an application submission to the designated application channel in the
+     * guild.
+     * <p>
+     * The {@code args} parameter should contain the applicant's name and the role they are applying
+     * for.
+     *
+     * @param event the modal interaction event triggering the application submission
+     * @param args the arguments provided in the application submission
+     * @param answer the answer provided by the applicant to the default question
+     */
     private void sendApplicationResult(final ModalInteractionEvent event, List<String> args,
             String answer) {
         Guild guild = event.getGuild();
@@ -205,6 +247,11 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         applicationChannel.get().sendMessageEmbeds(embed.build()).queue();
     }
 
+    /**
+     * Sends the initial embed and a button which displays role openings.
+     *
+     * @param event the command interaction event triggering the menu
+     */
     private void sendMenu(final CommandInteraction event) {
         MessageEmbed embed = createApplicationEmbed();
 
