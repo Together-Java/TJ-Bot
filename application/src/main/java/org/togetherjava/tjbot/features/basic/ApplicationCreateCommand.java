@@ -208,19 +208,20 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
 
     private boolean handleHasPermissions(SlashCommandInteractionEvent event) {
         Member member = event.getMember();
+        Guild guild = event.getGuild();
 
-        if (member == null) {
+        if (member == null || guild == null) {
             return false;
         }
 
-        if (!event.getMember().hasPermission(Permission.MANAGE_ROLES)) {
+        if (!member.hasPermission(Permission.MANAGE_ROLES)) {
             event.reply("You do not have the required manage role permission to use this command")
                 .setEphemeral(true)
                 .queue();
             return false;
         }
 
-        Member selfMember = event.getGuild().getSelfMember();
+        Member selfMember = guild.getSelfMember();
         if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
             event.reply(
                     "Sorry, but I was not set up correctly. I need the manage role permissions for this.")
