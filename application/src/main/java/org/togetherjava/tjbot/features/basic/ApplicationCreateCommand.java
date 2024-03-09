@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.features.basic;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -33,9 +35,12 @@ import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
 
 import java.awt.Color;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -51,8 +56,11 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
     private static final int MIN_REASON_LENGTH = 50;
     private static final int MAX_REASON_LENGTH = 500;
+    private static final int APPLICATION_SUBMIT_COOLDOWN = 5;
     private static final String DEFAULT_QUESTION =
             "What makes you a valuable addition to the team? 😎";
+
+    private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
     private final ApplicationFormConfig config;
 
@@ -70,6 +78,10 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         this.config = config.getApplicationFormConfig();
         this.applicationChannelPattern =
                 Pattern.compile(this.config.applicationChannelPattern()).asMatchPredicate();
+
+        this.applicationSubmitCooldown = Caffeine.newBuilder()
+            .expireAfterWrite(APPLICATION_SUBMIT_COOLDOWN, TimeUnit.MINUTES)
+            .build();
     }
 
     @Override
@@ -121,6 +133,18 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             return;
         }
 
+        OffsetDateTime timeSentCache = applicationSubmitCooldown.getIfPresent(event.getMember());
+        if (timeSentCache != null) {
+            Duration duration = Duration.between(timeSentCache, OffsetDateTime.now());
+
+            if (duration.toMinutes() < APPLICATION_SUBMIT_COOLDOWN) {
+                event.reply("Please wait before sending a new application form.")
+                    .setEphemeral(true)
+                    .queue();
+                return;
+            }
+        }
+
         TextInput body = TextInput
             .create(generateComponentId(event.getUser().getId()), "Question",
                     TextInputStyle.PARAGRAPH)
@@ -162,6 +186,8 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         event.reply("Your application has been submitted. Thank you for applying! 😎")
             .setEphemeral(true)
             .queue();
+
+        applicationSubmitCooldown.put(event.getMember(), OffsetDateTime.now());
     }
 
     /**
