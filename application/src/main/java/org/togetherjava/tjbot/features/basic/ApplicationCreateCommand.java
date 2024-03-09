@@ -65,7 +65,7 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private final ApplicationFormConfig config;
 
     /**
-     * Constructs a new {@code ApplicationCreateCommand} with the specified configuration.
+     * Constructs a new {@link ApplicationCreateCommand} with the specified configuration.
      * <p>
      * This command is designed to generate an application form for members to apply for roles.
      *
@@ -111,12 +111,12 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     /**
      * Maps a user and an {@link ApplyRoleConfig} option to a SelectOption object.
      * <p>
-     * This method is used to create a SelectOption object that represents a role configuration
-     * option for a user, including a unique component ID generated based on the user's ID and the
-     * option's name, a description, and an emoji.
+     * This method is used to create a {@link SelectOption} object that represents a role
+     * configuration option for a user, including a unique component ID generated based on the
+     * user's ID and the option's name, a description, and an emoji.
      *
      * @param user the user for whom the role configuration option is being mapped
-     * @param option the {@link ApplyRoleConfig} option to be mapped to a SelectOption
+     * @param option the {@link ApplyRoleConfig} option to be mapped to a {@link SelectOption}
      * @return a {@link SelectOption} object with the specified details
      */
     private SelectOption mapToSelectOption(User user, ApplyRoleConfig option) {
@@ -194,7 +194,7 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
      * Retrieves the application channel from the given {@link Guild}.
      *
      * @param guild the guild from which to retrieve the application channel
-     * @return an {@link Optional} containing the {@code TextChannel} representing the application
+     * @return an {@link Optional} containing the {@link TextChannel} representing the application
      *         channel, or an empty {@link Optional} if no such channel is found
      */
     private Optional<TextChannel> getApplicationChannel(Guild guild) {
