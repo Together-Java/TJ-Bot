@@ -424,6 +424,8 @@ public final class Config {
     }
 
     /**
+     * Gets the RSS feeds configuration.
+     *
      * @return the RSS feeds configuration
      */
     public RSSFeedsConfig getRSSFeedsConfig() {

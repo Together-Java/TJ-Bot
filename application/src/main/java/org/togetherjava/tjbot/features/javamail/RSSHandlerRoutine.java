@@ -127,7 +127,7 @@ public final class RSSHandlerRoutine implements Routine {
     private void sendRSS(JDA jda, RSSFeed feedConfig) {
         TextChannel textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
         if (textChannel == null) {
-            logger.warn("Tried to sendRss, got empty response (channel {} not found)",
+            logger.warn("Tried to send an RSS post, got empty response (channel {} not found)",
                     feedConfig.targetChannelPattern());
             return;
         }
@@ -137,23 +137,27 @@ public final class RSSHandlerRoutine implements Routine {
             return;
         }
 
-        // We only get the first RSS item from the list since we are
-        // assuming that the whole RSS feed uses the same format
-        if (!isValidDateFormat(rssItems.getFirst(), feedConfig)) {
-            logger.warn("Could not find valid date format for RSS feed {}", feedConfig.url());
+        for (Item item : rssItems) {
+            if (!isValidDateFormat(item, feedConfig)) {
+                logger.warn("Could not find valid or matching date format for RSS feed {}",
+                        feedConfig.url());
+                return;
+            }
+        }
+
+        Optional<RssFeedRecord> rssFeedRecord = getRssFeedRecordFromDatabase(feedConfig);
+        Optional<ZonedDateTime> lastPostedDate =
+                getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
+
+        lastPostedDate.ifPresent(
+                date -> updateLastDateToDatabase(feedConfig, rssFeedRecord.orElse(null), date));
+
+        if (rssFeedRecord.isEmpty()) {
             return;
         }
 
-        RssFeedRecord rssFeedRecord = getRssFeedRecordFromDatabase(feedConfig);
-        Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(rssFeedRecord,
-                feedConfig.dateFormatterPattern());
-
-        ZonedDateTime lastPostedDate =
-                getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
-
-        if (lastPostedDate != null) {
-            updateLastDateToDatabase(feedConfig, rssFeedRecord, lastPostedDate);
-        }
+        Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(
+                rssFeedRecord.get(), feedConfig.dateFormatterPattern());
 
         if (lastSavedDate.isEmpty()) {
             return;
@@ -162,7 +166,7 @@ public final class RSSHandlerRoutine implements Routine {
         final Predicate<Item> shouldItemBePosted = item -> {
             ZonedDateTime itemPubDate =
                     getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
-            return itemPubDate.isAfter(lastSavedDate.get());
+            return itemPubDate.isAfter(lastSavedDate.orElseThrow());
         };
 
         rssItems.reversed()
@@ -175,32 +179,27 @@ public final class RSSHandlerRoutine implements Routine {
      * Retrieves an RSS feed record from the database based on the provided RSS feed configuration.
      *
      * @param feedConfig the RSS feed configuration to retrieve the record for
-     * @return the RSS feed record retrieved from the database
+     * @return an optional RSS feed record retrieved from the database
      */
-    private RssFeedRecord getRssFeedRecordFromDatabase(RSSFeed feedConfig) {
-        return database.read(context -> context.selectFrom(RSS_FEED)
+    private Optional<RssFeedRecord> getRssFeedRecordFromDatabase(RSSFeed feedConfig) {
+        return Optional.ofNullable(database.read(context -> context.selectFrom(RSS_FEED)
             .where(RSS_FEED.URL.eq(feedConfig.url()))
             .limit(1)
-            .fetchAny());
+            .fetchAny()));
     }
 
     /**
      * Retrieves the last saved date from the database record associated with the given RSS feed
      * record.
-     * <p>
-     * If the RSS feed record is null, returns an empty {@link Optional}.
      *
-     * @param rssRecord the RSS feed record to retrieve the last saved date from
+     * @param rssRecord an existing RSS feed record to retrieve the last saved date from
      * @param dateFormatterPattern the pattern used to parse the date from the database record
      * @return An {@link Optional} containing the last saved date if it could be retrieved and
      *         parsed successfully, otherwise an empty {@link Optional}
      */
-    private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord,
-            String dateFormatterPattern) throws DateTimeParseException {
-        if (rssRecord == null) {
-            return Optional.empty();
-        }
-
+    private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(
+            @NotNull RssFeedRecord rssRecord, String dateFormatterPattern)
+            throws DateTimeParseException {
         try {
             ZonedDateTime savedDate =
                     getZonedDateTime(rssRecord.getLastDate(), dateFormatterPattern);
@@ -217,12 +216,11 @@ public final class RSSHandlerRoutine implements Routine {
      * @param dateFormatterPattern the pattern used to parse the date from the database record
      * @return the latest post date as a {@link ZonedDateTime} object, or null if the list is empty
      */
-    private ZonedDateTime getLatestPostDateFromItems(List<Item> items,
+    private Optional<ZonedDateTime> getLatestPostDateFromItems(List<Item> items,
             String dateFormatterPattern) {
         return items.stream()
             .map(item -> getDateTimeFromItem(item, dateFormatterPattern))
-            .max(ZonedDateTime::compareTo)
-            .orElse(null);
+            .max(ZonedDateTime::compareTo);
     }
 
     /**
@@ -274,8 +272,8 @@ public final class RSSHandlerRoutine implements Routine {
      * Attempts to get a {@link ZonedDateTime} from an {@link Item} with a provided string date time
      * format.
      * <p>
-     * If either of the function inputs are null, the oldest-possible {@link ZonedDateTime} will get
-     * returned instead.
+     * If either of the function inputs are null or a {@link DateTimeParseException} is caught, the
+     * oldest-possible {@link ZonedDateTime} will get returned instead.
      *
      * @param item The {@link Item} from which to extract the date.
      * @param dateTimeFormat The format of the date time string.
@@ -381,7 +379,8 @@ public final class RSSHandlerRoutine implements Routine {
      * Fetches a list of {@link Item} from a given RSS url.
      *
      * @param rssUrl the URL of the RSS feed to fetch
-     * @return a list of {@link Item} parsed from the RSS feed
+     * @return a list of {@link Item} parsed from the RSS feed, or an empty list if there's an
+     *         {@link IOException}
      */
     private List<Item> fetchRSSItemsFromURL(String rssUrl) {
         try {

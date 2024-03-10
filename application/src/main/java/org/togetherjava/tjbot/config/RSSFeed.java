@@ -20,6 +20,7 @@ public record RSSFeed(@JsonProperty(value = "url", required = true) String url,
      * @param url the URL of the RSS feed
      * @param targetChannelPattern the target channel pattern
      * @param dateFormatterPattern the date formatter pattern
+     * @throws NullPointerException if any of the parameters are null
      */
     public RSSFeed {
         Objects.requireNonNull(url);
