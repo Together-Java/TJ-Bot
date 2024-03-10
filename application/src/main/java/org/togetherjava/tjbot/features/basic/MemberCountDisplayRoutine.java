@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * Shows the guild member count on selected category, which runs every day.
+ * Shows the guild member count on selected category, which updates everyday.
  */
 public class MemberCountDisplayRoutine implements Routine {
     private final Predicate<String> memberCountCategoryPredicate;
