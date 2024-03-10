@@ -150,7 +150,10 @@ public final class RSSHandlerRoutine implements Routine {
 
         ZonedDateTime lastPostedDate =
                 getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
-        updateLastDateToDatabase(feedConfig, rssFeedRecord, lastPostedDate);
+
+        if (lastPostedDate != null) {
+            updateLastDateToDatabase(feedConfig, rssFeedRecord, lastPostedDate);
+        }
 
         if (lastSavedDate.isEmpty()) {
             return;
@@ -193,7 +196,7 @@ public final class RSSHandlerRoutine implements Routine {
      *         parsed successfully, otherwise an empty {@link Optional}
      */
     private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord,
-            String dateFormatterPattern) {
+            String dateFormatterPattern) throws DateTimeParseException {
         if (rssRecord == null) {
             return Optional.empty();
         }
@@ -241,16 +244,14 @@ public final class RSSHandlerRoutine implements Routine {
      * null.
      *
      * @param feedConfig the RSS feed configuration
-     * @param rssFeedRecord the record representing the RSS feed. can be null if not found in the
+     * @param rssFeedRecord the record representing the RSS feed, can be null if not found in the
      *        database
      * @param lastPostedDate the last posted date to be updated
+     *
+     * @throws DateTimeParseException if the date cannot be parsed
      */
     private void updateLastDateToDatabase(RSSFeed feedConfig, @Nullable RssFeedRecord rssFeedRecord,
             ZonedDateTime lastPostedDate) {
-        if (lastPostedDate == null) {
-            return;
-        }
-
         DateTimeFormatter dateTimeFormatter =
                 DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
         String lastDateStr = lastPostedDate.format(dateTimeFormatter);
@@ -369,11 +370,10 @@ public final class RSSHandlerRoutine implements Routine {
                 .collect(Collectors.joining(". "));
 
             embedBuilder.setDescription(StringUtils.abbreviate(finalDescription, MAX_CONTENTS));
-            return embedBuilder;
+        } else {
+            embedBuilder.setDescription("No description");
         }
 
-        // Fill the description with a placeholder if the description was empty
-        embedBuilder.setDescription("No description");
         return embedBuilder;
     }
 
