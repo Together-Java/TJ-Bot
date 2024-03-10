@@ -10,23 +10,29 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+/**
+ * Shows the guild member count on selected category, which runs every day.
+ */
 public class MemberCountDisplayRoutine implements Routine {
     private final Predicate<String> memberCountCategoryPredicate;
-    private static final Pattern baseNamePattern = Pattern.compile("(.+) - \\d+ Members");
 
+    /**
+     * Creates an instance on member count display routine.
+     *
+     * @param config the config to use
+     */
     public MemberCountDisplayRoutine(Config config) {
         memberCountCategoryPredicate =
-                Pattern.compile(config.getMemberCountCategoryPattern()).asMatchPredicate();
+                Pattern.compile(config.getMemberCountCategoryPattern() + "( - \\d+ Members)?")
+                    .asMatchPredicate();
     }
 
     private void updateCategoryName(Category category) {
         int totalMemberCount = category.getGuild().getMemberCount();
-        String baseName = category.getName();
-        if (baseName.contains(" Members")) {
-            baseName = baseNamePattern.toString();
-        }
+        String baseName = category.getName().split("-")[0].trim();
+
         category.getManager()
-            .setName("%s - %d Members".formatted(baseName.trim(), totalMemberCount))
+            .setName("%s - %d Members".formatted(baseName, totalMemberCount))
             .queue();
     }
 
