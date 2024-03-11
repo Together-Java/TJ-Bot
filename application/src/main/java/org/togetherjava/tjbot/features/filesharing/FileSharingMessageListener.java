@@ -134,7 +134,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
             .build()
             .createGist()
             .public_(false)
-            .description("Uploaded by " + event.getAuthor().getAsTag());
+            .description("Uploaded by " + event.getAuthor().getName());
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
 
