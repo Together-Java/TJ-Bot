@@ -104,7 +104,7 @@
         ]
     },
     "applicationForm": {
-        "applicationChannelPattern": "applications-log"
+        "applicationChannelPattern": "applications-log",
         "roles": [
             {
                 "description": "Lorem ipsum",
