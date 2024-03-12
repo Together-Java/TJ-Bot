@@ -50,7 +50,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private final ComponentIdInteractor componentIdInteractor;
     private final Map<String, CodeAction> labelToCodeAction;
-    private final ChatGptService chatGptService;
 
     /**
      * Memorizes the ID of the bots code-reply message that a message belongs to. That way, the
@@ -73,7 +72,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval,
             ChatGptService chatGptService) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
-        this.chatGptService = chatGptService;
 
         List<CodeAction> codeActions = blacklist
             .filterStream(
