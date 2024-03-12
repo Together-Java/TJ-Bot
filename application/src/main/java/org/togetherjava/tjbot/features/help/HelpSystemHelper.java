@@ -24,6 +24,7 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -208,11 +209,17 @@ public final class HelpSystemHelper {
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
+
+        Instant createdAt = Instant.now();
+        String tag = threadChannel.getAppliedTags().getFirst().getName();
+
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
                 .setAuthorId(authorId)
                 .setChannelId(threadChannel.getIdLong())
-                .setCreatedAt(threadChannel.getTimeCreated().toInstant());
+                .setCreatedAt(createdAt)
+                .setTag(tag)
+                .setTicketStatus(TicketStatus.ACTIVE.val);
             if (helpThreadsRecord.update() == 0) {
                 helpThreadsRecord.insert();
             }
@@ -359,6 +366,17 @@ public final class HelpSystemHelper {
 
         public String getTagName() {
             return tagName;
+        }
+    }
+
+    enum TicketStatus {
+        ARCHIVED(0),
+        ACTIVE(1);
+
+        final int val;
+
+        TicketStatus(int val) {
+            this.val = val;
         }
     }
 
