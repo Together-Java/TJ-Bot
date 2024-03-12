@@ -158,8 +158,6 @@ public class ChatGptService {
                 .n(MAX_NUMBER_OF_RESPONSES)
                 .build();
 
-            logger.debug("GPT tx payload: {}", message);
-
             String response = openAiService.createChatCompletion(chatCompletionRequest)
                 .getChoices()
                 .getFirst()
@@ -167,11 +165,8 @@ public class ChatGptService {
                 .getContent();
 
             if (response == null) {
-                logger.debug("Got empty response");
                 return Optional.empty();
             }
-
-            logger.debug("GPT rx: {}", response);
 
             return Optional.of(response);
         } catch (OpenAiHttpException openAiHttpException) {
