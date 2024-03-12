@@ -178,5 +178,7 @@ public class ChatGptService {
             logger.warn("There was an error using the OpenAI API: {}",
                     runtimeException.getMessage());
         }
+
+        return Optional.empty();
     }
 }
