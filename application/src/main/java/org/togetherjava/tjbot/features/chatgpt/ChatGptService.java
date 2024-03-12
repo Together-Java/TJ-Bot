@@ -100,28 +100,8 @@ public class ChatGptService {
             String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
             String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
                 .formatted(context, instructions, question);
-            ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
-                    Objects.requireNonNull(questionWithContext));
-            ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-                .model(AI_MODEL)
-                .messages(List.of(chatMessage))
-                .frequencyPenalty(FREQUENCY_PENALTY)
-                .temperature(TEMPERATURE)
-                .maxTokens(MAX_TOKENS)
-                .n(MAX_NUMBER_OF_RESPONSES)
-                .build();
 
-            String response = openAiService.createChatCompletion(chatCompletionRequest)
-                .getChoices()
-                .getFirst()
-                .getMessage()
-                .getContent();
-
-            if (response == null) {
-                return Optional.empty();
-            }
-
-            return Optional.of(response);
+            return getMessageResponse(questionWithContext);
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
                     "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
@@ -132,5 +112,62 @@ public class ChatGptService {
                     runtimeException.getMessage());
         }
         return Optional.empty();
+    }
+
+    public Optional<String> formatCode(CharSequence code) {
+        if (isDisabled) {
+            return Optional.empty();
+        }
+
+        String payload = String.format(
+                """
+                                If you happen to find any code in the container below, FORMAT \
+                                IT regardless of the programming language you find. MAKE IT HUMANLY READABLE. \
+                                If you don't find any, then your only answer should say empty. Output with no \
+                                introduction, no explanation, no ``` stuff, only code. Double check that \
+                                your response is correct. The code provided might not be readable.
+
+                                --- BEGIN CODE ---
+                                %s
+                                --- END CODE ---
+                        """,
+                code);
+        Optional<String> response = getMessageResponse(payload);
+
+        if (response.isEmpty() || response.get().equalsIgnoreCase("empty")) {
+            return Optional.empty();
+        }
+
+        return response;
+    }
+
+    private Optional<String> getMessageResponse(String message) {
+        ChatMessage chatMessage =
+                new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(message));
+        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+            .model(AI_MODEL)
+            .messages(List.of(chatMessage))
+            .frequencyPenalty(FREQUENCY_PENALTY)
+            .temperature(TEMPERATURE)
+            .maxTokens(MAX_TOKENS)
+            .n(MAX_NUMBER_OF_RESPONSES)
+            .build();
+
+        logger.debug("GPT tx payload: {}", message);
+
+        String response = openAiService.createChatCompletion(chatCompletionRequest)
+            .getChoices()
+            .getFirst()
+            .getMessage()
+            .getContent();
+
+        if (response == null) {
+            logger.debug("Got empty response");
+            return Optional.empty();
+        }
+
+        logger.debug("GPT rx: {}", response);
+
+        return Optional.of(response);
     }
 }

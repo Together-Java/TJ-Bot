@@ -3,6 +3,8 @@ package org.togetherjava.tjbot.features.code;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import org.togetherjava.tjbot.features.basic.ChatGPTFormatter;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.CodeFence;
 import org.togetherjava.tjbot.formatter.Formatter;
 
@@ -13,6 +15,11 @@ import org.togetherjava.tjbot.formatter.Formatter;
  */
 final class FormatCodeCommand implements CodeAction {
     private final Formatter formatter = new Formatter();
+    private final ChatGPTFormatter chatGPTFormatter;
+
+    public FormatCodeCommand(ChatGptService service) {
+        this.chatGPTFormatter = new ChatGPTFormatter(service);
+    }
 
     @Override
     public String getLabel() {
@@ -34,6 +41,6 @@ final class FormatCodeCommand implements CodeAction {
     }
 
     private String formatCode(CharSequence code) {
-        return formatter.format(code);
+        return chatGPTFormatter.format(code).orElse(formatter.format(code));
     }
 }

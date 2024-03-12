@@ -17,6 +17,7 @@ import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
@@ -49,6 +50,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private final ComponentIdInteractor componentIdInteractor;
     private final Map<String, CodeAction> labelToCodeAction;
+    private final ChatGptService chatGptService;
 
     /**
      * Memorizes the ID of the bots code-reply message that a message belongs to. That way, the
@@ -68,11 +70,15 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
      *        disabled
      * @param jshellEval used to execute java code and build visual result
      */
-    public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval) {
+    public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval,
+            ChatGptService chatGptService) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
+        this.chatGptService = chatGptService;
 
         List<CodeAction> codeActions = blacklist
-            .filterStream(Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval)),
+            .filterStream(
+                    Stream.of(new FormatCodeCommand(chatGptService),
+                            new EvalCodeCommand(jshellEval)),
                     codeAction -> codeAction.getClass().getName())
             .toList();
 
