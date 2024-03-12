@@ -45,6 +45,7 @@ public class ChatGptService {
      * a separate iteration based on the input.
      */
     private static final int MAX_NUMBER_OF_RESPONSES = 1;
+    private static final int MAX_CODE_LENGTH = 2000;
     private static final String AI_MODEL = "gpt-3.5-turbo";
 
     private boolean isDisabled = false;
@@ -115,7 +116,7 @@ public class ChatGptService {
     }
 
     public Optional<String> formatCode(CharSequence code) {
-        if (isDisabled) {
+        if (isDisabled || code.length() > MAX_CODE_LENGTH) {
             return Optional.empty();
         }
 
