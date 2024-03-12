@@ -97,24 +97,20 @@ public class ChatGptService {
             return Optional.empty();
         }
 
-        try {
-            String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
-            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
-                .formatted(context, instructions, question);
+        String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
+        String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
+            .formatted(context, instructions, question);
 
-            return getMessageResponse(questionWithContext);
-        } catch (OpenAiHttpException openAiHttpException) {
-            logger.warn(
-                    "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
-                    openAiHttpException.getMessage(), openAiHttpException.code,
-                    openAiHttpException.type, openAiHttpException.statusCode);
-        } catch (RuntimeException runtimeException) {
-            logger.warn("There was an error using the OpenAI API: {}",
-                    runtimeException.getMessage());
-        }
-        return Optional.empty();
+        return getMessageResponse(questionWithContext);
     }
 
+    /**
+     * Prompt ChatGPT with code for it to format it.
+     *
+     * @param code the code to be formatted by ChatGPT. If code exceeds {@value MAX_CODE_LENGTH}
+     *        characters then this method returns an empty {@link Optional}
+     * @return an optional response from ChatGPT as a String
+     */
     public Optional<String> formatCode(CharSequence code) {
         if (isDisabled || code.length() > MAX_CODE_LENGTH) {
             return Optional.empty();
@@ -133,6 +129,7 @@ public class ChatGptService {
                                 --- END CODE ---
                         """,
                 code);
+
         Optional<String> response = getMessageResponse(payload);
 
         if (response.isEmpty() || response.get().equalsIgnoreCase("empty")) {
@@ -142,33 +139,49 @@ public class ChatGptService {
         return response;
     }
 
+    /**
+     * Prompt ChatGPT with a message and get its response.
+     *
+     * @param message the message to send to ChatGPT
+     * @return an optional response from ChatGPT as a String
+     */
     private Optional<String> getMessageResponse(String message) {
-        ChatMessage chatMessage =
-                new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(message));
-        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-            .model(AI_MODEL)
-            .messages(List.of(chatMessage))
-            .frequencyPenalty(FREQUENCY_PENALTY)
-            .temperature(TEMPERATURE)
-            .maxTokens(MAX_TOKENS)
-            .n(MAX_NUMBER_OF_RESPONSES)
-            .build();
+        try {
+            ChatMessage chatMessage =
+                    new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(message));
+            ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+                .model(AI_MODEL)
+                .messages(List.of(chatMessage))
+                .frequencyPenalty(FREQUENCY_PENALTY)
+                .temperature(TEMPERATURE)
+                .maxTokens(MAX_TOKENS)
+                .n(MAX_NUMBER_OF_RESPONSES)
+                .build();
 
-        logger.debug("GPT tx payload: {}", message);
+            logger.debug("GPT tx payload: {}", message);
 
-        String response = openAiService.createChatCompletion(chatCompletionRequest)
-            .getChoices()
-            .getFirst()
-            .getMessage()
-            .getContent();
+            String response = openAiService.createChatCompletion(chatCompletionRequest)
+                .getChoices()
+                .getFirst()
+                .getMessage()
+                .getContent();
 
-        if (response == null) {
-            logger.debug("Got empty response");
-            return Optional.empty();
+            if (response == null) {
+                logger.debug("Got empty response");
+                return Optional.empty();
+            }
+
+            logger.debug("GPT rx: {}", response);
+
+            return Optional.of(response);
+        } catch (OpenAiHttpException openAiHttpException) {
+            logger.warn(
+                    "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
+                    openAiHttpException.getMessage(), openAiHttpException.code,
+                    openAiHttpException.type, openAiHttpException.statusCode);
+        } catch (RuntimeException runtimeException) {
+            logger.warn("There was an error using the OpenAI API: {}",
+                    runtimeException.getMessage());
         }
-
-        logger.debug("GPT rx: {}", response);
-
-        return Optional.of(response);
     }
 }
