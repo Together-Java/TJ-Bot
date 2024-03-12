@@ -40,6 +40,12 @@ final class FormatCodeCommand implements CodeAction {
             .build();
     }
 
+    /**
+     * Formats the provided code using either the ChatGPT formatter or the generic formatter.
+     *
+     * @param code the code to be formatted
+     * @return the formatted code
+     */
     private String formatCode(CharSequence code) {
         return chatGPTFormatter.format(code).orElse(formatter.format(code));
     }
