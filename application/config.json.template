@@ -110,5 +110,6 @@
         "special": [
         ]
     },
+    "memberCountCategoryPattern": "Info",
     "selectRolesChannelPattern": "select-your-roles"
 }
