@@ -43,8 +43,8 @@ public final class Config {
     private final JShellConfig jshell;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
-    private final ApplicationFormConfig applicationFormConfig;
     private final String memberCountCategoryPattern;
+    private final ApplicationFormConfig applicationFormConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -402,20 +402,20 @@ public final class Config {
     }
 
     /**
-     * The configuration related to the application form.
-     *
-     * @return the application form config
-     */
-    public ApplicationFormConfig getApplicationFormConfig() {
-        return applicationFormConfig;
-    }
-
-    /**
      * Gets the pattern matching the category that is used to display the total member count.
      *
      * @return the categories name types
      */
     public String getMemberCountCategoryPattern() {
         return memberCountCategoryPattern;
+    }
+
+    /**
+     * The configuration related to the application form.
+     *
+     * @return the application form config
+     */
+    public ApplicationFormConfig getApplicationFormConfig() {
+        return applicationFormConfig;
     }
 }
