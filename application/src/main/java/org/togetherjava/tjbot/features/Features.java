@@ -33,6 +33,9 @@ import org.togetherjava.tjbot.features.moderation.attachment.BlacklistedAttachme
 import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogRoutine;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
+import org.togetherjava.tjbot.features.moderation.history.PurgeExpiredMessageHistory;
+import org.togetherjava.tjbot.features.moderation.history.PurgeHistoryCommand;
+import org.togetherjava.tjbot.features.moderation.history.PurgeMessageListener;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
@@ -109,6 +112,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new PurgeExpiredMessageHistory(database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -123,6 +127,7 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
+        features.add(new PurgeMessageListener(database));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
@@ -164,6 +169,7 @@ public class Features {
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
+        features.add(new PurgeHistoryCommand(database));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return features.stream().filter(f -> blacklist.isEnabled(f.getClass())).toList();

@@ -55,7 +55,7 @@ For example, **TJ-Bot** may associate your `user_id` with a `message_id` and a `
 
 **TJ-Bot** may further store data that you explicitly provided for **TJ-Bot** to offer its services. For example the reason of a moderative action when using its moderation commands.
 
-Furthermore, upon utilization of our help service, `user_id`s and `channel_id`s are stored to track when/how many questions a user asks. The data may be stored for up to **30** days. 
+Furthermore, upon utilization of our help service, `user_id`s and `channel_id`s and `timestamp`s are stored to track when/how many questions a user asks. The data may be stored for up to **30** days. 
 
 The stored data is not linked to any information that is personally identifiable.
 
