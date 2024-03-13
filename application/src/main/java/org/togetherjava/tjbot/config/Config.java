@@ -44,6 +44,7 @@ public final class Config {
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
+    private final String memberCountCategoryPattern;
     private final ApplicationFormConfig applicationFormConfig;
     private final String memberCountCategoryPattern;
 
@@ -412,6 +413,15 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * Gets the pattern matching the category that is used to display the total member count.
+     *
+     * @return the categories name types
+     */
+    public String getMemberCountCategoryPattern() {
+        return memberCountCategoryPattern;
     }
 
     /**
