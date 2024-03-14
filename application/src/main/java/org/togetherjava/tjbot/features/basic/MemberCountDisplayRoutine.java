@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.Routine;
 
+import java.text.NumberFormat;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -23,17 +24,16 @@ public class MemberCountDisplayRoutine implements Routine {
      */
     public MemberCountDisplayRoutine(Config config) {
         memberCountCategoryPredicate =
-                Pattern.compile(config.getMemberCountCategoryPattern() + "( - \\d+ Members)?")
+                Pattern.compile(config.getMemberCountCategoryPattern() + "( - [\\d,]+ Members)?")
                     .asMatchPredicate();
     }
 
     private void updateCategoryName(Category category) {
-        int totalMemberCount = category.getGuild().getMemberCount();
+        String memberCount =
+                NumberFormat.getInstance().format(category.getGuild().getMemberCount());
         String baseName = category.getName().split("-")[0].trim();
 
-        category.getManager()
-            .setName("%s - %d Members".formatted(baseName, totalMemberCount))
-            .queue();
+        category.getManager().setName("%s - %s Members".formatted(baseName, memberCount)).queue();
     }
 
     @Override
