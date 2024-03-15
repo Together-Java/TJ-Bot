@@ -7,7 +7,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -53,6 +54,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private static final Set<ScamBlockerConfig.Mode> MODES_WITH_IMMEDIATE_DELETION =
             EnumSet.of(ScamBlockerConfig.Mode.AUTO_DELETE_BUT_APPROVE_QUARANTINE,
                     ScamBlockerConfig.Mode.AUTO_DELETE_AND_QUARANTINE);
+    private static final String NOT_USED_EXCEPTION_MESSAGE = "Not used";
 
     private final ScamBlockerConfig.Mode mode;
     private final String reportChannelPattern;
@@ -100,13 +102,18 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
+    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
+    }
+
+    @Override
+    public void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
     }
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
+        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
     }
 
     @Override

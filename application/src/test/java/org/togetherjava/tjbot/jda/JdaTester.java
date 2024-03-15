@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.jda;
 
-import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -20,9 +19,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.ItemComponent;
 import net.dv8tion.jda.api.interactions.components.LayoutComponent;
-import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.requests.Response;
-import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.*;
 import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.AttachmentProxy;
@@ -107,6 +104,7 @@ public final class JdaTester {
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
+    private final RestRateLimiter rateLimiter;
     private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
     private final MessageCreateActionImpl messageCreateAction;
@@ -137,6 +135,9 @@ public final class JdaTester {
         UserImpl user = spy(new UserImpl(USER_ID, jda));
         user.setName("John Doe Tester");
         guild = spy(new GuildImpl(jda, GUILD_ID));
+        rateLimiter =
+                new SequentialRestRateLimiter(new RestRateLimiter.RateLimitConfig(RATE_LIMIT_POOL,
+                        RestRateLimiter.GlobalRateLimit.create(), true));
         Member selfMember = spy(new MemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
@@ -172,8 +173,8 @@ public final class JdaTester {
         when(jda.getGatewayPool()).thenReturn(GATEWAY_POOL);
         when(jda.getRateLimitPool()).thenReturn(RATE_LIMIT_POOL);
         when(jda.getSessionController()).thenReturn(new ConcurrentSessionController());
-        doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN))).when(jda).getRequester();
-        when(jda.getAccountType()).thenReturn(AccountType.BOT);
+        doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN), new RestConfig(),
+                rateLimiter)).when(jda).getRequester();
 
         replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
@@ -191,6 +192,7 @@ public final class JdaTester {
         doReturn(webhookMessageEditAction).when(webhookMessageEditAction)
             .setActionRow(any(ItemComponent.class));
 
+        when(guild.getGuildChannelById(anyLong())).thenReturn(textChannel);
         doReturn(everyoneRole).when(guild).getPublicRole();
         doReturn(selfMember).when(guild).getMember(selfUser);
         doReturn(member).when(guild).getMember(not(eq(selfUser)));

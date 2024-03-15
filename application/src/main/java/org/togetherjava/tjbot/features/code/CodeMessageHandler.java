@@ -5,7 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -44,6 +45,7 @@ import java.util.stream.Stream;
  */
 public final class CodeMessageHandler extends MessageReceiverAdapter implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(CodeMessageHandler.class);
+    private static final String NOT_USED_EXCEPTION_MESSAGE = "Not used";
 
     private static final String DELETE_CUE = "delete";
 
@@ -94,13 +96,18 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     }
 
     @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
+    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
+    }
+
+    @Override
+    public void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args) {
+        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
     }
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
+        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
     }
 
     @Override

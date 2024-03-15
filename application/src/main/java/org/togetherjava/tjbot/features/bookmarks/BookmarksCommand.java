@@ -4,7 +4,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -116,7 +116,7 @@ public final class BookmarksCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
         listRemoveHandler.onSelectMenuSelection(event, args);
     }
 

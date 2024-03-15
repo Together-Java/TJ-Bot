@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.togetherjava.tjbot.jda.payloads.PayloadChannel;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 
 public final class PayloadSlashCommand {
@@ -10,25 +11,24 @@ public final class PayloadSlashCommand {
     private String id;
     private int type;
     private int version;
-    @JsonProperty("channel_id")
-    private String channelId;
     @JsonProperty("application_id")
     private String applicationId;
     private String token;
     private PayloadMember member;
+    private PayloadChannel channel;
     private PayloadSlashCommandData data;
 
-    public PayloadSlashCommand(String guildId, String id, int type, int version, String channelId,
-            String applicationId, String token, PayloadMember member,
+    public PayloadSlashCommand(String guildId, String id, int type, int version,
+            String applicationId, String token, PayloadMember member, PayloadChannel channel,
             PayloadSlashCommandData data) {
         this.guildId = guildId;
         this.id = id;
         this.type = type;
         this.version = version;
-        this.channelId = channelId;
         this.applicationId = applicationId;
         this.token = token;
         this.member = member;
+        this.channel = channel;
         this.data = data;
     }
 
@@ -64,14 +64,6 @@ public final class PayloadSlashCommand {
         this.version = version;
     }
 
-    public String getChannelId() {
-        return channelId;
-    }
-
-    public void setChannelId(String channelId) {
-        this.channelId = channelId;
-    }
-
     public String getApplicationId() {
         return applicationId;
     }
@@ -96,6 +88,14 @@ public final class PayloadSlashCommand {
         this.member = member;
     }
 
+    public PayloadChannel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(PayloadChannel channel) {
+        this.channel = channel;
+    }
+
     public PayloadSlashCommandData getData() {
         return data;
     }
@@ -103,4 +103,5 @@ public final class PayloadSlashCommand {
     public void setData(PayloadSlashCommandData data) {
         this.data = data;
     }
+
 }
