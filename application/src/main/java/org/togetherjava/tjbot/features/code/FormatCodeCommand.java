@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.features.code;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
-import org.togetherjava.tjbot.features.basic.ChatGPTFormatter;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.CodeFence;
 import org.togetherjava.tjbot.formatter.Formatter;

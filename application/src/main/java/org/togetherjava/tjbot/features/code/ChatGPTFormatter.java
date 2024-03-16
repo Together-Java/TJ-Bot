@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.basic;
+package org.togetherjava.tjbot.features.code;
 
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 
