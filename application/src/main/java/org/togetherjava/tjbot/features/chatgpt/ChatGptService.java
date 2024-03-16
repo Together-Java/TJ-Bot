@@ -105,7 +105,7 @@ public class ChatGptService {
     }
 
     /**
-     * Prompt ChatGPT with code for it to format it.
+     * Provide ChatGPT with code to format.
      *
      * @param code the code to be formatted by ChatGPT. If code exceeds {@value MAX_CODE_LENGTH}
      *        characters then this method returns an empty {@link Optional}
