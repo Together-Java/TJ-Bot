@@ -71,10 +71,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
-        List<CodeAction> codeActions =
-                Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval))
-                    .filter(a -> blacklist.isEnabled(a.getClass().getSimpleName()))
-                    .toList();
+        List<CodeAction> codeActions = blacklist
+            .filterStream(Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval)),
+                    codeAction -> codeAction.getClass().getName())
+            .toList();
 
         labelToCodeAction = codeActions.stream()
             .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,
