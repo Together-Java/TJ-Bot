@@ -120,9 +120,8 @@ public class ChatGptService {
                 """
                                 If you happen to find any code in the container below, FORMAT \
                                 IT regardless of the programming language you find. MAKE IT HUMANLY READABLE. \
-                                If you don't find any, then your only answer should say empty. Output with no \
-                                introduction, no explanation, no ``` stuff, only code. Double check that \
-                                your response is correct. The code provided might not be readable.
+                                Output with no introduction, no explanation, no ``` stuff, only code. Double \
+                                check that your response is correct. The code provided might not be readable.
 
                                 --- BEGIN CODE ---
                                 %s
@@ -130,13 +129,7 @@ public class ChatGptService {
                         """,
                 code);
 
-        Optional<String> response = getMessageResponse(payload);
-
-        if (response.isEmpty() || response.get().equalsIgnoreCase("empty")) {
-            return Optional.empty();
-        }
-
-        return response;
+        return getMessageResponse(payload);
     }
 
     /**
