@@ -5,9 +5,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -97,16 +95,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     @Override
     public UserInteractionType getInteractionType() {
         return UserInteractionType.OTHER;
-    }
-
-    @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
     }
 
     @Override
