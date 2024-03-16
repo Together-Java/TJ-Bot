@@ -58,7 +58,10 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onButtonClick(ButtonInteractionEvent event, List<String> args);
+    @SuppressWarnings("NoopMethodInInterface")
+    default void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        // Interface does not react by default, implementations may change this behaviour
+    }
 
     /**
      * Triggered by the core system when an entity selection menu corresponding to this
@@ -76,7 +79,10 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args);
+    @SuppressWarnings("NoopMethodInInterface")
+    default void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args) {
+        // Interface does not react by default, implementations may change this behaviour
+    }
 
     /**
      * Triggered by the core system when a string selection menu corresponding to this
@@ -94,7 +100,10 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args);
+    @SuppressWarnings("NoopMethodInInterface")
+    default void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
+        // Interface does not react by default, implementations may change this behaviour
+    }
 
     /**
      * Triggered by the core system when a modal corresponding to this implementation (based on
@@ -112,7 +121,10 @@ public interface UserInteractor extends Feature {
      *        {@link SlashCommand#onSlashCommand(SlashCommandInteractionEvent)} for details on how
      *        these are created
      */
-    void onModalSubmitted(ModalInteractionEvent event, List<String> args);
+    @SuppressWarnings("NoopMethodInInterface")
+    default void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
+        // Interface does not react by default, implementations may change this behaviour
+    }
 
     /**
      * Triggered by the core system during its setup phase. It will provide the command a component

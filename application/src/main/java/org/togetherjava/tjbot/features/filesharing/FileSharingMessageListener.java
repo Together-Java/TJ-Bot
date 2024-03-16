@@ -6,10 +6,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.kohsuke.github.GHGist;
@@ -44,7 +41,6 @@ import java.util.regex.Pattern;
 public final class FileSharingMessageListener extends MessageReceiverAdapter
         implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(FileSharingMessageListener.class);
-    private static final String NOT_USED_EXCEPTION_MESSAGE = "Not used";
 
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
@@ -219,20 +215,5 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     @Override
     public UserInteractionType getInteractionType() {
         return UserInteractionType.OTHER;
-    }
-
-    @Override
-    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
-    }
-
-    @Override
-    public void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
     }
 }

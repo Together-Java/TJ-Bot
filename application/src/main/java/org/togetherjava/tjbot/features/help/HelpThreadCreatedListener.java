@@ -10,10 +10,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
 
@@ -40,8 +37,6 @@ import java.util.stream.Collectors;
  */
 public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
-    private static final String NOT_USED_EXCEPTION_MESSAGE = "Not used";
-
     private final HelpSystemHelper helper;
 
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
@@ -194,21 +189,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
                     event, args));
 
-    }
-
-    @Override
-    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
-    }
-
-    @Override
-    public void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException(NOT_USED_EXCEPTION_MESSAGE);
     }
 
     private boolean isPostAuthor(Member interactionUser, Message message) {
