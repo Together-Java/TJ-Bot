@@ -75,7 +75,7 @@ dependencies {
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
     
-    implementation 'org.kohsuke:github-api:1.319'
+    implementation 'org.kohsuke:github-api:1.320'
 
     testImplementation 'org.mockito:mockito-core:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
