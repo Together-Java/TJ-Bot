@@ -16,6 +16,11 @@ final class FormatCodeCommand implements CodeAction {
     private final Formatter formatter = new Formatter();
     private final ChatGPTFormatter chatGPTFormatter;
 
+    /**
+     * Initializes a {@link FormatCodeCommand} which formats code.
+     *
+     * @param service the {@link ChatGptService} instance to be used for code formatting
+     */
     public FormatCodeCommand(ChatGptService service) {
         this.chatGPTFormatter = new ChatGPTFormatter(service);
     }
