@@ -231,6 +231,10 @@ public final class GitHubReference extends MessageReceiverAdapter {
     }
 
     private boolean isAllowedChannelOrChildThread(MessageReceivedEvent event) {
+        if (event.getChannelType() != ChannelType.TEXT) {
+            return false;
+        }
+
         if (event.getChannelType().isThread()) {
             ThreadChannel threadChannel = event.getChannel().asThreadChannel();
             String rootChannel = threadChannel.getParentChannel().getName();
