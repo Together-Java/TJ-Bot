@@ -133,7 +133,7 @@ public class Features {
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
 
         // Message context commands
-        features.add(new TransferQuestionCommand(config));
+        features.add(new TransferQuestionCommand(config, chatGptService));
 
         // User context commands
 
