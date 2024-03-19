@@ -108,8 +108,14 @@ public final class GitHubReference extends MessageReceiverAdapter {
 
         while (matcher.find()) {
             long defaultRepoId = config.getGitHubRepositories().get(0);
-            findIssue(Integer.parseInt(matcher.group(ID_GROUP)), defaultRepoId)
-                .ifPresent(issue -> embeds.add(generateReply(issue)));
+
+            try {
+                int issueId = Integer.parseInt(matcher.group(ID_GROUP));
+                findIssue(issueId, defaultRepoId)
+                    .ifPresent(issue -> embeds.add(generateReply(issue)));
+            } catch (NumberFormatException numberFormatException) {
+                return;
+            }
         }
 
         replyBatchEmbeds(embeds, message, false);
@@ -147,6 +153,11 @@ public final class GitHubReference extends MessageReceiverAdapter {
             String title = "[#%d] %s".formatted(issue.getNumber(), issue.getTitle());
             String titleUrl = issue.getHtmlUrl().toString();
             String description = issue.getBody();
+
+            if (description != null && description.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+                description =
+                        "description length is greater than allowed limit for embed, please visit github instead";
+            }
 
             String labels = issue.getLabels()
                 .stream()
