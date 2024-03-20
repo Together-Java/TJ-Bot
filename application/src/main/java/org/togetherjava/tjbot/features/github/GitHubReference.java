@@ -35,13 +35,13 @@ import java.util.stream.Collectors;
  * the bot replies with an embed that contains info on the issue/PR.
  */
 public final class GitHubReference extends MessageReceiverAdapter {
-    public static final String ID_GROUP = "id";
     private static final Logger logger = LoggerFactory.getLogger(GitHubReference.class);
+    static final String ID_GROUP = "id";
 
     /**
      * The pattern(#123) used to determine whether a message is referencing an issue.
      */
-    public static final Pattern ISSUE_REFERENCE_PATTERN =
+    static final Pattern ISSUE_REFERENCE_PATTERN =
             Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
@@ -142,7 +142,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Generates the embed to reply with when someone references an issue.
      */
-    public MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
+    MessageEmbed generateReply(GHIssue issue) throws UncheckedIOException {
         try {
             String title = "[#%d] %s".formatted(issue.getNumber(), issue.getTitle());
             String titleUrl = issue.getHtmlUrl().toString();
@@ -190,7 +190,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Looks through all of the given repositories for an issue/pr with the given id.
      */
-    public Optional<GHIssue> findIssue(int id, String targetIssueTitle) {
+    Optional<GHIssue> findIssue(int id, String targetIssueTitle) {
         return repositories.stream().map(repository -> {
             try {
                 GHIssue issue = repository.getIssue(id);
@@ -226,7 +226,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * All repositories monitored by this instance.
      */
-    public List<GHRepository> getRepositories() {
+    List<GHRepository> getRepositories() {
         return repositories;
     }
 
