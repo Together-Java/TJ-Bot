@@ -278,8 +278,10 @@ public final class RSSHandlerRoutine implements Routine {
      * @param item The {@link Item} from which to extract the date.
      * @param dateTimeFormat The format of the date time string.
      * @return The computed {@link ZonedDateTime}
+     * @throws DateTimeParseException if the date cannot be parsed
      */
-    private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat) {
+    private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat)
+            throws DateTimeParseException {
         String pubDate = item.getPubDate().orElse(null);
 
         if (pubDate == null || dateTimeFormat == null) {
