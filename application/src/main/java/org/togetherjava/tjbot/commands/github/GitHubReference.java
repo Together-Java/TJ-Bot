@@ -150,8 +150,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             String description = issue.getBody();
 
             if (description != null && description.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
-                description =
-                        "description length is greater than allowed limit for embed, please visit github instead";
+                description = "too long for preview, visit Github";
             }
 
             String labels = issue.getLabels()
