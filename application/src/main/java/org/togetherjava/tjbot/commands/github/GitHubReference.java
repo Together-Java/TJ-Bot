@@ -42,7 +42,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
      * The pattern(#123) used to determine whether a message is referencing an issue.
      */
     static final Pattern ISSUE_REFERENCE_PATTERN =
-            Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
+            Pattern.compile("#(?<%s>\\d{1,5})".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
 
@@ -109,13 +109,8 @@ public final class GitHubReference extends MessageReceiverAdapter {
         while (matcher.find()) {
             long defaultRepoId = config.getGitHubRepositories().get(0);
 
-            try {
-                int issueId = Integer.parseInt(matcher.group(ID_GROUP));
-                findIssue(issueId, defaultRepoId)
-                    .ifPresent(issue -> embeds.add(generateReply(issue)));
-            } catch (NumberFormatException numberFormatException) {
-                return;
-            }
+            int issueId = Integer.parseInt(matcher.group(ID_GROUP));
+            findIssue(issueId, defaultRepoId).ifPresent(issue -> embeds.add(generateReply(issue)));
         }
 
         replyBatchEmbeds(embeds, message, false);
