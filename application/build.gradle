@@ -46,7 +46,7 @@ dependencies {
     implementation project(':utils')
     implementation project(':formatter')
 
-    implementation 'net.dv8tion:JDA:5.0.0-alpha.20'
+    implementation 'net.dv8tion:JDA:5.0.0-beta.21'
 
     implementation 'org.apache.logging.log4j:log4j-core:2.23.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
@@ -77,7 +77,7 @@ dependencies {
     
     implementation 'org.kohsuke:github-api:1.319'
 
-    testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.mockito:mockito-core:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

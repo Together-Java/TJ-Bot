@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.features.basic.SlashCommandEducator;
@@ -109,6 +110,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new MemberCountDisplayRoutine(config));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -162,10 +164,10 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGptCommand(chatGptService));
+        features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
-        return features.stream().filter(f -> blacklist.isEnabled(f.getClass())).toList();
+        return blacklist.filterStream(features.stream(), Object::getClass).toList();
     }
 }

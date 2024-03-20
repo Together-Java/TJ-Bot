@@ -5,14 +5,14 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,11 +175,11 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private void sendRoleSelectionMenu(final CommandInteraction event,
             final Collection<? extends Role> selectableRoles) {
-        SelectMenu.Builder menu =
-                SelectMenu.create(generateComponentId(Lifespan.PERMANENT, event.getUser().getId()))
-                    .setPlaceholder("Select your roles")
-                    .setMinValues(0)
-                    .setMaxValues(selectableRoles.size());
+        StringSelectMenu.Builder menu = StringSelectMenu
+            .create(generateComponentId(Lifespan.PERMANENT, event.getUser().getId()))
+            .setPlaceholder("Select your roles")
+            .setMinValues(0)
+            .setMaxValues(selectableRoles.size());
 
         selectableRoles.stream()
             .map(RoleSelectCommand::mapToSelectOption)
@@ -203,8 +203,10 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         return option;
     }
 
+    // this should be entity select menu but im just gonna use string rn
+    // coz i'll have to do least changes that way
     @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
         Guild guild = event.getGuild();
         List<Role> selectedRoles = event.getSelectedOptions()
             .stream()
@@ -220,7 +222,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
         handleRoleSelection(event, guild, selectedRoles);
     }
 
-    private static void handleRoleSelection(SelectMenuInteractionEvent event, Guild guild,
+    private static void handleRoleSelection(StringSelectInteractionEvent event, Guild guild,
             Collection<Role> selectedRoles) {
         Collection<Role> rolesToAdd = new ArrayList<>(selectedRoles.size());
         Collection<Role> rolesToRemove = new ArrayList<>(selectedRoles.size());

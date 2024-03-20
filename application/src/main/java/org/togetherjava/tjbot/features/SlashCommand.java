@@ -3,7 +3,8 @@ package org.togetherjava.tjbot.features;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -35,7 +36,8 @@ import java.util.List;
  * After registration, the system will notify a command whenever one of its corresponding slash
  * commands ({@link #onSlashCommand(SlashCommandInteractionEvent)}), buttons
  * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
- * ({@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}) have been triggered.
+ * ({@link #onEntitySelectSelection(EntitySelectInteractionEvent, List)},
+ * {@link #onStringSelectSelection(StringSelectInteractionEvent, List)}) have been triggered.
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.features.basic}.
  */

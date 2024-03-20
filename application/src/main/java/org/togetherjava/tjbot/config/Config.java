@@ -44,6 +44,7 @@ public final class Config {
     private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
+    private final String memberCountCategoryPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -86,6 +87,8 @@ public final class Config {
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
             @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
+            @JsonProperty(value = "memberCountCategoryPattern",
+                    required = true) String memberCountCategoryPattern,
             @JsonProperty(value = "helperPruneConfig",
                     required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
@@ -96,6 +99,7 @@ public final class Config {
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
         this.projectWebsite = Objects.requireNonNull(projectWebsite);
+        this.memberCountCategoryPattern = Objects.requireNonNull(memberCountCategoryPattern);
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
         this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
@@ -404,5 +408,14 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * Gets the pattern matching the category that is used to display the total member count.
+     *
+     * @return the categories name types
+     */
+    public String getMemberCountCategoryPattern() {
+        return memberCountCategoryPattern;
     }
 }

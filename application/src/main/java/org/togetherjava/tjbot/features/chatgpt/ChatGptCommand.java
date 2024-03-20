@@ -2,14 +2,17 @@ package org.togetherjava.tjbot.features.chatgpt;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.help.HelpSystemHelper;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -28,6 +31,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     private static final int MIN_MESSAGE_INPUT_LENGTH = 4;
     private static final Duration COMMAND_COOLDOWN = Duration.of(10, ChronoUnit.SECONDS);
     private final ChatGptService chatGptService;
+    private final HelpSystemHelper helper;
 
     private final Cache<String, Instant> userIdToAskedAtCache =
             Caffeine.newBuilder().maximumSize(1_000).expireAfterWrite(COMMAND_COOLDOWN).build();
@@ -36,11 +40,13 @@ public final class ChatGptCommand extends SlashCommandAdapter {
      * Creates an instance of the chatgpt command.
      *
      * @param chatGptService ChatGptService - Needed to make calls to ChatGPT API
+     * @param helper HelpSystemHelper - Needed to generate response embed for prompt
      */
-    public ChatGptCommand(ChatGptService chatGptService) {
+    public ChatGptCommand(ChatGptService chatGptService, HelpSystemHelper helper) {
         super(COMMAND_NAME, "Ask the ChatGPT AI a question!", CommandVisibility.GUILD);
 
         this.chatGptService = chatGptService;
+        this.helper = helper;
     }
 
     @Override
@@ -75,20 +81,23 @@ public final class ChatGptCommand extends SlashCommandAdapter {
         event.deferReply().queue();
 
         String context = "";
-        Optional<String[]> optional =
-                chatGptService.ask(event.getValue(QUESTION_INPUT).getAsString(), context);
+        String question = event.getValue(QUESTION_INPUT).getAsString();
+
+        Optional<String> optional = chatGptService.ask(question, context);
         if (optional.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
 
-        String[] errorResponse = {"""
+        String errorResponse = """
                     An error has occurred while trying to communicate with ChatGPT.
                     Please try again later.
-                """};
+                """;
 
-        String[] response = optional.orElse(errorResponse);
-        for (String message : response) {
-            event.getHook().sendMessage(message).queue();
-        }
+        String response = optional.orElse(errorResponse);
+        SelfUser selfUser = event.getJDA().getSelfUser();
+
+        MessageEmbed responseEmbed = helper.generateGptResponseEmbed(response, selfUser, question);
+
+        event.getHook().sendMessageEmbeds(responseEmbed).queue();
     }
 }
