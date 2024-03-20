@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.github;
+package org.togetherjava.tjbot.features.github;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
  * the bot replies with an embed that contains info on the issue/PR.
  */
 public final class GitHubReference extends MessageReceiverAdapter {
-    static final String ID_GROUP = "id";
     private static final Logger logger = LoggerFactory.getLogger(GitHubReference.class);
+    static final String ID_GROUP = "id";
 
     /**
      * The pattern(#123) used to determine whether a message is referencing an issue.

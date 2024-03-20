@@ -3,7 +3,7 @@
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package org.togetherjava.tjbot.commands.github;
+package org.togetherjava.tjbot.features.github;
 
 import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 

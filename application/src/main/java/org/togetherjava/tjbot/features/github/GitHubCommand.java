@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.github;
+package org.togetherjava.tjbot.features.github;
 
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;

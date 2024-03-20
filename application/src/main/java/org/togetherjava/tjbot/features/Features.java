@@ -2,8 +2,6 @@ package org.togetherjava.tjbot.features;
 
 import net.dv8tion.jda.api.JDA;
 
-import org.togetherjava.tjbot.commands.github.GitHubCommand;
-import org.togetherjava.tjbot.commands.github.GitHubReference;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
@@ -23,6 +21,8 @@ import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
+import org.togetherjava.tjbot.features.github.GitHubCommand;
+import org.togetherjava.tjbot.features.github.GitHubReference;
 import org.togetherjava.tjbot.features.help.*;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
