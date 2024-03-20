@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public final class TagsCommand extends SlashCommandAdapter {
-
     private static final Logger logger = LoggerFactory.getLogger(TagsCommand.class);
     private static final int MAX_TAGS_THRESHOLD_WARNING = 200;
 
@@ -69,6 +68,7 @@ public final class TagsCommand extends SlashCommandAdapter {
                 .build())
             .addActionRow(
                     TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
+            .setEphemeral(true)
             .queue();
     }
 
