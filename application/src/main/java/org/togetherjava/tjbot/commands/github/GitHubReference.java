@@ -42,7 +42,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
      * The pattern(#123) used to determine whether a message is referencing an issue.
      */
     static final Pattern ISSUE_REFERENCE_PATTERN =
-            Pattern.compile("#(?<%s>\\d+)".formatted(ID_GROUP));
+            Pattern.compile("#(?<%s>\\d{1,5})".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
 
@@ -108,8 +108,9 @@ public final class GitHubReference extends MessageReceiverAdapter {
 
         while (matcher.find()) {
             long defaultRepoId = config.getGitHubRepositories().get(0);
-            findIssue(Integer.parseInt(matcher.group(ID_GROUP)), defaultRepoId)
-                .ifPresent(issue -> embeds.add(generateReply(issue)));
+
+            int issueId = Integer.parseInt(matcher.group(ID_GROUP));
+            findIssue(issueId, defaultRepoId).ifPresent(issue -> embeds.add(generateReply(issue)));
         }
 
         replyBatchEmbeds(embeds, message, false);
@@ -147,6 +148,10 @@ public final class GitHubReference extends MessageReceiverAdapter {
             String title = "[#%d] %s".formatted(issue.getNumber(), issue.getTitle());
             String titleUrl = issue.getHtmlUrl().toString();
             String description = issue.getBody();
+
+            if (description != null && description.length() > MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+                description = "too long for preview, visit Github";
+            }
 
             String labels = issue.getLabels()
                 .stream()
@@ -231,6 +236,10 @@ public final class GitHubReference extends MessageReceiverAdapter {
     }
 
     private boolean isAllowedChannelOrChildThread(MessageReceivedEvent event) {
+        if (event.getChannelType() != ChannelType.TEXT) {
+            return false;
+        }
+
         if (event.getChannelType().isThread()) {
             ThreadChannel threadChannel = event.getChannel().asThreadChannel();
             String rootChannel = threadChannel.getParentChannel().getName();
