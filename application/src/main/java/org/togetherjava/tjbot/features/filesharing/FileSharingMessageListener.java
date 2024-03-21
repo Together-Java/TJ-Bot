@@ -104,7 +104,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
                 interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
 
         if (!gistAuthorId.equals(interactionUser.getId()) && !hasSoftModPermissions) {
-            event.reply("You do not have permission for this action.").queue();
+            event.reply("You do not have permission for this action.").setEphemeral(true).queue();
             return;
         }
 
