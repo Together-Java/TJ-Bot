@@ -125,9 +125,9 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
-        helper.getAuthorByHelpThreadId(threadChannel.getIdLong()).ifPresentOrElse(authorId -> {
-            triggerArchiveFlow(threadChannel, authorId, embed);
-        }, () -> triggerAuthorIdNotFoundArchiveFlow(threadChannel, embed));
+        helper.getAuthorByHelpThreadId(threadChannel.getIdLong())
+            .ifPresentOrElse(authorId -> triggerArchiveFlow(threadChannel, authorId, embed),
+                    () -> triggerAuthorIdNotFoundArchiveFlow(threadChannel, embed));
     }
 
     private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId,
