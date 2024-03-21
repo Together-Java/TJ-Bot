@@ -170,6 +170,7 @@ public final class TeXCommand extends SlashCommandAdapter {
                 .queue();
             return;
         }
-        event.getMessage().delete().queue();
+        event.deferReply().queue();
+        event.getHook().deleteOriginal().queue();
     }
 }
