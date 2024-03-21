@@ -159,6 +159,10 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void triggerAuthorIdNotFoundArchiveFlow(ThreadChannel threadChannel,
             MessageEmbed embed) {
+
+        logger.info(
+                "Was unable to find a matching thread for id: {} in DB, archiving thread without mentioning OP",
+                threadChannel.getId());
         threadChannel.sendMessageEmbeds(embed)
             .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
             .queue();
