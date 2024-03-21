@@ -99,7 +99,6 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         Member interactionUser = event.getMember();
         String gistAuthorId = args.get(0);
-        String gistId = args.get(1);
         boolean hasSoftModPermissions =
                 interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
 
@@ -107,6 +106,8 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
             event.reply("You do not have permission for this action.").setEphemeral(true).queue();
             return;
         }
+
+        String gistId = args.get(1);
 
         try {
             new GitHubBuilder().withOAuthToken(githubApiKey).build().getGist(gistId).delete();
