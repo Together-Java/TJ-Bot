@@ -125,14 +125,21 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     private void handleArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
+        helper.getAuthorByHelpThreadId(threadChannel.getIdLong()).ifPresentOrElse(authorId -> {
+            triggerArchiveFlow(threadChannel, authorId, embed);
+        }, () -> {
+            triggerAuthorIdNotFoundArchiveFlow(threadChannel, embed);
+        });
+    }
+
+    private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId,
+            MessageEmbed embed) {
 
         Function<Member, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.getAsMention()).addEmbeds(embed);
 
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
                 () -> threadChannel.sendMessageEmbeds(embed);
-
-        long authorId = helper.getAuthorByHelpThreadId(threadChannel.getIdLong()).orElseThrow();
 
         threadChannel.getGuild()
             .retrieveMemberById(authorId)
@@ -149,6 +156,13 @@ public final class HelpThreadAutoArchiver implements Routine {
                 return sendEmbedWithMention.apply(authorResults.get());
             })
             .flatMap(any -> threadChannel.getManager().setArchived(true))
+            .queue();
+    }
+
+    private void triggerAuthorIdNotFoundArchiveFlow(ThreadChannel threadChannel,
+            MessageEmbed embed) {
+        threadChannel.sendMessageEmbeds(embed)
+            .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
             .queue();
     }
 }
