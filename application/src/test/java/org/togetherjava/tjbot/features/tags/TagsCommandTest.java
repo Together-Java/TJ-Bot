@@ -1,10 +1,7 @@
 package org.togetherjava.tjbot.features.tags;
 
-import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,8 +13,6 @@ import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
 
 import javax.annotation.Nullable;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -39,15 +34,6 @@ final class TagsCommandTest {
         SlashCommandInteractionEvent event =
                 jdaTester.createSlashCommandInteractionEvent(command).build();
         command.onSlashCommand(event);
-        return event;
-    }
-
-    private ButtonInteractionEvent triggerButtonClick(Member userWhoClicked, long idOfAuthor) {
-        ButtonInteractionEvent event = jdaTester.createButtonInteractionEvent()
-            .setUserWhoClicked(userWhoClicked)
-            .setActionRow(TagSystem.createDeleteButton("foo"))
-            .buildWithSingleButton();
-        command.onButtonClick(event, List.of(Long.toString(idOfAuthor)));
         return event;
     }
 
@@ -99,50 +85,5 @@ final class TagsCommandTest {
                 • second
                 • third""";
         assertEquals(expectedDescription, getResponseDescription(event));
-    }
-
-    @Test
-    @DisplayName("The list of tags can be deleted by the original author")
-    void authorCanDeleteList() {
-        // GIVEN a '/tags' message send by an author
-        long idOfAuthor = 1;
-        Member messageAuthor = jdaTester.createMemberSpy(idOfAuthor);
-
-        // WHEN the original author clicks the delete button
-        ButtonInteractionEvent event = triggerButtonClick(messageAuthor, idOfAuthor);
-
-        // THEN the '/tags' message is deleted
-        verify(event.getMessage()).delete();
-    }
-
-    @Test
-    @DisplayName("The list of tags can be deleted by a moderator")
-    void moderatorCanDeleteList() {
-        // GIVEN a '/tags' message send by an author and a moderator
-        long idOfAuthor = 1;
-        Member moderator = jdaTester.createMemberSpy(2);
-        doReturn(true).when(moderator).hasPermission(any(Permission.class));
-
-        // WHEN the moderator clicks the delete button
-        ButtonInteractionEvent event = triggerButtonClick(moderator, idOfAuthor);
-
-        // THEN the '/tags' message is deleted
-        verify(event.getMessage()).delete();
-    }
-
-    @Test
-    @DisplayName("The list of tags cannot be deleted by other users")
-    void othersCanNotDeleteList() {
-        // GIVEN a '/tags' message send by an author and another user
-        long idOfAuthor = 1;
-        Member otherUser = jdaTester.createMemberSpy(3);
-        doReturn(false).when(otherUser).hasPermission(any(Permission.class));
-
-        // WHEN the other clicks the delete button
-        ButtonInteractionEvent event = triggerButtonClick(otherUser, idOfAuthor);
-
-        // THEN the '/tags' message is not deleted
-        verify(event.getMessage(), never()).delete();
-        verify(event).reply(anyString());
     }
 }
