@@ -16,7 +16,6 @@ import org.togetherjava.tjbot.features.utils.DiscordClientAction;
 import javax.annotation.CheckReturnValue;
 
 import java.awt.*;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -139,10 +138,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
             final User.Profile profile, final Color effectiveColor) {
 
         EmbedBuilder embedBuilder = new EmbedBuilder().setThumbnail(user.getEffectiveAvatarUrl())
-            .setColor(effectiveColor)
-            .setFooter("Requested by " + event.getUser().getName(),
-                    event.getMember().getEffectiveAvatarUrl())
-            .setTimestamp(Instant.now());
+            .setColor(effectiveColor);
 
         if (null != profile.getBannerId()) {
             embedBuilder.setImage(profile.getBannerUrl() + "?size=" + USER_PROFILE_PICTURE_SIZE);
