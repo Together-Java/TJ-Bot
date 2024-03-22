@@ -114,7 +114,7 @@ public final class RemindRoutine implements Routine {
 
         return new EmbedBuilder().setAuthor(authorName, null, authorIconUrl)
             .setDescription(content)
-            .setFooter("reminer from")
+            .setFooter("reminder from")
             .setTimestamp(createdAt)
             .setColor(AMBIENT_COLOR)
             .build();
