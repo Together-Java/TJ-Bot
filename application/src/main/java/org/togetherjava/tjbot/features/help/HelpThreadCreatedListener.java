@@ -84,9 +84,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         threadChannel.retrieveStartMessage().flatMap(message -> {
             registerThreadDataInDB(message, threadChannel);
             return sendHelperHeadsUp(threadChannel)
-                .flatMap(any -> HelpThreadCreatedListener.isContextSufficient(message),
-                        any -> createAIResponse(threadChannel, message))
-                .flatMap(any -> pinOriginalQuestion(message));
+                .flatMap(_ -> HelpThreadCreatedListener.isContextSufficient(message),
+                        _ -> createAIResponse(threadChannel, message))
+                .flatMap(_ -> pinOriginalQuestion(message));
         }).queue();
     }
 
