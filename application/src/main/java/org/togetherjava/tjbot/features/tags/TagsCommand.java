@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -62,8 +61,6 @@ public final class TagsCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
                 .setDescription(tagListText)
-                .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
-                .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
             .addActionRow(
