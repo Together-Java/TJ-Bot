@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.help;
+﻿package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -168,7 +168,7 @@ public final class HelpSystemHelper {
         }
 
         MessageEmbed responseEmbed = generateGptResponseEmbed(answer, selfUser, originalQuestion);
-        return post.flatMap(any -> threadChannel.sendMessageEmbeds(responseEmbed)
+        return post.flatMap(_ -> threadChannel.sendMessageEmbeds(responseEmbed)
             .addActionRow(generateDismissButton(componentIdInteractor, messageId.get())));
     }
 

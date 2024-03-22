@@ -36,7 +36,7 @@ public final class GuildLeaveCloseThreadListener extends ListenerAdapter impleme
                 .filter(thread -> thread.getOwnerIdLong() == event.getUser().getIdLong())
                 .filter(thread -> thread.getParentChannel().getName().matches(helpForumPattern))
                 .forEach(thread -> thread.sendMessageEmbeds(embed)
-                    .flatMap(any -> thread.getManager().setArchived(true))
+                    .flatMap(_ -> thread.getManager().setArchived(true))
                     .queue()));
     }
 }

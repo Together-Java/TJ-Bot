@@ -63,7 +63,7 @@ public final class LinkPreviews {
             .toList();
 
         var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
-        return allDoneTask.thenApply(any -> extractResults(tasks)).exceptionally(e -> {
+        return allDoneTask.thenApply(_ -> extractResults(tasks)).exceptionally(e -> {
             logger.error("Unknown error during link preview creation", e);
             return List.of();
         });
