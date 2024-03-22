@@ -149,6 +149,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         long originalMessageId = Long.parseLong(args.get(0));
+
+        event.deferEdit().queue();
+
         // The third arg indicates a non-code-action button
         if (args.size() >= 3 && DELETE_CUE.equals(args.get(2))) {
             deleteCodeReply(event, originalMessageId);
@@ -156,7 +159,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         CodeAction codeAction = getActionOfEvent(event);
-        event.deferEdit().queue();
 
         // User decided for an action, apply it to the code
         event.getChannel()
@@ -189,7 +191,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 event.getUser().getId(), originalMessageId, event.getChannel().getName());
 
         originalMessageToCodeReply.invalidate(originalMessageId);
-        event.getMessage().delete().queue();
+        event.getHook().deleteOriginal().queue();
     }
 
     private CodeAction getActionOfEvent(ButtonInteractionEvent event) {

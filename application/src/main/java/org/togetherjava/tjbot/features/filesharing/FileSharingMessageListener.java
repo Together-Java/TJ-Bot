@@ -111,7 +111,8 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
         try {
             new GitHubBuilder().withOAuthToken(githubApiKey).build().getGist(gistId).delete();
-            event.getMessage().delete().queue();
+            event.deferEdit().queue();
+            event.getHook().deleteOriginal().queue();
         } catch (IOException e) {
             logger.warn("Failed to delete gist with id {}", gistId, e);
         }
