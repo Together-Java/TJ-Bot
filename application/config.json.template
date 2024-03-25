@@ -104,5 +104,8 @@
         ]
     },
     "memberCountCategoryPattern": "Info",
-    "selectRolesChannelPattern": "select-your-roles"
+    "selectRolesChannelPattern": "select-your-roles",
+    "cakeDayConfig": {
+        "rolePattern": "Cake Day"
+    }
 }
