@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.features.utils.LinkPreview;
 import org.togetherjava.tjbot.features.utils.LinkPreviews;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -84,6 +85,8 @@ public final class TagCommand extends SlashCommandAdapter {
 
         String tagContent = tagSystem.getTag(id).orElseThrow();
         MessageEmbed contentEmbed = new EmbedBuilder().setDescription(tagContent)
+            .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
+            .setTimestamp(Instant.now())
             .setColor(TagSystem.AMBIENT_COLOR)
             .build();
 
