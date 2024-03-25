@@ -220,7 +220,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
             // Re-apply the current action
             return codeReplyMessage.editMessageEmbeds(maybeCodeAction.orElseThrow().apply(code));
-        }).queue(any -> {
+        }).queue(_ -> {
         }, failure -> logger.warn(
                 "Attempted to update a code-reply-message ({}), but failed. The original code-message was {}",
                 codeReplyMessageId, originalMessageId, failure));
@@ -249,7 +249,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         // Delete the code reply as well
         originalMessageToCodeReply.invalidate(originalMessageId);
 
-        event.getChannel().deleteMessageById(codeReplyMessageId).queue(any -> {
+        event.getChannel().deleteMessageById(codeReplyMessageId).queue(_ -> {
         }, failure -> logger.warn(
                 "Attempted to delete a code-reply-message ({}), but failed. The original code-message was {}",
                 codeReplyMessageId, originalMessageId, failure));

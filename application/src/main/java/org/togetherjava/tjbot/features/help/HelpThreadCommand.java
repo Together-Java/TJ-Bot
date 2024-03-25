@@ -93,7 +93,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .collect(Collectors.toMap(Subcommand::getCommandName, Function.identity()));
         subcommandToCooldownCache = new EnumMap<>(streamSubcommands()
             .filter(Subcommand::hasCooldown)
-            .collect(Collectors.toMap(Function.identity(), any -> createCooldownCache.get())));
+            .collect(Collectors.toMap(Function.identity(), _ -> createCooldownCache.get())));
         subcommandToEventHandler = new EnumMap<>(Map.of(Subcommand.CHANGE_CATEGORY,
                 this::changeCategory, Subcommand.CHANGE_TITLE, this::changeTitle, Subcommand.CLOSE,
                 this::closeThread, Subcommand.RESET_ACTIVITY, this::resetActivity));
@@ -149,7 +149,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         refreshCooldownFor(Subcommand.CHANGE_CATEGORY, helpThread);
 
         helper.changeChannelCategory(helpThread, category)
-            .flatMap(any -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
+            .flatMap(_ -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
                     helpThread, category))
             .queue();
     }
@@ -176,7 +176,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         String headsUpPattern = "%s please have a look, thanks.";
         String headsUpWithoutRole = headsUpPattern.formatted("");
         String headsUpWithRole = headsUpPattern.formatted(helperRole.orElseThrow().getAsMention());
-        return action.flatMap(any -> helpThread.sendMessage(headsUpWithoutRole)
+        return action.flatMap(_ -> helpThread.sendMessage(headsUpWithoutRole)
             .flatMap(message -> message.editMessage(headsUpWithRole)));
     }
 
@@ -186,7 +186,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         refreshCooldownFor(Subcommand.CHANGE_TITLE, helpThread);
 
         helper.renameChannel(helpThread, title)
-            .flatMap(any -> event.reply("Changed the title to **%s**.".formatted(title)))
+            .flatMap(_ -> event.reply("Changed the title to **%s**.".formatted(title)))
             .queue();
     }
 
@@ -197,7 +197,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
             .setColor(HelpSystemHelper.AMBIENT_COLOR)
             .build();
 
-        event.replyEmbeds(embed).flatMap(any -> helpThread.getManager().setArchived(true)).queue();
+        event.replyEmbeds(embed).flatMap(_ -> helpThread.getManager().setArchived(true)).queue();
     }
 
     private void resetActivity(SlashCommandInteractionEvent event, ThreadChannel helpThread) {

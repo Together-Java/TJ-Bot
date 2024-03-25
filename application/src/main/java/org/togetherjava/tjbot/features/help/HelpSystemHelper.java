@@ -154,7 +154,7 @@ public final class HelpSystemHelper {
         }
 
         MessageEmbed responseEmbed = generateGptResponseEmbed(answer, selfUser, originalQuestion);
-        return message.flatMap(any -> threadChannel.sendMessageEmbeds(responseEmbed)
+        return message.flatMap(_ -> threadChannel.sendMessageEmbeds(responseEmbed)
             .addActionRow(
                     generateDismissButton(componentIdInteractor, idForDismissButton.toString())));
     }

@@ -138,7 +138,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         // Has been handled if original message was deleted by now.
         // Deleted messages cause retrieveMessageById to fail.
         Consumer<Message> notHandledAction =
-                any -> transferFlow(event, channelId, authorId, messageId);
+                _ -> transferFlow(event, channelId, authorId, messageId);
 
         Consumer<Throwable> handledAction = failure -> {
             if (failure instanceof ErrorResponseException errorResponseException
