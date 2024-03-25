@@ -45,6 +45,9 @@ public final class GitHubReference extends MessageReceiverAdapter {
             Pattern.compile("#(?<%s>\\d{1,5})".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
+    private static final int ISSUE_COMPLETE = Color.magenta.getRGB();
+    private static final int ISSUE_NOT_PLANNED = Color.gray.getRGB();
+
 
     /**
      * A constant representing the date and time formatter used for formatting the creation date of
@@ -167,9 +170,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             String dateOfCreation = FORMATTER.format(createdAt);
 
             String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
-
-            return new EmbedBuilder()
-                .setColor(issue.getState() == GHIssueState.OPEN ? ISSUE_OPEN : ISSUE_CLOSE)
+            return new EmbedBuilder().setColor(getIssueState(issue))
                 .setTitle(title, titleUrl)
                 .setDescription(description)
                 .setAuthor(issue.getUser().getName(), null, issue.getUser().getAvatarUrl())
@@ -178,6 +179,19 @@ public final class GitHubReference extends MessageReceiverAdapter {
 
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
+        }
+    }
+
+    /**
+     * Returns the state of the issue
+     */
+    private int getIssueState(GHIssue issue) {
+        if (issue.getStateReason() == GHIssueStateReason.COMPLETED) {
+            return ISSUE_COMPLETE;
+        } else if (issue.getStateReason() == GHIssueStateReason.NOT_PLANNED) {
+            return ISSUE_NOT_PLANNED;
+        } else {
+            return issue.getState() == GHIssueState.OPEN ? ISSUE_OPEN : ISSUE_CLOSE;
         }
     }
 
