@@ -103,6 +103,16 @@
         "special": [
         ]
     },
-    "memberCountCategoryPattern": "Info",
-    "selectRolesChannelPattern": "select-your-roles"
+    "applicationForm": {
+        "applicationChannelPattern": "applications-log",
+        "roles": [
+            {
+                "description": "Lorem ipsum",
+                "name": "Test role",
+                "formattedEmoji": ":joy:"
+            }
+        ]
+    }
+    "selectRolesChannelPattern": "select-your-roles",
+    "memberCountCategoryPattern": "Info"
 }
