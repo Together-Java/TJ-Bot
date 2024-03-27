@@ -45,7 +45,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             Pattern.compile("#(?<%s>\\d{1,5})".formatted(ID_GROUP));
     private static final int ISSUE_OPEN = Color.green.getRGB();
     private static final int ISSUE_CLOSE = Color.red.getRGB();
-    private static final int ISSUE_COMPLETE = Color.magenta.getRGB();
+    private static final int ISSUE_COMPLETE = new Color(141, 106, 187).getRGB();
     private static final int ISSUE_NOT_PLANNED = Color.gray.getRGB();
 
 
