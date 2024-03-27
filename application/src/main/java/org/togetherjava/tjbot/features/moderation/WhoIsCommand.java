@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.features.moderation;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -16,7 +15,6 @@ import org.togetherjava.tjbot.features.utils.DiscordClientAction;
 import javax.annotation.CheckReturnValue;
 
 import java.awt.*;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -77,10 +75,9 @@ public final class WhoIsCommand extends SlashCommandAdapter {
                 + userFlagsToStringItem(user.getFlags()) + "\n**Registration date:** "
                 + DATE_TIME_FORMAT.format(user.getTimeCreated());
 
-        EmbedBuilder embedBuilder =
-                generateEmbedBuilder(event, user, profile, profile.getAccentColor()).setAuthor(
-                        user.getName(), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
-                    .setDescription(description);
+        EmbedBuilder embedBuilder = generateEmbedBuilder(user, profile, profile.getAccentColor())
+            .setAuthor(user.getName(), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
+            .setDescription(description);
 
         return sendEmbedWithProfileAction(event, embedBuilder.build(), user.getId());
     }
@@ -100,7 +97,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
                 + DATE_TIME_FORMAT.format(user.getTimeCreated()) + "\n**Roles:** "
                 + formatRoles(member);
 
-        EmbedBuilder embedBuilder = generateEmbedBuilder(event, user, profile, effectiveColor)
+        EmbedBuilder embedBuilder = generateEmbedBuilder(user, profile, effectiveColor)
             .setAuthor(member.getEffectiveName(), member.getEffectiveAvatarUrl(),
                     member.getEffectiveAvatarUrl())
             .setDescription(description);
@@ -129,20 +126,15 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     /**
      * Generates whois embed based on the given parameters.
      *
-     * @param event the {@link SlashCommandInteractionEvent}
      * @param user the {@link User} getting whois'd
      * @param profile the {@link net.dv8tion.jda.api.entities.User.Profile} of the whois'd user
      * @param effectiveColor the {@link Color} that the embed will become
      * @return the generated {@link EmbedBuilder}
      */
-    private static EmbedBuilder generateEmbedBuilder(final Interaction event, final User user,
-            final User.Profile profile, final Color effectiveColor) {
-
+    private static EmbedBuilder generateEmbedBuilder(final User user, final User.Profile profile,
+            final Color effectiveColor) {
         EmbedBuilder embedBuilder = new EmbedBuilder().setThumbnail(user.getEffectiveAvatarUrl())
-            .setColor(effectiveColor)
-            .setFooter("Requested by " + event.getUser().getName(),
-                    event.getMember().getEffectiveAvatarUrl())
-            .setTimestamp(Instant.now());
+            .setColor(effectiveColor);
 
         if (null != profile.getBannerId()) {
             embedBuilder.setImage(profile.getBannerUrl() + "?size=" + USER_PROFILE_PICTURE_SIZE);
