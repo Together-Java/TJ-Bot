@@ -44,6 +44,7 @@ public final class Config {
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final CoolMessagesBoardConfig coolMessagesConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -91,7 +92,9 @@ public final class Config {
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern) {
+                    required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "coolMessagesConfig",
+                    required = true) CoolMessagesBoardConfig coolMessagesConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -123,6 +126,7 @@ public final class Config {
         this.jshell = Objects.requireNonNull(jshell);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.coolMessagesConfig = Objects.requireNonNull(coolMessagesConfig);
     }
 
     /**
@@ -395,6 +399,15 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * The configuration of the cool messages config.
+     *
+     * @return configuration of cool messages config
+     */
+    public CoolMessagesBoardConfig getCoolMessagesConfig() {
+        return coolMessagesConfig;
     }
 
     /**

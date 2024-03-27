@@ -104,5 +104,9 @@
         ]
     },
     "memberCountCategoryPattern": "Info",
-    "selectRolesChannelPattern": "select-your-roles"
+    "selectRolesChannelPattern": "select-your-roles",
+    "coolMessagesConfig": {
+        "minimumReactions": 1,
+        "boardChannelPattern": "quotes"
+    }
 }
