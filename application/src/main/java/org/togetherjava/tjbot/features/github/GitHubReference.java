@@ -194,18 +194,15 @@ public final class GitHubReference extends MessageReceiverAdapter {
                 return MERGED_STATE;
             } else if (pR.isDraft()) {
                 return DRAFT_STATE;
-            } else {
-                return issue.getState() == GHIssueState.OPEN ? OPEN_STATE : CLOSE_STATE;
             }
         } else {
             if (issue.getStateReason() == GHIssueStateReason.COMPLETED) {
                 return MERGED_STATE;
             } else if (issue.getStateReason() == GHIssueStateReason.NOT_PLANNED) {
                 return NOT_PLANNED_STATE;
-            } else {
-                return issue.getState() == GHIssueState.OPEN ? OPEN_STATE : CLOSE_STATE;
             }
         }
+        return issue.getState() == GHIssueState.OPEN ? OPEN_STATE : CLOSE_STATE;
     }
 
     /**
