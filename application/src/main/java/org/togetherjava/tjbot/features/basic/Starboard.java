@@ -4,13 +4,11 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -48,7 +46,7 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
         String emojiName = event.getEmoji().getName();
         Guild guild = event.getGuild();
         long messageId = event.getMessageIdLong();
-        if (shouldIgnoreMessage(emojiName, guild, event.getGuildChannel(), messageId)) {
+        if (shouldIgnoreMessage(emojiName, guild, event.getGuildChannel(), messageId, true)) {
             return;
         }
         Optional<TextChannel> starboardChannel = getStarboardChannel(guild);
@@ -65,14 +63,35 @@ public class Starboard extends ListenerAdapter implements EventReceiver {
             .queue();
     }
 
+    @Override
+    public void onMessageReactionRemove(@NotNull MessageReactionRemoveEvent event) {
+        String emojiName = event.getEmoji().getName();
+        Guild guild = event.getGuild();
+        long messageId = event.getMessageIdLong();
+        if (shouldIgnoreMessage(emojiName, guild, event.getGuildChannel(), messageId, false)) {
+            return;
+        }
+        event.retrieveMessage()
+            .map(m -> m.getReactions()
+                .stream()
+                .map(reaction -> reaction.getEmoji().getName())
+                .noneMatch(config.emojiNames()::contains))
+            .onSuccess(noGoodReactions -> {
+                if (noGoodReactions) {
+                    database.write(context -> context.data().remove(messageId));
+                    messageCache.invalidate(messageId);
+                }
+            })
+            .queue();
+    }
+
     private boolean shouldIgnoreMessage(String emojiName, Guild guild, GuildChannel channel,
-            long messageId) {
+            long messageId, boolean addingMessage) {
         return !config.emojiNames().contains(emojiName)
                 || !guild.getPublicRole().hasPermission(channel, Permission.VIEW_CHANNEL)
-                || messageCache.getIfPresent(messageId) != null
-                || database
+                || (addingMessage == (messageCache.getIfPresent(messageId) != null || database
                     .read(context -> context.fetchExists(context.selectFrom(STARBOARD_MESSAGES)
-                        .where(STARBOARD_MESSAGES.MESSAGE_ID.eq(messageId))));
+                        .where(STARBOARD_MESSAGES.MESSAGE_ID.eq(messageId))))));
     }
 
     private Optional<TextChannel> getStarboardChannel(Guild guild) {
