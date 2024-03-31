@@ -45,11 +45,11 @@ public final class GitHubReference extends MessageReceiverAdapter {
             Pattern.compile("#(?<%s>\\d{1,5})".formatted(ID_GROUP));
 
     // Representing different GitHub states of an Issue/PR
-    private static final int OPEN_STATE = Color.green.getRGB();
-    private static final int CLOSE_STATE = Color.red.getRGB();
-    private static final int MERGED_STATE = new Color(141, 106, 187).getRGB();
-    private static final int NOT_PLANNED_STATE = new Color(72, 72, 72).getRGB();
-    private static final int DRAFT_STATE = Color.gray.getRGB();
+    private static final Color OPEN_STATE = Color.green;
+    private static final Color CLOSE_STATE = Color.red;
+    private static final Color MERGED_STATE = new Color(141, 106, 187);
+    private static final Color NOT_PLANNED_STATE = new Color(72, 72, 72);
+    private static final Color DRAFT_STATE = Color.gray;
 
 
     /**
@@ -173,7 +173,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             String dateOfCreation = FORMATTER.format(createdAt);
 
             String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
-            return new EmbedBuilder().setColor(getIssueState(issue))
+            return new EmbedBuilder().setColor(getIssueStateColor(issue))
                 .setTitle(title, titleUrl)
                 .setDescription(description)
                 .setAuthor(issue.getUser().getName(), null, issue.getUser().getAvatarUrl())
@@ -188,11 +188,11 @@ public final class GitHubReference extends MessageReceiverAdapter {
     /**
      * Returns the state of the issue/PR
      */
-    private int getIssueState(GHIssue issue) throws IOException {
-        if (issue instanceof GHPullRequest pR) {
-            if (pR.isMerged()) {
+    private Color getIssueStateColor(GHIssue issue) throws IOException {
+        if (issue instanceof GHPullRequest pr) {
+            if (pr.isMerged()) {
                 return MERGED_STATE;
-            } else if (pR.isDraft()) {
+            } else if (pr.isDraft()) {
                 return DRAFT_STATE;
             }
         } else {
