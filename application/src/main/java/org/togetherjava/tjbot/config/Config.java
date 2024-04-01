@@ -397,9 +397,9 @@ public final class Config {
 
     /**
      * Gets the config for the Starboard. The starboard displays certain messages in a special
-     * emojis{@link StarboardConfig#emojiNames()}
-     * channel {@link StarboardConfig#channelPattern()} if a user reacts with one of the recognized
-     * 
+     * emojis{@link StarboardConfig#emojiNames()} channel {@link StarboardConfig#channelPattern()}
+     * if a user reacts with one of the recognized
+     *
      * @return the config of the Starboard
      */
     public StarboardConfig getStarboard() {
