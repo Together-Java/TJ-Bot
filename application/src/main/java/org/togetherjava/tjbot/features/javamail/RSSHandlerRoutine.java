@@ -157,7 +157,7 @@ public final class RSSHandlerRoutine implements Routine {
         }
 
         Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(
-                rssFeedRecord.get(), feedConfig.dateFormatterPattern());
+                rssFeedRecord.orElseThrow(), feedConfig.dateFormatterPattern());
 
         if (lastSavedDate.isEmpty()) {
             return;
@@ -360,9 +360,9 @@ public final class RSSHandlerRoutine implements Routine {
         embedBuilder.setAuthor(item.getChannel().getLink());
 
         // Process embed's description if a raw description was provided
-        if (rawDescription.isPresent() && !rawDescription.get().isEmpty()) {
+        if (rawDescription.isPresent() && !rawDescription.orElseThrow().isEmpty()) {
             Document fullDescription =
-                    Jsoup.parse(StringEscapeUtils.unescapeHtml4(rawDescription.get()));
+                    Jsoup.parse(StringEscapeUtils.unescapeHtml4(rawDescription.orElseThrow()));
             String finalDescription = fullDescription.body()
                 .select("*")
                 .stream()
