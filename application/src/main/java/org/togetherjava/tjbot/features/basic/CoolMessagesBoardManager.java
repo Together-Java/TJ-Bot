@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,11 +65,12 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
 
         final int newReactionsCount = originalReactionsCount + 1;
         if (isCoolEmoji && newReactionsCount >= config.minimumReactions()) {
-            event.retrieveMessage().queue(message -> {
-                message.addReaction(coolEmoji).queue();
-
-                insertCoolMessage(boardChannel.get(), message);
-            }, e -> logger.warn("Tried to retrieve cool message but got: {}", e.getMessage()));
+            event.retrieveMessage()
+                .queue(message -> message.addReaction(coolEmoji)
+                    .flatMap(v -> insertCoolMessage(boardChannel.get(), message))
+                    .queue(),
+                        e -> logger.warn("Tried to retrieve cool message but got: {}",
+                                e.getMessage()));
         }
     }
 
@@ -89,9 +91,12 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
 
     /**
      * Inserts a message to the specified text channel
+     *
+     * @return a {@link MessageCreateAction} of the call to make
      */
-    private static void insertCoolMessage(TextChannel boardChannel, Message message) {
-        boardChannel.sendMessageEmbeds(Collections.singleton(createQuoteEmbed(message))).queue();
+    private static MessageCreateAction insertCoolMessage(TextChannel boardChannel,
+            Message message) {
+        return boardChannel.sendMessageEmbeds(Collections.singleton(createQuoteEmbed(message)));
     }
 
     /**
