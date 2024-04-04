@@ -104,14 +104,7 @@
         ]
     },
     "applicationForm": {
-        "applicationChannelPattern": "applications-log",
-        "roles": [
-            {
-                "description": "Lorem ipsum",
-                "name": "Test role",
-                "formattedEmoji": "🔥"
-            }
-        ]
+        "applicationChannelPattern": "applications-log"
     }
     "selectRolesChannelPattern": "select-your-roles",
     "memberCountCategoryPattern": "Info"

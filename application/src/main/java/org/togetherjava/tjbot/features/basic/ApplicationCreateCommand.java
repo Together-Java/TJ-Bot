@@ -13,11 +13,12 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
@@ -38,11 +39,14 @@ import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 /**
  * Represents a command to create an application form for members to apply for roles.
@@ -59,6 +63,8 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private static final int APPLICATION_SUBMIT_COOLDOWN = 5;
     private static final String DEFAULT_QUESTION =
             "What makes you a valuable addition to the team? 😎";
+    private static final int OPTIONAL_ROLES_AMOUNT = 5;
+    private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
 
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
@@ -82,6 +88,24 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         this.applicationSubmitCooldown = Caffeine.newBuilder()
             .expireAfterWrite(APPLICATION_SUBMIT_COOLDOWN, TimeUnit.MINUTES)
             .build();
+
+        generateRoleOptions(getData());
+    }
+
+    /**
+     * Populates a {@link SlashCommandData} object with the proper arguments.
+     *
+     * @param data the object to populate
+     */
+    private void generateRoleOptions(SlashCommandData data) {
+        IntStream.range(0, OPTIONAL_ROLES_AMOUNT).forEach(index -> {
+            int renderNumber = index + 1;
+
+            data.addOption(OptionType.STRING, "title" + renderNumber, "The title of the role");
+            data.addOption(OptionType.STRING, "description" + renderNumber,
+                    "The description of the role");
+            data.addOption(OptionType.STRING, "emoji" + renderNumber, "The emoji of the role");
+        });
     }
 
     @Override
@@ -90,22 +114,15 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             return;
         }
 
+        long incorrectArgsCount = getIncorrectRoleArgsCount(event.getInteraction().getOptions());
+        if (incorrectArgsCount > 0) {
+            event.reply("Missing information for %d roles.".formatted(incorrectArgsCount))
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
         sendMenu(event);
-    }
-
-    @Override
-    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        User user = event.getUser();
-        StringSelectMenu.Builder menu = StringSelectMenu
-            .create(generateComponentId(Lifespan.REGULAR, event.getUser().getId()))
-            .setPlaceholder("Select role to apply for");
-
-        config.applyRoleConfig()
-            .stream()
-            .map(option -> mapToSelectOption(user, option))
-            .forEach(menu::addOptions);
-
-        event.reply("").addActionRow(menu.build()).setEphemeral(true).queue();
     }
 
     /**
@@ -170,6 +187,58 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
 
         event.getHook().deleteOriginal().queue();
         event.replyModal(modal).queue();
+    }
+
+    /**
+     * Checks a given list of passed arguments (from a user) and calculates how many roles have
+     * missing data.
+     *
+     * @param args the list of passed arguments
+     * @return the amount of roles with missing data
+     */
+    private static long getIncorrectRoleArgsCount(final List<OptionMapping> args) {
+        final Map<Character, Integer> frequencyMap = new HashMap<>();
+
+        args.stream()
+            .map(OptionMapping::getName)
+            .map(name -> name.charAt(name.length() - 1))
+            .forEach(number -> frequencyMap.merge(number, 1, Integer::sum));
+
+        return frequencyMap.values().stream().filter(value -> value != 3).count();
+    }
+
+    /**
+     * Populates a {@link StringSelectMenu.Builder} with application roles.
+     *
+     * @param menuBuilder the menu builder to populate
+     * @param args the arguments which contain data about the roles
+     */
+    private void addRolesToMenu(StringSelectMenu.Builder menuBuilder,
+            final List<OptionMapping> args) {
+        final Map<Character, MenuRole> roles = new HashMap<>();
+
+        args.forEach(arg -> {
+            final String name = arg.getName();
+            final String argValue = arg.getAsString();
+            final char roleId = name.charAt(name.length() - 1);
+            MenuRole role = roles.computeIfAbsent(roleId, k -> new MenuRole());
+
+            if (name.startsWith("title")) {
+                String value = generateComponentId(ROLE_COMPONENT_ID_HEADER, argValue);
+
+                role.setValue(value);
+                role.setLabel(argValue);
+            } else if (name.startsWith("description")) {
+                role.setDescription(argValue);
+            } else if (name.startsWith("emoji")) {
+                role.setEmoji(Emoji.fromFormatted(argValue));
+            }
+        });
+
+        roles.values().forEach(role -> {
+            menuBuilder.addOption(role.getLabel(), role.getValue(), role.getDescription(),
+                    role.getEmoji());
+        });
     }
 
     @Override
@@ -282,10 +351,14 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private void sendMenu(final CommandInteraction event) {
         MessageEmbed embed = createApplicationEmbed();
 
-        String buttonComponentId = generateComponentId(Lifespan.PERMANENT, event.getUser().getId());
-        Button button = Button.primary(buttonComponentId, "Check openings");
+        StringSelectMenu.Builder menuBuilder = StringSelectMenu
+            .create(generateComponentId(Lifespan.REGULAR, event.getUser().getId()))
+            .setPlaceholder("Select role to apply for")
+            .setRequiredRange(1, 1);
 
-        event.replyEmbeds(embed).addActionRow(button).queue();
+        addRolesToMenu(menuBuilder, event.getOptions());
+
+        event.replyEmbeds(embed).addActionRow(menuBuilder.build()).queue();
     }
 
     private static MessageEmbed createApplicationEmbed() {
@@ -296,5 +369,51 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
                             and take charge. If you are interested, you can apply for various positions here!""")
             .setColor(AMBIENT_COLOR)
             .build();
+    }
+
+    /**
+     * Wrapper class which represents a menu role for the application create command.
+     * <p>
+     * The reason this exists is due to the fact that {@link StringSelectMenu.Builder} does not have
+     * a method which takes emojis as input as of writing this, so we have to elegantly pass in
+     * custom data from this POJO.
+     */
+    private static class MenuRole {
+        private String label;
+        private String value;
+        private String description;
+        private Emoji emoji;
+
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String label) {
+            this.label = label;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public Emoji getEmoji() {
+            return emoji;
+        }
+
+        public void setEmoji(Emoji emoji) {
+            this.emoji = emoji;
+        }
     }
 }
