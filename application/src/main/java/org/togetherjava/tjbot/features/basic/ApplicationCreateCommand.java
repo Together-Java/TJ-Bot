@@ -14,15 +14,15 @@ import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,9 +96,9 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         User user = event.getUser();
-        SelectMenu.Builder menu =
-                SelectMenu.create(generateComponentId(Lifespan.REGULAR, event.getUser().getId()))
-                    .setPlaceholder("Select role to apply for");
+        StringSelectMenu.Builder menu = StringSelectMenu
+            .create(generateComponentId(Lifespan.REGULAR, event.getUser().getId()))
+            .setPlaceholder("Select role to apply for");
 
         config.applyRoleConfig()
             .stream()
@@ -126,7 +126,7 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     }
 
     @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
         SelectOption selectOption = event.getSelectedOptions().getFirst();
 
         if (selectOption == null) {
