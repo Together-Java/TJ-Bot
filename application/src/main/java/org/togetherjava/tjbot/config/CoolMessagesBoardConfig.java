@@ -12,13 +12,15 @@ import java.util.Objects;
 @JsonRootName("coolMessagesConfig")
 public record CoolMessagesBoardConfig(
         @JsonProperty(value = "minimumReactions", required = true) int minimumReactions,
-        @JsonProperty(value = "boardChannelPattern", required = true) String boardChannelPattern) {
+        @JsonProperty(value = "boardChannelPattern", required = true) String boardChannelPattern,
+        @JsonProperty(value = "reactionEmoji", required = true) String reactionEmoji) {
 
     /**
      * Creates a CoolMessagesBoardConfig.
      *
      * @param minimumReactions the minimum amount of reactions
      * @param boardChannelPattern the pattern for the board channel
+     * @param reactionEmoji the emoji with which users should react to
      */
     public CoolMessagesBoardConfig {
         Objects.requireNonNull(boardChannelPattern);

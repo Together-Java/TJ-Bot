@@ -29,12 +29,13 @@ import java.util.regex.Pattern;
 public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(CoolMessagesBoardManager.class);
-    private static final Emoji REACT_EMOJI = Emoji.fromUnicode("🌟");
+    private Emoji coolEmoji;
     private final Predicate<String> boardChannelNamePredicate;
     private final CoolMessagesBoardConfig config;
 
     public CoolMessagesBoardManager(Config config) {
         this.config = config.getCoolMessagesConfig();
+        this.coolEmoji = Emoji.fromUnicode(this.config.reactionEmoji());
 
         boardChannelNamePredicate =
                 Pattern.compile(this.config.boardChannelPattern()).asMatchPredicate();
@@ -44,7 +45,7 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         final MessageReaction messageReaction = event.getReaction();
         int originalReactionsCount = messageReaction.hasCount() ? messageReaction.getCount() : 0;
-        boolean isCoolEmoji = messageReaction.getEmoji().getName().equals(REACT_EMOJI.getName());
+        boolean isCoolEmoji = messageReaction.getEmoji().equals(coolEmoji);
         long guildId = event.getGuild().getIdLong();
         Optional<TextChannel> boardChannel = getBoardChannel(event.getJDA(), guildId);
 
@@ -64,7 +65,7 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
         final int newReactionsCount = originalReactionsCount + 1;
         if (isCoolEmoji && newReactionsCount >= config.minimumReactions()) {
             event.retrieveMessage().queue(message -> {
-                message.addReaction(REACT_EMOJI).queue();
+                message.addReaction(coolEmoji).queue();
 
                 insertCoolMessage(boardChannel.get(), message);
             }, e -> logger.warn("Tried to retrieve cool message but got: {}", e.getMessage()));
@@ -123,8 +124,8 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
     /**
      * Checks a {@link MessageReaction} to see if the bot has reacted to it.
      */
-    private static boolean hasBotReacted(JDA jda, MessageReaction messageReaction) {
-        if (!REACT_EMOJI.equals(messageReaction.getEmoji())) {
+    private boolean hasBotReacted(JDA jda, MessageReaction messageReaction) {
+        if (!coolEmoji.equals(messageReaction.getEmoji())) {
             return false;
         }
 
