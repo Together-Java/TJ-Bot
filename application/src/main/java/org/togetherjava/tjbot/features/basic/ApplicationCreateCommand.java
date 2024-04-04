@@ -65,6 +65,7 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             "What makes you a valuable addition to the team? 😎";
     private static final int OPTIONAL_ROLES_AMOUNT = 5;
     private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
+    private static final String VALUE_DELIMITER = "_";
 
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
@@ -101,11 +102,17 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         IntStream.range(0, OPTIONAL_ROLES_AMOUNT).forEach(index -> {
             int renderNumber = index + 1;
 
-            data.addOption(OptionType.STRING, "title" + renderNumber, "The title of the role");
-            data.addOption(OptionType.STRING, "description" + renderNumber,
+            data.addOption(OptionType.STRING, generateOptionId("title", renderNumber),
+                    "The title of the role");
+            data.addOption(OptionType.STRING, generateOptionId("description", renderNumber),
                     "The description of the role");
-            data.addOption(OptionType.STRING, "emoji" + renderNumber, "The emoji of the role");
+            data.addOption(OptionType.STRING, generateOptionId("emoji", renderNumber),
+                    "The emoji of the role");
         });
+    }
+
+    private static String generateOptionId(String name, int id) {
+        return "%s%s%d".formatted(name, VALUE_DELIMITER, id);
     }
 
     @Override
@@ -197,11 +204,11 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
      * @return the amount of roles with missing data
      */
     private static long getIncorrectRoleArgsCount(final List<OptionMapping> args) {
-        final Map<Character, Integer> frequencyMap = new HashMap<>();
+        final Map<String, Integer> frequencyMap = new HashMap<>();
 
         args.stream()
             .map(OptionMapping::getName)
-            .map(name -> name.charAt(name.length() - 1))
+            .map(name -> name.split(VALUE_DELIMITER)[1])
             .forEach(number -> frequencyMap.merge(number, 1, Integer::sum));
 
         return frequencyMap.values().stream().filter(value -> value != 3).count();
@@ -215,12 +222,12 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
      */
     private void addRolesToMenu(StringSelectMenu.Builder menuBuilder,
             final List<OptionMapping> args) {
-        final Map<Character, MenuRole> roles = new HashMap<>();
+        final Map<String, MenuRole> roles = new HashMap<>();
 
         args.forEach(arg -> {
             final String name = arg.getName();
             final String argValue = arg.getAsString();
-            final char roleId = name.charAt(name.length() - 1);
+            final String roleId = name.split(VALUE_DELIMITER)[1];
             MenuRole role = roles.computeIfAbsent(roleId, k -> new MenuRole());
 
             if (name.startsWith("title")) {
