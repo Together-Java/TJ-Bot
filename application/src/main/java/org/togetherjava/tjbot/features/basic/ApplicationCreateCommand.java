@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.ApplicationFormConfig;
-import org.togetherjava.tjbot.config.ApplyRoleConfig;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
@@ -69,7 +68,6 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
 
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
-    private final ApplicationFormConfig config;
 
     /**
      * Constructs a new {@link ApplicationCreateCommand} with the specified configuration.
@@ -82,9 +80,9 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         super("application-form", "Generates an application form for members to apply for roles.",
                 CommandVisibility.GUILD);
 
-        this.config = config.getApplicationFormConfig();
+        final ApplicationFormConfig formConfig = config.getApplicationFormConfig();
         this.applicationChannelPattern =
-                Pattern.compile(this.config.applicationChannelPattern()).asMatchPredicate();
+                Pattern.compile(formConfig.applicationChannelPattern()).asMatchPredicate();
 
         this.applicationSubmitCooldown = Caffeine.newBuilder()
             .expireAfterWrite(APPLICATION_SUBMIT_COOLDOWN, TimeUnit.MINUTES)
@@ -130,23 +128,6 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         }
 
         sendMenu(event);
-    }
-
-    /**
-     * Maps a user and an {@link ApplyRoleConfig} option to a SelectOption object.
-     * <p>
-     * This method is used to create a {@link SelectOption} object that represents a role
-     * configuration option for a user, including a unique component ID generated based on the
-     * user's ID and the option's name, a description, and an emoji.
-     *
-     * @param user the user for whom the role configuration option is being mapped
-     * @param option the {@link ApplyRoleConfig} option to be mapped to a {@link SelectOption}
-     * @return a {@link SelectOption} object with the specified details
-     */
-    private SelectOption mapToSelectOption(User user, ApplyRoleConfig option) {
-        return SelectOption.of(option.name(), generateComponentId(user.getId(), option.name()))
-            .withDescription(option.description())
-            .withEmoji(Emoji.fromFormatted(option.emoji()));
     }
 
     @Override
@@ -242,10 +223,9 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             }
         });
 
-        roles.values().forEach(role -> {
-            menuBuilder.addOption(role.getLabel(), role.getValue(), role.getDescription(),
-                    role.getEmoji());
-        });
+        roles.values()
+            .forEach(role -> menuBuilder.addOption(role.getLabel(), role.getValue(),
+                    role.getDescription(), role.getEmoji()));
     }
 
     @Override
