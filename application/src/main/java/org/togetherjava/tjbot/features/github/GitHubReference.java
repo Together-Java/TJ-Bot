@@ -186,7 +186,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
     }
 
     /**
-     * Returns the state of the issue/PR
+     * Returns the color based on the state of the issue/PR
      */
     private Color getIssueStateColor(GHIssue issue) throws IOException {
         if (issue instanceof GHPullRequest pr) {
