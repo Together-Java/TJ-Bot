@@ -43,8 +43,14 @@ public final class GitHubReference extends MessageReceiverAdapter {
      */
     static final Pattern ISSUE_REFERENCE_PATTERN =
             Pattern.compile("#(?<%s>\\d{1,5})".formatted(ID_GROUP));
-    private static final int ISSUE_OPEN = Color.green.getRGB();
-    private static final int ISSUE_CLOSE = Color.red.getRGB();
+
+    // Representing different GitHub states of an Issue/PR
+    private static final Color OPEN_STATE = Color.green;
+    private static final Color CLOSE_STATE = Color.red;
+    private static final Color MERGED_STATE = new Color(141, 106, 187);
+    private static final Color NOT_PLANNED_STATE = new Color(72, 72, 72);
+    private static final Color DRAFT_STATE = Color.gray;
+
 
     /**
      * A constant representing the date and time formatter used for formatting the creation date of
@@ -167,9 +173,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             String dateOfCreation = FORMATTER.format(createdAt);
 
             String footer = "%s • %s • %s".formatted(labels, assignees, dateOfCreation);
-
-            return new EmbedBuilder()
-                .setColor(issue.getState() == GHIssueState.OPEN ? ISSUE_OPEN : ISSUE_CLOSE)
+            return new EmbedBuilder().setColor(getIssueStateColor(issue))
                 .setTitle(title, titleUrl)
                 .setDescription(description)
                 .setAuthor(issue.getUser().getName(), null, issue.getUser().getAvatarUrl())
@@ -179,6 +183,26 @@ public final class GitHubReference extends MessageReceiverAdapter {
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
+    }
+
+    /**
+     * Returns the color based on the state of the issue/PR
+     */
+    private Color getIssueStateColor(GHIssue issue) throws IOException {
+        if (issue instanceof GHPullRequest pr) {
+            if (pr.isMerged()) {
+                return MERGED_STATE;
+            } else if (pr.isDraft()) {
+                return DRAFT_STATE;
+            }
+        } else {
+            if (issue.getStateReason() == GHIssueStateReason.COMPLETED) {
+                return MERGED_STATE;
+            } else if (issue.getStateReason() == GHIssueStateReason.NOT_PLANNED) {
+                return NOT_PLANNED_STATE;
+            }
+        }
+        return issue.getState() == GHIssueState.OPEN ? OPEN_STATE : CLOSE_STATE;
     }
 
     /**
@@ -199,6 +223,9 @@ public final class GitHubReference extends MessageReceiverAdapter {
         return repositories.stream().map(repository -> {
             try {
                 GHIssue issue = repository.getIssue(id);
+                if (issue.isPullRequest()) {
+                    issue = repository.getPullRequest(id);
+                }
                 if (issue.getTitle().equals(targetIssueTitle)) {
                     return Optional.of(issue);
                 }
@@ -216,7 +243,11 @@ public final class GitHubReference extends MessageReceiverAdapter {
             .filter(repository -> repository.getId() == defaultRepoId)
             .map(repository -> {
                 try {
-                    return Optional.of(repository.getIssue(id));
+                    GHIssue issue = repository.getIssue(id);
+                    if (issue.isPullRequest()) {
+                        issue = repository.getPullRequest(id);
+                    }
+                    return Optional.of(issue);
                 } catch (FileNotFoundException ignored) {
                     return Optional.<GHIssue>empty();
                 } catch (IOException ex) {
