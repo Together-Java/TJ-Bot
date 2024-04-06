@@ -7,9 +7,9 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
-import net.dv8tion.jda.api.entities.channel.unions.IThreadContainerUnion;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -60,8 +60,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.isFromThread()) {
-            IThreadContainerUnion parentChannel =
-                    event.getChannel().asThreadChannel().getParentChannel();
+            Channel parentChannel = event.getChannel().asThreadChannel().getParentChannel();
             if (helper.isHelpForumName(parentChannel.getName())) {
                 ThreadChannel threadChannel = event.getChannel().asThreadChannel();
                 int messageCount = threadChannel.getMessageCount();
@@ -83,7 +82,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
-        threadChannel.retrieveMessageById(threadChannel.getIdLong()).flatMap(message -> {
+        threadChannel.retrieveStartMessage().flatMap(message -> {
             registerThreadDataInDB(message, threadChannel);
             return generateAutomatedResponse(threadChannel);
         }).flatMap(message -> pinOriginalQuestion(threadChannel)).queue();
