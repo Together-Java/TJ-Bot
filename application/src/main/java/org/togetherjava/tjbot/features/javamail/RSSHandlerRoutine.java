@@ -125,8 +125,8 @@ public final class RSSHandlerRoutine implements Routine {
      * @param feedConfig The configuration object for the RSS feed.
      */
     private void sendRSS(JDA jda, RSSFeed feedConfig) {
-        List<TextChannel> textChannels = getTextChannelsFromFeed(jda, feedConfig).orElse(null);
-        if (textChannels == null || textChannels.isEmpty()) {
+        List<TextChannel> textChannels = getTextChannelsFromFeed(jda, feedConfig);
+        if (textChannels.isEmpty()) {
             logger.warn("Tried to send an RSS post, got empty response (channel {} not found)",
                     feedConfig.targetChannelPattern());
             return;
@@ -321,20 +321,20 @@ public final class RSSHandlerRoutine implements Routine {
      *
      * @param jda the JDA instance
      * @param feed the RSS feed configuration to search for text channels
-     * @return an {@link Optional} containing a list of text channels found, or empty if none are found
+     * @return an {@link List} of the text channels found, or empty if none are found
      */
-    private Optional<List<TextChannel>> getTextChannelsFromFeed(JDA jda, RSSFeed feed) {
+    private List<TextChannel> getTextChannelsFromFeed(JDA jda, RSSFeed feed) {
         // Attempt to find the target channel, use the fallback otherwise
         if (targetChannelPatterns.containsKey(feed)) {
-            return Optional.of(jda.getTextChannelCache()
+            return jda.getTextChannelCache()
                     .stream()
                     .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
-                    .toList());
+                    .toList();
         } else {
-            return Optional.of(jda.getTextChannelCache()
+            return jda.getTextChannelCache()
                     .stream()
                     .filter(channel -> fallbackChannelPattern.test(channel.getName()))
-                    .toList());
+                    .toList();
         }
     }
 
