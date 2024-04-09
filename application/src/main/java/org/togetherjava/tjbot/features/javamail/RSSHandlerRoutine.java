@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.apache.commons.text.StringEscapeUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.tools.StringUtils;
 import org.jsoup.Jsoup;
@@ -105,7 +104,6 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     @Override
-    @NotNull
     public Schedule createSchedule() {
         return new Schedule(ScheduleMode.FIXED_DELAY, 0, interval, TimeUnit.MINUTES);
     }
@@ -145,15 +143,18 @@ public final class RSSHandlerRoutine implements Routine {
             }
         }
 
-        final Predicate<Item> shouldItemBePosted = prepareItemPostPredicate(feedConfig, rssItems);
-        if (shouldItemBePosted == null) return;
+        final Optional<Predicate<Item>> shouldItemBePosted =
+                prepareItemPostPredicate(feedConfig, rssItems);
+        if (shouldItemBePosted.isEmpty())
+            return;
         rssItems.reversed()
             .stream()
-            .filter(shouldItemBePosted)
+            .filter(shouldItemBePosted.get())
             .forEachOrdered(item -> postItem(textChannels, item, feedConfig));
     }
 
-    private Predicate<Item> prepareItemPostPredicate(RSSFeed feedConfig, List<Item> rssItems) {
+    private Optional<Predicate<Item>> prepareItemPostPredicate(RSSFeed feedConfig,
+            List<Item> rssItems) {
         Optional<RssFeedRecord> rssFeedRecord = getRssFeedRecordFromDatabase(feedConfig);
         Optional<ZonedDateTime> lastPostedDate =
                 getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
@@ -162,21 +163,21 @@ public final class RSSHandlerRoutine implements Routine {
                 date -> updateLastDateToDatabase(feedConfig, rssFeedRecord.orElse(null), date));
 
         if (rssFeedRecord.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
         Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(
                 rssFeedRecord.orElseThrow(), feedConfig.dateFormatterPattern());
 
         if (lastSavedDate.isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
-        return item -> {
+        return Optional.of(item -> {
             ZonedDateTime itemPubDate =
                     getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
             return itemPubDate.isAfter(lastSavedDate.orElseThrow());
-        };
+        });
     }
 
     /**
@@ -201,9 +202,8 @@ public final class RSSHandlerRoutine implements Routine {
      * @return An {@link Optional} containing the last saved date if it could be retrieved and
      *         parsed successfully, otherwise an empty {@link Optional}
      */
-    private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(
-            @NotNull RssFeedRecord rssRecord, String dateFormatterPattern)
-            throws DateTimeParseException {
+    private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord,
+            String dateFormatterPattern) throws DateTimeParseException {
         try {
             ZonedDateTime savedDate =
                     getZonedDateTime(rssRecord.getLastDate(), dateFormatterPattern);
@@ -286,13 +286,10 @@ public final class RSSHandlerRoutine implements Routine {
      */
     private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat)
             throws DateTimeParseException {
-        String pubDate = item.getPubDate().orElse(null);
+        Optional<String> pubDate = item.getPubDate();
 
-        if (pubDate == null || dateTimeFormat == null) {
-            return ZONED_TIME_MIN;
-        }
+        return pubDate.map(s -> getZonedDateTime(s, dateTimeFormat)).orElse(ZONED_TIME_MIN);
 
-        return getZonedDateTime(pubDate, dateTimeFormat);
     }
 
     /**
@@ -303,9 +300,9 @@ public final class RSSHandlerRoutine implements Routine {
      * @return true if the date format is valid, false otherwise
      */
     private static boolean isValidDateFormat(Item rssItem, RSSFeed feedConfig) {
-        String firstRssFeedPubDate = rssItem.getPubDate().orElse(null);
+        Optional<String> firstRssFeedPubDate = rssItem.getPubDate();
 
-        if (firstRssFeedPubDate == null) {
+        if (firstRssFeedPubDate.isEmpty()) {
             return false;
         }
 
@@ -313,7 +310,7 @@ public final class RSSHandlerRoutine implements Routine {
             // If this throws a DateTimeParseException then it's certain
             // that the format pattern defined in the config and the
             // feed's actual format differ.
-            getZonedDateTime(firstRssFeedPubDate, feedConfig.dateFormatterPattern());
+            getZonedDateTime(firstRssFeedPubDate.get(), feedConfig.dateFormatterPattern());
         } catch (DateTimeParseException e) {
             return false;
         }
@@ -331,14 +328,14 @@ public final class RSSHandlerRoutine implements Routine {
         // Attempt to find the target channel, use the fallback otherwise
         if (targetChannelPatterns.containsKey(feed)) {
             return jda.getTextChannelCache()
-                    .stream()
-                    .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
-                    .toList();
+                .stream()
+                .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
+                .toList();
         } else {
             return jda.getTextChannelCache()
-                    .stream()
-                    .filter(channel -> fallbackChannelPattern.test(channel.getName()))
-                    .toList();
+                .stream()
+                .filter(channel -> fallbackChannelPattern.test(channel.getName()))
+                .toList();
         }
     }
 
@@ -406,7 +403,7 @@ public final class RSSHandlerRoutine implements Routine {
      * @return the parsed {@link ZonedDateTime} object
      * @throws DateTimeParseException if the date cannot be parsed
      */
-    private static ZonedDateTime getZonedDateTime(@Nullable String date, @NotNull String format)
+    private static ZonedDateTime getZonedDateTime(@Nullable String date, String format)
             throws DateTimeParseException {
         if (date == null) {
             return ZONED_TIME_MIN;
