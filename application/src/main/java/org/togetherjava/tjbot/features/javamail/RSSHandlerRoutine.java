@@ -89,7 +89,7 @@ public final class RSSHandlerRoutine implements Routine {
      */
     public RSSHandlerRoutine(Config config, Database database) {
         this.config = config.getRSSFeedsConfig();
-        this.interval = this.config.rssPollInterval();
+        this.interval = this.config.pollIntervalInMinutes();
         this.database = database;
         this.fallbackChannelPattern =
                 Pattern.compile(this.config.fallbackChannelPattern()).asMatchPredicate();
@@ -125,8 +125,8 @@ public final class RSSHandlerRoutine implements Routine {
      * @param feedConfig The configuration object for the RSS feed.
      */
     private void sendRSS(JDA jda, RSSFeed feedConfig) {
-        TextChannel textChannel = getTextChannelFromFeed(jda, feedConfig).orElse(null);
-        if (textChannel == null) {
+        List<TextChannel> textChannels = getTextChannelsFromFeed(jda, feedConfig).orElse(null);
+        if (textChannels == null || textChannels.isEmpty()) {
             logger.warn("Tried to send an RSS post, got empty response (channel {} not found)",
                     feedConfig.targetChannelPattern());
             return;
@@ -172,7 +172,7 @@ public final class RSSHandlerRoutine implements Routine {
         rssItems.reversed()
             .stream()
             .filter(shouldItemBePosted)
-            .forEach(item -> postItem(textChannel, item, feedConfig));
+            .forEachOrdered(item -> postItem(textChannels, item, feedConfig));
     }
 
     /**
@@ -226,13 +226,13 @@ public final class RSSHandlerRoutine implements Routine {
     /**
      * Posts an RSS item to a text channel.
      *
-     * @param textChannel the text channel to which the item will be posted
+     * @param textChannels the text channels to which the item will be posted
      * @param rssItem the RSS item to post
      * @param feedConfig the RSS feed configuration
      */
-    private void postItem(TextChannel textChannel, Item rssItem, RSSFeed feedConfig) {
+    private void postItem(List<TextChannel> textChannels, Item rssItem, RSSFeed feedConfig) {
         MessageEmbed embed = constructEmbedMessage(rssItem, feedConfig).build();
-        textChannel.sendMessageEmbeds(List.of(embed)).queue();
+        textChannels.forEach(channel -> channel.sendMessageEmbeds(List.of(embed)).queue());
     }
 
     /**
@@ -317,24 +317,24 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     /**
-     * Attempts to find a text channel from a given RSS feed configuration.
+     * Attempts to find text channels from a given RSS feed configuration.
      *
      * @param jda the JDA instance
-     * @param feed the RSS feed configuration to search for a text channel
-     * @return an {@link Optional} containing the found text channel if it exists, otherwise empty
+     * @param feed the RSS feed configuration to search for text channels
+     * @return an {@link Optional} containing a list of text channels found, or empty if none are found
      */
-    private Optional<TextChannel> getTextChannelFromFeed(JDA jda, RSSFeed feed) {
+    private Optional<List<TextChannel>> getTextChannelsFromFeed(JDA jda, RSSFeed feed) {
         // Attempt to find the target channel, use the fallback otherwise
         if (targetChannelPatterns.containsKey(feed)) {
-            return jda.getTextChannelCache()
-                .stream()
-                .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
-                .findFirst();
+            return Optional.of(jda.getTextChannelCache()
+                    .stream()
+                    .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
+                    .toList());
         } else {
-            return jda.getTextChannelCache()
-                .stream()
-                .filter(channel -> fallbackChannelPattern.test(channel.getName()))
-                .findFirst();
+            return Optional.of(jda.getTextChannelCache()
+                    .stream()
+                    .filter(channel -> fallbackChannelPattern.test(channel.getName()))
+                    .toList());
         }
     }
 

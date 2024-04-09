@@ -113,7 +113,7 @@
             }
         ],
         "fallbackChannelPattern": "<fallback_channel_pattern>",
-        "rssPollInterval": 10
+        "pollIntervalInMinutes": 10
     },
     "memberCountCategoryPattern": "Info"
 }
