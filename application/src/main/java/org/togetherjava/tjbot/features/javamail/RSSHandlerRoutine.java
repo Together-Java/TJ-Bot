@@ -145,6 +145,15 @@ public final class RSSHandlerRoutine implements Routine {
             }
         }
 
+        final Predicate<Item> shouldItemBePosted = prepareItemPostPredicate(feedConfig, rssItems);
+        if (shouldItemBePosted == null) return;
+        rssItems.reversed()
+            .stream()
+            .filter(shouldItemBePosted)
+            .forEachOrdered(item -> postItem(textChannels, item, feedConfig));
+    }
+
+    private Predicate<Item> prepareItemPostPredicate(RSSFeed feedConfig, List<Item> rssItems) {
         Optional<RssFeedRecord> rssFeedRecord = getRssFeedRecordFromDatabase(feedConfig);
         Optional<ZonedDateTime> lastPostedDate =
                 getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
@@ -153,26 +162,21 @@ public final class RSSHandlerRoutine implements Routine {
                 date -> updateLastDateToDatabase(feedConfig, rssFeedRecord.orElse(null), date));
 
         if (rssFeedRecord.isEmpty()) {
-            return;
+            return null;
         }
 
         Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(
                 rssFeedRecord.orElseThrow(), feedConfig.dateFormatterPattern());
 
         if (lastSavedDate.isEmpty()) {
-            return;
+            return null;
         }
 
-        final Predicate<Item> shouldItemBePosted = item -> {
+        return item -> {
             ZonedDateTime itemPubDate =
                     getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
             return itemPubDate.isAfter(lastSavedDate.orElseThrow());
         };
-
-        rssItems.reversed()
-            .stream()
-            .filter(shouldItemBePosted)
-            .forEachOrdered(item -> postItem(textChannels, item, feedConfig));
     }
 
     /**
