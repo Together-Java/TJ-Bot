@@ -24,6 +24,7 @@ import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
 import org.togetherjava.tjbot.features.help.*;
+import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
@@ -109,6 +110,7 @@ public class Features {
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MemberCountDisplayRoutine(config));
+        features.add(new RSSHandlerRoutine(config, database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));

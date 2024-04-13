@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+
 /**
  * Configuration of the application. Create instances using {@link #load(Path)}.
  */
@@ -42,6 +43,7 @@ public final class Config {
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
     private final FeatureBlacklistConfig featureBlacklistConfig;
+    private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
 
@@ -90,6 +92,7 @@ public final class Config {
                     required = true) String memberCountCategoryPattern,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
+            @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern) {
         this.token = Objects.requireNonNull(token);
@@ -122,6 +125,7 @@ public final class Config {
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
+        this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
     }
 
@@ -404,5 +408,14 @@ public final class Config {
      */
     public String getMemberCountCategoryPattern() {
         return memberCountCategoryPattern;
+    }
+
+    /**
+     * Gets the RSS feeds configuration.
+     *
+     * @return the RSS feeds configuration
+     */
+    public RSSFeedsConfig getRSSFeedsConfig() {
+        return rssFeedsConfig;
     }
 }

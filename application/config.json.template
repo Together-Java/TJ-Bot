@@ -103,6 +103,17 @@
         "special": [
         ]
     },
-    "memberCountCategoryPattern": "Info",
-    "selectRolesChannelPattern": "select-your-roles"
+    "selectRolesChannelPattern": "select-your-roles",
+    "rssConfig": {
+        "feeds": [
+            {
+                "url": "<rss_feed_url>",
+                "targetChannelPattern": "<target_channel_pattern>",
+                "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss zzz"
+            }
+        ],
+        "fallbackChannelPattern": "<fallback_channel_pattern>",
+        "pollIntervalInMinutes": 10
+    },
+    "memberCountCategoryPattern": "Info"
 }
