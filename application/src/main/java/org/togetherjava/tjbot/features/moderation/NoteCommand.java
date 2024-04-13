@@ -51,10 +51,11 @@ public final class NoteCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        OptionMapping targetOption = event.getOption(USER_OPTION);
-        Member author = event.getMember();
-        Guild guild = event.getGuild();
-        String content = event.getOption(CONTENT_OPTION).getAsString();
+        OptionMapping targetOption =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
+        Member author = Objects.requireNonNull(event.getMember());
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION), "The content is null").getAsString();
 
         if (!handleChecks(guild.getSelfMember(), author, targetOption.getAsMember(), content,
                 event)) {
