@@ -55,7 +55,9 @@ public final class NoteCommand extends SlashCommandAdapter {
                 Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
         Member author = Objects.requireNonNull(event.getMember());
         Guild guild = Objects.requireNonNull(event.getGuild());
-        String content = Objects.requireNonNull(event.getOption(CONTENT_OPTION), "The content is null").getAsString();
+        String content =
+                Objects.requireNonNull(event.getOption(CONTENT_OPTION), "The content is null")
+                    .getAsString();
 
         if (!handleChecks(guild.getSelfMember(), author, targetOption.getAsMember(), content,
                 event)) {
