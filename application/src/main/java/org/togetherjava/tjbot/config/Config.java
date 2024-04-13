@@ -44,6 +44,7 @@ public final class Config {
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final ApplicationFormConfig applicationFormConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -91,7 +92,9 @@ public final class Config {
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern) {
+                    required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "applicationForm",
+                    required = true) ApplicationFormConfig applicationFormConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -123,6 +126,7 @@ public final class Config {
         this.jshell = Objects.requireNonNull(jshell);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.applicationFormConfig = applicationFormConfig;
     }
 
     /**
@@ -404,5 +408,14 @@ public final class Config {
      */
     public String getMemberCountCategoryPattern() {
         return memberCountCategoryPattern;
+    }
+
+    /**
+     * The configuration related to the application form.
+     *
+     * @return the application form config
+     */
+    public ApplicationFormConfig getApplicationFormConfig() {
+        return applicationFormConfig;
     }
 }

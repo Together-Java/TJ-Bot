@@ -103,6 +103,9 @@
         "special": [
         ]
     },
-    "memberCountCategoryPattern": "Info",
-    "selectRolesChannelPattern": "select-your-roles"
+    "applicationForm": {
+        "applicationChannelPattern": "applications-log"
+    }
+    "selectRolesChannelPattern": "select-your-roles",
+    "memberCountCategoryPattern": "Info"
 }
