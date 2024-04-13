@@ -145,8 +145,9 @@ public final class RSSHandlerRoutine implements Routine {
 
         final Optional<Predicate<Item>> shouldItemBePosted =
                 prepareItemPostPredicate(feedConfig, rssItems);
-        if (shouldItemBePosted.isEmpty())
+        if (shouldItemBePosted.isEmpty()) {
             return;
+        }
         rssItems.reversed()
             .stream()
             .filter(shouldItemBePosted.get())
