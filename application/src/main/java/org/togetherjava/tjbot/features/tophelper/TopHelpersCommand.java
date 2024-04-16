@@ -23,9 +23,18 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import javax.annotation.Nullable;
 
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.Month;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
@@ -137,7 +146,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     private static void handleTopHelpers(Collection<TopHelperResult> topHelpers,
-            Collection<? extends Member> members, TimeRange timeRange, IDeferrableCallback event) {
+                                         Collection<? extends Member> members, TimeRange timeRange, IDeferrableCallback event) {
         Map<Long, Member> userIdToMember =
                 members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
 

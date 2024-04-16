@@ -26,7 +26,11 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import javax.annotation.Nullable;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

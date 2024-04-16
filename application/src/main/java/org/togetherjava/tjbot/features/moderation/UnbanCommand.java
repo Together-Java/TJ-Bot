@@ -1,7 +1,11 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.IPermissionHolder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -45,7 +49,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     private void unban(User target, Member author, String reason, Guild guild,
-            IReplyCallback event) {
+                       IReplyCallback event) {
         guild.unban(target).reason(reason).queue(result -> {
             MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
                     ModerationAction.UNBAN, target, null, reason);
@@ -86,7 +90,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     private boolean handleChecks(IPermissionHolder bot, Member author, CharSequence reason,
-            Guild guild, IReplyCallback event) {
+                                 Guild guild, IReplyCallback event) {
         if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
                 guild, event)) {
             return false;

@@ -7,7 +7,7 @@ import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 
 import javax.annotation.Nullable;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

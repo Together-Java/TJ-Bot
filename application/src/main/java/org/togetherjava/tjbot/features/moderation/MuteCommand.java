@@ -1,6 +1,10 @@
 package org.togetherjava.tjbot.features.moderation;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -70,7 +74,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(User target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
+                                              @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage = temporaryData == null ? "Permanent" : temporaryData.duration();
         String description =
                 """
@@ -82,7 +86,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
+                                             @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The mute duration is: "
                 + (temporaryData == null ? "permanent" : temporaryData.duration());
         String dmNoticeText = "";

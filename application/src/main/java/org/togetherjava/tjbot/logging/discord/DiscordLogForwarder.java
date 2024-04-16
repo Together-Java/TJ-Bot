@@ -18,7 +18,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -204,7 +210,7 @@ final class DiscordLogForwarder {
         }
 
         private static Optional<String> linkToSource(@Nullable StackTraceElement sourceElement,
-                String sourceCodeBaseUrl) {
+                                                     String sourceCodeBaseUrl) {
             if (sourceElement == null) {
                 return Optional.empty();
             }

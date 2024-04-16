@@ -1,7 +1,11 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -82,7 +86,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(User target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
+                                              @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage = temporaryData == null ? "Permanently" : temporaryData.duration();
         String description =
                 """
@@ -94,7 +98,7 @@ public final class BanCommand extends SlashCommandAdapter {
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, User target, Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
+                                             @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The ban duration is: "
                 + (temporaryData == null ? "permanent" : temporaryData.duration());
         String dmNoticeText = "";

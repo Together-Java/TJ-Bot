@@ -2,7 +2,12 @@ package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.IPermissionHolder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
@@ -85,7 +90,7 @@ public class ModerationUtils {
      * @return Whether the author and bot can interact with the target user
      */
     public static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
-            Member target, IReplyCallback event) {
+                                                      Member target, IReplyCallback event) {
         String targetTag = target.getUser().getName();
         if (!author.canInteract(target)) {
             event
@@ -153,7 +158,7 @@ public class ModerationUtils {
      * @return Whether the bot has the required permission
      */
     static boolean handleHasBotPermissions(String actionVerb, Permission permission,
-            IPermissionHolder bot, Guild guild, IReplyCallback event) {
+                                           IPermissionHolder bot, Guild guild, IReplyCallback event) {
         if (!bot.hasPermission(permission)) {
             event
                 .reply("I can not %s users in this guild since I do not have the %s permission."
@@ -278,7 +283,7 @@ public class ModerationUtils {
      * @return the created response
      */
     static MessageEmbed createActionResponse(User author, ModerationAction action, User target,
-            @Nullable String extraMessage, @Nullable String reason) {
+                                             @Nullable String extraMessage, @Nullable String reason) {
         String description =
                 "%s **%s** (id: %s).".formatted(action.getVerb(), target.getName(), target.getId());
         if (extraMessage != null && !extraMessage.isBlank()) {
