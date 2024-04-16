@@ -37,7 +37,7 @@ public class StringDistances {
      * @return the best matching candidate, or empty iff the candidates are empty
      */
     public static <S extends CharSequence> Optional<S> closestMatch(CharSequence query,
-                                                                    Collection<S> candidates) {
+            Collection<S> candidates) {
         return candidates.stream()
             .min(Comparator.comparingInt(candidate -> editDistance(query, candidate)));
     }

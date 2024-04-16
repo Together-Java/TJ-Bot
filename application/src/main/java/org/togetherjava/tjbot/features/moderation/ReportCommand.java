@@ -167,7 +167,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private MessageCreateAction createModMessage(String reportReason,
-                                                 ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
+            ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
         MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
             .setDescription(MessageUtils.abbreviate(reportedMessage.content,
                     MessageEmbed.DESCRIPTION_MAX_LENGTH))

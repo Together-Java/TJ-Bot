@@ -74,7 +74,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<Boolean> sendDm(User target,
-                                              @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
         String durationMessage = temporaryData == null ? "Permanent" : temporaryData.duration();
         String description =
                 """
@@ -86,7 +86,7 @@ public final class MuteCommand extends SlashCommandAdapter {
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
-                                             @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
         String durationText = "The mute duration is: "
                 + (temporaryData == null ? "permanent" : temporaryData.duration());
         String dmNoticeText = "";

@@ -110,7 +110,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     }
 
     private static ReplyCallbackAction sendEmbedWithProfileAction(final IReplyCallback event,
-                                                                  MessageEmbed embed, String userId) {
+            MessageEmbed embed, String userId) {
         return event.replyEmbeds(embed)
             .addActionRow(
                     DiscordClientAction.General.USER.asLinkButton("Click to see profile!", userId));

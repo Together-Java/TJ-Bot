@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 
 import javax.annotation.Nullable;
+
 import java.awt.Color;
 
 /**

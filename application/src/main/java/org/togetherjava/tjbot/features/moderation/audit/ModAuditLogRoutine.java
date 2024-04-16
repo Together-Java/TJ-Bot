@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated

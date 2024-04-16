@@ -76,7 +76,7 @@ public final class UnquarantineCommand extends SlashCommandAdapter {
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
-                                             String reason) {
+            String reason) {
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";

@@ -24,7 +24,7 @@ final class DiscordLogAppender extends AbstractAppender {
     private final DiscordLogForwarder logForwarder;
 
     private DiscordLogAppender(String name, Filter filter, StringLayout layout,
-                               boolean ignoreExceptions, URI webhook, String sourceCodeBaseUrl) {
+            boolean ignoreExceptions, URI webhook, String sourceCodeBaseUrl) {
         super(name, filter, layout, ignoreExceptions, NO_PROPERTIES);
 
         logForwarder = new DiscordLogForwarder(webhook, sourceCodeBaseUrl);

@@ -146,7 +146,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     }
 
     private static void handleTopHelpers(Collection<TopHelperResult> topHelpers,
-                                         Collection<? extends Member> members, TimeRange timeRange, IDeferrableCallback event) {
+            Collection<? extends Member> members, TimeRange timeRange, IDeferrableCallback event) {
         Map<Long, Member> userIdToMember =
                 members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
 

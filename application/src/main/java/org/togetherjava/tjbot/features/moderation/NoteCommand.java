@@ -79,7 +79,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     }
 
     private void sendNote(User target, Member author, String content, ISnowflake guild,
-                          IReplyCallback event) {
+            IReplyCallback event) {
         storeNote(target, author, content, guild);
         sendFeedback(target, author, content, event);
     }

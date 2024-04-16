@@ -210,7 +210,7 @@ final class DiscordLogForwarder {
         }
 
         private static Optional<String> linkToSource(@Nullable StackTraceElement sourceElement,
-                                                     String sourceCodeBaseUrl) {
+                String sourceCodeBaseUrl) {
             if (sourceElement == null) {
                 return Optional.empty();
             }

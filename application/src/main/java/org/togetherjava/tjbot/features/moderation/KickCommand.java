@@ -58,7 +58,7 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     private void kickUserFlow(Member target, Member author, String reason, Guild guild,
-                              SlashCommandInteractionEvent event) {
+            SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
         sendDm(target.getUser(), reason, guild)
@@ -94,7 +94,7 @@ public final class KickCommand extends SlashCommandAdapter {
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, Member target, Member author,
-                                             String reason) {
+            String reason) {
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";

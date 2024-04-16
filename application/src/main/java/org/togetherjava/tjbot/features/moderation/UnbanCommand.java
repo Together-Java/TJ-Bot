@@ -49,7 +49,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     private void unban(User target, Member author, String reason, Guild guild,
-                       IReplyCallback event) {
+            IReplyCallback event) {
         guild.unban(target).reason(reason).queue(result -> {
             MessageEmbed message = ModerationUtils.createActionResponse(author.getUser(),
                     ModerationAction.UNBAN, target, null, reason);
@@ -90,7 +90,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     private boolean handleChecks(IPermissionHolder bot, Member author, CharSequence reason,
-                                 Guild guild, IReplyCallback event) {
+            Guild guild, IReplyCallback event) {
         if (!ModerationUtils.handleHasBotPermissions(ACTION_VERB, Permission.BAN_MEMBERS, bot,
                 guild, event)) {
             return false;

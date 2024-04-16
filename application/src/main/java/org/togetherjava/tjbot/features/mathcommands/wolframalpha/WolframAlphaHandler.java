@@ -161,7 +161,7 @@ final class WolframAlphaHandler {
     }
 
     private static <E> String createBulletPointList(Collection<? extends E> elements,
-                                                    Function<E, String> elementToText) {
+            Function<E, String> elementToText) {
         return elements.stream()
             .map(elementToText)
             .map(text -> "• " + text)

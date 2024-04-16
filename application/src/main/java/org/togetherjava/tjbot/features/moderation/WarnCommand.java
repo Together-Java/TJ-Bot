@@ -49,7 +49,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private void warnUserFlow(User target, Member author, String reason, Guild guild,
-                              SlashCommandInteractionEvent event) {
+            SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
         sendDm(target, reason, guild).map(hasSentDm -> {
@@ -80,7 +80,7 @@ public final class WarnCommand extends SlashCommandAdapter {
     }
 
     private static MessageEmbed sendFeedback(boolean hasSentDm, User target, Member author,
-                                             String reason) {
+            String reason) {
         String dmNoticeText = "";
         if (!hasSentDm) {
             dmNoticeText = "(Unable to send them a DM.)";

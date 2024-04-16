@@ -168,7 +168,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     }
 
     private RestAction<Message> sendCategoryChangedMessage(Guild guild, InteractionHook hook,
-                                                           ThreadChannel helpThread, String category) {
+            ThreadChannel helpThread, String category) {
         String changedContent = "Changed the category to **%s**.".formatted(category);
         WebhookMessageEditAction<Message> action = hook.editOriginal(changedContent);
 

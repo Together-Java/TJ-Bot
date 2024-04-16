@@ -483,7 +483,7 @@ public final class JdaTester {
      */
     @SuppressWarnings("unchecked")
     public <T, R extends RestAction<T>> R createSucceededActionMock(@Nullable T t,
-                                                                    Class<R> restActionType) {
+            Class<R> restActionType) {
         R action = mock(restActionType);
 
         Answer<Void> successExecution = invocation -> {
@@ -626,7 +626,7 @@ public final class JdaTester {
      * @return the event of receiving the given message
      */
     public MessageReceivedEvent createMessageReceiveEvent(MessageCreateData message,
-                                                          List<Message.Attachment> attachments, ChannelType channelType) {
+            List<Message.Attachment> attachments, ChannelType channelType) {
         Message receivedMessage = clientMessageToReceivedMessageMock(message);
         mockMessage(receivedMessage, channelType);
         doReturn(attachments).when(receivedMessage).getAttachments();

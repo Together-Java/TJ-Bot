@@ -119,7 +119,7 @@ public final class HelpSystemHelper {
      *         why the message wasn't used.
      */
     RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
-                                                String originalQuestion, ComponentIdInteractor componentIdInteractor) {
+            String originalQuestion, ComponentIdInteractor componentIdInteractor) {
         Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
         Optional<String> chatGPTAnswer;
 
