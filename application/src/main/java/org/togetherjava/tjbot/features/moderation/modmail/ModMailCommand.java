@@ -204,7 +204,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     }
 
     private MessageEmbed createModMailMessage(@Nullable User author, String userMessage) {
-        String authorTag = author == null ? "Anonymous" : author.getName();
+        String authorTag = (author == null ? "Anonymous" : author.getName()) + " (Reporter)";
         String authorAvatar = author == null ? null : author.getAvatarUrl();
         return new EmbedBuilder().setTitle("Modmail")
             .setAuthor(authorTag, null, authorAvatar)
