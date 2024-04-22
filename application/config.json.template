@@ -107,12 +107,12 @@
     "rssConfig": {
         "feeds": [
             {
-                "url": "<rss_feed_url>",
-                "targetChannelPattern": "<target_channel_pattern>",
-                "dateFormatterPattern": "EEE, dd MMM yyyy HH:mm:ss zzz"
+                "url": "https://wiki.openjdk.org/spaces/createrssfeed.action?types=page&types=comment&types=blogpost&types=mail&types=attachment&spaces=JDKUpdates&maxResults=15&title=%5BJDK+Updates%5D+All+Content+Feed&amp;publicFeed=true",
+                "targetChannelPattern": "java-news-and-changes",
+                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssX"
             }
         ],
-        "fallbackChannelPattern": "<fallback_channel_pattern>",
+        "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
     },
     "memberCountCategoryPattern": "Info"
