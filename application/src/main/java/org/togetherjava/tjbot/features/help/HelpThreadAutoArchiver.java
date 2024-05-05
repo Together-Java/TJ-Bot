@@ -79,6 +79,9 @@ public final class HelpThreadAutoArchiver implements Routine {
     }
 
     private void autoArchiveForThread(ThreadChannel threadChannel, Instant archiveAfterMoment) {
+        // if threadChannel is pinned then do not archive it!
+        if (threadChannel.isPinned())
+            return;
         if (shouldBeArchived(threadChannel, archiveAfterMoment)) {
             logger.debug("Auto archiving help thread {}", threadChannel.getId());
 
