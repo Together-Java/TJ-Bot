@@ -1,6 +1,12 @@
 package org.togetherjava.tjbot.features.utils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 

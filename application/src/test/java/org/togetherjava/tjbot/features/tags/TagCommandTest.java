@@ -15,7 +15,9 @@ import org.togetherjava.tjbot.jda.SlashCommandInteractionEventBuilder;
 
 import javax.annotation.Nullable;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 final class TagCommandTest {
     private TagSystem system;

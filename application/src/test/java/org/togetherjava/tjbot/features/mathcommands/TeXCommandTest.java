@@ -14,7 +14,9 @@ import org.togetherjava.tjbot.jda.JdaTester;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.description;
 import static org.mockito.Mockito.verify;
 
