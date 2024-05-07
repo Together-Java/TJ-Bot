@@ -36,6 +36,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -310,7 +311,7 @@ public final class ModAuditLogRoutine implements Routine {
             .orElse(List.of());
         return roleChanges.stream()
             .map(Map::entrySet)
-            .flatMap(java.util.Collection::stream)
+            .flatMap(Collection::stream)
             .filter(changeEntry -> "name".equals(changeEntry.getKey()))
             .map(Map.Entry::getValue)
             .anyMatch(ModerationUtils.getIsMutedRolePredicate(config));
