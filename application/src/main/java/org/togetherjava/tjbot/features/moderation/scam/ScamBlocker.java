@@ -142,8 +142,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                     "The OFF-mode should be detected earlier already to prevent expensive computation");
             case ONLY_LOG -> takeActionLogOnly(event);
             case APPROVE_FIRST -> takeActionApproveFirst(event);
-            case AUTO_DELETE_BUT_APPROVE_QUARANTINE -> takeActionAutoDeleteButApproveQuarantine(
-                    event);
+            case AUTO_DELETE_BUT_APPROVE_QUARANTINE ->
+                takeActionAutoDeleteButApproveQuarantine(event);
             case AUTO_DELETE_AND_QUARANTINE -> takeActionAutoDeleteAndQuarantine(event);
             default -> throw new IllegalArgumentException("Mode not supported: " + mode);
         }

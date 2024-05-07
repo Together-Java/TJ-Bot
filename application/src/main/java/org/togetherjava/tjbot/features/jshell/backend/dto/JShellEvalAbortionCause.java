@@ -26,11 +26,13 @@ public sealed interface JShellEvalAbortionCause {
      * @param exceptionMessage the message of the exception
      */
     @JsonTypeName("UNCAUGHT_EXCEPTION")
-    record UnhandledExceptionAbortionCause(String exceptionClass, String exceptionMessage) implements JShellEvalAbortionCause {
+    record UnhandledExceptionAbortionCause(String exceptionClass,
+            String exceptionMessage) implements JShellEvalAbortionCause {
     }
 
     /**
      * The code doesn't compile, but at least the syntax is correct.
+     * 
      * @param errors the compilation errors
      */
     @JsonTypeName("COMPILE_TIME_ERROR")

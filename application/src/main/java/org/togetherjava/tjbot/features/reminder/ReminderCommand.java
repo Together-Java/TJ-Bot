@@ -90,7 +90,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
         // "/remind at" next to "/remind in" and use subcommands then
         OptionData timeAmount = new OptionData(OptionType.INTEGER, TIME_AMOUNT_OPTION,
                 "period to remind you in, the amount of time (e.g. [5] weeks)", true)
-                    .setRequiredRange(MIN_TIME_AMOUNT, MAX_TIME_AMOUNT);
+            .setRequiredRange(MIN_TIME_AMOUNT, MAX_TIME_AMOUNT);
         OptionData timeUnit = new OptionData(OptionType.STRING, TIME_UNIT_OPTION,
                 "period to remind you in, the unit of time (e.g. 5 [weeks])", true);
         TIME_UNITS.forEach(unit -> timeUnit.addChoice(unit, unit));
@@ -114,8 +114,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
             case CREATE_SUBCOMMAND -> handleCreateCommand(event);
             case CANCEL_COMMAND -> handleCancelCommand(event);
             case LIST_SUBCOMMAND -> handleListCommand(event);
-            default -> throw new AssertionError(
-                    "Unexpected Subcommand: " + event.getSubcommandName());
+            default ->
+                throw new AssertionError("Unexpected Subcommand: " + event.getSubcommandName());
         }
     }
 

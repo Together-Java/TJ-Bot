@@ -51,16 +51,16 @@ import static org.mockito.Mockito.when;
  *
  * // /days start:10.01.2021 end:13.01.2021
  * jdaTester.createSlashCommandInteractionEvent(command)
- *   .setOption("start", "10.01.2021")
- *   .setOption("end", "13.01.2021")
- *   .build();
+ *     .setOption("start", "10.01.2021")
+ *     .setOption("end", "13.01.2021")
+ *     .build();
  *
  * // /db put key:foo value:bar
  * jdaTester.createSlashCommandInteractionEvent(command)
- *   .setSubcommand("put")
- *   .setOption("key", "foo")
- *   .setOption("value", "bar")
- *   .build();
+ *     .setSubcommand("put")
+ *     .setOption("key", "foo")
+ *     .setOption("value", "bar")
+ *     .build();
  * }
  * </pre>
  */
@@ -411,6 +411,6 @@ public final class SlashCommandInteractionEventBuilder {
             });
     }
 
-    private record Option<T> (String name, T value, OptionType type) {
+    private record Option<T>(String name, T value, OptionType type) {
     }
 }
