@@ -106,12 +106,6 @@
     "starboard": {
         "emojiNames" : ["⭐"],
         "channelPattern": "starboard"
-    }
-    "featureBlacklist": {
-        "normal": [
-        ],
-        "special": [
-        ]
     },
     "selectRolesChannelPattern": "select-your-roles",
     "rssConfig": {
