@@ -97,7 +97,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.get(0);
         String chatGptPrompt =
-                "generate title for this question %s, it shouldn't be longer than 4-5 words with no header"
+                "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
         Optional<String> chatGptResponse = chatGptService.ask(chatGptPrompt, "");
         String title = chatGptResponse.orElse(createTitle(originalMessage));
