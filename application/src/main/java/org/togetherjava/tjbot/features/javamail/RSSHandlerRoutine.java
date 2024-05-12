@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.tools.StringUtils;
@@ -125,8 +126,8 @@ public final class RSSHandlerRoutine implements Routine {
     private void sendRSS(JDA jda, RSSFeed feedConfig) {
         List<TextChannel> textChannels = getTextChannelsFromFeed(jda, feedConfig);
         if (textChannels.isEmpty()) {
-            logger.warn("Tried to send an RSS post, got empty response (channel {} not found)",
-                    feedConfig.targetChannelPattern());
+            logger.warn(
+                    "Tried to send an RSS post, but neither a target channel nor a fallback channel was found.");
             return;
         }
 
@@ -326,18 +327,18 @@ public final class RSSHandlerRoutine implements Routine {
      * @return an {@link List} of the text channels found, or empty if none are found
      */
     private List<TextChannel> getTextChannelsFromFeed(JDA jda, RSSFeed feed) {
-        // Attempt to find the target channel, use the fallback otherwise
-        if (targetChannelPatterns.containsKey(feed)) {
-            return jda.getTextChannelCache()
-                .stream()
-                .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
-                .toList();
-        } else {
-            return jda.getTextChannelCache()
-                .stream()
-                .filter(channel -> fallbackChannelPattern.test(channel.getName()))
-                .toList();
+        final SnowflakeCacheView<TextChannel> textChannelCache = jda.getTextChannelCache();
+        List<TextChannel> textChannels = textChannelCache.stream()
+            .filter(channel -> targetChannelPatterns.get(feed).test(channel.getName()))
+            .toList();
+
+        if (!textChannels.isEmpty()) {
+            return textChannels;
         }
+
+        return textChannelCache.stream()
+            .filter(channel -> fallbackChannelPattern.test(channel.getName()))
+            .toList();
     }
 
     /**
