@@ -16,7 +16,12 @@ import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.jda.payloads.PayloadChannel;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
-import org.togetherjava.tjbot.jda.payloads.slashcommand.*;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommand;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandData;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandMembers;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandOption;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandResolved;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandUsers;
 
 import javax.annotation.Nullable;
 

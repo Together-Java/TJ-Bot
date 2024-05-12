@@ -10,7 +10,7 @@ import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
 
 import javax.annotation.Nullable;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * Allows to render JShell results.

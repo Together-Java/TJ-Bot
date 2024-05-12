@@ -24,7 +24,12 @@ import org.togetherjava.tjbot.features.utils.LinkPreviews;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Implements the {@code /tag} command which lets the bot respond content of a tag that has been

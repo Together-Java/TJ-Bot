@@ -14,7 +14,9 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Optional;
 
-import static org.togetherjava.tjbot.features.utils.Colors.*;
+import static org.togetherjava.tjbot.features.utils.Colors.ERROR_COLOR;
+import static org.togetherjava.tjbot.features.utils.Colors.PARTIAL_SUCCESS_COLOR;
+import static org.togetherjava.tjbot.features.utils.Colors.SUCCESS_COLOR;
 
 class RendererUtils {
     private RendererUtils() {}

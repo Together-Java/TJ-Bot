@@ -8,17 +8,31 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.*;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.DidYouMean;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.DidYouMeans;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.Error;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.FutureTopic;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.LanguageMessage;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.Pod;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.QueryResult;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.RelatedExample;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.RelatedExamples;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.SubPod;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.Tip;
+import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.Tips;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 

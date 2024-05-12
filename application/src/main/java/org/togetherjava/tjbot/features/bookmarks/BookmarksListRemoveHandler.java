@@ -20,7 +20,11 @@ import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
