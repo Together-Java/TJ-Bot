@@ -110,7 +110,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
-        return threadChannel.retrieveMessageById(threadChannel.getIdLong()).flatMap(Message::pin);
+        return threadChannel.retrieveStartMessage().flatMap(Message::pin);
     }
 
     private RestAction<Message> generateAutomatedResponse(ThreadChannel threadChannel) {
