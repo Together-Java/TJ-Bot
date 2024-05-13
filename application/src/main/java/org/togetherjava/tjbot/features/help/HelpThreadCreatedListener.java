@@ -60,9 +60,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.isFromThread()) {
-            Channel parentChannel = event.getChannel().asThreadChannel().getParentChannel();
+            ThreadChannel threadChannel = event.getChannel().asThreadChannel();
+            Channel parentChannel = threadChannel.getParentChannel();
             if (helper.isHelpForumName(parentChannel.getName())) {
-                ThreadChannel threadChannel = event.getChannel().asThreadChannel();
                 int messageCount = threadChannel.getMessageCount();
                 if (messageCount > 1 || wasThreadAlreadyHandled(threadChannel.getIdLong())) {
                     return;
@@ -84,8 +84,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
         threadChannel.retrieveStartMessage().flatMap(message -> {
             registerThreadDataInDB(message, threadChannel);
-            return generateAutomatedResponse(threadChannel);
-        }).flatMap(message -> pinOriginalQuestion(threadChannel)).queue();
+            return sendHelperHeadsUp(threadChannel)
+                .flatMap(any -> HelpThreadCreatedListener.isContextSufficient(message),
+                        any -> createAIResponse(threadChannel, message))
+                .flatMap(any -> pinOriginalQuestion(message));
+        }).queue();
     }
 
     private static User getMentionedAuthorByMessage(Message message) {
@@ -96,11 +99,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         return message.getJDA().getSelfUser().equals(message.getAuthor());
     }
 
-    private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
-        RestAction<Message> originalQuestion = threadChannel.retrieveStartMessage();
-        return originalQuestion.flatMap(HelpThreadCreatedListener::isContextSufficient,
-                message -> helper.constructChatGptAttempt(threadChannel, getMessageContent(message),
-                        componentIdInteractor));
+    private RestAction<Message> createAIResponse(ThreadChannel threadChannel, Message message) {
+        return helper.constructChatGptAttempt(threadChannel, getMessageContent(message),
+                componentIdInteractor);
     }
 
     private static boolean isContextSufficient(Message message) {
@@ -108,12 +109,8 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
                 && !LinkDetection.containsLink(message.getContentRaw());
     }
 
-    private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
-        return threadChannel.retrieveStartMessage().flatMap(Message::pin);
-    }
-
-    private RestAction<Message> generateAutomatedResponse(ThreadChannel threadChannel) {
-        return sendHelperHeadsUp(threadChannel).flatMap(any -> createAIResponse(threadChannel));
+    private RestAction<Void> pinOriginalQuestion(Message message) {
+        return message.pin();
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
