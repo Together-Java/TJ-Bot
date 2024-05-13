@@ -97,8 +97,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
-        RestAction<Message> originalQuestion =
-                threadChannel.retrieveMessageById(threadChannel.getIdLong());
+        RestAction<Message> originalQuestion = threadChannel.retrieveStartMessage();
         return originalQuestion.flatMap(HelpThreadCreatedListener::isContextSufficient,
                 message -> helper.constructChatGptAttempt(threadChannel, getMessageContent(message),
                         componentIdInteractor));
@@ -172,7 +171,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         ThreadChannel channel = event.getChannel().asThreadChannel();
         Member interactionUser = Objects.requireNonNull(event.getMember());
 
-        channel.retrieveMessageById(channel.getId())
+        channel.retrieveStartMessage()
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
                     event, args));
 
