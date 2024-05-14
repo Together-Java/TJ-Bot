@@ -16,6 +16,7 @@ import java.util.Optional;
  */
 public class ResponseUtils {
     private static final Logger logger = LoggerFactory.getLogger(ResponseUtils.class);
+
     private ResponseUtils() {}
 
     /**
@@ -33,9 +34,12 @@ public class ResponseUtils {
             if (responseInfo.statusCode() == 200 || responseInfo.statusCode() == 204) {
                 return uncheckedParseJson(type, mapper, bytes);
             }
-            ErrorAndMessage errorMessage = tryParseError(bytes, mapper)
-                .orElse(new ErrorAndMessage("Bad Request", "Request failed with status: " + responseInfo.statusCode()));
-            throw new UncheckedRequestFailedException(errorMessage.error() + ". " + errorMessage.message(), responseInfo.statusCode());
+            ErrorAndMessage errorMessage =
+                    tryParseError(bytes, mapper).orElse(new ErrorAndMessage("Bad Request",
+                            "Request failed with status: " + responseInfo.statusCode()));
+            throw new UncheckedRequestFailedException(
+                    errorMessage.error() + ". " + errorMessage.message(),
+                    responseInfo.statusCode());
         });
     }
 
@@ -48,7 +52,9 @@ public class ResponseUtils {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record ErrorAndMessage(String error, String message) {}
+    private record ErrorAndMessage(String error, String message) {
+    }
+
     private static Optional<ErrorAndMessage> tryParseError(byte[] bytes, ObjectMapper mapper) {
         try {
             return Optional.ofNullable(mapper.readValue(bytes, ErrorAndMessage.class));
