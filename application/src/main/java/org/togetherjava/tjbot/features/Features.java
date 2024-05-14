@@ -148,7 +148,7 @@ public class Features {
         features.add(new PinnedNotificationRemover(config));
 
         // Voice receivers
-        features.add(new DynamicVoiceListener());
+        features.add(new DynamicVoiceListener(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
