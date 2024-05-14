@@ -46,6 +46,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final List<String> dynamicVoiceChannelPatterns;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -94,7 +95,9 @@ public final class Config {
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern) {
+                    required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "dynamicVoiceChannelPattern",
+                    required = true) List<String> dynamicVoiceChannelPatterns) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -127,6 +130,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.dynamicVoiceChannelPatterns = Objects.requireNonNull(dynamicVoiceChannelPatterns);
     }
 
     /**
@@ -418,4 +422,14 @@ public final class Config {
     public RSSFeedsConfig getRSSFeedsConfig() {
         return rssFeedsConfig;
     }
+
+    /**
+     * Gets the list of voice channel patterns that are treated dynamically.
+     *
+     * @return the list of dynamic voice channel patterns
+     */
+    public List<String> getDynamicVoiceChannelPatterns() {
+        return this.dynamicVoiceChannelPatterns;
+    }
+
 }
