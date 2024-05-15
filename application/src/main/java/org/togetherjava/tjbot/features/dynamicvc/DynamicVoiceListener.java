@@ -26,13 +26,35 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * {@link DynamicVoiceListener} is a feature that dynamically manages voice channels within a
+ * Discord guild based on user activity.
+ * <p>
+ * It is designed to handle events related to voice channel updates (e.g. when users join or leave
+ * voice channels). It dynamically creates or deletes voice channels to ensure there is always
+ * <i>one</i> available empty channel for users to join, and removes duplicate empty channels to
+ * avoid clutter.
+ * <p>
+ * This feature relies on configurations provided at initialization to determine the patterns for
+ * channel names it should manage. The configuration is expected to provide a list of regular
+ * expression patterns for these channel names.
+ */
 public class DynamicVoiceListener extends VoiceReceiverAdapter {
 
     private final Map<String, Predicate<String>> channelPredicates = new HashMap<>();
     private static final Pattern channelTopicPattern = Pattern.compile("(\\s+\\d+)$");
+
+    /** Map of event queues for each channel topic. */
     private static final Map<String, Queue<GuildVoiceUpdateEvent>> eventQueues = new HashMap<>();
+
+    /** Map to track if an event queue is currently being processed for each channel topic. */
     private static final Map<String, AtomicBoolean> activeQueuesMap = new HashMap<>();
 
+    /**
+     * Initializes a new {@link DynamicVoiceListener} with the specified configuration.
+     *
+     * @param config the configuration containing dynamic voice channel patterns
+     */
     public DynamicVoiceListener(Config config) {
         config.getDynamicVoiceChannelPatterns().forEach(pattern -> {
             channelPredicates.put(pattern, Pattern.compile(pattern).asMatchPredicate());
