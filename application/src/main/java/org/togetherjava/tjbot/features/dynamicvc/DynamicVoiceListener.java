@@ -28,15 +28,15 @@ import java.util.stream.Stream;
 
 public class DynamicVoiceListener extends VoiceReceiverAdapter {
 
-    private final Map<String, Predicate<String>> patterns = new HashMap<>();
+    private final Map<String, Predicate<String>> channelPredicates = new HashMap<>();
     private static final Pattern channelTopicPattern = Pattern.compile("(\\s+\\d+)$");
     private static final Map<String, Queue<GuildVoiceUpdateEvent>> eventQueues = new HashMap<>();
-    private static final Map<String, AtomicBoolean> isEventProcessing = new HashMap<>();
+    private static final Map<String, AtomicBoolean> activeQueuesMap = new HashMap<>();
 
     public DynamicVoiceListener(Config config) {
         config.getDynamicVoiceChannelPatterns().forEach(pattern -> {
-            patterns.put(pattern, Pattern.compile(pattern).asMatchPredicate());
-            isEventProcessing.put(pattern, new AtomicBoolean(false));
+            channelPredicates.put(pattern, Pattern.compile(pattern).asMatchPredicate());
+            activeQueuesMap.put(pattern, new AtomicBoolean(false));
             eventQueues.put(pattern, new LinkedList<>());
         });
     }
@@ -64,7 +64,7 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
 
         eventQueue.add(event);
 
-        if (isEventProcessing.get(channelTopic).get()) {
+        if (activeQueuesMap.get(channelTopic).get()) {
             return;
         }
 
@@ -72,26 +72,26 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
     }
 
     private void processEventFromQueue(String channelTopic) {
-        AtomicBoolean processing = isEventProcessing.get(channelTopic);
+        AtomicBoolean activeQueueFlag = activeQueuesMap.get(channelTopic);
         GuildVoiceUpdateEvent event = eventQueues.get(channelTopic).poll();
 
         if (event == null) {
-            processing.set(false);
+            activeQueueFlag.set(false);
             return;
         }
 
-        processing.set(true);
+        activeQueueFlag.set(true);
 
         handleTopicUpdate(event, channelTopic);
     }
 
     private void handleTopicUpdate(GuildVoiceUpdateEvent event, String channelTopic) {
-        AtomicBoolean processing = isEventProcessing.get(channelTopic);
+        AtomicBoolean activeQueueFlag = activeQueuesMap.get(channelTopic);
         Guild guild = event.getGuild();
-        List<CompletableFuture<?>> tasks = new ArrayList<>();
+        List<CompletableFuture<?>> restActionTasks = new ArrayList<>();
 
-        if (patterns.get(channelTopic) == null) {
-            processing.set(false);
+        if (channelPredicates.get(channelTopic) == null) {
+            activeQueueFlag.set(false);
             return;
         }
 
@@ -100,38 +100,43 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
         if (emptyChannelsCount == 0) {
             long channelCount = getChannelCountFromTopic(guild, channelTopic);
 
-            tasks.add(createVoiceChannelFromTopic(guild, channelTopic, channelCount));
+            restActionTasks
+                .add(makeCreateVoiceChannelFromTopicFuture(guild, channelTopic, channelCount));
         } else if (emptyChannelsCount != 1) {
-            tasks.addAll(removeDuplicateEmptyChannels(guild, channelTopic));
-            tasks.addAll(renameTopicChannels(guild, channelTopic));
+            restActionTasks.addAll(makeRemoveDuplicateEmptyChannelsFutures(guild, channelTopic));
+            restActionTasks.addAll(makeRenameTopicChannelsFutures(guild, channelTopic));
         }
 
-        if (!tasks.isEmpty()) {
-            CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new)).thenCompose(v -> {
-                List<CompletableFuture<?>> renameTasks = renameTopicChannels(guild, channelTopic);
-                return CompletableFuture.allOf(renameTasks.toArray(CompletableFuture[]::new));
-            }).handle((result, exception) -> {
-                processEventFromQueue(channelTopic);
-                processing.set(false);
-                return null;
-            });
+        if (!restActionTasks.isEmpty()) {
+            CompletableFuture.allOf(restActionTasks.toArray(CompletableFuture[]::new))
+                .thenCompose(v -> {
+                    List<CompletableFuture<?>> renameTasks =
+                            makeRenameTopicChannelsFutures(guild, channelTopic);
+                    return CompletableFuture.allOf(renameTasks.toArray(CompletableFuture[]::new));
+                })
+                .handle((result, exception) -> {
+                    processEventFromQueue(channelTopic);
+                    activeQueueFlag.set(false);
+                    return null;
+                });
             return;
         }
 
         processEventFromQueue(channelTopic);
-        processing.set(false);
+        activeQueueFlag.set(false);
     }
 
-    private static CompletableFuture<? extends StandardGuildChannel> createVoiceChannelFromTopic(
+    private static CompletableFuture<? extends StandardGuildChannel> makeCreateVoiceChannelFromTopicFuture(
             Guild guild, String channelTopic, long topicChannelsCount) {
-        Optional<VoiceChannel> voiceChannelOptional = getOriginalTopicChannel(guild, channelTopic);
+        Optional<VoiceChannel> originalTopicChannelOptional =
+                getOriginalTopicChannel(guild, channelTopic);
 
-        if (voiceChannelOptional.isPresent()) {
-            VoiceChannel originalChannel = voiceChannelOptional.orElseThrow();
+        if (originalTopicChannelOptional.isPresent()) {
+            VoiceChannel originalTopicChannel = originalTopicChannelOptional.orElseThrow();
 
-            return originalChannel.createCopy()
+            return originalTopicChannel.createCopy()
                 .setName(getNumberedChannelTopic(channelTopic, topicChannelsCount + 1))
-                .setPosition(originalChannel.getPositionRaw())
+                .setPosition(originalTopicChannel.getPositionRaw())
                 .submit();
         }
 
@@ -146,38 +151,39 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
             .findFirst();
     }
 
-    private List<CompletableFuture<Void>> removeDuplicateEmptyChannels(Guild guild,
+    private List<CompletableFuture<Void>> makeRemoveDuplicateEmptyChannelsFutures(Guild guild,
             String channelTopic) {
         List<VoiceChannel> channelsToRemove = getVoiceChannelsFromTopic(guild, channelTopic)
             .filter(channel -> channel.getMembers().isEmpty())
             .toList();
-        final List<CompletableFuture<Void>> tasks = new ArrayList<>();
+        final List<CompletableFuture<Void>> restActionTasks = new ArrayList<>();
 
         channelsToRemove.subList(1, channelsToRemove.size())
-            .forEach(channel -> tasks.add(channel.delete().submit()));
+            .forEach(channel -> restActionTasks.add(channel.delete().submit()));
 
-        return tasks;
+        return restActionTasks;
     }
 
-    private List<CompletableFuture<?>> renameTopicChannels(Guild guild, String channelTopic) {
-        List<VoiceChannel> channels = getVoiceChannelsFromTopic(guild, channelTopic).toList();
-        List<CompletableFuture<?>> tasks = new ArrayList<>();
+    private List<CompletableFuture<?>> makeRenameTopicChannelsFutures(Guild guild,
+            String channelTopic) {
+        List<VoiceChannel> topicChannels = getVoiceChannelsFromTopic(guild, channelTopic).toList();
+        List<CompletableFuture<?>> restActionTasks = new ArrayList<>();
 
-        IntStream.range(0, channels.size())
+        IntStream.range(0, topicChannels.size())
             .asLongStream()
-            .mapToObj(number -> Pair.of(number + 1, channels.get((int) number)))
+            .mapToObj(channelId -> Pair.of(channelId + 1, topicChannels.get((int) channelId)))
             .filter(pair -> pair.getLeft() != 1)
             .forEach(pair -> {
-                long number = pair.getLeft();
+                long channelId = pair.getLeft();
                 VoiceChannel voiceChannel = pair.getRight();
                 String voiceChannelNameTopic = getChannelTopic(voiceChannel.getName());
 
-                tasks.add(voiceChannel.getManager()
-                    .setName(getNumberedChannelTopic(voiceChannelNameTopic, number))
+                restActionTasks.add(voiceChannel.getManager()
+                    .setName(getNumberedChannelTopic(voiceChannelNameTopic, channelId))
                     .submit());
             });
 
-        return tasks;
+        return restActionTasks;
     }
 
     private long getChannelCountFromTopic(Guild guild, String channelTopic) {
@@ -187,7 +193,8 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
     private Stream<VoiceChannel> getVoiceChannelsFromTopic(Guild guild, String channelTopic) {
         return guild.getVoiceChannels()
             .stream()
-            .filter(channel -> patterns.get(channelTopic).test(getChannelTopic(channel.getName())));
+            .filter(channel -> channelPredicates.get(channelTopic)
+                .test(getChannelTopic(channel.getName())));
     }
 
     private long getEmptyChannelsCountFromTopic(Guild guild, String channelTopic) {
@@ -198,16 +205,16 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
     }
 
     private static String getChannelTopic(String channelName) {
-        Matcher matcher = channelTopicPattern.matcher(channelName);
+        Matcher channelTopicPatternMatcher = channelTopicPattern.matcher(channelName);
 
-        if (matcher.find()) {
-            return matcher.replaceAll("");
+        if (channelTopicPatternMatcher.find()) {
+            return channelTopicPatternMatcher.replaceAll("");
         }
 
         return channelName;
     }
 
-    private static String getNumberedChannelTopic(String channelTopic, long id) {
-        return String.format("%s %d", channelTopic, id);
+    private static String getNumberedChannelTopic(String channelTopic, long channelId) {
+        return String.format("%s %d", channelTopic, channelId);
     }
 }
