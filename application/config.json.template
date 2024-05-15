@@ -118,6 +118,7 @@
     "memberCountCategoryPattern": "Info",
     "dynamicVoiceChannelPattern": [
         "Gaming",
+        "Support/Studying Room",
         "Chit Chat"
     ]
 }
