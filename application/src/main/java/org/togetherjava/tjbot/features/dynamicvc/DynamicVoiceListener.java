@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
@@ -19,6 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -41,14 +45,22 @@ import java.util.stream.Stream;
  */
 public class DynamicVoiceListener extends VoiceReceiverAdapter {
 
+    private final Logger logger = LoggerFactory.getLogger(DynamicVoiceListener.class);
+
     private final Map<String, Predicate<String>> channelPredicates = new HashMap<>();
     private static final Pattern channelTopicPattern = Pattern.compile("(\\s+\\d+)$");
 
     /** Map of event queues for each channel topic. */
-    private static final Map<String, Queue<GuildVoiceUpdateEvent>> eventQueues = new HashMap<>();
+    private final Map<String, Queue<GuildVoiceUpdateEvent>> eventQueues = new HashMap<>();
 
     /** Map to track if an event queue is currently being processed for each channel topic. */
-    private static final Map<String, AtomicBoolean> activeQueuesMap = new HashMap<>();
+    private final Map<String, AtomicBoolean> activeQueuesMap = new HashMap<>();
+
+    /** Boolean to track if events from all queues should be handled at a slower rate. */
+    private final AtomicBoolean slowmode = new AtomicBoolean(false);
+    private final Executor eventQueueExecutor =
+            CompletableFuture.delayedExecutor(1L, TimeUnit.SECONDS);
+    private static final int SLOWMODE_THRESHOLD = 5;
 
     /**
      * Initializes a new {@link DynamicVoiceListener} with the specified configuration.
@@ -85,8 +97,16 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
         }
 
         eventQueue.add(event);
+        slowmode.set(eventQueue.size() >= SLOWMODE_THRESHOLD);
 
         if (activeQueuesMap.get(channelTopic).get()) {
+            return;
+        }
+
+        if (slowmode.get()) {
+            logger.info("Running with slowmode");
+            CompletableFuture.runAsync(() -> processEventFromQueue(channelTopic),
+                    eventQueueExecutor);
             return;
         }
 
