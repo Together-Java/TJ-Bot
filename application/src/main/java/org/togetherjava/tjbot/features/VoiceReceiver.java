@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
 public interface VoiceReceiver extends Feature {
     /**
      * Retrieves the pattern matching the names of channels of which this receiver is interested in
-     * receiving sent messages from. Called by the core system once during the startup in order to
-     * register the receiver accordingly.
+     * receiving events from. Called by the core system once during the startup in order to register
+     * the receiver accordingly.
      * <p>
      * Changes on the pattern returned by this method afterwards will not be picked up.
      *
