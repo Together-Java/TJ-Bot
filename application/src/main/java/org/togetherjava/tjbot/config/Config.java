@@ -96,7 +96,7 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "dynamicVoiceChannelPattern",
+            @JsonProperty(value = "dynamicVoiceChannelPatterns",
                     required = true) List<String> dynamicVoiceChannelPatterns) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);

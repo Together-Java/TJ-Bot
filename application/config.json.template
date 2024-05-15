@@ -116,7 +116,7 @@
         "pollIntervalInMinutes": 10
     },
     "memberCountCategoryPattern": "Info",
-    "dynamicVoiceChannelPattern": [
+    "dynamicVoiceChannelPatterns": [
         "Gaming",
         "Support/Studying Room",
         "Chit Chat"
