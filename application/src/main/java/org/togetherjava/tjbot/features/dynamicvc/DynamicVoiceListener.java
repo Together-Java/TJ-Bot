@@ -73,10 +73,10 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
 
     private void processEventFromQueue(String channelTopic) {
         AtomicBoolean processing = isEventProcessing.get(channelTopic);
-        processing.set(false);
         GuildVoiceUpdateEvent event = eventQueues.get(channelTopic).poll();
 
         if (event == null) {
+            processing.set(false);
             return;
         }
 
@@ -112,12 +112,14 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
                 return CompletableFuture.allOf(renameTasks.toArray(CompletableFuture[]::new));
             }).handle((result, exception) -> {
                 processEventFromQueue(channelTopic);
+                processing.set(false);
                 return null;
             });
             return;
         }
 
         processEventFromQueue(channelTopic);
+        processing.set(false);
     }
 
     private static CompletableFuture<? extends StandardGuildChannel> createVoiceChannelFromTopic(
