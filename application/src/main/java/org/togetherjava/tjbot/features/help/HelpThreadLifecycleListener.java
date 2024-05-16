@@ -64,7 +64,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
     }
 
     private void handleThreadStatus(ThreadChannel threadChannel) {
-        Instant closedAt = Instant.now();
+        Instant closedAt = threadChannel.getTimeArchiveInfoLastModified().toInstant();
         long threadId = threadChannel.getIdLong();
 
         int status = database.read(context -> context.selectFrom(HELP_THREADS)
