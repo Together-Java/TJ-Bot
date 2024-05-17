@@ -66,17 +66,14 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
     private void handleThreadStatus(ThreadChannel threadChannel) {
         Instant closedAt = threadChannel.getTimeArchiveInfoLastModified().toInstant();
         long threadId = threadChannel.getIdLong();
+        boolean isArchived = threadChannel.isArchived();
 
-        int status = database.read(context -> context.selectFrom(HELP_THREADS)
-            .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
-            .fetchOne(HELP_THREADS.TICKET_STATUS));
-
-        if (status == HelpSystemHelper.TicketStatus.ACTIVE.val) {
+        if (isArchived) {
             handleArchiveStatus(closedAt, threadChannel);
             return;
         }
 
-        changeStatusToActive(threadId);
+        updateThreadStatusToActive(threadId);
     }
 
     void handleArchiveStatus(Instant closedAt, ThreadChannel threadChannel) {
@@ -95,7 +92,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         logger.info("Thread with id: {}, updated to archived status in database", threadId);
     }
 
-    private void changeStatusToActive(long threadId) {
+    private void updateThreadStatusToActive(long threadId) {
         database.write(context -> context.update(HELP_THREADS)
             .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ACTIVE.val)
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
