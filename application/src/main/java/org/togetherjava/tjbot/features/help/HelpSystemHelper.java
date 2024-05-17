@@ -28,8 +28,8 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
-import java.time.Instant;
 import java.awt.Color;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,6 +67,8 @@ public final class HelpSystemHelper {
     private final Set<String> categories;
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
+
+    private final Set<String> tagsToIgnore;
     private final Database database;
     private final ChatGptService chatGptService;
     private static final int MAX_QUESTION_LENGTH = 200;
@@ -105,6 +107,10 @@ public final class HelpSystemHelper {
         threadActivityTagNames = Arrays.stream(ThreadActivity.values())
             .map(ThreadActivity::getTagName)
             .collect(Collectors.toSet());
+
+        List<String> tagsToIgnoreList = helpConfig.getTagsToIgnore();
+        tagsToIgnore = new HashSet<>(tagsToIgnoreList);
+
     }
 
     /**
@@ -224,8 +230,12 @@ public final class HelpSystemHelper {
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
 
         Instant createdAt = threadChannel.getTimeCreated().toInstant();
-        List<String> tagsList =
-                threadChannel.getAppliedTags().stream().map(ForumTag::getName).toList();
+
+        List<String> tagsList = threadChannel.getAppliedTags()
+            .stream()
+            .filter(this::shouldIgnoreTag)
+            .map(ForumTag::getName)
+            .toList();
 
         String tags = String.join(", ", tagsList);
 
@@ -234,7 +244,7 @@ public final class HelpSystemHelper {
                 .setAuthorId(authorId)
                 .setChannelId(threadChannel.getIdLong())
                 .setCreatedAt(createdAt)
-                .setTag(tags)
+                .setTags(tags)
                 .setTicketStatus(TicketStatus.ACTIVE.val);
             if (helpThreadsRecord.update() == 0) {
                 helpThreadsRecord.insert();
@@ -404,5 +414,16 @@ public final class HelpSystemHelper {
             .from(HelpThreads.HELP_THREADS)
             .where(HelpThreads.HELP_THREADS.CHANNEL_ID.eq(channelId))
             .fetchOptional(HelpThreads.HELP_THREADS.AUTHOR_ID));
+    }
+
+
+    /**
+     * will be used to filter a tag based on tagsToIgnore config list
+     * 
+     * @param tag applied tag
+     * @return boolean result whether to ignore this tag or not
+     */
+    boolean shouldIgnoreTag(ForumTag tag) {
+        return !this.tagsToIgnore.contains(tag.getName());
     }
 }

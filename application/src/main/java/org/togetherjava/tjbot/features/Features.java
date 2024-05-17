@@ -31,6 +31,8 @@ import org.togetherjava.tjbot.features.help.HelpThreadCommand;
 import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
 import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
 import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
+import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
+import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
 import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;

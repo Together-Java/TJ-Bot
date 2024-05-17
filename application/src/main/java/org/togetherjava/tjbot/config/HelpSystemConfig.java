@@ -18,16 +18,18 @@ public final class HelpSystemConfig {
     private final String helpForumPattern;
     private final List<String> categories;
     private final String categoryRoleSuffix;
+    private final List<String> tagsToIgnore;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private HelpSystemConfig(
             @JsonProperty(value = "helpForumPattern", required = true) String helpForumPattern,
             @JsonProperty(value = "categories", required = true) List<String> categories,
-            @JsonProperty(value = "categoryRoleSuffix",
-                    required = true) String categoryRoleSuffix) {
+            @JsonProperty(value = "categoryRoleSuffix", required = true) String categoryRoleSuffix,
+            @JsonProperty(value = "tagsToIgnore", required = true) List<String> tagsToIgnore) {
         this.helpForumPattern = Objects.requireNonNull(helpForumPattern);
         this.categories = new ArrayList<>(Objects.requireNonNull(categories));
         this.categoryRoleSuffix = Objects.requireNonNull(categoryRoleSuffix);
+        this.tagsToIgnore = new ArrayList<>(Objects.requireNonNull(tagsToIgnore));
     }
 
     /**
@@ -61,5 +63,14 @@ public final class HelpSystemConfig {
      */
     public String getCategoryRoleSuffix() {
         return categoryRoleSuffix;
+    }
+
+    /**
+     * Retrieves all tags that needs to be ignored during collection of meta data in
+     * {@link org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener} and
+     * {@link org.togetherjava.tjbot.features.help.HelpThreadCreatedListener}
+     */
+    public List<String> getTagsToIgnore() {
+        return tagsToIgnore;
     }
 }

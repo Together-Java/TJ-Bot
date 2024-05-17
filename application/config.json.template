@@ -45,7 +45,8 @@
             "Together Java Bot",
             "Other"
         ],
-        "categoryRoleSuffix": " - Helper"
+        "categoryRoleSuffix": " - Helper",
+        "tagsToIgnore":  ["Nobody helped yet", "Needs attention", "Active"]
     },
     "mediaOnlyChannelPattern": "memes",
     "blacklistedFileExtension": [

@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.update.ChannelUpdateAppliedTagsEvent;
 import net.dv8tion.jda.api.events.channel.update.ChannelUpdateArchivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -12,6 +13,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.EventReceiver;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREADS;
 
@@ -38,9 +40,6 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
 
     @Override
     public void onChannelUpdateArchived(@NotNull ChannelUpdateArchivedEvent event) {
-        if (!event.getChannelType().isThread()) {
-            return;
-        }
         ThreadChannel threadChannel = event.getChannel().asThreadChannel();
 
         if (!helper.isHelpForumName(threadChannel.getParentChannel().getName())) {
@@ -53,14 +52,22 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
     public void onChannelUpdateAppliedTags(@NotNull ChannelUpdateAppliedTagsEvent event) {
         ThreadChannel threadChannel = event.getChannel().asThreadChannel();
 
-        if (!helper.isHelpForumName(threadChannel.getParentChannel().getName())) {
+        if (!helper.isHelpForumName(threadChannel.getParentChannel().getName())
+                || shouldIgnoreUpdatedTagEvent(event)) {
             return;
         }
 
-        String updatedTag = event.getAddedTags().getFirst().getName();
+
+        List<String> updatedTagList = threadChannel.getAppliedTags()
+            .stream()
+            .filter(helper::shouldIgnoreTag)
+            .map(ForumTag::getName)
+            .toList();
+        String tags = String.join(", ", updatedTagList);
+
         long threadId = threadChannel.getIdLong();
 
-        handleTagsUpdate(threadId, updatedTag);
+        handleTagsUpdate(threadId, tags);
     }
 
     private void handleThreadStatus(ThreadChannel threadChannel) {
@@ -103,10 +110,25 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
 
     private void handleTagsUpdate(long threadId, String updatedTag) {
         database.write(context -> context.update(HELP_THREADS)
-            .set(HELP_THREADS.TAG, updatedTag)
+            .set(HELP_THREADS.TAGS, updatedTag)
             .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
             .execute());
 
         logger.info("Updated tag for thread with id: {} in database", threadId);
+    }
+
+    /**
+     * will ignore updated tag event if all new tags belong to tagsToIgnore config list
+     * 
+     * @param event updated tags event
+     * @return boolean
+     */
+    private boolean shouldIgnoreUpdatedTagEvent(ChannelUpdateAppliedTagsEvent event) {
+        List<String> newTags = event.getNewTags()
+            .stream()
+            .filter(helper::shouldIgnoreTag)
+            .map(ForumTag::getName)
+            .toList();
+        return newTags.isEmpty();
     }
 }
