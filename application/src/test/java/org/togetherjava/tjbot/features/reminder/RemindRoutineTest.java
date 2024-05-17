@@ -24,7 +24,13 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.togetherjava.tjbot.db.generated.tables.PendingReminders.PENDING_REMINDERS;
 
 final class RemindRoutineTest {
@@ -102,7 +108,7 @@ final class RemindRoutineTest {
         MessageEmbed lastMessage = getLastMessageFrom(jdaTester.getTextChannelSpy());
         assertEquals(reminderContent, lastMessage.getDescription());
         assertSimilar(remindAt, lastMessage.getTimestamp().toInstant());
-        assertEquals(author.getUser().getAsTag(), lastMessage.getAuthor().getName());
+        assertEquals(author.getUser().getName(), lastMessage.getAuthor().getName());
     }
 
     @Test
@@ -145,7 +151,7 @@ final class RemindRoutineTest {
         MessageEmbed lastMessage = getLastMessageFrom(jdaTester.getPrivateChannelSpy());
         assertEquals(reminderContent, lastMessage.getDescription());
         assertSimilar(remindAt, lastMessage.getTimestamp().toInstant());
-        assertEquals(author.getUser().getAsTag(), lastMessage.getAuthor().getName());
+        assertEquals(author.getUser().getName(), lastMessage.getAuthor().getName());
     }
 
     @Test

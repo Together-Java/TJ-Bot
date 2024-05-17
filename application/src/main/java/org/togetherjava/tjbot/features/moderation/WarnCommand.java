@@ -1,6 +1,9 @@
 package org.togetherjava.tjbot.features.moderation;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -69,7 +72,7 @@ public final class WarnCommand extends SlashCommandAdapter {
 
     private void warnUser(User target, Member author, String reason, Guild guild) {
         logger.info(LogMarkers.SENSITIVE, "'{}' ({}) warned the user '{}' ({}) for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                 reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),

@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath 'org.xerial:sqlite-jdbc:3.44.0.0'
+        classpath 'org.xerial:sqlite-jdbc:3.45.0.0'
     }
 }
 
@@ -46,9 +46,9 @@ dependencies {
     implementation project(':utils')
     implementation project(':formatter')
 
-    implementation 'net.dv8tion:JDA:5.0.0-alpha.20'
+    implementation 'net.dv8tion:JDA:5.0.0-beta.21'
 
-    implementation 'org.apache.logging.log4j:log4j-core:2.22.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.23.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
 
     implementation 'club.minnced:discord-webhooks:0.8.2'
@@ -67,6 +67,7 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    implementation "com.sigpwned:jackson-modules-java17-sealed-classes:0.0.0"
 
 	implementation 'com.github.freva:ascii-table:1.8.0'
 
@@ -74,9 +75,12 @@ dependencies {
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
     
-    implementation 'org.kohsuke:github-api:1.318'
+    implementation 'org.kohsuke:github-api:1.321'
 
-    testImplementation 'org.mockito:mockito-core:5.3.1'
+    implementation 'org.apache.commons:commons-text:1.11.0'
+    implementation 'com.apptasticsoftware:rssreader:3.6.0'
+
+    testImplementation 'org.mockito:mockito-core:5.11.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

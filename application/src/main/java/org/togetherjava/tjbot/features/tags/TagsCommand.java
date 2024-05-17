@@ -1,19 +1,14 @@
 package org.togetherjava.tjbot.features.tags;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 
-import java.time.Instant;
 import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +26,6 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public final class TagsCommand extends SlashCommandAdapter {
-
     private static final Logger logger = LoggerFactory.getLogger(TagsCommand.class);
     private static final int MAX_TAGS_THRESHOLD_WARNING = 200;
 
@@ -63,27 +57,9 @@ public final class TagsCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
                 .setDescription(tagListText)
-                .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
-                .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
-            .addActionRow(
-                    TagSystem.createDeleteButton(generateComponentId(event.getUser().getId())))
+            .setEphemeral(true)
             .queue();
-    }
-
-    @Override
-    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        String userId = args.get(0);
-
-        if (!event.getUser().getId().equals(userId) && !Objects.requireNonNull(event.getMember())
-            .hasPermission(Permission.MESSAGE_MANAGE)) {
-            event.reply(
-                    "The message can only be deleted by its author or an user with 'MESSAGE_MANAGE' permissions.")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
-        event.getMessage().delete().queue();
     }
 }

@@ -3,7 +3,8 @@ package org.togetherjava.tjbot.features;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.Contract;
@@ -20,9 +21,10 @@ import java.util.Objects;
  * their respective command method. A new command can then be registered by adding it to
  * {@link Features}.
  * <p>
- * Further, {@link #onButtonClick(ButtonInteractionEvent, List)} and
- * {@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)} can be overridden if desired.
- * The default implementation is empty, the adapter will not react to such events.
+ * Further, {@link #onButtonClick(ButtonInteractionEvent, List)},
+ * {@link #onEntitySelectSelection(EntitySelectInteractionEvent, List)} and
+ * {@link #onStringSelectSelection(StringSelectInteractionEvent, List)} can be overridden if
+ * desired. The default implementation is empty, the adapter will not react to such events.
  * <p>
  * The adapter manages some getters for you, you've to create the {@link CommandData} yourself. See
  * {@link #BotCommandAdapter(CommandData, CommandVisibility)}} for more info on that. Minimal
@@ -101,7 +103,13 @@ public abstract class BotCommandAdapter implements BotCommand {
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+    public void onEntitySelectSelection(EntitySelectInteractionEvent event, List<String> args) {
+        // Adapter does not react by default, subclasses may change this behavior
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 

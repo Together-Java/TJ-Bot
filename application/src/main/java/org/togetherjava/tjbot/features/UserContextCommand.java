@@ -2,7 +2,8 @@ package org.togetherjava.tjbot.features;
 
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -30,7 +31,8 @@ import java.util.List;
  * After registration, the system will notify a command whenever one of its corresponding user
  * context-commands ({@link #onUserContext(UserContextInteractionEvent)}), buttons
  * ({@link #onButtonClick(ButtonInteractionEvent, List)}) or menus
- * ({@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)}) have been triggered.
+ * ({@link #onStringSelectSelection(StringSelectInteractionEvent, List)},
+ * {@link #onEntitySelectSelection(EntitySelectInteractionEvent, List)}) have been triggered.
  * <p>
  * Some example commands are available in {@link org.togetherjava.tjbot.features.basic}.
  */

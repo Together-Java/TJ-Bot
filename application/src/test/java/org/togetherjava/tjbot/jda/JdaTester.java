@@ -1,9 +1,12 @@
 package org.togetherjava.tjbot.jda;
 
-import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -23,6 +26,9 @@ import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.Response;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.RestConfig;
+import net.dv8tion.jda.api.requests.RestRateLimiter;
+import net.dv8tion.jda.api.requests.SequentialRestRateLimiter;
 import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.AttachmentProxy;
@@ -32,7 +38,12 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.JDAImpl;
-import net.dv8tion.jda.internal.entities.*;
+import net.dv8tion.jda.internal.entities.EntityBuilder;
+import net.dv8tion.jda.internal.entities.GuildImpl;
+import net.dv8tion.jda.internal.entities.MemberImpl;
+import net.dv8tion.jda.internal.entities.RoleImpl;
+import net.dv8tion.jda.internal.entities.SelfUserImpl;
+import net.dv8tion.jda.internal.entities.UserImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.PrivateChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.ThreadChannelImpl;
@@ -45,6 +56,7 @@ import net.dv8tion.jda.internal.utils.config.AuthorizationConfig;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.MockingDetails;
+import org.mockito.internal.util.MockUtil;
 import org.mockito.stubbing.Answer;
 
 import org.togetherjava.tjbot.features.SlashCommand;
@@ -54,7 +66,12 @@ import javax.annotation.Nullable;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -66,7 +83,19 @@ import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 /**
  * Utility class for testing {@link SlashCommand}s.
@@ -106,6 +135,7 @@ public final class JdaTester {
     private final JDAImpl jda;
     private final MemberImpl member;
     private final GuildImpl guild;
+    private final RestRateLimiter rateLimiter;
     private final ReplyCallbackActionImpl replyAction;
     private final AuditableRestActionImpl<Void> auditableRestAction;
     private final MessageCreateActionImpl messageCreateAction;
@@ -132,8 +162,13 @@ public final class JdaTester {
         when(jda.getCacheFlags()).thenReturn(EnumSet.noneOf(CacheFlag.class));
 
         SelfUserImpl selfUser = spy(new SelfUserImpl(SELF_USER_ID, jda));
+        selfUser.setName("Self Tester");
         UserImpl user = spy(new UserImpl(USER_ID, jda));
+        user.setName("John Doe Tester");
         guild = spy(new GuildImpl(jda, GUILD_ID));
+        rateLimiter =
+                new SequentialRestRateLimiter(new RestRateLimiter.RateLimitConfig(RATE_LIMIT_POOL,
+                        RestRateLimiter.GlobalRateLimit.create(), true));
         Member selfMember = spy(new MemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
@@ -169,8 +204,8 @@ public final class JdaTester {
         when(jda.getGatewayPool()).thenReturn(GATEWAY_POOL);
         when(jda.getRateLimitPool()).thenReturn(RATE_LIMIT_POOL);
         when(jda.getSessionController()).thenReturn(new ConcurrentSessionController());
-        doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN))).when(jda).getRequester();
-        when(jda.getAccountType()).thenReturn(AccountType.BOT);
+        doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN), new RestConfig(),
+                rateLimiter)).when(jda).getRequester();
 
         replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
@@ -188,6 +223,7 @@ public final class JdaTester {
         doReturn(webhookMessageEditAction).when(webhookMessageEditAction)
             .setActionRow(any(ItemComponent.class));
 
+        when(guild.getGuildChannelById(anyLong())).thenReturn(textChannel);
         doReturn(everyoneRole).when(guild).getPublicRole();
         doReturn(selfMember).when(guild).getMember(selfUser);
         doReturn(member).when(guild).getMember(not(eq(selfUser)));
@@ -245,9 +281,11 @@ public final class JdaTester {
     public SlashCommandInteractionEventBuilder createSlashCommandInteractionEvent(
             SlashCommand command) {
         UnaryOperator<SlashCommandInteractionEvent> mockOperator = event -> {
-            SlashCommandInteractionEvent SlashCommandInteractionEvent = spy(event);
-            mockInteraction(SlashCommandInteractionEvent);
-            return SlashCommandInteractionEvent;
+            if (!MockUtil.isMock(event)) {
+                event = spy(event);
+            }
+            mockInteraction(event);
+            return event;
         };
 
         return new SlashCommandInteractionEventBuilder(jda, mockOperator).setCommand(command)

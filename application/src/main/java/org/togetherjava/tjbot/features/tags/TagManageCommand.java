@@ -21,9 +21,15 @@ import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import javax.annotation.Nullable;
 
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -108,8 +114,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder().setTitle("Success")
                 .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
-                .setFooter(event.getUser().getName())
-                .setTimestamp(Instant.now())
                 .setColor(TagSystem.AMBIENT_COLOR)
                 .build())
             .queue();

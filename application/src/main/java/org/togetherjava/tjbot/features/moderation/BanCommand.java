@@ -1,7 +1,11 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -65,8 +69,9 @@ public final class BanCommand extends SlashCommandAdapter {
             .addOptions(durationData)
             .addOption(OptionType.STRING, REASON_OPTION, "Why the user should be banned", true)
             .addOptions(new OptionData(OptionType.INTEGER, DELETE_HISTORY_OPTION,
-                    "the amount of days of the message history to delete, none means no messages are deleted.",
-                    true).addChoice("none", 0).addChoice("recent", 1).addChoice("all", 7));
+                    "the message history to delete", true).addChoice("none", 0)
+                        .addChoice("day", 1)
+                        .addChoice("week", 7));
 
         this.actionsStore = Objects.requireNonNull(actionsStore);
     }
@@ -76,8 +81,8 @@ public final class BanCommand extends SlashCommandAdapter {
         String reasonText =
                 reason == null || reason.isBlank() ? "" : " (reason: %s)".formatted(reason);
 
-        String message = "The user '%s' is already banned%s.".formatted(ban.getUser().getAsTag(),
-                reasonText);
+        String message =
+                "The user '%s' is already banned%s.".formatted(ban.getUser().getName(), reasonText);
         return hook.sendMessage(message).setEphemeral(true);
     }
 
@@ -123,7 +128,7 @@ public final class BanCommand extends SlashCommandAdapter {
         }
         logger.warn(LogMarkers.SENSITIVE,
                 "Something unexpected went wrong while trying to ban the user '{}'.",
-                target.getAsTag(), alreadyBannedFailure);
+                target.getName(), alreadyBannedFailure);
         return Optional.of(hook.sendMessage("Failed to ban the user due to an unexpected problem.")
             .setEphemeral(true));
     }
@@ -145,7 +150,7 @@ public final class BanCommand extends SlashCommandAdapter {
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) banned the user '{}' ({}) {} from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                 durationMessage, guild.getName(), deleteHistoryDays, reason);
 
         Instant expiresAt = temporaryData == null ? null : temporaryData.expiresAt();

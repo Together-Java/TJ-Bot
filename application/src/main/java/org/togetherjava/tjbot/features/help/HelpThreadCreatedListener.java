@@ -7,20 +7,22 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
-import net.dv8tion.jda.api.events.channel.ChannelCreateEvent;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
+import org.jetbrains.annotations.NotNull;
 
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.LinkDetection;
+import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -37,7 +39,6 @@ import java.util.stream.Collectors;
  */
 public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
-
     private final HelpSystemHelper helper;
 
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
@@ -57,20 +58,18 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     @Override
-    public void onChannelCreate(ChannelCreateEvent createEvent) {
-        if (!createEvent.getChannelType().isThread()) {
-            return;
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        if (event.isFromThread()) {
+            ThreadChannel threadChannel = event.getChannel().asThreadChannel();
+            Channel parentChannel = threadChannel.getParentChannel();
+            if (helper.isHelpForumName(parentChannel.getName())) {
+                int messageCount = threadChannel.getMessageCount();
+                if (messageCount > 1 || wasThreadAlreadyHandled(threadChannel.getIdLong())) {
+                    return;
+                }
+                handleHelpThreadCreated(threadChannel);
+            }
         }
-        ThreadChannel threadChannel = createEvent.getChannel().asThreadChannel();
-
-        if (wasThreadAlreadyHandled(threadChannel.getIdLong())) {
-            return;
-        }
-
-        if (!helper.isHelpForumName(threadChannel.getParentChannel().getName())) {
-            return;
-        }
-        handleHelpThreadCreated(threadChannel);
     }
 
     private boolean wasThreadAlreadyHandled(long threadChannelId) {
@@ -83,23 +82,13 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
-        threadChannel.retrieveMessageById(threadChannel.getIdLong()).queue(message -> {
-
-            long authorId = threadChannel.getOwnerIdLong();
-
-            if (isPostedBySelfUser(message)) {
-                // When transfer-command is used
-                authorId = getMentionedAuthorByMessage(message).getIdLong();
-            }
-
-            helper.writeHelpThreadToDatabase(authorId, threadChannel);
-        });
-
-        // The creation is delayed, because otherwise it could be too fast and be executed
-        // after Discord created the thread, but before Discord send OPs initial message.
-        // Sending messages at that moment is not allowed.
-        createMessages(threadChannel).and(pinOriginalQuestion(threadChannel))
-            .queueAfter(5, TimeUnit.SECONDS);
+        threadChannel.retrieveStartMessage().flatMap(message -> {
+            registerThreadDataInDB(message, threadChannel);
+            return sendHelperHeadsUp(threadChannel)
+                .flatMap(any -> HelpThreadCreatedListener.isContextSufficient(message),
+                        any -> createAIResponse(threadChannel, message))
+                .flatMap(any -> pinOriginalQuestion(message));
+        }).queue();
     }
 
     private static User getMentionedAuthorByMessage(Message message) {
@@ -110,19 +99,18 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         return message.getJDA().getSelfUser().equals(message.getAuthor());
     }
 
-    private RestAction<Message> createAIResponse(ThreadChannel threadChannel) {
-        RestAction<Message> originalQuestion =
-                threadChannel.retrieveMessageById(threadChannel.getIdLong());
-        return originalQuestion.flatMap(message -> helper.constructChatGptAttempt(threadChannel,
-                getMessageContent(message), componentIdInteractor));
+    private RestAction<Message> createAIResponse(ThreadChannel threadChannel, Message message) {
+        return helper.constructChatGptAttempt(threadChannel, getMessageContent(message),
+                componentIdInteractor);
     }
 
-    private RestAction<Void> pinOriginalQuestion(ThreadChannel threadChannel) {
-        return threadChannel.retrieveMessageById(threadChannel.getIdLong()).flatMap(Message::pin);
+    private static boolean isContextSufficient(Message message) {
+        return !MessageUtils.containsImage(message)
+                && !LinkDetection.containsLink(message.getContentRaw());
     }
 
-    private RestAction<Message> createMessages(ThreadChannel threadChannel) {
-        return sendHelperHeadsUp(threadChannel).flatMap(any -> createAIResponse(threadChannel));
+    private RestAction<Void> pinOriginalQuestion(Message message) {
+        return message.pin();
     }
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
@@ -180,20 +168,10 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         ThreadChannel channel = event.getChannel().asThreadChannel();
         Member interactionUser = Objects.requireNonNull(event.getMember());
 
-        channel.retrieveMessageById(channel.getId())
+        channel.retrieveStartMessage()
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
                     event, args));
 
-    }
-
-    @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
     }
 
     private boolean isPostAuthor(Member interactionUser, Message message) {
@@ -232,5 +210,16 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             deleteMessages = deleteMessages.and(channel.deleteMessageById(id));
         }
         deleteMessages.queue();
+    }
+
+    private void registerThreadDataInDB(Message message, ThreadChannel threadChannel) {
+        long authorId = threadChannel.getOwnerIdLong();
+
+        if (isPostedBySelfUser(message)) {
+            // When transfer-command is used
+            authorId = getMentionedAuthorByMessage(message).getIdLong();
+        }
+
+        helper.writeHelpThreadToDatabase(authorId, threadChannel);
     }
 }

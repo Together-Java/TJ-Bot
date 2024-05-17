@@ -13,9 +13,15 @@ import net.dv8tion.jda.internal.JDAImpl;
 import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
 
 import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.jda.payloads.PayloadChannel;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
-import org.togetherjava.tjbot.jda.payloads.slashcommand.*;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommand;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandData;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandMembers;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandOption;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandResolved;
+import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommandUsers;
 
 import javax.annotation.Nullable;
 
@@ -270,6 +276,7 @@ public final class SlashCommandInteractionEventBuilder {
                 "Test-User", "3452");
         PayloadMember member = new PayloadMember(null, null, "2021-09-07T18:25:16.615000+00:00",
                 "1099511627775", List.of(), false, false, false, null, false, user);
+        PayloadChannel channel = new PayloadChannel(channelId, 1);
 
         List<PayloadSlashCommandOption> options;
         if (subcommand == null) {
@@ -281,8 +288,8 @@ public final class SlashCommandInteractionEventBuilder {
         PayloadSlashCommandData data = new PayloadSlashCommandData(command.getName(), "1", 1,
                 options, extractResolvedOrNull(nameToOption));
 
-        return new PayloadSlashCommand(guildId, "897425767397466123", 2, 1, channelId,
-                applicationId, token, member, data);
+        return new PayloadSlashCommand(guildId, "897425767397466123", 2, 1, applicationId, token,
+                member, channel, data);
     }
 
     @Nullable

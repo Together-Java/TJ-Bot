@@ -1,6 +1,10 @@
 package org.togetherjava.tjbot.features.moderation;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -51,10 +55,13 @@ public final class NoteCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        OptionMapping targetOption = event.getOption(USER_OPTION);
-        Member author = event.getMember();
-        Guild guild = event.getGuild();
-        String content = event.getOption(CONTENT_OPTION).getAsString();
+        OptionMapping targetOption =
+                Objects.requireNonNull(event.getOption(USER_OPTION), "The user is null");
+        Member author = Objects.requireNonNull(event.getMember());
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        String content =
+                Objects.requireNonNull(event.getOption(CONTENT_OPTION), "The content is null")
+                    .getAsString();
 
         if (!handleChecks(guild.getSelfMember(), author, targetOption.getAsMember(), content,
                 event)) {
@@ -83,7 +90,7 @@ public final class NoteCommand extends SlashCommandAdapter {
     private void storeNote(User target, Member author, String content, ISnowflake guild) {
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) wrote a note about the user '{}' ({}) with content '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                 content);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),

@@ -5,7 +5,9 @@ import org.togetherjava.tjbot.features.mathcommands.wolframalpha.api.WolframAlph
 
 import javax.imageio.ImageIO;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;

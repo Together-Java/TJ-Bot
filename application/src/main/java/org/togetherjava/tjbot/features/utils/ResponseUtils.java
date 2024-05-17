@@ -1,6 +1,9 @@
 package org.togetherjava.tjbot.features.utils;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,6 +15,8 @@ import java.util.Optional;
  * Handle the parsing of json in a http request.
  */
 public class ResponseUtils {
+    private static final Logger logger = LoggerFactory.getLogger(ResponseUtils.class);
+
     private ResponseUtils() {}
 
     /**
@@ -29,9 +34,12 @@ public class ResponseUtils {
             if (responseInfo.statusCode() == 200 || responseInfo.statusCode() == 204) {
                 return uncheckedParseJson(type, mapper, bytes);
             }
-            String errorMessage = tryParseError(bytes, mapper)
-                .orElse("Request failed with status: " + responseInfo.statusCode());
-            throw new UncheckedRequestFailedException(errorMessage, responseInfo.statusCode());
+            ErrorAndMessage errorMessage =
+                    tryParseError(bytes, mapper).orElse(new ErrorAndMessage("Bad Request",
+                            "Request failed with status: " + responseInfo.statusCode()));
+            throw new UncheckedRequestFailedException(
+                    errorMessage.error() + ". " + errorMessage.message(),
+                    responseInfo.statusCode());
         });
     }
 
@@ -43,10 +51,15 @@ public class ResponseUtils {
         }
     }
 
-    private static Optional<String> tryParseError(byte[] bytes, ObjectMapper mapper) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record ErrorAndMessage(String error, String message) {
+    }
+
+    private static Optional<ErrorAndMessage> tryParseError(byte[] bytes, ObjectMapper mapper) {
         try {
-            return Optional.ofNullable(mapper.readTree(bytes).get("error").asText());
+            return Optional.ofNullable(mapper.readValue(bytes, ErrorAndMessage.class));
         } catch (Exception e) {
+            logger.error("Error parsing json", e);
             return Optional.empty();
         }
     }

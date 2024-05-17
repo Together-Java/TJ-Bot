@@ -8,7 +8,8 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.UserContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
@@ -21,13 +22,28 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.features.*;
+import org.togetherjava.tjbot.features.EventReceiver;
+import org.togetherjava.tjbot.features.Feature;
+import org.togetherjava.tjbot.features.Features;
+import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.MessageReceiver;
+import org.togetherjava.tjbot.features.Routine;
+import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.features.UserContextCommand;
+import org.togetherjava.tjbot.features.UserInteractionType;
+import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentId;
 import org.togetherjava.tjbot.features.componentids.ComponentIdParser;
 import org.togetherjava.tjbot.features.componentids.ComponentIdStore;
 import org.togetherjava.tjbot.features.componentids.InvalidComponentIdFormatException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -248,7 +264,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         String name = event.getName();
 
         logger.debug("Received auto completion from command '{}' (#{}) on guild '{}'",
-                event.getCommandPath(), event.getId(), event.getGuild());
+                event.getFullCommandName(), event.getId(), event.getGuild());
         COMMAND_SERVICE.execute(
                 () -> requireUserInteractor(UserInteractionType.SLASH_COMMAND.getPrefixedName(name),
                         SlashCommand.class).onAutoComplete(event));
@@ -263,11 +279,19 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     @Override
-    public void onSelectMenuInteraction(SelectMenuInteractionEvent event) {
-        logger.debug("Received selection menu event '{}' (#{}) on guild '{}'",
+    public void onEntitySelectInteraction(EntitySelectInteractionEvent event) {
+        logger.debug("Received entity selection menu event '{}' (#{}) on guild '{}'",
                 event.getComponentId(), event.getId(), event.getGuild());
         COMMAND_SERVICE
-            .execute(() -> forwardComponentCommand(event, UserInteractor::onSelectMenuSelection));
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onEntitySelectSelection));
+    }
+
+    @Override
+    public void onStringSelectInteraction(StringSelectInteractionEvent event) {
+        logger.debug("Received string selection menu event '{}' (#{}) on guild '{}'",
+                event.getComponentId(), event.getId(), event.getGuild());
+        COMMAND_SERVICE
+            .execute(() -> forwardComponentCommand(event, UserInteractor::onStringSelectSelection));
     }
 
     @Override

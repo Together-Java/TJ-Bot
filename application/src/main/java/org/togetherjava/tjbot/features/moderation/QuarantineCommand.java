@@ -1,6 +1,10 @@
 package org.togetherjava.tjbot.features.moderation;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -85,7 +89,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
             Guild guild) {
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
+                author.getUser().getName(), author.getId(), target.getUser().getName(),
                 target.getId(), guild.getName(), reason);
 
         actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),

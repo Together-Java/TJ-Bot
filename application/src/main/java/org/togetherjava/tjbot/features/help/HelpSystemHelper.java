@@ -1,6 +1,12 @@
 package org.togetherjava.tjbot.features.help;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.entities.channel.attribute.IThreadContainer;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -9,7 +15,6 @@ import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +28,8 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
-import java.awt.*;
 import java.time.Instant;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -118,7 +122,7 @@ public final class HelpSystemHelper {
     RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
             String originalQuestion, ComponentIdInteractor componentIdInteractor) {
         Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
-        Optional<String[]> chatGPTAnswer;
+        Optional<String> chatGPTAnswer;
 
         if (questionOptional.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
@@ -126,12 +130,17 @@ public final class HelpSystemHelper {
         String question = questionOptional.get();
         logger.debug("The final question sent to chatGPT: {}", question);
 
-        chatGPTAnswer = chatGptService.ask(question);
+        ForumTag defaultTag = threadChannel.getAppliedTags().getFirst();
+        ForumTag matchingTag = getCategoryTagOfChannel(threadChannel).orElse(defaultTag);
+
+        String context = matchingTag.getName();
+        chatGPTAnswer = chatGptService.ask(question, context);
+
         if (chatGPTAnswer.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
         }
 
-        List<String> ids = new CopyOnWriteArrayList<>();
+        StringBuilder idForDismissButton = new StringBuilder();
         RestAction<Message> message =
                 mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
                     .map("""
@@ -140,27 +149,51 @@ public final class HelpSystemHelper {
                             %s.
                             """::formatted)
                     .flatMap(threadChannel::sendMessage)
-                    .onSuccess(m -> ids.add(m.getId()));
-        String[] answers = chatGPTAnswer.orElseThrow();
+                    .onSuccess(m -> idForDismissButton.append(m.getId()));
 
-        for (int i = 0; i < answers.length; i++) {
-            MessageCreateAction answer = threadChannel.sendMessage(answers[i]);
+        String answer = chatGPTAnswer.orElseThrow();
+        SelfUser selfUser = threadChannel.getJDA().getSelfUser();
 
-            if (i == answers.length - 1) {
-                message = message.flatMap(any -> answer
-                    .addActionRow(generateDismissButton(componentIdInteractor, ids)));
-                continue;
-            }
-
-            message = message.flatMap(ignored -> answer.onSuccess(m -> ids.add(m.getId())));
+        int responseCharLimit = MessageEmbed.DESCRIPTION_MAX_LENGTH;
+        if (answer.length() > responseCharLimit) {
+            answer = answer.substring(0, responseCharLimit);
         }
 
-        return message;
+        MessageEmbed responseEmbed = generateGptResponseEmbed(answer, selfUser, originalQuestion);
+        return message.flatMap(any -> threadChannel.sendMessageEmbeds(responseEmbed)
+            .addActionRow(
+                    generateDismissButton(componentIdInteractor, idForDismissButton.toString())));
     }
 
-    private Button generateDismissButton(ComponentIdInteractor componentIdInteractor,
-            List<String> ids) {
-        String buttonId = componentIdInteractor.generateComponentId(ids.toArray(String[]::new));
+    /**
+     * Generates a MessageEmbed for a response using AI.
+     *
+     * @param answer The response text generated by AI.
+     * @param selfUser The SelfUser representing the bot.
+     * @param title The title for the MessageEmbed.
+     * @return A MessageEmbed that contains response generated by AI.
+     */
+    public MessageEmbed generateGptResponseEmbed(String answer, SelfUser selfUser, String title) {
+        String responseByGptFooter = "- AI generated response";
+
+        int embedTitleLimit = MessageEmbed.TITLE_MAX_LENGTH;
+        String capitalizedTitle = Character.toUpperCase(title.charAt(0)) + title.substring(1);
+
+        String titleForEmbed = capitalizedTitle.length() > embedTitleLimit
+                ? capitalizedTitle.substring(0, embedTitleLimit)
+                : capitalizedTitle;
+
+        return new EmbedBuilder()
+            .setAuthor(selfUser.getName(), null, selfUser.getEffectiveAvatarUrl())
+            .setTitle(titleForEmbed)
+            .setDescription(answer)
+            .setColor(Color.pink)
+            .setFooter(responseByGptFooter)
+            .build();
+    }
+
+    private Button generateDismissButton(ComponentIdInteractor componentIdInteractor, String id) {
+        String buttonId = componentIdInteractor.generateComponentId(id);
         return Button.danger(buttonId, "Dismiss");
     }
 
@@ -179,20 +212,6 @@ public final class HelpSystemHelper {
             .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
 
         questionBuilder.append(originalQuestion);
-
-        StringBuilder tagBuilder = new StringBuilder();
-        int stringLength = questionBuilder.length();
-        for (ForumTag tag : threadChannel.getAppliedTags()) {
-            String tagName = tag.getName();
-            stringLength += tagName.length();
-            if (stringLength > MAX_QUESTION_LENGTH) {
-                break;
-            }
-            tagBuilder.append(String.format("%s ", tagName));
-        }
-
-        questionBuilder.insert(0, tagBuilder);
-
         return Optional.of(questionBuilder.toString());
     }
 

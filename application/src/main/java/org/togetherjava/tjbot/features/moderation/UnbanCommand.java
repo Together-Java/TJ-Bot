@@ -1,7 +1,11 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.IPermissionHolder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -53,7 +57,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
 
             logger.info(LogMarkers.SENSITIVE,
                     "'{}' ({}) unbanned the user '{}' ({}) from guild '{}' for reason '{}'.",
-                    author.getUser().getAsTag(), author.getId(), target.getAsTag(), target.getId(),
+                    author.getUser().getName(), author.getId(), target.getName(), target.getId(),
                     guild.getName(), reason);
 
             actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
@@ -62,7 +66,7 @@ public final class UnbanCommand extends SlashCommandAdapter {
     }
 
     private static void handleFailure(Throwable unbanFailure, User target, IReplyCallback event) {
-        String targetTag = target.getAsTag();
+        String targetTag = target.getName();
         if (unbanFailure instanceof ErrorResponseException errorResponseException) {
             if (errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_USER) {
                 event.reply("The specified user does not exist.").setEphemeral(true).queue();

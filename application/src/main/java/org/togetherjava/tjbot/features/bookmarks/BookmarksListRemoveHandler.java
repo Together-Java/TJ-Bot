@@ -7,19 +7,24 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 
 import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -157,7 +162,7 @@ final class BookmarksListRemoveHandler {
         bookmarksSystem.removeBookmarks(userID, request.bookmarkIdsToRemove);
     }
 
-    void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
+    void onSelectMenuSelection(StringSelectInteractionEvent event, List<String> args) {
         Request request = Request.fromArgs(args);
 
         if (request.type != RequestType.REMOVE) {
@@ -244,7 +249,7 @@ final class BookmarksListRemoveHandler {
         }).toList();
 
         String selectMenuRemoveId = generateRemoveComponentId.apply(SELECT_MENU_REMOVE_NAME);
-        SelectMenu selectMenuRemove = SelectMenu.create(selectMenuRemoveId)
+        SelectMenu selectMenuRemove = StringSelectMenu.create(selectMenuRemoveId)
             .setPlaceholder("Select bookmarks to delete")
             .addOptions(selectMenuRemoveOptions)
             .setDefaultValues(bookmarksToRemoveChannelIDs.stream().map(String::valueOf).toList())

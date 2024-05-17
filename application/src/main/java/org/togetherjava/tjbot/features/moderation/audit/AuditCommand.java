@@ -31,7 +31,11 @@ import javax.annotation.Nullable;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -138,7 +142,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
         String avatarOrDefaultUrl = user.getEffectiveAvatarUrl();
 
-        return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getAsTag()))
+        return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
             .setAuthor(user.getName(), null, avatarOrDefaultUrl)
             .setDescription(createSummaryMessageDescription(actions))
             .setColor(ModerationUtils.AMBIENT_COLOR);
@@ -190,7 +194,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
         return jda.retrieveUserById(action.authorId())
-            .map(author -> author == null ? "(unknown user)" : author.getAsTag())
+            .map(author -> author == null ? "(unknown user)" : author.getName())
             .map(authorText -> {
                 String expiresAtFormatted = action.actionExpiresAt() == null ? ""
                         : "\nTemporary action, expires at: " + formatTime(action.actionExpiresAt());

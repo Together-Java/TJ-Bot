@@ -6,9 +6,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.kohsuke.github.GHGist;
@@ -47,7 +45,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
 
-    private final String gistApiKey;
+    private final String githubApiKey;
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
@@ -56,12 +54,13 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     /**
      * Creates a new instance.
-     * 
+     *
      * @param config used to get api key and channel names.
      * @see org.togetherjava.tjbot.features.Features
      */
     public FileSharingMessageListener(Config config) {
-        gistApiKey = config.getGistApiKey();
+        super(Pattern.compile(".*"));
+        githubApiKey = config.getGitHubApiKey();
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
         isSoftModRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
@@ -111,9 +110,9 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
         String gistId = args.get(1);
 
         try {
-            new GitHubBuilder().withOAuthToken(gistApiKey).build().getGist(gistId).delete();
-
-            event.getMessage().delete().queue();
+            new GitHubBuilder().withOAuthToken(githubApiKey).build().getGist(gistId).delete();
+            event.deferEdit().queue();
+            event.getHook().deleteOriginal().queue();
         } catch (IOException e) {
             logger.warn("Failed to delete gist with id {}", gistId, e);
         }
@@ -129,11 +128,12 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void processAttachments(MessageReceivedEvent event,
             List<Message.Attachment> attachments) throws IOException {
-        GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(gistApiKey)
+
+        GHGistBuilder gistBuilder = new GitHubBuilder().withOAuthToken(githubApiKey)
             .build()
             .createGist()
             .public_(false)
-            .description("Uploaded by " + event.getAuthor().getAsTag());
+            .description("Uploaded by " + event.getAuthor().getName());
 
         List<CompletableFuture<Void>> tasks = new ArrayList<>();
 
@@ -216,15 +216,5 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     @Override
     public UserInteractionType getInteractionType() {
         return UserInteractionType.OTHER;
-    }
-
-    @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
     }
 }

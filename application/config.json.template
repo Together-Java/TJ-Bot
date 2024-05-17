@@ -1,6 +1,6 @@
 {
     "token": "<put_your_token_here>",
-    "gistApiKey": "<your_gist_personal_access_token>",
+    "githubApiKey": "<your_github_personal_access_token>",
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
@@ -86,6 +86,8 @@
         "wsf",
         "wsh"
     ],
+    "githubReferencingEnabledChannelPattern": "server-suggestions|tjbot-discussion|modernjava-discussion",
+    "githubRepositories": [403389278,587644974,601602394],
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>",
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
@@ -95,18 +97,23 @@
         "rateLimitWindowSeconds": 10,
         "rateLimitRequestsInWindow": 3
     },
-    "helperPruneConfig": {
-        "roleFullLimit": 100,
-        "roleFullThreshold": 95,
-        "pruneMemberAmount": 7,
-        "inactivateAfterDays": 90,
-        "recentlyJoinedDays": 4
-    },
     "featureBlacklist": {
         "normal": [
         ],
         "special": [
         ]
     },
-    "selectRolesChannelPattern": "select-your-roles"
+    "selectRolesChannelPattern": "select-your-roles",
+    "rssConfig": {
+        "feeds": [
+            {
+                "url": "https://wiki.openjdk.org/spaces/createrssfeed.action?types=page&types=comment&types=blogpost&types=mail&types=attachment&spaces=JDKUpdates&maxResults=15&title=%5BJDK+Updates%5D+All+Content+Feed&amp;publicFeed=true",
+                "targetChannelPattern": "java-news-and-changes",
+                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssX"
+            }
+        ],
+        "fallbackChannelPattern": "java-news-and-changes",
+        "pollIntervalInMinutes": 10
+    },
+    "memberCountCategoryPattern": "Info"
 }

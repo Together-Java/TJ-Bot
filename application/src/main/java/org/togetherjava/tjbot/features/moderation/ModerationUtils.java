@@ -2,7 +2,12 @@ package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.IPermissionHolder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
@@ -86,7 +91,7 @@ public class ModerationUtils {
      */
     public static boolean handleCanInteractWithTarget(String actionVerb, Member bot, Member author,
             Member target, IReplyCallback event) {
-        String targetTag = target.getUser().getAsTag();
+        String targetTag = target.getUser().getName();
         if (!author.canInteract(target)) {
             event
                 .reply("The user %s is too powerful for you to %s.".formatted(targetTag,
@@ -279,8 +284,8 @@ public class ModerationUtils {
      */
     static MessageEmbed createActionResponse(User author, ModerationAction action, User target,
             @Nullable String extraMessage, @Nullable String reason) {
-        String description = "%s **%s** (id: %s).".formatted(action.getVerb(), target.getAsTag(),
-                target.getId());
+        String description =
+                "%s **%s** (id: %s).".formatted(action.getVerb(), target.getName(), target.getId());
         if (extraMessage != null && !extraMessage.isBlank()) {
             description += "\n" + extraMessage;
         }
@@ -290,7 +295,7 @@ public class ModerationUtils {
 
         String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
 
-        return new EmbedBuilder().setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
+        return new EmbedBuilder().setAuthor(author.getName(), null, avatarOrDefaultUrl)
             .setDescription(description)
             .setTimestamp(Instant.now())
             .setColor(AMBIENT_COLOR)

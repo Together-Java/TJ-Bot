@@ -3,9 +3,7 @@ package org.togetherjava.tjbot.features.code;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -28,7 +26,11 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import javax.annotation.Nullable;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,10 +75,10 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
 
-        List<CodeAction> codeActions =
-                Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval))
-                    .filter(a -> blacklist.isEnabled(a.getClass().getSimpleName()))
-                    .toList();
+        List<CodeAction> codeActions = blacklist
+            .filterStream(Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval)),
+                    codeAction -> codeAction.getClass().getName())
+            .toList();
 
         labelToCodeAction = codeActions.stream()
             .collect(Collectors.toMap(CodeAction::getLabel, Function.identity(), (x, y) -> y,
@@ -91,16 +93,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     @Override
     public UserInteractionType getInteractionType() {
         return UserInteractionType.OTHER;
-    }
-
-    @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
     }
 
     @Override
@@ -161,6 +153,9 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         long originalMessageId = Long.parseLong(args.get(0));
+
+        event.deferEdit().queue();
+
         // The third arg indicates a non-code-action button
         if (args.size() >= 3 && DELETE_CUE.equals(args.get(2))) {
             deleteCodeReply(event, originalMessageId);
@@ -168,7 +163,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         CodeAction codeAction = getActionOfEvent(event);
-        event.deferEdit().queue();
 
         // User decided for an action, apply it to the code
         event.getChannel()
@@ -201,7 +195,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 event.getUser().getId(), originalMessageId, event.getChannel().getName());
 
         originalMessageToCodeReply.invalidate(originalMessageId);
-        event.getMessage().delete().queue();
+        event.getHook().deleteOriginal().queue();
     }
 
     private CodeAction getActionOfEvent(ButtonInteractionEvent event) {

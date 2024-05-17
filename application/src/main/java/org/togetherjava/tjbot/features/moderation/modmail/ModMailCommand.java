@@ -14,9 +14,9 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -27,7 +27,7 @@ import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.utils.DiscordClientAction;
 
-import java.awt.*;
+import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -204,7 +204,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     }
 
     private MessageEmbed createModMailMessage(@Nullable User author, String userMessage) {
-        String authorTag = author == null ? "Anonymous" : author.getAsTag();
+        String authorTag = (author == null ? "Anonymous" : author.getName()) + " (Reporter)";
         String authorAvatar = author == null ? null : author.getAvatarUrl();
         return new EmbedBuilder().setTitle("Modmail")
             .setAuthor(authorTag, null, authorAvatar)

@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.features.basic.SlashCommandEducator;
@@ -20,13 +21,36 @@ import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
-import org.togetherjava.tjbot.features.help.*;
+import org.togetherjava.tjbot.features.github.GitHubCommand;
+import org.togetherjava.tjbot.features.github.GitHubReference;
+import org.togetherjava.tjbot.features.help.GuildLeaveCloseThreadListener;
+import org.togetherjava.tjbot.features.help.HelpSystemHelper;
+import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;
+import org.togetherjava.tjbot.features.help.HelpThreadAutoArchiver;
+import org.togetherjava.tjbot.features.help.HelpThreadCommand;
+import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
+import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
+import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
+import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
-import org.togetherjava.tjbot.features.moderation.*;
+import org.togetherjava.tjbot.features.moderation.BanCommand;
+import org.togetherjava.tjbot.features.moderation.KickCommand;
+import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
+import org.togetherjava.tjbot.features.moderation.MuteCommand;
+import org.togetherjava.tjbot.features.moderation.NoteCommand;
+import org.togetherjava.tjbot.features.moderation.QuarantineCommand;
+import org.togetherjava.tjbot.features.moderation.RejoinModerationRoleListener;
+import org.togetherjava.tjbot.features.moderation.ReportCommand;
+import org.togetherjava.tjbot.features.moderation.TransferQuestionCommand;
+import org.togetherjava.tjbot.features.moderation.UnbanCommand;
+import org.togetherjava.tjbot.features.moderation.UnmuteCommand;
+import org.togetherjava.tjbot.features.moderation.UnquarantineCommand;
+import org.togetherjava.tjbot.features.moderation.WarnCommand;
+import org.togetherjava.tjbot.features.moderation.WhoIsCommand;
 import org.togetherjava.tjbot.features.moderation.attachment.BlacklistedAttachmentListener;
 import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogRoutine;
@@ -77,13 +101,14 @@ public class Features {
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
         FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
-        JShellEval jshellEval = new JShellEval(config.getJshell());
+        JShellEval jshellEval = new JShellEval(config.getJshell(), config.getGitHubApiKey());
 
         TagSystem tagSystem = new TagSystem(database);
         BookmarksSystem bookmarksSystem = new BookmarksSystem(config, database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
+        GitHubReference githubReference = new GitHubReference(config);
         CodeMessageHandler codeMessageHandler =
                 new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
@@ -104,11 +129,11 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
-        features
-            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
+        features.add(new MemberCountDisplayRoutine(config));
+        features.add(new RSSHandlerRoutine(config, database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -117,6 +142,7 @@ public class Features {
         features.add(new MediaOnlyChannelListener(config));
         features.add(new FileSharingMessageListener(config));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(githubReference);
         features.add(codeMessageHandler);
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
         features.add(new CodeMessageManualDetection(codeMessageHandler));
@@ -131,7 +157,7 @@ public class Features {
         features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
 
         // Message context commands
-        features.add(new TransferQuestionCommand(config));
+        features.add(new TransferQuestionCommand(config, chatGptService));
 
         // User context commands
 
@@ -157,14 +183,15 @@ public class Features {
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
         features.add(new WolframAlphaCommand(config));
+        features.add(new GitHubCommand(githubReference));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGptCommand(chatGptService));
+        features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
-        return features.stream().filter(f -> blacklist.isEnabled(f.getClass())).toList();
+        return blacklist.filterStream(features.stream(), Object::getClass).toList();
     }
 }

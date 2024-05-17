@@ -28,14 +28,25 @@ import org.togetherjava.tjbot.features.moderation.ModerationUtils;
 import javax.annotation.Nullable;
 
 import java.awt.Color;
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
+
 
 /**
  * Routine that automatically checks moderator actions on a schedule and logs them to dedicated
@@ -334,7 +345,7 @@ public final class ModAuditLogRoutine implements Routine {
     private record AuditLogMessage(User author, Action action, @Nullable User target,
             @Nullable String reason, TemporalAccessor timestamp) {
         MessageEmbed toEmbed() {
-            String targetTag = target == null ? "(user unknown)" : target.getAsTag();
+            String targetTag = target == null ? "(user unknown)" : target.getName();
             String description = "%s **%s**.".formatted(action.getVerb(), targetTag);
 
             if (reason != null && !reason.isBlank()) {
@@ -343,7 +354,7 @@ public final class ModAuditLogRoutine implements Routine {
 
             String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
 
-            return new EmbedBuilder().setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
+            return new EmbedBuilder().setAuthor(author.getName(), null, avatarOrDefaultUrl)
                 .setDescription(description)
                 .setTimestamp(timestamp)
                 .setColor(AMBIENT_COLOR)

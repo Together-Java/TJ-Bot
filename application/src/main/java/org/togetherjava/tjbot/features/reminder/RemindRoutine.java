@@ -109,7 +109,7 @@ public final class RemindRoutine implements Routine {
 
     private static MessageEmbed createReminderEmbed(CharSequence content,
             TemporalAccessor createdAt, @Nullable User author) {
-        String authorName = author == null ? "Unknown user" : author.getAsTag();
+        String authorName = author == null ? "Unknown user" : author.getName();
         String authorIconUrl = author == null ? null : author.getAvatarUrl();
 
         return new EmbedBuilder().setAuthor(authorName, null, authorIconUrl)

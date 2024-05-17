@@ -16,10 +16,10 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.Modal;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
@@ -32,6 +32,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.awt.Color;
@@ -64,20 +65,23 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int INPUT_MIN_LENGTH = 3;
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
+    private final ChatGptService chatGptService;
 
 
     /**
      * Creates a new instance.
      *
      * @param config to get the helper forum and tags
+     * @param chatGptService the service used to ask ChatGPT questions via the API.
      */
-    public TransferQuestionCommand(Config config) {
+    public TransferQuestionCommand(Config config, ChatGptService chatGptService) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
 
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
 
         tags = config.getHelpSystem().getCategories();
+        this.chatGptService = chatGptService;
     }
 
     @Override
@@ -92,12 +96,20 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.get(0);
+        String chatGptPrompt =
+                "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
+                    .formatted(originalMessage);
+        Optional<String> chatGptResponse = chatGptService.ask(chatGptPrompt, "");
+        String title = chatGptResponse.orElse(createTitle(originalMessage));
+        if (title.length() > TITLE_MAX_LENGTH) {
+            title = title.substring(0, TITLE_MAX_LENGTH);
+        }
 
         TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
             .setMaxLength(TITLE_MAX_LENGTH)
             .setMinLength(TITLE_MIN_LENGTH)
             .setPlaceholder("Describe the question in short")
-            .setValue(createTitle(originalMessage))
+            .setValue(title)
             .build();
 
         Builder modalInputBuilder =

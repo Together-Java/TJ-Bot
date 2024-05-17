@@ -1,14 +1,16 @@
 package org.togetherjava.tjbot.features.jshell;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sigpwned.jackson.modules.jdk17.sealedclasses.Jdk17SealedClassesModule;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.utils.TimeFormat;
 
 import org.togetherjava.tjbot.config.JShellConfig;
 import org.togetherjava.tjbot.features.jshell.backend.JShellApi;
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
+import org.togetherjava.tjbot.features.jshell.renderer.ResultRenderer;
 import org.togetherjava.tjbot.features.utils.Colors;
 import org.togetherjava.tjbot.features.utils.ConnectionFailedException;
 import org.togetherjava.tjbot.features.utils.RateLimiter;
@@ -24,6 +26,7 @@ import java.time.Instant;
  * including JShell commands and JShell code actions.
  */
 public class JShellEval {
+    private final String gistApiToken;
     private final JShellApi api;
 
     private final ResultRenderer renderer;
@@ -33,9 +36,12 @@ public class JShellEval {
      * Creates a JShell evaluation instance
      * 
      * @param config the JShell configuration to use
+     * @param gistApiToken token of Gist api in case a JShell result is uploaded here
      */
-    public JShellEval(JShellConfig config) {
-        this.api = new JShellApi(new ObjectMapper(), config.baseUrl());
+    public JShellEval(JShellConfig config, String gistApiToken) {
+        this.gistApiToken = gistApiToken;
+        this.api = new JShellApi(new ObjectMapper().registerModule(new Jdk17SealedClassesModule()),
+                config.baseUrl());
         this.renderer = new ResultRenderer();
 
         this.rateLimiter = new RateLimiter(Duration.ofSeconds(config.rateLimitWindowSeconds()),
@@ -49,7 +55,7 @@ public class JShellEval {
     /**
      * Evaluate code and return a message containing the response.
      *
-     * @param user the user, if null, will create a single use session
+     * @param member the member, if null, will create a single use session
      * @param code the code
      * @param showCode if the original code should be displayed
      * @param startupScript if the startup script should be used or not
@@ -58,26 +64,24 @@ public class JShellEval {
      * @throws ConnectionFailedException if the connection to the API couldn't be made at the first
      *         place
      */
-    public MessageEmbed evaluateAndRespond(@Nullable User user, String code, boolean showCode,
+    public MessageEmbed evaluateAndRespond(@Nullable Member member, String code, boolean showCode,
             boolean startupScript) throws RequestFailedException, ConnectionFailedException {
-        MessageEmbed rateLimitedMessage = wasRateLimited(user, Instant.now());
+        MessageEmbed rateLimitedMessage = wasRateLimited(member, Instant.now());
         if (rateLimitedMessage != null) {
             return rateLimitedMessage;
         }
         JShellResult result;
-        if (user == null) {
+        if (member == null) {
             result = api.evalOnce(code, startupScript);
         } else {
-            result = api.evalSession(code, user.getId(), startupScript);
+            result = api.evalSession(code, member.getId(), startupScript);
         }
 
-        return renderer
-            .renderToEmbed(user, showCode ? code : null, user != null, result, new EmbedBuilder())
-            .build();
+        return renderer.render(gistApiToken, member, showCode, result);
     }
 
     @Nullable
-    private MessageEmbed wasRateLimited(@Nullable User user, Instant checkTime) {
+    private MessageEmbed wasRateLimited(@Nullable Member member, Instant checkTime) {
         if (rateLimiter.allowRequest(checkTime)) {
             return null;
         }
@@ -88,8 +92,8 @@ public class JShellEval {
             .setDescription(
                     "You are currently rate-limited. Please try again " + nextAllowedTime + ".")
             .setColor(Colors.ERROR_COLOR);
-        if (user != null) {
-            embedBuilder.setAuthor(user.getName() + "'s result");
+        if (member != null) {
+            embedBuilder.setAuthor(member.getEffectiveName() + "'s result");
         }
         return embedBuilder.build();
     }

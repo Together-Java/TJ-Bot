@@ -3,7 +3,8 @@ package org.togetherjava.tjbot.features;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.CommandInteractionPayload;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -22,9 +23,10 @@ import java.util.stream.IntStream;
  * of {@link #onSlashCommand(SlashCommandInteractionEvent)}. A new command can then be registered by
  * adding it to {@link Features}.
  * <p>
- * Further, {@link #onButtonClick(ButtonInteractionEvent, List)} and
- * {@link #onSelectMenuSelection(SelectMenuInteractionEvent, List)} can be overridden if desired.
- * The default implementation is empty, the adapter will not react to such events.
+ * Further, {@link #onButtonClick(ButtonInteractionEvent, List)},
+ * {@link #onEntitySelectSelection(EntitySelectInteractionEvent, List)} and
+ * {@link #onStringSelectSelection(StringSelectInteractionEvent, List)} can be overridden if
+ * desired. The default implementation is empty, the adapter will not react to such events.
  * <p>
  * The adapter manages all command related data itself, which can be provided during construction
  * (see {@link #SlashCommandAdapter(String, String, CommandVisibility)}). In order to add options,

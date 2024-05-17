@@ -2,12 +2,16 @@ package org.togetherjava.tjbot.features.moderation.scam;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.SelfUser;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -34,7 +38,11 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.awt.Color;
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -97,16 +105,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     @Override
     public UserInteractionType getInteractionType() {
         return UserInteractionType.OTHER;
-    }
-
-    @Override
-    public void onSelectMenuSelection(SelectMenuInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        throw new UnsupportedOperationException("Not used");
     }
 
     @Override
@@ -237,7 +235,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         MessageEmbed embed =
                 new EmbedBuilder().setDescription(event.getMessage().getContentStripped())
                     .setTitle(reportTitle)
-                    .setAuthor(author.getAsTag(), null, avatarOrDefaultUrl)
+                    .setAuthor(author.getName(), null, avatarOrDefaultUrl)
                     .setTimestamp(event.getMessage().getTimeCreated())
                     .setColor(AMBIENT_COLOR)
                     .setFooter(author.getId())

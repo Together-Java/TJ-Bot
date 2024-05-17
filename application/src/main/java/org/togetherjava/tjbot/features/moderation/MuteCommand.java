@@ -1,6 +1,10 @@
 package org.togetherjava.tjbot.features.moderation;
 
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -99,7 +103,7 @@ public final class MuteCommand extends SlashCommandAdapter {
                 temporaryData == null ? "permanently" : "for " + temporaryData.duration();
         logger.info(LogMarkers.SENSITIVE,
                 "'{}' ({}) muted the user '{}' ({}) {} in guild '{}' for reason '{}'.",
-                author.getUser().getAsTag(), author.getId(), target.getUser().getAsTag(),
+                author.getUser().getName(), author.getId(), target.getUser().getName(),
                 target.getId(), durationMessage, guild.getName(), reason);
 
         Instant expiresAt = temporaryData == null ? null : temporaryData.expiresAt();
