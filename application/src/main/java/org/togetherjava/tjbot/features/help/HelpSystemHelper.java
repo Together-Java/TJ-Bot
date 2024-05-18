@@ -108,7 +108,12 @@ public final class HelpSystemHelper {
             .map(ThreadActivity::getTagName)
             .collect(Collectors.toSet());
 
-        List<String> tagsToIgnoreList = helpConfig.getTagsToIgnore();
+        // tagsToIgnore list values are sanitized to avoid any config mismatch due to human error
+        List<String> tagsToIgnoreList = helpConfig.getTagsToIgnore()
+            .stream()
+            .map(String::toLowerCase)
+            .map(String::strip)
+            .toList();
         tagsToIgnore = new HashSet<>(tagsToIgnoreList);
 
     }
@@ -424,6 +429,6 @@ public final class HelpSystemHelper {
      * @return boolean result whether to ignore this tag or not
      */
     boolean shouldIgnoreTag(ForumTag tag) {
-        return !this.tagsToIgnore.contains(tag.getName());
+        return !this.tagsToIgnore.contains(tag.getName().toLowerCase());
     }
 }
