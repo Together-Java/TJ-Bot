@@ -58,12 +58,13 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         }
 
 
-        List<String> updatedTagList = threadChannel.getAppliedTags()
+        List<String> newlyAppliedTagsOnly = event.getAddedTags()
             .stream()
             .filter(helper::shouldIgnoreTag)
             .map(ForumTag::getName)
             .toList();
-        String tags = String.join(", ", updatedTagList);
+
+        String tags = String.join(", ", newlyAppliedTagsOnly);
 
         long threadId = threadChannel.getIdLong();
 
