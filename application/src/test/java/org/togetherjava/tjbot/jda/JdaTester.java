@@ -205,7 +205,9 @@ public final class JdaTester {
         when(jda.getRateLimitPool()).thenReturn(RATE_LIMIT_POOL);
         when(jda.getSessionController()).thenReturn(new ConcurrentSessionController());
         doReturn(new Requester(jda, new AuthorizationConfig(TEST_TOKEN), new RestConfig(),
-                rateLimiter)).when(jda).getRequester();
+                rateLimiter))
+            .when(jda)
+            .getRequester();
 
         replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
@@ -711,8 +713,8 @@ public final class JdaTester {
         MessageChannelUnion channel = switch (channelType) {
             case TEXT -> textChannel;
             case GUILD_PUBLIC_THREAD -> threadChannel;
-            default -> throw new IllegalArgumentException(
-                    "Unsupported channel type: " + channelType);
+            default ->
+                throw new IllegalArgumentException("Unsupported channel type: " + channelType);
         };
 
         doReturn(messageCreateAction).when(message).reply(anyString());

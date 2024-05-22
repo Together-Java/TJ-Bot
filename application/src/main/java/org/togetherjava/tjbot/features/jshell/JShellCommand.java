@@ -70,16 +70,16 @@ public class JShellCommand extends SlashCommandAdapter {
                 new SubcommandData(VERSION_SUBCOMMAND, "Get the version of JShell"),
                 new SubcommandData(EVAL_SUBCOMMAND,
                         "Evaluate java code in JShell, submit the command without code for inputting longer, multi-line code.")
-                            .addOption(OptionType.STRING, CODE_PARAMETER,
-                                    "Code to evaluate. Leave empty to input longer, multi-line code.")
-                            .addOption(OptionType.BOOLEAN, STARTUP_SCRIPT_PARAMETER,
-                                    "If the startup script should be loaded, true by default."),
+                    .addOption(OptionType.STRING, CODE_PARAMETER,
+                            "Code to evaluate. Leave empty to input longer, multi-line code.")
+                    .addOption(OptionType.BOOLEAN, STARTUP_SCRIPT_PARAMETER,
+                            "If the startup script should be loaded, true by default."),
                 new SubcommandData(SNIPPETS_SUBCOMMAND,
                         "Display your snippets, or the snippets of the specified user if any.")
-                            .addOption(OptionType.USER, USER_PARAMETER,
-                                    "User to get the snippets from. If null, get your snippets.")
-                            .addOption(OptionType.BOOLEAN, INCLUDE_STARTUP_SCRIPT_PARAMETER,
-                                    "if the startup script should be included, false by default."),
+                    .addOption(OptionType.USER, USER_PARAMETER,
+                            "User to get the snippets from. If null, get your snippets.")
+                    .addOption(OptionType.BOOLEAN, INCLUDE_STARTUP_SCRIPT_PARAMETER,
+                            "if the startup script should be included, false by default."),
                 new SubcommandData(CLOSE_SUBCOMMAND, "Close your session."),
                 new SubcommandData(STARTUP_SCRIPT_SUBCOMMAND, "Display the startup script."));
     }
@@ -92,8 +92,8 @@ public class JShellCommand extends SlashCommandAdapter {
             case SNIPPETS_SUBCOMMAND -> handleSnippetsCommand(event);
             case CLOSE_SUBCOMMAND -> handleCloseCommand(event);
             case STARTUP_SCRIPT_SUBCOMMAND -> handleStartupScriptCommand(event);
-            default -> throw new AssertionError(
-                    "Unexpected Subcommand: " + event.getSubcommandName());
+            default ->
+                throw new AssertionError("Unexpected Subcommand: " + event.getSubcommandName());
         }
     }
 

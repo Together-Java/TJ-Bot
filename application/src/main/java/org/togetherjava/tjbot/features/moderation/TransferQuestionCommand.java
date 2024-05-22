@@ -176,7 +176,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
             .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
-                    event.getGuild()).and(sendMessageToTransferrer.apply(createdForumPost)))
+                    event.getGuild())
+                .and(sendMessageToTransferrer.apply(createdForumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }

@@ -145,7 +145,8 @@ final class BookmarksListRemoveHandler {
                 removeSelectedBookmarks(bookmarks, event, request);
                 yield clampPageIndex(bookmarks, request.pageToDisplayIndex);
             }
-            default -> throw new IllegalArgumentException("Unknown button: " + request.componentName);
+            default ->
+                throw new IllegalArgumentException("Unknown button: " + request.componentName);
         };
 
         updatePagination(event, request.atPage(nextPageIndex), bookmarks);

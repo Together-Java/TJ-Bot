@@ -85,9 +85,10 @@ public final class AuditCommand extends SlashCommandAdapter {
         }
 
         auditUser(MessageCreateBuilder::new, guild.getIdLong(), target.getIdLong(),
-                event.getMember().getIdLong(), -1, event.getJDA()).map(MessageCreateBuilder::build)
-                    .flatMap(event::reply)
-                    .queue();
+                event.getMember().getIdLong(), -1, event.getJDA())
+            .map(MessageCreateBuilder::build)
+            .flatMap(event::reply)
+            .queue();
     }
 
     private boolean handleChecks(Member bot, Member author, @Nullable Member target,
@@ -276,6 +277,9 @@ public final class AuditCommand extends SlashCommandAdapter {
         int pageToDisplay = currentPage + turnPageBy;
 
         auditUser(MessageEditBuilder::new, guildId, targetId, buttonUserId, pageToDisplay,
-                event.getJDA()).map(MessageEditBuilder::build).flatMap(event::editMessage).queue();
+                event.getJDA())
+            .map(MessageEditBuilder::build)
+            .flatMap(event::editMessage)
+            .queue();
     }
 }
