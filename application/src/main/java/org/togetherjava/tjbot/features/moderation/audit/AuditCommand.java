@@ -25,7 +25,6 @@ import org.togetherjava.tjbot.features.moderation.ActionRecord;
 import org.togetherjava.tjbot.features.moderation.ModerationAction;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
-import org.togetherjava.tjbot.features.utils.Pagination;
 
 import javax.annotation.Nullable;
 
@@ -116,7 +115,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         if (pageNumber == -1) {
             pageNumberInLimits = totalPages;
         } else {
-            pageNumberInLimits = Pagination.clamp(1, pageNumber, totalPages);
+            pageNumberInLimits = Math.clamp(pageNumber, 1, totalPages);
         }
 
         return jda.retrieveUserById(targetId)

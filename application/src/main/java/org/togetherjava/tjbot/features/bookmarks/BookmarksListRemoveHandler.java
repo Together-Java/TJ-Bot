@@ -291,7 +291,7 @@ final class BookmarksListRemoveHandler {
     private static int clampPageIndex(List<BookmarksRecord> bookmarks, int pageIndex) {
         int maxPageIndex = getLastPageIndex(bookmarks);
 
-        return Math.min(Math.max(0, pageIndex), maxPageIndex);
+        return Math.clamp(pageIndex, 0, maxPageIndex);
     }
 
     private enum RequestType {

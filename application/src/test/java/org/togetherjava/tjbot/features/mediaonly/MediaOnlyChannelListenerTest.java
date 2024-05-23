@@ -95,7 +95,7 @@ final class MediaOnlyChannelListenerTest {
         MessageCreateData message = new MessageCreateBuilder().setContent("any").build();
 
         // WHEN sending the message
-        MessageReceivedEvent event = sendMessage(message);
+        sendMessage(message);
 
         // THEN the author receives a DM
         verify(jdaTester.getPrivateChannelSpy()).sendMessage(any(MessageCreateData.class));

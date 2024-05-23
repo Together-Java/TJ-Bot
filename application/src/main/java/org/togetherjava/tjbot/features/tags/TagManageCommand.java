@@ -320,19 +320,21 @@ public final class TagManageCommand extends SlashCommandAdapter {
      */
     private boolean isWrongTagStatusAndHandle(TagStatus requiredTagStatus, String id,
             IReplyCallback event) {
-        if (requiredTagStatus == TagStatus.EXISTS) {
-            return tagSystem.handleIsUnknownTag(id, event);
-        } else if (requiredTagStatus == TagStatus.NOT_EXISTS) {
-            if (tagSystem.hasTag(id)) {
+        switch (requiredTagStatus) {
+            case TagStatus.EXISTS -> {
+                return tagSystem.handleIsUnknownTag(id, event);
+            }
+            case TagStatus status when status == TagStatus.NOT_EXISTS && tagSystem.hasTag(id) -> {
                 event.reply("The tag with id '%s' already exists.".formatted(id))
-                    .setEphemeral(true)
-                    .queue();
+                        .setEphemeral(true)
+                        .queue();
                 return true;
             }
-        } else {
-            throw new AssertionError("Unknown tag status '%s'".formatted(requiredTagStatus));
+            case NOT_EXISTS -> {
+                return false;
+            }
+            default -> throw new AssertionError("Unknown tag status '%s'".formatted(requiredTagStatus));
         }
-        return false;
     }
 
     private void logAction(Subcommand subcommand, Guild guild, User author,

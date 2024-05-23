@@ -273,7 +273,7 @@ public final class SlashCommandInteractionEventBuilder {
         // command has one
         // TODO Make as much of this configurable as needed
         PayloadUser user = new PayloadUser(false, 0, userId, "286b894dc74634202d251d591f63537d",
-                "Test-User", "3452");
+                "Test-User");
         PayloadMember member = new PayloadMember(null, null, "2021-09-07T18:25:16.615000+00:00",
                 "1099511627775", List.of(), false, false, false, null, false, user);
         PayloadChannel channel = new PayloadChannel(channelId, 1);
@@ -309,7 +309,7 @@ public final class SlashCommandInteractionEventBuilder {
         if (type == OptionType.STRING) {
             return (String) value;
         } else if (type == OptionType.INTEGER) {
-            if (value instanceof Long asLong) {
+            if (value instanceof Long) {
                 return value.toString();
             }
 

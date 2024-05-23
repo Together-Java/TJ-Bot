@@ -12,20 +12,19 @@ public final class PayloadUser {
     private String id;
     private String avatar;
     private String username;
-    private String discriminator;
 
     public PayloadUser(boolean bot, long publicFlags, String id, @Nullable String avatar,
-            String username, String discriminator) {
+            String username) {
+        this.bot = bot;
         this.publicFlags = publicFlags;
         this.id = id;
         this.avatar = avatar;
         this.username = username;
-        this.discriminator = discriminator;
     }
 
     public static PayloadUser of(User user) {
         return new PayloadUser(user.isBot(), user.getFlagsRaw(), user.getId(), user.getAvatarId(),
-                user.getName(), user.getDiscriminator());
+                user.getName());
     }
 
     public boolean isBot() {
@@ -67,13 +66,5 @@ public final class PayloadUser {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getDiscriminator() {
-        return discriminator;
-    }
-
-    public void setDiscriminator(String discriminator) {
-        this.discriminator = discriminator;
     }
 }

@@ -39,7 +39,7 @@ final class TeXCommandTest {
         return event;
     }
 
-    private void verifySuccessfulResponse(SlashCommandInteractionEvent event, String query) {
+    private void verifySuccessfulResponse(String query) {
         ArgumentMatcher<FileUpload> attachmentIsTexPng =
                 attachment -> attachment != null && "tex.png".equals(attachment.getName());
 
@@ -71,10 +71,10 @@ final class TeXCommandTest {
         // GIVEN a supported latex query
 
         // WHEN triggering the command
-        SlashCommandInteractionEvent event = triggerSlashCommand(supportedQuery);
+        triggerSlashCommand(supportedQuery);
 
         // THEN the command send a successful response
-        verifySuccessfulResponse(event, supportedQuery);
+        verifySuccessfulResponse(supportedQuery);
     }
 
     private static List<String> provideBadInlineQueries() {

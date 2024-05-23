@@ -745,8 +745,6 @@ public final class JdaTester {
      */
     public Message clientMessageToReceivedMessageMock(MessageCreateData clientMessage) {
         Message receivedMessage = mock(Message.class);
-        var foo = clientMessage.getComponents();
-
         when(receivedMessage.getJDA()).thenReturn(jda);
         when(receivedMessage.getEmbeds()).thenReturn(clientMessage.getEmbeds());
         when(receivedMessage.getContentRaw()).thenReturn(clientMessage.getContent());
