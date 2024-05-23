@@ -329,8 +329,6 @@ public final class TagManageCommand extends SlashCommandAdapter {
                 yield true;
             }
             case TagStatus.NOT_EXISTS -> false;
-            default -> throw new IllegalStateException(
-                    "Unknown tag status '%s'".formatted(requiredTagStatus));
         };
     }
 
