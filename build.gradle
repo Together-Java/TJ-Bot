@@ -78,7 +78,7 @@ subprojects {
             // we use it as catch-all for external dependencies like JDA
             // '\\#` is prefix for static imports
             importOrder('','org.togetherjava', 'javax', 'java', '\\#')
-            eclipse().configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
+            eclipse("4.31").configFile("${rootProject.rootDir}/meta/formatting/google-style-eclipse.xml")
         }
     }
 
