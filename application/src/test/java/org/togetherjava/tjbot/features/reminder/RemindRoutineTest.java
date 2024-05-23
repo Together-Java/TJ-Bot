@@ -159,7 +159,6 @@ final class RemindRoutineTest {
     void reminderIsNotSendIfNotPending() {
         // GIVEN a reminder that is not pending yet
         Instant remindAt = Instant.now().plus(1, ChronoUnit.HOURS);
-        String reminderContent = "foo";
         rawReminders.insertReminder("foo", remindAt);
 
         // WHEN running the routine

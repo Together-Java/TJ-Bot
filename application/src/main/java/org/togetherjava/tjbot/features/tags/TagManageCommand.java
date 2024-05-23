@@ -318,19 +318,25 @@ public final class TagManageCommand extends SlashCommandAdapter {
      * @param event the event to send messages with
      * @return whether the status of the given tag is <b>not equal</b> to the required status
      */
+    // ToDo: gradle task :application:spotlessJava throws internal exception if this method uses new
+    // when keyword
+    @SuppressWarnings("java:S6916")
     private boolean isWrongTagStatusAndHandle(TagStatus requiredTagStatus, String id,
             IReplyCallback event) {
-        if (requiredTagStatus == TagStatus.EXISTS) {
-            return tagSystem.handleIsUnknownTag(id, event);
-        } else if (requiredTagStatus == TagStatus.NOT_EXISTS) {
-            if (tagSystem.hasTag(id)) {
-                event.reply("The tag with id '%s' already exists.".formatted(id))
-                    .setEphemeral(true)
-                    .queue();
-                return true;
+        switch (requiredTagStatus) {
+            case TagStatus.EXISTS -> {
+                return tagSystem.handleIsUnknownTag(id, event);
             }
-        } else {
-            throw new AssertionError("Unknown tag status '%s'".formatted(requiredTagStatus));
+            case TagStatus.NOT_EXISTS -> {
+                if (tagSystem.hasTag(id)) {
+                    event.reply("The tag with id '%s' already exists.".formatted(id))
+                        .setEphemeral(true)
+                        .queue();
+                    return true;
+                }
+            }
+            default ->
+                throw new AssertionError("Unknown tag status '%s'".formatted(requiredTagStatus));
         }
         return false;
     }
