@@ -103,6 +103,10 @@
         "special": [
         ]
     },
+    "starboard": {
+        "emojiNames" : ["⭐"],
+        "channelPattern": "starboard"
+    },
     "selectRolesChannelPattern": "select-your-roles",
     "rssConfig": {
         "feeds": [
