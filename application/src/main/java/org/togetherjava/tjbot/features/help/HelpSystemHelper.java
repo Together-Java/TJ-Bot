@@ -236,20 +236,18 @@ public final class HelpSystemHelper {
 
         Instant createdAt = threadChannel.getTimeCreated().toInstant();
 
-        List<String> tagsList = threadChannel.getAppliedTags()
+        String appliedTags = threadChannel.getAppliedTags()
             .stream()
             .filter(this::shouldIgnoreTag)
             .map(ForumTag::getName)
-            .toList();
-
-        String tags = String.join(", ", tagsList);
+                .collect(Collectors.joining(","));
 
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
                 .setAuthorId(authorId)
                 .setChannelId(threadChannel.getIdLong())
                 .setCreatedAt(createdAt)
-                .setTags(tags)
+                .setTags(appliedTags)
                 .setTicketStatus(TicketStatus.ACTIVE.val);
             if (helpThreadsRecord.update() == 0) {
                 helpThreadsRecord.insert();

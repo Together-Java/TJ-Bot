@@ -22,9 +22,8 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREAD
  * in database.
  */
 public final class HelpThreadLifecycleListener extends ListenerAdapter implements EventReceiver {
-
+    private static final Logger logger = LoggerFactory.getLogger(HelpThreadLifecycleListener.class);
     private final HelpSystemHelper helper;
-    private final Logger logger = LoggerFactory.getLogger(HelpThreadLifecycleListener.class);
     private final Database database;
 
     /**

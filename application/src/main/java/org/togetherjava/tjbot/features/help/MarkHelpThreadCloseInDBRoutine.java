@@ -21,7 +21,7 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREAD
  * closed.
  */
 public final class MarkHelpThreadCloseInDBRoutine implements Routine {
-    private final Logger logger = LoggerFactory.getLogger(MarkHelpThreadCloseInDBRoutine.class);
+    private static final Logger logger = LoggerFactory.getLogger(MarkHelpThreadCloseInDBRoutine.class);
     private final Database database;
     private final HelpThreadLifecycleListener helpThreadLifecycleListener;
 
