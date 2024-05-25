@@ -240,7 +240,7 @@ public final class HelpSystemHelper {
             .stream()
             .filter(this::shouldIgnoreTag)
             .map(ForumTag::getName)
-                .collect(Collectors.joining(","));
+            .collect(Collectors.joining(","));
 
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
