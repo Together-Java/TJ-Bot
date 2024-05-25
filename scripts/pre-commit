@@ -45,7 +45,7 @@ if [ "$spotlessExitCode" -ne 0 ]; then
 fi
 
 # Spotless possibly found changes, apply them, excluding untracked files
-git add --renormalize -u
+git add -u
 
 # Restore back the unstaged changes
 pop_stash
