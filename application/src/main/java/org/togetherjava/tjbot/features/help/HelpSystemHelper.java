@@ -211,6 +211,10 @@ public final class HelpSystemHelper {
             .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
 
         questionBuilder.append(originalQuestion);
+
+        questionBuilder.append(
+                ". If possible, get, maximum, 5 top links from reliable websites as references in markdown syntax. Put this message on top of the links list \"Here are some links that may help :\".");
+
         return Optional.of(questionBuilder.toString());
     }
 
