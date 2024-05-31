@@ -1,8 +1,17 @@
-* text eol=lf
-* binary
+# This will do normalization to LF on index (staging area) 
+* text=auto
 
-# Linux start script should use lf
-/gradlew        text eol=lf
+# Explicit for linux files
+*.sh     text eol=lf
 
-# These are Windows script files and should use crlf
-*.bat           text eol=crlf
+# Explicit stuff for win files
+*.bat    text eol=crlf
+
+# Just to make sure git doesn't corrupt our binaries accidentally, it's a good practice.
+*.gif  binary
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+
+# No extensions, so we set them manually
+/gradlew           text eol=lf
