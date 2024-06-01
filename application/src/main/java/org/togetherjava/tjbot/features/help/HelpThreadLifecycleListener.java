@@ -123,11 +123,8 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
      * @return boolean
      */
     private boolean shouldIgnoreUpdatedTagEvent(ChannelUpdateAppliedTagsEvent event) {
-        List<String> newTags = event.getNewTags()
-            .stream()
-            .filter(helper::shouldIgnoreTag)
-            .map(ForumTag::getName)
-            .toList();
+        List<ForumTag> newTags =
+                event.getNewTags().stream().filter(helper::shouldIgnoreTag).toList();
         return newTags.isEmpty();
     }
 }
