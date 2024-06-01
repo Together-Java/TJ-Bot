@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,7 +67,6 @@ public final class HelpSystemHelper {
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
 
-    private final Set<String> tagsToIgnore;
     private final Database database;
     private final ChatGptService chatGptService;
     private static final int MAX_QUESTION_LENGTH = 200;
@@ -93,7 +91,10 @@ public final class HelpSystemHelper {
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
         List<String> categoriesList = helpConfig.getCategories();
-        categories = new HashSet<>(categoriesList);
+        categories = categoriesList.stream()
+            .map(String::strip)
+            .map(String::toLowerCase)
+            .collect(Collectors.toSet());
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
 
         Map<String, Integer> categoryToCommonDesc = IntStream.range(0, categoriesList.size())
@@ -108,13 +109,6 @@ public final class HelpSystemHelper {
             .map(ThreadActivity::getTagName)
             .collect(Collectors.toSet());
 
-        // tagsToIgnore list values are sanitized to avoid any config mismatch due to human error
-        List<String> tagsToIgnoreList = helpConfig.getTagsToIgnore()
-            .stream()
-            .map(String::toLowerCase)
-            .map(String::strip)
-            .toList();
-        tagsToIgnore = new HashSet<>(tagsToIgnoreList);
 
     }
 
@@ -288,7 +282,7 @@ public final class HelpSystemHelper {
             ThreadChannel channel) {
         return channel.getAppliedTags()
             .stream()
-            .filter(tag -> tagNamesToMatch.contains(tag.getName()))
+            .filter(tag -> tagNamesToMatch.contains(tag.getName().toLowerCase()))
             .min(byCategoryCommonnessAsc);
     }
 
@@ -421,12 +415,12 @@ public final class HelpSystemHelper {
 
 
     /**
-     * will be used to filter a tag based on tagsToIgnore config list
+     * will be used to filter a tag based on categories config
      * 
      * @param tag applied tag
      * @return boolean result whether to ignore this tag or not
      */
     boolean shouldIgnoreTag(ForumTag tag) {
-        return !this.tagsToIgnore.contains(tag.getName().toLowerCase());
+        return this.categories.contains(tag.getName().toLowerCase());
     }
 }
