@@ -41,7 +41,7 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
 
     @Override
     public Schedule createSchedule() {
-        return new Schedule(ScheduleMode.FIXED_RATE, 0, 1, TimeUnit.HOURS);
+        return new Schedule(ScheduleMode.FIXED_RATE, 0, 24, TimeUnit.HOURS);
     }
 
     @Override
