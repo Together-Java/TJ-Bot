@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class HelpThreadMetadataPurger implements Routine {
     private final Database database;
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadMetadataPurger.class);
-    private static final Period DELETE_MESSAGE_RECORDS_AFTER = Period.ofDays(30);
+    private static final Period DELETE_MESSAGE_RECORDS_AFTER = Period.ofDays(180);
 
     /**
      * Creates a new instance.
@@ -31,7 +31,7 @@ public class HelpThreadMetadataPurger implements Routine {
 
     @Override
     public Schedule createSchedule() {
-        return new Schedule(ScheduleMode.FIXED_RATE, 0, 4, TimeUnit.HOURS);
+        return new Schedule(ScheduleMode.FIXED_RATE, 0, 1, TimeUnit.DAYS);
     }
 
     @Override

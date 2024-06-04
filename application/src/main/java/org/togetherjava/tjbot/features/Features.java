@@ -29,7 +29,9 @@ import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;
 import org.togetherjava.tjbot.features.help.HelpThreadAutoArchiver;
 import org.togetherjava.tjbot.features.help.HelpThreadCommand;
 import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
+import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
 import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
+import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
 import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
 import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
@@ -113,6 +115,8 @@ public class Features {
                 new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
+        HelpThreadLifecycleListener helpThreadLifecycleListener =
+                new HelpThreadLifecycleListener(helpSystemHelper, database);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -129,6 +133,7 @@ public class Features {
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
+        features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
         features.add(new RSSHandlerRoutine(config, database));
 
@@ -151,6 +156,7 @@ public class Features {
         features.add(new GuildLeaveCloseThreadListener(config));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
+        features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));

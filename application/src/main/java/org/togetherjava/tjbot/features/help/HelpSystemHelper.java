@@ -29,11 +29,11 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
 import java.awt.Color;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +66,7 @@ public final class HelpSystemHelper {
     private final Set<String> categories;
     private final Set<String> threadActivityTagNames;
     private final String categoryRoleSuffix;
+
     private final Database database;
     private final ChatGptService chatGptService;
     private static final int MAX_QUESTION_LENGTH = 200;
@@ -90,7 +91,10 @@ public final class HelpSystemHelper {
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
         List<String> categoriesList = helpConfig.getCategories();
-        categories = new HashSet<>(categoriesList);
+        categories = categoriesList.stream()
+            .map(String::strip)
+            .map(String::toLowerCase)
+            .collect(Collectors.toSet());
         categoryRoleSuffix = helpConfig.getCategoryRoleSuffix();
 
         Map<String, Integer> categoryToCommonDesc = IntStream.range(0, categoriesList.size())
@@ -104,6 +108,8 @@ public final class HelpSystemHelper {
         threadActivityTagNames = Arrays.stream(ThreadActivity.values())
             .map(ThreadActivity::getTagName)
             .collect(Collectors.toSet());
+
+
     }
 
     /**
@@ -221,11 +227,22 @@ public final class HelpSystemHelper {
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
+
+        Instant createdAt = threadChannel.getTimeCreated().toInstant();
+
+        String appliedTags = threadChannel.getAppliedTags()
+            .stream()
+            .filter(this::shouldIgnoreTag)
+            .map(ForumTag::getName)
+            .collect(Collectors.joining(","));
+
         database.write(content -> {
             HelpThreadsRecord helpThreadsRecord = content.newRecord(HelpThreads.HELP_THREADS)
                 .setAuthorId(authorId)
                 .setChannelId(threadChannel.getIdLong())
-                .setCreatedAt(threadChannel.getTimeCreated().toInstant());
+                .setCreatedAt(createdAt)
+                .setTags(appliedTags)
+                .setTicketStatus(TicketStatus.ACTIVE.val);
             if (helpThreadsRecord.update() == 0) {
                 helpThreadsRecord.insert();
             }
@@ -265,7 +282,7 @@ public final class HelpSystemHelper {
             ThreadChannel channel) {
         return channel.getAppliedTags()
             .stream()
-            .filter(tag -> tagNamesToMatch.contains(tag.getName()))
+            .filter(tag -> tagNamesToMatch.contains(tag.getName().toLowerCase()))
             .min(byCategoryCommonnessAsc);
     }
 
@@ -375,6 +392,17 @@ public final class HelpSystemHelper {
         }
     }
 
+    enum TicketStatus {
+        ARCHIVED(0),
+        ACTIVE(1);
+
+        final int val;
+
+        TicketStatus(int val) {
+            this.val = val;
+        }
+    }
+
     Optional<Long> getAuthorByHelpThreadId(final long channelId) {
 
         logger.debug("Looking for thread-record using channel ID: {}", channelId);
@@ -383,5 +411,16 @@ public final class HelpSystemHelper {
             .from(HelpThreads.HELP_THREADS)
             .where(HelpThreads.HELP_THREADS.CHANNEL_ID.eq(channelId))
             .fetchOptional(HelpThreads.HELP_THREADS.AUTHOR_ID));
+    }
+
+
+    /**
+     * will be used to filter a tag based on categories config
+     * 
+     * @param tag applied tag
+     * @return boolean result whether to ignore this tag or not
+     */
+    boolean shouldIgnoreTag(ForumTag tag) {
+        return this.categories.contains(tag.getName().toLowerCase());
     }
 }

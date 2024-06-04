@@ -48,6 +48,13 @@ The databases may store
 * `guild_id` of guilds the **bot** is member of (the unique id of a Discord guild),
 * `channel_id` of channels belonging to guilds the **bot** is member of (the unique id of a Discord channel),
 * `message_id` of messages send by users in guilds the **bot** is member of (the unique id of a Discord message),
+*  `participant_count` of no of people who participated in help thread discussions,
+*  `tags` aka categories to which these help threads belong to,
+*  `timestamp`s for both when thread was created and closed,
+*  `message_count` the no of messages that were sent in lifecycle of any help thread
+
+_Note: Help threads are just threads that are created via forum channels, used for anyone to ask questions and get help
+in certain problems._
 
 and any combination of those.
 
@@ -55,7 +62,7 @@ For example, **TJ-Bot** may associate your `user_id` with a `message_id` and a `
 
 **TJ-Bot** may further store data that you explicitly provided for **TJ-Bot** to offer its services. For example the reason of a moderative action when using its moderation commands.
 
-Furthermore, upon utilization of our help service, `user_id`s and `channel_id`s are stored to track when/how many questions a user asks. The data may be stored for up to **30** days. 
+Furthermore, upon utilization of our help service, `user_id`s and `channel_id`s are stored to track when/how many questions a user asks. The data may be stored for up to **180** days. 
 
 The stored data is not linked to any information that is personally identifiable.
 
