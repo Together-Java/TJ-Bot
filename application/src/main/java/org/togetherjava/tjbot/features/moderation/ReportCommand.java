@@ -223,7 +223,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
             Instant timestamp, String authorName, String authorAvatarUrl) {
         static ReportedMessage ofArgs(List<String> args) {
-            String content = args.get(0);
+            String content = args.getFirst();
             String id = args.get(1);
             String jumpUrl = args.get(2);
             String channelID = args.get(3);

@@ -314,7 +314,7 @@ final class BookmarksListRemoveHandler {
         }
 
         static Request fromArgs(List<String> args) {
-            RequestType requestType = RequestType.valueOf(args.get(0));
+            RequestType requestType = RequestType.valueOf(args.getFirst());
             String componentName = args.get(1);
             int currentPageIndex = Integer.parseInt(args.get(2));
 

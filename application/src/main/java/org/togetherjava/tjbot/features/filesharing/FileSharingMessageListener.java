@@ -98,7 +98,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         Member interactionUser = event.getMember();
-        String gistAuthorId = args.get(0);
+        String gistAuthorId = args.getFirst();
         boolean hasSoftModPermissions =
                 interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
 

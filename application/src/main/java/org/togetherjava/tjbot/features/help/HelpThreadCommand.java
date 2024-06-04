@@ -213,7 +213,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
 
         helpThread.getHistory()
             .retrievePast(1)
-            .map(messages -> messages.get(0))
+            .map(messages -> messages.getFirst())
             .queue(lastMessage -> manuallyResetChannelActivityCache.put(helpThread.getIdLong(),
                     lastMessage.getIdLong()));
 

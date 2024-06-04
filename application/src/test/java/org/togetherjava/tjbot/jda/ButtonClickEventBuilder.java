@@ -221,7 +221,7 @@ public final class ButtonClickEventBuilder {
                     + " Either only use a single button or explicitly state the clicked button");
         }
 
-        return buttons.get(0);
+        return buttons.getFirst();
     }
 
     private ButtonInteractionEvent mockButtonClickEvent(Message message, Button clickedButton) {

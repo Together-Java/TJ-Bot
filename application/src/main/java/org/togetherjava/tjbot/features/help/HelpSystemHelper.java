@@ -337,7 +337,7 @@ public final class HelpSystemHelper {
                 .formatted(forumChannel.getName(), forumChannel.getGuild().getName(), tagName));
         }
 
-        return matchingTags.get(0);
+        return matchingTags.getFirst();
     }
 
     boolean hasTagManageRole(Member member) {

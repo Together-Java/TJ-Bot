@@ -164,7 +164,7 @@ public final class TeXCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(final ButtonInteractionEvent event, final List<String> args) {
-        if (!args.get(0).equals(Objects.requireNonNull(event.getMember()).getId())) {
+        if (!args.getFirst().equals(Objects.requireNonNull(event.getMember()).getId())) {
             event.reply("You are not the person who executed the command, you cannot do that")
                 .setEphemeral(true)
                 .queue();

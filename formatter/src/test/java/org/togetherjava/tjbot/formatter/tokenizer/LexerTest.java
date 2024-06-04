@@ -67,7 +67,7 @@ final class LexerTest {
     @DisplayName("Each token must be recognized by the expected content and not hidden by another token that prefixes it.")
     void typesAreNotHidden(TokenType expectedTokenType) {
         String text = expectedTokenType.getContentExample();
-        TokenType actualTokenType = tokenize(text).get(0);
+        TokenType actualTokenType = tokenize(text).getFirst();
 
         assertEquals(expectedTokenType, actualTokenType, "Tested on: " + text);
     }

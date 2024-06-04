@@ -362,7 +362,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             long messageId, long authorId, String contentHash) {
 
         static ComponentIdArguments fromList(List<String> args) {
-            ScamBlockerConfig.Mode mode = ScamBlockerConfig.Mode.valueOf(args.get(0));
+            ScamBlockerConfig.Mode mode = ScamBlockerConfig.Mode.valueOf(args.getFirst());
             long guildId = Long.parseLong(args.get(1));
             long channelId = Long.parseLong(args.get(2));
             long messageId = Long.parseLong(args.get(3));
