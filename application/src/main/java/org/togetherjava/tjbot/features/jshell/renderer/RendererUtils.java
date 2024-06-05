@@ -59,8 +59,7 @@ class RendererUtils {
             return GeneralStatus.PARTIAL_SUCCESS; // At least one snippet is a success
         }
 
-        return getGeneralStatus(
-                result.snippetsResults().get(result.snippetsResults().size() - 1).status());
+        return getGeneralStatus(result.snippetsResults().getLast().status());
     }
 
     static Color getStatusColor(JShellResult result) {
