@@ -179,7 +179,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         }
 
         String embedAuthor = Objects
-            .requireNonNull(message.getEmbeds().get(0).getAuthor(),
+            .requireNonNull(message.getEmbeds().getFirst().getAuthor(),
                     "embed author for forum post is null")
             .getName();
 

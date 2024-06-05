@@ -133,7 +133,7 @@ public final class AuditCommand extends SlashCommandAdapter {
                 groupedActions.add(new ArrayList<>(AuditCommand.MAX_PAGE_LENGTH));
             }
 
-            groupedActions.get(groupedActions.size() - 1).add(actions.get(i));
+            groupedActions.getLast().add(actions.get(i));
         }
 
         return groupedActions;
@@ -271,7 +271,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         int currentPage = Integer.parseInt(args.get(3));
         int turnPageBy = Integer.parseInt(args.get(4));
 
-        long guildId = Long.parseLong(args.get(0));
+        long guildId = Long.parseLong(args.getFirst());
         long targetId = Long.parseLong(args.get(1));
         int pageToDisplay = currentPage + turnPageBy;
 

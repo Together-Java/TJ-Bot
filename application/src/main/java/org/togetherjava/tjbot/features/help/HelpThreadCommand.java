@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -213,7 +214,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
 
         helpThread.getHistory()
             .retrievePast(1)
-            .map(messages -> messages.get(0))
+            .map(List::getFirst)
             .queue(lastMessage -> manuallyResetChannelActivityCache.put(helpThread.getIdLong(),
                     lastMessage.getIdLong()));
 

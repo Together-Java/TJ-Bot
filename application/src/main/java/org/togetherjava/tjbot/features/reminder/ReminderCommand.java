@@ -124,7 +124,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        int pageToShow = Integer.parseInt(args.get(0));
+        int pageToShow = Integer.parseInt(args.getFirst());
 
         EmojiUnion emoji = event.getButton().getEmoji();
         if (PREVIOUS_BUTTON_EMOJI.equals(emoji)) {

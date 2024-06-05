@@ -118,7 +118,7 @@ final class ReminderCommandTest {
 
         List<String> remindersOfSecondUser = rawReminders.readReminders(secondUser);
         assertEquals(1, remindersOfSecondUser.size());
-        assertEquals("foo", remindersOfSecondUser.get(0));
+        assertEquals("foo", remindersOfSecondUser.getFirst());
     }
 
     @Test
@@ -133,6 +133,6 @@ final class ReminderCommandTest {
 
         List<String> pendingReminders = rawReminders.readReminders();
         assertEquals(1, pendingReminders.size());
-        assertEquals("foo", pendingReminders.get(0));
+        assertEquals("foo", pendingReminders.getFirst());
     }
 }

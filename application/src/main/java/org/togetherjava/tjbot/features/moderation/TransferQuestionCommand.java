@@ -95,7 +95,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalMessageId = event.getTarget().getId();
         String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
-        String mostCommonTag = tags.get(0);
+        String mostCommonTag = tags.getFirst();
         String chatGptPrompt =
                 "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
@@ -142,7 +142,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferReply(true).queue();
 
-        String authorId = args.get(0);
+        String authorId = args.getFirst();
         String messageId = args.get(1);
         String channelId = args.get(2);
         ForumChannel helperForum = getHelperForum(event.getJDA());
@@ -226,13 +226,13 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String transferQuestionTag = event.getValue(MODAL_TAG).getAsString();
 
         ForumChannel questionsForum = getHelperForum(event.getJDA());
-        String mostCommonTag = tags.get(0);
+        String mostCommonTag = tags.getFirst();
 
         String queryTag =
                 StringDistances.closestMatch(transferQuestionTag, tags).orElse(mostCommonTag);
 
         ForumTag tag = getTagOrDefault(questionsForum.getAvailableTagsByName(queryTag, true),
-                () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).get(0));
+                () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).getFirst());
 
         return questionsForum.createForumPost(forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(tag.getId()))
@@ -279,7 +279,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     private static ForumTag getTagOrDefault(List<ForumTag> tagsFoundOnForum,
             Supplier<ForumTag> defaultTag) {
-        return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.get(0);
+        return tagsFoundOnForum.isEmpty() ? defaultTag.get() : tagsFoundOnForum.getFirst();
     }
 
     private MessageEmbed makeEmbedForPost(User originalUser, String originalMessage) {

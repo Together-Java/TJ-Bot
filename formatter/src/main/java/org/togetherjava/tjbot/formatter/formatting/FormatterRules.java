@@ -229,7 +229,7 @@ final class FormatterRules {
         /*
          * Example multi-line comment
          */
-        String firstLine = lines.get(0);
+        String firstLine = lines.getFirst();
         List<String> otherLines = lines.subList(1, lines.size());
 
         String otherLinesText = otherLines.stream()

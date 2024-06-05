@@ -76,7 +76,7 @@ public class RateLimiter {
                 return Instant.now();
             }
 
-            return currentUses.get(0).plus(duration);
+            return currentUses.getFirst().plus(duration);
         }
     }
 

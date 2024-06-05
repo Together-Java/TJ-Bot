@@ -154,8 +154,7 @@ public final class ModAuditLogRoutine implements Routine {
         List<Instant> scheduleDates = scheduleHours.stream()
             .map(hour -> dateAtTime.apply(offsetDateTime, hour))
             .collect(Collectors.toCollection(ArrayList::new));
-        int rolloverHour =
-                (scheduleHours.get(scheduleHours.size() - 1) + periodHours) % HOURS_OF_DAY;
+        int rolloverHour = (scheduleHours.getLast() + periodHours) % HOURS_OF_DAY;
         scheduleDates.add(dateAtTime.apply(offsetDateTime.plusDays(1), rolloverHour));
 
         return scheduleDates.stream()

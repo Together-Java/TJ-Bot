@@ -152,7 +152,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        long originalMessageId = Long.parseLong(args.get(0));
+        long originalMessageId = Long.parseLong(args.getFirst());
 
         event.deferEdit().queue();
 

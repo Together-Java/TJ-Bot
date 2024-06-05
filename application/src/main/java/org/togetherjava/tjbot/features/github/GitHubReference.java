@@ -120,7 +120,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
         List<MessageEmbed> embeds = new ArrayList<>();
 
         while (matcher.find()) {
-            long defaultRepoId = config.getGitHubRepositories().get(0);
+            long defaultRepoId = config.getGitHubRepositories().getFirst();
 
             int issueId = Integer.parseInt(matcher.group(ID_GROUP));
             findIssue(issueId, defaultRepoId).ifPresent(issue -> embeds.add(generateReply(issue)));

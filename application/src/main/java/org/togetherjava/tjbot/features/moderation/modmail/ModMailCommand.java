@@ -135,7 +135,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         String userMessage = event.getValue(OPTION_MESSAGE).getAsString();
         long userId = event.getUser().getIdLong();
 
-        long userGuildId = Long.parseLong(args.get(0));
+        long userGuildId = Long.parseLong(args.getFirst());
         boolean wantsToStayAnonymous = Boolean.parseBoolean(args.get(1));
 
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
