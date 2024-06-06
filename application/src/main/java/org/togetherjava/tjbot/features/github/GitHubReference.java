@@ -255,7 +255,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
                         issue = repository.getPullRequest(id);
                     }
                     return Optional.of(issue);
-                } catch (FileNotFoundException ignored) {
+                } catch (FileNotFoundException _) {
                     return Optional.<GHIssue>empty();
                 } catch (IOException ex) {
                     throw new UncheckedIOException(ex);
