@@ -115,5 +115,9 @@
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
     },
+    "coolMessagesConfig": {
+        "minimumReactions": 1,
+        "boardChannelPattern": "quotes"
+    },
     "memberCountCategoryPattern": "Info"
 }
