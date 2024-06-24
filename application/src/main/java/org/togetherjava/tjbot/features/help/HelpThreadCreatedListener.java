@@ -104,7 +104,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private static boolean isContextSufficient(Message message) {
-        return !MessageUtils.containsImage(message)
+        return !MessageUtils.containsAttachments(message)
                 && !LinkDetection.containsLink(message.getContentRaw());
     }
 
