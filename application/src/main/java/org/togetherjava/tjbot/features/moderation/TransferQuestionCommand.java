@@ -96,14 +96,17 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.getFirst();
+        final int TITLE_MAX_LENGTH = 50;
         String chatGptPrompt =
                 "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
         Optional<String> chatGptResponse = chatGptService.ask(chatGptPrompt, "");
         String title = chatGptResponse.orElse(createTitle(originalMessage));
+        title = title.replaceAll("^\"|\"$", "").replaceAll("^'|'$", "");
         if (title.length() > TITLE_MAX_LENGTH) {
             title = title.substring(0, TITLE_MAX_LENGTH);
         }
+
 
         TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
             .setMaxLength(TITLE_MAX_LENGTH)
@@ -176,8 +179,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
             .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
-                    event.getGuild())
-                .and(sendMessageToTransferrer.apply(createdForumPost)))
+                    event.getGuild()).and(sendMessageToTransferrer.apply(createdForumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
