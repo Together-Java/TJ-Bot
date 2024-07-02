@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.features.moderation;
 
+
+import net.dv8tion.jda.api.JDAConstants;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -84,6 +86,32 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         this.chatGptService = chatGptService;
     }
 
+
+    public class TitleGenerator {
+
+        // Define regex patterns for leading and trailing quotation marks
+        private static final Pattern LEADING_TRAILING_QUOTES = Pattern.compile("^['\"]|['\"]$");
+
+        public static String generateTitle(String originalMessage, ChatGptService chatGptService) {
+            String chatGptPrompt =
+                    "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
+                        .formatted(originalMessage);
+            Optional<String> chatGptResponse = chatGptService.ask(chatGptPrompt, "");
+            String title = chatGptResponse.orElse(createTitle(originalMessage));
+            title = LEADING_TRAILING_QUOTES.matcher(title).replaceAll("");
+            if (title.length() > JDAConstants.MAX_TITLE_LENGTH) {
+                title = title.substring(0, JDAConstants.MAX_TITLE_LENGTH);
+            }
+
+            return title;
+        }
+
+        private static String createTitle(String originalMessage) {
+            return originalMessage.substring(0,
+                    Math.min(originalMessage.length(), JDAConstants.MAX_TITLE_LENGTH));
+        }
+    }
+
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
 
@@ -96,7 +124,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.getFirst();
-        final int TITLE_MAX_LENGTH = 50;
+
         String chatGptPrompt =
                 "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
