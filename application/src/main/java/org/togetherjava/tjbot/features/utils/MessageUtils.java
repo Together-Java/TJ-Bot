@@ -221,16 +221,16 @@ public class MessageUtils {
     }
 
     /**
-     * Checks if a given message contains any image attachments.
-     * 
+     * Checks if a given message contains any attachments.
+     *
      * @param message the message to be checked
-     * @return {@code true} if the message contains at least one image attachment
+     * @return {@code true} if the message contains at least one attachment
      *
      * @see Message
      * @see Message.Attachment
      */
-    public static boolean containsImage(Message message) {
-        return message.getAttachments().stream().anyMatch(Message.Attachment::isImage);
+    public static boolean containsAttachments(Message message) {
+        return !message.getAttachments().isEmpty();
     }
 
 }
