@@ -23,6 +23,8 @@ import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
+import org.togetherjava.tjbot.features.github.projectnotification.LinkGHProjectCommand;
+import org.togetherjava.tjbot.features.github.projectnotification.ProjectPRNotifierRoutine;
 import org.togetherjava.tjbot.features.help.GuildLeaveCloseThreadListener;
 import org.togetherjava.tjbot.features.help.HelpSystemHelper;
 import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;
@@ -136,6 +138,7 @@ public class Features {
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
         features.add(new RSSHandlerRoutine(config, database));
+        features.add(new ProjectPRNotifierRoutine(config.getGitHubApiKey(), database));
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -192,6 +195,7 @@ public class Features {
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
+        features.add(new LinkGHProjectCommand(config.getGitHubApiKey(), database));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
