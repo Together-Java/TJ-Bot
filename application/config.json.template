@@ -1,4 +1,5 @@
 {
+    "jshellAwsApiUrl": "<put_your_jshell_aws_api_url>",
     "token": "<put_your_token_here>",
     "githubApiKey": "<your_github_personal_access_token>",
     "databasePath": "local-database.db",
