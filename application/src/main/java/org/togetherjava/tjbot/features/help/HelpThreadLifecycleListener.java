@@ -88,10 +88,10 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         if (threadChannel == null) {
             logger.info("thread with id: {} no longer exists, marking archived in records", id);
             database.write(context -> context.update(HELP_THREADS)
-                    .set(HELP_THREADS.CLOSED_AT, closedAt)
-                    .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
-                    .where(HELP_THREADS.CHANNEL_ID.eq(id))
-                    .execute());
+                .set(HELP_THREADS.CLOSED_AT, closedAt)
+                .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
+                .where(HELP_THREADS.CHANNEL_ID.eq(id))
+                .execute());
             return;
         }
 
@@ -100,12 +100,12 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         int participantsExceptAuthor = threadChannel.getMemberCount() - 1;
 
         database.write(context -> context.update(HELP_THREADS)
-                .set(HELP_THREADS.CLOSED_AT, closedAt)
-                .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
-                .set(HELP_THREADS.MESSAGE_COUNT, messageCount)
-                .set(HELP_THREADS.PARTICIPANTS, participantsExceptAuthor)
-                .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
-                .execute());
+            .set(HELP_THREADS.CLOSED_AT, closedAt)
+            .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
+            .set(HELP_THREADS.MESSAGE_COUNT, messageCount)
+            .set(HELP_THREADS.PARTICIPANTS, participantsExceptAuthor)
+            .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
+            .execute());
 
         logger.info("Thread with id: {}, updated to archived status in database", threadId);
 

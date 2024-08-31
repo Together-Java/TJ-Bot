@@ -1,7 +1,6 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +58,7 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
             .map(HelpThreadsRecord::getChannelId)
             .toList());
 
-        threadIdsToClose.forEach(id -> helpThreadLifecycleListener.handleArchiveStatus(now, id, jda));
+        threadIdsToClose
+            .forEach(id -> helpThreadLifecycleListener.handleArchiveStatus(now, id, jda));
     }
 }
