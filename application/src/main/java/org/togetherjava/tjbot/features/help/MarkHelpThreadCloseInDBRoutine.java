@@ -1,8 +1,6 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.JDA;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
@@ -20,8 +18,6 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREAD
  * closed.
  */
 public final class MarkHelpThreadCloseInDBRoutine implements Routine {
-    private static final Logger logger =
-            LoggerFactory.getLogger(MarkHelpThreadCloseInDBRoutine.class);
     private final Database database;
     private final HelpThreadLifecycleListener helpThreadLifecycleListener;
 
