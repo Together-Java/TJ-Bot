@@ -59,14 +59,6 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
             .map(HelpThreadsRecord::getChannelId)
             .toList());
 
-
-        threadIdsToClose.forEach(id -> {
-            try {
-                ThreadChannel threadChannel = jda.getThreadChannelById(id);
-                helpThreadLifecycleListener.handleArchiveStatus(now, threadChannel);
-            } catch (Exception exception) {
-                logger.warn("unable to mark thread as close with id :{}", id, exception);
-            }
-        });
+        threadIdsToClose.forEach(id -> helpThreadLifecycleListener.handleArchiveStatus(now, id, jda));
     }
 }

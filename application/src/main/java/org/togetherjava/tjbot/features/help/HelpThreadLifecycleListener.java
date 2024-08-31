@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.help;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.update.ChannelUpdateAppliedTagsEvent;
@@ -75,27 +76,39 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         boolean isArchived = threadChannel.isArchived();
 
         if (isArchived) {
-            handleArchiveStatus(closedAt, threadChannel);
+            handleArchiveStatus(closedAt, threadId, threadChannel.getJDA());
             return;
         }
 
         updateThreadStatusToActive(threadId);
     }
 
-    void handleArchiveStatus(Instant closedAt, ThreadChannel threadChannel) {
+    void handleArchiveStatus(Instant closedAt, long id, JDA jda) {
+        ThreadChannel threadChannel = jda.getThreadChannelById(id);
+        if (threadChannel == null) {
+            logger.info("thread with id: {} no longer exists, marking archived in records", id);
+            database.write(context -> context.update(HELP_THREADS)
+                    .set(HELP_THREADS.CLOSED_AT, closedAt)
+                    .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
+                    .where(HELP_THREADS.CHANNEL_ID.eq(id))
+                    .execute());
+            return;
+        }
+
         long threadId = threadChannel.getIdLong();
         int messageCount = threadChannel.getMessageCount();
         int participantsExceptAuthor = threadChannel.getMemberCount() - 1;
 
         database.write(context -> context.update(HELP_THREADS)
-            .set(HELP_THREADS.CLOSED_AT, closedAt)
-            .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
-            .set(HELP_THREADS.MESSAGE_COUNT, messageCount)
-            .set(HELP_THREADS.PARTICIPANTS, participantsExceptAuthor)
-            .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
-            .execute());
+                .set(HELP_THREADS.CLOSED_AT, closedAt)
+                .set(HELP_THREADS.TICKET_STATUS, HelpSystemHelper.TicketStatus.ARCHIVED.val)
+                .set(HELP_THREADS.MESSAGE_COUNT, messageCount)
+                .set(HELP_THREADS.PARTICIPANTS, participantsExceptAuthor)
+                .where(HELP_THREADS.CHANNEL_ID.eq(threadId))
+                .execute());
 
         logger.info("Thread with id: {}, updated to archived status in database", threadId);
+
     }
 
     private void updateThreadStatusToActive(long threadId) {
