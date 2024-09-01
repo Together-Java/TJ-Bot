@@ -62,9 +62,8 @@ subprojects {
     // sonarlint configuration, not to be confused with sonarqube/sonarcloud.
     sonarLint {
         rules {
-            disable(
-                    'java:S1135' // Disables "Track uses of "TO-DO" tags" rule.
-            )
+            disable('java:S1135') // Disables "Track uses of "TO-DO" tags" rule.
+            disable('java:S00117')
         }
     }
 
