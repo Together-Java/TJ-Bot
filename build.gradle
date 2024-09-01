@@ -63,7 +63,7 @@ subprojects {
     sonarLint {
         rules {
             disable('java:S1135') // Disables "Track uses of "TO-DO" tags" rule.
-            disable('java:S00117')
+            disable('java:S1190')
         }
     }
 
