@@ -1,8 +1,8 @@
 plugins {
     id 'java'
     id "com.diffplug.spotless" version "6.25.0"
-    id "org.sonarqube" version "5.0.0.4638"
-    id "name.remal.sonarlint" version "4.2.2"
+    id "org.sonarqube" version "5.1.0.4882"
+    id "name.remal.sonarlint" version "4.2.8"
 }
 
 group 'org.togetherjava'
@@ -55,16 +55,16 @@ subprojects {
     java {
         toolchain {
             // Nails the Java-Version of every Subproject
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(22)
         }
     }
 
     // sonarlint configuration, not to be confused with sonarqube/sonarcloud.
     sonarLint {
         rules {
-            disable(
-                    'java:S1135' // Disables "Track uses of "TO-DO" tags" rule.
-            )
+            disable('java:S1135') // Disables "Track uses of "TO-DO" tags" rule.
+            disable('java:S1190')
+            disable('java:S117')
         }
     }
 
