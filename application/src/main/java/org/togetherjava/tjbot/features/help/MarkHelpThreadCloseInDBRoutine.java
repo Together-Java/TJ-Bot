@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.JDA;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import org.togetherjava.tjbot.features.Routine;
@@ -18,18 +20,20 @@ import static org.togetherjava.tjbot.db.generated.tables.HelpThreads.HELP_THREAD
  * closed.
  */
 public final class MarkHelpThreadCloseInDBRoutine implements Routine {
+    private static final Logger logger =
+            LoggerFactory.getLogger(MarkHelpThreadCloseInDBRoutine.class);
     private final Database database;
     private final HelpThreadLifecycleListener helpThreadLifecycleListener;
 
     /**
      * Creates a new instance.
      *
-     * @param database the database to store help thread metadata in
+     * @param database                    the database to store help thread metadata in
      * @param helpThreadLifecycleListener class which offers method to update thread status in
-     *        database
+     *                                    database
      */
     public MarkHelpThreadCloseInDBRoutine(Database database,
-            HelpThreadLifecycleListener helpThreadLifecycleListener) {
+                                          HelpThreadLifecycleListener helpThreadLifecycleListener) {
         this.database = database;
         this.helpThreadLifecycleListener = helpThreadLifecycleListener;
     }
@@ -48,13 +52,20 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
         Instant now = Instant.now();
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
         List<Long> threadIdsToClose = database.read(context -> context.selectFrom(HELP_THREADS)
-            .where(HELP_THREADS.TICKET_STATUS.eq(HelpSystemHelper.TicketStatus.ACTIVE.val))
-            .and(HELP_THREADS.CREATED_AT.lessThan(threeDaysAgo))
-            .stream()
-            .map(HelpThreadsRecord::getChannelId)
-            .toList());
+                .where(HELP_THREADS.TICKET_STATUS.eq(HelpSystemHelper.TicketStatus.ACTIVE.val))
+                .and(HELP_THREADS.CREATED_AT.lessThan(threeDaysAgo))
+                .stream()
+                .map(HelpThreadsRecord::getChannelId)
+                .toList());
 
         threadIdsToClose
-            .forEach(id -> helpThreadLifecycleListener.handleArchiveStatus(now, id, jda));
+                .forEach(id -> {
+                            try {
+                                helpThreadLifecycleListener.handleArchiveStatus(now, id, jda);
+                            } catch (Throwable throwable) {
+                                logger.warn("Failed to update status of thread with id: {} to archived",id, throwable);
+                            }
+                        }
+                );
     }
 }
