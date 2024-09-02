@@ -48,6 +48,7 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
         updateTicketStatus(jda);
     }
 
+    @SuppressWarnings("java:S1181")
     private void updateTicketStatus(JDA jda) {
         Instant now = Instant.now();
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
