@@ -48,7 +48,6 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
         updateTicketStatus(jda);
     }
 
-    @SuppressWarnings("java:S1181")
     private void updateTicketStatus(JDA jda) {
         Instant now = Instant.now();
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
@@ -62,9 +61,9 @@ public final class MarkHelpThreadCloseInDBRoutine implements Routine {
         threadIdsToClose.forEach(id -> {
             try {
                 helpThreadLifecycleListener.handleArchiveStatus(now, id, jda);
-            } catch (Throwable throwable) {
+            } catch (Exception exception) {
                 logger.warn("Failed to update status of thread with id: {} to archived", id,
-                        throwable);
+                        exception);
             }
         });
     }
