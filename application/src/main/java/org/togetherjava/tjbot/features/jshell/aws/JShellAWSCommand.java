@@ -35,7 +35,8 @@ public class JShellAWSCommand extends SlashCommandAdapter {
      */
     public JShellAWSCommand(JShellService jShellService) {
         super("jshell-aws", "Execute Java code in Discord!", CommandVisibility.GUILD);
-        getData().addOption(OptionType.STRING, CODE_PARAMETER, "The code to execute using JShell");
+        getData().addOption(OptionType.STRING, CODE_PARAMETER, "The code to execute using JShell",
+                true);
         this.jShellService = jShellService;
     }
 
