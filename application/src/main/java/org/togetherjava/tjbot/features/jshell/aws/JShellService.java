@@ -13,6 +13,8 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The JShellService class is used to interact with the AWS JShell API.
@@ -49,6 +51,7 @@ public class JShellService {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(new URI(apiURL))
             .header("Content-Type", "application/json")
+            .timeout(Duration.of(30, TimeUnit.SECONDS.toChronoUnit()))
             .POST(HttpRequest.BodyPublishers
                 .ofString(OBJECT_MAPPER.writeValueAsString(jShellRequest)))
             .build();
