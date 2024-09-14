@@ -73,6 +73,7 @@ import org.togetherjava.tjbot.features.tags.TagsCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
+import org.togetherjava.tjbot.features.tophelper.ai.AITopHelperCommand;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -192,6 +193,7 @@ public class Features {
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
+        features.add(new AITopHelperCommand(chatGptService));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
