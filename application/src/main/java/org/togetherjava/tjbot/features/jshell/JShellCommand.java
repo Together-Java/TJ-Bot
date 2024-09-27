@@ -111,12 +111,11 @@ public class JShellCommand extends SlashCommandAdapter {
 
     private void handleVersionCommand(SlashCommandInteractionEvent event) {
         String code = """
-                System.out.println("```");
                 System.out.println("Version: " + Runtime.version());
                 System.out.println("Vendor:  " + System.getProperty("java.vendor"));
                 System.out.println("OS:      " + System.getProperty("os.name"));
                 System.out.println("Arch:    " + System.getProperty("os.arch"));
-                System.out.println("```");""";
+                """;
         handleEval(event, null, false, code, false);
     }
 
