@@ -1,0 +1,96 @@
+openapi: 3.0.1
+info:
+  title: "JShell API"
+  version: "1.0"
+
+servers:
+  - url: https://33ykaxnvin5lusynogiwrevqgm0ovara.lambda-url.eu-west-2.on.aws/
+    description: AWS
+  - url: http://127.0.0.1:3000/jshell
+    description: localhost
+
+paths:
+  /:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: "System.out.println(\"Hello, World!\");"
+      responses:
+        200:
+          description: "Successful invocation of the JShell API"
+          content: 
+            application/json:
+              examples:
+                Happy path:
+                  value:
+                    errorStream: ""
+                    outputStream: "Hello, World!"
+                    events: [
+                      statement: "System.out.println(\"Hello, World!\");",
+                      value: "",
+                      status: "VALID"
+                    ]
+                Syntax errors:
+                  value:
+                    errorStream: ""
+                    outputStream: ""
+                    events: [
+                      statement: "System.out.prinn(\"Hello, World!\");",
+                      value: null,
+                      status: "REJECTED"
+                    ]
+                System.err.println:
+                  value:
+                    errorStream: "Hello, World!"
+                    outputStream: ""
+                    events: [
+                      statement: "System.out.prinn(\"Hello, World!\");",
+                      value: "",
+                      status: "VALID"
+                    ]
+                Simple evaluation that provides a value:
+                  value:
+                    errorStream: ""
+                    outputStream: ""
+                    events: [
+                      statement: "1+1",
+                      value: "2",
+                      status: "VALID"
+                    ]
+        408:
+          description: "Execution took too long so it timed out"
+          content:
+            application/json:
+              examples:
+                Response:
+                  value:
+                    error: "Execution timed out"
+        400:
+          description: "Missing fields or the provided input is incorrect"
+          content:
+            application/json:
+              examples:
+                Invalid request payload:
+                  value:
+                    error: "Invalid input format"
+                Invalid code value:
+                  value:
+                    error: "Code field is empty or invalid"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              examples:
+                JShell exceptions:
+                  value:
+                    error: "Error during code execution"
+                InputStream error:
+                  value:
+                    error: "Failed to read the request stream"

@@ -1,0 +1,44 @@
+name: deploy
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'jshell-aws-backend/**'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to AWS
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-west-2
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Authenticate with AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+
+      - name: Build Application
+        run: sam build -t infrastructure/template.yaml
+
+      - name: Deploy to AWS
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file infrastructure/samconfig.toml

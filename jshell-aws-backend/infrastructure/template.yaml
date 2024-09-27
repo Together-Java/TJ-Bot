@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: JShell Stack
+Transform: [ AWS::LanguageExtensions, AWS::Serverless-2016-10-31 ]
+
+Globals:
+  Function:
+    Timeout: 20
+    CodeUri: ..
+    MemorySize: 512
+    Runtime: java21
+    Architectures: [ arm64 ]
+
+Resources:
+  CodeRunnerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: org.togetherjava.jshell.CodeRunner::handleRequest
+      SnapStart:
+        ApplyOn: PublishedVersions
+      AutoPublishAlias: live
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            Effect: Allow
+            Action: lambda:InvokeFunctionUrl
+            Resource: '*'
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /jshell
+            Method: POST
+
+  CodeRunnerFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${CodeRunnerFunction}
+      RetentionInDays: 7
+
+Outputs:
+  LambdaURL:
+    Value: !GetAtt CodeRunnerFunctionUrl.FunctionUrl
