@@ -12,7 +12,6 @@ import org.togetherjava.tjbot.config.Config;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -95,32 +94,32 @@ public class ChatGptService {
         if (isDisabled) {
             return Optional.empty();
         }
+        String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
+        String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
+            .formatted(context, instructions, question);
+        return ask(questionWithContext);
+    }
 
+    /**
+     * Prompt ChatGPT with a question and receive a response.
+     *
+     * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @return response from ChatGPT as a String.
+     * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
+     *      Tokens</a>.
+     */
+    public Optional<String> ask(String question) {
         try {
-            String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
-            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
-                .formatted(context, instructions, question);
-            ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
-                    Objects.requireNonNull(questionWithContext));
-            ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-                .model(AI_MODEL)
-                .messages(List.of(chatMessage))
-                .frequencyPenalty(FREQUENCY_PENALTY)
-                .temperature(TEMPERATURE)
-                .maxTokens(MAX_TOKENS)
-                .n(MAX_NUMBER_OF_RESPONSES)
-                .build();
-
+            ChatCompletionRequest chatCompletionRequest =
+                    chatCompletionRequest(new ChatMessage(ChatMessageRole.USER.value(), question));
             String response = openAiService.createChatCompletion(chatCompletionRequest)
                 .getChoices()
                 .getFirst()
                 .getMessage()
                 .getContent();
-
             if (response == null) {
                 return Optional.empty();
             }
-
             return Optional.of(response);
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
@@ -132,5 +131,16 @@ public class ChatGptService {
                     runtimeException.getMessage());
         }
         return Optional.empty();
+    }
+
+    private static ChatCompletionRequest chatCompletionRequest(ChatMessage chatMessage) {
+        return ChatCompletionRequest.builder()
+            .model(AI_MODEL)
+            .messages(List.of(chatMessage))
+            .frequencyPenalty(FREQUENCY_PENALTY)
+            .temperature(TEMPERATURE)
+            .maxTokens(MAX_TOKENS)
+            .n(MAX_NUMBER_OF_RESPONSES)
+            .build();
     }
 }
