@@ -58,15 +58,15 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        String projectsChannelName = "projects";
         if (event.isFromThread()) {
             ThreadChannel threadChannel = event.getChannel().asThreadChannel();
             Channel parentChannel = threadChannel.getParentChannel();
-            boolean isPost = isPostMessage(threadChannel);
-            if (helper.isHelpForumName(parentChannel.getName()) && isPost) {
+            if (helper.isHelpForumName(parentChannel.getName())) {
+                int messageCount = threadChannel.getMessageCount();
+                if (messageCount > 1 || wasThreadAlreadyHandled(threadChannel.getIdLong())) {
+                    return;
+                }
                 handleHelpThreadCreated(threadChannel);
-            } else if (parentChannel.getName().equals(projectsChannelName) && isPost) {
-                handleProjectThread(event);
             }
         }
     }
@@ -90,21 +90,12 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         }).queue();
     }
 
-    private void handleProjectThread(MessageReceivedEvent event) {
-        event.getMessage().pin().queue();
-    }
-
     private static User getMentionedAuthorByMessage(Message message) {
         return message.getMentions().getUsers().getFirst();
     }
 
     private static boolean isPostedBySelfUser(Message message) {
         return message.getJDA().getSelfUser().equals(message.getAuthor());
-    }
-
-    private boolean isPostMessage(ThreadChannel threadChannel) {
-        int messageCount = threadChannel.getMessageCount();
-        return messageCount <= 1 && !wasThreadAlreadyHandled(threadChannel.getIdLong());
     }
 
     private RestAction<Message> createAIResponse(ThreadChannel threadChannel, Message message) {
