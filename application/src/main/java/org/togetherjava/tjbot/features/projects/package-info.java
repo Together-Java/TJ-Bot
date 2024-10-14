@@ -1,5 +1,5 @@
 /**
- * This packages offers all the functionality for the remind-command. The core class is
+ * This packages offers all the functionality for the projects channel. The core class is
  * {@link org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener}.
  */
 @MethodsReturnNonnullByDefault
