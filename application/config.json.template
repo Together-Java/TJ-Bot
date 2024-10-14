@@ -6,6 +6,7 @@
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
     "modAuditLogChannelPattern": "mod-audit-log",
     "modMailChannelPattern": "modmail",
+    "projectsChannelPattern": "projects"
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Community Ambassador",

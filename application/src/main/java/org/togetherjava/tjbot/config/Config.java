@@ -23,6 +23,7 @@ public final class Config {
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
     private final String modMailChannelPattern;
+    private final String projectsChannelPattern;
     private final String mutedRolePattern;
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
@@ -58,6 +59,8 @@ public final class Config {
                     required = true) String modAuditLogChannelPattern,
             @JsonProperty(value = "modMailChannelPattern",
                     required = true) String modMailChannelPattern,
+            @JsonProperty(value = "projectsChannelPattern",
+                    required = true) String projectsChannelPattern,
             @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
             @JsonProperty(value = "heavyModerationRolePattern",
                     required = true) String heavyModerationRolePattern,
@@ -103,6 +106,7 @@ public final class Config {
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
         this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
+        this.projectsChannelPattern = Objects.requireNonNull(projectsChannelPattern);
         this.mutedRolePattern = Objects.requireNonNull(mutedRolePattern);
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
@@ -168,6 +172,16 @@ public final class Config {
      */
     public String getModMailChannelPattern() {
         return modMailChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain information
+     * about user projects
+     *
+     * @return the channel name pattern
+     */
+    public String getProjectsChannelPattern() {
+        return projectsChannelPattern;
     }
 
     /**
