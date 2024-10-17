@@ -32,8 +32,6 @@ import org.togetherjava.tjbot.features.componentids.Lifespan;
 import javax.annotation.Nullable;
 
 import java.awt.Color;
-import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,26 +118,20 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     @Override
     public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
         SelectOption selectOption = event.getSelectedOptions().getFirst();
+        Member member = event.getMember();
 
-        if (selectOption == null) {
+        if (selectOption == null || member == null) {
             return;
         }
 
-        OffsetDateTime timeSentCache = applicationApplyHandler.getApplicationSubmitCooldown()
-            .getIfPresent(event.getMember());
-        if (timeSentCache != null) {
-            Duration duration = Duration.between(timeSentCache, OffsetDateTime.now());
-            long remainingMinutes =
-                    roleApplicationSystemConfig.applicationSubmitCooldownMinutes() - duration.toMinutes();
-
-            if (duration.toMinutes() < roleApplicationSystemConfig.applicationSubmitCooldownMinutes()) {
-                event
-                    .reply("Please wait %d minutes before sending a new application form."
-                        .formatted(remainingMinutes))
-                    .setEphemeral(true)
-                    .queue();
-                return;
-            }
+        long remainingMinutes = applicationApplyHandler.getMemberCooldownMinutes(member);
+        if (remainingMinutes > 0) {
+            event
+                .reply("Please wait %d minutes before sending a new application form."
+                    .formatted(remainingMinutes))
+                .setEphemeral(true)
+                .queue();
+            return;
         }
 
         String questionLabel = roleApplicationSystemConfig.defaultQuestion();
@@ -151,7 +143,8 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             .create(generateComponentId(event.getUser().getId()), questionLabel,
                     TextInputStyle.PARAGRAPH)
             .setRequired(true)
-            .setRequiredRange(roleApplicationSystemConfig.minimumAnswerLength(), roleApplicationSystemConfig.maximumAnswerLength())
+            .setRequiredRange(roleApplicationSystemConfig.minimumAnswerLength(),
+                    roleApplicationSystemConfig.maximumAnswerLength())
             .setPlaceholder("Enter your answer here")
             .build();
 

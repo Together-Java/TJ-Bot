@@ -37,13 +37,14 @@ public class ApplicationApplyHandler {
     /**
      * Constructs a new {@code ApplicationApplyHandler} instance.
      *
-     * @param roleApplicationSystemConfig the configuration that contains the details for the application form
-     *        including the cooldown duration and channel pattern.
+     * @param roleApplicationSystemConfig the configuration that contains the details for the
+     *        application form including the cooldown duration and channel pattern.
      */
     public ApplicationApplyHandler(RoleApplicationSystemConfig roleApplicationSystemConfig) {
         this.roleApplicationSystemConfig = roleApplicationSystemConfig;
         this.applicationChannelPattern =
-                Pattern.compile(roleApplicationSystemConfig.submissionsChannelPattern()).asMatchPredicate();
+                Pattern.compile(roleApplicationSystemConfig.submissionsChannelPattern())
+                    .asMatchPredicate();
 
         final Duration applicationSubmitCooldownDuration =
                 Duration.ofMinutes(roleApplicationSystemConfig.applicationSubmitCooldownMinutes());
@@ -85,8 +86,8 @@ public class ApplicationApplyHandler {
         MessageEmbed.Field roleField = new MessageEmbed.Field("Role", roleString, false);
         embed.addField(roleField);
 
-        MessageEmbed.Field answerField =
-                new MessageEmbed.Field(roleApplicationSystemConfig.defaultQuestion(), answer, false);
+        MessageEmbed.Field answerField = new MessageEmbed.Field(
+                roleApplicationSystemConfig.defaultQuestion(), answer, false);
         embed.addField(answerField);
 
         applicationChannel.get().sendMessageEmbeds(embed.build()).queue();
@@ -128,5 +129,15 @@ public class ApplicationApplyHandler {
             .queue();
 
         applicationSubmitCooldown.put(event.getMember(), OffsetDateTime.now());
+    }
+
+    protected long getMemberCooldownMinutes(Member member) {
+        OffsetDateTime timeSentCache = getApplicationSubmitCooldown().getIfPresent(member);
+        if (timeSentCache != null) {
+            Duration duration = Duration.between(timeSentCache, OffsetDateTime.now());
+            return roleApplicationSystemConfig.applicationSubmitCooldownMinutes()
+                    - duration.toMinutes();
+        }
+        return 0L;
     }
 }
