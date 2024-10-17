@@ -175,5 +175,12 @@
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
     },
+    "roleApplicationSystem": {
+        "submissionsChannelPattern": "staff-applications",
+        "defaultQuestion": "What makes you a valuable addition to the team? 😎",
+        "minimumAnswerLength": 50,
+        "maximumAnswerLength": 500,
+        "applicationSubmitCooldownMinutes": 5
+    },
     "memberCountCategoryPattern": "Info"
 }
