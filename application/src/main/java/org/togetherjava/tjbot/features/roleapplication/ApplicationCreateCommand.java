@@ -234,16 +234,6 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             return false;
         }
 
-        Member selfMember = guild.getSelfMember();
-        if (!selfMember.hasPermission(Permission.MANAGE_ROLES)) {
-            event.reply(
-                    "Sorry, but I was not set up correctly. I need the manage role permissions for this.")
-                .setEphemeral(true)
-                .queue();
-            logger.error("The bot requires the manage role permissions for /{}.", getName());
-            return false;
-        }
-
         return true;
     }
 
