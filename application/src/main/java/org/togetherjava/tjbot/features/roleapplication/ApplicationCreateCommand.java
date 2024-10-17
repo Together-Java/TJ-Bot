@@ -134,13 +134,8 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             return;
         }
 
-        String questionLabel = roleApplicationSystemConfig.defaultQuestion();
-        if (questionLabel.length() > TextInput.MAX_LABEL_LENGTH) {
-            questionLabel = questionLabel.substring(0, TextInput.MAX_LABEL_LENGTH);
-        }
-
         TextInput body = TextInput
-            .create(generateComponentId(event.getUser().getId()), questionLabel,
+            .create(generateComponentId(event.getUser().getId()), roleApplicationSystemConfig.defaultQuestion(),
                     TextInputStyle.PARAGRAPH)
             .setRequired(true)
             .setRequiredRange(roleApplicationSystemConfig.minimumAnswerLength(),
