@@ -20,8 +20,6 @@ import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.RoleApplicationSystemConfig;
@@ -44,8 +42,6 @@ import java.util.stream.IntStream;
  * guild.
  */
 public class ApplicationCreateCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationCreateCommand.class);
-
     protected static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
     private static final int OPTIONAL_ROLES_AMOUNT = 5;
     private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
@@ -135,8 +131,8 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         }
 
         TextInput body = TextInput
-            .create(generateComponentId(event.getUser().getId()), roleApplicationSystemConfig.defaultQuestion(),
-                    TextInputStyle.PARAGRAPH)
+            .create(generateComponentId(event.getUser().getId()),
+                    roleApplicationSystemConfig.defaultQuestion(), TextInputStyle.PARAGRAPH)
             .setRequired(true)
             .setRequiredRange(roleApplicationSystemConfig.minimumAnswerLength(),
                     roleApplicationSystemConfig.maximumAnswerLength())

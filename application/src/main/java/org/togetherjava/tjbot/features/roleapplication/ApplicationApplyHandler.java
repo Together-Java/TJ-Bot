@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
  * users to prevent spamming.
  */
 public class ApplicationApplyHandler {
-
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
