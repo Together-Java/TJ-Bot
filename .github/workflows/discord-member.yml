@@ -38,6 +38,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: `Congratulations on your first contribution! We're excited to have you on board. Your work will be included in the next release, so stay tuned! 
-            Are you a Together-Java member on Discord? If so, please share your username here. If not, that’s perfectly fine! If you change your mind, here's the link: discord_link.
+            Are you a Together-Java member on Discord? If so, please share your username here. If not, that’s perfectly fine! If you change your mind, here's the link: ${{secrets.SERVER_INVITE}}.
             Why do we need your username? We’d like to give you a shoutout to show our gratitude!`
             })
