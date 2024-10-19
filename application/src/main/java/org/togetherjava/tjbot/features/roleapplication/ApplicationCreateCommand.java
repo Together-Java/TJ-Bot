@@ -121,10 +121,12 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
         }
 
         long remainingMinutes = applicationApplyHandler.getMemberCooldownMinutes(member);
+        String correctMinutesWord = selectWordFromCount(remainingMinutes, "minute", "minutes");
+
         if (remainingMinutes > 0) {
             event
-                .reply("Please wait %d minutes before sending a new application form."
-                    .formatted(remainingMinutes))
+                .reply("Please wait %d %s before sending a new application form."
+                    .formatted(remainingMinutes, correctMinutesWord))
                 .setEphemeral(true)
                 .queue();
             return;
@@ -155,6 +157,23 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             .build();
 
         event.replyModal(modal).queue();
+    }
+
+    /**
+     * Selects and returns the appropriate singular or plural form of a word based on the given
+     * count.
+     *
+     * @param singularForm the word in its singular form
+     * @param pluralForm the word in its plural form
+     * @param count the number used to determine whether to return the singular or plural form
+     * @return the singular form if count equals 1, otherwise the plural form
+     */
+    private String selectWordFromCount(final Number count, final String singularForm,
+            final String pluralForm) {
+        if (count.intValue() == 1) {
+            return singularForm;
+        }
+        return pluralForm;
     }
 
     /**
