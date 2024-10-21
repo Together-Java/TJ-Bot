@@ -37,7 +37,7 @@ public final class ProjectsThreadCreatedListener extends ListenerAdapter impleme
             boolean isPost = isPostMessage(threadChannel);
 
             if (parentChannel.getName().equals(configProjectsChannelPattern) && isPost) {
-                handleProjectThread(event);
+                pinParentMessage(event);
             }
         }
     }
@@ -50,11 +50,15 @@ public final class ProjectsThreadCreatedListener extends ListenerAdapter impleme
 
     private boolean isPostMessage(ThreadChannel threadChannel) {
         int messageCount = threadChannel.getMessageCount();
-        return messageCount <= 1 && !wasThreadAlreadyHandled(threadChannel.getIdLong());
+        if (messageCount <= 1 && !wasThreadAlreadyHandled(threadChannel.getIdLong())) {
+            return threadChannel.retrieveMessageById(threadChannel.getIdLong())
+                .map(message -> message.getIdLong() == threadChannel.getIdLong())
+                .complete();
+        }
+        return false;
     }
 
-    private void handleProjectThread(MessageReceivedEvent event) {
-        // Pin the first message in the thread
+    private void pinParentMessage(MessageReceivedEvent event) {
         event.getMessage().pin().queue();
     }
 }
