@@ -34,7 +34,7 @@ public final class ProjectsThreadCreatedListener extends ListenerAdapter impleme
         if (event.isFromThread()) {
             ThreadChannel threadChannel = event.getChannel().asThreadChannel();
             Channel parentChannel = threadChannel.getParentChannel();
-            boolean isPost = isPostMessage(threadChannel);
+            boolean isPost = isPostMessage(threadChannel, event);
 
             if (parentChannel.getName().equals(configProjectsChannelPattern) && isPost) {
                 pinParentMessage(event);
@@ -48,12 +48,10 @@ public final class ProjectsThreadCreatedListener extends ListenerAdapter impleme
         return createdAt != now;
     }
 
-    private boolean isPostMessage(ThreadChannel threadChannel) {
+    private boolean isPostMessage(ThreadChannel threadChannel, MessageReceivedEvent event) {
         int messageCount = threadChannel.getMessageCount();
         if (messageCount <= 1 && !wasThreadAlreadyHandled(threadChannel.getIdLong())) {
-            return threadChannel.retrieveMessageById(threadChannel.getIdLong())
-                .map(message -> message.getIdLong() == threadChannel.getIdLong())
-                .complete();
+            return event.getMessageId().equals(threadChannel.getId());
         }
         return false;
     }
