@@ -1,11 +1,8 @@
 package org.togetherjava.tjbot.features.basic;
 
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
@@ -17,8 +14,6 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.CoolMessagesBoardConfig;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
-import java.awt.Color;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -102,34 +97,7 @@ public final class CoolMessagesBoardManager extends MessageReceiverAdapter {
      */
     private static MessageCreateAction insertCoolMessage(TextChannel boardChannel,
             Message message) {
-        return boardChannel.sendMessageEmbeds(Collections.singleton(createQuoteEmbed(message)));
-    }
-
-    /**
-     * Wraps a text message into a properly formatted quote message used for the board text channel.
-     */
-    private static MessageEmbed createQuoteEmbed(Message message) {
-        final User author = message.getAuthor();
-        EmbedBuilder embedBuilder = new EmbedBuilder();
-
-        // If the message contains image(s), include the first one
-        var firstImageAttachment = message.getAttachments()
-            .stream()
-            .parallel()
-            .filter(Message.Attachment::isImage)
-            .findAny()
-            .orElse(null);
-
-        if (firstImageAttachment != null) {
-            embedBuilder.setThumbnail(firstImageAttachment.getUrl());
-        }
-
-        return embedBuilder.setDescription(message.getContentDisplay())
-            .appendDescription("%n%n[Jump to Message](%s)".formatted(message.getJumpUrl()))
-            .setColor(Color.orange)
-            .setAuthor(author.getName(), null, author.getAvatarUrl())
-            .setTimestamp(message.getTimeCreated())
-            .build();
+        return message.forwardTo(boardChannel);
     }
 
     /**
