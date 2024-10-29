@@ -115,5 +115,10 @@
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
     },
-    "memberCountCategoryPattern": "Info"
+    "memberCountCategoryPattern": "Info",
+    "dynamicVoiceChannelPatterns": [
+        "Gaming",
+        "Support/Studying Room",
+        "Chit Chat"
+    ]
 }
