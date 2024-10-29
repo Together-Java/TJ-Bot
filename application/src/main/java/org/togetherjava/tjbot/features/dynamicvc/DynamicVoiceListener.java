@@ -57,10 +57,10 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
     private final Map<String, AtomicBoolean> activeQueuesMap = new HashMap<>();
 
     /** Boolean to track if events from all queues should be handled at a slower rate. */
-    private final AtomicBoolean slowmode = new AtomicBoolean(false);
+    private final AtomicBoolean voiceActivityCongestion = new AtomicBoolean(false);
     private final Executor eventQueueExecutor =
             CompletableFuture.delayedExecutor(1L, TimeUnit.SECONDS);
-    private static final int SLOWMODE_THRESHOLD = 5;
+    private static final int CONGESTION_THRESHOLD = 5;
 
     /**
      * Initializes a new {@link DynamicVoiceListener} with the specified configuration.
@@ -97,14 +97,18 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
         }
 
         eventQueue.add(event);
-        slowmode.set(eventQueue.size() >= SLOWMODE_THRESHOLD);
+        voiceActivityCongestion.set(eventQueue.size() >= CONGESTION_THRESHOLD);
 
         if (activeQueuesMap.get(channelTopic).get()) {
             return;
         }
 
-        if (slowmode.get()) {
-            logger.info("Running with slowmode");
+        if (voiceActivityCongestion.get()) {
+            final String logMessage = String.format(
+                    "Congestion detected in the event queue of voice channel '%s', responding to event %s asynchronously.",
+                    channelTopic, event);
+
+            logger.info(logMessage);
             CompletableFuture.runAsync(() -> processEventFromQueue(channelTopic),
                     eventQueueExecutor);
             return;
