@@ -20,6 +20,7 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
+import org.togetherjava.tjbot.features.dynamicvc.DynamicVoiceListener;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
@@ -150,6 +151,9 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
+
+        // Voice receivers
+        features.add(new DynamicVoiceListener(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
