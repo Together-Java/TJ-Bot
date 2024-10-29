@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.features;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import java.util.regex.Pattern;
 
@@ -55,6 +56,12 @@ public abstract class MessageReceiverAdapter implements MessageReceiver {
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Override
     public void onMessageDeleted(MessageDeleteEvent event) {
+        // Adapter does not react by default, subclasses may change this behavior
+    }
+
+    @SuppressWarnings("NoopMethodInAbstractClass")
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event) {
         // Adapter does not react by default, subclasses may change this behavior
     }
 }
