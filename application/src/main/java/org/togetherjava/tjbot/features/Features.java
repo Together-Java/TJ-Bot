@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.basic.CoolMessagesBoardManager;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
@@ -150,6 +151,7 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
+        features.add(new CoolMessagesBoardManager(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
