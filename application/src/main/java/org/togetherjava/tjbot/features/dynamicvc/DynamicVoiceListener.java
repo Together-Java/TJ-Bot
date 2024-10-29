@@ -90,7 +90,7 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
     }
 
     private void insertEventToQueue(GuildVoiceUpdateEvent event, String channelTopic) {
-        var eventQueue = eventQueues.get(channelTopic);
+        Queue<GuildVoiceUpdateEvent> eventQueue = eventQueues.get(channelTopic);
 
         if (eventQueue == null) {
             return;
