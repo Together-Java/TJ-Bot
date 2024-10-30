@@ -23,16 +23,7 @@ import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
-import org.togetherjava.tjbot.features.help.GuildLeaveCloseThreadListener;
-import org.togetherjava.tjbot.features.help.HelpSystemHelper;
-import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;
-import org.togetherjava.tjbot.features.help.HelpThreadAutoArchiver;
-import org.togetherjava.tjbot.features.help.HelpThreadCommand;
-import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
-import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
-import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
-import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
-import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
+import org.togetherjava.tjbot.features.help.*;
 import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
@@ -194,6 +185,7 @@ public class Features {
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
+        features.add(new HelpThreadStatsCommand());
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
