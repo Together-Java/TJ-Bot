@@ -62,6 +62,7 @@ import org.togetherjava.tjbot.features.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.features.moderation.temp.TemporaryModerationRoutine;
+import org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener;
 import org.togetherjava.tjbot.features.reminder.RemindRoutine;
 import org.togetherjava.tjbot.features.reminder.ReminderCommand;
 import org.togetherjava.tjbot.features.system.BotCore;
@@ -157,6 +158,7 @@ public class Features {
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
         features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
+        features.add(new ProjectsThreadCreatedListener(config));
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
