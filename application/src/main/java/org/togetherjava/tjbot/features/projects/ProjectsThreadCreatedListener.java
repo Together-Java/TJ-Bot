@@ -25,6 +25,12 @@ public final class ProjectsThreadCreatedListener extends ListenerAdapter impleme
         .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
         .build();
 
+    /**
+     * Creates a new instance.
+     *
+     * @param config to work with the project related threads
+     */
+
     public ProjectsThreadCreatedListener(Config config) {
         configProjectsChannelPattern = config.getProjectsChannelPattern();
     }
