@@ -47,6 +47,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final CakeDayConfig cakeDayConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -97,7 +98,8 @@ public final class Config {
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern) {
+                    required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "cakeDayConfig", required = true) CakeDayConfig cakeDayConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -131,6 +133,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.cakeDayConfig = Objects.requireNonNull(cakeDayConfig);
     }
 
     /**
@@ -413,6 +416,15 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * Retrieves the Cake Day configuration.
+     *
+     * @return the cake-day feature configuration
+     */
+    public CakeDayConfig getCakeDayConfig() {
+        return cakeDayConfig;
     }
 
     /**

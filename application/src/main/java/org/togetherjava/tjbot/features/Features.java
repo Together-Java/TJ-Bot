@@ -15,6 +15,9 @@ import org.togetherjava.tjbot.features.bookmarks.BookmarksCommand;
 import org.togetherjava.tjbot.features.bookmarks.BookmarksSystem;
 import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksCleanupRoutine;
 import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksListener;
+import org.togetherjava.tjbot.features.cakeday.CakeDayListener;
+import org.togetherjava.tjbot.features.cakeday.CakeDayRoutine;
+import org.togetherjava.tjbot.features.cakeday.CakeDayService;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
@@ -116,6 +119,7 @@ public class Features {
                 new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
+        CakeDayService cakeDayService = new CakeDayService(config, database);
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
 
@@ -136,6 +140,7 @@ public class Features {
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
+        features.add(new CakeDayRoutine(cakeDayService));
         features.add(new RSSHandlerRoutine(config, database));
 
         // Message receivers
@@ -157,6 +162,7 @@ public class Features {
         features.add(new GuildLeaveCloseThreadListener(config));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
+        features.add(new CakeDayListener(cakeDayService));
         features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
         features.add(new ProjectsThreadCreatedListener(config));
 
