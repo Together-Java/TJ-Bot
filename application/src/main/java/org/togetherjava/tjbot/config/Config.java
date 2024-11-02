@@ -16,6 +16,7 @@ import java.util.Objects;
  * Configuration of the application. Create instances using {@link #load(Path)}.
  */
 public final class Config {
+    private final String jShellAwsApiUrl;
     private final String token;
     private final String githubApiKey;
     private final String databasePath;
@@ -50,7 +51,8 @@ public final class Config {
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private Config(@JsonProperty(value = "token", required = true) String token,
+    private Config(@JsonProperty(value = "jshellAwsApiUrl", required = true) String jShellAwsApiUrl,
+            @JsonProperty(value = "token", required = true) String token,
             @JsonProperty(value = "githubApiKey", required = true) String githubApiKey,
             @JsonProperty(value = "databasePath", required = true) String databasePath,
             @JsonProperty(value = "projectWebsite", required = true) String projectWebsite,
@@ -98,6 +100,7 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern) {
+        this.jShellAwsApiUrl = Objects.requireNonNull(jShellAwsApiUrl);
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -431,5 +434,9 @@ public final class Config {
      */
     public RSSFeedsConfig getRSSFeedsConfig() {
         return rssFeedsConfig;
+    }
+
+    public String getjShellAwsApiUrl() {
+        return jShellAwsApiUrl;
     }
 }
