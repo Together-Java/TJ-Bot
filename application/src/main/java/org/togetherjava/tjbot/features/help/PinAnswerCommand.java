@@ -12,7 +12,7 @@ import org.togetherjava.tjbot.features.MessageContextCommand;
 
 public final class PinAnswerCommand extends BotCommandAdapter implements MessageContextCommand {
     private static final String COMMAND_NAME = "pin-answer";
-    private static final int MAX_PINNED_ANSWERS = 3;
+    private static final int MAX_PINNED_ANSWERS = 10;
     private int count = 0;
 
     public PinAnswerCommand() {
