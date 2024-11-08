@@ -7,7 +7,7 @@ var sqliteVersion = "3.46.1.0"
 dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
     implementation "org.xerial:sqlite-jdbc:${sqliteVersion}"
-    implementation 'org.flywaydb:flyway-core:10.17.2'
+    implementation 'org.flywaydb:flyway-core:10.21.0'
     implementation "org.jooq:jooq:$jooqVersion"
 
     implementation project(':utils')
