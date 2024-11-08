@@ -161,7 +161,7 @@ public class Features {
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
-        features.add(new PinAnswerCommand());
+        features.add(new PinAnswerCommand(config));
 
         // User context commands
 
