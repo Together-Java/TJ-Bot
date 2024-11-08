@@ -36,12 +36,12 @@ public final class PinAnswerCommand extends BotCommandAdapter implements Message
 
         if (!(threadChannel.getParentChannel() instanceof ForumChannel forumChannel)
                 || !forumChannel.getName().equalsIgnoreCase(helpForumPattern)) {
-            replyNotInQuestionsChannel(event);
+            replyNotInThread(event);
             return;
         }
 
         if (!threadOwner(commandInvoker, threadChannel)) {
-            replyNotThreadCreator(event);
+            replyNotThreadOwner(event);
             return;
         }
 
@@ -68,13 +68,7 @@ public final class PinAnswerCommand extends BotCommandAdapter implements Message
         event.reply("This command can only be used in threads").setEphemeral(true).queue();
     }
 
-    private void replyNotInQuestionsChannel(MessageContextInteractionEvent event) {
-        event.reply("Answers can only be pinned in the questions channel")
-            .setEphemeral(true)
-            .queue();
-    }
-
-    private void replyNotThreadCreator(MessageContextInteractionEvent event) {
+    private void replyNotThreadOwner(MessageContextInteractionEvent event) {
         event.reply("Only thread owners can use this command").setEphemeral(true).queue();
     }
 
