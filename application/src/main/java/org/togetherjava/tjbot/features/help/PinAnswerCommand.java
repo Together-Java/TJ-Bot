@@ -29,16 +29,13 @@ public final class PinAnswerCommand extends BotCommandAdapter implements Message
         Message originalMessage = event.getTarget();
         User commandInvoker = event.getUser();
 
-        if (!(originalMessage.getChannel() instanceof ThreadChannel threadChannel)) {
+        if (!(originalMessage.getChannel() instanceof ThreadChannel threadChannel)
+                || !(threadChannel.getParentChannel() instanceof ForumChannel forumChannel)
+                || !forumChannel.getName().matches(helpForumPattern)) {
             replyNotInThread(event);
             return;
         }
 
-        if (!(threadChannel.getParentChannel() instanceof ForumChannel forumChannel)
-                || !forumChannel.getName().equalsIgnoreCase(helpForumPattern)) {
-            replyNotInThread(event);
-            return;
-        }
 
         if (!threadOwner(commandInvoker, threadChannel)) {
             replyNotThreadOwner(event);
@@ -60,12 +57,15 @@ public final class PinAnswerCommand extends BotCommandAdapter implements Message
 
     private void pinMessage(MessageContextInteractionEvent event, Message message) {
         message.pin()
-            .queue(success -> event.reply("Answer pinned successfully!").setEphemeral(true).queue(),
-                    failure -> event.reply("Failed to pin the answer.").setEphemeral(true).queue());
+            .queue(success -> event.reply("Answer pinned successfully!")
+                .setEphemeral(true)
+                .queue());
     }
 
     private void replyNotInThread(MessageContextInteractionEvent event) {
-        event.reply("This command can only be used in threads").setEphemeral(true).queue();
+        event.reply("This command can only be used in threads in the questions channel")
+            .setEphemeral(true)
+            .queue();
     }
 
     private void replyNotThreadOwner(MessageContextInteractionEvent event) {
