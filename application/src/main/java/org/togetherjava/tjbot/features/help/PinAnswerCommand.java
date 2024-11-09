@@ -36,7 +36,6 @@ public final class PinAnswerCommand extends BotCommandAdapter implements Message
             return;
         }
 
-
         if (!threadOwner(commandInvoker, threadChannel)) {
             replyNotThreadOwner(event);
             return;
