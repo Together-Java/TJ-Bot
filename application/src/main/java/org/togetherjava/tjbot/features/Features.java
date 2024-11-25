@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
+import org.togetherjava.tjbot.features.help.AutoPruneHelperRoutine;
 import org.togetherjava.tjbot.features.help.GuildLeaveCloseThreadListener;
 import org.togetherjava.tjbot.features.help.HelpSystemHelper;
 import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;

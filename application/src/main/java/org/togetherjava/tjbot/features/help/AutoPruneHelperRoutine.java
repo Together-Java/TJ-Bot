@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 import static org.togetherjava.tjbot.db.generated.tables.HelpChannelMessages.HELP_CHANNEL_MESSAGES;
 
 /**
- * Due to a technical limitation in Discord, roles with more than 100 users can not be ghost-pinged
+ * Due to a technical limitation in Discord, roles with more than 250 users cannot be ghost-pinged
  * into helper threads.
  * <p>
  * This routine mitigates the problem by automatically pruning inactive users from helper roles
@@ -54,7 +54,7 @@ public final class AutoPruneHelperRoutine implements Routine {
      * @param config to determine all helper categories
      * @param helper the helper to use
      * @param modAuditLogWriter to inform mods when manual pruning becomes necessary
-     * @param database to determine whether an user is inactive
+     * @param database to determine whether a user is inactive
      */
     public AutoPruneHelperRoutine(Config config, HelpSystemHelper helper,
             ModAuditLogWriter modAuditLogWriter, Database database) {
