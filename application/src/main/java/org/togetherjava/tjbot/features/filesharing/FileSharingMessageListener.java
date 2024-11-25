@@ -182,13 +182,14 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void sendResponse(MessageReceivedEvent event, String url, String gistId) {
         Message message = event.getMessage();
-        String messageContent = "I uploaded your attachments as **Gist**.";
+        String messageContent =
+                "I uploaded your attachments as **Gist**. This makes them more accessible, for example to **mobile users**.";
 
         Button gist = Button.link(url, "Gist");
 
         Button delete = Button.danger(
                 componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
-                "Dismiss");
+                "Delete");
 
         message.reply(messageContent).setActionRow(gist, delete).queue();
     }
