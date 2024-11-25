@@ -98,6 +98,13 @@
         "rateLimitWindowSeconds": 10,
         "rateLimitRequestsInWindow": 3
     },
+    "helperPruneConfig": {
+        "roleFullLimit": 250,
+        "roleFullThreshold": 245,
+        "pruneMemberAmount": 7,
+        "inactivateAfterDays": 90,
+        "recentlyJoinedDays": 4
+    },
     "featureBlacklist": {
         "normal": [
         ],

@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
 import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
+import org.togetherjava.tjbot.features.help.AutoPruneHelperRoutine;
 import org.togetherjava.tjbot.features.help.GuildLeaveCloseThreadListener;
 import org.togetherjava.tjbot.features.help.HelpSystemHelper;
 import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;
@@ -132,6 +133,8 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
+        features
+            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));

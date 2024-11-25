@@ -43,6 +43,7 @@ public final class Config {
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
+    private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
@@ -93,6 +94,8 @@ public final class Config {
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
             @JsonProperty(value = "memberCountCategoryPattern",
                     required = true) String memberCountCategoryPattern,
+            @JsonProperty(value = "helperPruneConfig",
+                    required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
@@ -128,6 +131,7 @@ public final class Config {
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
+        this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
@@ -394,6 +398,15 @@ public final class Config {
      */
     public JShellConfig getJshell() {
         return jshell;
+    }
+
+    /**
+     * Gets the config for automatic pruning of helper roles.
+     *
+     * @return the configuration
+     */
+    public HelperPruneConfig getHelperPruneConfig() {
+        return helperPruneConfig;
     }
 
     /**
