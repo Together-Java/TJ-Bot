@@ -33,6 +33,7 @@ import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
 import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
 import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
 import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
+import org.togetherjava.tjbot.features.help.PinAnswerCommand;
 import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
 import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
@@ -165,6 +166,7 @@ public class Features {
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
+        features.add(new PinAnswerCommand(config));
 
         // User context commands
 
