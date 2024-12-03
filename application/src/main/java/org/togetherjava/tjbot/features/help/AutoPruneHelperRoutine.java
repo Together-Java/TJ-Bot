@@ -84,23 +84,36 @@ public final class AutoPruneHelperRoutine implements Routine {
     }
 
     private void pruneForGuild(Guild guild) {
-        Instant now = Instant.now();
         TextChannel selectRoleChannel = getSelectRolesChannelOptional(guild.getJDA()).orElse(null);
+        guild.loadMembers()
+            .onSuccess(members -> pruneCategories(guild, members, selectRoleChannel))
+            .onError(throwable -> logger.error("Failed to request all members for auto prune.",
+                    throwable));
+    }
+
+    private void pruneCategories(Guild guild, List<Member> members,
+            @Nullable TextChannel selectRoleChannel) {
+        Instant now = Instant.now();
 
         allCategories.stream()
             .map(category -> helper.handleFindRoleForCategory(category, guild))
             .filter(Optional::isPresent)
             .map(Optional::orElseThrow)
-            .forEach(role -> pruneRoleIfFull(role, selectRoleChannel, now));
+            .forEach(role -> pruneRoleIfFull(members, role, selectRoleChannel, now));
     }
 
-    private void pruneRoleIfFull(Role role, @Nullable TextChannel selectRoleChannel, Instant when) {
-        role.getGuild().findMembersWithRoles(role).onSuccess(members -> {
-            if (isRoleFull(members)) {
-                logger.debug("Helper role {} is full, starting to prune.", role.getName());
-                pruneRole(role, members, selectRoleChannel, when);
-            }
-        });
+    private void pruneRoleIfFull(List<Member> members, Role targetRole,
+            @Nullable TextChannel selectRoleChannel, Instant when) {
+        List<Member> withRole = filterForRole(members, targetRole);
+
+        if (isRoleFull(withRole)) {
+            logger.debug("Helper role {} is full, starting to prune.", targetRole.getName());
+            pruneRole(targetRole, withRole, selectRoleChannel, when);
+        }
+    }
+
+    private List<Member> filterForRole(List<Member> members, Role role) {
+        return members.stream().filter(member -> member.getRoles().contains(role)).toList();
     }
 
     private boolean isRoleFull(Collection<?> members) {
