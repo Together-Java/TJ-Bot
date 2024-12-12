@@ -113,9 +113,9 @@ public class Features {
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
         GitHubReference githubReference = new GitHubReference(config);
-        CodeMessageHandler codeMessageHandler =
-                new CodeMessageHandler(blacklistConfig.special(), jshellEval);
         ChatGptService chatGptService = new ChatGptService(config);
+        CodeMessageHandler codeMessageHandler =
+                new CodeMessageHandler(blacklistConfig.special(), jshellEval, chatGptService);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
