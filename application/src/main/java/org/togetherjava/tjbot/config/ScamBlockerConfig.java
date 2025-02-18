@@ -17,6 +17,7 @@ import java.util.Set;
 public final class ScamBlockerConfig {
     private final Mode mode;
     private final String reportChannelPattern;
+    private final String botTrapChannelPattern;
     private final Set<String> suspiciousKeywords;
     private final Set<String> hostWhitelist;
     private final Set<String> hostBlacklist;
@@ -27,6 +28,8 @@ public final class ScamBlockerConfig {
     private ScamBlockerConfig(@JsonProperty(value = "mode", required = true) Mode mode,
             @JsonProperty(value = "reportChannelPattern",
                     required = true) String reportChannelPattern,
+            @JsonProperty(value = "botTrapChannelPattern",
+                    required = true) String botTrapChannelPattern,
             @JsonProperty(value = "suspiciousKeywords",
                     required = true) Set<String> suspiciousKeywords,
             @JsonProperty(value = "hostWhitelist", required = true) Set<String> hostWhitelist,
@@ -37,6 +40,7 @@ public final class ScamBlockerConfig {
                     required = true) int isHostSimilarToKeywordDistanceThreshold) {
         this.mode = Objects.requireNonNull(mode);
         this.reportChannelPattern = Objects.requireNonNull(reportChannelPattern);
+        this.botTrapChannelPattern = Objects.requireNonNull(botTrapChannelPattern);
         this.suspiciousKeywords = new HashSet<>(Objects.requireNonNull(suspiciousKeywords));
         this.hostWhitelist = new HashSet<>(Objects.requireNonNull(hostWhitelist));
         this.hostBlacklist = new HashSet<>(Objects.requireNonNull(hostBlacklist));
@@ -61,6 +65,16 @@ public final class ScamBlockerConfig {
      */
     public String getReportChannelPattern() {
         return reportChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is used to as bot-trap. Sending
+     * messages in this channel identifies the author as bot.
+     *
+     * @return the channel name pattern
+     */
+    public String getBotTrapChannelPattern() {
+        return botTrapChannelPattern;
     }
 
     /**
