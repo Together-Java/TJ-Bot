@@ -7,6 +7,7 @@ import org.togetherjava.tjbot.features.utils.StringDistances;
 import java.net.URI;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * Detects whether a text message classifies as scam or not, using certain heuristics.
@@ -40,10 +41,16 @@ public final class ScamDetector {
     }
 
     private boolean isScam(AnalyseResults results) {
-        if (results.pingsEveryone && results.containsSuspiciousKeyword && results.hasUrl) {
+        if (results.pingsEveryone && (results.containsSuspiciousKeyword || results.hasUrl
+                || results.containsDollarSign)) {
             return true;
         }
-        return results.containsSuspiciousKeyword && results.hasSuspiciousUrl;
+
+        return Stream
+            .of(results.containsSuspiciousKeyword, results.hasSuspiciousUrl,
+                    results.containsDollarSign)
+            .filter(flag -> flag)
+            .count() >= 2;
     }
 
     private void analyzeToken(String token, AnalyseResults results) {
@@ -51,12 +58,17 @@ public final class ScamDetector {
             return;
         }
 
-        if (!results.pingsEveryone && "@everyone".equalsIgnoreCase(token)) {
+        if (!results.pingsEveryone
+                && ("@everyone".equalsIgnoreCase(token) || "@here".equalsIgnoreCase(token))) {
             results.pingsEveryone = true;
         }
 
         if (!results.containsSuspiciousKeyword && containsSuspiciousKeyword(token)) {
             results.containsSuspiciousKeyword = true;
+        }
+
+        if (!results.containsDollarSign && token.contains("$")) {
+            results.containsDollarSign = true;
         }
 
         if (token.startsWith("http")) {
@@ -131,6 +143,7 @@ public final class ScamDetector {
     private static class AnalyseResults {
         private boolean pingsEveryone;
         private boolean containsSuspiciousKeyword;
+        private boolean containsDollarSign;
         private boolean hasUrl;
         private boolean hasSuspiciousUrl;
     }
