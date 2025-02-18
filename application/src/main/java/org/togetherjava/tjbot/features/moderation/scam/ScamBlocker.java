@@ -64,7 +64,9 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     private final ScamBlockerConfig.Mode mode;
     private final String reportChannelPattern;
+    private final String botTrapChannelPattern;
     private final Predicate<TextChannel> isReportChannel;
+    private final Predicate<TextChannel> isBotTrapChannel;
     private final ScamDetector scamDetector;
     private final Config config;
     private final ModerationActionsStore actionsStore;
@@ -92,6 +94,12 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         Predicate<String> isReportChannelName =
                 Pattern.compile(reportChannelPattern).asMatchPredicate();
         isReportChannel = channel -> isReportChannelName.test(channel.getName());
+
+        botTrapChannelPattern = config.getScamBlocker().getBotTrapChannelPattern();
+        Predicate<String> isBotTrapChannelName =
+                Pattern.compile(botTrapChannelPattern).asMatchPredicate();
+        isBotTrapChannel = channel -> isBotTrapChannelName.test(channel.getName());
+
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
@@ -122,9 +130,15 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             return;
         }
 
+        boolean isSafe = !isBotTrapChannel.test(event.getChannel().asTextChannel());
+
         Message message = event.getMessage();
         String content = message.getContentDisplay();
-        if (!scamDetector.isScam(content)) {
+        if (isSafe && scamDetector.isScam(content)) {
+            isSafe = false;
+        }
+
+        if (isSafe) {
             return;
         }
 
