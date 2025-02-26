@@ -26,10 +26,10 @@ final class ScamDetectorTest {
         ScamBlockerConfig scamConfig = mock(ScamBlockerConfig.class);
         when(config.getScamBlocker()).thenReturn(scamConfig);
 
-        when(scamConfig.getSuspiciousKeywords())
-            .thenReturn(Set.of("nitro", "boob", "sexy", "sexi", "esex", "steam", "gift", "onlyfans",
-                    "bitcoin", "btc", "promo", "trader", "trading", "whatsapp", "crypto", "claim",
-                    "teen", "adobe", "hack", "steamcommunity", "freenitro", "usd", "earn", ".exe"));
+        when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
+                "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
+                "whatsapp", "crypto", "claim", "teen", "adobe", "hack", "steamcommunity",
+                "freenitro", "usd", "^earn", ".exe"));
         when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
                 "discordapp.com", "discordapp.net", "discordstatus.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
