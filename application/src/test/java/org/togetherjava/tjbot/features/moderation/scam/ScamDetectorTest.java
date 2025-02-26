@@ -54,6 +54,18 @@ final class ScamDetectorTest {
         assertTrue(isScamResult);
     }
 
+    @ParameterizedTest
+    @MethodSource("provideRealFalsePositiveMessages")
+    @DisplayName("Can ignore real false positive messages")
+    void ignoresFalsePositives(String falsePositiveMessage) {
+        // GIVEN a real false positive message
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(falsePositiveMessage);
+
+        // THEN does not flag it as scam
+        assertFalse(isScamResult);
+    }
+
     @Test
     @DisplayName("Can detect messages that contain blacklisted websites as scam")
     void detectsBlacklistedWebsite() {
@@ -226,5 +238,11 @@ final class ScamDetectorTest {
                         """,
                 "Urgently looking for mods & collab managers https://discord.gg/cryptohireo",
                 "Check this - https://transfer.sh/get/ajmkh3l7tzop/Setup.exe");
+    }
+
+    private static List<String> provideRealFalsePositiveMessages() {
+        return List
+            .of("""
+                    https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types""");
     }
 }
