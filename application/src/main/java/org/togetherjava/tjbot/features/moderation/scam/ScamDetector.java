@@ -116,11 +116,10 @@ public final class ScamDetector {
             .map(keyword -> keyword.toLowerCase(Locale.US))
             .anyMatch(keyword -> {
                 // Simple regex-inspired syntax "^foo"
-                if (!keyword.isEmpty() && keyword.charAt(0) == '^') {
+                if (startsWith(keyword, '^')) {
                     return preparedToken.startsWith(keyword.substring(1));
-                } else {
-                    return preparedToken.contains(keyword);
                 }
+                return preparedToken.contains(keyword);
             });
     }
 
@@ -145,6 +144,10 @@ public final class ScamDetector {
         }
 
         return false;
+    }
+
+    private static boolean startsWith(CharSequence text, char prefixToTest) {
+        return !text.isEmpty() && text.charAt(0) == prefixToTest;
     }
 
     private static class AnalyseResults {
