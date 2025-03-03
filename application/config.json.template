@@ -45,7 +45,7 @@
             "steamcommunity",
             "freenitro",
             "usd",
-            "earn",
+            "^earn",
             ".exe"
         ],
         "hostWhitelist": [

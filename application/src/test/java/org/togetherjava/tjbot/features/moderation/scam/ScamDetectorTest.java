@@ -26,10 +26,10 @@ final class ScamDetectorTest {
         ScamBlockerConfig scamConfig = mock(ScamBlockerConfig.class);
         when(config.getScamBlocker()).thenReturn(scamConfig);
 
-        when(scamConfig.getSuspiciousKeywords())
-            .thenReturn(Set.of("nitro", "boob", "sexy", "sexi", "esex", "steam", "gift", "onlyfans",
-                    "bitcoin", "btc", "promo", "trader", "trading", "whatsapp", "crypto", "claim",
-                    "teen", "adobe", "hack", "steamcommunity", "freenitro", "usd", "earn", ".exe"));
+        when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
+                "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
+                "whatsapp", "crypto", "claim", "teen", "adobe", "hack", "steamcommunity",
+                "freenitro", "usd", "^earn", ".exe"));
         when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
                 "discordapp.com", "discordapp.net", "discordstatus.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
@@ -52,6 +52,18 @@ final class ScamDetectorTest {
 
         // THEN flags it as scam
         assertTrue(isScamResult);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideRealFalsePositiveMessages")
+    @DisplayName("Can ignore real false positive messages")
+    void ignoresFalsePositives(String falsePositiveMessage) {
+        // GIVEN a real false positive message
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(falsePositiveMessage);
+
+        // THEN does not flag it as scam
+        assertFalse(isScamResult);
     }
 
     @Test
@@ -226,5 +238,11 @@ final class ScamDetectorTest {
                         """,
                 "Urgently looking for mods & collab managers https://discord.gg/cryptohireo",
                 "Check this - https://transfer.sh/get/ajmkh3l7tzop/Setup.exe");
+    }
+
+    private static List<String> provideRealFalsePositiveMessages() {
+        return List
+            .of("""
+                    https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types""");
     }
 }

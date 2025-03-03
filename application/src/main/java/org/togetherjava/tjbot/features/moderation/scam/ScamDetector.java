@@ -114,7 +114,13 @@ public final class ScamDetector {
         return config.getSuspiciousKeywords()
             .stream()
             .map(keyword -> keyword.toLowerCase(Locale.US))
-            .anyMatch(preparedToken::contains);
+            .anyMatch(keyword -> {
+                // Simple regex-inspired syntax "^foo"
+                if (startsWith(keyword, '^')) {
+                    return preparedToken.startsWith(keyword.substring(1));
+                }
+                return preparedToken.contains(keyword);
+            });
     }
 
     private boolean isHostSimilarToKeyword(String host, String keyword) {
@@ -138,6 +144,10 @@ public final class ScamDetector {
         }
 
         return false;
+    }
+
+    private static boolean startsWith(CharSequence text, char prefixToTest) {
+        return !text.isEmpty() && text.charAt(0) == prefixToTest;
     }
 
     private static class AnalyseResults {
