@@ -26,10 +26,10 @@ final class ScamDetectorTest {
         ScamBlockerConfig scamConfig = mock(ScamBlockerConfig.class);
         when(config.getScamBlocker()).thenReturn(scamConfig);
 
-        when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
-                "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
-                "whatsapp", "crypto", "claim", "teen", "adobe", "hack", "steamcommunity",
-                "freenitro", "usd", "^earn", ".exe"));
+        when(scamConfig.getSuspiciousKeywords())
+            .thenReturn(Set.of("nitro", "boob", "sexy", "sexi", "esex", "steam", "gift", "onlyfans",
+                    "bitcoin", "btc", "promo", "trader", "trading", "whatsapp", "crypto", "claim",
+                    "teen", "adobe", "hack", "steamcommunity", "freenitro", "^earn", ".exe"));
         when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
                 "discordapp.com", "discordapp.net", "discordstatus.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
@@ -243,6 +243,8 @@ final class ScamDetectorTest {
     private static List<String> provideRealFalsePositiveMessages() {
         return List
             .of("""
-                    https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types""");
+                    https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types""",
+                    """
+                            And according to quick google search. Median wage is about $23k usd""");
     }
 }
