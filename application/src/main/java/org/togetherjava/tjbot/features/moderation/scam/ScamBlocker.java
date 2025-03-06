@@ -130,7 +130,11 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             return;
         }
 
-        boolean isSafe = !isBotTrapChannel.test(event.getChannel().asTextChannel());
+        boolean isSafe = true;
+        if (event.getChannel() instanceof TextChannel textChannel
+                && isBotTrapChannel.test(textChannel)) {
+            isSafe = false;
+        }
 
         Message message = event.getMessage();
         String content = message.getContentDisplay();
