@@ -67,7 +67,7 @@ public final class ScamDetector {
             results.containsSuspiciousKeyword = true;
         }
 
-        if (!results.containsDollarSign && token.contains("$")) {
+        if (!results.containsDollarSign && (token.contains("$") || "usd".equalsIgnoreCase(token))) {
             results.containsDollarSign = true;
         }
 
