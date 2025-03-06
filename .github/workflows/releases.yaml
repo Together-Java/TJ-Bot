@@ -23,7 +23,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Build shadow jar
         run: ./gradlew shadowJar

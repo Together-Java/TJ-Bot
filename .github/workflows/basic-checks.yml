@@ -14,7 +14,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Check
         run: ./gradlew spotlessCheck
 
@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Check
         run: ./gradlew test
 
@@ -38,7 +38,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ env.JAVA_VERSION }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
       - name: Check
