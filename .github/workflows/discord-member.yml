@@ -1,0 +1,43 @@
+name: Comment When PR Merged
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - develop
+
+
+jobs:
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const creator = context.payload.sender.login
+            const opts = github.rest.issues.listForRepo.endpoint.merge({
+              ...context.issue,
+              creator,
+              state: 'all'
+            })
+            const issues = await github.paginate(opts)
+
+            for (const issue of issues) {
+              if (issue.number === context.issue.number) {
+                continue
+              }
+
+              if (issue.pull_request) {
+                return
+              }
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `Congratulations on your first contribution! We're excited to have you on board. Your work will be included in the next release, so stay tuned! 
+            Are you a Together-Java member on Discord? If so, please share your username here. If not, that’s perfectly fine! If you change your mind, here's the link: ${{vars.SERVER_INVITE}}.
+            Why do we need your username? We’d like to give you a shoutout to show our gratitude!`
+            })
