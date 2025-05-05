@@ -9,7 +9,7 @@ group 'org.togetherjava'
 version '1.0-SNAPSHOT'
 
 ext {
-    jooqVersion = '3.19.1'
+    jooqVersion = '3.20.4'
     jacksonVersion = '2.19.0'
     chatGPTVersion = '0.18.0'
 }
