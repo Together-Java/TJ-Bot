@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-var sqliteVersion = "3.47.1.0"
+var sqliteVersion = "3.49.1.0"
 
 dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
