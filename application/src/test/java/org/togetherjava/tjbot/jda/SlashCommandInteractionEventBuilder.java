@@ -5,15 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.IntegrationOwners;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import net.dv8tion.jda.api.utils.data.DataObject;
 import net.dv8tion.jda.internal.JDAImpl;
+import net.dv8tion.jda.internal.interactions.IntegrationOwnersImpl;
 import net.dv8tion.jda.internal.interactions.command.SlashCommandInteractionImpl;
 
 import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.jda.payloads.PayloadChannel;
+import org.togetherjava.tjbot.jda.payloads.PayloadGuild;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 import org.togetherjava.tjbot.jda.payloads.PayloadUser;
 import org.togetherjava.tjbot.jda.payloads.slashcommand.PayloadSlashCommand;
@@ -28,6 +32,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -278,6 +283,8 @@ public final class SlashCommandInteractionEventBuilder {
                 "1099511627775", List.of(), false, false, false, null, false, user);
         PayloadChannel channel = new PayloadChannel(channelId, 1);
 
+        PayloadGuild guild = new PayloadGuild(Long.parseLong(guildId), "en-US", Set.of());
+
         List<PayloadSlashCommandOption> options;
         if (subcommand == null) {
             options = extractOptionsOrNull(nameToOption);
@@ -288,8 +295,11 @@ public final class SlashCommandInteractionEventBuilder {
         PayloadSlashCommandData data = new PayloadSlashCommandData(command.getName(), "1", 1,
                 options, extractResolvedOrNull(nameToOption));
 
+        IntegrationOwners owners = new IntegrationOwnersImpl(DataObject.empty());
+
         return new PayloadSlashCommand(guildId, "897425767397466123", 2, 1, applicationId, token,
-                member, channel, data);
+                member, channel, guild, data, Long.parseLong(channelId),
+                InteractionContextType.PRIVATE_CHANNEL, owners);
     }
 
     @Nullable
