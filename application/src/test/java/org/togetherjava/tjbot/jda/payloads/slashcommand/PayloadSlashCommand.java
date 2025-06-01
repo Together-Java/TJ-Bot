@@ -1,8 +1,11 @@
 package org.togetherjava.tjbot.jda.payloads.slashcommand;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import net.dv8tion.jda.api.interactions.IntegrationOwners;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 
 import org.togetherjava.tjbot.jda.payloads.PayloadChannel;
+import org.togetherjava.tjbot.jda.payloads.PayloadGuild;
 import org.togetherjava.tjbot.jda.payloads.PayloadMember;
 
 public final class PayloadSlashCommand {
@@ -16,11 +19,18 @@ public final class PayloadSlashCommand {
     private String token;
     private PayloadMember member;
     private PayloadChannel channel;
+    private PayloadGuild guild;
     private PayloadSlashCommandData data;
+    @JsonProperty("channel_id")
+    private long channelId;
+    private InteractionContextType context;
+    @JsonProperty("authorizing_integration_owners")
+    private IntegrationOwners integrationOwners;
 
     public PayloadSlashCommand(String guildId, String id, int type, int version,
             String applicationId, String token, PayloadMember member, PayloadChannel channel,
-            PayloadSlashCommandData data) {
+            PayloadGuild guild, PayloadSlashCommandData data, long channelId,
+            InteractionContextType context, IntegrationOwners integrationOwners) {
         this.guildId = guildId;
         this.id = id;
         this.type = type;
@@ -29,7 +39,11 @@ public final class PayloadSlashCommand {
         this.token = token;
         this.member = member;
         this.channel = channel;
+        this.guild = guild;
         this.data = data;
+        this.channelId = channelId;
+        this.context = context;
+        this.integrationOwners = integrationOwners;
     }
 
     public String getGuildId() {
@@ -96,12 +110,44 @@ public final class PayloadSlashCommand {
         this.channel = channel;
     }
 
+    public PayloadGuild getGuild() {
+        return guild;
+    }
+
+    public void setGuild(PayloadGuild guild) {
+        this.guild = guild;
+    }
+
     public PayloadSlashCommandData getData() {
         return data;
     }
 
     public void setData(PayloadSlashCommandData data) {
         this.data = data;
+    }
+
+    public long getChannelId() {
+        return channelId;
+    }
+
+    public void setChannelId(long channelId) {
+        this.channelId = channelId;
+    }
+
+    public InteractionContextType getContext() {
+        return context;
+    }
+
+    public void setContext(InteractionContextType context) {
+        this.context = context;
+    }
+
+    public IntegrationOwners getIntegrationOwners() {
+        return integrationOwners;
+    }
+
+    public void setIntegrationOwners(IntegrationOwners integrationOwners) {
+        this.integrationOwners = integrationOwners;
     }
 
 }
