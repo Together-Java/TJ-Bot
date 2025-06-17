@@ -46,7 +46,7 @@ dependencies {
     implementation project(':utils')
     implementation project(':formatter')
 
-    implementation 'net.dv8tion:JDA:5.5.1'
+    implementation 'net.dv8tion:JDA:5.6.1'
 
     implementation 'org.apache.logging.log4j:log4j-core:2.25.0'
     runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
