@@ -47,7 +47,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ModMailCommand.class);
     public static final String COMMAND_NAME = "modmail";
     private static final String OPTION_MESSAGE = "message";
-    private static final String OPTION_STAY_ANONYMOUS = "stay-anonymous";
+    private static final String OPTION_REVEAL_NAME = "reveal-name";
     private static final String OPTION_GUILD = "server";
     private static final int COOLDOWN_DURATION_VALUE = 30;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
@@ -70,8 +70,9 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         OptionData guildOption = new OptionData(OptionType.STRING, OPTION_GUILD,
                 "The server to contact mods from", true);
-        OptionData anonymousOption = new OptionData(OptionType.BOOLEAN, OPTION_STAY_ANONYMOUS,
-                "If set, your name is hidden - note that mods then can not get back to you", true);
+        OptionData revealNameOption = new OptionData(OptionType.BOOLEAN, OPTION_REVEAL_NAME,
+                "If set, your name is shown to mods - false means mods can not get back to you",
+                true);
 
         List<Command.Choice> choices = jda.getGuildCache()
             .stream()
@@ -80,7 +81,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         guildOption.addChoices(choices);
 
-        getData().addOptions(guildOption, anonymousOption);
+        getData().addOptions(guildOption, revealNameOption);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -112,7 +113,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
     private void sendMessageModal(SlashCommandInteractionEvent event) {
         long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
-        boolean wantsToStayAnonymous = event.getOption(OPTION_STAY_ANONYMOUS).getAsBoolean();
+        boolean wantsToRevealName = event.getOption(OPTION_REVEAL_NAME).getAsBoolean();
 
         TextInput message =
                 TextInput.create(OPTION_MESSAGE, "Your message", TextInputStyle.PARAGRAPH)
@@ -120,8 +121,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
                     .setMinLength(3)
                     .build();
 
-        String componentId = generateComponentId(String.valueOf(userGuildId),
-                String.valueOf(wantsToStayAnonymous));
+        String componentId =
+                generateComponentId(String.valueOf(userGuildId), String.valueOf(wantsToRevealName));
 
         Modal modal = Modal.create(componentId, "Send message to moderators")
             .addActionRow(message)
@@ -136,7 +137,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
         long userId = event.getUser().getIdLong();
 
         long userGuildId = Long.parseLong(args.getFirst());
-        boolean wantsToStayAnonymous = Boolean.parseBoolean(args.get(1));
+        boolean wantsToRevealName = Boolean.parseBoolean(args.get(1));
 
         Optional<TextChannel> modMailAuditLog = getModMailChannel(event.getJDA(), userGuildId);
         if (modMailAuditLog.isEmpty()) {
@@ -148,7 +149,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
 
         event.deferReply().setEphemeral(true).queue();
         MessageCreateAction message = createModMessage(event, userId, userMessage,
-                wantsToStayAnonymous, modMailAuditLog.orElseThrow());
+                wantsToRevealName, modMailAuditLog.orElseThrow());
 
         sendMessage(event, message);
     }
@@ -172,11 +173,11 @@ public final class ModMailCommand extends SlashCommandAdapter {
     }
 
     private MessageCreateAction createModMessage(ModalInteractionEvent event, long userId,
-            String userMessage, boolean wantsToStayAnonymous, TextChannel modMailAuditLog) {
-        User user = wantsToStayAnonymous ? null : event.getUser();
+            String userMessage, boolean wantsToRevealName, TextChannel modMailAuditLog) {
+        User user = wantsToRevealName ? event.getUser() : null;
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
-        if (!wantsToStayAnonymous) {
+        if (wantsToRevealName) {
             message.addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
                     String.valueOf(userId)));
         }
