@@ -97,7 +97,7 @@ public class ChatGptService {
             return Optional.empty();
         }
 
-        String contextText = context == null ? "" : ", Context: %s. ".formatted(context);
+        String contextText = context == null ? "" : ", Context: %s.".formatted(context);
         String fullQuestion = "(KEEP IT CONCISE, NOT MORE THAN 280 WORDS%s) - %s"
             .formatted(contextText, question);
 
