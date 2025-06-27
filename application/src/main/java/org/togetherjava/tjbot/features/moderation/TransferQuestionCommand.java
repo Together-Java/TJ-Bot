@@ -17,7 +17,6 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInput.Builder;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
@@ -86,7 +85,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
-
         if (isInvalidForTransfer(event)) {
             return;
         }
@@ -96,11 +94,12 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String originalChannelId = event.getTarget().getChannel().getId();
         String authorId = event.getTarget().getAuthor().getId();
         String mostCommonTag = tags.getFirst();
-        String chatGptPrompt =
-                "Summarize the following text into a concise title or heading not more than 4-5 words, remove quotations if any: %s"
+
+        String chatGptTitleRequest =
+                "Summarize the following question into a concise title or heading not more than 5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
-        Optional<String> chatGptResponse = chatGptService.ask(chatGptPrompt, "");
-        String title = chatGptResponse.orElse(createTitle(originalMessage));
+        Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
+        String title = chatGptTitle.orElse(createTitle(originalMessage));
         if (title.length() > TITLE_MAX_LENGTH) {
             title = title.substring(0, TITLE_MAX_LENGTH);
         }
@@ -112,7 +111,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .setValue(title)
             .build();
 
-        Builder modalInputBuilder =
+        TextInput.Builder modalInputBuilder =
                 TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
                     .setRequiredRange(INPUT_MIN_LENGTH, INPUT_MAX_LENGTH)
                     .setPlaceholder("Contents of the question");
