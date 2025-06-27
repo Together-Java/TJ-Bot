@@ -23,6 +23,7 @@ import java.util.Optional;
  */
 public final class DiscordLogging {
     private static final Logger logger = LoggerFactory.getLogger(DiscordLogging.class);
+    private static final String LOG_CHANNEL_WEBHOOK_DEFAULT_VALUE = "<put_your_webhook_here>";
 
     private DiscordLogging() {
         throw new UnsupportedOperationException("Utility class");
@@ -45,22 +46,29 @@ public final class DiscordLogging {
     }
 
     private static void addAppenders(Configuration logConfig, Config botConfig) {
-        parseWebhookUri(botConfig.getLogInfoChannelWebhook())
+        parseWebhookUri(botConfig.getLogInfoChannelWebhook(), "info")
             .ifPresent(webhookUri -> addDiscordLogAppender("DiscordInfo", createInfoRangeFilter(),
                     webhookUri, botConfig.getSourceCodeBaseUrl(), logConfig));
 
-        parseWebhookUri(botConfig.getLogErrorChannelWebhook())
+        parseWebhookUri(botConfig.getLogErrorChannelWebhook(), "error")
             .ifPresent(webhookUri -> addDiscordLogAppender("DiscordError", createErrorRangeFilter(),
                     webhookUri, botConfig.getSourceCodeBaseUrl(), logConfig));
     }
 
-    private static Optional<URI> parseWebhookUri(String webhookUri) {
+    private static Optional<URI> parseWebhookUri(String webhookUri, String webhookName) {
+        if (webhookUri.equalsIgnoreCase(LOG_CHANNEL_WEBHOOK_DEFAULT_VALUE)) {
+            logger.warn(
+                    "The {} webhook URL was not setup yet, logs will not be forwarded to Discord. Enter a valid webhook URL in your `config.json` if you want log forwarding.",
+                    webhookName);
+            return Optional.empty();
+        }
+
         try {
             return Optional.of(URI.create(webhookUri));
         } catch (IllegalArgumentException e) {
             logger.warn(LogMarkers.NO_DISCORD,
-                    "The webhook URL ({}) in the config is invalid, logs will not be forwarded to Discord.",
-                    webhookUri, e);
+                    "The {} webhook URL ({}) in the config is invalid, logs will not be forwarded to Discord.",
+                    webhookName, webhookUri, e);
             return Optional.empty();
         }
     }
