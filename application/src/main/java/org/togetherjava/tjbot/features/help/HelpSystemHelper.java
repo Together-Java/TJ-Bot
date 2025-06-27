@@ -140,7 +140,8 @@ public final class HelpSystemHelper {
         ForumTag matchingTag = getCategoryTagOfChannel(threadChannel).orElse(defaultTag);
 
         String context =
-                "Category %s on a Java Q&A discord server".formatted(matchingTag.getName());
+                "Category %s on a Java Q&A discord server. You may use markdown syntax for the response"
+                    .formatted(matchingTag.getName());
         chatGptAnswer = chatGptService.ask(question, context);
 
         if (chatGptAnswer.isEmpty()) {

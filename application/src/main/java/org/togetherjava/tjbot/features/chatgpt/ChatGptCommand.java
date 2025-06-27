@@ -82,7 +82,8 @@ public final class ChatGptCommand extends SlashCommandAdapter {
 
         String question = event.getValue(QUESTION_INPUT).getAsString();
 
-        Optional<String> chatgptResponse = chatGptService.ask(question, null);
+        Optional<String> chatgptResponse =
+                chatGptService.ask(question, "You may use markdown syntax for the response");
         if (chatgptResponse.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
