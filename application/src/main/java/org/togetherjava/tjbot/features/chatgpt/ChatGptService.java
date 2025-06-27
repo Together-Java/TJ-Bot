@@ -45,6 +45,7 @@ public class ChatGptService {
      * a separate iteration based on the input.
      */
     private static final int MAX_NUMBER_OF_RESPONSES = 1;
+    private static final int MAX_CODE_LENGTH = 2000;
     private static final String AI_MODEL = "gpt-3.5-turbo";
 
     private boolean isDisabled = false;
@@ -96,12 +97,51 @@ public class ChatGptService {
             return Optional.empty();
         }
 
+        String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
+        String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
+            .formatted(context, instructions, question);
+
+        return getMessageResponse(questionWithContext);
+    }
+
+    /**
+     * Provide ChatGPT with code to format.
+     *
+     * @param code the code to be formatted by ChatGPT. If code exceeds {@value MAX_CODE_LENGTH}
+     *        characters then this method returns an empty {@link Optional}
+     * @return an optional response from ChatGPT as a String
+     */
+    public Optional<String> formatCode(CharSequence code) {
+        if (isDisabled || code.length() > MAX_CODE_LENGTH) {
+            return Optional.empty();
+        }
+
+        String payload = String.format(
+                """
+                                If you happen to find any code in the container below, FORMAT \
+                                IT regardless of the programming language you find. MAKE IT HUMANLY READABLE. \
+                                Output with no introduction, no explanation, no ``` stuff, only code. Double \
+                                check that your response is correct. The code provided might not be readable.
+
+                                --- BEGIN CODE ---
+                                %s
+                                --- END CODE ---
+                        """,
+                code);
+
+        return getMessageResponse(payload);
+    }
+
+    /**
+     * Prompt ChatGPT with a message and get its response.
+     *
+     * @param message the message to send to ChatGPT
+     * @return an optional response from ChatGPT as a String
+     */
+    private Optional<String> getMessageResponse(String message) {
         try {
-            String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
-            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
-                .formatted(context, instructions, question);
-            ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
-                    Objects.requireNonNull(questionWithContext));
+            ChatMessage chatMessage =
+                    new ChatMessage(ChatMessageRole.USER.value(), Objects.requireNonNull(message));
             ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model(AI_MODEL)
                 .messages(List.of(chatMessage))
@@ -131,6 +171,7 @@ public class ChatGptService {
             logger.warn("There was an error using the OpenAI API: {}",
                     runtimeException.getMessage());
         }
+
         return Optional.empty();
     }
 }
