@@ -80,11 +80,10 @@ public final class ChatGptCommand extends SlashCommandAdapter {
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferReply().queue();
 
-        String context = "";
         String question = event.getValue(QUESTION_INPUT).getAsString();
 
-        Optional<String> optional = chatGptService.ask(question, context);
-        if (optional.isPresent()) {
+        Optional<String> chatgptResponse = chatGptService.ask(question, null);
+        if (chatgptResponse.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
 
@@ -93,7 +92,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
                     Please try again later.
                 """;
 
-        String response = optional.orElse(errorResponse);
+        String response = chatgptResponse.orElse(errorResponse);
         SelfUser selfUser = event.getJDA().getSelfUser();
 
         MessageEmbed responseEmbed = helper.generateGptResponseEmbed(response, selfUser, question);
