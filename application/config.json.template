@@ -166,11 +166,11 @@
     "selectRolesChannelPattern": "select-your-roles",
     "rssConfig": {
         "feeds": [
-            {
-                "url": "https://wiki.openjdk.org/spaces/createrssfeed.action?types=page&types=comment&types=blogpost&types=mail&types=attachment&spaces=JDKUpdates&maxResults=15&title=%5BJDK+Updates%5D+All+Content+Feed&amp;publicFeed=true",
-                "targetChannelPattern": "java-news-and-changes",
-                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssX"
-            }
+          {
+            "url": "https://blogs.oracle.com/java/rss",
+            "targetChannelPattern": "java-news-and-changes",
+            "dateFormatterPattern": "EEE, d MMM yyyy HH:mm:ss z"
+          }
         ],
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
