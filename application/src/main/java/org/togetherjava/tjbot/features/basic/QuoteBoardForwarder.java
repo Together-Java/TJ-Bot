@@ -19,9 +19,17 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
- * Manager for the cool messages board. It appends highly-voted text messages to a separate channel
- * where members of the guild can see a list of all of them. User reacts to a message with a
- * configured emoji it then forwards this message to the configured quote board channel
+ * Listens for reaction-add events and turns popular messages into “quotes”.
+ * <p>
+ * When someone reacts to a message with the configured emoji, the listener counts how many users
+ * have used that same emoji. If the total meets or exceeds the minimum threshold and the bot has
+ * not processed the message before, it copies (forwards) the message to the first text channel
+ * whose name matches the configured quote-board pattern, then reacts to the original message itself
+ * to mark it as handled (and to not let people spam react a message and give a way to the bot to
+ * know that a message has been quoted before).
+ * <p>
+ * Key points: - Trigger emoji, minimum vote count and quote-board channel pattern are supplied via
+ * {@code QuoteBoardConfig}.
  */
 public final class QuoteBoardForwarder extends MessageReceiverAdapter {
 
