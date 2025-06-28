@@ -166,11 +166,11 @@
     "selectRolesChannelPattern": "select-your-roles",
     "rssConfig": {
         "feeds": [
-          {
-            "url": "https://blogs.oracle.com/java/rss",
-            "targetChannelPattern": "java-news-and-changes",
-            "dateFormatterPattern": "EEE, d MMM yyyy HH:mm:ss z"
-          }
+            {
+                "url": "https://blogs.oracle.com/java/rss",
+                "targetChannelPattern": "java-news-and-changes",
+                "dateFormatterPattern": "EEE, d MMM yyyy HH:mm:ss z"
+            }
         ],
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
