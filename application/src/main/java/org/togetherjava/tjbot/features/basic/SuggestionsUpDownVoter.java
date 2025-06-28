@@ -55,19 +55,26 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     private static void createThread(Message message) {
-        String title = message.getContentRaw();
 
-        if (title.length() >= TITLE_MAX_LENGTH) {
-            int lastWordEnd = title.lastIndexOf(' ', TITLE_MAX_LENGTH);
+        String threadTitle;
+        String messageContent = message.getContentRaw();
+
+        if (messageContent.isEmpty()){
+            threadTitle = message.getAuthor().getName();
+        } else if (messageContent.length() >= TITLE_MAX_LENGTH) {
+            int lastWordEnd = messageContent.lastIndexOf(' ', TITLE_MAX_LENGTH);
 
             if (lastWordEnd == -1) {
                 lastWordEnd = TITLE_MAX_LENGTH;
             }
 
-            title = title.substring(0, lastWordEnd);
+            threadTitle = messageContent.substring(0, lastWordEnd);
+        } else {
+
+            threadTitle = messageContent;
         }
 
-        message.createThreadChannel(title).queue();
+        message.createThreadChannel(threadTitle).queue();
     }
 
     private static void reactWith(String emojiName, Emoji fallbackEmoji, Guild guild,
