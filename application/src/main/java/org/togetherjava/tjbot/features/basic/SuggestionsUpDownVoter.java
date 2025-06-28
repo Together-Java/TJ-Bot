@@ -59,7 +59,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         String threadTitle;
         String messageContent = message.getContentRaw();
 
-        if (messageContent.isEmpty()){
+        if (messageContent.isEmpty()) {
             threadTitle = message.getAuthor().getName();
         } else if (messageContent.length() >= TITLE_MAX_LENGTH) {
             int lastWordEnd = messageContent.lastIndexOf(' ', TITLE_MAX_LENGTH);
