@@ -6,23 +6,22 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import java.util.Objects;
 
 /**
- * Configuration for the cool messages board feature, see
- * {@link org.togetherjava.tjbot.features.basic.CoolMessagesBoardManager}.
+ * Configuration for the cool messages board feature, see {@link ``QuoteBoardForwarder``}.
  */
 @JsonRootName("coolMessagesConfig")
-public record CoolMessagesBoardConfig(
+public record QuoteBoardConfig(
         @JsonProperty(value = "minimumReactions", required = true) int minimumReactions,
         @JsonProperty(value = "boardChannelPattern", required = true) String boardChannelPattern,
         @JsonProperty(value = "reactionEmoji", required = true) String reactionEmoji) {
 
     /**
-     * Creates a CoolMessagesBoardConfig.
+     * Creates a QuoteBoardConfig.
      *
      * @param minimumReactions the minimum amount of reactions
      * @param boardChannelPattern the pattern for the board channel
      * @param reactionEmoji the emoji with which users should react to
      */
-    public CoolMessagesBoardConfig {
+    public QuoteBoardConfig {
         Objects.requireNonNull(boardChannelPattern);
     }
 }

@@ -48,7 +48,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
-    private final CoolMessagesBoardConfig coolMessagesConfig;
+    private final QuoteBoardConfig coolMessagesConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -103,7 +103,7 @@ public final class Config {
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
             @JsonProperty(value = "coolMessagesConfig",
-                    required = true) CoolMessagesBoardConfig coolMessagesConfig) {
+                    required = true) QuoteBoardConfig coolMessagesConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -437,7 +437,7 @@ public final class Config {
      *
      * @return configuration of cool messages config
      */
-    public CoolMessagesBoardConfig getCoolMessagesConfig() {
+    public QuoteBoardConfig getCoolMessagesConfig() {
         return coolMessagesConfig;
     }
 

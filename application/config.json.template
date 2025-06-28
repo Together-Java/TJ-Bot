@@ -176,9 +176,9 @@
         "pollIntervalInMinutes": 10
     },
     "coolMessagesConfig": {
-        "minimumReactions": 5,
+        "minimumReactions": 2,
         "boardChannelPattern": "quotes",
-        "reactionEmoji": "U+2B50"
+        "reactionEmoji": "⭐"
     },
     "memberCountCategoryPattern": "Info"
 }
