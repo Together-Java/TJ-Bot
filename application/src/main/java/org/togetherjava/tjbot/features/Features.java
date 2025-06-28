@@ -34,7 +34,6 @@ import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
 import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
 import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
 import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
-import org.togetherjava.tjbot.features.rss.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
@@ -66,6 +65,7 @@ import org.togetherjava.tjbot.features.moderation.temp.TemporaryModerationRoutin
 import org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener;
 import org.togetherjava.tjbot.features.reminder.RemindRoutine;
 import org.togetherjava.tjbot.features.reminder.ReminderCommand;
+import org.togetherjava.tjbot.features.rss.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.features.system.LogLevelCommand;
 import org.togetherjava.tjbot.features.tags.TagCommand;
