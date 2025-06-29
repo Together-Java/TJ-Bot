@@ -14,6 +14,8 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.awt.Color;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -31,7 +33,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
             ".*https?://\\S+\\.(png|jpe?g|gif|bmp|webp|mp4|mov|avi|webm|mp3|wav|ogg|youtube\\.com/|youtu\\.com|imgur\\.com/).*",
             Pattern.CASE_INSENSITIVE);
 
-    private final ConcurrentHashMap<Long, Long> lastValidForwardedMediaMessageTime =
+    private final ConcurrentHashMap<Long, Instant> lastValidForwardedMediaMessageTime =
             new ConcurrentHashMap<>();
 
     /**
@@ -45,40 +47,35 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+        if (event.getAuthor().isBot() || event.isWebhookMessage()
+                || event.getMessage().getType() == MessageType.THREAD_CREATED) {
             return;
         }
 
         Message message = event.getMessage();
-        if (message.getType() == MessageType.THREAD_CREATED) {
-            return;
-        }
-
         long userId = event.getAuthor().getIdLong();
 
-        boolean isForwardedWithMedia =
-                !message.getMessageSnapshots().isEmpty() && !messageHasNoMediaAttached(message);
-
-        if (isForwardedWithMedia) {
-            lastValidForwardedMediaMessageTime.put(userId, System.currentTimeMillis());
+        if (!messageHasNoMediaAttached(message)) {
+            if (!message.getMessageSnapshots().isEmpty()) {
+                lastValidForwardedMediaMessageTime.put(userId, Instant.now());
+            }
             return;
         }
 
-        boolean isNormalMediaUpload =
-                message.getMessageSnapshots().isEmpty() && !messageHasNoMediaAttached(message);
-        if (isNormalMediaUpload) {
-            return;
-        }
-
-        Long lastForwardedMediaTime = lastValidForwardedMediaMessageTime.get(userId);
-        long gracePeriodMillis = TimeUnit.SECONDS.toMillis(1);
+        Instant lastForwardedMediaTime = lastValidForwardedMediaMessageTime.get(userId);
+        Duration gracePeriod = Duration.ofSeconds(1);
 
         if (lastForwardedMediaTime != null
-                && (System.currentTimeMillis() - lastForwardedMediaTime) <= gracePeriodMillis) {
+                && Duration.between(lastForwardedMediaTime, Instant.now())
+                    .compareTo(gracePeriod) <= 0) {
             lastValidForwardedMediaMessageTime.remove(userId);
             return;
         }
 
+        deleteAndNotify(message);
+    }
+
+    private void deleteAndNotify(Message message) {
         message.delete().queue(deleteSuccess -> dmUser(message).queue(dmSuccess -> {
         }, dmFailure -> tempNotifyUserInChannel(message)),
                 deleteFailure -> tempNotifyUserInChannel(message));
@@ -106,7 +103,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
     private MessageCreateData createNotificationMessage(Message message) {
         String originalMessageContent = message.getContentRaw();
         if (originalMessageContent.trim().isEmpty()) {
-            originalMessageContent = "(Original message had no visible text content)";
+            originalMessageContent = "Original message had no visible text content";
         }
 
         MessageEmbed originalMessageEmbed =
