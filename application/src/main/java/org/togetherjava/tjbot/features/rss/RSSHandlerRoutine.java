@@ -391,7 +391,7 @@ public final class RSSHandlerRoutine implements Routine {
         try {
             return rssReader.read(rssUrl).toList();
         } catch (IOException e) {
-            logger.error("Could not fetch RSS from URL ({})", rssUrl, e;
+            logger.error("Could not fetch RSS from URL ({})", rssUrl, e);
             return List.of();
         }
     }
