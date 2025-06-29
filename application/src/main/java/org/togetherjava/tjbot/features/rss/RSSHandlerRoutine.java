@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.javamail;
+package org.togetherjava.tjbot.features.rss;
 
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
