@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
  */
 public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SuggestionsUpDownVoter.class);
-    private static final int TITLE_MAX_LENGTH = 60;
     private static final Emoji FALLBACK_UP_VOTE = Emoji.fromUnicode("👍");
     private static final Emoji FALLBACK_DOWN_VOTE = Emoji.fromUnicode("👎");
 
@@ -55,26 +54,10 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     private static void createThread(Message message) {
+        ThreadTitle threadTitle = ThreadTitle.withFallback(message.getContentRaw(),
+                message.getAuthor().getName() + "'s suggestions");
 
-        String threadTitle;
-        String messageContent = message.getContentRaw();
-
-        if (messageContent.isEmpty()) {
-            threadTitle = message.getAuthor().getName();
-        } else if (messageContent.length() >= TITLE_MAX_LENGTH) {
-            int lastWordEnd = messageContent.lastIndexOf(' ', TITLE_MAX_LENGTH);
-
-            if (lastWordEnd == -1) {
-                lastWordEnd = TITLE_MAX_LENGTH;
-            }
-
-            threadTitle = messageContent.substring(0, lastWordEnd);
-        } else {
-
-            threadTitle = messageContent;
-        }
-
-        message.createThreadChannel(threadTitle).queue();
+        message.createThreadChannel(threadTitle.value()).queue();
     }
 
     private static void reactWith(String emojiName, Emoji fallbackEmoji, Guild guild,
