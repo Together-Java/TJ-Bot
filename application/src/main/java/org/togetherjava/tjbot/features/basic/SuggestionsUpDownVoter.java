@@ -25,7 +25,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SuggestionsUpDownVoter.class);
     private static final Emoji FALLBACK_UP_VOTE = Emoji.fromUnicode("👍");
     private static final Emoji FALLBACK_DOWN_VOTE = Emoji.fromUnicode("👎");
-    private static final int THREAD_TITLE_MAX_LENGTH = 60; // Define the max length
+    private static final int THREAD_TITLE_MAX_LENGTH = 60;
 
     private final SuggestionsConfig config;
 
@@ -55,22 +55,20 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     private static void createThread(Message message) {
-        String threadTitle = generateThreadTitle(message.getContentRaw(),
-                message.getAuthor().getName() + "'s suggestion");
+        String threadTitle = generateThreadTitle(message);
         message.createThreadChannel(threadTitle).queue();
     }
 
     /**
-     * Generates a thread title, enforcing a maximum length of 60 characters. If an initial title
-     * exceeds this limit, it's truncated at the last word boundary before or at the 60-character
-     * mark to prevent cutting words mid-sentence. If no space is found, it truncates at 60
-     * characters. Uses a fallback title if the primary title is empty.
+     * Generates a title for the given message. The maximum length of the title is
+     * {@value #THREAD_TITLE_MAX_LENGTH}.
      *
-     * @param primaryTitle The primary title to use.
-     * @param fallbackTitle The fallback title to use if the primary title is empty.
+     * @param message The message for which to generate the title.
      * @return The generated and truncated thread title.
      */
-    private static String generateThreadTitle(String primaryTitle, String fallbackTitle) {
+    private static String generateThreadTitle(Message message) {
+        String primaryTitle = message.getContentRaw();
+        String fallbackTitle = message.getAuthor().getName() + "'s suggestion";
         String title = primaryTitle.isEmpty() ? fallbackTitle : primaryTitle;
 
         if (title.length() < THREAD_TITLE_MAX_LENGTH) {
