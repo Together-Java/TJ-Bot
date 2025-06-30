@@ -173,12 +173,7 @@
             }
         ],
         "fallbackChannelPattern": "java-news-and-changes",
-        "pollIntervalInMinutes": 10,
-        "clientRequestHeaders": {
-            "User-Agent": "TJ-Bot/1.0 (+https://github.com/Together-Java/TJ-Bot)",
-            "Accept": "application/xml;",
-            "Accept-Language": "en-US;"
-        }
+        "pollIntervalInMinutes": 10
     },
     "memberCountCategoryPattern": "Info"
 }
