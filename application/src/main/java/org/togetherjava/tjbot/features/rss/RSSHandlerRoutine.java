@@ -103,9 +103,7 @@ public final class RSSHandlerRoutine implements Routine {
         });
 
         this.rssReader = new RssReader();
-        this.rssReader.setUserAgent("Mozilla/5.0");
-        this.rssReader.addHeader("Accept", "application/xhtml+xml,application/xml;");
-        this.rssReader.addHeader("Accept-Language", "en-US,en;");
+        this.config.clientRequestHeaders().forEach(this.rssReader::addHeader);
     }
 
     @Override

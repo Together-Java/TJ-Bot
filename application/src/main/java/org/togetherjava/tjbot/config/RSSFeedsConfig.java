@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -16,7 +17,8 @@ import java.util.Objects;
 public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) List<RSSFeed> feeds,
         @JsonProperty(value = "fallbackChannelPattern",
                 required = true) String fallbackChannelPattern,
-        @JsonProperty(value = "pollIntervalInMinutes", required = true) int pollIntervalInMinutes) {
+        @JsonProperty(value = "pollIntervalInMinutes", required = true) int pollIntervalInMinutes,
+        @JsonProperty(value = "clientRequestHeaders") Map<String, String> clientRequestHeaders) {
 
     /**
      * Constructs a new {@link RSSFeedsConfig}.
