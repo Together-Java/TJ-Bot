@@ -175,9 +175,9 @@
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10,
         "clientRequestHeaders": {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/xhtml+xml,application/xml;",
-            "Accept-Language": "en-US,en;"
+            "User-Agent": "Mozilla",
+            "Accept": "application/xml;",
+            "Accept-Language": "en-US;"
         }
     },
     "memberCountCategoryPattern": "Info"

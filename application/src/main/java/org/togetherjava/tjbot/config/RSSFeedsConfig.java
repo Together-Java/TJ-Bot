@@ -13,6 +13,7 @@ import java.util.Objects;
  * @param feeds The list of RSS feeds to subscribe to.
  * @param fallbackChannelPattern The pattern used to identify the fallback text channel to use.
  * @param pollIntervalInMinutes The interval (in minutes) for polling the RSS feeds for updates.
+ * @param clientRequestHeaders The headers that will be sent with each request to the RSS feeds.
  */
 public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) List<RSSFeed> feeds,
         @JsonProperty(value = "fallbackChannelPattern",
@@ -26,6 +27,7 @@ public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) Lis
      * @param feeds The list of RSS feeds to subscribe to.
      * @param fallbackChannelPattern The pattern used to identify the fallback text channel to use.
      * @param pollIntervalInMinutes The interval (in minutes) for polling the RSS feeds for updates.
+     * @param clientRequestHeaders The headers that will be sent with each request to the RSS feeds.
      * @throws NullPointerException if any of the parameters (feeds or fallbackChannelPattern) are
      *         null
      */
