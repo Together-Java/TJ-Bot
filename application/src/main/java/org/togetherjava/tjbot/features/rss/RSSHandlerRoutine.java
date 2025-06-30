@@ -74,6 +74,8 @@ public final class RSSHandlerRoutine implements Routine {
     private static final int MAX_CONTENTS = 1000;
     private static final ZonedDateTime ZONED_TIME_MIN =
             ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
+    private static final String HTTP_USER_AGENT =
+            "TJ-Bot/1.0 (+https://github.com/Together-Java/TJ-Bot)";
     private final RssReader rssReader;
     private final RSSFeedsConfig config;
     private final Predicate<String> fallbackChannelPattern;
@@ -101,7 +103,9 @@ public final class RSSHandlerRoutine implements Routine {
                 targetChannelPatterns.put(feed, predicate);
             }
         });
+
         this.rssReader = new RssReader();
+        this.rssReader.setUserAgent(HTTP_USER_AGENT);
     }
 
     @Override
