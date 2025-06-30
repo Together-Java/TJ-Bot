@@ -48,7 +48,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
-    private final QuoteBoardConfig coolMessagesConfig;
+    private final QuoteBoardConfig quoteMessagesConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -102,8 +102,8 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "coolMessagesConfig",
-                    required = true) QuoteBoardConfig coolMessagesConfig) {
+            @JsonProperty(value = "quoteMessagesConfig",
+                    required = true) QuoteBoardConfig quoteMessagesConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -138,7 +138,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
-        this.coolMessagesConfig = Objects.requireNonNull(coolMessagesConfig);
+        this.quoteMessagesConfig = Objects.requireNonNull(quoteMessagesConfig);
     }
 
     /**
@@ -433,12 +433,13 @@ public final class Config {
     }
 
     /**
-     * The configuration of the cool messages config.
+     * The configuration of the cool messages config. The configuration of the quote board feature.
+     * Quotes user selected messages
      *
      * @return configuration of cool messages config
      */
     public QuoteBoardConfig getCoolMessagesConfig() {
-        return coolMessagesConfig;
+        return quoteMessagesConfig;
     }
 
     /**
