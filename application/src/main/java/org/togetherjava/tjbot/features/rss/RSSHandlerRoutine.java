@@ -101,7 +101,11 @@ public final class RSSHandlerRoutine implements Routine {
                 targetChannelPatterns.put(feed, predicate);
             }
         });
+
         this.rssReader = new RssReader();
+        this.rssReader.setUserAgent("Mozilla/5.0");
+        this.rssReader.addHeader("Accept", "application/xhtml+xml,application/xml;");
+        this.rssReader.addHeader("Accept-Language", "en-US,en;");
     }
 
     @Override
