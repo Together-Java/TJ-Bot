@@ -14,9 +14,6 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.awt.Color;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -32,9 +29,6 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
     private static final Pattern MEDIA_URL_PATTERN = Pattern.compile(
             ".*https?://\\S+\\.(png|jpe?g|gif|bmp|webp|mp4|mov|avi|webm|mp3|wav|ogg|youtube\\.com/|youtu\\.com|imgur\\.com/).*",
             Pattern.CASE_INSENSITIVE);
-
-    private final ConcurrentHashMap<Long, Instant> lastValidForwardedMediaMessageTime =
-            new ConcurrentHashMap<>();
 
     /**
      * Creates a MediaOnlyChannelListener to receive all message sent in MediaOnly channel.
@@ -53,22 +47,8 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         Message message = event.getMessage();
-        long userId = event.getAuthor().getIdLong();
 
         if (!messageHasNoMediaAttached(message)) {
-            if (!message.getMessageSnapshots().isEmpty()) {
-                lastValidForwardedMediaMessageTime.put(userId, Instant.now());
-            }
-            return;
-        }
-
-        Instant lastForwardedMediaTime = lastValidForwardedMediaMessageTime.get(userId);
-        Duration gracePeriod = Duration.ofSeconds(1);
-
-        if (lastForwardedMediaTime != null
-                && Duration.between(lastForwardedMediaTime, Instant.now())
-                    .compareTo(gracePeriod) <= 0) {
-            lastValidForwardedMediaMessageTime.remove(userId);
             return;
         }
 
