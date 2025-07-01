@@ -45,8 +45,8 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
     protected static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
     private static final int OPTIONAL_ROLES_AMOUNT = 5;
     private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
-    private static final String VALUE_DELIMITER = "_";
-    private static final int ARG_COUNT = 3;
+    private static final String OPTION_PARAM_ID_DELIMITER = "_";
+    private static final int OPTIONS_PER_ROLE = 3;
     private static final int MINIMUM_ANSWER_LENGTH = 50;
     private static final int MAXIMUM_ANSWER_LENGTH = 500;
 
@@ -88,7 +88,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
     }
 
     private static String generateOptionId(String name, int id) {
-        return "%s%s%d".formatted(name, VALUE_DELIMITER, id);
+        return "%s%s%d".formatted(name, OPTION_PARAM_ID_DELIMITER, id);
     }
 
     @Override
@@ -190,7 +190,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
 
         args.stream()
             .map(OptionMapping::getName)
-            .map(name -> name.split(VALUE_DELIMITER)[1])
+            .map(name -> name.split(OPTION_PARAM_ID_DELIMITER)[1])
             .forEach(number -> frequencyMap.merge(number, 1, Integer::sum));
 
         return frequencyMap.values().stream().filter(value -> value != 3).count();
@@ -206,7 +206,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             final List<OptionMapping> args) {
         final Map<Integer, MenuRole> roles = new HashMap<>();
 
-        for (int i = 0; i < args.size(); i += ARG_COUNT) {
+        for (int i = 0; i < args.size(); i += OPTIONS_PER_ROLE) {
             OptionMapping optionTitle = args.get(i);
             OptionMapping optionDescription = args.get(i + 1);
             OptionMapping optionEmoji = args.get(i + 2);
