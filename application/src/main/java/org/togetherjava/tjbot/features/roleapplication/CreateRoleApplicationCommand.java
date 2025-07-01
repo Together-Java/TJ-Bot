@@ -265,7 +265,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             .setDescription(
                     """
                             We are always looking for community members that want to contribute to our community \
-                            and take charge. If you are interested, you can apply for various positions here!""")
+                            and take charge. If you are interested, you can apply for various positions here! 😎""")
             .setColor(AMBIENT_COLOR)
             .build();
     }
