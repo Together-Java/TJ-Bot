@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageType;
+import net.dv8tion.jda.api.entities.messages.MessageSnapshot;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -13,6 +14,9 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.awt.Color;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -25,6 +29,13 @@ import java.util.regex.Pattern;
  */
 public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
+    private static final Pattern MEDIA_URL_PATTERN = Pattern.compile(
+            ".*https?://\\S+\\.(png|jpe?g|gif|bmp|webp|mp4|mov|avi|webm|mp3|wav|ogg|youtube\\.com/|youtu\\.com|imgur\\.com/).*",
+            Pattern.CASE_INSENSITIVE);
+
+    private final ConcurrentHashMap<Long, Instant> lastValidForwardedMediaMessageTime =
+            new ConcurrentHashMap<>();
+
     /**
      * Creates a MediaOnlyChannelListener to receive all message sent in MediaOnly channel.
      *
@@ -36,38 +47,76 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+        if (event.getAuthor().isBot() || event.isWebhookMessage()
+                || event.getMessage().getType() == MessageType.THREAD_CREATED) {
             return;
         }
 
         Message message = event.getMessage();
-        if (message.getType() == MessageType.THREAD_CREATED) {
+        long userId = event.getAuthor().getIdLong();
+
+        if (!messageHasNoMediaAttached(message)) {
+            if (!message.getMessageSnapshots().isEmpty()) {
+                lastValidForwardedMediaMessageTime.put(userId, Instant.now());
+            }
             return;
         }
 
-        if (messageHasNoMediaAttached(message)) {
-            message.delete().flatMap(any -> dmUser(message)).queue(any -> {
-            }, failure -> tempNotifyUserInChannel(message));
+        Instant lastForwardedMediaTime = lastValidForwardedMediaMessageTime.get(userId);
+        Duration gracePeriod = Duration.ofSeconds(1);
+
+        if (lastForwardedMediaTime != null
+                && Duration.between(lastForwardedMediaTime, Instant.now())
+                    .compareTo(gracePeriod) <= 0) {
+            lastValidForwardedMediaMessageTime.remove(userId);
+            return;
         }
+
+        deleteAndNotify(message);
+    }
+
+    private void deleteAndNotify(Message message) {
+        message.delete().queue(deleteSuccess -> dmUser(message).queue(dmSuccess -> {
+        }, dmFailure -> tempNotifyUserInChannel(message)),
+                deleteFailure -> tempNotifyUserInChannel(message));
     }
 
     private boolean messageHasNoMediaAttached(Message message) {
-        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
-                && !message.getContentRaw().contains("http");
+        if (!message.getAttachments().isEmpty() || !message.getEmbeds().isEmpty()
+                || MEDIA_URL_PATTERN.matcher(message.getContentRaw()).matches()) {
+            return false;
+        }
+
+        if (!message.getMessageSnapshots().isEmpty()) {
+            for (MessageSnapshot snapshot : message.getMessageSnapshots()) {
+                if (!snapshot.getAttachments().isEmpty() || !snapshot.getEmbeds().isEmpty()
+                        || MEDIA_URL_PATTERN.matcher(snapshot.getContentRaw()).matches()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        return true;
     }
 
     private MessageCreateData createNotificationMessage(Message message) {
         String originalMessageContent = message.getContentRaw();
 
-        MessageEmbed originalMessageEmbed =
-                new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
-                    .build();
+        MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
+        messageBuilder.setContent(message.getAuthor().getAsMention()
+                + " Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀");
 
-        return new MessageCreateBuilder().setContent(message.getAuthor().getAsMention()
-                + " Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-            .setEmbeds(originalMessageEmbed)
-            .build();
+        // Conditionally add the embed only if the original message content is NOT empty
+        if (!originalMessageContent.trim().isEmpty()) {
+            MessageEmbed originalMessageEmbed =
+                    new EmbedBuilder().setDescription(originalMessageContent)
+                        .setColor(Color.ORANGE)
+                        .build();
+            messageBuilder.setEmbeds(originalMessageEmbed);
+        }
+
+        return messageBuilder.build();
     }
 
     private RestAction<Message> dmUser(Message message) {
