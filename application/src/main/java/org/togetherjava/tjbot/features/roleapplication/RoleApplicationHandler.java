@@ -71,6 +71,8 @@ public class RoleApplicationHandler {
             return;
         }
 
+        String roleString = args.get(1);
+
         Optional<TextChannel> applicationChannel = getApplicationChannel(guild);
         if (applicationChannel.isEmpty()) {
             return;
@@ -83,7 +85,6 @@ public class RoleApplicationHandler {
                     .setFooter("Submitted at")
                     .setTimestamp(Instant.now());
 
-        String roleString = args.getLast();
         MessageEmbed.Field roleField = new MessageEmbed.Field("Role", roleString, false);
         embed.addField(roleField);
 
