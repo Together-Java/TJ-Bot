@@ -81,10 +81,10 @@ dependencies {
     implementation 'com.apptasticsoftware:rssreader:3.9.3'
 
     testImplementation 'org.mockito:mockito-core:5.18.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.13.2'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.2'
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 
     implementation "com.theokanning.openai-gpt3-java:api:$chatGPTVersion"
     implementation "com.theokanning.openai-gpt3-java:service:$chatGPTVersion"
