@@ -102,19 +102,21 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
     private MessageCreateData createNotificationMessage(Message message) {
         String originalMessageContent = message.getContentRaw();
-        if (originalMessageContent.trim().isEmpty()) {
-            originalMessageContent = "Original message had no visible text content";
+
+        MessageCreateBuilder messageBuilder = new MessageCreateBuilder();
+        messageBuilder.setContent(message.getAuthor().getAsMention()
+                + " Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀");
+
+        // Conditionally add the embed only if the original message content is NOT empty
+        if (!originalMessageContent.trim().isEmpty()) {
+            MessageEmbed originalMessageEmbed =
+                    new EmbedBuilder().setDescription(originalMessageContent)
+                        .setColor(Color.ORANGE)
+                        .build();
+            messageBuilder.setEmbeds(originalMessageEmbed);
         }
 
-        MessageEmbed originalMessageEmbed =
-                new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
-                    .build();
-
-        return new MessageCreateBuilder().setContent(message.getAuthor().getAsMention()
-                + " Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
-            .setEmbeds(originalMessageEmbed)
-            .build();
+        return messageBuilder.build();
     }
 
     private RestAction<Message> dmUser(Message message) {
