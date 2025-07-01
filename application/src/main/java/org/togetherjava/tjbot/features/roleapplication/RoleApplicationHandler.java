@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * that submissions are sent to the appropriate application channel, and enforcing cooldowns for
  * users to prevent spamming.
  */
-public class ApplicationApplyHandler {
+public class RoleApplicationHandler {
     private static final int APPLICATION_SUBMIT_COOLDOWN_MINUTES = 5;
 
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
@@ -36,12 +36,12 @@ public class ApplicationApplyHandler {
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
 
     /**
-     * Constructs a new {@code ApplicationApplyHandler} instance.
+     * Constructs a new {@code RoleApplicationHandler} instance.
      *
      * @param roleApplicationSystemConfig the configuration that contains the details for the
      *        application form including the cooldown duration and channel pattern.
      */
-    public ApplicationApplyHandler(RoleApplicationSystemConfig roleApplicationSystemConfig) {
+    public RoleApplicationHandler(RoleApplicationSystemConfig roleApplicationSystemConfig) {
         this.roleApplicationSystemConfig = roleApplicationSystemConfig;
         this.applicationChannelPattern =
                 Pattern.compile(roleApplicationSystemConfig.submissionsChannelPattern())

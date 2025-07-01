@@ -50,7 +50,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
     private static final int MINIMUM_ANSWER_LENGTH = 50;
     private static final int MAXIMUM_ANSWER_LENGTH = 500;
 
-    private final ApplicationApplyHandler applicationApplyHandler;
+    private final RoleApplicationHandler roleApplicationHandler;
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
 
     /**
@@ -67,7 +67,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         this.roleApplicationSystemConfig = config.getRoleApplicationSystemConfig();
 
         generateRoleOptions(getData());
-        applicationApplyHandler = new ApplicationApplyHandler(roleApplicationSystemConfig);
+        roleApplicationHandler = new RoleApplicationHandler(roleApplicationSystemConfig);
     }
 
     /**
@@ -122,7 +122,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             return;
         }
 
-        long remainingMinutes = applicationApplyHandler.getMemberCooldownMinutes(member);
+        long remainingMinutes = roleApplicationHandler.getMemberCooldownMinutes(member);
         String correctMinutesWord = selectWordFromCount(remainingMinutes, "minute", "minutes");
 
         if (remainingMinutes > 0) {
@@ -269,8 +269,8 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             .build();
     }
 
-    public ApplicationApplyHandler getApplicationApplyHandler() {
-        return applicationApplyHandler;
+    public RoleApplicationHandler getApplicationApplyHandler() {
+        return roleApplicationHandler;
     }
 
     @Override
