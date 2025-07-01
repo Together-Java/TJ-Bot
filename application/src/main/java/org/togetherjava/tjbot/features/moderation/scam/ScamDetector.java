@@ -80,7 +80,7 @@ public final class ScamDetector {
         String host;
         try {
             host = URI.create(url).getHost();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException _) {
             // Invalid urls are not scam
             return;
         }
