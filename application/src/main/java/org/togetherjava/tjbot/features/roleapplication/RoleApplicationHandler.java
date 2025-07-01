@@ -10,6 +10,8 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.RoleApplicationSystemConfig;
 
@@ -29,8 +31,9 @@ import java.util.regex.Pattern;
  * users to prevent spamming.
  */
 public class RoleApplicationHandler {
-    private static final int APPLICATION_SUBMIT_COOLDOWN_MINUTES = 5;
+    private static final Logger logger = LoggerFactory.getLogger(RoleApplicationHandler.class);
 
+    private static final int APPLICATION_SUBMIT_COOLDOWN_MINUTES = 5;
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
@@ -65,17 +68,26 @@ public class RoleApplicationHandler {
      * @param answer the answer provided by the applicant to the default question
      */
     protected void sendApplicationResult(final ModalInteractionEvent event, List<String> args,
-            String answer) {
+            String answer) throws IllegalArgumentException {
         Guild guild = event.getGuild();
-        if (args.size() != 2 || guild == null) {
-            return;
+
+        if (guild == null) {
+            throw new IllegalArgumentException(
+                    "sendApplicationResult() got fired in a non-guild environment.");
+        }
+
+        if (args.size() != 2) {
+            throw new IllegalArgumentException(
+                    "Received application result after user submitted one, and did not receive 2 arguments. Args: "
+                            + args);
         }
 
         String roleString = args.get(1);
 
         Optional<TextChannel> applicationChannel = getApplicationChannel(guild);
         if (applicationChannel.isEmpty()) {
-            return;
+            throw new IllegalArgumentException("Application channel %s could not be found."
+                .formatted(roleApplicationSystemConfig.submissionsChannelPattern()));
         }
 
         User applicant = event.getUser();
@@ -125,10 +137,17 @@ public class RoleApplicationHandler {
 
         ModalMapping modalAnswer = event.getValues().getFirst();
 
-        sendApplicationResult(event, args, modalAnswer.getAsString());
-        event.reply("Your application has been submitted. Thank you for applying! 😎")
-            .setEphemeral(true)
-            .queue();
+        try {
+            sendApplicationResult(event, args, modalAnswer.getAsString());
+            event.reply("Your application has been submitted. Thank you for applying! 😎")
+                .setEphemeral(true)
+                .queue();
+        } catch (IllegalArgumentException e) {
+            logger.error("A role application could not be submitted. ", e);
+            event.reply("Your application could not be submitted. Please contact the staff team.")
+                .setEphemeral(true)
+                .queue();
+        }
 
         applicationSubmitCooldown.put(event.getMember(), OffsetDateTime.now());
     }
