@@ -50,8 +50,8 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
     private static final int MINIMUM_ANSWER_LENGTH = 50;
     private static final int MAXIMUM_ANSWER_LENGTH = 500;
 
-    private final RoleApplicationHandler roleApplicationHandler;
-    private final RoleApplicationSystemConfig roleApplicationSystemConfig;
+    private final RoleApplicationHandler handler;
+    private final RoleApplicationSystemConfig config;
 
     /**
      * Constructs a new {@link CreateRoleApplicationCommand} with the specified configuration.
@@ -64,10 +64,10 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         super("application-form", "Generates an application form for members to apply for roles.",
                 CommandVisibility.GUILD);
 
-        this.roleApplicationSystemConfig = config.getRoleApplicationSystemConfig();
+        this.config = config.getRoleApplicationSystemConfig();
 
         generateRoleOptions(getData());
-        roleApplicationHandler = new RoleApplicationHandler(roleApplicationSystemConfig);
+        handler = new RoleApplicationHandler(this.config);
     }
 
     /**
@@ -122,7 +122,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             return;
         }
 
-        long remainingMinutes = roleApplicationHandler.getMemberCooldownMinutes(member);
+        long remainingMinutes = handler.getMemberCooldownMinutes(member);
         String correctMinutesWord = selectWordFromCount(remainingMinutes, "minute", "minutes");
 
         if (remainingMinutes > 0) {
@@ -135,8 +135,8 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         }
 
         TextInput body = TextInput
-            .create(generateComponentId(event.getUser().getId()),
-                    roleApplicationSystemConfig.defaultQuestion(), TextInputStyle.PARAGRAPH)
+            .create(generateComponentId(event.getUser().getId()), config.defaultQuestion(),
+                    TextInputStyle.PARAGRAPH)
             .setRequired(true)
             .setRequiredRange(MINIMUM_ANSWER_LENGTH, MAXIMUM_ANSWER_LENGTH)
             .setPlaceholder("Enter your answer here")
@@ -270,7 +270,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
     }
 
     public RoleApplicationHandler getApplicationApplyHandler() {
-        return roleApplicationHandler;
+        return handler;
     }
 
     @Override
