@@ -80,8 +80,8 @@ public class RoleApplicationHandler {
         EmbedBuilder embed =
                 new EmbedBuilder().setAuthor(applicant.getName(), null, applicant.getAvatarUrl())
                     .setColor(CreateRoleApplicationCommand.AMBIENT_COLOR)
-                    .setTimestamp(Instant.now())
-                    .setFooter("Submitted at");
+                    .setFooter("Submitted at")
+                    .setTimestamp(Instant.now());
 
         String roleString = args.getLast();
         MessageEmbed.Field roleField = new MessageEmbed.Field("Role", roleString, false);
