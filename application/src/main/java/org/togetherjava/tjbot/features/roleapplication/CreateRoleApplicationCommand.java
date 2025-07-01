@@ -193,7 +193,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             .map(name -> name.split(OPTION_PARAM_ID_DELIMITER)[1])
             .forEach(number -> frequencyMap.merge(number, 1, Integer::sum));
 
-        return frequencyMap.values().stream().filter(value -> value != 3).count();
+        return frequencyMap.values().stream().filter(value -> value != OPTIONS_PER_ROLE).count();
     }
 
     /**
