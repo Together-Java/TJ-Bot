@@ -1,4 +1,4 @@
-﻿package org.togetherjava.tjbot.features.help;
+package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
