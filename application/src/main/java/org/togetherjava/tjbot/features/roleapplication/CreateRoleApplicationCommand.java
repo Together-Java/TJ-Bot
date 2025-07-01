@@ -124,7 +124,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         }
 
         long remainingMinutes = handler.getMemberCooldownMinutes(member);
-        String correctMinutesWord = selectWordFromCount(remainingMinutes, "minute", "minutes");
+        String correctMinutesWord = remainingMinutes == 1 ? "minute" : "minutes";
 
         if (remainingMinutes > 0) {
             event
@@ -159,23 +159,6 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
             .build();
 
         event.replyModal(modal).queue();
-    }
-
-    /**
-     * Selects and returns the appropriate singular or plural form of a word based on the given
-     * count.
-     *
-     * @param singularForm the word in its singular form
-     * @param pluralForm the word in its plural form
-     * @param count the number used to determine whether to return the singular or plural form
-     * @return the singular form if count equals 1, otherwise the plural form
-     */
-    private String selectWordFromCount(final Number count, final String singularForm,
-            final String pluralForm) {
-        if (count.intValue() == 1) {
-            return singularForm;
-        }
-        return pluralForm;
     }
 
     /**
