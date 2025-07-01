@@ -76,7 +76,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         // the threads we already handled
         Instant now = Instant.now();
         // NOTE It is necessary to do the "check if exists, otherwise insert" atomic
-        Instant createdAt = threadIdToCreatedAtCache.get(threadChannelId, any -> now);
+        Instant createdAt = threadIdToCreatedAtCache.get(threadChannelId, _ -> now);
         return createdAt != now;
     }
 
@@ -84,9 +84,9 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         threadChannel.retrieveStartMessage().flatMap(message -> {
             registerThreadDataInDB(message, threadChannel);
             return sendHelperHeadsUp(threadChannel)
-                .flatMap(any -> HelpThreadCreatedListener.isContextSufficient(message),
-                        any -> createAIResponse(threadChannel, message))
-                .flatMap(any -> pinOriginalQuestion(message));
+                .flatMap(_ -> HelpThreadCreatedListener.isContextSufficient(message),
+                        _ -> createAIResponse(threadChannel, message))
+                .flatMap(_ -> pinOriginalQuestion(message));
         }).queue();
     }
 

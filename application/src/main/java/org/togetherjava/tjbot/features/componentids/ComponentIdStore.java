@@ -165,7 +165,7 @@ public final class ComponentIdStore implements AutoCloseable {
      * @throws InvalidComponentIdFormatException if the given component ID was in an unexpected
      *         format and could not be serialized
      */
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess", "squid:S2259"})
     public Optional<ComponentId> get(UUID uuid) {
         synchronized (storeLock) {
             // Get it from the cache or, if not found, the database

@@ -63,7 +63,7 @@ public final class LinkPreviews {
             .toList();
 
         var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
-        return allDoneTask.thenApply(any -> extractResults(tasks)).exceptionally(e -> {
+        return allDoneTask.thenApply(_ -> extractResults(tasks)).exceptionally(e -> {
             logger.error("Unknown error during link preview creation", e);
             return List.of();
         });
@@ -184,6 +184,7 @@ public final class LinkPreviews {
             .filter(Predicate.not(String::isBlank));
     }
 
+    @SuppressWarnings("squid:S2259")
     private static Optional<String> selectFirstMetaTag(Document doc, String key, String value) {
         return Optional.ofNullable(doc.selectFirst("meta[%s=%s]".formatted(key, value)))
             .map(element -> element.attr("content"));

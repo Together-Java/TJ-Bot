@@ -154,7 +154,7 @@ public final class RemindRoutine implements Routine {
 
         int failureAttempts = pendingReminder.getFailureAttempts() + 1;
         Instant remindAt = Instant.now().plus(1, ChronoUnit.MINUTES);
-        database.write(any -> {
+        database.write(_ -> {
             pendingReminder.setRemindAt(remindAt);
             pendingReminder.setFailureAttempts(failureAttempts);
             pendingReminder.insert();

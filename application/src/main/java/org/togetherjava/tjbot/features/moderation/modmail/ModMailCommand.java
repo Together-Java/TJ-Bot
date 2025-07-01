@@ -214,6 +214,7 @@ public final class ModMailCommand extends SlashCommandAdapter {
             .build();
     }
 
+    @SuppressWarnings("squid:S2259")
     private boolean isChannelOnCooldown(long userId) {
         return Optional.ofNullable(authorToLastModMailInvocation.getIfPresent(userId))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,

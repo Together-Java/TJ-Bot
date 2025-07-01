@@ -1,17 +1,20 @@
 plugins {
     id 'java'
-    id "com.diffplug.spotless" version "7.0.3"
+    id "com.diffplug.spotless" version "7.0.4"
     id "org.sonarqube" version "6.2.0.5505"
-    id "name.remal.sonarlint" version "4.2.2"
+    id "name.remal.sonarlint" version "5.1.10"
+}
+repositories {
+    mavenCentral()
 }
 
 group 'org.togetherjava'
 version '1.0-SNAPSHOT'
 
 ext {
-    jooqVersion = '3.20.4'
-    jacksonVersion = '2.19.0'
-    chatGPTVersion = '0.18.0'
+    jooqVersion = '3.20.5'
+    jacksonVersion = '2.19.1'
+    chatGPTVersion = '0.18.2'
 }
 
 // Skips sonarlint during the build, useful for testing purposes.
@@ -55,7 +58,7 @@ subprojects {
     java {
         toolchain {
             // Nails the Java-Version of every Subproject
-            languageVersion = JavaLanguageVersion.of(21)
+            languageVersion = JavaLanguageVersion.of(24)
         }
     }
 
@@ -63,7 +66,7 @@ subprojects {
     sonarLint {
         rules {
             disable(
-                    'java:S1135' // Disables "Track uses of "TO-DO" tags" rule.
+                    'java:S1135', // Disables "Track uses of "TO-DO" tags" rule.
             )
         }
     }

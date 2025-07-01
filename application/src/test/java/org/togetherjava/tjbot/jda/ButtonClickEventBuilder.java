@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.jda;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -67,7 +66,6 @@ import static org.mockito.Mockito.when;
  * </pre>
  */
 public final class ButtonClickEventBuilder {
-    private static final ObjectMapper JSON = new ObjectMapper();
     private final JdaTester jdaTester;
     private final Supplier<? extends ButtonInteractionEvent> mockEventSupplier;
     private final UnaryOperator<Message> mockMessageOperator;
