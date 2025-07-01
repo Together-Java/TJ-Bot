@@ -124,6 +124,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         subcommandToEventHandler.get(invokedSubcommand).accept(event, helpThread);
     }
 
+    @SuppressWarnings("squid:S2259")
     private boolean isHelpThreadOnCooldown(Subcommand subcommand, ThreadChannel helpThread) {
         Cache<? super Long, Instant> helpThreadIdToLastAction = requireCooldownCache(subcommand);
         return Optional.ofNullable(helpThreadIdToLastAction.getIfPresent(helpThread.getIdLong()))

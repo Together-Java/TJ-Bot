@@ -184,6 +184,7 @@ public final class LinkPreviews {
             .filter(Predicate.not(String::isBlank));
     }
 
+    @SuppressWarnings("squid:S2259")
     private static Optional<String> selectFirstMetaTag(Document doc, String key, String value) {
         return Optional.ofNullable(doc.selectFirst("meta[%s=%s]".formatted(key, value)))
             .map(element -> element.attr("content"));
