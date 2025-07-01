@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  * that submissions are sent to the appropriate application channel, and enforcing cooldowns for
  * users to prevent spamming.
  */
-public class RoleApplicationHandler {
+public final class RoleApplicationHandler {
     private static final Logger logger = LoggerFactory.getLogger(RoleApplicationHandler.class);
 
     private static final int APPLICATION_SUBMIT_COOLDOWN_MINUTES = 5;
@@ -67,7 +67,7 @@ public class RoleApplicationHandler {
      * @param args the arguments provided in the application submission
      * @param answer the answer provided by the applicant to the default question
      */
-    protected void sendApplicationResult(final ModalInteractionEvent event, List<String> args,
+    private void sendApplicationResult(final ModalInteractionEvent event, List<String> args,
             String answer) throws IllegalArgumentException {
         Guild guild = event.getGuild();
 
@@ -127,8 +127,7 @@ public class RoleApplicationHandler {
         return applicationSubmitCooldown;
     }
 
-    protected void submitApplicationFromModalInteraction(ModalInteractionEvent event,
-            List<String> args) {
+    void submitApplicationFromModalInteraction(ModalInteractionEvent event, List<String> args) {
         Guild guild = event.getGuild();
 
         if (guild == null) {
@@ -152,7 +151,7 @@ public class RoleApplicationHandler {
         applicationSubmitCooldown.put(event.getMember(), OffsetDateTime.now());
     }
 
-    protected long getMemberCooldownMinutes(Member member) {
+    long getMemberCooldownMinutes(Member member) {
         OffsetDateTime timeSentCache = getApplicationSubmitCooldown().getIfPresent(member);
         if (timeSentCache != null) {
             Duration duration = Duration.between(timeSentCache, OffsetDateTime.now());
