@@ -8,7 +8,7 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
-      "version": "18.0.2.1-tem",
+      "version": "24-tem",
       "jdkDistro": "tem",
       "installGradle": true
     },
