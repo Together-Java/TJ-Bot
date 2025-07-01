@@ -124,9 +124,9 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         }
 
         long remainingMinutes = handler.getMemberCooldownMinutes(member);
-        String correctMinutesWord = remainingMinutes == 1 ? "minute" : "minutes";
-
         if (remainingMinutes > 0) {
+            String correctMinutesWord = remainingMinutes == 1 ? "minute" : "minutes";
+
             event
                 .reply("Please wait %d %s before sending a new application form."
                     .formatted(remainingMinutes, correctMinutesWord))
