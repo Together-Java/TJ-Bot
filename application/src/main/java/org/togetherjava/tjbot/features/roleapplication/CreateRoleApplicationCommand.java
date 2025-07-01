@@ -66,16 +66,17 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
 
         this.config = config.getRoleApplicationSystemConfig();
 
-        generateRoleOptions(getData());
+        generateRoleOptions();
         handler = new RoleApplicationHandler(this.config);
     }
 
     /**
-     * Populates a {@link SlashCommandData} object with the proper arguments.
-     *
-     * @param data the object to populate
+     * Populates this command's instance {@link SlashCommandData} object with the proper arguments
+     * for this command.
      */
-    private void generateRoleOptions(SlashCommandData data) {
+    private void generateRoleOptions() {
+        final SlashCommandData data = getData();
+
         IntStream.range(1, OPTIONAL_ROLES_AMOUNT + 1).forEach(index -> {
             data.addOption(OptionType.STRING, generateOptionId("title", index),
                     "The title of the role");
