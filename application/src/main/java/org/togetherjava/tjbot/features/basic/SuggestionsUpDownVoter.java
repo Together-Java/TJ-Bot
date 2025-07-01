@@ -67,11 +67,11 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
      * @return The generated and truncated thread title.
      */
     private static String generateThreadTitle(Message message) {
-        String primaryTitle = message.getContentRaw();
-        String fallbackTitle = message.getAuthor().getName() + "'s suggestion";
+        String primaryTitle = message.getContentStripped();
+        String fallbackTitle = message.getAuthor().getEffectiveName() + "'s suggestion";
         String title = primaryTitle.isEmpty() ? fallbackTitle : primaryTitle;
 
-        if (title.length() < THREAD_TITLE_MAX_LENGTH) {
+        if (title.length() <= THREAD_TITLE_MAX_LENGTH) {
             return title;
         }
 
