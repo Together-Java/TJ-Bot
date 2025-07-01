@@ -1,7 +1,7 @@
 /**
  * This packages offers all the functionality for the application-create command as well as the
  * application system. The core class is
- * {@link org.togetherjava.tjbot.features.roleapplication.ApplicationCreateCommand}.
+ * {@link org.togetherjava.tjbot.features.roleapplication.CreateRoleApplicationCommand}.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault

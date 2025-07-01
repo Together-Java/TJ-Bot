@@ -41,7 +41,7 @@ import java.util.stream.IntStream;
  * This command is designed to generate an application form for members to apply for roles within a
  * guild.
  */
-public class ApplicationCreateCommand extends SlashCommandAdapter {
+public class CreateRoleApplicationCommand extends SlashCommandAdapter {
     protected static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
     private static final int OPTIONAL_ROLES_AMOUNT = 5;
     private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
@@ -54,13 +54,13 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
 
     /**
-     * Constructs a new {@link ApplicationCreateCommand} with the specified configuration.
+     * Constructs a new {@link CreateRoleApplicationCommand} with the specified configuration.
      * <p>
      * This command is designed to generate an application form for members to apply for roles.
      *
      * @param config the configuration containing the settings for the application form
      */
-    public ApplicationCreateCommand(Config config) {
+    public CreateRoleApplicationCommand(Config config) {
         super("application-form", "Generates an application form for members to apply for roles.",
                 CommandVisibility.GUILD);
 

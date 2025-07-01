@@ -79,7 +79,7 @@ public class ApplicationApplyHandler {
         User applicant = event.getUser();
         EmbedBuilder embed =
                 new EmbedBuilder().setAuthor(applicant.getName(), null, applicant.getAvatarUrl())
-                    .setColor(ApplicationCreateCommand.AMBIENT_COLOR)
+                    .setColor(CreateRoleApplicationCommand.AMBIENT_COLOR)
                     .setTimestamp(Instant.now())
                     .setFooter("Submitted at");
 
