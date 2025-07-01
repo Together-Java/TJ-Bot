@@ -47,6 +47,8 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
     private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
     private static final String VALUE_DELIMITER = "_";
     private static final int ARG_COUNT = 3;
+    private static final int MINIMUM_ANSWER_LENGTH = 50;
+    private static final int MAXIMUM_ANSWER_LENGTH = 500;
 
     private final ApplicationApplyHandler applicationApplyHandler;
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
@@ -136,8 +138,7 @@ public class ApplicationCreateCommand extends SlashCommandAdapter {
             .create(generateComponentId(event.getUser().getId()),
                     roleApplicationSystemConfig.defaultQuestion(), TextInputStyle.PARAGRAPH)
             .setRequired(true)
-            .setRequiredRange(roleApplicationSystemConfig.minimumAnswerLength(),
-                    roleApplicationSystemConfig.maximumAnswerLength())
+            .setRequiredRange(MINIMUM_ANSWER_LENGTH, MAXIMUM_ANSWER_LENGTH)
             .setPlaceholder("Enter your answer here")
             .build();
 

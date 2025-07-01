@@ -29,6 +29,8 @@ import java.util.regex.Pattern;
  * users to prevent spamming.
  */
 public class ApplicationApplyHandler {
+    private static final int APPLICATION_SUBMIT_COOLDOWN_MINUTES = 5;
+
     private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
@@ -46,7 +48,7 @@ public class ApplicationApplyHandler {
                     .asMatchPredicate();
 
         final Duration applicationSubmitCooldownDuration =
-                Duration.ofMinutes(roleApplicationSystemConfig.applicationSubmitCooldownMinutes());
+                Duration.ofMinutes(APPLICATION_SUBMIT_COOLDOWN_MINUTES);
         applicationSubmitCooldown =
                 Caffeine.newBuilder().expireAfterWrite(applicationSubmitCooldownDuration).build();
     }
@@ -134,8 +136,7 @@ public class ApplicationApplyHandler {
         OffsetDateTime timeSentCache = getApplicationSubmitCooldown().getIfPresent(member);
         if (timeSentCache != null) {
             Duration duration = Duration.between(timeSentCache, OffsetDateTime.now());
-            return roleApplicationSystemConfig.applicationSubmitCooldownMinutes()
-                    - duration.toMinutes();
+            return APPLICATION_SUBMIT_COOLDOWN_MINUTES - duration.toMinutes();
         }
         return 0L;
     }

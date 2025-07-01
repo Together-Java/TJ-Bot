@@ -12,19 +12,11 @@ import java.util.Objects;
  * @param submissionsChannelPattern the pattern used to identify the submissions channel where
  *        applications are sent
  * @param defaultQuestion the default question that will be asked in the role application form
- * @param minimumAnswerLength the minimum number of characters required for the applicant's answer
- * @param maximumAnswerLength the maximum number of characters allowed for the applicant's answer
- * @param applicationSubmitCooldownMinutes the cooldown time in minutes before the user can submit
- *        another application
  */
 public record RoleApplicationSystemConfig(
         @JsonProperty(value = "submissionsChannelPattern",
                 required = true) String submissionsChannelPattern,
-        @JsonProperty(value = "defaultQuestion", required = true) String defaultQuestion,
-        @JsonProperty(value = "minimumAnswerLength", required = true) int minimumAnswerLength,
-        @JsonProperty(value = "maximumAnswerLength", required = true) int maximumAnswerLength,
-        @JsonProperty(value = "applicationSubmitCooldownMinutes",
-                required = true) int applicationSubmitCooldownMinutes) {
+        @JsonProperty(value = "defaultQuestion", required = true) String defaultQuestion) {
 
     /**
      * Constructs an instance of {@link RoleApplicationSystemConfig} with the provided parameters.

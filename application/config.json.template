@@ -177,10 +177,7 @@
     },
     "roleApplicationSystem": {
         "submissionsChannelPattern": "staff-applications",
-        "defaultQuestion": "What makes you a good addition to the team?",
-        "minimumAnswerLength": 50,
-        "maximumAnswerLength": 500,
-        "applicationSubmitCooldownMinutes": 5
+        "defaultQuestion": "What makes you a good addition to the team?"
     },
     "memberCountCategoryPattern": "Info"
 }
