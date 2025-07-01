@@ -20,6 +20,8 @@ import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.RoleApplicationSystemConfig;
@@ -52,6 +54,9 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
 
     private final RoleApplicationHandler handler;
     private final RoleApplicationSystemConfig config;
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(CreateRoleApplicationCommand.class);
 
     /**
      * Constructs a new {@link CreateRoleApplicationCommand} with the specified configuration.
@@ -119,7 +124,13 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         SelectOption selectOption = event.getSelectedOptions().getFirst();
         Member member = event.getMember();
 
-        if (selectOption == null || member == null) {
+        if (member == null) {
+            logger.error("Member was null during onStringSelectSelection()");
+            return;
+        }
+
+        if (selectOption == null) {
+            logger.error("selectOption was null during onStringSelectSelection()");
             return;
         }
 
