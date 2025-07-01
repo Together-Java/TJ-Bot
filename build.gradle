@@ -31,7 +31,7 @@ sonarqube {
 }
 
 // Install git hooks
-task installLocalGitHook(type: Copy) {
+tasks.register('installLocalGitHook', Copy) {
     from new File(rootProject.rootDir, 'scripts/pre-commit')
     into new File(rootProject.rootDir, '.git/hooks')
     fileMode 0775
@@ -97,5 +97,4 @@ subprojects {
     compileTestJava {
         options.encoding = "UTF-8"
     }
-    
 }

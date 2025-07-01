@@ -214,7 +214,7 @@ public final class RSSHandlerRoutine implements Routine {
             ZonedDateTime savedDate =
                     getZonedDateTime(rssRecord.getLastDate(), dateFormatterPattern);
             return Optional.of(savedDate);
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException _) {
             return Optional.empty();
         }
     }
@@ -317,7 +317,7 @@ public final class RSSHandlerRoutine implements Routine {
             // that the format pattern defined in the config and the
             // feed's actual format differ.
             getZonedDateTime(firstRssFeedPubDate.get(), feedConfig.dateFormatterPattern());
-        } catch (DateTimeParseException e) {
+        } catch (DateTimeParseException _) {
             return false;
         }
         return true;
