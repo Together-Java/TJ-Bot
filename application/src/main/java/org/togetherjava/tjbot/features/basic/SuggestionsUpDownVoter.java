@@ -23,9 +23,9 @@ import java.util.regex.Pattern;
  */
 public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(SuggestionsUpDownVoter.class);
-    private static final int TITLE_MAX_LENGTH = 60;
     private static final Emoji FALLBACK_UP_VOTE = Emoji.fromUnicode("👍");
     private static final Emoji FALLBACK_DOWN_VOTE = Emoji.fromUnicode("👎");
+    private static final int THREAD_TITLE_MAX_LENGTH = 60;
 
     private final SuggestionsConfig config;
 
@@ -55,19 +55,33 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     }
 
     private static void createThread(Message message) {
-        String title = message.getContentRaw();
+        String threadTitle = generateThreadTitle(message);
+        message.createThreadChannel(threadTitle).queue();
+    }
 
-        if (title.length() >= TITLE_MAX_LENGTH) {
-            int lastWordEnd = title.lastIndexOf(' ', TITLE_MAX_LENGTH);
+    /**
+     * Generates a title for the given message. The maximum length of the title is
+     * {@value #THREAD_TITLE_MAX_LENGTH}.
+     *
+     * @param message The message for which to generate the title.
+     * @return The generated and truncated thread title.
+     */
+    private static String generateThreadTitle(Message message) {
+        String primaryTitle = message.getContentStripped();
+        String fallbackTitle = message.getAuthor().getEffectiveName() + "'s suggestion";
+        String title = primaryTitle.isEmpty() ? fallbackTitle : primaryTitle;
 
-            if (lastWordEnd == -1) {
-                lastWordEnd = TITLE_MAX_LENGTH;
-            }
-
-            title = title.substring(0, lastWordEnd);
+        if (title.length() <= THREAD_TITLE_MAX_LENGTH) {
+            return title;
         }
 
-        message.createThreadChannel(title).queue();
+        int lastWordEnd = title.lastIndexOf(' ', THREAD_TITLE_MAX_LENGTH);
+
+        if (lastWordEnd == -1) {
+            return title.substring(0, THREAD_TITLE_MAX_LENGTH);
+        }
+
+        return title.substring(0, lastWordEnd);
     }
 
     private static void reactWith(String emojiName, Emoji fallbackEmoji, Guild guild,
