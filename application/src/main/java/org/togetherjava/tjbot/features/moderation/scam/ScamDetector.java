@@ -1,11 +1,16 @@
 package org.togetherjava.tjbot.features.moderation.scam;
 
+import net.dv8tion.jda.api.entities.Message;
+
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -18,6 +23,7 @@ import java.util.stream.Stream;
 public final class ScamDetector {
     private static final Pattern TOKENIZER = Pattern.compile("[\\s,]");
     private final ScamBlockerConfig config;
+    private final Predicate<String> isSuspiciousAttachmentName;
 
     /**
      * Creates a new instance with the given configuration
@@ -26,6 +32,26 @@ public final class ScamDetector {
      */
     public ScamDetector(Config config) {
         this.config = config.getScamBlocker();
+        isSuspiciousAttachmentName =
+                Pattern.compile(config.getScamBlocker().getSuspiciousAttachmentNamePattern())
+                    .asMatchPredicate();
+    }
+
+    /**
+     * Detects whether the given message classifies as scam or not, using certain heuristics.
+     *
+     * @param message the message to analyze
+     * @return Whether the message classifies as scam
+     */
+    public boolean isScam(Message message) {
+        String content = message.getContentDisplay();
+        List<Message.Attachment> attachments = message.getAttachments();
+
+        if (content.isBlank()) {
+            return areAttachmentsSuspicious(attachments);
+        }
+
+        return isScam(content);
     }
 
     /**
@@ -121,6 +147,16 @@ public final class ScamDetector {
                 }
                 return preparedToken.contains(keyword);
             });
+    }
+
+    private boolean areAttachmentsSuspicious(Collection<? extends Message.Attachment> attachments) {
+        long suspiciousAttachments =
+                attachments.stream().filter(this::isAttachmentSuspicious).count();
+        return suspiciousAttachments >= config.getSuspiciousAttachmentsThreshold();
+    }
+
+    private boolean isAttachmentSuspicious(Message.Attachment attachment) {
+        return attachment.isImage() && isSuspiciousAttachmentName.test(attachment.getFileName());
     }
 
     private boolean isHostSimilarToKeyword(String host, String keyword) {

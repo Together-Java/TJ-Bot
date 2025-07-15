@@ -137,8 +137,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         Message message = event.getMessage();
-        String content = message.getContentDisplay();
-        if (isSafe && scamDetector.isScam(content)) {
+        if (isSafe && scamDetector.isScam(message)) {
             isSafe = false;
         }
 

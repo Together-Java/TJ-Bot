@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.moderation.scam;
 
+import net.dv8tion.jda.api.entities.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +21,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 final class ScamDetectorTest {
+    private static final int SUSPICIOUS_ATTACHMENTS_THRESHOLD = 3;
+    private static final String SUSPICIOUS_ATTACHMENT_NAME = "scam.png";
+
     private ScamDetector scamDetector;
 
     @BeforeEach
@@ -38,6 +44,10 @@ final class ScamDetectorTest {
         when(scamConfig.getSuspiciousHostKeywords())
             .thenReturn(Set.of("discord", "nitro", "premium", "free", "cheat", "crypto", "tele"));
         when(scamConfig.getIsHostSimilarToKeywordDistanceThreshold()).thenReturn(2);
+        when(scamConfig.getSuspiciousAttachmentsThreshold())
+            .thenReturn(SUSPICIOUS_ATTACHMENTS_THRESHOLD);
+        when(scamConfig.getSuspiciousAttachmentNamePattern())
+            .thenReturn(SUSPICIOUS_ATTACHMENT_NAME);
 
         scamDetector = new ScamDetector(config);
     }
@@ -119,6 +129,94 @@ final class ScamDetectorTest {
 
         // THEN flags it as harmless
         assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing multiple suspicious attachments are flagged as scam")
+    void detectsSuspiciousAttachments() {
+        // GIVEN an empty message containing suspicious attachments
+        String content = "";
+        Message.Attachment attachment = createImageAttachmentMock(SUSPICIOUS_ATTACHMENT_NAME);
+        List<Message.Attachment> attachments =
+                Collections.nCopies(SUSPICIOUS_ATTACHMENTS_THRESHOLD, attachment);
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as scam
+        assertTrue(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing text content are not flagged for suspicious attachments")
+    void ignoresAttachmentsIfContentProvided() {
+        // GIVEN a non-empty message containing suspicious attachments
+        String content = "Hello World";
+        Message.Attachment attachment = createImageAttachmentMock(SUSPICIOUS_ATTACHMENT_NAME);
+        List<Message.Attachment> attachments =
+                Collections.nCopies(SUSPICIOUS_ATTACHMENTS_THRESHOLD, attachment);
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing not enough suspicious attachments are not flagged")
+    void ignoresIfNotEnoughSuspiciousAttachments() {
+        // GIVEN an empty message containing some, but not enough suspicious attachments
+        String content = "";
+
+        Message.Attachment badAttachment = createImageAttachmentMock(SUSPICIOUS_ATTACHMENT_NAME);
+        Message.Attachment goodAttachment = createImageAttachmentMock("good.png");
+        int badAttachmentAmount = SUSPICIOUS_ATTACHMENTS_THRESHOLD - 1;
+        List<Message.Attachment> attachments =
+                new ArrayList<>(Collections.nCopies(badAttachmentAmount, badAttachment));
+        attachments.add(goodAttachment);
+
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing harmless attachments are not flagged")
+    void ignoresHarmlessAttachments() {
+        // GIVEN an empty message containing only harmless attachments
+        String content = "";
+        Message.Attachment attachment = createImageAttachmentMock("good.png");
+        List<Message.Attachment> attachments =
+                Collections.nCopies(SUSPICIOUS_ATTACHMENTS_THRESHOLD, attachment);
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    private static Message createMessageMock(String content, List<Message.Attachment> attachments) {
+        Message message = mock(Message.class);
+        when(message.getContentRaw()).thenReturn(content);
+        when(message.getContentDisplay()).thenReturn(content);
+        when(message.getAttachments()).thenReturn(attachments);
+        return message;
+    }
+
+    private static Message.Attachment createImageAttachmentMock(String name) {
+        Message.Attachment attachment = mock(Message.Attachment.class);
+        when(attachment.isImage()).thenReturn(true);
+        when(attachment.getFileName()).thenReturn(name);
+        return attachment;
     }
 
     private static List<String> provideRealScamMessages() {
