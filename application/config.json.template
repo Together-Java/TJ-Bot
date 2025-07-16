@@ -77,7 +77,9 @@
             "crypto",
             "tele"
         ],
-        "isHostSimilarToKeywordDistanceThreshold": 2
+        "isHostSimilarToKeywordDistanceThreshold": 2,
+        "suspiciousAttachmentsThreshold": 3,
+        "suspiciousAttachmentNamePattern": "(image|\\d{1,2})\\.[^.]{0,5}"
     },
     "wolframAlphaAppId": "79J52T-6239TVXHR7",
     "helpSystem": {
