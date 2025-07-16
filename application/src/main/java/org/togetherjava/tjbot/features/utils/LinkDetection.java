@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -123,5 +124,48 @@ public class LinkDetection {
             logger.error("Invalid URL " + url + ": " + e.getMessage());
             return CompletableFuture.completedFuture(true);
         }
+    }
+
+    public static CompletableFuture<String> replaceDeadLinks(String text, String replacement) {
+        List<String> links =
+                extractLinks(text, Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME));
+        if (links.isEmpty()) {
+            return CompletableFuture.completedFuture(text);
+        }
+
+        // Manually figure out (start,end) indices for each link within text for later replacement
+        List<Integer> startIndices = new ArrayList<>();
+        List<Integer> endIndices = new ArrayList<>();
+        int fromIndex = 0;
+        for (String link : links) {
+            int startIndex = text.indexOf(link, fromIndex);
+            int endIndex = startIndex + link.length();
+            startIndices.add(startIndex);
+            endIndices.add(endIndex);
+
+            fromIndex = endIndex;
+        }
+
+        List<CompletableFuture<Boolean>> futures =
+                links.stream().map(link -> isLinkDead(link)).toList();
+
+        CompletableFuture<Void> futuresResults =
+                CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+
+        // Replace all dead links within text w/ the given replacement string
+        return futuresResults.thenApply(_ -> {
+            StringBuilder modifiedText = new StringBuilder(text);
+            for (int i = startIndices.size() - 1; i >= 0; i--) {
+                boolean isDead = futures.get(i).join();
+                if (isDead) {
+                    modifiedText.replace(startIndices.get(i), endIndices.get(i), replacement);
+                }
+            }
+            return modifiedText.toString();
+        }).exceptionally(throwable -> {
+            logger.error("Error replacing broken links in text {" + text + "}: "
+                    + throwable.getMessage());
+            return text;
+        });
     }
 }
