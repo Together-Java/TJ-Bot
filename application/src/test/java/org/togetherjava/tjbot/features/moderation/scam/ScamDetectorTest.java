@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.moderation.scam;
 
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,8 @@ final class ScamDetectorTest {
             .thenReturn(SUSPICIOUS_ATTACHMENTS_THRESHOLD);
         when(scamConfig.getSuspiciousAttachmentNamePattern())
             .thenReturn(SUSPICIOUS_ATTACHMENT_NAME);
+
+        when(scamConfig.getTrustedUserRolePattern()).thenReturn("Moderator");
 
         scamDetector = new ScamDetector(config);
     }
@@ -205,6 +209,23 @@ final class ScamDetectorTest {
         assertFalse(isScamResult);
     }
 
+    @Test
+    @DisplayName("Suspicious messages send by trusted users are not flagged")
+    void ignoreTrustedUser() {
+        // GIVEN a scam message send by a trusted user
+        String content = "Checkout https://bit.ly/3IhcLiO to get your free nitro !";
+        Member trustedUser = createAuthorMock(List.of("Moderator"));
+        Message message = createMessageMock(content, List.of());
+
+        when(message.getMember()).thenReturn(trustedUser);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertTrue(isScamResult);
+    }
+
     private static Message createMessageMock(String content, List<Message.Attachment> attachments) {
         Message message = mock(Message.class);
         when(message.getContentRaw()).thenReturn(content);
@@ -218,6 +239,19 @@ final class ScamDetectorTest {
         when(attachment.isImage()).thenReturn(true);
         when(attachment.getFileName()).thenReturn(name);
         return attachment;
+    }
+
+    private static Member createAuthorMock(List<String> roleNames) {
+        List<Role> roles = new ArrayList<>();
+        for (String roleName : roleNames) {
+            Role role = mock(Role.class);
+            when(role.getName()).thenReturn(roleName);
+            roles.add(role);
+        }
+
+        Member member = mock(Member.class);
+        when(member.getRoles()).thenReturn(roles);
+        return member;
     }
 
     private static List<String> provideRealScamMessages() {

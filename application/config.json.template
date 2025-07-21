@@ -22,6 +22,7 @@
         "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
         "reportChannelPattern": "commands",
         "botTrapChannelPattern": "bot-trap",
+        "trustedUserRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
         "suspiciousKeywords": [
             "nitro",
             "boob",

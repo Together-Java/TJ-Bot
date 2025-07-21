@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.moderation.scam;
 
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
@@ -25,6 +27,7 @@ public final class ScamDetector {
     private static final Pattern TOKENIZER = Pattern.compile("[\\s,]");
     private final ScamBlockerConfig config;
     private final Predicate<String> isSuspiciousAttachmentName;
+    private final Predicate<String> hasTrustedRole;
 
     /**
      * Creates a new instance with the given configuration
@@ -33,9 +36,12 @@ public final class ScamDetector {
      */
     public ScamDetector(Config config) {
         this.config = config.getScamBlocker();
+
         isSuspiciousAttachmentName =
-                Pattern.compile(config.getScamBlocker().getSuspiciousAttachmentNamePattern())
+                Pattern.compile(this.config.getSuspiciousAttachmentNamePattern())
                     .asMatchPredicate();
+        hasTrustedRole =
+                Pattern.compile(this.config.getTrustedUserRolePattern()).asMatchPredicate();
     }
 
     /**
@@ -45,6 +51,13 @@ public final class ScamDetector {
      * @return Whether the message classifies as scam
      */
     public boolean isScam(Message message) {
+        Member author = message.getMember();
+        boolean isTrustedUser = author != null
+                && author.getRoles().stream().map(Role::getName).noneMatch(hasTrustedRole);
+        if (isTrustedUser) {
+            return false;
+        }
+
         String content = message.getContentDisplay();
         List<Message.Attachment> attachments = message.getAttachments();
 
