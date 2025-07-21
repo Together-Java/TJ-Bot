@@ -142,6 +142,10 @@ public final class ScamDetector {
             .stream()
             .map(keyword -> keyword.toLowerCase(Locale.US))
             .anyMatch(keyword -> {
+                // Exact match "^foo$"
+                if (startsWith(keyword, '^') && endsWith(keyword, '$')) {
+                    return preparedToken.equals(keyword.substring(1, keyword.length() - 1));
+                }
                 // Simple regex-inspired syntax "^foo"
                 if (startsWith(keyword, '^')) {
                     return preparedToken.startsWith(keyword.substring(1));

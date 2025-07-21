@@ -41,7 +41,7 @@ final class ScamDetectorTest {
                 "gradle.org", "help.gradle.org", "youtube.com", "www.youtube.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
                 "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph",
-                "shorturl.at", "cheatings.xyz", "transfer.sh"));
+                "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"));
         when(scamConfig.getSuspiciousHostKeywords()).thenReturn(Set.of("discord", "nitro",
                 "premium", "free", "cheat", "crypto", "telegra", "telety"));
         when(scamConfig.getIsHostSimilarToKeywordDistanceThreshold()).thenReturn(2);
