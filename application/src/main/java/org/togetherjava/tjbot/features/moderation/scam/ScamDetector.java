@@ -10,6 +10,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -141,9 +142,17 @@ public final class ScamDetector {
             .stream()
             .map(keyword -> keyword.toLowerCase(Locale.US))
             .anyMatch(keyword -> {
+                // Exact match "^foo$"
+                if (startsWith(keyword, '^') && endsWith(keyword, '$')) {
+                    return preparedToken.equals(keyword.substring(1, keyword.length() - 1));
+                }
                 // Simple regex-inspired syntax "^foo"
                 if (startsWith(keyword, '^')) {
                     return preparedToken.startsWith(keyword.substring(1));
+                }
+                // Simple regex-inspired syntax "foo$"
+                if (endsWith(keyword, '$')) {
+                    return preparedToken.endsWith(keyword.substring(0, keyword.length() - 1));
                 }
                 return preparedToken.contains(keyword);
             });
@@ -186,11 +195,26 @@ public final class ScamDetector {
         return !text.isEmpty() && text.charAt(0) == prefixToTest;
     }
 
+    private static boolean endsWith(CharSequence text, char suffixToTest) {
+        return !text.isEmpty() && text.charAt(text.length() - 1) == suffixToTest;
+    }
+
     private static class AnalyseResults {
         private boolean pingsEveryone;
         private boolean containsSuspiciousKeyword;
         private boolean containsDollarSign;
         private boolean hasUrl;
         private boolean hasSuspiciousUrl;
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", AnalyseResults.class.getSimpleName() + "[", "]")
+                .add("pingsEveryone=" + pingsEveryone)
+                .add("containsSuspiciousKeyword=" + containsSuspiciousKeyword)
+                .add("containsDollarSign=" + containsDollarSign)
+                .add("hasUrl=" + hasUrl)
+                .add("hasSuspiciousUrl=" + hasSuspiciousUrl)
+                .toString();
+        }
     }
 }
