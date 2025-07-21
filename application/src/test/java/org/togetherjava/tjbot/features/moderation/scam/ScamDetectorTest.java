@@ -51,7 +51,7 @@ final class ScamDetectorTest {
         when(scamConfig.getSuspiciousAttachmentNamePattern())
             .thenReturn(SUSPICIOUS_ATTACHMENT_NAME);
 
-        when(config.getSoftModerationRolePattern()).thenReturn("Moderator|Community Ambassador");
+        when(scamConfig.getTrustedUserRolePattern()).thenReturn("Moderator");
 
         scamDetector = new ScamDetector(config);
     }

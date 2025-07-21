@@ -37,9 +37,10 @@ public final class ScamDetector {
         this.config = config.getScamBlocker();
 
         isSuspiciousAttachmentName =
-                Pattern.compile(config.getScamBlocker().getSuspiciousAttachmentNamePattern())
+                Pattern.compile(this.config.getSuspiciousAttachmentNamePattern())
                     .asMatchPredicate();
-        hasTrustedRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
+        hasTrustedRole =
+                Pattern.compile(this.config.getTrustedUserRolePattern()).asMatchPredicate();
     }
 
     /**

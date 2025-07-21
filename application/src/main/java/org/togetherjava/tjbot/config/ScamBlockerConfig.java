@@ -18,6 +18,7 @@ public final class ScamBlockerConfig {
     private final Mode mode;
     private final String reportChannelPattern;
     private final String botTrapChannelPattern;
+    private final String trustedUserRolePattern;
     private final Set<String> suspiciousKeywords;
     private final Set<String> hostWhitelist;
     private final Set<String> hostBlacklist;
@@ -32,6 +33,8 @@ public final class ScamBlockerConfig {
                     required = true) String reportChannelPattern,
             @JsonProperty(value = "botTrapChannelPattern",
                     required = true) String botTrapChannelPattern,
+            @JsonProperty(value = "trustedUserRolePattern",
+                    required = true) String trustedUserRolePattern,
             @JsonProperty(value = "suspiciousKeywords",
                     required = true) Set<String> suspiciousKeywords,
             @JsonProperty(value = "hostWhitelist", required = true) Set<String> hostWhitelist,
@@ -47,6 +50,7 @@ public final class ScamBlockerConfig {
         this.mode = Objects.requireNonNull(mode);
         this.reportChannelPattern = Objects.requireNonNull(reportChannelPattern);
         this.botTrapChannelPattern = Objects.requireNonNull(botTrapChannelPattern);
+        this.trustedUserRolePattern = Objects.requireNonNull(trustedUserRolePattern);
         this.suspiciousKeywords = new HashSet<>(Objects.requireNonNull(suspiciousKeywords));
         this.hostWhitelist = new HashSet<>(Objects.requireNonNull(hostWhitelist));
         this.hostBlacklist = new HashSet<>(Objects.requireNonNull(hostBlacklist));
@@ -84,6 +88,15 @@ public final class ScamBlockerConfig {
      */
     public String getBotTrapChannelPattern() {
         return botTrapChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that will be ignored for scam detection.
+     *
+     * @return the REGEX pattern
+     */
+    public String getTrustedUserRolePattern() {
+        return trustedUserRolePattern;
     }
 
     /**
