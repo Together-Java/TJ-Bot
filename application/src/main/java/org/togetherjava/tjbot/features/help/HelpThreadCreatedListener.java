@@ -11,9 +11,12 @@ import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.RestAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.UserInteractionType;
@@ -38,6 +41,9 @@ import java.util.stream.Collectors;
  */
 public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
+
     private final HelpSystemHelper helper;
 
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
@@ -67,6 +73,34 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
                     return;
                 }
                 handleHelpThreadCreated(threadChannel);
+            }
+        }
+    }
+
+    @Override
+    public void onMessageDelete(MessageDeleteEvent event) {
+        // Check if the deleted message was from a thread
+        if (event.isFromThread()) {
+            ThreadChannel threadChannel = event.getChannel().asThreadChannel();
+            Channel parentChannel = threadChannel.getParentChannel();
+
+            // Check if it's a help forum thread
+            if (helper.isHelpForumName(parentChannel.getName())) {
+                // Retrieve the thread owner using the owner's ID
+                long ownerId = threadChannel.getOwnerIdLong();
+                threadChannel.getGuild()
+                    .retrieveMemberById(ownerId)
+                    .queue(member -> threadChannel
+                        .sendMessage(
+                                """
+                                        It looks like a message was deleted in this help post.\s
+                                        To properly close this post, please __right-click__ on the **Created Post** __followed by__ **Delete Post**\s
+                                        instead of deleting messages. This ensures proper record-keeping and\s
+                                        helps other users find solutions.""")
+                        .queue(),
+                            failure -> LOGGER.error(
+                                    "Could not retrieve thread owner for thread ID {}: {}",
+                                    threadChannel.getId(), failure.getMessage(), failure));
             }
         }
     }
