@@ -37,7 +37,7 @@ final class ScamDetectorTest {
         when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
                 "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
                 "whatsapp", "crypto", "^claim", "teen", "adobe", "hack", "steamcommunity",
-                "freenitro", "^earn$", "^earning", ".exe$"));
+                "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
         when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
                 "discordapp.com", "discordapp.net", "discordstatus.com", "thehackernews.com",
                 "gradle.org", "help.gradle.org", "youtube.com", "www.youtube.com"));
@@ -400,7 +400,8 @@ final class ScamDetectorTest {
                         Ready to unlock your earning potential in the digital market? you can start earning $100,000 and even more
                         as a beginner from the digital market, DM me for expert guidance or contact me directly on telegram and start building your financial future.
                         Telegram username @JohnSmith123""",
-                "Grab it before it's deleted (available for Windows and macOS): https://www.reddit.com/r/TVBaFreeHub/comments/12345t/ninaatradercrackedfullpowertradingfreefor123/");
+                "Grab it before it's deleted (available for Windows and macOS): https://www.reddit.com/r/TVBaFreeHub/comments/12345t/ninaatradercrackedfullpowertradingfreefor123/",
+                "Bro, claim 0.1 BTC now! Use promo code \"mrbeast\" at expmcoins.com screen @everyone");
     }
 
     private static List<String> provideRealFalsePositiveMessages() {
