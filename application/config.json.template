@@ -47,7 +47,8 @@
             "freenitro",
             "^earn$",
             "^earning",
-            ".exe$"
+            ".exe$",
+            "mrbeast"
         ],
         "hostWhitelist": [
             "discord.com",
