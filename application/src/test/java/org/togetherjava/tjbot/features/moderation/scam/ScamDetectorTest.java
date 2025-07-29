@@ -223,7 +223,7 @@ final class ScamDetectorTest {
         boolean isScamResult = scamDetector.isScam(message);
 
         // THEN flags it as harmless
-        assertTrue(isScamResult);
+        assertFalse(isScamResult);
     }
 
     private static Message createMessageMock(String content, List<Message.Attachment> attachments) {
