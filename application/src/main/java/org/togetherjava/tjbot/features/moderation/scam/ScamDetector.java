@@ -53,7 +53,7 @@ public final class ScamDetector {
     public boolean isScam(Message message) {
         Member author = message.getMember();
         boolean isTrustedUser = author != null
-                && author.getRoles().stream().map(Role::getName).noneMatch(hasTrustedRole);
+                && author.getRoles().stream().map(Role::getName).anyMatch(hasTrustedRole);
         if (isTrustedUser) {
             return false;
         }
