@@ -24,7 +24,8 @@
         "hostWhitelist": ["discord.com", "discord.gg", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"],
         "hostBlacklist": ["bit.ly"],
         "suspiciousHostKeywords": ["discord", "nitro", "premium"],
-        "isHostSimilarToKeywordDistanceThreshold": 2
+        "isHostSimilarToKeywordDistanceThreshold": 2,
+        "maxSimilarMessages": 2
     },
     "wolframAlphaAppId": "79J52T-6239TVXHR7",
     "helpSystem": {

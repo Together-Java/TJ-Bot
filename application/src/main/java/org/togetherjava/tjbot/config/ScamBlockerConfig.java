@@ -22,6 +22,7 @@ public final class ScamBlockerConfig {
     private final Set<String> hostBlacklist;
     private final Set<String> suspiciousHostKeywords;
     private final int isHostSimilarToKeywordDistanceThreshold;
+    private final int maxSimilarMessages;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private ScamBlockerConfig(@JsonProperty(value = "mode", required = true) Mode mode,
@@ -34,7 +35,8 @@ public final class ScamBlockerConfig {
             @JsonProperty(value = "suspiciousHostKeywords",
                     required = true) Set<String> suspiciousHostKeywords,
             @JsonProperty(value = "isHostSimilarToKeywordDistanceThreshold",
-                    required = true) int isHostSimilarToKeywordDistanceThreshold) {
+                    required = true) int isHostSimilarToKeywordDistanceThreshold,
+            @JsonProperty(value = "maxSimilarMessages") int maxSimilarMessages) {
         this.mode = Objects.requireNonNull(mode);
         this.reportChannelPattern = Objects.requireNonNull(reportChannelPattern);
         this.suspiciousKeywords = new HashSet<>(Objects.requireNonNull(suspiciousKeywords));
@@ -42,6 +44,7 @@ public final class ScamBlockerConfig {
         this.hostBlacklist = new HashSet<>(Objects.requireNonNull(hostBlacklist));
         this.suspiciousHostKeywords = new HashSet<>(Objects.requireNonNull(suspiciousHostKeywords));
         this.isHostSimilarToKeywordDistanceThreshold = isHostSimilarToKeywordDistanceThreshold;
+        this.maxSimilarMessages = maxSimilarMessages;
     }
 
     /**
@@ -109,6 +112,15 @@ public final class ScamBlockerConfig {
      */
     public int getIsHostSimilarToKeywordDistanceThreshold() {
         return isHostSimilarToKeywordDistanceThreshold;
+    }
+
+    /**
+     * Gets the maximum amount of allowed messages before it gets flagged by the scam detector.
+     * 
+     * @return the maximum amount of allowed messages
+     */
+    public int getMaxSimilarMessages() {
+        return maxSimilarMessages;
     }
 
     /**

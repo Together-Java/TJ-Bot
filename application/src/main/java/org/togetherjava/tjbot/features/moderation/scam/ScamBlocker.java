@@ -24,10 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.MessageInfo;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
-import org.togetherjava.tjbot.features.MessageReceiverAdapter;
-import org.togetherjava.tjbot.features.UserInteractionType;
-import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.*;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.moderation.ModerationAction;
@@ -38,11 +37,10 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.awt.Color;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -55,7 +53,7 @@ import java.util.regex.Pattern;
  * If scam is detected, depending on the configuration, the blockers actions range from deleting the
  * message and banning the author to just logging the message for auditing.
  */
-public final class ScamBlocker extends MessageReceiverAdapter implements UserInteractor {
+public final class ScamBlocker extends MessageReceiverAdapter implements UserInteractor, Routine {
     private static final Logger logger = LoggerFactory.getLogger(ScamBlocker.class);
     private static final Color AMBIENT_COLOR = Color.decode("#CFBFF5");
     private static final Set<ScamBlockerConfig.Mode> MODES_WITH_IMMEDIATE_DELETION =
@@ -72,6 +70,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final Predicate<String> hasRequiredRole;
 
     private final ComponentIdInteractor componentIdInteractor;
+    private final Set<MessageInfo> messageCache;
 
     /**
      * Creates a new listener to receive all message sent in any channel.
@@ -95,6 +94,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
+        messageCache = new HashSet<>();
     }
 
     @Override
@@ -124,7 +124,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         Message message = event.getMessage();
         String content = message.getContentDisplay();
-        if (!scamDetector.isScam(content)) {
+        if (!scamDetector.isScam(content) && !doSimilarMessageCheck(event)) {
             return;
         }
 
@@ -134,6 +134,42 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         takeAction(event);
+    }
+
+    @Override
+    public Schedule createSchedule() {
+        return new Schedule(ScheduleMode.FIXED_RATE, 1, 1, TimeUnit.HOURS);
+    }
+
+    @Override
+    public void runRoutine(JDA jda) {
+        Instant now = Instant.now();
+        messageCache.removeIf(m -> m.timestamp().plus(1, ChronoUnit.HOURS).isBefore(now));
+    }
+
+    /**
+     * Stores message data and if many messages of same author, different channel and same content
+     * is posted several times, returns true.
+     * 
+     * @param event the message event
+     * @return true if the user spammed the message in several channels, false otherwise
+     */
+    private boolean doSimilarMessageCheck(MessageReceivedEvent event) {
+        long userId = event.getAuthor().getIdLong();
+        long channelId = event.getChannel().getIdLong();
+        int messageHash = getHash(event.getMessage());
+        Instant timestamp = event.getMessage().getTimeCreated().toInstant();
+        messageCache.add(new MessageInfo(userId, channelId, messageHash, timestamp));
+        return config.getScamBlocker().getMaxSimilarMessages() < messageCache.stream()
+            .filter(m -> m.userId() == userId && m.messageHash() == messageHash)
+            .count();
+    }
+
+    private int getHash(Message message) {
+        return message.getContentRaw().hashCode() + message.getAttachments()
+            .stream()
+            .mapToInt(a -> a.getFileName().hashCode())
+            .reduce(1, (a, b) -> a * b);
     }
 
     private void takeActionWasAlreadyReported(MessageReceivedEvent event) {
