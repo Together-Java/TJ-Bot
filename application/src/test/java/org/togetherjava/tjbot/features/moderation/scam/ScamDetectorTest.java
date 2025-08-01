@@ -38,10 +38,10 @@ final class ScamDetectorTest {
                 "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
                 "whatsapp", "crypto", "^claim", "teen", "adobe", "hack", "steamcommunity",
                 "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
-        when(scamConfig.getHostWhitelist())
-            .thenReturn(Set.of("discord.com", "discord.media", "discordapp.com", "discordapp.net",
-                    "discordstatus.com", "thehackernews.com", "gradle.org", "help.gradle.org",
-                    "youtube.com", "www.youtube.com", "cdn.discordapp.com"));
+        when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
+                "discordapp.com", "discordapp.net", "discordstatus.com", "thehackernews.com",
+                "gradle.org", "help.gradle.org", "youtube.com", "www.youtube.com",
+                "cdn.discordapp.com", "media.discordapp.net"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
                 "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph",
                 "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"));

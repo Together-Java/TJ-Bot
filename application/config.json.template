@@ -61,7 +61,8 @@
             "help.gradle.org",
             "youtube.com",
             "www.youtube.com",
-            "cdn.discordapp.com"
+            "cdn.discordapp.com",
+            "media.discordapp.net"
         ],
         "hostBlacklist": [
             "bit.ly",
