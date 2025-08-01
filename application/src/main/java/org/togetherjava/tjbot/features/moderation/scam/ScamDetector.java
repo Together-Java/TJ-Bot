@@ -8,10 +8,16 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
+import javax.annotation.Nullable;
+
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -24,6 +30,8 @@ import java.util.stream.Stream;
  * {@link #isScam(CharSequence)}.
  */
 public final class ScamDetector {
+    private static final Set<String> IMAGE_EXTENSIONS =
+            Set.of("jpg", "jpeg", "png", "gif", "webp", "tiff", "svg", "apng");
     private static final Pattern TOKENIZER = Pattern.compile("[\\s,]");
     private final ScamBlockerConfig config;
     private final Predicate<String> isSuspiciousAttachmentName;
@@ -59,7 +67,8 @@ public final class ScamDetector {
         }
 
         String content = message.getContentDisplay();
-        List<Message.Attachment> attachments = message.getAttachments();
+        List<Attachment> attachments =
+                message.getAttachments().stream().map(Attachment::fromDiscord).toList();
 
         if (content.isBlank()) {
             return areAttachmentsSuspicious(attachments);
@@ -76,21 +85,28 @@ public final class ScamDetector {
      */
     public boolean isScam(CharSequence message) {
         AnalyseResults results = new AnalyseResults();
+        results.onlyContainsUrls = true;
         TOKENIZER.splitAsStream(message).forEach(token -> analyzeToken(token, results));
         return isScam(results);
     }
 
     private boolean isScam(AnalyseResults results) {
-        if (results.pingsEveryone && (results.containsSuspiciousKeyword || results.hasUrl
+        if (results.pingsEveryone && (results.containsSuspiciousKeyword || results.hasUrl()
                 || results.containsDollarSign)) {
             return true;
         }
 
-        return Stream
-            .of(results.containsSuspiciousKeyword, results.hasSuspiciousUrl,
+        boolean hasTooManySuspiciousFlags = Stream
+            .of(results.containsSuspiciousKeyword, results.hasSuspiciousUrl(),
                     results.containsDollarSign)
             .filter(flag -> flag)
             .count() >= 2;
+        if (hasTooManySuspiciousFlags) {
+            return true;
+        }
+
+        return results.onlyContainsUrls && results.areAllUrlsWithAttachments()
+                && areAttachmentsSuspicious(results.getUrlAttachments());
     }
 
     private void analyzeToken(String token, AnalyseResults results) {
@@ -113,13 +129,18 @@ public final class ScamDetector {
 
         if (token.startsWith("http")) {
             analyzeUrl(token, results);
+        } else {
+            results.onlyContainsUrls = false;
         }
     }
 
     private void analyzeUrl(String url, AnalyseResults results) {
         String host;
+        String path;
         try {
-            host = URI.create(url).getHost();
+            URI uri = URI.create(url);
+            host = uri.getHost();
+            path = uri.getPath();
         } catch (IllegalArgumentException _) {
             // Invalid urls are not scam
             return;
@@ -129,20 +150,25 @@ public final class ScamDetector {
             return;
         }
 
-        results.hasUrl = true;
+        AnalyseUrlResult result = new AnalyseUrlResult();
+        results.urls.add(result);
+
+        if (path != null && path.startsWith("/attachments")) {
+            result.containedAttachment = Attachment.fromUrlPath(path);
+        }
 
         if (config.getHostWhitelist().contains(host)) {
             return;
         }
 
         if (config.getHostBlacklist().contains(host)) {
-            results.hasSuspiciousUrl = true;
+            result.isSuspicious = true;
             return;
         }
 
         for (String keyword : config.getSuspiciousHostKeywords()) {
             if (isHostSimilarToKeyword(host, keyword)) {
-                results.hasSuspiciousUrl = true;
+                result.isSuspicious = true;
                 break;
             }
         }
@@ -171,14 +197,14 @@ public final class ScamDetector {
             });
     }
 
-    private boolean areAttachmentsSuspicious(Collection<? extends Message.Attachment> attachments) {
+    private boolean areAttachmentsSuspicious(Collection<Attachment> attachments) {
         long suspiciousAttachments =
                 attachments.stream().filter(this::isAttachmentSuspicious).count();
         return suspiciousAttachments >= config.getSuspiciousAttachmentsThreshold();
     }
 
-    private boolean isAttachmentSuspicious(Message.Attachment attachment) {
-        return attachment.isImage() && isSuspiciousAttachmentName.test(attachment.getFileName());
+    private boolean isAttachmentSuspicious(Attachment attachment) {
+        return attachment.isImage() && isSuspiciousAttachmentName.test(attachment.fileName());
     }
 
     private boolean isHostSimilarToKeyword(String host, String keyword) {
@@ -212,12 +238,70 @@ public final class ScamDetector {
         return !text.isEmpty() && text.charAt(text.length() - 1) == suffixToTest;
     }
 
-    private static class AnalyseResults {
+    private record Attachment(String fileName) {
+        boolean isImage() {
+            return getFileExtension().map(IMAGE_EXTENSIONS::contains).orElse(false);
+        }
+
+        private Optional<String> getFileExtension() {
+            int dot = fileName.lastIndexOf('.');
+            if (dot == -1) {
+                return Optional.empty();
+            }
+            String extension = fileName.substring(dot + 1);
+            return Optional.of(extension);
+        }
+
+        static Attachment fromDiscord(Message.Attachment attachment) {
+            return new Attachment(attachment.getFileName());
+        }
+
+        static Attachment fromUrlPath(String urlPath) {
+            int fileNameStart = urlPath.lastIndexOf('/');
+            String fileName = fileNameStart == -1 ? "" : urlPath.substring(fileNameStart + 1);
+            return new Attachment(fileName);
+        }
+    }
+
+    private static final class AnalyseUrlResult {
+        private boolean isSuspicious;
+        @Nullable
+        private Attachment containedAttachment;
+
+        @Override
+        public String toString() {
+            return new StringJoiner(", ", AnalyseUrlResult.class.getSimpleName() + "[", "]")
+                .add("isSuspicious=" + isSuspicious)
+                .add("containedAttachment=" + containedAttachment)
+                .toString();
+        }
+    }
+
+    private static final class AnalyseResults {
         private boolean pingsEveryone;
         private boolean containsSuspiciousKeyword;
         private boolean containsDollarSign;
-        private boolean hasUrl;
-        private boolean hasSuspiciousUrl;
+        private boolean onlyContainsUrls;
+        private final Collection<AnalyseUrlResult> urls = new ArrayList<>();
+
+        boolean hasUrl() {
+            return !urls.isEmpty();
+        }
+
+        boolean hasSuspiciousUrl() {
+            return urls.stream().anyMatch(url -> url.isSuspicious);
+        }
+
+        boolean areAllUrlsWithAttachments() {
+            return urls.stream().allMatch(url -> url.containedAttachment != null);
+        }
+
+        Collection<Attachment> getUrlAttachments() {
+            return urls.stream()
+                .map(url -> url.containedAttachment)
+                .filter(Objects::nonNull)
+                .toList();
+        }
 
         @Override
         public String toString() {
@@ -225,8 +309,8 @@ public final class ScamDetector {
                 .add("pingsEveryone=" + pingsEveryone)
                 .add("containsSuspiciousKeyword=" + containsSuspiciousKeyword)
                 .add("containsDollarSign=" + containsDollarSign)
-                .add("hasUrl=" + hasUrl)
-                .add("hasSuspiciousUrl=" + hasSuspiciousUrl)
+                .add("onlyContainsUrls=" + onlyContainsUrls)
+                .add("urls=" + urls)
                 .toString();
         }
     }

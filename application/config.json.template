@@ -60,7 +60,8 @@
             "gradle.org",
             "help.gradle.org",
             "youtube.com",
-            "www.youtube.com"
+            "www.youtube.com",
+            "cdn.discordapp.com"
         ],
         "hostBlacklist": [
             "bit.ly",
