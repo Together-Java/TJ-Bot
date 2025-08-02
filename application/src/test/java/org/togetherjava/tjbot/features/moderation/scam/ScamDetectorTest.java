@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 final class ScamDetectorTest {
     private static final int SUSPICIOUS_ATTACHMENTS_THRESHOLD = 3;
-    private static final String SUSPICIOUS_ATTACHMENT_NAME = "scam.png";
+    private static final String SUSPICIOUS_ATTACHMENT_NAME = "image.png";
 
     private ScamDetector scamDetector;
 
@@ -40,7 +40,8 @@ final class ScamDetectorTest {
                 "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
         when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
                 "discordapp.com", "discordapp.net", "discordstatus.com", "thehackernews.com",
-                "gradle.org", "help.gradle.org", "youtube.com", "www.youtube.com"));
+                "gradle.org", "help.gradle.org", "youtube.com", "www.youtube.com",
+                "cdn.discordapp.com", "media.discordapp.net"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
                 "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph",
                 "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"));
@@ -50,7 +51,7 @@ final class ScamDetectorTest {
         when(scamConfig.getSuspiciousAttachmentsThreshold())
             .thenReturn(SUSPICIOUS_ATTACHMENTS_THRESHOLD);
         when(scamConfig.getSuspiciousAttachmentNamePattern())
-            .thenReturn(SUSPICIOUS_ATTACHMENT_NAME);
+            .thenReturn("(image|\\d{1,2})\\.[^.]{0,5}");
 
         when(scamConfig.getTrustedUserRolePattern()).thenReturn("Moderator");
 
@@ -401,7 +402,16 @@ final class ScamDetectorTest {
                         as a beginner from the digital market, DM me for expert guidance or contact me directly on telegram and start building your financial future.
                         Telegram username @JohnSmith123""",
                 "Grab it before it's deleted (available for Windows and macOS): https://www.reddit.com/r/TVBaFreeHub/comments/12345t/ninaatradercrackedfullpowertradingfreefor123/",
-                "Bro, claim 0.1 BTC now! Use promo code \"mrbeast\" at expmcoins.com screen @everyone");
+                "Bro, claim 0.1 BTC now! Use promo code \"mrbeast\" at expmcoins.com screen @everyone",
+                """
+                        https://cdn.discordapp.com/attachments/1234/5678/image.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/image.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/image.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&""",
+                """
+                        https://cdn.discordapp.com/attachments/1234/5678/1.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/2.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/3.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/4.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&""");
     }
 
     private static List<String> provideRealFalsePositiveMessages() {
