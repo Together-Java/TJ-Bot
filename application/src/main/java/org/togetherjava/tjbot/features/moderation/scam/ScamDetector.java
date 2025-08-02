@@ -62,7 +62,7 @@ public final class ScamDetector {
                 message.getAttachments().stream().map(Attachment::fromDiscord).toList();
 
         if (content.isBlank()) {
-            return areAttachmentsSuspicious(attachments);
+            return areAttachmentsScam(attachments);
         }
 
         return isScam(content);
@@ -96,10 +96,10 @@ public final class ScamDetector {
         }
 
         return results.onlyContainsUrls() && results.areAllUrlsWithAttachments()
-                && areAttachmentsSuspicious(results.getUrlAttachments());
+                && areAttachmentsScam(results.getUrlAttachments());
     }
 
-    private boolean areAttachmentsSuspicious(Collection<Attachment> attachments) {
+    private boolean areAttachmentsScam(Collection<Attachment> attachments) {
         long suspiciousAttachments =
                 attachments.stream().filter(this::isAttachmentSuspicious).count();
         return suspiciousAttachments >= config.getSuspiciousAttachmentsThreshold();
