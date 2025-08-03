@@ -26,6 +26,10 @@ public final class ScamBlockerConfig {
     private final int isHostSimilarToKeywordDistanceThreshold;
     private final int suspiciousAttachmentsThreshold;
     private final String suspiciousAttachmentNamePattern;
+    private final int maxAllowedSimilarMessages;
+    private final int similarMessagesWindow;
+    private final int similarMessageLengthIgnore;
+    private final Set<String> similarMessagesWhitelist;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private ScamBlockerConfig(@JsonProperty(value = "mode", required = true) Mode mode,
@@ -46,7 +50,12 @@ public final class ScamBlockerConfig {
             @JsonProperty(value = "suspiciousAttachmentsThreshold",
                     required = true) int suspiciousAttachmentsThreshold,
             @JsonProperty(value = "suspiciousAttachmentNamePattern",
-                    required = true) String suspiciousAttachmentNamePattern) {
+                    required = true) String suspiciousAttachmentNamePattern,
+            @JsonProperty(value = "maxAllowedSimilarMessages") int maxAllowedSimilarMessages,
+            @JsonProperty(value = "similarMessagesWindow") int similarMessagesWindow,
+            @JsonProperty(value = "similarMessageLengthIgnore") int similarMessageLengthIgnore,
+            @JsonProperty(
+                    value = "similarMessagesWhitelist") Set<String> similarMessagesWhitelist) {
         this.mode = Objects.requireNonNull(mode);
         this.reportChannelPattern = Objects.requireNonNull(reportChannelPattern);
         this.botTrapChannelPattern = Objects.requireNonNull(botTrapChannelPattern);
@@ -59,6 +68,10 @@ public final class ScamBlockerConfig {
         this.suspiciousAttachmentsThreshold = suspiciousAttachmentsThreshold;
         this.suspiciousAttachmentNamePattern =
                 Objects.requireNonNull(suspiciousAttachmentNamePattern);
+        this.maxAllowedSimilarMessages = maxAllowedSimilarMessages;
+        this.similarMessagesWindow = similarMessagesWindow;
+        this.similarMessageLengthIgnore = similarMessageLengthIgnore;
+        this.similarMessagesWhitelist = similarMessagesWhitelist;
     }
 
     /**
@@ -165,6 +178,43 @@ public final class ScamBlockerConfig {
      */
     public String getSuspiciousAttachmentNamePattern() {
         return suspiciousAttachmentNamePattern;
+    }
+
+    /**
+     * Gets the maximum amount of allowed messages before it gets flagged by the scam detector.
+     * 
+     * @return the maximum amount of allowed messages
+     */
+    public int getMaxAllowedSimilarMessages() {
+        return maxAllowedSimilarMessages;
+    }
+
+    /**
+     * Gets the window in minutes to which messages are kept in the similar messages feature.
+     * 
+     * @return the window in minutes to keep the messages
+     */
+    public int getSimilarMessagesWindow() {
+        return similarMessagesWindow;
+    }
+
+    /**
+     * Gets the maximum length allowed before the message gets monitored by the similar message
+     * feature.
+     * 
+     * @return maximum length allowed
+     */
+    public int getSimilarMessageLengthIgnore() {
+        return similarMessageLengthIgnore;
+    }
+
+    /**
+     * Gets the set of messages that are allowed to be spammed in the similar messages feature.
+     * 
+     * @return set of whitelisted messages
+     */
+    public Set<String> getSimilarMessagesWhitelist() {
+        return similarMessagesWhitelist;
     }
 
     /**
