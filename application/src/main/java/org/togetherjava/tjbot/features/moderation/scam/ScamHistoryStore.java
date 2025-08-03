@@ -7,7 +7,6 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.ScamHistoryRecord;
 import org.togetherjava.tjbot.features.utils.Hashing;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -138,8 +137,7 @@ public final class ScamHistoryStore {
      * @return a text representation of the hash
      */
     public static String hashMessageContent(Message message) {
-        return Hashing.bytesToHex(Hashing.hash(HASH_METHOD,
-                message.getContentRaw().getBytes(StandardCharsets.UTF_8)));
+        return Hashing.bytesToHex(Hashing.hashUTF8(HASH_METHOD, message.getContentRaw()));
     }
 
     /**

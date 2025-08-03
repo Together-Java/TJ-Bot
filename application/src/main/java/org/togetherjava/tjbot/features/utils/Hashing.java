@@ -57,4 +57,16 @@ public class Hashing {
             throw new IllegalStateException("Hash method must be supported", e);
         }
     }
+
+    /**
+     * Hashes the given UTF 8 text using the given method, see {@link Hashing#hash(String, byte[])}.
+     *
+     * @param method the method to use for hashing, must be supported by {@link MessageDigest}, e.g.
+     *        {@code "SHA"}
+     * @param text the UTF 8 text to hash
+     * @return the computed hash
+     */
+    public static byte[] hashUTF8(String method, String text) {
+        return hash(method, text.getBytes(StandardCharsets.UTF_8));
+    }
 }
