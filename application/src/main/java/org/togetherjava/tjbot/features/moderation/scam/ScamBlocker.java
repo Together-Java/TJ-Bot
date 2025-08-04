@@ -25,9 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
-import org.togetherjava.tjbot.features.MessageReceiverAdapter;
-import org.togetherjava.tjbot.features.UserInteractionType;
-import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.*;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.moderation.ModerationAction;
@@ -38,11 +36,8 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.awt.Color;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -55,7 +50,7 @@ import java.util.regex.Pattern;
  * If scam is detected, depending on the configuration, the blockers actions range from deleting the
  * message and banning the author to just logging the message for auditing.
  */
-public final class ScamBlocker extends MessageReceiverAdapter implements UserInteractor {
+public final class ScamBlocker extends MessageReceiverAdapter implements UserInteractor, Routine {
     private static final Logger logger = LoggerFactory.getLogger(ScamBlocker.class);
     private static final Color AMBIENT_COLOR = Color.decode("#CFBFF5");
     private static final Set<ScamBlockerConfig.Mode> MODES_WITH_IMMEDIATE_DELETION =
@@ -72,8 +67,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final ModerationActionsStore actionsStore;
     private final ScamHistoryStore scamHistoryStore;
     private final Predicate<String> hasRequiredRole;
-
     private final ComponentIdInteractor componentIdInteractor;
+    private final SimilarMessagesDetector similarMessagesDetector;
 
     /**
      * Creates a new listener to receive all message sent in any channel.
@@ -103,6 +98,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
+        similarMessagesDetector = new SimilarMessagesDetector(config.getScamBlocker());
     }
 
     @Override
@@ -141,6 +137,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             isSafe = false;
         }
 
+        if (isSafe && similarMessagesDetector.doSimilarMessageCheck(event)) {
+            isSafe = false;
+        }
+
         if (isSafe) {
             return;
         }
@@ -151,6 +151,16 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         takeAction(event);
+    }
+
+    @Override
+    public Schedule createSchedule() {
+        return new Schedule(ScheduleMode.FIXED_RATE, 1, 1, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void runRoutine(JDA jda) {
+        similarMessagesDetector.runRoutine();
     }
 
     private void takeActionWasAlreadyReported(MessageReceivedEvent event) {
