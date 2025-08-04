@@ -18,15 +18,15 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 /**
- * Provides means to create previews of links. See
- * {@link LinkDetection#extractLinks(String, boolean, boolean)} and
- * {@link #createLinkPreviews(List)}.
+ * Provides means to create previews of links. See {@link LinkDetection#extractLinks(String, Set)}
+ * and {@link #createLinkPreviews(List)}.
  */
 public final class LinkPreviews {
     private static final Logger logger = LoggerFactory.getLogger(LinkPreviews.class);
