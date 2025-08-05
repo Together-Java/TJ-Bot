@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.features;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import java.util.regex.Pattern;
 
@@ -56,4 +57,13 @@ public interface MessageReceiver extends Feature {
      *        message that was deleted
      */
     void onMessageDeleted(MessageDeleteEvent event);
+
+    /**
+     * Triggered by the core system whenever a new reaction was added to a message in a text channel
+     * of a guild the bot has been added to.
+     *
+     * @param event the event that triggered this, containing information about the corresponding
+     *        reaction that was added
+     */
+    void onMessageReactionAdd(MessageReactionAddEvent event);
 }
