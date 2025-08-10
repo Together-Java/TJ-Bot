@@ -90,7 +90,7 @@ The project is not intended necessarily to be run in a container or a specific I
 - `meta` directory currently contains 3 [draw.io](https://www.drawio.com/) diagram files about the project, and a `google-style-eclipse.xml` file used in Spotless configuration.
 - `scripts` directory currently contains only one file which is a git pre-commit hook that runs Spotless to format the code before committing.
 
-## Application 
+### Module 1: Application 
 
 This is the main module. It contains the entry point, core logic, feature implementations, configuration management, and logging utilities for the bot.
 
@@ -98,7 +98,9 @@ Most packages are equipped with a `package-info.java` file, which contains a bri
 - `@MethodsReturnNonnullByDefault`: defined in the `/utils` module, indicating that all methods in the package return non-null values by default.
 - `@ParametersAreNonnullByDefault`: from `javax.annotation` package, indicating that all parameters in the package are non-null by default.
 
-### 1. `config`: 
+NOTE: _We recommend to all contributors to only focus on this module. The other ones are handling some aspects behind the scenes, and are not meant to be modified by contributors._
+
+#### 1. `config`: 
 
 Purpose: Handles all configuration aspects of the bot, including loading, validating, and providing access to configuration values.
 
@@ -107,7 +109,7 @@ Contents:
 - Utilities for environment variable overrides and runtime configuration changes.
 - Central access point for configuration values used throughout the application.
 
-### 2. `features`
+#### 2. `features`
 
 Purpose: Implements the bot’s features, including commands, event listeners, and integrations.
 
@@ -117,7 +119,7 @@ Contents:
 - Feature registration and lifecycle management (e.g., Features.createFeatures).
 - Sub-packages for organizing features by domain (e.g., basic, chatgpt (openai), code, projects, and others).
 
-### 3. `logging`
+#### 3. `logging`
 
 Purpose: Provides logging configuration and utilities for the application.
 
@@ -126,15 +128,56 @@ Contents:
 - Custom logging utilities and wrappers.
 - Integration with `SLF4J` for consistent logging across dependencies.
 
+### Module 2: BuildSrc
+
+This module doesn't contain any Java files, it contains a build process to the SQLite database using Flyway and JOOQ.
+
+It contains exactly one groovy file database-settings.gradle, which is a custom Gradle plugin that handles the database schema generation and migration.
+
+### Module 3: Database
+
+This module is about creating the connection to the SQLite database and providing a way to interact with it using JOOQ.
+
+### Module 4: Formatter
+
+This module is about formatting code snippets in Discord messages, using the JDA library.
+
+It's a sort of support for the `features.code` package in the `application` module.
+
+> formatter... is a really complex project. it was created as its own module. probably also bc it was originally intended to be run outside the bots context - Zabuzard
+
+### Module 5: Utils
+
+This module contains utility classes and methods that are used across the application. It includes exactly one class `MethodsReturnNonnullByDefault` which is an annotation used in most packages in the `application` module.
+
 ## Complex Aspects
 
-## Security
+This section is about some important aspects in the `application` module. Some of these aspects are complex and may require additional attention when they get modified :
+
+- `BotCore` a class/component defined under a subpackage `features.system`.
+- `ComponentIdStore` under a subpackage `features.componentids`.
+- `ComponentIdGenerator` under a subpackage `features.componentids`.
+- `ComponentIdInteractor` under a subpackage `features.componentids`.
+- `ComponentIdParser` under a subpackage `features.componentids`.
+- `Lifespan` under a subpackage `features.componentids`.
+- The corresponding database table and how it hooks into the actions, i.e. `UserInteractor#acceptComponmentIdGenerator` and the like.
+- the unit testing setup around discord mocking: the `JdaTester` class and the files next to it (.e.g the `jda.payloads` package)
+
+NOTE: _These aspects are not meant to be modified by contributors, but they are important to understand how the bot works._
 
 ## Coding Style
+
+This section outlines the coding style and conventions to follow when contributing to the project. Adhering to these guidelines ensures consistency and readability across the codebase.
+
+Know that the organization uses [Sonar](https://sonarcloud.io/project/overview?id=Together-Java_TJ-Bot) and Spotless to enforce coding style and formatting rules. 
+
+Try to use the [Together-Java Sonar's Quality Profile](https://sonarcloud.io/organizations/togetherjava/quality_profiles) when you write code or help with completions.
+
+In addition, the following conventions should be followed:
 - Use meaningful variable and method names.
 - Use `@Override` annotation for overridden methods.
-- Use `final` for fields and classes.
-- Use `this` keyword to refer to the current instance of a class.
+- Use `final` for fields and classes whenever is better.
+- Enforce using `this` keyword to refer to the current instance of a class.
 - No magic numbers or strings; use constants instead.
 - No unnecessary comments; code should be self-explanatory.
 - Use Javadoc for public classes and methods.
@@ -177,13 +220,3 @@ public static Collection<Feature> createFeatures(JDA jda, Database database, Con
     features.add(new FooCommand(database, config));
 }
 ```
-
-## Database
-
-## Error Handling
-
-## Logging
-
-## Testing
-
-## Documentation
