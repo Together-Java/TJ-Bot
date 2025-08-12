@@ -1,0 +1,23 @@
+name: Wiki Sync
+
+on:
+  push:
+    branches:
+      - 'develop'
+    paths:
+      - wiki/**
+      - .github/workflows/wiki-sync.yaml
+
+concurrency:
+  group: sync-wiki
+  cancel-in-progress: true
+  
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Andrew-Chen-Wang/github-wiki-action@v5.0.1
