@@ -102,11 +102,9 @@ public interface Routine extends Feature {
          */
         public static Schedule atFixedRateFromNextFixedTime(int periodStartHour, int periodHours) {
             // NOTE This scheduler could be improved, for example supporting arbitrary periods (not
-            // just
-            // hour-based). Also, it probably does not correctly handle all date/time-quirks, for
-            // example if a schedule would hit a time that does not exist for a specific date due to
-            // DST
-            // or similar issues. Those are minor though and can be ignored for now.
+            // just hour-based). Also, it probably does not correctly handle all date/time-quirks,
+            // for example if a schedule would hit a time that does not exist for a specific date
+            // due to DST or similar issues. Those are minor though and can be ignored for now.
             if (periodStartHour < 0 || periodStartHour >= HOURS_OF_DAY) {
                 throw new IllegalArgumentException(
                         "Schedule period start hour must be a valid hour of a day (0-23)");
