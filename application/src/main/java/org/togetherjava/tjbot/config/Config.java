@@ -48,6 +48,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final String topHelperAssignmentChannelPattern;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -100,7 +101,9 @@ public final class Config {
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern) {
+                    required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "topHelperAssignmentChannelPattern",
+                    required = true) String topHelperAssignmentChannelPattern) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -135,6 +138,8 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.topHelperAssignmentChannelPattern =
+                Objects.requireNonNull(topHelperAssignmentChannelPattern);
     }
 
     /**
@@ -444,5 +449,15 @@ public final class Config {
      */
     public RSSFeedsConfig getRSSFeedsConfig() {
         return rssFeedsConfig;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel where Top Helper Assignments are
+     * automatically executed.
+     *
+     * @return the channel name pattern
+     */
+    public String getTopHelperAssignmentChannelPattern() {
+        return topHelperAssignmentChannelPattern;
     }
 }
