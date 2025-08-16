@@ -3,10 +3,14 @@ package org.togetherjava.tjbot.features.tophelper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -15,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.TopHelpersConfig;
 import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
@@ -27,9 +32,12 @@ import java.time.Instant;
 import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -40,17 +48,22 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
     private static final Logger logger = LoggerFactory.getLogger(TopHelpersAssignmentRoutine.class);
     private static final int CHECK_AT_HOUR = 12;
 
-    private final Config config;
+    private final TopHelpersConfig config;
     private final TopHelpersService service;
+    private final Predicate<String> roleNamePredicate;
     private final Predicate<String> assignmentChannelNamePredicate;
+    private final Predicate<String> announcementChannelNamePredicate;
     private final ComponentIdInteractor componentIdInteractor;
 
     public TopHelpersAssignmentRoutine(Config config, TopHelpersService service) {
-        this.config = config;
+        this.config = config.getTopHelpers();
         this.service = service;
 
+        roleNamePredicate = Pattern.compile(this.config.getRolePattern()).asMatchPredicate();
         assignmentChannelNamePredicate =
-                Pattern.compile(config.getTopHelperAssignmentChannelPattern()).asMatchPredicate();
+                Pattern.compile(this.config.getAssignmentChannelPattern()).asMatchPredicate();
+        announcementChannelNamePredicate =
+                Pattern.compile(this.config.getAnnouncementChannelPattern()).asMatchPredicate();
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
     }
@@ -93,7 +106,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
         assignmentChannel.ifPresentOrElse(this::startDialogIn, () -> logger.warn(
                 "Unable to assign Top Helpers, did not find an assignment channel matching the configured pattern '{}' for guild '{}'",
-                config.getTopHelperAssignmentChannelPattern(), guild.getName()));
+                config.getAssignmentChannelPattern(), guild.getName()));
     }
 
     private void startDialogIn(TextChannel channel) {
@@ -134,7 +147,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
                 service.asAsciiTable(topHelpers, members, false));
 
         StringSelectMenu.Builder menu =
-                StringSelectMenu.create(componentIdInteractor.generateComponentId("foo"))
+                StringSelectMenu.create(componentIdInteractor.generateComponentId())
                     .setPlaceholder("Select the Top Helpers")
                     .setMinValues(1)
                     .setMaxValues(topHelpers.size());
@@ -148,8 +161,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
         MessageCreateData message = new MessageCreateBuilder().setContent(content)
             .addActionRow(menu.build())
-            .addActionRow(
-                    Button.danger(componentIdInteractor.generateComponentId("cancel"), "Cancel"))
+            .addActionRow(Button.danger(componentIdInteractor.generateComponentId(), "Cancel"))
             .build();
 
         channel.sendMessage(message).queue();
@@ -168,13 +180,87 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        // TODO Implement
-        logger.error("TODO Button clicked: {}", args);
+        ButtonStyle buttonStyle = event.getButton().getStyle();
+        if (buttonStyle == ButtonStyle.DANGER) {
+            endFlow(event);
+            return;
+        }
+
+        // TODO Positive case (send generic message to hall of fame)
+        logger.error("TODO Positive case (send generic message to hall of fame)");
     }
 
     @Override
     public void onStringSelectSelection(StringSelectInteractionEvent event, List<String> args) {
-        // TODO Implement
-        logger.error("TODO Menu used: {}", args);
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        Set<Long> selectedTopHelperIds = event.getSelectedOptions()
+            .stream()
+            .map(SelectOption::getValue)
+            .map(Long::parseLong)
+            .collect(Collectors.toSet());
+
+        Optional<Role> topHelperRole = guild.getRoles()
+            .stream()
+            .filter(role -> roleNamePredicate.test(role.getName()))
+            .findAny();
+        if (topHelperRole.isEmpty()) {
+            logger.warn(
+                    "Unable to assign Top Helpers, did not find a role matching the configured pattern '{}' for guild '{}'",
+                    config.getRolePattern(), guild.getName());
+            event.reply("Wanted to assign Top Helpers, but something went wrong.").queue();
+            return;
+        }
+
+        event.deferEdit().queue();
+        // TODO Error case potentially needs to disable actions
+        guild.findMembersWithRoles(List.of(topHelperRole.orElseThrow()))
+            .onSuccess(currentTopHelpers -> manageTopHelperRole(currentTopHelpers,
+                    selectedTopHelperIds, event, topHelperRole.orElseThrow()))
+            .onError(error -> handleError(error, event.getChannel().asTextChannel()));
+    }
+
+    private void manageTopHelperRole(Collection<? extends Member> currentTopHelpers,
+            Set<Long> selectedTopHelperIds, StringSelectInteractionEvent event,
+            Role topHelperRole) {
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        Set<Long> currentTopHelperIds =
+                currentTopHelpers.stream().map(Member::getIdLong).collect(Collectors.toSet());
+
+        Set<Long> usersToRemoveRoleFrom = new HashSet<>(currentTopHelperIds);
+        usersToRemoveRoleFrom.removeAll(selectedTopHelperIds);
+
+        Set<Long> usersToAddRoleTo = new HashSet<>(selectedTopHelperIds);
+        usersToAddRoleTo.removeAll(currentTopHelperIds);
+
+        for (long userToRemoveRoleFrom : usersToRemoveRoleFrom) {
+            guild.removeRoleFromMember(UserSnowflake.fromId(userToRemoveRoleFrom), topHelperRole)
+                .queue();
+        }
+        for (long userToAddRoleTo : usersToAddRoleTo) {
+            guild.addRoleToMember(UserSnowflake.fromId(userToAddRoleTo), topHelperRole).queue();
+        }
+
+        reportRoleManageSuccess(event);
+    }
+
+    private void reportRoleManageSuccess(StringSelectInteractionEvent event) {
+        String topHelperList = event.getSelectedOptions()
+            .stream()
+            .map(SelectOption::getLabel)
+            .map(label -> "* " + label)
+            .collect(Collectors.joining("\n"));
+
+        String content = event.getMessage().getContentRaw() + "\nSelected Top Helpers:\n"
+                + topHelperList + "\nShould I send a generic announcement?";
+        event.getHook()
+            .editOriginal(content)
+            .setActionRow(Button.success(componentIdInteractor.generateComponentId(), "Yes"),
+                    Button.danger(componentIdInteractor.generateComponentId(), "No"))
+            .queue();
+    }
+
+    private void endFlow(ComponentInteraction event) {
+        String content = event.getMessage().getContentRaw() + "\nOkay, done. See you next time 👋";
+        event.editMessage(content).setComponents().queue();
     }
 }

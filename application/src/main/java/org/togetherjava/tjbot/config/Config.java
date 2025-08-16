@@ -48,7 +48,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
-    private final String topHelperAssignmentChannelPattern;
+    private final TopHelpersConfig topHelpers;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -102,8 +102,7 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "topHelperAssignmentChannelPattern",
-                    required = true) String topHelperAssignmentChannelPattern) {
+            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -138,8 +137,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
-        this.topHelperAssignmentChannelPattern =
-                Objects.requireNonNull(topHelperAssignmentChannelPattern);
+        this.topHelpers = Objects.requireNonNull(topHelpers);
     }
 
     /**
@@ -452,12 +450,11 @@ public final class Config {
     }
 
     /**
-     * Gets the REGEX pattern used to identify the channel where Top Helper Assignments are
-     * automatically executed.
+     * Gets the config for the Top Helpers system.
      *
-     * @return the channel name pattern
+     * @return the configuration
      */
-    public String getTopHelperAssignmentChannelPattern() {
-        return topHelperAssignmentChannelPattern;
+    public TopHelpersConfig getTopHelpers() {
+        return topHelpers;
     }
 }
