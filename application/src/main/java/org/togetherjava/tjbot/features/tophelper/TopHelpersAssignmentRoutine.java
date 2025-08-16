@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -29,9 +28,9 @@ import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import javax.annotation.Nullable;
 
 import java.time.Instant;
-import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -42,11 +41,15 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // TODO Javadoc everywhere
 public final class TopHelpersAssignmentRoutine implements Routine, UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(TopHelpersAssignmentRoutine.class);
     private static final int CHECK_AT_HOUR = 12;
+    private static final String CANCEL_BUTTON_NAME = "cancel";
+    private static final String YES_MESSAGE_BUTTON_NAME = "yes-message";
+    private static final String NO_MESSAGE_BUTTON_NAME = "no-message";
 
     private final TopHelpersConfig config;
     private final TopHelpersService service;
@@ -112,9 +115,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
     private void startDialogIn(TextChannel channel) {
         Guild guild = channel.getGuild();
 
-        Month previousMonth = Instant.now().atZone(ZoneOffset.UTC).minusMonths(1).getMonth();
-        TopHelpersService.TimeRange timeRange =
-                TopHelpersService.TimeRange.fromMonth(previousMonth);
+        TopHelpersService.TimeRange timeRange = TopHelpersService.TimeRange.ofPreviousMonth();
         List<TopHelpersService.TopHelperResult> topHelpers = service
             .computeTopHelpersDescending(guild.getIdLong(), timeRange.start(), timeRange.end());
 
@@ -127,13 +128,12 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         }
 
         service.retrieveTopHelperMembers(topHelpers, guild)
-            .onError(error -> handleError(error, channel))
-            .onSuccess(members -> sendSelectionMenu(topHelpers, members, timeRange, channel));
-    }
-
-    private static void handleError(Throwable error, TextChannel channel) {
-        logger.warn("Failed to compute top-helpers for automatic assignment", error);
-        channel.sendMessage("Wanted to assign Top Helpers, but something went wrong.").queue();
+            .onSuccess(members -> sendSelectionMenu(topHelpers, members, timeRange, channel))
+            .onError(error -> {
+                logger.warn("Failed to compute top-helpers for automatic assignment", error);
+                channel.sendMessage("Wanted to assign Top Helpers, but something went wrong.")
+                    .queue();
+            });
     }
 
     private void sendSelectionMenu(Collection<TopHelpersService.TopHelperResult> topHelpers,
@@ -161,7 +161,8 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
         MessageCreateData message = new MessageCreateBuilder().setContent(content)
             .addActionRow(menu.build())
-            .addActionRow(Button.danger(componentIdInteractor.generateComponentId(), "Cancel"))
+            .addActionRow(Button
+                .danger(componentIdInteractor.generateComponentId(CANCEL_BUTTON_NAME), "Cancel"))
             .build();
 
         channel.sendMessage(message).queue();
@@ -180,14 +181,15 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        ButtonStyle buttonStyle = event.getButton().getStyle();
-        if (buttonStyle == ButtonStyle.DANGER) {
-            endFlow(event);
-            return;
-        }
+        event.deferEdit().queue();
+        String name = args.getFirst();
 
-        // TODO Positive case (send generic message to hall of fame)
-        logger.error("TODO Positive case (send generic message to hall of fame)");
+        switch (name) {
+            case CANCEL_BUTTON_NAME -> endFlow(event, "cancelled");
+            case NO_MESSAGE_BUTTON_NAME -> endFlow(event, "not posting an announcement");
+            case YES_MESSAGE_BUTTON_NAME -> prepareAnnouncement(event, args);
+            default -> throw new AssertionError("Unknown button name: " + name);
+        }
     }
 
     @Override
@@ -212,11 +214,17 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         }
 
         event.deferEdit().queue();
-        // TODO Error case potentially needs to disable actions
         guild.findMembersWithRoles(List.of(topHelperRole.orElseThrow()))
             .onSuccess(currentTopHelpers -> manageTopHelperRole(currentTopHelpers,
                     selectedTopHelperIds, event, topHelperRole.orElseThrow()))
-            .onError(error -> handleError(error, event.getChannel().asTextChannel()));
+            .onError(error -> {
+                logger.warn("Failed to find existing top-helpers for automatic assignment", error);
+                event.getHook()
+                    .editOriginal(event.getMessage()
+                            + "\n❌ Sorry, something went wrong trying to find existing top-helpers.")
+                    .setComponents()
+                    .queue();
+            });
     }
 
     private void manageTopHelperRole(Collection<? extends Member> currentTopHelpers,
@@ -250,17 +258,75 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             .map(label -> "* " + label)
             .collect(Collectors.joining("\n"));
 
+        Stream<String> topHelperIds =
+                event.getSelectedOptions().stream().map(SelectOption::getValue);
+        String[] successButtonArgs = Stream.concat(Stream.of(YES_MESSAGE_BUTTON_NAME), topHelperIds)
+            .toArray(String[]::new);
+
         String content = event.getMessage().getContentRaw() + "\nSelected Top Helpers:\n"
                 + topHelperList + "\nShould I send a generic announcement?";
         event.getHook()
             .editOriginal(content)
-            .setActionRow(Button.success(componentIdInteractor.generateComponentId(), "Yes"),
-                    Button.danger(componentIdInteractor.generateComponentId(), "No"))
+            .setActionRow(
+                    Button.success(componentIdInteractor.generateComponentId(successButtonArgs),
+                            "Yes"),
+                    Button.danger(componentIdInteractor.generateComponentId(NO_MESSAGE_BUTTON_NAME),
+                            "No"))
             .queue();
     }
 
-    private void endFlow(ComponentInteraction event) {
-        String content = event.getMessage().getContentRaw() + "\nOkay, done. See you next time 👋";
-        event.editMessage(content).setComponents().queue();
+    private void prepareAnnouncement(ButtonInteractionEvent event, List<String> args) {
+        List<Long> topHelperIds = args.stream().skip(1).map(Long::parseLong).toList();
+
+        event.getGuild()
+            .retrieveMembersByIds(topHelperIds)
+            .onSuccess(topHelpers -> postAnnouncement(event, topHelpers))
+            .onError(error -> {
+                logger.warn("Failed to retrieve top-helper data for automatic assignment", error);
+                event.getHook()
+                    .editOriginal(event.getMessage()
+                            + "\n❌ Sorry, something went wrong trying to retrieve top-helper data.")
+                    .setComponents()
+                    .queue();
+            });
+    }
+
+    private void postAnnouncement(ButtonInteractionEvent event, List<? extends Member> topHelpers) {
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        Optional<TextChannel> announcementChannel = guild.getTextChannelCache()
+            .stream()
+            .filter(channel -> announcementChannelNamePredicate.test(channel.getName()))
+            .findAny();
+
+        if (announcementChannel.isEmpty()) {
+            logger.warn(
+                    "Unable to send a Top Helper announcement, did not find an announcement channel matching the configured pattern '{}' for guild '{}'",
+                    config.getAnnouncementChannelPattern(), guild.getName());
+            event.getHook()
+                .editOriginal(event.getMessage()
+                        + "\n❌ Sorry, something went wrong trying to post the announcement.")
+                .setComponents()
+                .queue();
+            return;
+        }
+
+        Collections.shuffle(topHelpers); // for fairness
+        String topHelperList = topHelpers.stream()
+            .map(Member::getAsMention)
+            .map(mention -> "* " + mention)
+            .collect(Collectors.joining("\n"));
+        TopHelpersService.TimeRange timeRange = TopHelpersService.TimeRange.ofPreviousMonth();
+        String announcement = "Thanks to the Top Helpers of %s 🎉%n%s"
+            .formatted(timeRange.description(), topHelperList);
+
+        announcementChannel.orElseThrow().sendMessage(announcement).queue();
+
+        endFlow(event, "posted an announcement");
+    }
+
+    private void endFlow(ComponentInteraction event, String message) {
+        String content = event.getMessage().getContentRaw() + "\n✅ Okay, " + message
+                + ". See you next time 👋";
+        event.getHook().editOriginal(content).setComponents().queue();
     }
 }

@@ -136,7 +136,12 @@ public final class TopHelpersService {
     }
 
     public record TimeRange(Instant start, Instant end, String description) {
-        public static TimeRange fromMonth(Month atMonth) {
+        public static TimeRange ofPreviousMonth() {
+            Month previousMonth = Instant.now().atZone(ZoneOffset.UTC).minusMonths(1).getMonth();
+            return TimeRange.ofMonth(previousMonth);
+        }
+
+        public static TimeRange ofMonth(Month atMonth) {
             ZonedDateTime now = Instant.now().atZone(ZoneOffset.UTC);
 
             int atYear = now.getYear();

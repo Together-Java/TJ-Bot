@@ -82,7 +82,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         OptionMapping atMonthData = event.getOption(MONTH_OPTION);
 
         TopHelpersService.TimeRange timeRange =
-                TopHelpersService.TimeRange.fromMonth(computeMonth(atMonthData));
+                TopHelpersService.TimeRange.ofMonth(computeMonth(atMonthData));
         List<TopHelpersService.TopHelperResult> topHelpers = service.computeTopHelpersDescending(
                 event.getGuild().getIdLong(), timeRange.start(), timeRange.end());
 
