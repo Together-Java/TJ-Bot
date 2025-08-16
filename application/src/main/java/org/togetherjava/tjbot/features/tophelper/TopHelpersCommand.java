@@ -1,9 +1,5 @@
 package org.togetherjava.tjbot.features.tophelper;
 
-import com.github.freva.asciitable.AsciiTable;
-import com.github.freva.asciitable.Column;
-import com.github.freva.asciitable.ColumnData;
-import com.github.freva.asciitable.HorizontalAlign;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
@@ -16,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
-import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
@@ -28,12 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Command that displays the top helpers of a given time range.
@@ -47,8 +37,6 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
     private static final String SUBCOMMAND_SHOW_NAME = "show";
     private static final String SUBCOMMAND_ASSIGN_NAME = "assign";
     private static final String MONTH_OPTION = "at-month";
-
-    private static final int MAX_USER_NAME_LIMIT = 15;
 
     private final TopHelpersService service;
     private final TopHelpersAssignmentRoutine assignmentRoutine;
@@ -107,10 +95,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         }
         event.deferReply().queue();
 
-        List<Long> topHelperIds =
-                topHelpers.stream().map(TopHelpersService.TopHelperResult::authorId).toList();
-        event.getGuild()
-            .retrieveMembersByIds(topHelperIds)
+        service.retrieveTopHelperMembers(topHelpers, event.getGuild())
             .onError(error -> handleError(error, event))
             .onSuccess(members -> handleTopHelpers(topHelpers, members, timeRange, event));
     }
@@ -136,59 +121,15 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         event.getHook().editOriginal("Sorry, something went wrong.").queue();
     }
 
-    private static void handleTopHelpers(Collection<TopHelpersService.TopHelperResult> topHelpers,
+    private void handleTopHelpers(Collection<TopHelpersService.TopHelperResult> topHelpers,
             Collection<? extends Member> members, TopHelpersService.TimeRange timeRange,
             IDeferrableCallback event) {
-        Map<Long, Member> userIdToMember =
-                members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
-
-        List<List<String>> topHelpersDataTable = topHelpers.stream()
-            .map(topHelper -> topHelperToDataRow(topHelper,
-                    userIdToMember.get(topHelper.authorId())))
-            .toList();
-
         String message = """
                 ```java
                 // for %s
                 %s
-                ```""".formatted(timeRange.description(), dataTableToString(topHelpersDataTable));
-
+                ```""".formatted(timeRange.description(),
+                service.asAsciiTable(topHelpers, members, true));
         event.getHook().editOriginal(message).queue();
-    }
-
-    private static List<String> topHelperToDataRow(TopHelpersService.TopHelperResult topHelper,
-            @Nullable Member member) {
-        String id = Long.toString(topHelper.authorId());
-        String name = MessageUtils.abbreviate(
-                member == null ? "UNKNOWN_USER" : member.getEffectiveName(), MAX_USER_NAME_LIMIT);
-        String messageLengths = Long.toString(topHelper.messageLengths().longValue());
-
-        return List.of(id, name, messageLengths);
-    }
-
-    private static String dataTableToString(Collection<List<String>> dataTable) {
-        return dataTableToAsciiTable(dataTable,
-                List.of(new ColumnSetting("Id", HorizontalAlign.RIGHT),
-                        new ColumnSetting("Name", HorizontalAlign.RIGHT),
-                        new ColumnSetting("Message lengths", HorizontalAlign.RIGHT)));
-    }
-
-    private static String dataTableToAsciiTable(Collection<List<String>> dataTable,
-            List<ColumnSetting> columnSettings) {
-        IntFunction<String> headerToAlignment = i -> columnSettings.get(i).headerName();
-        IntFunction<HorizontalAlign> indexToAlignment = i -> columnSettings.get(i).alignment();
-
-        IntFunction<ColumnData<List<String>>> indexToColumn =
-                i -> new Column().header(headerToAlignment.apply(i))
-                    .dataAlign(indexToAlignment.apply(i))
-                    .with(row -> row.get(i));
-
-        List<ColumnData<List<String>>> columns =
-                IntStream.range(0, columnSettings.size()).mapToObj(indexToColumn).toList();
-
-        return AsciiTable.getTable(AsciiTable.BASIC_ASCII_NO_DATA_SEPARATORS, dataTable, columns);
-    }
-
-    private record ColumnSetting(String headerName, HorizontalAlign alignment) {
     }
 }
