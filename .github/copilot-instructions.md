@@ -81,11 +81,11 @@ A **multi-module** Gradle project composed of 5 modules:
 The repository has other directories that are not modules:
 
 - `.devcontainer` and `.vscode` directories are about giving support to coding on [GitHub's Codespaces](https://github.com/features/codespaces). The `.vscode` can also be used to support developers on [VS Code](https://code.visualstudio.com/) IDE. A local setup does not require running the project from a container like Docker or the use of a specific IDE.
-- `.github` directory contains configuration files for GitHub Actions, Dependabot, and other GitHub features.
-- `.gradle` directory contains the Gradle wrapper files, allowing the project to be built with a specific version of Gradle without requiring users to install it manually, ignore it.
-- `meta` directory contains 3 [draw.io](https://www.drawio.com/) diagram files about the project, and a `google-style-eclipse.xml` file used in Spotless configuration.
-- `scripts` directory contains only one file which is a git pre-commit hook that runs Spotless to format the code before committing.
-- `wiki` directory contains the project's wiki pages, which are used to document the project and its features. The wiki is an important reference to understanding core logic and coding style.
+- `.github` directory holds configuration files for GitHub Actions, Dependabot, and other GitHub features.
+- `.gradle` directory holds Gradle wrapper files, allowing the project to be built with a specific version of Gradle.
+- `meta` directory holds source files of diagrams or code formatting configurations.
+- `scripts` directory holds git hooks (e,g: precommit, prepush, etc.),  and any other utility scripts.
+- `wiki` directory holds the project's wiki pages. It's an important reference to understanding core logic and coding style.
 
 ## Coding Style
 
