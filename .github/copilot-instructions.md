@@ -98,7 +98,6 @@ Try to use the [Together-Java Sonar's Quality Profile](https://sonarcloud.io/org
 In addition, the following conventions should be followed:
 - Use meaningful class, method and variable names.
 - Use `final` for fields and classes as default. Only make them non-final when modification and extension becomes necessary. In which case it is important to document its interface and intended use with Javadoc.
-- Enforce using `this` keyword to refer to the current instance of a class.
 - It's generally preferred to use well named constants over magic values.
 - Prefer writing self-explanatory code, employ clean coding techniques. 
 - Introduce helper method when necessary before using a comment instead.
