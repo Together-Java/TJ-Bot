@@ -141,13 +141,13 @@ public final class TopHelpersService {
 
     /**
      * Retrieves the member-data to a given list of top helpers.
-     * <p>
-     * The resulting list is in the same order as the given list and will contain {@code null} for
-     * any Top Helper who is not member of the guild anymore.
      *
      * @param topHelpers the list of top helpers to retrieve member-data for
      * @param guild the guild the top helpers are members of
-     * @return list of member-data for each top helper, same size and same order.
+     * @return list of member-data for each top helper. If a Top helper is not member of the guild
+     *         anymore, it will not be contained in the list of members. Also, the order is not
+     *         given and in particular does not have to line up with the original order of Top
+     *         Helpers.
      */
     public static Task<List<Member>> retrieveTopHelperMembers(List<TopHelperStats> topHelpers,
             Guild guild) {
@@ -160,8 +160,8 @@ public final class TopHelpersService {
      * Name and Message lengths.
      *
      * @param topHelpers the list of top helpers to represent
-     * @param members the list of member-data that lines up with the topHelpers, for example given
-     *        by {@link #retrieveTopHelperMembers(List, Guild)}
+     * @param members the list of available member-data, for example given by
+     *        {@link #retrieveTopHelperMembers(List, Guild)}
      * @return ASCII table representing the Top Helpers
      */
     public static String asAsciiTableWithIds(Collection<TopHelperStats> topHelpers,
@@ -174,8 +174,8 @@ public final class TopHelpersService {
      * Name and Message lengths.
      *
      * @param topHelpers the list of top helpers to represent
-     * @param members the list of member-data that lines up with the topHelpers, for example given
-     *        by {@link #retrieveTopHelperMembers(List, Guild)}
+     * @param members the list of available member-data, for example given by
+     *        {@link #retrieveTopHelperMembers(List, Guild)}
      * @return ASCII table representing the Top Helpers
      */
     public static String asAsciiTable(Collection<TopHelperStats> topHelpers,
