@@ -80,7 +80,7 @@ dependencies {
     implementation 'org.apache.commons:commons-text:1.14.0'
     implementation 'com.apptasticsoftware:rssreader:3.10.0'
 
-    testImplementation 'org.mockito:mockito-core:5.18.0'
+    testImplementation 'org.mockito:mockito-core:5.19.0'
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
