@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.UserSnowflake;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
@@ -43,7 +44,18 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-// TODO Javadoc everywhere
+/**
+ * Semi-automatic routine for assigning and announcing Top Helpers of the month.
+ * <p>
+ * The routine triggers once on the 1st of each month, but can also be started manually by calling
+ * {@link #startDialogFor(Guild)}.
+ * <p>
+ * The routine starts a dialog in a configured channel, proposing a list of Top Helpers. A user can
+ * now choose from a list who to reward with the Top Helper role. These users are now assigned the
+ * configured Top Helper role, while users who had the role in the past have it removed from them.
+ * Afterward, one can select from the dialog whether a generic announcement that thanks the selected
+ * Top Helpers should be posted in a configured channel.
+ */
 public final class TopHelpersAssignmentRoutine implements Routine, UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(TopHelpersAssignmentRoutine.class);
     private static final int CHECK_AT_HOUR = 12;
@@ -58,6 +70,12 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
     private final Predicate<String> announcementChannelNamePredicate;
     private final ComponentIdInteractor componentIdInteractor;
 
+    /**
+     * Creates a new instance.
+     * 
+     * @param config the config to use
+     * @param service the service to use to compute Top Helpers
+     */
     public TopHelpersAssignmentRoutine(Config config, TopHelpersService service) {
         this.config = config.getTopHelpers();
         this.service = service;
@@ -88,19 +106,30 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
     @Override
     public Schedule createSchedule() {
+        // Routine schedules are hour-based. Ensuring it only triggers once per a month is done
+        // inside the routine as early-check instead.
         return Schedule.atFixedHour(CHECK_AT_HOUR);
     }
 
     @Override
     public void runRoutine(JDA jda) {
-        int dayOfMonth = Instant.now().atOffset(ZoneOffset.UTC).getDayOfMonth();
-        if (dayOfMonth != 1) {
+        if (!isFirstDayOfMonth()) {
             return;
         }
 
         jda.getGuilds().forEach(this::startDialogFor);
     }
 
+    private static boolean isFirstDayOfMonth() {
+        return Instant.now().atOffset(ZoneOffset.UTC).getDayOfMonth() == 1;
+    }
+
+    /**
+     * Starts a dialog for semi-automatic Top Helper assignment and announcement. See
+     * {@link TopHelpersAssignmentRoutine} for details.
+     *
+     * @param guild to start the dialog and compute Top Helpers for
+     */
     public void startDialogFor(Guild guild) {
         Optional<TextChannel> assignmentChannel = guild.getTextChannelCache()
             .stream()
@@ -116,8 +145,8 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         Guild guild = channel.getGuild();
 
         TopHelpersService.TimeRange timeRange = TopHelpersService.TimeRange.ofPreviousMonth();
-        List<TopHelpersService.TopHelperResult> topHelpers = service
-            .computeTopHelpersDescending(guild.getIdLong(), timeRange.start(), timeRange.end());
+        List<TopHelpersService.TopHelperStats> topHelpers =
+                service.computeTopHelpersDescending(guild, timeRange);
 
         if (topHelpers.isEmpty()) {
             channel.sendMessage(
@@ -127,24 +156,21 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             return;
         }
 
-        service.retrieveTopHelperMembers(topHelpers, guild)
-            .onSuccess(members -> sendSelectionMenu(topHelpers, members, timeRange, channel))
-            .onError(error -> {
-                logger.warn("Failed to compute top-helpers for automatic assignment", error);
-                channel.sendMessage("Wanted to assign Top Helpers, but something went wrong.")
-                    .queue();
-            });
+        TopHelpersService.retrieveTopHelperMembers(topHelpers, guild).onError(error -> {
+            logger.warn("Failed to compute top-helpers for automatic assignment", error);
+            channel.sendMessage("Wanted to assign Top Helpers, but something went wrong.").queue();
+        }).onSuccess(members -> sendSelectionMenu(topHelpers, members, timeRange, channel));
     }
 
-    private void sendSelectionMenu(Collection<TopHelpersService.TopHelperResult> topHelpers,
+    private void sendSelectionMenu(Collection<TopHelpersService.TopHelperStats> topHelpers,
             Collection<? extends Member> members, TopHelpersService.TimeRange timeRange,
-            TextChannel channel) {
+            MessageChannel channel) {
         String content = """
                 Starting assignment of Top Helpers for %s:
                 ```java
                 %s
                 ```""".formatted(timeRange.description(),
-                service.asAsciiTable(topHelpers, members, false));
+                TopHelpersService.asAsciiTable(topHelpers, members));
 
         StringSelectMenu.Builder menu =
                 StringSelectMenu.create(componentIdInteractor.generateComponentId())
@@ -168,7 +194,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         channel.sendMessage(message).queue();
     }
 
-    private static SelectOption topHelperToSelectOption(TopHelpersService.TopHelperResult topHelper,
+    private static SelectOption topHelperToSelectOption(TopHelpersService.TopHelperStats topHelper,
             @Nullable Member member) {
         String id = Long.toString(topHelper.authorId());
 
@@ -177,19 +203,6 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         String label = messageLengths + " - " + name;
 
         return SelectOption.of(label, id);
-    }
-
-    @Override
-    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        event.deferEdit().queue();
-        String name = args.getFirst();
-
-        switch (name) {
-            case CANCEL_BUTTON_NAME -> endFlow(event, "cancelled");
-            case NO_MESSAGE_BUTTON_NAME -> endFlow(event, "not posting an announcement");
-            case YES_MESSAGE_BUTTON_NAME -> prepareAnnouncement(event, args);
-            default -> throw new AssertionError("Unknown button name: " + name);
-        }
     }
 
     @Override
@@ -214,17 +227,16 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         }
 
         event.deferEdit().queue();
-        guild.findMembersWithRoles(List.of(topHelperRole.orElseThrow()))
+        guild.findMembersWithRoles(List.of(topHelperRole.orElseThrow())).onError(error -> {
+            logger.warn("Failed to find existing top-helpers for automatic assignment", error);
+            event.getHook()
+                .editOriginal(event.getMessage()
+                        + "\n❌ Sorry, something went wrong trying to find existing top-helpers.")
+                .setComponents()
+                .queue();
+        })
             .onSuccess(currentTopHelpers -> manageTopHelperRole(currentTopHelpers,
-                    selectedTopHelperIds, event, topHelperRole.orElseThrow()))
-            .onError(error -> {
-                logger.warn("Failed to find existing top-helpers for automatic assignment", error);
-                event.getHook()
-                    .editOriginal(event.getMessage()
-                            + "\n❌ Sorry, something went wrong trying to find existing top-helpers.")
-                    .setComponents()
-                    .queue();
-            });
+                    selectedTopHelperIds, event, topHelperRole.orElseThrow()));
     }
 
     private void manageTopHelperRole(Collection<? extends Member> currentTopHelpers,
@@ -275,20 +287,30 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             .queue();
     }
 
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        event.deferEdit().queue();
+        String name = args.getFirst();
+
+        switch (name) {
+            case YES_MESSAGE_BUTTON_NAME -> prepareAnnouncement(event, args);
+            case NO_MESSAGE_BUTTON_NAME -> reportFlowFinished(event, "not posting an announcement");
+            case CANCEL_BUTTON_NAME -> reportFlowFinished(event, "cancelled");
+            default -> throw new AssertionError("Unknown button name: " + name);
+        }
+    }
+
     private void prepareAnnouncement(ButtonInteractionEvent event, List<String> args) {
         List<Long> topHelperIds = args.stream().skip(1).map(Long::parseLong).toList();
 
-        event.getGuild()
-            .retrieveMembersByIds(topHelperIds)
-            .onSuccess(topHelpers -> postAnnouncement(event, topHelpers))
-            .onError(error -> {
-                logger.warn("Failed to retrieve top-helper data for automatic assignment", error);
-                event.getHook()
-                    .editOriginal(event.getMessage()
-                            + "\n❌ Sorry, something went wrong trying to retrieve top-helper data.")
-                    .setComponents()
-                    .queue();
-            });
+        event.getGuild().retrieveMembersByIds(topHelperIds).onError(error -> {
+            logger.warn("Failed to retrieve top-helper data for automatic assignment", error);
+            event.getHook()
+                .editOriginal(event.getMessage()
+                        + "\n❌ Sorry, something went wrong trying to retrieve top-helper data.")
+                .setComponents()
+                .queue();
+        }).onSuccess(topHelpers -> postAnnouncement(event, topHelpers));
     }
 
     private void postAnnouncement(ButtonInteractionEvent event, List<? extends Member> topHelpers) {
@@ -310,7 +332,9 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             return;
         }
 
-        Collections.shuffle(topHelpers); // for fairness
+        // For fairness Top Helpers in the announcement are ordered randomly
+        Collections.shuffle(topHelpers);
+
         String topHelperList = topHelpers.stream()
             .map(Member::getAsMention)
             .map(mention -> "* " + mention)
@@ -321,12 +345,12 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
         announcementChannel.orElseThrow().sendMessage(announcement).queue();
 
-        endFlow(event, "posted an announcement");
+        reportFlowFinished(event, "posted an announcement");
     }
 
-    private void endFlow(ComponentInteraction event, String message) {
-        String content = event.getMessage().getContentRaw() + "\n✅ Okay, " + message
-                + ". See you next time 👋";
+    private void reportFlowFinished(ComponentInteraction event, String phrase) {
+        String content = "%s%n✅ Okay, %s. See you next time 👋"
+            .formatted(event.getMessage().getContentRaw(), phrase);
         event.getHook().editOriginal(content).setComponents().queue();
     }
 }

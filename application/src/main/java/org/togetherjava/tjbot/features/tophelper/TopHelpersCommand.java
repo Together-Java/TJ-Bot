@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.tophelper;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
@@ -26,7 +27,8 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * Command that displays the top helpers of a given time range.
+ * Command that displays the top helpers of a given time range. Can also be used to start a
+ * semi-automatic flow to assign Top Helpers.
  * <p>
  * Top helpers are measured by their message length in help channels, as set by
  * {@link TopHelpersMessageListener}.
@@ -57,12 +59,12 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
             .forEach(month -> monthData.addChoice(
                     month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.US), month.name()));
 
-        getData().addSubcommands(
-                new SubcommandData(SUBCOMMAND_SHOW_NAME,
-                        "Lists top helpers for the last month, or a given month")
-                    .addOptions(monthData),
-                new SubcommandData(SUBCOMMAND_ASSIGN_NAME,
-                        "Automatically assigns top helpers for the last month"));
+        var showCommand = new SubcommandData(SUBCOMMAND_SHOW_NAME,
+                "Lists top helpers for the last month, or a given month")
+            .addOptions(monthData);
+        var assignCommand = new SubcommandData(SUBCOMMAND_ASSIGN_NAME,
+                "Automatically assigns top helpers for the last month");
+        getData().addSubcommands(showCommand, assignCommand);
 
         this.service = service;
         this.assignmentRoutine = assignmentRoutine;
@@ -80,11 +82,12 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
 
     private void showTopHelpers(SlashCommandInteractionEvent event) {
         OptionMapping atMonthData = event.getOption(MONTH_OPTION);
+        Guild guild = Objects.requireNonNull(event.getGuild());
 
         TopHelpersService.TimeRange timeRange =
-                TopHelpersService.TimeRange.ofMonth(computeMonth(atMonthData));
-        List<TopHelpersService.TopHelperResult> topHelpers = service.computeTopHelpersDescending(
-                event.getGuild().getIdLong(), timeRange.start(), timeRange.end());
+                TopHelpersService.TimeRange.ofPastMonth(computeMonth(atMonthData));
+        List<TopHelpersService.TopHelperStats> topHelpers =
+                service.computeTopHelpersDescending(guild, timeRange);
 
         if (topHelpers.isEmpty()) {
             event
@@ -95,7 +98,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         }
         event.deferReply().queue();
 
-        service.retrieveTopHelperMembers(topHelpers, event.getGuild())
+        TopHelpersService.retrieveTopHelperMembers(topHelpers, guild)
             .onError(error -> handleError(error, event))
             .onSuccess(members -> handleTopHelpers(topHelpers, members, timeRange, event));
     }
@@ -121,7 +124,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
         event.getHook().editOriginal("Sorry, something went wrong.").queue();
     }
 
-    private void handleTopHelpers(Collection<TopHelpersService.TopHelperResult> topHelpers,
+    private void handleTopHelpers(Collection<TopHelpersService.TopHelperStats> topHelpers,
             Collection<? extends Member> members, TopHelpersService.TimeRange timeRange,
             IDeferrableCallback event) {
         String message = """
@@ -129,7 +132,7 @@ public final class TopHelpersCommand extends SlashCommandAdapter {
                 // for %s
                 %s
                 ```""".formatted(timeRange.description(),
-                service.asAsciiTable(topHelpers, members, true));
+                TopHelpersService.asAsciiTableWithIds(topHelpers, members));
         event.getHook().editOriginal(message).queue();
     }
 }
