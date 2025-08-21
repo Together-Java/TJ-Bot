@@ -189,5 +189,8 @@
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
     },
-    "memberCountCategoryPattern": "Info"
+    "memberCountCategoryPattern": "Info",
+    "cakeDayConfig": {
+        "rolePattern": "Cake Day"
+    }
 }
