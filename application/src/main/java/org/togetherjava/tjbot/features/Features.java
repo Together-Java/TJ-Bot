@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
+import org.togetherjava.tjbot.features.basic.QuoteBoardForwarder;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.features.basic.SlashCommandEducator;
 import org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter;
@@ -154,6 +155,7 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
+        features.add(new QuoteBoardForwarder(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
