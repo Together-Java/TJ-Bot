@@ -288,9 +288,10 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         event.deferEdit().queue();
         String name = args.getFirst();
+        List<String> otherArgs = args.subList(1, args.size());
 
         switch (name) {
-            case YES_MESSAGE_BUTTON_NAME -> prepareAnnouncement(event, args);
+            case YES_MESSAGE_BUTTON_NAME -> prepareAnnouncement(event, otherArgs);
             case NO_MESSAGE_BUTTON_NAME -> reportFlowFinished(event, "not posting an announcement");
             case CANCEL_BUTTON_NAME -> reportFlowFinished(event, "cancelled");
             default -> throw new AssertionError("Unknown button name: " + name);
@@ -298,7 +299,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
     }
 
     private void prepareAnnouncement(ButtonInteractionEvent event, List<String> args) {
-        List<Long> topHelperIds = args.stream().skip(1).map(Long::parseLong).toList();
+        List<Long> topHelperIds = args.stream().map(Long::parseLong).toList();
 
         event.getGuild().retrieveMembersByIds(topHelperIds).onError(error -> {
             logger.warn("Failed to retrieve top-helper data for automatic assignment", error);
