@@ -166,8 +166,9 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             Collection<? extends Member> members, TopHelpersService.TimeRange timeRange,
             MessageChannel channel) {
         String content = """
-                Starting assignment of Top Helpers for %s:
+                Starting assignment of Top Helpers:
                 ```java
+                // %s
                 %s
                 ```""".formatted(timeRange.description(),
                 TopHelpersService.asAsciiTable(topHelpers, members));
