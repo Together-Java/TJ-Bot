@@ -192,7 +192,7 @@
     "memberCountCategoryPattern": "Info",
     "topHelpers": {
         "rolePattern": "Top Helper.*",
-        "assignmentChannelPattern": "commands",
+        "assignmentChannelPattern": "community-commands",
         "announcementChannelPattern": "hall-of-fame"
     }
 }
