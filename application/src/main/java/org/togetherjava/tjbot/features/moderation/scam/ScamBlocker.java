@@ -66,7 +66,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final ScamBlockerConfig.Mode mode;
     private final String reportChannelPattern;
     private final String botTrapChannelPattern;
-    private final Predicate<TextChannel> isReportChannel;
+    private final Predicate<String> isReportChannelName;
     private final Predicate<TextChannel> isBotTrapChannel;
     private final ScamDetector scamDetector;
     private final Config config;
@@ -92,9 +92,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         scamDetector = new ScamDetector(config);
 
         reportChannelPattern = config.getScamBlocker().getReportChannelPattern();
-        Predicate<String> isReportChannelName =
-                Pattern.compile(reportChannelPattern).asMatchPredicate();
-        isReportChannel = channel -> isReportChannelName.test(channel.getName());
+        isReportChannelName = Pattern.compile(reportChannelPattern).asMatchPredicate();
 
         botTrapChannelPattern = config.getScamBlocker().getBotTrapChannelPattern();
         Predicate<String> isBotTrapChannelName =
@@ -297,7 +295,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private Optional<TextChannel> getReportChannel(Guild guild) {
-        return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
+        return Guilds.findTextChannel(guild, isReportChannelName);
     }
 
     private List<Button> createConfirmDialog(MessageReceivedEvent event) {

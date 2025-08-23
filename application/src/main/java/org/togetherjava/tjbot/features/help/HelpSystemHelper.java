@@ -361,11 +361,7 @@ public final class HelpSystemHelper {
         Predicate<String> isChannelName = this::isHelpForumName;
         String channelPattern = getHelpForumPattern();
 
-        Optional<ForumChannel> maybeChannel = guild.getForumChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
-
+        Optional<ForumChannel> maybeChannel = Guilds.findForumChannel(guild, isChannelName);
         if (maybeChannel.isEmpty()) {
             consumeChannelPatternIfNotFound.accept(channelPattern);
         }

@@ -131,10 +131,8 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
      * @param guild to start the dialog and compute Top Helpers for
      */
     public void startDialogFor(Guild guild) {
-        Optional<TextChannel> assignmentChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> assignmentChannelNamePredicate.test(channel.getName()))
-            .findAny();
+        Optional<TextChannel> assignmentChannel =
+                Guilds.findTextChannel(guild, assignmentChannelNamePredicate);
 
         assignmentChannel.ifPresentOrElse(this::startDialogIn, () -> logger.warn(
                 "Unable to assign Top Helpers, did not find an assignment channel matching the configured pattern '{}' for guild '{}'",
@@ -313,10 +311,8 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
     private void postAnnouncement(ButtonInteractionEvent event, List<? extends Member> topHelpers) {
         Guild guild = Objects.requireNonNull(event.getGuild());
-        Optional<TextChannel> announcementChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> announcementChannelNamePredicate.test(channel.getName()))
-            .findAny();
+        Optional<TextChannel> announcementChannel =
+                Guilds.findTextChannel(guild, announcementChannelNamePredicate);
 
         if (announcementChannel.isEmpty()) {
             logger.warn(
