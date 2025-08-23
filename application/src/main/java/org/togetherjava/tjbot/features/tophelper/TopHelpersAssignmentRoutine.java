@@ -38,7 +38,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -179,8 +178,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
                     .setMinValues(1)
                     .setMaxValues(topHelpers.size());
 
-        Map<Long, Member> userIdToMember =
-                members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
+        Map<Long, Member> userIdToMember = TopHelpersService.mapUserIdToMember(members);
         topHelpers.stream()
             .map(topHelper -> topHelperToSelectOption(topHelper,
                     userIdToMember.get(topHelper.authorId())))

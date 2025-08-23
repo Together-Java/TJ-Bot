@@ -185,8 +185,7 @@ public final class TopHelpersService {
 
     private static String asAsciiTable(Collection<TopHelperStats> topHelpers,
             Collection<? extends Member> members, boolean includeIds) {
-        Map<Long, Member> userIdToMember =
-                members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
+        Map<Long, Member> userIdToMember = mapUserIdToMember(members);
 
         List<List<String>> topHelpersDataTable = topHelpers.stream()
             .map(topHelper -> topHelperToDataRow(topHelper,
@@ -194,6 +193,16 @@ public final class TopHelpersService {
             .toList();
 
         return dataTableToString(topHelpersDataTable, includeIds);
+    }
+
+    /**
+     * Given a list of members, maps them by their user ID.
+     * 
+     * @param members the members to map
+     * @return a map of user ID to corresponding member
+     */
+    public static Map<Long, Member> mapUserIdToMember(Collection<? extends Member> members) {
+        return members.stream().collect(Collectors.toMap(Member::getIdLong, Function.identity()));
     }
 
     /**
