@@ -25,6 +25,7 @@ import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.Guilds;
 
 import javax.annotation.Nullable;
 
@@ -213,10 +214,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             .map(Long::parseLong)
             .collect(Collectors.toSet());
 
-        Optional<Role> topHelperRole = guild.getRoles()
-            .stream()
-            .filter(role -> roleNamePredicate.test(role.getName()))
-            .findAny();
+        Optional<Role> topHelperRole = Guilds.findRole(guild, roleNamePredicate);
         if (topHelperRole.isEmpty()) {
             logger.warn(
                     "Unable to assign Top Helpers, did not find a role matching the configured pattern '{}' for guild '{}'",
