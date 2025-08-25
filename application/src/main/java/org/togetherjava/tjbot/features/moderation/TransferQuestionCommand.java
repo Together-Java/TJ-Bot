@@ -32,6 +32,7 @@ import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
+import org.togetherjava.tjbot.features.utils.ForumPoster;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.awt.Color;
@@ -233,7 +234,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         ForumTag tag = getTagOrDefault(questionsForum.getAvailableTagsByName(queryTag, true),
                 () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).getFirst());
 
-        return questionsForum.createForumPost(forumTitle, forumMessage)
+        return ForumPoster.using(event.getJDA())
+            .createPost(questionsForum, forumTitle, forumMessage)
             .setTags(ForumTagSnowflake.fromId(tag.getId()))
             .map(createdPost -> new ForumPostData(createdPost, originalUser));
     }
