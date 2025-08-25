@@ -22,14 +22,14 @@ public final class ForumPoster {
 
     private ForumChannel findForumChannel(String channelId) {
         return Optional.ofNullable(jda.getForumChannelById(channelId))
-            .orElseThrow(() -> new IllegalStateException(
+            .orElseThrow(() -> new IllegalArgumentException(
                     "Did not find a forum channel with ID %s while trying to create a forum post. Make sure the config is setup properly."));
     }
 
     private ThreadChannel findForumPost(String postId) {
         return Optional.ofNullable(jda.getThreadChannelById(postId))
-            .orElseThrow(() -> new IllegalStateException(
-                    "Did not find the forum post with ID %s while trying to reply to a post. Make sure the config is setup properly."));
+            .orElseThrow(() -> new IllegalArgumentException(
+                    "Did not find the forum post with ID %s while trying to reply to a post."));
 
     }
 
