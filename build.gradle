@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id "com.diffplug.spotless" version "7.2.0"
-    id "org.sonarqube" version "6.2.0.5505"
+    id "org.sonarqube" version "6.3.0.5676"
     id "name.remal.sonarlint" version "6.0.0"
 }
 repositories {
