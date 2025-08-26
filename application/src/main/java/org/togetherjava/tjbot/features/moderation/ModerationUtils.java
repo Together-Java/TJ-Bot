@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
+import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
@@ -321,7 +322,7 @@ public class ModerationUtils {
      */
     public static Optional<Role> getMutedRole(Guild guild, Config config) {
         Predicate<String> isMutedRole = getIsMutedRolePredicate(config);
-        return guild.getRoles().stream().filter(role -> isMutedRole.test(role.getName())).findAny();
+        return Guilds.findRole(guild, isMutedRole);
     }
 
     /**
@@ -343,10 +344,7 @@ public class ModerationUtils {
      */
     public static Optional<Role> getQuarantinedRole(Guild guild, Config config) {
         Predicate<String> isQuarantinedRole = getIsQuarantinedRolePredicate(config);
-        return guild.getRoles()
-            .stream()
-            .filter(role -> isQuarantinedRole.test(role.getName()))
-            .findAny();
+        return Guilds.findRole(guild, isQuarantinedRole);
     }
 
     /**

@@ -2,10 +2,10 @@ package org.togetherjava.tjbot.features.moderation.scam;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
+import org.togetherjava.tjbot.features.utils.Guilds;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,8 +51,7 @@ public final class ScamDetector {
      */
     public boolean isScam(Message message) {
         Member author = message.getMember();
-        boolean isTrustedUser = author != null
-                && author.getRoles().stream().map(Role::getName).anyMatch(hasTrustedRole);
+        boolean isTrustedUser = author != null && Guilds.hasMemberRole(author, hasTrustedRole);
         if (isTrustedUser) {
             return false;
         }

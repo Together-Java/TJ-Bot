@@ -27,6 +27,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.Guilds;
 
 import java.awt.Color;
 import java.time.Instant;
@@ -57,7 +58,7 @@ public final class HelpSystemHelper {
 
     static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
-    private final Predicate<String> hasTagManageRole;
+    private final Predicate<String> isTagManageRole;
     private final Predicate<String> isHelpForumName;
     private final String helpForumPattern;
     /**
@@ -88,7 +89,7 @@ public final class HelpSystemHelper {
         this.database = database;
         this.chatGptService = chatGptService;
 
-        hasTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
+        isTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
         helpForumPattern = helpConfig.getHelpForumPattern();
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
@@ -344,7 +345,7 @@ public final class HelpSystemHelper {
     }
 
     boolean hasTagManageRole(Member member) {
-        return member.getRoles().stream().map(Role::getName).anyMatch(hasTagManageRole);
+        return Guilds.hasMemberRole(member, isTagManageRole);
     }
 
     boolean isHelpForumName(String channelName) {
@@ -360,11 +361,7 @@ public final class HelpSystemHelper {
         Predicate<String> isChannelName = this::isHelpForumName;
         String channelPattern = getHelpForumPattern();
 
-        Optional<ForumChannel> maybeChannel = guild.getForumChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
-
+        Optional<ForumChannel> maybeChannel = Guilds.findForumChannel(guild, isChannelName);
         if (maybeChannel.isEmpty()) {
             consumeChannelPatternIfNotFound.accept(channelPattern);
         }

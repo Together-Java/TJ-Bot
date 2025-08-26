@@ -10,8 +10,8 @@
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Community Ambassador",
-    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
-    "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helper.*",
+    "excludeCodeAutoDetectionRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
     "suggestions": {
         "channelPattern": "tj-suggestions",
         "upVoteEmoteName": "peepo_yes",
@@ -22,7 +22,7 @@
         "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
         "reportChannelPattern": "commands",
         "botTrapChannelPattern": "bot-trap",
-        "trustedUserRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
+        "trustedUserRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
         "suspiciousKeywords": [
             "nitro",
             "boob",
@@ -189,5 +189,10 @@
         "fallbackChannelPattern": "java-news-and-changes",
         "pollIntervalInMinutes": 10
     },
-    "memberCountCategoryPattern": "Info"
+    "memberCountCategoryPattern": "Info",
+    "topHelpers": {
+        "rolePattern": "Top Helper.*",
+        "assignmentChannelPattern": "community-commands",
+        "announcementChannelPattern": "hall-of-fame"
+    }
 }

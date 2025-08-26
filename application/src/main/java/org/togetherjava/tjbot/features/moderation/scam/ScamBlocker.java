@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
@@ -34,6 +33,7 @@ import org.togetherjava.tjbot.features.moderation.ModerationAction;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
+import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
@@ -41,6 +41,7 @@ import java.awt.Color;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -65,13 +66,13 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final ScamBlockerConfig.Mode mode;
     private final String reportChannelPattern;
     private final String botTrapChannelPattern;
-    private final Predicate<TextChannel> isReportChannel;
+    private final Predicate<String> isReportChannelName;
     private final Predicate<TextChannel> isBotTrapChannel;
     private final ScamDetector scamDetector;
     private final Config config;
     private final ModerationActionsStore actionsStore;
     private final ScamHistoryStore scamHistoryStore;
-    private final Predicate<String> hasRequiredRole;
+    private final Predicate<String> isRequiredRole;
 
     private final ComponentIdInteractor componentIdInteractor;
 
@@ -91,16 +92,14 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         scamDetector = new ScamDetector(config);
 
         reportChannelPattern = config.getScamBlocker().getReportChannelPattern();
-        Predicate<String> isReportChannelName =
-                Pattern.compile(reportChannelPattern).asMatchPredicate();
-        isReportChannel = channel -> isReportChannelName.test(channel.getName());
+        isReportChannelName = Pattern.compile(reportChannelPattern).asMatchPredicate();
 
         botTrapChannelPattern = config.getScamBlocker().getBotTrapChannelPattern();
         Predicate<String> isBotTrapChannelName =
                 Pattern.compile(botTrapChannelPattern).asMatchPredicate();
         isBotTrapChannel = channel -> isBotTrapChannelName.test(channel.getName());
 
-        hasRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
+        isRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
 
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
     }
@@ -296,7 +295,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private Optional<TextChannel> getReportChannel(Guild guild) {
-        return guild.getTextChannelCache().stream().filter(isReportChannel).findAny();
+        return Guilds.findTextChannel(guild, isReportChannelName);
     }
 
     private List<Button> createConfirmDialog(MessageReceivedEvent event) {
@@ -316,7 +315,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> argsRaw) {
         ComponentIdArguments args = ComponentIdArguments.fromList(argsRaw);
-        if (event.getMember().getRoles().stream().map(Role::getName).noneMatch(hasRequiredRole)) {
+        if (Guilds.doesMemberNotHaveRole(Objects.requireNonNull(event.getMember()),
+                isRequiredRole)) {
             event.reply(
                     "You can not handle scam in this guild, since you do not have the required role.")
                 .setEphemeral(true)

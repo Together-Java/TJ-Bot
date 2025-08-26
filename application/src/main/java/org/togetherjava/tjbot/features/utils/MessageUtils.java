@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  * This class is meant to contain all utility methods for {@link Message} that can be used on all
  * other commands to avoid similar methods appearing everywhere.
  */
-public class MessageUtils {
+public final class MessageUtils {
     public static final int MAXIMUM_VISIBLE_EMBEDS = 25;
     public static final String ABBREVIATION = "...";
     private static final String CODE_FENCE_SYMBOL = "```";
