@@ -21,6 +21,10 @@ import java.util.Queue;
 import java.util.function.ToIntFunction;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
+import java.util.concurrent.CompletableFuture;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Slash command (/github-search) used to search for an issue in one of the repositories listed in
@@ -41,11 +45,12 @@ public final class GitHubCommand extends SlashCommandAdapter {
     };
 
     private static final String TITLE_OPTION = "title";
+    private static final Logger logger = LoggerFactory.getLogger(GitHubCommand.class);
 
     private final GitHubReference reference;
 
-    private Instant lastCacheUpdate;
-    private List<String> autocompleteGHIssueCache;
+    private Instant lastCacheUpdate = Instant.EPOCH;
+    private List<String> autocompleteGHIssueCache = List.of();
 
     /**
      * Constructs an instance of GitHubCommand.
@@ -66,7 +71,14 @@ public final class GitHubCommand extends SlashCommandAdapter {
         getData().addOption(OptionType.STRING, TITLE_OPTION,
                 "Title of the issue you're looking for", true, true);
 
-        updateCache();
+        CompletableFuture.runAsync(() -> {
+            try {
+                updateCache();
+            } catch (Exception e) {
+                logger.error("Unknown error updating the GitHub cache", e);
+            }
+        });
+                
     }
 
     @Override
@@ -111,7 +123,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
             event.replyChoiceStrings(choices).queue();
         }
 
-        if (lastCacheUpdate.isAfter(Instant.now().minus(CACHE_EXPIRES_AFTER))) {
+        if (lastCacheUpdate.isBefore(Instant.now().minus(CACHE_EXPIRES_AFTER))) {
             updateCache();
         }
     }
@@ -122,10 +134,13 @@ public final class GitHubCommand extends SlashCommandAdapter {
     }
 
     private void updateCache() {
+        logger.debug("GitHub Autocomplete cache update started"); // log start
+
         autocompleteGHIssueCache = reference.getRepositories().stream().map(repo -> {
             try {
                 return repo.getIssues(GHIssueState.ALL);
             } catch (IOException ex) {
+                logger.error("Error fetching issues from repo {}", repo.getName(), ex);
                 throw new UncheckedIOException(ex);
             }
         })
@@ -135,5 +150,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
             .toList();
 
         lastCacheUpdate = Instant.now();
+
+        logger.debug("GitHub autocomplete cache update completed successfully. Cached {} issues.", autocompleteGHIssueCache.size()); // log end
     }
 }
