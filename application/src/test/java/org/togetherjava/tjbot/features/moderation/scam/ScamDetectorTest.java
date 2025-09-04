@@ -211,6 +211,23 @@ final class ScamDetectorTest {
     }
 
     @Test
+    @DisplayName("Messages containing suspicious attachments are flagged even if extensions are upper-case (jpg vs JPG)")
+    void detectsSuspiciousAttachmentsRegardlessOfCase() {
+        // GIVEN an empty message containing suspicious attachments with mixed case for extensions
+        String content = "";
+        List<Message.Attachment> attachments =
+                List.of(createImageAttachmentMock("1.JPG"), createImageAttachmentMock("2.JPG"),
+                        createImageAttachmentMock("3.jpg"), createImageAttachmentMock("4.jpg"));
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as scam
+        assertTrue(isScamResult);
+    }
+
+    @Test
     @DisplayName("Suspicious messages send by trusted users are not flagged")
     void ignoreTrustedUser() {
         // GIVEN a scam message send by a trusted user
