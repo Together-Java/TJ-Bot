@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.kohsuke.github.GHIssue;
-import org.kohsuke.github.GHIssueState;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
@@ -143,7 +142,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
 
         autocompleteGHIssueCache = reference.getRepositories().stream().map(repo -> {
             try {
-                return repo.getIssues(GHIssueState.ALL);
+                return repo.queryIssues().pageSize(1000).list().toList();
             } catch (IOException ex) {
                 throw new UncheckedIOException("Error fetching issues from repo " + repo.getName(),
                         ex);
