@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.kohsuke.github.GHIssue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
@@ -17,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.ToIntFunction;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
@@ -40,11 +43,12 @@ public final class GitHubCommand extends SlashCommandAdapter {
     };
 
     private static final String TITLE_OPTION = "title";
+    private static final Logger logger = LoggerFactory.getLogger(GitHubCommand.class);
 
     private final GitHubReference reference;
 
-    private Instant lastCacheUpdate;
-    private List<String> autocompleteGHIssueCache;
+    private Instant lastCacheUpdate = Instant.EPOCH;
+    private List<String> autocompleteGHIssueCache = List.of();
 
     /**
      * Constructs an instance of GitHubCommand.
@@ -65,7 +69,14 @@ public final class GitHubCommand extends SlashCommandAdapter {
         getData().addOption(OptionType.STRING, TITLE_OPTION,
                 "Title of the issue you're looking for", true, true);
 
-        updateCache();
+        CompletableFuture.runAsync(() -> {
+            try {
+                updateCache();
+            } catch (Exception e) {
+                logger.error("Unknown error updating the GitHub cache", e);
+            }
+        });
+
     }
 
     @Override
@@ -110,7 +121,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
             event.replyChoiceStrings(choices).queue();
         }
 
-        if (lastCacheUpdate.isAfter(Instant.now().minus(CACHE_EXPIRES_AFTER))) {
+        if (isCacheExpired()) {
             updateCache();
         }
     }
@@ -120,12 +131,20 @@ public final class GitHubCommand extends SlashCommandAdapter {
         return s -> StringDistances.editDistance(title, s.replaceFirst("\\[#\\d+] ", ""));
     }
 
+    private boolean isCacheExpired() {
+        Instant cacheExpiresAt = lastCacheUpdate.plus(CACHE_EXPIRES_AFTER);
+        return Instant.now().isAfter(cacheExpiresAt);
+    }
+
     private void updateCache() {
+        logger.debug("GitHub Autocomplete cache update started");
+
         autocompleteGHIssueCache = reference.getRepositories().stream().map(repo -> {
             try {
                 return repo.queryIssues().pageSize(1000).list().toList();
             } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
+                throw new UncheckedIOException("Error fetching issues from repo " + repo.getName(),
+                        ex);
             }
         })
             .flatMap(List::stream)
@@ -134,5 +153,8 @@ public final class GitHubCommand extends SlashCommandAdapter {
             .toList();
 
         lastCacheUpdate = Instant.now();
+
+        logger.debug("GitHub autocomplete cache update completed successfully. Cached {} issues.",
+                autocompleteGHIssueCache.size());
     }
 }
