@@ -75,7 +75,7 @@ dependencies {
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
     
-    implementation 'org.kohsuke:github-api:1.329'
+    implementation 'org.kohsuke:github-api:1.330'
 
     implementation 'org.apache.commons:commons-text:1.14.0'
     implementation 'com.apptasticsoftware:rssreader:3.10.0'
