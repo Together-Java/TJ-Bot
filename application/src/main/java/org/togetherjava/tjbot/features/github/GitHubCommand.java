@@ -4,6 +4,8 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.kohsuke.github.GHIssue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
@@ -17,13 +19,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.ToIntFunction;
 import java.util.regex.Matcher;
 import java.util.stream.Stream;
-import java.util.concurrent.CompletableFuture;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Slash command (/github-search) used to search for an issue in one of the repositories listed in
