@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.features.moderation.scam;
 
 import net.dv8tion.jda.api.entities.Message;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 
@@ -10,7 +11,9 @@ record Attachment(String fileName) {
             Set.of("jpg", "jpeg", "png", "gif", "webp", "tiff", "svg", "apng");
 
     boolean isImage() {
-        return getFileExtension().map(IMAGE_EXTENSIONS::contains).orElse(false);
+        return getFileExtension().map(ext -> ext.toLowerCase(Locale.US))
+            .map(IMAGE_EXTENSIONS::contains)
+            .orElse(false);
     }
 
     private Optional<String> getFileExtension() {
