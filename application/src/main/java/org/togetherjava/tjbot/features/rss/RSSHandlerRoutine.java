@@ -4,9 +4,9 @@ import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jooq.tools.StringUtils;
@@ -79,6 +79,7 @@ public final class RSSHandlerRoutine implements Routine {
     private final RssReader rssReader;
     private final RSSFeedsConfig config;
     private final Predicate<String> fallbackChannelPattern;
+    private final Predicate<String> isVideoLink;
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns;
     private final int interval;
     private final Database database;
@@ -95,6 +96,7 @@ public final class RSSHandlerRoutine implements Routine {
         this.database = database;
         this.fallbackChannelPattern =
                 Pattern.compile(this.config.fallbackChannelPattern()).asMatchPredicate();
+        isVideoLink = Pattern.compile(this.config.videoLinkPattern()).asMatchPredicate();
         this.targetChannelPatterns = new HashMap<>();
         this.config.feeds().forEach(feed -> {
             if (feed.targetChannelPattern() != null) {
@@ -155,7 +157,7 @@ public final class RSSHandlerRoutine implements Routine {
         }
         rssItems.reversed()
             .stream()
-            .filter(shouldItemBePosted.get())
+            .filter(shouldItemBePosted.orElseThrow())
             .forEachOrdered(item -> postItem(textChannels, item, feedConfig));
     }
 
@@ -241,8 +243,8 @@ public final class RSSHandlerRoutine implements Routine {
      * @param feedConfig the RSS feed configuration
      */
     private void postItem(List<TextChannel> textChannels, Item rssItem, RSSFeed feedConfig) {
-        MessageEmbed embed = constructEmbedMessage(rssItem, feedConfig).build();
-        textChannels.forEach(channel -> channel.sendMessageEmbeds(List.of(embed)).queue());
+        MessageCreateData message = constructMessage(rssItem, feedConfig);
+        textChannels.forEach(channel -> channel.sendMessage(message).queue());
     }
 
     /**
@@ -346,13 +348,18 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     /**
-     * Provides the {@link EmbedBuilder} from an RSS item used for sending RSS posts.
+     * Provides the message from an RSS item used for sending RSS posts.
      *
      * @param item the RSS item to construct the embed message from
      * @param feedConfig the configuration of the RSS feed
-     * @return the constructed {@link EmbedBuilder} containing information from the RSS item
+     * @return the constructed message containing information from the RSS item
      */
-    private static EmbedBuilder constructEmbedMessage(Item item, RSSFeed feedConfig) {
+    private MessageCreateData constructMessage(Item item, RSSFeed feedConfig) {
+        if (item.getLink().filter(isVideoLink).isPresent()) {
+            // Automatic video previews are created on normal messages, not on embeds
+            return MessageCreateData.fromContent(item.getLink().orElseThrow());
+        }
+
         final EmbedBuilder embedBuilder = new EmbedBuilder();
         String title = item.getTitle().orElse("No title");
         String titleLink = item.getLink().orElse("");
@@ -381,7 +388,7 @@ public final class RSSHandlerRoutine implements Routine {
             embedBuilder.setDescription("No description");
         }
 
-        return embedBuilder;
+        return MessageCreateData.fromEmbeds(embedBuilder.build());
     }
 
     /**

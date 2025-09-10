@@ -16,6 +16,7 @@ import java.util.Objects;
 public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) List<RSSFeed> feeds,
         @JsonProperty(value = "fallbackChannelPattern",
                 required = true) String fallbackChannelPattern,
+        @JsonProperty(value = "videoLinkPattern", required = true) String videoLinkPattern,
         @JsonProperty(value = "pollIntervalInMinutes", required = true) int pollIntervalInMinutes) {
 
     /**
@@ -23,6 +24,8 @@ public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) Lis
      *
      * @param feeds The list of RSS feeds to subscribe to.
      * @param fallbackChannelPattern The pattern used to identify the fallback text channel to use.
+     * @param videoLinkPattern pattern determining if a link is a video. It is then posted in a way
+     *        to support Discord video embeds.
      * @param pollIntervalInMinutes The interval (in minutes) for polling the RSS feeds for updates.
      * @throws NullPointerException if any of the parameters (feeds or fallbackChannelPattern) are
      *         null
@@ -30,5 +33,6 @@ public record RSSFeedsConfig(@JsonProperty(value = "feeds", required = true) Lis
     public RSSFeedsConfig {
         Objects.requireNonNull(feeds);
         Objects.requireNonNull(fallbackChannelPattern);
+        Objects.requireNonNull(videoLinkPattern);
     }
 }
