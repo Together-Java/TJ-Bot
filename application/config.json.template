@@ -187,6 +187,7 @@
             }
         ],
         "fallbackChannelPattern": "java-news-and-changes",
+        "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
         "pollIntervalInMinutes": 10
     },
     "memberCountCategoryPattern": "Info",
