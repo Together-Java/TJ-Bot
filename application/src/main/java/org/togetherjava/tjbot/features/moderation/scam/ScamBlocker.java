@@ -257,7 +257,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
                 .collect(Collectors.joining(", "));
             content += "%s(The message has %d attachment%s: %s)".formatted(
                     content.isBlank() ? "" : "\n", attachments.size(),
-                    attachments.size() > 1 ? "s " : " ", attachmentInfo);
+                    attachments.size() > 1 ? "s " : "", attachmentInfo);
         }
         MessageEmbed embed = new EmbedBuilder().setDescription(content)
             .setTitle(reportTitle)
