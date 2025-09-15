@@ -48,6 +48,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Listener that receives all sent messages from channels, checks them for scam and takes
@@ -247,15 +248,24 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         User author = event.getAuthor();
         String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
+        String content = event.getMessage().getContentStripped();
+        List<Message.Attachment> attachments = event.getMessage().getAttachments();
 
-        MessageEmbed embed =
-                new EmbedBuilder().setDescription(event.getMessage().getContentStripped())
-                    .setTitle(reportTitle)
-                    .setAuthor(author.getName(), null, avatarOrDefaultUrl)
-                    .setTimestamp(event.getMessage().getTimeCreated())
-                    .setColor(AMBIENT_COLOR)
-                    .setFooter(author.getId())
-                    .build();
+        if (!attachments.isEmpty()) {
+            String attachmentInfo = attachments.stream()
+                .map(Message.Attachment::getFileName)
+                .collect(Collectors.joining(", "));
+            content += "%s(The message has %d attachment%s: %s)".formatted(
+                    content.isBlank() ? "" : "\n", attachments.size(),
+                    attachments.size() > 1 ? "s " : "", attachmentInfo);
+        }
+        MessageEmbed embed = new EmbedBuilder().setDescription(content)
+            .setTitle(reportTitle)
+            .setAuthor(author.getName(), null, avatarOrDefaultUrl)
+            .setTimestamp(event.getMessage().getTimeCreated())
+            .setColor(AMBIENT_COLOR)
+            .setFooter(author.getId())
+            .build();
 
         MessageCreateBuilder messageBuilder = new MessageCreateBuilder().setEmbeds(embed);
         if (!confirmDialog.isEmpty()) {
