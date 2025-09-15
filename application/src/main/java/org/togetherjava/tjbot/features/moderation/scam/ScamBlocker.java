@@ -253,21 +253,18 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         if (!attachments.isEmpty()) {
             String attachmentInfo = attachments.stream()
-                    .map(Message.Attachment::getFileName)
-                    .collect(Collectors.joining(", "));
-            content += (content.isEmpty() ? "" : " ")
-                    + "and " + attachments.size() + " attachment"
-                    + (attachments.size() > 1 ? "s " : " ")
-                    + "(" + attachmentInfo + ")";
+                .map(Message.Attachment::getFileName)
+                .collect(Collectors.joining(", "));
+            content += (content.isEmpty() ? "" : " ") + "and " + attachments.size() + " attachment"
+                    + (attachments.size() > 1 ? "s " : " ") + "(" + attachmentInfo + ")";
         }
-        MessageEmbed embed =
-                new EmbedBuilder().setDescription(content)
-                    .setTitle(reportTitle)
-                    .setAuthor(author.getName(), null, avatarOrDefaultUrl)
-                    .setTimestamp(event.getMessage().getTimeCreated())
-                    .setColor(AMBIENT_COLOR)
-                    .setFooter(author.getId())
-                    .build();
+        MessageEmbed embed = new EmbedBuilder().setDescription(content)
+            .setTitle(reportTitle)
+            .setAuthor(author.getName(), null, avatarOrDefaultUrl)
+            .setTimestamp(event.getMessage().getTimeCreated())
+            .setColor(AMBIENT_COLOR)
+            .setFooter(author.getId())
+            .build();
 
         MessageCreateBuilder messageBuilder = new MessageCreateBuilder().setEmbeds(embed);
         if (!confirmDialog.isEmpty()) {
