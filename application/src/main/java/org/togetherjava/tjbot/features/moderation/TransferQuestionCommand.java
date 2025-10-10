@@ -100,6 +100,11 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                     .formatted(originalMessage);
         Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
         String title = chatGptTitle.orElse(createTitle(originalMessage));
+
+        // Fix
+        title = title.replaceAll("^[\"']|[\"']$", "");
+        //
+
         if (title.length() > TITLE_MAX_LENGTH) {
             title = title.substring(0, TITLE_MAX_LENGTH);
         }
@@ -136,6 +141,25 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         event.replyModal(transferModal).queue();
     }
+
+
+    String generateTitle(String originalMessage) {
+        String chatGptTitleRequest =
+                "Summarize the following question into a concise title or heading not more than 5 words, remove quotations if any: %s"
+                    .formatted(originalMessage);
+        Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
+        String title = chatGptTitle.orElse(createTitle(originalMessage));
+
+        // 🔧 FIX: Remove surrounding quotes
+        title = title.replaceAll("^\"|\"$", "");
+
+        if (title.length() > TITLE_MAX_LENGTH) {
+            title = title.substring(0, TITLE_MAX_LENGTH);
+        }
+
+        return title;
+    }
+
 
     @Override
     public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
@@ -175,8 +199,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .retrieveUserById(authorId)
             .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
             .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
-                    event.getGuild())
-                .and(sendMessageToTransferrer.apply(createdForumPost)))
+                    event.getGuild()).and(sendMessageToTransferrer.apply(createdForumPost)))
             .flatMap(dmSent -> deleteOriginalMessage(event.getJDA(), channelId, messageId))
             .queue();
     }
