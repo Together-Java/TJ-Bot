@@ -75,7 +75,7 @@ dependencies {
 
     implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
     
-    implementation('org.kohsuke:github-api:1.326') {
+    implementation('org.kohsuke:github-api:1.329') {
     exclude group: 'com.fasterxml.jackson.core'
     exclude group: 'com.fasterxml.jackson.datatype'
     exclude group: 'com.fasterxml.jackson.dataformat'
