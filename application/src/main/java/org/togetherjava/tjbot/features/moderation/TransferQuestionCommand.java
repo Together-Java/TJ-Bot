@@ -100,6 +100,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                     .formatted(originalMessage);
         Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
         String title = chatGptTitle.orElse(createTitle(originalMessage));
+        if (title.startsWith("\"") && title.endsWith("\"")) {
+            title = title.substring(1, title.length() - 1);
+        }
+
         if (title.length() > TITLE_MAX_LENGTH) {
             title = title.substring(0, TITLE_MAX_LENGTH);
         }
