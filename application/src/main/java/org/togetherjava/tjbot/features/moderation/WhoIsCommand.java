@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -112,8 +113,8 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     private static ReplyCallbackAction sendEmbedWithProfileAction(final IReplyCallback event,
             MessageEmbed embed, String userId) {
         return event.replyEmbeds(embed)
-            .addActionRow(
-                    DiscordClientAction.General.USER.asLinkButton("Click to see profile!", userId));
+            .addComponents(ActionRow.of(DiscordClientAction.General.USER
+                .asLinkButton("Click to see profile!", userId)));
     }
 
     private static String voiceStateToStringItem(final Member member) {

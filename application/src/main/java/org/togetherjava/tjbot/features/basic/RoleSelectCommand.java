@@ -2,6 +2,10 @@ package org.togetherjava.tjbot.features.basic;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu.Builder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Member;
@@ -16,8 +20,6 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,7 +185,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
 
     private void sendRoleSelectionMenu(final CommandInteraction event,
             final Collection<? extends Role> selectableRoles) {
-        StringSelectMenu.Builder menu = StringSelectMenu
+        Builder menu = StringSelectMenu
             .create(generateComponentId(Lifespan.PERMANENT, event.getUser().getId()))
             .setPlaceholder("Select your roles")
             .setMinValues(0)
@@ -197,7 +199,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
                 event.getOption(TITLE_OPTION, "Select your roles:", OptionMapping::getAsString);
         MessageEmbed embed = createEmbed(title, event.getOption(DESCRIPTION_OPTION).getAsString());
 
-        event.replyEmbeds(embed).addActionRow(menu.build()).queue();
+        event.replyEmbeds(embed).addComponents(ActionRow.of(menu.build())).queue();
     }
 
     private static SelectOption mapToSelectOption(Role role) {

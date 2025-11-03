@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.features.filesharing;
 
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -7,7 +9,6 @@ import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.kohsuke.github.GHGist;
 import org.kohsuke.github.GHGistBuilder;
 import org.kohsuke.github.GitHubBuilder;
@@ -190,7 +191,9 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
                 componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
                 "Delete");
 
-        message.reply(messageContent).setActionRow(gist, delete).queue();
+        message.reply(messageContent)
+            .setComponents(ActionRow.of(gist), ActionRow.of(delete))
+            .queue();
     }
 
     private boolean isHelpThread(MessageReceivedEvent event) {

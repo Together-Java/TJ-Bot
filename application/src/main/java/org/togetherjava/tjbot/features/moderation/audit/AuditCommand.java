@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.features.moderation.audit;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -11,7 +13,6 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -223,13 +224,13 @@ public final class AuditCommand extends SlashCommandAdapter {
         if (totalPages <= 1) {
             return messageBuilder;
         }
-        List<Button> pageTurnButtons =
+        List<ActionRow> pageTurnButtons =
                 createPageTurnButtons(guildId, targetId, callerId, pageNumber, totalPages);
 
-        return messageBuilder.setActionRow(pageTurnButtons);
+        return messageBuilder.setComponents(pageTurnButtons);
     }
 
-    private List<Button> createPageTurnButtons(long guildId, long targetId, long callerId,
+    private List<ActionRow> createPageTurnButtons(long guildId, long targetId, long callerId,
             int pageNumber, int totalPages) {
         int previousButtonTurnPageBy = -1;
         Button previousButton = createPageTurnButton(PREVIOUS_BUTTON_LABEL, guildId, targetId,
@@ -245,7 +246,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             nextButton = nextButton.asDisabled();
         }
 
-        return List.of(previousButton, nextButton);
+        return List.of(ActionRow.of(previousButton), ActionRow.of(nextButton));
     }
 
     private Button createPageTurnButton(String label, long guildId, long targetId, long callerId,

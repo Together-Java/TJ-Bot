@@ -3,6 +3,11 @@ package org.togetherjava.tjbot.features.moderation;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -12,10 +17,7 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
@@ -96,18 +98,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String reportedAuthorAvatarUrl = event.getTarget().getAuthor().getEffectiveAvatarUrl();
         String reportedAuthorID = event.getTarget().getAuthor().getId();
 
-        TextInput modalTextInput = TextInput
-            .create(REPORT_REASON_INPUT_ID, "Anonymous report to the moderators",
-                    TextInputStyle.PARAGRAPH)
-            .setPlaceholder("Why do you want to report this message?")
-            .setRequiredRange(3, 200)
-            .build();
+        TextInput modalTextInput =
+                TextInput.create(REPORT_REASON_INPUT_ID, TextInputStyle.PARAGRAPH)
+                    .setPlaceholder("Why do you want to report this message?")
+                    .setRequiredRange(3, 200)
+                    .build();
 
         String reportModalComponentID = generateComponentId(reportedMessage, reportedMessageID,
                 reportedMessageJumpUrl, reportedMessageChannel, reportedMessageTimestamp,
                 reportedAuthorName, reportedAuthorAvatarUrl, reportedAuthorID);
         Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
-            .addActionRow(modalTextInput)
+            .addComponents(Label.of("Anonymous report to the moderators", modalTextInput))
             .build();
 
         event.replyModal(reportModal).queue();
@@ -182,9 +183,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .build();
 
-        MessageCreateAction message =
-                modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"));
+        MessageCreateAction message = modMailAuditLog
+            .sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
+            .addComponents(ActionRow.of(Button.link(reportedMessage.jumpUrl, "Go to message")));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()

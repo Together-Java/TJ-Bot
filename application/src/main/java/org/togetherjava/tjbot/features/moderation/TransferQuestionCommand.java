@@ -2,6 +2,9 @@ package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -16,9 +19,7 @@ import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
@@ -108,7 +109,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             title = title.substring(0, TITLE_MAX_LENGTH);
         }
 
-        TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
+        TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, TextInputStyle.SHORT)
             .setMaxLength(TITLE_MAX_LENGTH)
             .setMinLength(TITLE_MIN_LENGTH)
             .setPlaceholder("Describe the question in short")
@@ -116,7 +117,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .build();
 
         TextInput.Builder modalInputBuilder =
-                TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
+                TextInput.create(MODAL_INPUT_ID, TextInputStyle.PARAGRAPH)
                     .setRequiredRange(INPUT_MIN_LENGTH, INPUT_MAX_LENGTH)
                     .setPlaceholder("Contents of the question");
 
@@ -125,7 +126,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             modalInputBuilder.setValue(trimmedMessage);
         }
 
-        TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
+        TextInput modalTag = TextInput.create(MODAL_TAG, TextInputStyle.SHORT)
             .setValue(mostCommonTag)
             .setPlaceholder("Suitable tag for the question")
             .build();
@@ -133,9 +134,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String modalComponentId =
                 generateComponentId(authorId, originalMessageId, originalChannelId);
         Modal transferModal = Modal.create(modalComponentId, "Transfer this question")
-            .addActionRow(modalTitle)
-            .addActionRow(modalInputBuilder.build())
-            .addActionRow(modalTag)
+            .addComponents(Label.of("Title", modalTitle))
+            .addComponents(Label.of("Question", modalInputBuilder.build()))
+            .addComponents(Label.of("Most fitting tag", modalTag))
             .build();
 
         event.replyModal(transferModal).queue();

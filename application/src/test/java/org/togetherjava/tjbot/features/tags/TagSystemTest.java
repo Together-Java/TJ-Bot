@@ -49,8 +49,8 @@ final class TagSystemTest {
 
     @Test
     void createDeleteButton() {
-        assertEquals("foo", TagSystem.createDeleteButton("foo").getId());
-        assertEquals("fooBarFooBar", TagSystem.createDeleteButton("fooBarFooBar").getId());
+        assertEquals("foo", TagSystem.createDeleteButton("foo").getCustomId());
+        assertEquals("fooBarFooBar", TagSystem.createDeleteButton("fooBarFooBar").getCustomId());
     }
 
     @Test

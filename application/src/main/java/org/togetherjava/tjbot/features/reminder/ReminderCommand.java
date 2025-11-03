@@ -1,6 +1,9 @@
 package org.togetherjava.tjbot.features.reminder;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -16,7 +19,6 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -232,7 +234,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
             if (totalPages > 1) {
                 pendingReminders = getPageEntries(pendingReminders, pageToShow);
                 remindersEmbed.setFooter("Page: %d/%d".formatted(pageToShow, totalPages));
-                pendingRemindersPage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
+                pendingRemindersPage.addComponents(createPageTurnButtons(pageToShow, totalPages));
             }
             pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
         }
@@ -240,7 +242,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
         return pendingRemindersPage.addEmbeds(remindersEmbed.build()).build();
     }
 
-    private List<Button> createPageTurnButtons(int currentPage, int totalPages) {
+    private List<MessageTopLevelComponent> createPageTurnButtons(int currentPage, int totalPages) {
         String pageNumberString = String.valueOf(currentPage);
 
         Button previousButton =
@@ -255,7 +257,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
             nextButton = nextButton.asDisabled();
         }
 
-        return List.of(previousButton, nextButton);
+        return List.of(ActionRow.of(previousButton), ActionRow.of(nextButton));
     }
 
     private static List<PendingRemindersRecord> getPageEntries(

@@ -4,6 +4,10 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
@@ -14,9 +18,7 @@ import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -115,17 +117,16 @@ public final class ModMailCommand extends SlashCommandAdapter {
         long userGuildId = event.getOption(OPTION_GUILD).getAsLong();
         boolean wantsToRevealName = event.getOption(OPTION_REVEAL_NAME).getAsBoolean();
 
-        TextInput message =
-                TextInput.create(OPTION_MESSAGE, "Your message", TextInputStyle.PARAGRAPH)
-                    .setPlaceholder("What do you want to tell them?")
-                    .setMinLength(3)
-                    .build();
+        TextInput message = TextInput.create(OPTION_MESSAGE, TextInputStyle.PARAGRAPH)
+            .setPlaceholder("What do you want to tell them?")
+            .setMinLength(3)
+            .build();
 
         String componentId =
                 generateComponentId(String.valueOf(userGuildId), String.valueOf(wantsToRevealName));
 
         Modal modal = Modal.create(componentId, "Send message to moderators")
-            .addActionRow(message)
+            .addComponents(Label.of("Your Message", message))
             .build();
 
         event.replyModal(modal).queue();
@@ -178,8 +179,8 @@ public final class ModMailCommand extends SlashCommandAdapter {
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(createModMailMessage(user, userMessage));
         if (wantsToRevealName) {
-            message.addActionRow(DiscordClientAction.General.USER.asLinkButton("Author Profile",
-                    String.valueOf(userId)));
+            message.addComponents(ActionRow.of(DiscordClientAction.General.USER
+                .asLinkButton("Author Profile", String.valueOf(userId))));
         }
 
         Optional<Role> moderatorRole = modMailAuditLog.getGuild()
