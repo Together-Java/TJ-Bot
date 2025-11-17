@@ -42,7 +42,7 @@ final class ScamDetectorTest {
             .thenReturn(Set.of("discord.com", "discord.media", "discordapp.com", "discordapp.net",
                     "discordstatus.com", "thehackernews.com", "gradle.org", "help.gradle.org",
                     "youtube.com", "www.youtube.com", "cdn.discordapp.com", "media.discordapp.net",
-                    "store.steampowered.com", "help.steampowered.com"));
+                    "store.steampowered.com", "help.steampowered.com", "learn.microsoft.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
                 "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph",
                 "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"));
@@ -541,6 +541,11 @@ final class ScamDetectorTest {
                 "https://help.steampowered.com/en/faqs/view/49A1-B944-48B8-FF00",
                 "https://store.steampowered.com/api/appdetails?appids=8930 this endpoint is so cool",
                 "id play it if it was free maybe https://store.steampowered.com/app/1349230/5DChessWithMultiverseTime_Travel/",
-                "Why wouldn't they just take the $150 and not bother hacking an account to get the petfood sent?");
+                "Why wouldn't they just take the $150 and not bother hacking an account to get the petfood sent?",
+                """
+                        https://learn.microsoft.com/en-us/powershell/scripting/discover-powershell?view=powershell-7.5
+                        What makes PowerShell unique is that it accepts and returns .NET objects, rather than text.
+                        because of that, but well it says that it returns .NET objects not that the commands are from .NET,
+                        but well as i said i use cmd.exe because i do not know .NET nor powershell""");
     }
 }

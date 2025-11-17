@@ -65,7 +65,8 @@
             "cdn.discordapp.com",
             "media.discordapp.net",
             "store.steampowered.com",
-            "help.steampowered.com"
+            "help.steampowered.com",
+            "learn.microsoft.com"
         ],
         "hostBlacklist": [
             "bit.ly",
