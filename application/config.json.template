@@ -40,7 +40,7 @@
             "whatsapp",
             "crypto",
             "^claim",
-            "teen",
+            "^teen$",
             "adobe",
             "^hack$",
             "hacks",

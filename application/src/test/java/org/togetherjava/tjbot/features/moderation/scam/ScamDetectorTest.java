@@ -546,6 +546,19 @@ final class ScamDetectorTest {
                         https://learn.microsoft.com/en-us/powershell/scripting/discover-powershell?view=powershell-7.5
                         What makes PowerShell unique is that it accepts and returns .NET objects, rather than text.
                         because of that, but well it says that it returns .NET objects not that the commands are from .NET,
-                        but well as i said i use cmd.exe because i do not know .NET nor powershell""");
+                        but well as i said i use cmd.exe because i do not know .NET nor powershell""",
+                """
+                        Exception in thread "ServerEntityWriterThread"
+                        java.lang.NoSuchMethodError: org.schema.game.common.controller.rails.RailRelation.isLocked()Z
+                        at org.schema.game.common.controller.rails.RailController.getDockedTag(RailController.java:2686)
+                        at org.schema.game.common.controller.rails.RailController.getTag(RailController.java:2652)
+                        at org.schema.game.common.controller.SegmentController.toTagStructure(SegmentController.java:2813)
+                        at org.schema.game.common.data.EntityFileTools.write(EntityFileTools.java:57)
+                        at org.schema.game.server.controller.GameServerController.writeEntity(GameServerController.java:2938)
+                        at org.schema.game.common.data.world.Sector.writeSingle(Sector.java:2570)
+                        at org.schema.game.common.data.world.Sector.writeEntity(Sector.java:2546)
+                        at org.schema.game.common.data.world.Sector.access$200(Sector.java:120)
+                        at org.schema.game.common.data.world.Sector$3.run(Sector.java:2665)
+                        at org.schema.schine.network.server.ServerEntityWriterThread.run(ServerEntityWriterThread.java:74)""");
     }
 }

@@ -5,6 +5,8 @@ import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.net.URI;
 import java.util.Locale;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Analyzes a given text token. Populates various metrics regarding the token possibly being
@@ -14,6 +16,10 @@ import java.util.Locale;
  * {@link #analyze(String, AnalyseResults)}.
  */
 final class TokenAnalyse {
+    // Tokens like: "org.schema.game.common.data.world.Sector.access$200(Sector.java:120)"
+    private static final Predicate<String> IS_STACKTRACE_TOKEN =
+            Pattern.compile("(org|com|de|dev)(\\.[^.()]+){4,15}\\([^.()]+\\.java:\\d+\\)")
+                .asMatchPredicate();
     private final ScamBlockerConfig config;
 
     TokenAnalyse(ScamBlockerConfig config) {
@@ -27,7 +33,7 @@ final class TokenAnalyse {
      * @param results metrics representing how suspicious the token is
      */
     void analyze(String token, AnalyseResults results) {
-        if (token.isBlank()) {
+        if (token.isBlank() || IS_STACKTRACE_TOKEN.test(token)) {
             return;
         }
 
