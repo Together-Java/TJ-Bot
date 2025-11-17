@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id "com.diffplug.spotless" version "7.2.0"
-    id "org.sonarqube" version "7.0.0.6105"
+    id "com.diffplug.spotless" version "8.0.0"
+    id "org.sonarqube" version "7.0.1.6134"
     id "name.remal.sonarlint" version "6.0.0"
 }
 repositories {
@@ -35,7 +35,9 @@ sonarqube {
 tasks.register('installLocalGitHook', Copy) {
     from new File(rootProject.rootDir, 'scripts/pre-commit')
     into new File(rootProject.rootDir, '.git/hooks')
-    fileMode 0775
+    filePermissions {
+        unix("rwxrwxr-x")
+    }
 }
 build.dependsOn installLocalGitHook
 
@@ -59,7 +61,7 @@ subprojects {
     java {
         toolchain {
             // Nails the Java-Version of every Subproject
-            languageVersion = JavaLanguageVersion.of(24)
+            languageVersion = JavaLanguageVersion.of(25)
         }
     }
 

@@ -7,7 +7,7 @@ buildscript {
 plugins {
     id 'application'
     id 'com.google.cloud.tools.jib' version '3.5.0'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.2.2'
     id 'database-settings'
 }
 
@@ -18,7 +18,7 @@ repositories {
 var outputImage = 'togetherjava.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
-    from.image = 'eclipse-temurin:24'
+    from.image = 'eclipse-temurin:25'
     to {
         image = outputImage
         auth {
