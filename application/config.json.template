@@ -62,7 +62,9 @@
             "youtube.com",
             "www.youtube.com",
             "cdn.discordapp.com",
-            "media.discordapp.net"
+            "media.discordapp.net",
+            "store.steampowered.com",
+            "help.steampowered.com"
         ],
         "hostBlacklist": [
             "bit.ly",
