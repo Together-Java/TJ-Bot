@@ -36,8 +36,8 @@ final class ScamDetectorTest {
 
         when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
                 "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
-                "whatsapp", "crypto", "^claim", "teen", "adobe", "hack", "steamcommunity",
-                "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
+                "whatsapp", "crypto", "^claim", "teen", "adobe", "^hack$", "hacks",
+                "steamcommunity", "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
         when(scamConfig.getHostWhitelist())
             .thenReturn(Set.of("discord.com", "discord.media", "discordapp.com", "discordapp.net",
                     "discordstatus.com", "thehackernews.com", "gradle.org", "help.gradle.org",
@@ -540,6 +540,7 @@ final class ScamDetectorTest {
                 "https://store.steampowered.com/app/3028330/Battlefield_REDSEC/",
                 "https://help.steampowered.com/en/faqs/view/49A1-B944-48B8-FF00",
                 "https://store.steampowered.com/api/appdetails?appids=8930 this endpoint is so cool",
-                "id play it if it was free maybe https://store.steampowered.com/app/1349230/5DChessWithMultiverseTime_Travel/");
+                "id play it if it was free maybe https://store.steampowered.com/app/1349230/5DChessWithMultiverseTime_Travel/",
+                "Why wouldn't they just take the $150 and not bother hacking an account to get the petfood sent?");
     }
 }
