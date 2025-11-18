@@ -10,7 +10,7 @@ defaults:
     shell: bash
 
 env:
-  JAVA_VERSION: 24
+  JAVA_VERSION: 25
 
 jobs:
 
