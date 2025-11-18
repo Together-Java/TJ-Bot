@@ -6,7 +6,7 @@ Alternatively, you can also work directly in the cloud, for free, and get starte
 * [[Code in the cloud (codespaces)]]
 
 ## Prerequisites
-* [Java 24](https://adoptium.net/temurin/releases?version=24) installed
+* [Java 25](https://adoptium.net/temurin/releases?version=25) installed
 * your favorite Java IDE or text editor, e.g. [IntelliJ](https://www.jetbrains.com/idea/download/) or [Eclipse](https://www.eclipse.org/downloads/)
 * [`git`](https://git-scm.com/downloads) installed (or any GUI or IDE plugin)
 * [`gradle`](https://gradle.org/releases/) available (or any GUI or IDE plugin), you can either install it or use our provided wrapper
