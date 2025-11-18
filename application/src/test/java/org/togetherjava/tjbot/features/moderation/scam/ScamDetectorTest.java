@@ -36,12 +36,13 @@ final class ScamDetectorTest {
 
         when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
                 "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
-                "whatsapp", "crypto", "^claim", "teen", "adobe", "hack", "steamcommunity",
-                "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
-        when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
-                "discordapp.com", "discordapp.net", "discordstatus.com", "thehackernews.com",
-                "gradle.org", "help.gradle.org", "youtube.com", "www.youtube.com",
-                "cdn.discordapp.com", "media.discordapp.net"));
+                "whatsapp", "crypto", "^claim", "teen", "adobe", "^hack$", "hacks",
+                "steamcommunity", "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
+        when(scamConfig.getHostWhitelist())
+            .thenReturn(Set.of("discord.com", "discord.media", "discordapp.com", "discordapp.net",
+                    "discordstatus.com", "thehackernews.com", "gradle.org", "help.gradle.org",
+                    "youtube.com", "www.youtube.com", "cdn.discordapp.com", "media.discordapp.net",
+                    "store.steampowered.com", "help.steampowered.com", "learn.microsoft.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
                 "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph",
                 "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"));
@@ -428,7 +429,25 @@ final class ScamDetectorTest {
                         https://cdn.discordapp.com/attachments/1234/5678/1.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
                         https://cdn.discordapp.com/attachments/1234/5678/2.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
                         https://cdn.discordapp.com/attachments/1234/5678/3.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
-                        https://cdn.discordapp.com/attachments/1234/5678/4.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&""");
+                        https://cdn.discordapp.com/attachments/1234/5678/4.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&""",
+                """
+                        I’ll help the first 10 interested people learn how to start earning over $100,000 within a week.
+                        You only send me 10% of your profits after you receive them.
+                        No pressure. No gimmicks. Just results.
+                        Send a friend request or DM me (HOW) on Telegram:
+                        @Joinna_Dwayno
+                        (Or use the link in my bio.)
+                        If you’re not serious, don’t message.""",
+                """
+                        I'll help the first 10 people interested on how to  start earning $100k or more within a week, but you will reimburse me 15% of your profits when you receive it.
+                        Note: only interested people should send a friend request or send me a dm! ask me (HOW) via Telegram
+                        @laula_david2
+                        Or Click /use the the telegram link on my bio""",
+                """
+                        I’m looking for a couple of reliable people (🇺🇸) to help with simple recurring tasks. It’s only 1–2 hours of work per week, fully flexible on your schedule,
+                        and pays $150+ per month, with the potential to increase to $300+ later. If you’re interested in easy side income with minimal time commitment,
+                        send me a message💬 and I’ll share more details.
+                        WhatsApp: +12534267893""");
     }
 
     private static List<String> provideRealFalsePositiveMessages() {
@@ -516,6 +535,30 @@ final class ScamDetectorTest {
                         It was pretty pricey, and the costs likely differ a lot from country to country
                         (keeping in mind that a portion is importing of equipment to NZ and some is labour in a very different market).
                         We have 13.5KW of storage, a 10KW inverter, 11.5KW of generation and an EV charger.
-                        All up, on a 1% 'green loan', it was $40k NZD (~$23k USD)""");
+                        All up, on a 1% 'green loan', it was $40k NZD (~$23k USD)""",
+                "https://store.steampowered.com/app/3176060/Emissary_Zero/",
+                "https://store.steampowered.com/app/3028330/Battlefield_REDSEC/",
+                "https://help.steampowered.com/en/faqs/view/49A1-B944-48B8-FF00",
+                "https://store.steampowered.com/api/appdetails?appids=8930 this endpoint is so cool",
+                "id play it if it was free maybe https://store.steampowered.com/app/1349230/5DChessWithMultiverseTime_Travel/",
+                "Why wouldn't they just take the $150 and not bother hacking an account to get the petfood sent?",
+                """
+                        https://learn.microsoft.com/en-us/powershell/scripting/discover-powershell?view=powershell-7.5
+                        What makes PowerShell unique is that it accepts and returns .NET objects, rather than text.
+                        because of that, but well it says that it returns .NET objects not that the commands are from .NET,
+                        but well as i said i use cmd.exe because i do not know .NET nor powershell""",
+                """
+                        Exception in thread "ServerEntityWriterThread"
+                        java.lang.NoSuchMethodError: org.schema.game.common.controller.rails.RailRelation.isLocked()Z
+                        at org.schema.game.common.controller.rails.RailController.getDockedTag(RailController.java:2686)
+                        at org.schema.game.common.controller.rails.RailController.getTag(RailController.java:2652)
+                        at org.schema.game.common.controller.SegmentController.toTagStructure(SegmentController.java:2813)
+                        at org.schema.game.common.data.EntityFileTools.write(EntityFileTools.java:57)
+                        at org.schema.game.server.controller.GameServerController.writeEntity(GameServerController.java:2938)
+                        at org.schema.game.common.data.world.Sector.writeSingle(Sector.java:2570)
+                        at org.schema.game.common.data.world.Sector.writeEntity(Sector.java:2546)
+                        at org.schema.game.common.data.world.Sector.access$200(Sector.java:120)
+                        at org.schema.game.common.data.world.Sector$3.run(Sector.java:2665)
+                        at org.schema.schine.network.server.ServerEntityWriterThread.run(ServerEntityWriterThread.java:74)""");
     }
 }

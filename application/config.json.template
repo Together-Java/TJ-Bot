@@ -40,9 +40,10 @@
             "whatsapp",
             "crypto",
             "^claim",
-            "teen",
+            "^teen$",
             "adobe",
-            "hack",
+            "^hack$",
+            "hacks",
             "steamcommunity",
             "freenitro",
             "^earn$",
@@ -62,7 +63,10 @@
             "youtube.com",
             "www.youtube.com",
             "cdn.discordapp.com",
-            "media.discordapp.net"
+            "media.discordapp.net",
+            "store.steampowered.com",
+            "help.steampowered.com",
+            "learn.microsoft.com"
         ],
         "hostBlacklist": [
             "bit.ly",
