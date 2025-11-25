@@ -41,6 +41,7 @@ import net.dv8tion.jda.internal.entities.EntityBuilder;
 import net.dv8tion.jda.internal.entities.GuildImpl;
 import net.dv8tion.jda.internal.entities.MemberImpl;
 import net.dv8tion.jda.internal.entities.RoleImpl;
+import net.dv8tion.jda.internal.entities.SelfMemberImpl;
 import net.dv8tion.jda.internal.entities.SelfUserImpl;
 import net.dv8tion.jda.internal.entities.UserImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.PrivateChannelImpl;
@@ -168,7 +169,7 @@ public final class JdaTester {
         rateLimiter =
                 new SequentialRestRateLimiter(new RestRateLimiter.RateLimitConfig(RATE_LIMIT_POOL,
                         RestRateLimiter.GlobalRateLimit.create(), true));
-        Member selfMember = spy(new MemberImpl(guild, selfUser));
+        Member selfMember = spy(new SelfMemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
         threadChannel = spy(
