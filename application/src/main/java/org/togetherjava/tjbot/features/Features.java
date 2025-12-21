@@ -204,7 +204,7 @@ public class Features {
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
-        features.add(new HelpThreadStatsCommand());
+        features.add(new HelpThreadStatsCommand(database));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
