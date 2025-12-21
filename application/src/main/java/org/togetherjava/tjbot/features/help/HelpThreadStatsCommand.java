@@ -26,7 +26,7 @@ import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
  * forum's activity over a specific duration.
  * <p>
  * Example usage:
- * 
+ *
  * <pre>
  * {@code
  * /help-thread-stats duration-option: 7 Days
@@ -47,6 +47,15 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
     private static final String AVERAGE_THREAD_DURATION_IN_SECONDS_ALIAS = "avg_sec";
     private static final String MINIMUM_THREAD_DURATION_IN_SECONDS_ALIAS = "min_sec";
     private static final String MAXIMUM_THREAD_DURATION_IN_SECONDS_ALIAS = "max_sec";
+
+    private static final String EMOJI_CHART = "\uD83D\uDCCA";
+    private static final String EMOJI_MEMO = "\uD83D\uDCDD";
+    private static final String EMOJI_SPEECH_BUBBLE = "\uD83D\uDCAC";
+    private static final String EMOJI_LABEL = "\uD83C\uDFF7\uFE0F";
+    private static final String EMOJI_LIGHTNING = "\u26A1";
+
+    private static final String EMBED_BLANK_LINE = "\u200B";
+    private static final String WHITESPACE = " ";
 
     private final Database database;
 
@@ -121,20 +130,20 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
             String peakHourRange = getPeakHour(context, startDate);
 
-            EmbedBuilder embed =
-                    new EmbedBuilder().setTitle("📊 Help Thread Stats (Last " + days + " Days)")
-                        .setColor(getStatusColor(totalCreated, ghostThreads))
-                        .setTimestamp(Instant.now())
-                        .setDescription("\u200B")
-                        .setFooter("Together Java Community Stats",
-                                Objects.requireNonNull(event.getGuild()).getIconUrl());
+            EmbedBuilder embed = new EmbedBuilder()
+                .setTitle(EMOJI_CHART + " Help Thread Stats (Last " + days + " Days)")
+                .setColor(getStatusColor(totalCreated, ghostThreads))
+                .setTimestamp(Instant.now())
+                .setDescription(EMBED_BLANK_LINE)
+                .setFooter("Together Java Community Stats",
+                        Objects.requireNonNull(event.getGuild()).getIconUrl());
 
-            embed.addField("📝 THREAD ACTIVITY",
+            embed.addField(EMOJI_MEMO + WHITESPACE + "THREAD ACTIVITY",
                     "Created: `%d`%nCurrently Open: `%d`%nResponse Rate: %.1f%%%nPeak Hours: `%s`"
                         .formatted(totalCreated, openThreads, rawResRate, peakHourRange),
                     false);
 
-            embed.addField("💬 ENGAGEMENT",
+            embed.addField(EMOJI_SPEECH_BUBBLE + WHITESPACE + "ENGAGEMENT",
                     "Avg Messages: `%s`%nAvg Helpers: `%s`%nUnanswered (Ghost): `%d`".formatted(
                             formatDouble(Objects
                                 .requireNonNull(statsRecord.get(AVERAGE_MESSAGE_COUNT_ALIAS))),
@@ -143,12 +152,12 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
                             ghostThreads),
                     false);
 
-            embed.addField("🏷️ TAG ACTIVITY",
+            embed.addField(EMOJI_LABEL + WHITESPACE + "TAG ACTIVITY",
                     "Most Used: `%s`%nMost Active: `%s`%nNeeds Love: `%s`".formatted(highVolumeTag,
                             highActivityTag, lowActivityTag),
                     false);
 
-            embed.addField("⚡ RESOLUTION SPEED",
+            embed.addField(EMOJI_LIGHTNING + WHITESPACE + "RESOLUTION SPEED",
                     "Average: `%s`%nFastest: `%s`%nSlowest: `%s`".formatted(
                             smartFormat(statsRecord.get(AVERAGE_THREAD_DURATION_IN_SECONDS_ALIAS,
                                     Double.class)),
