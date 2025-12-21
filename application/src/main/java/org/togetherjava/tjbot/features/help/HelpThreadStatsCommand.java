@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.OrderField;
 import org.jooq.Record1;
 
@@ -38,6 +39,14 @@ import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 public class HelpThreadStatsCommand extends SlashCommandAdapter {
     public static final String COMMAND_NAME = "help-thread-stats";
     public static final String DURATION_OPTION = "duration-option";
+    private static final String TOTAL_CREATED_FIELD = "total_created";
+    private static final String OPEN_NOW_ALIAS = "open_now";
+    private static final String GHOST_NOW_ALIAS = "ghost_count";
+    private static final String AVERAGE_PARTICIPANTS_ALIAS = "avg_parts";
+    private static final String AVERAGE_MESSAGE_COUNT_ALIAS = "avg_msgs";
+    private static final String AVERAGE_THREAD_DURATION_IN_SECONDS_ALIAS = "avg_sec";
+    private static final String MINIMUM_THREAD_DURATION_IN_SECONDS_ALIAS = "min_sec";
+    private static final String MAXIMUM_THREAD_DURATION_IN_SECONDS_ALIAS = "max_sec";
 
     private final Database database;
 
@@ -72,36 +81,33 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
         database.read(context -> {
             var statsRecord = context
-                .select(count().as("total_created"), count()
+                .select(count().as(TOTAL_CREATED_FIELD), count()
                     .filterWhere(
                             HELP_THREADS.TICKET_STATUS.eq(HelpSystemHelper.TicketStatus.ACTIVE.val))
-                    .as("open_now"),
-                        count().filterWhere(HELP_THREADS.PARTICIPANTS.eq(1)).as("ghost_count"),
-                        avg(HELP_THREADS.PARTICIPANTS).as("avg_parts"),
-                        avg(HELP_THREADS.MESSAGE_COUNT).as("avg_msgs"),
-                        avg(field("unixepoch({0}) - unixepoch({1})", Double.class,
-                                HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
-                            .as("avg_sec"),
-                        min(field("unixepoch({0}) - unixepoch({1})", Double.class,
-                                HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
-                            .as("min_sec"),
-                        max(field("unixepoch({0}) - unixepoch({1})", Double.class,
-                                HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
-                            .as("max_sec"))
+                    .as(OPEN_NOW_ALIAS),
+                        count().filterWhere(HELP_THREADS.PARTICIPANTS.eq(1)).as(GHOST_NOW_ALIAS),
+                        avg(HELP_THREADS.PARTICIPANTS).as(AVERAGE_PARTICIPANTS_ALIAS),
+                        avg(HELP_THREADS.MESSAGE_COUNT).as(AVERAGE_MESSAGE_COUNT_ALIAS),
+                        avg(durationInSeconds(HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
+                            .as(AVERAGE_THREAD_DURATION_IN_SECONDS_ALIAS),
+                        min(durationInSeconds(HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
+                            .as(MINIMUM_THREAD_DURATION_IN_SECONDS_ALIAS),
+                        max(durationInSeconds(HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
+                            .as(MAXIMUM_THREAD_DURATION_IN_SECONDS_ALIAS))
                 .from(HELP_THREADS)
                 .where(HELP_THREADS.CREATED_AT.ge(startDate))
                 .fetchOne();
 
-            if (statsRecord == null || statsRecord.get("total_created", Integer.class) == 0) {
+            if (statsRecord == null || statsRecord.get(TOTAL_CREATED_FIELD, Integer.class) == 0) {
                 event.getHook()
                     .editOriginal("No stats available for the last " + days + " days.")
                     .queue();
                 return null;
             }
 
-            int totalCreated = statsRecord.get("total_created", Integer.class);
-            int openThreads = statsRecord.get("open_now", Integer.class);
-            long ghostThreads = statsRecord.get("ghost_count", Number.class).longValue();
+            int totalCreated = statsRecord.get(TOTAL_CREATED_FIELD, Integer.class);
+            int openThreads = statsRecord.get(OPEN_NOW_ALIAS, Integer.class);
+            long ghostThreads = statsRecord.get(GHOST_NOW_ALIAS, Number.class).longValue();
 
             double rawResRate =
                     totalCreated > 0 ? ((double) (totalCreated - ghostThreads) / totalCreated) * 100
@@ -124,27 +130,32 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
                                 Objects.requireNonNull(event.getGuild()).getIconUrl());
 
             embed.addField("📝 THREAD ACTIVITY",
-                    "Created: `%d`\nCurrently Open: `%d`\nResponse Rate: %.1f%%\nPeak Hours: `%s`"
+                    "Created: `%d`%nCurrently Open: `%d`%nResponse Rate: %.1f%%%nPeak Hours: `%s`"
                         .formatted(totalCreated, openThreads, rawResRate, peakHourRange),
                     false);
 
             embed.addField("💬 ENGAGEMENT",
-                    "Avg Messages: `%s`\nAvg Helpers: `%s`\nUnanswered (Ghost): `%d`".formatted(
-                            formatDouble(Objects.requireNonNull(statsRecord.get("avg_msgs"))),
-                            formatDouble(Objects.requireNonNull(statsRecord.get("avg_parts"))),
+                    "Avg Messages: `%s`%nAvg Helpers: `%s`%nUnanswered (Ghost): `%d`".formatted(
+                            formatDouble(Objects
+                                .requireNonNull(statsRecord.get(AVERAGE_MESSAGE_COUNT_ALIAS))),
+                            formatDouble(Objects
+                                .requireNonNull(statsRecord.get(AVERAGE_PARTICIPANTS_ALIAS))),
                             ghostThreads),
                     false);
 
             embed.addField("🏷️ TAG ACTIVITY",
-                    "Most Used: `%s`\nMost Active: `%s`\nNeeds Love: `%s`".formatted(highVolumeTag,
+                    "Most Used: `%s`%nMost Active: `%s`%nNeeds Love: `%s`".formatted(highVolumeTag,
                             highActivityTag, lowActivityTag),
                     false);
 
             embed.addField("⚡ RESOLUTION SPEED",
-                    "Average: `%s`\nFastest: `%s`\nSlowest: `%s`".formatted(
-                            smartFormat(statsRecord.get("avg_sec", Double.class)),
-                            smartFormat(statsRecord.get("min_sec", Double.class)),
-                            smartFormat(statsRecord.get("max_sec", Double.class))),
+                    "Average: `%s`%nFastest: `%s`%nSlowest: `%s`".formatted(
+                            smartFormat(statsRecord.get(AVERAGE_THREAD_DURATION_IN_SECONDS_ALIAS,
+                                    Double.class)),
+                            smartFormat(statsRecord.get(MINIMUM_THREAD_DURATION_IN_SECONDS_ALIAS,
+                                    Double.class)),
+                            smartFormat(statsRecord.get(MAXIMUM_THREAD_DURATION_IN_SECONDS_ALIAS,
+                                    Double.class))),
                     false);
 
             event.getHook().editOriginalEmbeds(embed.build()).queue();
@@ -207,5 +218,13 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
     private String formatDouble(Object val) {
         return val instanceof Number num ? "%.2f".formatted(num.doubleValue()) : "0.00";
+    }
+
+    /**
+     * Calculates the duration in seconds between two timestamp fields. Uses SQLite unixepoch for
+     * conversion.
+     */
+    private Field<Double> durationInSeconds(Field<Instant> end, Field<Instant> start) {
+        return field("unixepoch({0}) - unixepoch({1})", Double.class, end, start);
     }
 }
