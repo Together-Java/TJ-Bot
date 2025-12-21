@@ -93,6 +93,9 @@ public final class RSSHandlerRoutine implements Routine {
             Caffeine.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).maximumSize(500).build();
 
     private static final int DEAD_RSS_FEED_FAILURE_THRESHOLD = 15;
+    private static final double BACKOFF_BASE = 2.0;
+    private static final double BACKOFF_EXPONENT_OFFSET = 1.0;
+    private static final double MAX_BACKOFF_HOURS = 24.0;
 
     /**
      * Constructs an RSSHandlerRoutine with the provided configuration and database.
@@ -430,11 +433,11 @@ public final class RSSHandlerRoutine implements Routine {
             }
             circuitBreaker.put(rssUrl, new FailureState(newCount, ZonedDateTime.now()));
 
-            long nextWait = (long) Math.min(Math.pow(2.0, newCount - 1.0), 24.0);
+            long blacklistedHours = calculateWaitHours(newCount);
 
             logger.warn(
                     "RSS fetch failed for {} (Attempt #{}). Backing off for {} hours. Reason: {}",
-                    rssUrl, newCount, nextWait, e.getMessage(), e);
+                    rssUrl, newCount, blacklistedHours, e.getMessage(), e);
 
             return List.of();
         }
@@ -458,12 +461,17 @@ public final class RSSHandlerRoutine implements Routine {
         return ZonedDateTime.parse(date, DateTimeFormatter.ofPattern(format));
     }
 
+    private long calculateWaitHours(int failureCount) {
+        return (long) Math.min(Math.pow(BACKOFF_BASE, failureCount - BACKOFF_EXPONENT_OFFSET),
+                MAX_BACKOFF_HOURS);
+    }
+
     private boolean isBackingOff(String url) {
         FailureState state = circuitBreaker.getIfPresent(url);
-        if (state == null) {
+        if (state == null)
             return false;
-        }
-        long waitHours = (long) Math.min(Math.pow(2.0, state.count() - 1.0), 24.0);
+
+        long waitHours = calculateWaitHours(state.count());
         ZonedDateTime retryAt = state.lastFailure().plusHours(waitHours);
 
         return ZonedDateTime.now().isBefore(retryAt);
