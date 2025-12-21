@@ -103,10 +103,8 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "topHelpers",
-                    required = true) TopHelpersConfig topHelpers,
-            @JsonProperty(value = "cakeDayConfig",
-                    required = true) CakeDayConfig cakeDayConfig) {
+            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
+            @JsonProperty(value = "cakeDayConfig", required = true) CakeDayConfig cakeDayConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
