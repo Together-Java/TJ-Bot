@@ -24,7 +24,17 @@ import org.togetherjava.tjbot.features.filesharing.FileSharingMessageListener;
 import org.togetherjava.tjbot.features.github.GitHubCommand;
 import org.togetherjava.tjbot.features.github.GitHubReference;
 import org.togetherjava.tjbot.features.help.*;
-import org.togetherjava.tjbot.features.javamail.RSSHandlerRoutine;
+import org.togetherjava.tjbot.features.help.AutoPruneHelperRoutine;
+import org.togetherjava.tjbot.features.help.GuildLeaveCloseThreadListener;
+import org.togetherjava.tjbot.features.help.HelpSystemHelper;
+import org.togetherjava.tjbot.features.help.HelpThreadActivityUpdater;
+import org.togetherjava.tjbot.features.help.HelpThreadAutoArchiver;
+import org.togetherjava.tjbot.features.help.HelpThreadCommand;
+import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
+import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
+import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
+import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
+import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
@@ -53,17 +63,21 @@ import org.togetherjava.tjbot.features.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.features.moderation.temp.TemporaryModerationRoutine;
+import org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener;
 import org.togetherjava.tjbot.features.reminder.RemindRoutine;
 import org.togetherjava.tjbot.features.reminder.ReminderCommand;
+import org.togetherjava.tjbot.features.rss.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.features.system.LogLevelCommand;
 import org.togetherjava.tjbot.features.tags.TagCommand;
 import org.togetherjava.tjbot.features.tags.TagManageCommand;
 import org.togetherjava.tjbot.features.tags.TagSystem;
 import org.togetherjava.tjbot.features.tags.TagsCommand;
+import org.togetherjava.tjbot.features.tophelper.TopHelpersAssignmentRoutine;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
+import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -108,6 +122,9 @@ public class Features {
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
+        TopHelpersService topHelpersService = new TopHelpersService(database);
+        TopHelpersAssignmentRoutine topHelpersAssignmentRoutine =
+                new TopHelpersAssignmentRoutine(config, topHelpersService);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -122,11 +139,14 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
+        features
+            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
         features.add(new RSSHandlerRoutine(config, database));
+        features.add(topHelpersAssignmentRoutine);
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
@@ -148,6 +168,7 @@ public class Features {
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(new HelpThreadCreatedListener(helpSystemHelper));
         features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
+        features.add(new ProjectsThreadCreatedListener(config));
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
@@ -168,7 +189,7 @@ public class Features {
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore, config));
         features.add(new UnmuteCommand(actionsStore, config));
-        features.add(new TopHelpersCommand(database));
+        features.add(new TopHelpersCommand(topHelpersService, topHelpersAssignmentRoutine));
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore));
         features.add(new ReminderCommand(database));

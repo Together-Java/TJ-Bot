@@ -23,6 +23,7 @@ public final class Config {
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
     private final String modMailChannelPattern;
+    private final String projectsChannelPattern;
     private final String mutedRolePattern;
     private final String heavyModerationRolePattern;
     private final String softModerationRolePattern;
@@ -42,10 +43,12 @@ public final class Config {
     private final String openaiApiKey;
     private final String sourceCodeBaseUrl;
     private final JShellConfig jshell;
+    private final HelperPruneConfig helperPruneConfig;
     private final FeatureBlacklistConfig featureBlacklistConfig;
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final TopHelpersConfig topHelpers;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -58,6 +61,8 @@ public final class Config {
                     required = true) String modAuditLogChannelPattern,
             @JsonProperty(value = "modMailChannelPattern",
                     required = true) String modMailChannelPattern,
+            @JsonProperty(value = "projectsChannelPattern",
+                    required = true) String projectsChannelPattern,
             @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
             @JsonProperty(value = "heavyModerationRolePattern",
                     required = true) String heavyModerationRolePattern,
@@ -90,11 +95,14 @@ public final class Config {
             @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
             @JsonProperty(value = "memberCountCategoryPattern",
                     required = true) String memberCountCategoryPattern,
+            @JsonProperty(value = "helperPruneConfig",
+                    required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern) {
+                    required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -103,6 +111,7 @@ public final class Config {
         this.discordGuildInvite = Objects.requireNonNull(discordGuildInvite);
         this.modAuditLogChannelPattern = Objects.requireNonNull(modAuditLogChannelPattern);
         this.modMailChannelPattern = Objects.requireNonNull(modMailChannelPattern);
+        this.projectsChannelPattern = Objects.requireNonNull(projectsChannelPattern);
         this.mutedRolePattern = Objects.requireNonNull(mutedRolePattern);
         this.heavyModerationRolePattern = Objects.requireNonNull(heavyModerationRolePattern);
         this.softModerationRolePattern = Objects.requireNonNull(softModerationRolePattern);
@@ -124,9 +133,11 @@ public final class Config {
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.sourceCodeBaseUrl = Objects.requireNonNull(sourceCodeBaseUrl);
         this.jshell = Objects.requireNonNull(jshell);
+        this.helperPruneConfig = Objects.requireNonNull(helperPruneConfig);
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.topHelpers = Objects.requireNonNull(topHelpers);
     }
 
     /**
@@ -168,6 +179,16 @@ public final class Config {
      */
     public String getModMailChannelPattern() {
         return modMailChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is supposed to contain information
+     * about user projects
+     *
+     * @return the channel name pattern
+     */
+    public String getProjectsChannelPattern() {
+        return projectsChannelPattern;
     }
 
     /**
@@ -383,6 +404,15 @@ public final class Config {
     }
 
     /**
+     * Gets the config for automatic pruning of helper roles.
+     *
+     * @return the configuration
+     */
+    public HelperPruneConfig getHelperPruneConfig() {
+        return helperPruneConfig;
+    }
+
+    /**
      * The configuration of blacklisted features.
      * 
      * @return configuration of blacklisted features
@@ -417,5 +447,14 @@ public final class Config {
      */
     public RSSFeedsConfig getRSSFeedsConfig() {
         return rssFeedsConfig;
+    }
+
+    /**
+     * Gets the config for the Top Helpers system.
+     *
+     * @return the configuration
+     */
+    public TopHelpersConfig getTopHelpers() {
+        return topHelpers;
     }
 }

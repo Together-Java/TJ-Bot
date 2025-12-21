@@ -15,7 +15,6 @@ final class SlashCommandAdapterTest {
             UserInteractionType.SLASH_COMMAND.getPrefix() + NAME;
     private static final String DESCRIPTION = "Foo command";
     private static final CommandVisibility VISIBILITY = CommandVisibility.GUILD;
-    private static final int UNIQUE_ID_ITERATIONS = 20;
 
     static SlashCommandAdapter createAdapter() {
         // noinspection AnonymousInnerClass

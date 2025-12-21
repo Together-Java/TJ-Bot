@@ -31,9 +31,9 @@ import net.dv8tion.jda.api.requests.RestRateLimiter;
 import net.dv8tion.jda.api.requests.SequentialRestRateLimiter;
 import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
-import net.dv8tion.jda.api.utils.AttachmentProxy;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.api.utils.NamedAttachmentProxy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
@@ -770,7 +770,7 @@ public final class JdaTester {
     private Message.Attachment clientAttachmentToReceivedAttachmentMock(
             FileUpload clientAttachment) {
         Message.Attachment receivedAttachment = mock(Message.Attachment.class);
-        AttachmentProxy attachmentProxy = mock(AttachmentProxy.class);
+        NamedAttachmentProxy attachmentProxy = mock(NamedAttachmentProxy.class);
 
         when(receivedAttachment.getJDA()).thenReturn(jda);
         when(receivedAttachment.getFileName()).thenReturn(clientAttachment.getName());

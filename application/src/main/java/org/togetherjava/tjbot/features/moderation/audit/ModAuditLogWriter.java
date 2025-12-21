@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.features.utils.Guilds;
 
 import javax.annotation.Nullable;
 
@@ -34,7 +35,7 @@ public final class ModAuditLogWriter {
 
     private final Config config;
 
-    private final Predicate<String> auditLogChannelNamePredicate;
+    private final Predicate<String> isAuditLogChannelName;
 
     /**
      * Creates a new instance.
@@ -43,7 +44,7 @@ public final class ModAuditLogWriter {
      */
     public ModAuditLogWriter(Config config) {
         this.config = config;
-        auditLogChannelNamePredicate =
+        isAuditLogChannelName =
                 Pattern.compile(config.getModAuditLogChannelPattern()).asMatchPredicate();
     }
 
@@ -90,11 +91,8 @@ public final class ModAuditLogWriter {
      * @return the channel used for moderation audit logs, if present
      */
     public Optional<TextChannel> getAndHandleModAuditLogChannel(Guild guild) {
-        Optional<TextChannel> auditLogChannel = guild.getTextChannelCache()
-            .stream()
-            .filter(channel -> auditLogChannelNamePredicate.test(channel.getName()))
-            .findAny();
-
+        Optional<TextChannel> auditLogChannel =
+                Guilds.findTextChannel(guild, isAuditLogChannelName);
         if (auditLogChannel.isEmpty()) {
             logger.warn(
                     "Unable to log moderation events, did not find a mod audit log channel matching the configured pattern '{}' for guild '{}'",

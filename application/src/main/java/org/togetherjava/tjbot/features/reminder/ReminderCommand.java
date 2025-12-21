@@ -219,6 +219,7 @@ public final class ReminderCommand extends SlashCommandAdapter {
             List<PendingRemindersRecord> pendingReminders, int pageToShow) {
         // 12 reminders, 10 per page, ceil(12 / 10) = 2
         int totalPages = Math.ceilDiv(pendingReminders.size(), REMINDERS_PER_PAGE);
+        totalPages = Math.max(1, totalPages);
 
         pageToShow = Math.clamp(pageToShow, 1, totalPages);
 

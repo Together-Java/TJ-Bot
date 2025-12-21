@@ -6,11 +6,12 @@
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
     "modAuditLogChannelPattern": "mod-audit-log",
     "modMailChannelPattern": "modmail",
+    "projectsChannelPattern": "projects",
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Community Ambassador",
-    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
-    "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helper.*",
+    "excludeCodeAutoDetectionRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
     "suggestions": {
         "channelPattern": "tj-suggestions",
         "upVoteEmoteName": "peepo_yes",
@@ -20,11 +21,81 @@
     "scamBlocker": {
         "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
         "reportChannelPattern": "commands",
-        "suspiciousKeywords": ["nitro", "boob", "sexy", "sexi", "esex"],
-        "hostWhitelist": ["discord.com", "discord.gg", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com"],
-        "hostBlacklist": ["bit.ly"],
-        "suspiciousHostKeywords": ["discord", "nitro", "premium"],
-        "isHostSimilarToKeywordDistanceThreshold": 2
+        "botTrapChannelPattern": "bot-trap",
+        "trustedUserRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
+        "suspiciousKeywords": [
+            "nitro",
+            "boob",
+            "sexy",
+            "sexi",
+            "esex",
+            "steam",
+            "gift",
+            "onlyfans",
+            "bitcoin",
+            "btc",
+            "promo",
+            "trader",
+            "trading",
+            "whatsapp",
+            "crypto",
+            "^claim",
+            "^teen$",
+            "adobe",
+            "^hack$",
+            "hacks",
+            "steamcommunity",
+            "freenitro",
+            "^earn$",
+            "^earning",
+            ".exe$",
+            "mrbeast"
+        ],
+        "hostWhitelist": [
+            "discord.com",
+            "discord.media",
+            "discordapp.com",
+            "discordapp.net",
+            "discordstatus.com",
+            "thehackernews.com",
+            "gradle.org",
+            "help.gradle.org",
+            "youtube.com",
+            "www.youtube.com",
+            "cdn.discordapp.com",
+            "media.discordapp.net",
+            "store.steampowered.com",
+            "help.steampowered.com",
+            "learn.microsoft.com"
+        ],
+        "hostBlacklist": [
+            "bit.ly",
+            "discord.gg",
+            "teletype.in",
+            "t.me",
+            "corematrix.us",
+            "u.to",
+            "steamcommunity.com",
+            "goo.su",
+            "telegra.ph",
+            "shorturl.at",
+            "cheatings.xyz",
+            "transfer.sh",
+            "tobimoller.space"
+        ],
+        "suspiciousHostKeywords": [
+            "discord",
+            "nitro",
+            "premium",
+            "free",
+            "cheat",
+            "crypto",
+            "telegra",
+            "telety"
+        ],
+        "isHostSimilarToKeywordDistanceThreshold": 2,
+        "suspiciousAttachmentsThreshold": 3,
+        "suspiciousAttachmentNamePattern": "(image|\\d{1,2})\\.[^.]{0,5}"
     },
     "wolframAlphaAppId": "79J52T-6239TVXHR7",
     "helpSystem": {
@@ -97,6 +168,13 @@
         "rateLimitWindowSeconds": 10,
         "rateLimitRequestsInWindow": 3
     },
+    "helperPruneConfig": {
+        "roleFullLimit": 250,
+        "roleFullThreshold": 245,
+        "pruneMemberAmount": 7,
+        "inactivateAfterDays": 90,
+        "recentlyJoinedDays": 4
+    },
     "featureBlacklist": {
         "normal": [
         ],
@@ -107,13 +185,19 @@
     "rssConfig": {
         "feeds": [
             {
-                "url": "https://wiki.openjdk.org/spaces/createrssfeed.action?types=page&types=comment&types=blogpost&types=mail&types=attachment&spaces=JDKUpdates&maxResults=15&title=%5BJDK+Updates%5D+All+Content+Feed&amp;publicFeed=true",
+                "url": "https://blogs.oracle.com/java/rss",
                 "targetChannelPattern": "java-news-and-changes",
-                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssX"
+                "dateFormatterPattern": "EEE, d MMM yyyy HH:mm:ss z"
             }
         ],
         "fallbackChannelPattern": "java-news-and-changes",
+        "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
         "pollIntervalInMinutes": 10
     },
-    "memberCountCategoryPattern": "Info"
+    "memberCountCategoryPattern": "Info",
+    "topHelpers": {
+        "rolePattern": "Top Helper.*",
+        "assignmentChannelPattern": "community-commands",
+        "announcementChannelPattern": "hall-of-fame"
+    }
 }

@@ -1,13 +1,13 @@
 buildscript {
     dependencies {
-        classpath 'org.xerial:sqlite-jdbc:3.45.0.0'
+        classpath 'org.xerial:sqlite-jdbc:3.51.0.0'
     }
 }
 
 plugins {
     id 'application'
-    id 'com.google.cloud.tools.jib' version '3.4.0'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.google.cloud.tools.jib' version '3.5.0'
+    id 'com.gradleup.shadow' version '9.3.0'
     id 'database-settings'
 }
 
@@ -18,7 +18,7 @@ repositories {
 var outputImage = 'togetherjava.org:5001/togetherjava/tjbot:' + System.getenv('BRANCH_NAME') ?: 'latest'
 
 jib {
-    from.image = 'eclipse-temurin:21'
+    from.image = 'eclipse-temurin:25'
     to {
         image = outputImage
         auth {
@@ -40,24 +40,24 @@ shadowJar {
 
 dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
-    implementation 'org.jetbrains:annotations:24.1.0'
+    implementation 'org.jetbrains:annotations:26.0.1'
 
     implementation project(':database')
     implementation project(':utils')
     implementation project(':formatter')
 
-    implementation 'net.dv8tion:JDA:5.0.0-beta.21'
+    implementation 'net.dv8tion:JDA:5.6.1'
 
-    implementation 'org.apache.logging.log4j:log4j-core:2.23.0'
-    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j18-impl:2.18.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.25.0'
+    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j2-impl:2.25.0'
 
-    implementation 'club.minnced:discord-webhooks:0.8.2'
+    implementation 'club.minnced:discord-webhooks:0.8.4'
 
     implementation "org.jooq:jooq:$jooqVersion"
 
     implementation 'io.mikael:urlbuilder:2.0.9'
 
-    implementation 'org.jsoup:jsoup:1.17.1'
+    implementation 'org.jsoup:jsoup:1.21.1'
 
     implementation 'org.scilab.forge:jlatexmath:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-greek:1.0.7'
@@ -67,24 +67,24 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
-    implementation "com.sigpwned:jackson-modules-java17-sealed-classes:0.0.0"
+    implementation "com.sigpwned:jackson-modules-java17-sealed-classes:2.19.0.0"
 
 	implementation 'com.github.freva:ascii-table:1.8.0'
 
     implementation 'io.github.url-detector:url-detector:0.1.23'
 
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.1'
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.2.0'
     
-    implementation 'org.kohsuke:github-api:1.321'
+    implementation 'org.kohsuke:github-api:1.329'
 
-    implementation 'org.apache.commons:commons-text:1.12.0'
-    implementation 'com.apptasticsoftware:rssreader:3.6.0'
+    implementation 'org.apache.commons:commons-text:1.15.0'
+    implementation 'com.apptasticsoftware:rssreader:3.12.0'
 
-    testImplementation 'org.mockito:mockito-core:5.12.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.20.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 
     implementation "com.theokanning.openai-gpt3-java:api:$chatGPTVersion"
     implementation "com.theokanning.openai-gpt3-java:service:$chatGPTVersion"
@@ -92,4 +92,5 @@ dependencies {
 
 application {
     mainClass = 'org.togetherjava.tjbot.Application'
+    applicationDefaultJvmArgs = ["--enable-native-access=ALL-UNNAMED"]
 }

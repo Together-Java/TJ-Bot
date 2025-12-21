@@ -130,7 +130,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
     private static OptionalLong parseMessageIdAndHandle(String messageId, IReplyCallback event) {
         try {
             return OptionalLong.of(Long.parseLong(messageId));
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             event
                 .reply("The given message id '%s' is invalid, expected a number."
                     .formatted(messageId))
@@ -297,7 +297,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         if (Subcommand.SUBCOMMANDS_WITH_PREVIOUS_CONTENT.contains(subcommand)) {
             try {
                 return tagSystem.getTag(id);
-            } catch (NoSuchElementException e) {
+            } catch (NoSuchElementException _) {
                 // NOTE Rare race condition, for example if another thread deleted the tag in the
                 // meantime
                 logger.warn("Tried to retrieve content of tag '{}', but the content doesn't exist.",

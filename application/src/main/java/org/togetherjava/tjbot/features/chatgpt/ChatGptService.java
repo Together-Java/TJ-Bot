@@ -10,9 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 
+import javax.annotation.Nullable;
+
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -91,37 +92,33 @@ public class ChatGptService {
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      */
-    public Optional<String> ask(String question, String context) {
+    public Optional<String> ask(String question, @Nullable String context) {
         if (isDisabled) {
             return Optional.empty();
         }
 
-        try {
-            String instructions = "KEEP IT CONCISE, NOT MORE THAN 280 WORDS";
-            String questionWithContext = "context: Category %s on a Java Q&A discord server. %s %s"
-                .formatted(context, instructions, question);
-            ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(),
-                    Objects.requireNonNull(questionWithContext));
-            ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-                .model(AI_MODEL)
-                .messages(List.of(chatMessage))
-                .frequencyPenalty(FREQUENCY_PENALTY)
-                .temperature(TEMPERATURE)
-                .maxTokens(MAX_TOKENS)
-                .n(MAX_NUMBER_OF_RESPONSES)
-                .build();
+        String contextText = context == null ? "" : ", Context: %s.".formatted(context);
+        String fullQuestion = "(KEEP IT CONCISE, NOT MORE THAN 280 WORDS%s) - %s"
+            .formatted(contextText, question);
 
-            String response = openAiService.createChatCompletion(chatCompletionRequest)
+        ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(), fullQuestion);
+        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+            .model(AI_MODEL)
+            .messages(List.of(chatMessage))
+            .frequencyPenalty(FREQUENCY_PENALTY)
+            .temperature(TEMPERATURE)
+            .maxTokens(MAX_TOKENS)
+            .n(MAX_NUMBER_OF_RESPONSES)
+            .build();
+        logger.debug("ChatGpt Request: {}", fullQuestion);
+
+        String response = null;
+        try {
+            response = openAiService.createChatCompletion(chatCompletionRequest)
                 .getChoices()
                 .getFirst()
                 .getMessage()
                 .getContent();
-
-            if (response == null) {
-                return Optional.empty();
-            }
-
-            return Optional.of(response);
         } catch (OpenAiHttpException openAiHttpException) {
             logger.warn(
                     "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
@@ -131,6 +128,12 @@ public class ChatGptService {
             logger.warn("There was an error using the OpenAI API: {}",
                     runtimeException.getMessage());
         }
-        return Optional.empty();
+
+        logger.debug("ChatGpt Response: {}", response);
+        if (response == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(response);
     }
 }
