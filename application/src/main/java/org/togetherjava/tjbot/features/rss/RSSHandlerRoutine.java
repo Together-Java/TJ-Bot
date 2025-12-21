@@ -132,7 +132,7 @@ public final class RSSHandlerRoutine implements Routine {
     public void runRoutine(@Nonnull JDA jda) {
         this.config.feeds().forEach(feed -> {
             if (isBackingOff(feed.url())) {
-                logger.info("Skipping RSS feed (Backing off): {}", feed.url());
+                logger.debug("Skipping RSS feed (Backing off): {}", feed.url());
                 return;
             }
 
