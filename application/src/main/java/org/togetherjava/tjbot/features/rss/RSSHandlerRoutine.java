@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.features.rss;
 
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -48,7 +50,7 @@ import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
  * <p>
  * To include a new RSS feed, simply define an {@link RSSFeed} entry in the {@code "rssFeeds"} array
  * within the configuration file, adhering to the format shown below:
- * 
+ *
  * <pre>
  * {@code
  * {
@@ -58,7 +60,7 @@ import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
  * }
  * }
  * </pre>
- * 
+ * <p>
  * Where:
  * <ul>
  * <li>{@code url} represents the URL of the RSS feed.</li>
@@ -69,6 +71,9 @@ import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
  * </ul>
  */
 public final class RSSHandlerRoutine implements Routine {
+
+    private record FailureState(int count, ZonedDateTime lastFailure) {
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(RSSHandlerRoutine.class);
     private static final int MAX_CONTENTS = 1000;
@@ -83,6 +88,11 @@ public final class RSSHandlerRoutine implements Routine {
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns;
     private final int interval;
     private final Database database;
+
+    private final Cache<String, FailureState> circuitBreaker =
+            Caffeine.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).maximumSize(500).build();
+
+    private static final int DEAD_RSS_FEED_FAILURE_THRESHOLD = 15;
 
     /**
      * Constructs an RSSHandlerRoutine with the provided configuration and database.
@@ -117,7 +127,14 @@ public final class RSSHandlerRoutine implements Routine {
 
     @Override
     public void runRoutine(@Nonnull JDA jda) {
-        this.config.feeds().forEach(feed -> sendRSS(jda, feed));
+        this.config.feeds().forEach(feed -> {
+            if (isBackingOff(feed.url())) {
+                logger.info("Skipping RSS feed (Backing off): {}", feed.url());
+                return;
+            }
+
+            sendRSS(jda, feed);
+        });
     }
 
     /**
@@ -257,7 +274,6 @@ public final class RSSHandlerRoutine implements Routine {
      * @param rssFeedRecord the record representing the RSS feed, can be null if not found in the
      *        database
      * @param lastPostedDate the last posted date to be updated
-     *
      * @throws DateTimeParseException if the date cannot be parsed
      */
     private void updateLastDateToDatabase(RSSFeed feedConfig, @Nullable RssFeedRecord rssFeedRecord,
@@ -400,9 +416,26 @@ public final class RSSHandlerRoutine implements Routine {
      */
     private List<Item> fetchRSSItemsFromURL(String rssUrl) {
         try {
-            return rssReader.read(rssUrl).toList();
+            List<Item> items = rssReader.read(rssUrl).toList();
+            circuitBreaker.invalidate(rssUrl);
+            return items;
         } catch (IOException e) {
-            logger.error("Could not fetch RSS from URL ({})", rssUrl, e);
+            FailureState oldState = circuitBreaker.getIfPresent(rssUrl);
+            int newCount = (oldState == null) ? 1 : oldState.count() + 1;
+
+            if (newCount >= DEAD_RSS_FEED_FAILURE_THRESHOLD) {
+                logger.error(
+                        "Possibly dead RSS feed URL: {} - Failed {} times. Please remove it from config.",
+                        rssUrl, newCount);
+            }
+            circuitBreaker.put(rssUrl, new FailureState(newCount, ZonedDateTime.now()));
+
+            long nextWait = (long) Math.min(Math.pow(2.0, newCount - 1.0), 24.0);
+
+            logger.warn(
+                    "RSS fetch failed for {} (Attempt #{}). Backing off for {} hours. Reason: {}",
+                    rssUrl, newCount, nextWait, e.getMessage(), e);
+
             return List.of();
         }
     }
@@ -423,5 +456,16 @@ public final class RSSHandlerRoutine implements Routine {
         }
 
         return ZonedDateTime.parse(date, DateTimeFormatter.ofPattern(format));
+    }
+
+    private boolean isBackingOff(String url) {
+        FailureState state = circuitBreaker.getIfPresent(url);
+        if (state == null) {
+            return false;
+        }
+        long waitHours = (long) Math.min(Math.pow(2.0, state.count() - 1.0), 24.0);
+        ZonedDateTime retryAt = state.lastFailure().plusHours(waitHours);
+
+        return ZonedDateTime.now().isBefore(retryAt);
     }
 }
