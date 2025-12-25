@@ -194,7 +194,7 @@
         "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
         "pollIntervalInMinutes": 10
     },
-    "coolMessagesConfig": {
+    "quoteMessagesConfig": {
         "minimumReactions": 2,
         "boardChannelPattern": "quotes",
         "reactionEmoji": "⭐"

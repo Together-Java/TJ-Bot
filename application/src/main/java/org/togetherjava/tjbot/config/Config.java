@@ -436,12 +436,14 @@ public final class Config {
     }
 
     /**
-     * The configuration of the cool messages config. The configuration of the quote board feature.
-     * Quotes user selected messages
+     * The configuration of the quote messages config.
      *
-     * @return configuration of cool messages config
+     * <p>
+     * >The configuration of the quote board feature. Quotes user selected messages.
+     *
+     * @return configuration of quote messages config
      */
-    public QuoteBoardConfig getCoolMessagesConfig() {
+    public QuoteBoardConfig getQuoteMessagesConfig() {
         return quoteMessagesConfig;
     }
 
