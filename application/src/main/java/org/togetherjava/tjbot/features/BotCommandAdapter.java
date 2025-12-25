@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.EntitySelectInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.jetbrains.annotations.Contract;
@@ -15,6 +16,7 @@ import org.togetherjava.tjbot.features.componentids.Lifespan;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Adapter implementation of a {@link BotCommand}. The minimal setup only requires implementation of
@@ -51,7 +53,14 @@ public abstract class BotCommandAdapter implements BotCommand {
      * @param visibility the visibility of the command
      */
     protected BotCommandAdapter(CommandData data, CommandVisibility visibility) {
-        this.data = data.setGuildOnly(visibility == CommandVisibility.GUILD);
+        this.data = data;
+
+        Set<InteractionContextType> contexts = switch (visibility) {
+            case GUILD -> Set.of(InteractionContextType.GUILD);
+            case GLOBAL -> InteractionContextType.ALL;
+        };
+
+        data.setContexts(contexts);
         this.visibility = Objects.requireNonNull(visibility, "The visibility shouldn't be null");
 
         name = data.getName();

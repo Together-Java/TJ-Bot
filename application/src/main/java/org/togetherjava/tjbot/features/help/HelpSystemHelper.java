@@ -27,6 +27,7 @@ import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.Guilds;
 
 import java.awt.Color;
 import java.time.Instant;
@@ -38,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -55,7 +58,7 @@ public final class HelpSystemHelper {
 
     static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
-    private final Predicate<String> hasTagManageRole;
+    private final Predicate<String> isTagManageRole;
     private final Predicate<String> isHelpForumName;
     private final String helpForumPattern;
     /**
@@ -86,7 +89,7 @@ public final class HelpSystemHelper {
         this.database = database;
         this.chatGptService = chatGptService;
 
-        hasTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
+        isTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
         helpForumPattern = helpConfig.getHelpForumPattern();
         isHelpForumName = Pattern.compile(helpForumPattern).asMatchPredicate();
 
@@ -127,26 +130,27 @@ public final class HelpSystemHelper {
     RestAction<Message> constructChatGptAttempt(ThreadChannel threadChannel,
             String originalQuestion, ComponentIdInteractor componentIdInteractor) {
         Optional<String> questionOptional = prepareChatGptQuestion(threadChannel, originalQuestion);
-        Optional<String> chatGPTAnswer;
+        Optional<String> chatGptAnswer;
 
         if (questionOptional.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
         }
         String question = questionOptional.get();
-        logger.debug("The final question sent to chatGPT: {}", question);
 
         ForumTag defaultTag = threadChannel.getAppliedTags().getFirst();
         ForumTag matchingTag = getCategoryTagOfChannel(threadChannel).orElse(defaultTag);
 
-        String context = matchingTag.getName();
-        chatGPTAnswer = chatGptService.ask(question, context);
+        String context =
+                "Category %s on a Java Q&A discord server. You may use markdown syntax for the response"
+                    .formatted(matchingTag.getName());
+        chatGptAnswer = chatGptService.ask(question, context);
 
-        if (chatGPTAnswer.isEmpty()) {
+        if (chatGptAnswer.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
         }
 
-        StringBuilder idForDismissButton = new StringBuilder();
-        RestAction<Message> message =
+        AtomicReference<String> messageId = new AtomicReference<>("");
+        RestAction<Message> post =
                 mentionGuildSlashCommand(threadChannel.getGuild(), ChatGptCommand.COMMAND_NAME)
                     .map("""
                             Here is an AI assisted attempt to answer your question 🤖. Maybe it helps! \
@@ -154,9 +158,9 @@ public final class HelpSystemHelper {
                             %s.
                             """::formatted)
                     .flatMap(threadChannel::sendMessage)
-                    .onSuccess(m -> idForDismissButton.append(m.getId()));
+                    .onSuccess(message -> messageId.set(message.getId()));
 
-        String answer = chatGPTAnswer.orElseThrow();
+        String answer = chatGptAnswer.orElseThrow();
         SelfUser selfUser = threadChannel.getJDA().getSelfUser();
 
         int responseCharLimit = MessageEmbed.DESCRIPTION_MAX_LENGTH;
@@ -165,9 +169,8 @@ public final class HelpSystemHelper {
         }
 
         MessageEmbed responseEmbed = generateGptResponseEmbed(answer, selfUser, originalQuestion);
-        return message.flatMap(any -> threadChannel.sendMessageEmbeds(responseEmbed)
-            .addActionRow(
-                    generateDismissButton(componentIdInteractor, idForDismissButton.toString())));
+        return post.flatMap(_ -> threadChannel.sendMessageEmbeds(responseEmbed)
+            .addActionRow(generateDismissButton(componentIdInteractor, messageId.get())));
     }
 
     /**
@@ -204,20 +207,21 @@ public final class HelpSystemHelper {
 
     private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,
             String originalQuestion) {
-        String questionTitle = threadChannel.getName();
-        StringBuilder questionBuilder = new StringBuilder(MAX_QUESTION_LENGTH);
+        StringJoiner question = new StringJoiner(" - ");
 
-        if (originalQuestion.length() < MIN_QUESTION_LENGTH
-                && questionTitle.length() < MIN_QUESTION_LENGTH) {
+        String questionTitle = threadChannel.getName();
+        question.add(questionTitle);
+        question.add(originalQuestion.substring(0,
+                Math.min(originalQuestion.length(), MAX_QUESTION_LENGTH)));
+
+        // Not enough content for meaningful responses
+        if (question.length() < MIN_QUESTION_LENGTH) {
             return Optional.empty();
         }
 
-        questionBuilder.append(questionTitle).append(" ");
-        originalQuestion = originalQuestion.substring(0, Math
-            .min(MAX_QUESTION_LENGTH - questionBuilder.length(), originalQuestion.length()));
-
-        questionBuilder.append(originalQuestion);
-        return Optional.of(questionBuilder.toString());
+        question.add(
+                "Additionally to answering the question, provide 3 useful links (as markdown list) from reliable websites on the topic. Write \"Useful links:\" as title for this list.");
+        return Optional.of(question.toString());
     }
 
     private RestAction<Message> useChatGptFallbackMessage(ThreadChannel threadChannel) {
@@ -341,7 +345,7 @@ public final class HelpSystemHelper {
     }
 
     boolean hasTagManageRole(Member member) {
-        return member.getRoles().stream().map(Role::getName).anyMatch(hasTagManageRole);
+        return Guilds.hasMemberRole(member, isTagManageRole);
     }
 
     boolean isHelpForumName(String channelName) {
@@ -357,11 +361,7 @@ public final class HelpSystemHelper {
         Predicate<String> isChannelName = this::isHelpForumName;
         String channelPattern = getHelpForumPattern();
 
-        Optional<ForumChannel> maybeChannel = guild.getForumChannelCache()
-            .stream()
-            .filter(channel -> isChannelName.test(channel.getName()))
-            .findAny();
-
+        Optional<ForumChannel> maybeChannel = Guilds.findForumChannel(guild, isChannelName);
         if (maybeChannel.isEmpty()) {
             consumeChannelPatternIfNotFound.accept(channelPattern);
         }

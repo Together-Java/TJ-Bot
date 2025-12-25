@@ -17,16 +17,24 @@ import java.util.Set;
 public final class ScamBlockerConfig {
     private final Mode mode;
     private final String reportChannelPattern;
+    private final String botTrapChannelPattern;
+    private final String trustedUserRolePattern;
     private final Set<String> suspiciousKeywords;
     private final Set<String> hostWhitelist;
     private final Set<String> hostBlacklist;
     private final Set<String> suspiciousHostKeywords;
     private final int isHostSimilarToKeywordDistanceThreshold;
+    private final int suspiciousAttachmentsThreshold;
+    private final String suspiciousAttachmentNamePattern;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private ScamBlockerConfig(@JsonProperty(value = "mode", required = true) Mode mode,
             @JsonProperty(value = "reportChannelPattern",
                     required = true) String reportChannelPattern,
+            @JsonProperty(value = "botTrapChannelPattern",
+                    required = true) String botTrapChannelPattern,
+            @JsonProperty(value = "trustedUserRolePattern",
+                    required = true) String trustedUserRolePattern,
             @JsonProperty(value = "suspiciousKeywords",
                     required = true) Set<String> suspiciousKeywords,
             @JsonProperty(value = "hostWhitelist", required = true) Set<String> hostWhitelist,
@@ -34,14 +42,23 @@ public final class ScamBlockerConfig {
             @JsonProperty(value = "suspiciousHostKeywords",
                     required = true) Set<String> suspiciousHostKeywords,
             @JsonProperty(value = "isHostSimilarToKeywordDistanceThreshold",
-                    required = true) int isHostSimilarToKeywordDistanceThreshold) {
+                    required = true) int isHostSimilarToKeywordDistanceThreshold,
+            @JsonProperty(value = "suspiciousAttachmentsThreshold",
+                    required = true) int suspiciousAttachmentsThreshold,
+            @JsonProperty(value = "suspiciousAttachmentNamePattern",
+                    required = true) String suspiciousAttachmentNamePattern) {
         this.mode = Objects.requireNonNull(mode);
         this.reportChannelPattern = Objects.requireNonNull(reportChannelPattern);
+        this.botTrapChannelPattern = Objects.requireNonNull(botTrapChannelPattern);
+        this.trustedUserRolePattern = Objects.requireNonNull(trustedUserRolePattern);
         this.suspiciousKeywords = new HashSet<>(Objects.requireNonNull(suspiciousKeywords));
         this.hostWhitelist = new HashSet<>(Objects.requireNonNull(hostWhitelist));
         this.hostBlacklist = new HashSet<>(Objects.requireNonNull(hostBlacklist));
         this.suspiciousHostKeywords = new HashSet<>(Objects.requireNonNull(suspiciousHostKeywords));
         this.isHostSimilarToKeywordDistanceThreshold = isHostSimilarToKeywordDistanceThreshold;
+        this.suspiciousAttachmentsThreshold = suspiciousAttachmentsThreshold;
+        this.suspiciousAttachmentNamePattern =
+                Objects.requireNonNull(suspiciousAttachmentNamePattern);
     }
 
     /**
@@ -61,6 +78,25 @@ public final class ScamBlockerConfig {
      */
     public String getReportChannelPattern() {
         return reportChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel that is used to as bot-trap. Sending
+     * messages in this channel identifies the author as bot.
+     *
+     * @return the channel name pattern
+     */
+    public String getBotTrapChannelPattern() {
+        return botTrapChannelPattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that will be ignored for scam detection.
+     *
+     * @return the REGEX pattern
+     */
+    public String getTrustedUserRolePattern() {
+        return trustedUserRolePattern;
     }
 
     /**
@@ -109,6 +145,26 @@ public final class ScamBlockerConfig {
      */
     public int getIsHostSimilarToKeywordDistanceThreshold() {
         return isHostSimilarToKeywordDistanceThreshold;
+    }
+
+    /**
+     * Gets the minimum amount of suspicious attachments that are required in a message to flag it
+     * as suspicious for its contained attachments.
+     *
+     * @return the minimum amount of suspicious attachments
+     */
+    public int getSuspiciousAttachmentsThreshold() {
+        return suspiciousAttachmentsThreshold;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify an attachment file name that is considered
+     * suspicious. The file name includes the extension.
+     *
+     * @return the attachment file name pattern
+     */
+    public String getSuspiciousAttachmentNamePattern() {
+        return suspiciousAttachmentNamePattern;
     }
 
     /**

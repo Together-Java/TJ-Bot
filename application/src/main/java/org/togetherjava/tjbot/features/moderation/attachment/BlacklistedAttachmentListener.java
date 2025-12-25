@@ -49,7 +49,7 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
     }
 
     private void handleBadMessage(Message message) {
-        message.delete().flatMap(any -> dmUser(message)).queue(any -> warnMods(message));
+        message.delete().flatMap(_ -> dmUser(message)).queue(_ -> warnMods(message));
     }
 
     private RestAction<Message> dmUser(Message message) {

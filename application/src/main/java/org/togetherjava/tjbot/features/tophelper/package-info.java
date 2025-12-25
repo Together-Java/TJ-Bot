@@ -1,5 +1,5 @@
 /**
- * This packages offers all the functionality for the top-helpers command system. The core class is
+ * This packages offers all the functionality for the top-helpers system. The core class is
  * {@link org.togetherjava.tjbot.features.tophelper.TopHelpersCommand}.
  */
 @MethodsReturnNonnullByDefault

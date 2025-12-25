@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.features.filesharing;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -21,6 +20,7 @@ import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.Guilds;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -99,8 +99,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         Member interactionUser = event.getMember();
         String gistAuthorId = args.getFirst();
-        boolean hasSoftModPermissions =
-                interactionUser.getRoles().stream().map(Role::getName).anyMatch(isSoftModRole);
+        boolean hasSoftModPermissions = Guilds.hasMemberRole(interactionUser, isSoftModRole);
 
         if (!gistAuthorId.equals(interactionUser.getId()) && !hasSoftModPermissions) {
             event.reply("You do not have permission for this action.").setEphemeral(true).queue();
@@ -182,13 +181,14 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
 
     private void sendResponse(MessageReceivedEvent event, String url, String gistId) {
         Message message = event.getMessage();
-        String messageContent = "I uploaded your attachments as **Gist**.";
+        String messageContent =
+                "I uploaded your attachments as **Gist**. This makes them more accessible, for example to **mobile users**.";
 
         Button gist = Button.link(url, "Gist");
 
         Button delete = Button.danger(
                 componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
-                "Dismiss");
+                "Delete");
 
         message.reply(messageContent).setActionRow(gist, delete).queue();
     }
