@@ -1,5 +1,8 @@
 package org.togetherjava.tjbot.features.moderation.scam;
 
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +12,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.ScamBlockerConfig;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +23,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 final class ScamDetectorTest {
+    private static final int SUSPICIOUS_ATTACHMENTS_THRESHOLD = 3;
+    private static final String SUSPICIOUS_ATTACHMENT_NAME = "image.png";
+
     private ScamDetector scamDetector;
 
     @BeforeEach
@@ -26,18 +34,27 @@ final class ScamDetectorTest {
         ScamBlockerConfig scamConfig = mock(ScamBlockerConfig.class);
         when(config.getScamBlocker()).thenReturn(scamConfig);
 
-        when(scamConfig.getSuspiciousKeywords())
-            .thenReturn(Set.of("nitro", "boob", "sexy", "sexi", "esex", "steam", "gift", "onlyfans",
-                    "bitcoin", "btc", "promo", "trader", "trading", "whatsapp", "crypto", "claim",
-                    "teen", "adobe", "hack", "steamcommunity", "freenitro", "^earn", ".exe"));
-        when(scamConfig.getHostWhitelist()).thenReturn(Set.of("discord.com", "discord.media",
-                "discordapp.com", "discordapp.net", "discordstatus.com"));
+        when(scamConfig.getSuspiciousKeywords()).thenReturn(Set.of("nitro", "boob", "sexy", "sexi",
+                "esex", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading",
+                "whatsapp", "crypto", "^claim", "teen", "adobe", "^hack$", "hacks",
+                "steamcommunity", "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"));
+        when(scamConfig.getHostWhitelist())
+            .thenReturn(Set.of("discord.com", "discord.media", "discordapp.com", "discordapp.net",
+                    "discordstatus.com", "thehackernews.com", "gradle.org", "help.gradle.org",
+                    "youtube.com", "www.youtube.com", "cdn.discordapp.com", "media.discordapp.net",
+                    "store.steampowered.com", "help.steampowered.com", "learn.microsoft.com"));
         when(scamConfig.getHostBlacklist()).thenReturn(Set.of("bit.ly", "discord.gg", "teletype.in",
                 "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph",
-                "shorturl.at", "cheatings.xyz", "transfer.sh"));
-        when(scamConfig.getSuspiciousHostKeywords())
-            .thenReturn(Set.of("discord", "nitro", "premium", "free", "cheat", "crypto", "tele"));
+                "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"));
+        when(scamConfig.getSuspiciousHostKeywords()).thenReturn(Set.of("discord", "nitro",
+                "premium", "free", "cheat", "crypto", "telegra", "telety"));
         when(scamConfig.getIsHostSimilarToKeywordDistanceThreshold()).thenReturn(2);
+        when(scamConfig.getSuspiciousAttachmentsThreshold())
+            .thenReturn(SUSPICIOUS_ATTACHMENTS_THRESHOLD);
+        when(scamConfig.getSuspiciousAttachmentNamePattern())
+            .thenReturn("(image|\\d{1,2})\\.[^.]{0,5}");
+
+        when(scamConfig.getTrustedUserRolePattern()).thenReturn("Moderator");
 
         scamDetector = new ScamDetector(config);
     }
@@ -119,6 +136,141 @@ final class ScamDetectorTest {
 
         // THEN flags it as harmless
         assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing multiple suspicious attachments are flagged as scam")
+    void detectsSuspiciousAttachments() {
+        // GIVEN an empty message containing suspicious attachments
+        String content = "";
+        Message.Attachment attachment = createImageAttachmentMock(SUSPICIOUS_ATTACHMENT_NAME);
+        List<Message.Attachment> attachments =
+                Collections.nCopies(SUSPICIOUS_ATTACHMENTS_THRESHOLD, attachment);
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as scam
+        assertTrue(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing text content are not flagged for suspicious attachments")
+    void ignoresAttachmentsIfContentProvided() {
+        // GIVEN a non-empty message containing suspicious attachments
+        String content = "Hello World";
+        Message.Attachment attachment = createImageAttachmentMock(SUSPICIOUS_ATTACHMENT_NAME);
+        List<Message.Attachment> attachments =
+                Collections.nCopies(SUSPICIOUS_ATTACHMENTS_THRESHOLD, attachment);
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing not enough suspicious attachments are not flagged")
+    void ignoresIfNotEnoughSuspiciousAttachments() {
+        // GIVEN an empty message containing some, but not enough suspicious attachments
+        String content = "";
+
+        Message.Attachment badAttachment = createImageAttachmentMock(SUSPICIOUS_ATTACHMENT_NAME);
+        Message.Attachment goodAttachment = createImageAttachmentMock("good.png");
+        int badAttachmentAmount = SUSPICIOUS_ATTACHMENTS_THRESHOLD - 1;
+        List<Message.Attachment> attachments =
+                new ArrayList<>(Collections.nCopies(badAttachmentAmount, badAttachment));
+        attachments.add(goodAttachment);
+
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing harmless attachments are not flagged")
+    void ignoresHarmlessAttachments() {
+        // GIVEN an empty message containing only harmless attachments
+        String content = "";
+        Message.Attachment attachment = createImageAttachmentMock("good.png");
+        List<Message.Attachment> attachments =
+                Collections.nCopies(SUSPICIOUS_ATTACHMENTS_THRESHOLD, attachment);
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Messages containing suspicious attachments are flagged even if extensions are upper-case (jpg vs JPG)")
+    void detectsSuspiciousAttachmentsRegardlessOfCase() {
+        // GIVEN an empty message containing suspicious attachments with mixed case for extensions
+        String content = "";
+        List<Message.Attachment> attachments =
+                List.of(createImageAttachmentMock("1.JPG"), createImageAttachmentMock("2.JPG"),
+                        createImageAttachmentMock("3.jpg"), createImageAttachmentMock("4.jpg"));
+        Message message = createMessageMock(content, attachments);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as scam
+        assertTrue(isScamResult);
+    }
+
+    @Test
+    @DisplayName("Suspicious messages send by trusted users are not flagged")
+    void ignoreTrustedUser() {
+        // GIVEN a scam message send by a trusted user
+        String content = "Checkout https://bit.ly/3IhcLiO to get your free nitro !";
+        Member trustedUser = createAuthorMock(List.of("Moderator"));
+        Message message = createMessageMock(content, List.of());
+
+        when(message.getMember()).thenReturn(trustedUser);
+
+        // WHEN analyzing it
+        boolean isScamResult = scamDetector.isScam(message);
+
+        // THEN flags it as harmless
+        assertFalse(isScamResult);
+    }
+
+    private static Message createMessageMock(String content, List<Message.Attachment> attachments) {
+        Message message = mock(Message.class);
+        when(message.getContentRaw()).thenReturn(content);
+        when(message.getContentDisplay()).thenReturn(content);
+        when(message.getAttachments()).thenReturn(attachments);
+        return message;
+    }
+
+    private static Message.Attachment createImageAttachmentMock(String name) {
+        Message.Attachment attachment = mock(Message.Attachment.class);
+        when(attachment.isImage()).thenReturn(true);
+        when(attachment.getFileName()).thenReturn(name);
+        return attachment;
+    }
+
+    private static Member createAuthorMock(List<String> roleNames) {
+        List<Role> roles = new ArrayList<>();
+        for (String roleName : roleNames) {
+            Role role = mock(Role.class);
+            when(role.getName()).thenReturn(roleName);
+            roles.add(role);
+        }
+
+        Member member = mock(Member.class);
+        when(member.getRoles()).thenReturn(roles);
+        return member;
     }
 
     private static List<String> provideRealScamMessages() {
@@ -237,14 +389,176 @@ final class ScamDetectorTest {
                             Or via TG: https://t.me/Charlie_Adamo
                         """,
                 "Urgently looking for mods & collab managers https://discord.gg/cryptohireo",
-                "Check this - https://transfer.sh/get/ajmkh3l7tzop/Setup.exe");
+                "Check this - https://transfer.sh/get/ajmkh3l7tzop/Setup.exe",
+                """
+                        Secrets of the crypto market that top traders don’t want you to know! I’m looking to help some individuals who
+                        are serious about earning over $100K weekly in the market. Remember, I’ll require just 15% of your profits once
+                        you start seeing earnings. Note: I’m only looking for serious and truly interested individuals.
+                        Text me on TG/WhatApps for more info on how to get started +(123)123-1230 https://t.me/officialjohnsmith""",
+                """
+                        💻 Senior Full Stack Engineer | 8+ Years Experience with me
+                        Hi, I’m a Senior Software Engineer with over 8 years of experience building scalable website, cloud-native software solutions across industries like healthcare, fintech, e-commerce, gaming, logistics, and energy.
+                        🧰 Core Skills:
+                        Frontend: React, Vue, Angular, Next.js, TypeScript, Web3 integration, Svelte, Three.js, Pixi.js
+                        Backend: Node.js, NestJS, PHP (Laravel, Symfony), Python (FastAPI/Flask), .Net, Rails
+                        Databases: MongoDB, MySQL, PostgreSQL, Redis
+                        Ecommerce platforms: MedusaJS, MercurJS, Shopify (Gadget)
+                        Automation & Bots: Token Swap / Trading Bots, AI/ML & Generative AI & CRM, Automation online sites
+                        🔍 Notable Projects:
+                        Property Shield: Scalable backend with NestJS, Redis Streams, MongoDB, Supabase
+                        Ready Education: Frontend state architecture with NgRx, Next / Vue, TypeScript with Web3,
+                        Kozoom Multimedia: Secure enterprise login using React, Redux, Azure
+                        B2CWorkflow Builder (React Flow)
+                        📂 Portfolio: https://tobimoller.space/
+                        📬 Open to freelance gigs, contracts, and bounties — let’s talk!""",
+                """
+                        I'll help the first 10 people interested on how to start earning $100k or more within a week,
+                        but you will reimburse me 10% of your profits when you receive it. Note: only interested people should
+                        send a friend request or send me a dm! ask me (HOW) via Telegram username @JohnSmith_123""",
+                """
+                        Ready to unlock your earning potential in the digital market? you can start earning $100,000 and even more
+                        as a beginner from the digital market, DM me for expert guidance or contact me directly on telegram and start building your financial future.
+                        Telegram username @JohnSmith123""",
+                "Grab it before it's deleted (available for Windows and macOS): https://www.reddit.com/r/TVBaFreeHub/comments/12345t/ninaatradercrackedfullpowertradingfreefor123/",
+                "Bro, claim 0.1 BTC now! Use promo code \"mrbeast\" at expmcoins.com screen @everyone",
+                """
+                        https://cdn.discordapp.com/attachments/1234/5678/image.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/image.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/image.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&""",
+                """
+                        https://cdn.discordapp.com/attachments/1234/5678/1.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/2.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/3.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&
+                        https://cdn.discordapp.com/attachments/1234/5678/4.png?ex=688cd552&is=688b83d2&hm=5787b53f08a488a22df6e3d2d43b4445ed0ced5f790e4f6e6e82810e38dba2aa&""",
+                """
+                        I’ll help the first 10 interested people learn how to start earning over $100,000 within a week.
+                        You only send me 10% of your profits after you receive them.
+                        No pressure. No gimmicks. Just results.
+                        Send a friend request or DM me (HOW) on Telegram:
+                        @Joinna_Dwayno
+                        (Or use the link in my bio.)
+                        If you’re not serious, don’t message.""",
+                """
+                        I'll help the first 10 people interested on how to  start earning $100k or more within a week, but you will reimburse me 15% of your profits when you receive it.
+                        Note: only interested people should send a friend request or send me a dm! ask me (HOW) via Telegram
+                        @laula_david2
+                        Or Click /use the the telegram link on my bio""",
+                """
+                        I’m looking for a couple of reliable people (🇺🇸) to help with simple recurring tasks. It’s only 1–2 hours of work per week, fully flexible on your schedule,
+                        and pays $150+ per month, with the potential to increase to $300+ later. If you’re interested in easy side income with minimal time commitment,
+                        send me a message💬 and I’ll share more details.
+                        WhatsApp: +12534267893""");
     }
 
     private static List<String> provideRealFalsePositiveMessages() {
-        return List
-            .of("""
-                    https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types""",
-                    """
-                            And according to quick google search. Median wage is about $23k usd""");
+        return List.of(
+                """
+                        https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/anonymous-types""",
+                "And according to quick google search. Median wage is about $23k usd",
+                """
+                        $ docker image prune -a
+                        WARNING! This will remove all images without at least one container associated to them.
+                        Are you sure you want to continue? [y/N] y
+                        ...
+                        Total reclaimed space: 37.73GB""",
+                """
+                        Exception in thread "main" java.lang.NoSuchMethodError: 'java.lang.String org.junit.platform.engine.discovery.MethodSelector.getMethodParameterTypes()'
+                        at com.intellij.junit5.JUnit5TestRunnerUtil.loadMethodByReflection(JUnit5TestRunnerUtil.java:127)
+                        at com.intellij.junit5.JUnit5TestRunnerUtil.buildRequest(JUnit5TestRunnerUtil.java:102)
+                        at com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:43)
+                        at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38)
+                        at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11)
+                        at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35)
+                        at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:232)
+                        at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:55)""",
+                """
+                        The average wage here (not the median, which is lower) gives you a take-home of about $68k in New Zealand dollars.
+                        The median house-price in my city (which is not at all the most expensive city) is ~$740k.
+                        That's an 11 year save for an average earner for an average house without spending anything.""",
+                "https://thehackernews.com/2025/07/alert-exposed-jdwp-interfaces-lead-to.html",
+                """
+                        ~/Developer/TJ-Bot develop ❯ ./gradlew build 10:20:05 PM
+                        FAILURE: Build failed with an exception.
+                        What went wrong:
+                        class name.remal.gradleplugins.sonarlint.SonarLintPlugin
+                        tried to access private field org.gradle.api.plugins.quality.internal.AbstractCodeQualityPlugin.extension
+                        (name.remal.gradleplugins.sonarlint.SonarLintPlugin is in unnamed module of loader
+                        org.gradle.internal.classloader.VisitableURLClassLoader$InstrumentingVisitableURLClassLoader @55f4c79b;
+                        org.gradle.api.plugins.quality.internal.AbstractCodeQualityPlugin is in unnamed module of
+                        loader org.gradle.initialization.MixInLegacyTypesClassLoader @49b2a47d)
+                        Try:
+                        Run with --stacktrace option to get the stack trace.
+                        Run with --info or --debug option to get more log output.
+                        Run with --scan to get full insights.
+                        Get more help at https://help.gradle.org/.
+                        BUILD FAILED in 795ms
+                        7 actionable tasks: 7 up-to-date
+                        ~/Developer/TJ-Bot develop ❯""",
+                """
+                        For example. I enter 3.45 for the price and 3 for the count. It results in 10.350000000000001 for some reason. I followed Bro Code's video:
+                        https://www.youtube.com/watch?v=P8CVPIaRmys&list=PLZPZq0rRZOOjNOZYq_R2PECIMglLemc&index=6
+                        and his does not do this. Why is this?
+                        import java.util.Scanner;
+                        public class ShoppingCart {
+                          public static void main(String[] args){
+                            // Shopping Cart Arithmetic Practice
+                            Scanner input = new Scanner(System.in);
+                            String item;
+                            double price;
+                            int count;
+                            char currency = '$';
+                            double total;
+                            System.out.print("What item would you like to buy?: ");
+                            item = input.nextLine();
+                            System.out.print("What is the price of this item?: ");
+                            price = input.nextDouble();
+                            System.out.print("How many " + item + "(s) would you like to buy?: ");
+                            count = input.nextInt();
+                            total = price * count;
+                            System.out.println("\\nYou bought " + count + " " + item + "(s).\\n");
+                            System.out.println("Your total is " + currency + total);
+                          }
+                        }""",
+                "@squidxtv https://cdn.steamusercontent.com/ugc/12827361819537692968/A7B3AC5A176E7B2287B5E84B9A0BE9754F5A6388/",
+                """
+                        today i understood, why security is joke, even for people on top
+                        https://micahsmith.com/ddosecrets-publishes-410-gb-of-heap-dumps-hacked-from-telemessages-archive-server/""",
+                """
+                        Hey guys @everyone, apologise for disturbing,
+                        I wanted to ask what's the scope of Java in future like after 2030 in USA, like the newer frameworks will
+                        replace Spring Boot ... and how AI will play it role ...
+                        I am very much confused, what to do, I tired exploring Machine Learning, but I don't know why it felt more
+                        like a burden then enjoyment, but spring boot was fun, although exploring microservice architecture
+                        is was tricky mostly when it came to deployment and it become really confusing...""",
+                "https://www.cloudflare.com/learning/email-security/dmarc-dkim-spf/",
+                """
+                        It was pretty pricey, and the costs likely differ a lot from country to country
+                        (keeping in mind that a portion is importing of equipment to NZ and some is labour in a very different market).
+                        We have 13.5KW of storage, a 10KW inverter, 11.5KW of generation and an EV charger.
+                        All up, on a 1% 'green loan', it was $40k NZD (~$23k USD)""",
+                "https://store.steampowered.com/app/3176060/Emissary_Zero/",
+                "https://store.steampowered.com/app/3028330/Battlefield_REDSEC/",
+                "https://help.steampowered.com/en/faqs/view/49A1-B944-48B8-FF00",
+                "https://store.steampowered.com/api/appdetails?appids=8930 this endpoint is so cool",
+                "id play it if it was free maybe https://store.steampowered.com/app/1349230/5DChessWithMultiverseTime_Travel/",
+                "Why wouldn't they just take the $150 and not bother hacking an account to get the petfood sent?",
+                """
+                        https://learn.microsoft.com/en-us/powershell/scripting/discover-powershell?view=powershell-7.5
+                        What makes PowerShell unique is that it accepts and returns .NET objects, rather than text.
+                        because of that, but well it says that it returns .NET objects not that the commands are from .NET,
+                        but well as i said i use cmd.exe because i do not know .NET nor powershell""",
+                """
+                        Exception in thread "ServerEntityWriterThread"
+                        java.lang.NoSuchMethodError: org.schema.game.common.controller.rails.RailRelation.isLocked()Z
+                        at org.schema.game.common.controller.rails.RailController.getDockedTag(RailController.java:2686)
+                        at org.schema.game.common.controller.rails.RailController.getTag(RailController.java:2652)
+                        at org.schema.game.common.controller.SegmentController.toTagStructure(SegmentController.java:2813)
+                        at org.schema.game.common.data.EntityFileTools.write(EntityFileTools.java:57)
+                        at org.schema.game.server.controller.GameServerController.writeEntity(GameServerController.java:2938)
+                        at org.schema.game.common.data.world.Sector.writeSingle(Sector.java:2570)
+                        at org.schema.game.common.data.world.Sector.writeEntity(Sector.java:2546)
+                        at org.schema.game.common.data.world.Sector.access$200(Sector.java:120)
+                        at org.schema.game.common.data.world.Sector$3.run(Sector.java:2665)
+                        at org.schema.schine.network.server.ServerEntityWriterThread.run(ServerEntityWriterThread.java:74)""");
     }
 }

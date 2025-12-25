@@ -125,6 +125,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return true;
     }
 
+    @SuppressWarnings("squid:S2259")
     private boolean isAuthorOnCooldown(long userId) {
         return Optional.ofNullable(authorToLastReportInvocation.getIfPresent(userId))
             .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,

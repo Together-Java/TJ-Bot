@@ -49,6 +49,7 @@ public final class Config {
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
     private final QuoteBoardConfig quoteMessagesConfig;
+    private final TopHelpersConfig topHelpers;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -103,7 +104,8 @@ public final class Config {
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
             @JsonProperty(value = "quoteMessagesConfig",
-                    required = true) QuoteBoardConfig quoteMessagesConfig) {
+                    required = true) QuoteBoardConfig quoteMessagesConfig,
+            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -139,6 +141,7 @@ public final class Config {
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
         this.quoteMessagesConfig = Objects.requireNonNull(quoteMessagesConfig);
+        this.topHelpers = Objects.requireNonNull(topHelpers);
     }
 
     /**
@@ -458,5 +461,14 @@ public final class Config {
      */
     public RSSFeedsConfig getRSSFeedsConfig() {
         return rssFeedsConfig;
+    }
+
+    /**
+     * Gets the config for the Top Helpers system.
+     *
+     * @return the configuration
+     */
+    public TopHelpersConfig getTopHelpers() {
+        return topHelpers;
     }
 }

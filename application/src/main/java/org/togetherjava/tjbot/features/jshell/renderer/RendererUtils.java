@@ -23,12 +23,12 @@ class RendererUtils {
 
     static String abortionCauseToString(JShellEvalAbortionCause abortionCause) {
         return switch (abortionCause) {
-            case JShellEvalAbortionCause.TimeoutAbortionCause ignored -> "Allowed time exceeded.";
+            case JShellEvalAbortionCause.TimeoutAbortionCause _ -> "Allowed time exceeded.";
             case JShellEvalAbortionCause.UnhandledExceptionAbortionCause(String exceptionClass, String exceptionMessage) ->
                 "Uncaught exception:\n" + exceptionClass + ":" + exceptionMessage;
             case JShellEvalAbortionCause.CompileTimeErrorAbortionCause(List<String> errors) ->
                 "The code doesn't compile:\n" + String.join("\n", errors);
-            case JShellEvalAbortionCause.SyntaxErrorAbortionCause ignored ->
+            case JShellEvalAbortionCause.SyntaxErrorAbortionCause _ ->
                 "The code doesn't compile, there are syntax errors in this code.";
         };
     }

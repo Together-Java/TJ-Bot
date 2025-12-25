@@ -1,0 +1,37 @@
+# Overview ![](https://i.imgur.com/Kq68zt9.png)
+
+TJ-Bot is a **Discord Bot** used on the [Together Java](https://discord.com/invite/xxfuxzk) server. It is maintained by the community, anyone can contribute.
+
+If you want to join the party, please have a look at:
+* [[Contributing]]
+* [[Code Guidelines]]
+* [[Create Discord server and bot]]
+* [[Setup project locally]]
+* [[Flyway guide with solutions to common issues]]
+* Features
+  * [[Add a new command]]
+    * [[Add days command]]
+    * [[Add question command]]
+    * [[Adding context commands]]
+  * [[Create and use modals]]
+  * [[Disabling Features]]
+* [[JDA Tips and Tricks]]
+* [[Component IDs]]
+* [[Code in the cloud (codespaces)]]
+* [[Connect SonarLint extension to our SonarCloud]]
+
+We also have several guides explaining the infrastructure, architecture and flow of the project:
+* [[Tech Stack]]
+* [[Component ID Store]]
+
+As well as some tutorials regarding on how to maintain the project:
+* [[Discord Bot Details]]
+* [[Access the VPS]]
+* Logging
+  * [[View the logs]]
+  * [[Change log level]]
+  * [[Setup Log Viewer]]
+* [[Edit the Config]]
+* [[Shutdown or restart the bot]]
+* [[Release a new version]]
+* [[Reset or edit the databases]]

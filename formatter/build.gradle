@@ -6,8 +6,9 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
     implementation project(':utils')
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.11.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.1'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 }
 
