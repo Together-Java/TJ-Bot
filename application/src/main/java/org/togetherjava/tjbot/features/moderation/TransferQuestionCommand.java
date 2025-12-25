@@ -100,6 +100,10 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                     .formatted(originalMessage);
         Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
         String title = chatGptTitle.orElse(createTitle(originalMessage));
+        if (title.startsWith("\"") && title.endsWith("\"")) {
+            title = title.substring(1, title.length() - 1);
+        }
+
         if (title.length() > TITLE_MAX_LENGTH) {
             title = title.substring(0, TITLE_MAX_LENGTH);
         }
@@ -149,7 +153,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         // Has been handled if original message was deleted by now.
         // Deleted messages cause retrieveMessageById to fail.
         Consumer<Message> notHandledAction =
-                any -> transferFlow(event, channelId, authorId, messageId);
+                _ -> transferFlow(event, channelId, authorId, messageId);
 
         Consumer<Throwable> handledAction = failure -> {
             if (failure instanceof ErrorResponseException errorResponseException

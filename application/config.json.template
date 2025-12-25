@@ -10,8 +10,8 @@
     "mutedRolePattern": "Muted",
     "heavyModerationRolePattern": "Moderator",
     "softModerationRolePattern": "Moderator|Community Ambassador",
-    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helpers .+",
-    "excludeCodeAutoDetectionRolePattern": "Top Helpers .+|Moderator|Community Ambassador|Expert",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helper.*",
+    "excludeCodeAutoDetectionRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
     "suggestions": {
         "channelPattern": "tj-suggestions",
         "upVoteEmoteName": "peepo_yes",
@@ -22,6 +22,7 @@
         "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
         "reportChannelPattern": "commands",
         "botTrapChannelPattern": "bot-trap",
+        "trustedUserRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
         "suspiciousKeywords": [
             "nitro",
             "boob",
@@ -38,21 +39,34 @@
             "trading",
             "whatsapp",
             "crypto",
-            "claim",
-            "teen",
+            "^claim",
+            "^teen$",
             "adobe",
-            "hack",
+            "^hack$",
+            "hacks",
             "steamcommunity",
             "freenitro",
-            "^earn",
-            ".exe"
+            "^earn$",
+            "^earning",
+            ".exe$",
+            "mrbeast"
         ],
         "hostWhitelist": [
             "discord.com",
             "discord.media",
             "discordapp.com",
             "discordapp.net",
-            "discordstatus.com"
+            "discordstatus.com",
+            "thehackernews.com",
+            "gradle.org",
+            "help.gradle.org",
+            "youtube.com",
+            "www.youtube.com",
+            "cdn.discordapp.com",
+            "media.discordapp.net",
+            "store.steampowered.com",
+            "help.steampowered.com",
+            "learn.microsoft.com"
         ],
         "hostBlacklist": [
             "bit.ly",
@@ -66,7 +80,8 @@
             "telegra.ph",
             "shorturl.at",
             "cheatings.xyz",
-            "transfer.sh"
+            "transfer.sh",
+            "tobimoller.space"
         ],
         "suspiciousHostKeywords": [
             "discord",
@@ -75,9 +90,12 @@
             "free",
             "cheat",
             "crypto",
-            "tele"
+            "telegra",
+            "telety"
         ],
-        "isHostSimilarToKeywordDistanceThreshold": 2
+        "isHostSimilarToKeywordDistanceThreshold": 2,
+        "suspiciousAttachmentsThreshold": 3,
+        "suspiciousAttachmentNamePattern": "(image|\\d{1,2})\\.[^.]{0,5}"
     },
     "wolframAlphaAppId": "79J52T-6239TVXHR7",
     "helpSystem": {
@@ -167,17 +185,23 @@
     "rssConfig": {
         "feeds": [
             {
-                "url": "https://wiki.openjdk.org/spaces/createrssfeed.action?types=page&types=comment&types=blogpost&types=mail&types=attachment&spaces=JDKUpdates&maxResults=15&title=%5BJDK+Updates%5D+All+Content+Feed&amp;publicFeed=true",
+                "url": "https://blogs.oracle.com/java/rss",
                 "targetChannelPattern": "java-news-and-changes",
-                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssX"
+                "dateFormatterPattern": "EEE, d MMM yyyy HH:mm:ss z"
             }
         ],
         "fallbackChannelPattern": "java-news-and-changes",
+        "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
         "pollIntervalInMinutes": 10
     },
     "roleApplicationSystem": {
         "submissionsChannelPattern": "staff-applications",
         "defaultQuestion": "What makes you a good addition to the team?"
     },
-    "memberCountCategoryPattern": "Info"
+    "memberCountCategoryPattern": "Info",
+    "topHelpers": {
+        "rolePattern": "Top Helper.*",
+        "assignmentChannelPattern": "community-commands",
+        "announcementChannelPattern": "hall-of-fame"
+    }
 }

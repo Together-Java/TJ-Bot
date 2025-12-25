@@ -18,15 +18,15 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 /**
- * Provides means to create previews of links. See
- * {@link LinkDetection#extractLinks(String, boolean, boolean)} and
- * {@link #createLinkPreviews(List)}.
+ * Provides means to create previews of links. See {@link LinkDetection#extractLinks(String, Set)}
+ * and {@link #createLinkPreviews(List)}.
  */
 public final class LinkPreviews {
     private static final Logger logger = LoggerFactory.getLogger(LinkPreviews.class);
@@ -63,7 +63,7 @@ public final class LinkPreviews {
             .toList();
 
         var allDoneTask = CompletableFuture.allOf(tasks.toArray(CompletableFuture[]::new));
-        return allDoneTask.thenApply(any -> extractResults(tasks)).exceptionally(e -> {
+        return allDoneTask.thenApply(_ -> extractResults(tasks)).exceptionally(e -> {
             logger.error("Unknown error during link preview creation", e);
             return List.of();
         });
@@ -184,6 +184,7 @@ public final class LinkPreviews {
             .filter(Predicate.not(String::isBlank));
     }
 
+    @SuppressWarnings("squid:S2259")
     private static Optional<String> selectFirstMetaTag(Document doc, String key, String value) {
         return Optional.ofNullable(doc.selectFirst("meta[%s=%s]".formatted(key, value)))
             .map(element -> element.attr("content"));

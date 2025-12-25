@@ -3,7 +3,7 @@
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-package org.togetherjava.tjbot.features.javamail;
+package org.togetherjava.tjbot.features.rss;
 
 import org.togetherjava.tjbot.annotations.MethodsReturnNonnullByDefault;
 
