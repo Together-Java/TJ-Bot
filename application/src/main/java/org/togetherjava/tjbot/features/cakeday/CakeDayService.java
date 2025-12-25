@@ -4,9 +4,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.UserSnowflake;
-import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.utils.Result;
+import org.jetbrains.annotations.NotNull;
 import org.jooq.Query;
 import org.jooq.impl.DSL;
 import org.slf4j.Logger;
@@ -23,9 +21,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.togetherjava.tjbot.db.generated.tables.CakeDays.CAKE_DAYS;
 
@@ -37,21 +32,21 @@ public class CakeDayService {
     private static final DateTimeFormatter MONTH_DAY_FORMATTER =
             DateTimeFormatter.ofPattern("MM-dd");
     private final Set<String> cakeDaysCache = new HashSet<>();
-    private final Predicate<String> cakeDayRolePredicate;
-    private final CakeDayConfig config;
+    private final String cakeDayRolePattern;
+    private final CakeDayConfig fullConfig;
     private final Database database;
 
     /**
      * Constructs a {@link CakeDayService} with the given configuration and database.
      *
-     * @param config the configuration for cake day management
+     * @param fullConfig the full configuration for cake day management
      * @param database the database for storing cake day information
      */
-    public CakeDayService(Config config, Database database) {
-        this.config = config.getCakeDayConfig();
+    public CakeDayService(Config fullConfig, Database database) {
+        this.fullConfig = fullConfig.getCakeDayConfig();
         this.database = database;
 
-        this.cakeDayRolePredicate = Pattern.compile(this.config.rolePattern()).asPredicate();
+        this.cakeDayRolePattern = this.fullConfig.rolePattern();
     }
 
     private Optional<Role> getCakeDayRole(Guild guild) {
@@ -59,7 +54,7 @@ public class CakeDayService {
 
         if (cakeDayRole.isEmpty()) {
             logger.warn("Cake day role with pattern {} not found for guild: {}",
-                    config.rolePattern(), guild.getName());
+                    fullConfig.rolePattern(), guild.getName());
         }
 
         return cakeDayRole;
@@ -74,13 +69,7 @@ public class CakeDayService {
      * @param guild the guild for which to reassign the cake day role
      */
     protected void reassignCakeDayRole(Guild guild) {
-        Optional<Role> cakeDayRole = getCakeDayRole(guild);
-
-        if (cakeDayRole.isEmpty()) {
-            return;
-        }
-
-        refreshMembersCakeDayRoles(cakeDayRole.get(), guild);
+        getCakeDayRole(guild).ifPresent(role -> refreshMembersCakeDayRoles(role, guild));
     }
 
     /**
@@ -92,7 +81,7 @@ public class CakeDayService {
     private void refreshMembersCakeDayRoles(Role cakeDayRole, Guild guild) {
         guild.findMembersWithRoles(cakeDayRole).onSuccess(members -> {
             removeRoleFromMembers(guild, cakeDayRole, members);
-            addTodayMembersCakeDayRole(guild);
+            addTodayMembersCakeDayRole(guild, cakeDayRole);
         });
     }
 
@@ -106,7 +95,7 @@ public class CakeDayService {
      *
      * @param guild the guild to check for members celebrating their cake day today
      */
-    private void addTodayMembersCakeDayRole(Guild guild) {
+    private void addTodayMembersCakeDayRole(Guild guild, Role cakeDayRole) {
         findCakeDaysTodayFromDatabase(guild).forEach(cakeDayRecord -> {
             Member member = guild.getMemberById(cakeDayRecord.getUserId());
 
@@ -114,30 +103,41 @@ public class CakeDayService {
                 return;
             }
 
-            boolean isAnniversaryDay = hasMemberCakeDayToday(member);
-            int yearsSinceJoin = OffsetDateTime.now().getYear() - cakeDayRecord.getJoinedYear();
-
-            if (yearsSinceJoin > 0 && isAnniversaryDay) {
-                addCakeDayRole(member);
+            if (!hasMemberCakeDayToday(member)) {
+                return;
             }
+
+            addCakeDayRole(member, cakeDayRole);
         });
     }
 
     /**
-     * Adds the cake day role to the specified member if the cake day role exists in the guild.
+     * Adds the cake day role supplied to the specified member if the cake day role exists in the
+     * guild.
      *
      * @param member the {@link Member} to whom the cake day role will be added
      */
     protected void addCakeDayRole(Member member) {
         Guild guild = member.getGuild();
-        UserSnowflake snowflake = UserSnowflake.fromId(member.getId());
         Optional<Role> cakeDayRole = getCakeDayRole(guild);
 
         if (cakeDayRole.isEmpty()) {
             return;
         }
 
-        guild.addRoleToMember(snowflake, cakeDayRole.get()).complete();
+        addCakeDayRole(member, cakeDayRole.get());
+    }
+
+    /**
+     * Adds the cake day role supplied to the specified member.
+     *
+     * @param member the {@link Member} to whom the cake day role will be added
+     * @param cakeDayRole the cake day {@link Role}
+     */
+    private void addCakeDayRole(Member member, @NotNull Role cakeDayRole) {
+        Guild guild = member.getGuild();
+
+        guild.addRoleToMember(member, cakeDayRole).queue();
     }
 
     /**
@@ -148,57 +148,43 @@ public class CakeDayService {
      * @param members the {@link List} of members from which the {@link Role} will be removed
      */
     private void removeRoleFromMembers(Guild guild, Role role, List<Member> members) {
-        List<RestAction<Result<Void>>> chain = members.stream()
-            .map(member -> guild.removeRoleFromMember(member, role).mapToResult())
-            .toList();
-
-        if (chain.isEmpty()) {
-            return;
-        }
-
-        RestAction.allOf(chain).queue();
+        members.forEach(member -> guild.removeRoleFromMember(member, role)
+            .queue(null,
+                    failure -> logger.error("Could not remove role {} from {} ({}): {}",
+                            role.getName(), member.getEffectiveName(), member.getId(),
+                            failure.getMessage())));
     }
 
     /**
-     * Creates a query to insert a member's cake day information into the database.
+     * Asynchronously inserts a member's cake day information into the database.
      *
-     * @param member the member whose cake day information is to be inserted
-     * @param guildId the ID of the guild to which the member belongs
-     * @return an Optional containing the query to insert cake day information if the member has a
-     *         join time; empty Optional otherwise
-     */
-    private Optional<Query> createMemberCakeDayQuery(Member member, long guildId) {
-        if (!member.hasTimeJoined()) {
-            return Optional.empty();
-        }
-
-        OffsetDateTime cakeDay = member.getTimeJoined();
-        String joinedMonthDay = cakeDay.format(MONTH_DAY_FORMATTER);
-
-        return Optional.of(DSL.insertInto(CAKE_DAYS)
-            .set(CAKE_DAYS.JOINED_MONTH_DAY, joinedMonthDay)
-            .set(CAKE_DAYS.JOINED_YEAR, cakeDay.getYear())
-            .set(CAKE_DAYS.GUILD_ID, guildId)
-            .set(CAKE_DAYS.USER_ID, member.getIdLong()));
-    }
-
-    /**
-     * Inserts the cake day of a member into the database.
      * <p>
-     * If the member has no join date, nothing happens.
+     * This method retrieves the {@link Member} from the Discord API to obtain the member's join
+     * timestamp, derives the month/day portion using {@code MONTH_DAY_FORMATTER}, and then inserts
+     * a row into {@code CAKE_DAYS} with the join month-day, join year, guild id, and user id.
      *
-     * @param member the member whose cake day is to be inserted into the database
-     * @param guildId the ID of the guild to which the member belongs
+     * <p>
+     * The Discord retrieval is performed asynchronously; on success the database write is executed.
+     * If the Discord retrieval fails (e.g., member not found, missing permissions, network issues),
+     * the insert is skipped and a warning is logged.
+     *
+     * @param member the member whose cake day information should be inserted
+     * @param guildId the id of the guild associated with the cake day record
      */
     protected void insertMemberCakeDayToDatabase(Member member, long guildId) {
-        Query insertQuery = createMemberCakeDayQuery(member, guildId).orElse(null);
+        member.getGuild().retrieveMemberById(member.getIdLong()).queue(retrievedMember -> {
+            OffsetDateTime timeJoined = retrievedMember.getTimeJoined();
+            String joinedMonthDay = timeJoined.format(MONTH_DAY_FORMATTER);
 
-        if (insertQuery == null) {
-            logger.warn("Tried to add member {} to database but found no time joined",
-                    member.getId());
-        }
+            Query query = DSL.insertInto(CAKE_DAYS)
+                .set(CAKE_DAYS.JOINED_MONTH_DAY, joinedMonthDay)
+                .set(CAKE_DAYS.JOINED_YEAR, timeJoined.getYear())
+                .set(CAKE_DAYS.GUILD_ID, guildId)
+                .set(CAKE_DAYS.USER_ID, member.getIdLong());
 
-        database.write(context -> context.batch(insertQuery).execute());
+            database.write(ctx -> ctx.execute(query));
+        }, failure -> logger.warn("Could not insert member cake day into the database: {}",
+                failure.getMessage()));
     }
 
     /**
@@ -221,10 +207,7 @@ public class CakeDayService {
      * @return an {@link Optional} containing the cake day role if found, otherwise empty
      */
     private Optional<Role> getCakeDayRoleFromGuild(Guild guild) {
-        return guild.getRoles()
-            .stream()
-            .filter(role -> cakeDayRolePredicate.test(role.getName()))
-            .findFirst();
+        return guild.getRolesByName(cakeDayRolePattern, true).stream().findFirst();
     }
 
     /**
@@ -234,7 +217,7 @@ public class CakeDayService {
      * @param user the {@link User} who left the guild
      * @param guild the {@link Guild} from which the user left
      */
-    protected void handleUserLeft(User user, Guild guild) {
+    protected void removeUserCakeDay(User user, Guild guild) {
         removeMemberCakeDayFromDatabase(user.getIdLong(), guild.getIdLong());
         cakeDaysCache.remove(guild.getId());
     }
@@ -247,12 +230,10 @@ public class CakeDayService {
     private List<CakeDaysRecord> findCakeDaysTodayFromDatabase(Guild guild) {
         String todayMonthDay = OffsetDateTime.now().format(MONTH_DAY_FORMATTER);
 
-        return database
-            .read(context -> context.selectFrom(CAKE_DAYS)
-                .where(CAKE_DAYS.JOINED_MONTH_DAY.eq(todayMonthDay))
-                .and(CAKE_DAYS.GUILD_ID.eq(guild.getIdLong()))
-                .fetch())
-            .collect(Collectors.toList());
+        return database.read(context -> context.selectFrom(CAKE_DAYS)
+            .where(CAKE_DAYS.JOINED_MONTH_DAY.eq(todayMonthDay))
+            .and(CAKE_DAYS.GUILD_ID.eq(guild.getIdLong()))
+            .fetch());
     }
 
     /**
@@ -263,13 +244,8 @@ public class CakeDayService {
      *         {@link Optional} if no record is found
      */
     protected Optional<CakeDaysRecord> findUserCakeDayFromDatabase(long userId) {
-        return database
-            .read(context -> context.selectFrom(CAKE_DAYS)
-                .where(CAKE_DAYS.USER_ID.eq(userId))
-                .fetch())
-            .collect(Collectors.toList())
-            .stream()
-            .findFirst();
+        return database.read(ctx -> Optional
+            .ofNullable(ctx.selectFrom(CAKE_DAYS).where(CAKE_DAYS.USER_ID.eq(userId)).fetchOne()));
     }
 
     /**

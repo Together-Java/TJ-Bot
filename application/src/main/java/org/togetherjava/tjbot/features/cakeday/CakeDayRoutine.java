@@ -17,11 +17,6 @@ public class CakeDayRoutine implements Routine {
 
     private final CakeDayService cakeDayService;
 
-    /**
-     * Constructs a new {@link CakeDayRoutine} instance.
-     *
-     * @param cakeDayService an instance of the cake day service
-     */
     public CakeDayRoutine(CakeDayService cakeDayService) {
         this.cakeDayService = cakeDayService;
     }

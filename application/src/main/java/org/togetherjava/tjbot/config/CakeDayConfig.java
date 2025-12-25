@@ -6,6 +6,8 @@ import java.util.Objects;
 
 /**
  * Configuration record for the Cake Day feature.
+ *
+ * @see org.togetherjava.tjbot.features.cakeday.CakeDayService
  */
 public record CakeDayConfig(
         @JsonProperty(value = "rolePattern", required = true) String rolePattern) {

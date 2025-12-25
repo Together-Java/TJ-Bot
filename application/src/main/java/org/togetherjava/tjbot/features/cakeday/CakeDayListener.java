@@ -20,11 +20,6 @@ public class CakeDayListener extends ListenerAdapter implements EventReceiver {
 
     private final CakeDayService cakeDayService;
 
-    /**
-     * Constructs a new CakeDayListener with the given {@link CakeDayService}.
-     *
-     * @param cakeDayService the {@link CakeDayService} to be used by this listener
-     */
     public CakeDayListener(CakeDayService cakeDayService) {
         this.cakeDayService = cakeDayService;
     }
@@ -79,6 +74,6 @@ public class CakeDayListener extends ListenerAdapter implements EventReceiver {
         User user = event.getUser();
         Guild guild = event.getGuild();
 
-        cakeDayService.handleUserLeft(user, guild);
+        cakeDayService.removeUserCakeDay(user, guild);
     }
 }
