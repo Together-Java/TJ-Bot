@@ -45,7 +45,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      *        including the reaction emoji and the pattern to match board channel names
      */
     public QuoteBoardForwarder(Config config) {
-        this.config = config.getCoolMessagesConfig();
+        this.config = config.getQuoteMessagesConfig();
         this.triggerReaction = Emoji.fromUnicode(this.config.reactionEmoji());
 
         isQuoteBoardChannelName =
