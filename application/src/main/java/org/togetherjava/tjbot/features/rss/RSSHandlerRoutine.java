@@ -72,9 +72,6 @@ import static org.togetherjava.tjbot.db.generated.tables.RssFeed.RSS_FEED;
  */
 public final class RSSHandlerRoutine implements Routine {
 
-    private record FailureState(int count, ZonedDateTime lastFailure) {
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(RSSHandlerRoutine.class);
     private static final int MAX_CONTENTS = 1000;
     private static final ZonedDateTime ZONED_TIME_MIN =
