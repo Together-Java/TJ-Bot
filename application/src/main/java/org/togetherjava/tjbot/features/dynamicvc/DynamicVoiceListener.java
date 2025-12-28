@@ -48,7 +48,8 @@ public class DynamicVoiceListener extends VoiceReceiverAdapter {
     private final Logger logger = LoggerFactory.getLogger(DynamicVoiceListener.class);
 
     private final Map<String, Predicate<String>> channelPredicates = new HashMap<>();
-    private static final Pattern channelTopicPattern = Pattern.compile("(\\s+\\d+)$");
+
+    private static final Pattern channelTopicPattern = Pattern.compile("(\\s{1,100}\\d+)$");
 
     /** Map of event queues for each channel topic. */
     private final Map<String, Queue<GuildVoiceUpdateEvent>> eventQueues = new HashMap<>();
