@@ -256,18 +256,38 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     }
 
     /**
-     * @param joinChannel the join channel
-     * @param leftChannel the leave channel
+     * Calculates the correct voice channel to act upon.
+     *
+     * <p>
+     * If there is a <code>channelJoined</code> and a <code>channelLeft</code>, then the
+     * <code>channelJoined</code> is prioritized and returned. Otherwise, it returns
+     * <code>channelLeft</code>.
+     *
+     * <p>
+     * This is an essential method due to the need of updating both channel categories that a member
+     * utilizes. For example, take the scenario of a user browsing through voice channels:
+     *
+     * <pre>
+     *     - User joins General -> channelJoined = General | channelLeft = null
+     *     - User switches to Gaming -> channelJoined = Gaming | channelLeft = General
+     *     - User leaves Discord -> channelJoined = null | channelLeft = Gaming
+     * </pre>
+     *
+     * <p>
+     * This way, we make sure that all relevant voice channels are updated.
+     *
+     * @param channelJoined the channel that the member has connected to, if any
+     * @param channelLeft the channel that the member left from, if any
      * @return the join channel if not null, otherwise the leave channel, otherwise an empty
      *         optional
      */
-    private Optional<Channel> calculateSubscribeTarget(@Nullable AudioChannelUnion joinChannel,
-            @Nullable AudioChannelUnion leftChannel) {
-        if (joinChannel != null) {
-            return Optional.of(joinChannel);
+    private Optional<Channel> calculateSubscribeTarget(@Nullable AudioChannelUnion channelJoined,
+            @Nullable AudioChannelUnion channelLeft) {
+        if (channelJoined != null) {
+            return Optional.of(channelJoined);
         }
 
-        return Optional.ofNullable(leftChannel);
+        return Optional.ofNullable(channelLeft);
     }
 
     @Override
