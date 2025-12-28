@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.dynamicvc;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.StandardGuildChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
@@ -184,7 +186,19 @@ public class DynamicVoiceChannelListener extends VoiceReceiverAdapter {
             return originalTopicChannel.createCopy()
                 .setName(getNumberedChannelTopic(channelTopic, topicChannelsCount + 1))
                 .setPosition(originalTopicChannel.getPositionRaw())
-                .submit();
+                .submit()
+                .whenComplete((voiceChannel, _) -> {
+                    MessageEmbed messageEmbed = new EmbedBuilder()
+                        .addField("👋 Heads up!",
+                                """
+                                        This is a **temporary** voice chat channel. Messages sent here will be *cleared* once \
+                                        the channel is deleted when everyone leaves. If you need to keep something important, \
+                                        make sure to save it elsewhere. 💬
+                                        """,
+                                false)
+                        .build();
+                    voiceChannel.sendMessageEmbeds(messageEmbed).queue();
+                });
         }
 
         return CompletableFuture.completedFuture(null);
