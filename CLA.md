@@ -115,8 +115,6 @@ IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION 5. AND SECTION 6. CANNO
 
 ### Us
 
-Name: Daniel Tischner (aka Zabuzard, acting on behalf of Together Java)
-
 Organization: https://github.com/Together-Java
 
 Contact: https://discord.com/invite/XXFUXzK
