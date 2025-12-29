@@ -14,6 +14,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.QuoteBoardConfig;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -45,47 +46,59 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      *        including the reaction emoji and the pattern to match board channel names
      */
     public QuoteBoardForwarder(Config config) {
-        this.config = config.getQuoteMessagesConfig();
+        this.config = config.getQuoteBoardConfig();
         this.triggerReaction = Emoji.fromUnicode(this.config.reactionEmoji());
 
-        isQuoteBoardChannelName =
-                Pattern.compile(this.config.boardChannelPattern()).asMatchPredicate();
+        this.isQuoteBoardChannelName = Pattern.compile(this.config.channel()).asMatchPredicate();
     }
 
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
-        final MessageReaction messageReaction = event.getReaction();
-        boolean isTriggerEmoji = messageReaction.getEmoji().equals(triggerReaction);
-        long guildId = event.getGuild().getIdLong();
+        logger.debug("Received MessageReactionAddEvent: messageId={}, channelId={}, userId={}",
+                event.getMessageId(), event.getChannel().getId(), event.getUserId());
 
-        if (!isTriggerEmoji) {
+        final MessageReaction messageReaction = event.getReaction();
+
+        if (!messageReaction.getEmoji().equals(triggerReaction)) {
+            logger.debug("Reaction emoji '{}' does not match trigger emoji '{}'. Ignoring.",
+                    messageReaction.getEmoji(), triggerReaction);
             return;
         }
 
         if (hasAlreadyForwardedMessage(event.getJDA(), messageReaction)) {
+            logger.debug("Message has already been forwarded by the bot. Skipping.");
             return;
         }
 
-        final int reactionsCount = (int) messageReaction.retrieveUsers().stream().count();
-
-        if (reactionsCount < config.minimumReactions()) {
+        long reactionCount = messageReaction.retrieveUsers().stream().count();
+        if (reactionCount < config.minimumReactions()) {
+            logger.debug("Reaction count {} is less than minimum required {}. Skipping.",
+                    reactionCount, config.minimumReactions());
             return;
         }
+
+        final long guildId = event.getGuild().getIdLong();
 
         Optional<TextChannel> boardChannel = findQuoteBoardChannel(event.getJDA(), guildId);
 
         if (boardChannel.isEmpty()) {
             logger.warn(
                     "Could not find board channel with pattern '{}' in server with ID '{}'. Skipping reaction handling...",
-                    this.config.boardChannelPattern(), guildId);
+                    this.config.channel(), guildId);
             return;
         }
 
+        logger.debug("Forwarding message to quote board channel: {}", boardChannel.get().getName());
+
         event.retrieveMessage()
-            .queue(message -> markAsProcessed(message).flatMap(v -> message
-                .forwardTo(boardChannel.orElseThrow())).queue(), e -> logger.warn(
-                        "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
-                        e));
+            .queue(message -> markAsProcessed(message)
+                .flatMap(v -> message.forwardTo(boardChannel.orElseThrow()))
+                .queue(_ -> logger.debug("Message forwarded to quote board channel: {}",
+                        boardChannel.get().getName())),
+
+                    e -> logger.warn(
+                            "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
+                            e));
 
     }
 
@@ -101,18 +114,26 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      * @return the board text channel
      */
     private Optional<TextChannel> findQuoteBoardChannel(JDA jda, long guildId) {
-        return jda.getGuildById(guildId)
-            .getTextChannelCache()
+        var guild = jda.getGuildById(guildId);
+
+        if (guild == null) {
+            throw new IllegalStateException(
+                    String.format("Guild with ID '%d' not found.", guildId));
+        }
+
+        List<TextChannel> matchingChannels = guild.getTextChannelCache()
             .stream()
             .filter(channel -> isQuoteBoardChannelName.test(channel.getName()))
-            .findAny();
-    }
+            .toList();
 
-    /**
-     * Inserts a message to the specified text channel
-     *
-     * @return a {@link MessageCreateAction} of the call to make
-     */
+        if (matchingChannels.size() > 1) {
+            logger.warn(
+                    "Multiple quote board channels found matching pattern '{}' in guild with ID '{}'. Selecting the first one anyway.",
+                    this.config.channel(), guildId);
+        }
+
+        return matchingChannels.stream().findFirst();
+    }
 
     /**
      * Checks a {@link MessageReaction} to see if the bot has reacted to it.

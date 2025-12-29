@@ -194,9 +194,9 @@
         "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
         "pollIntervalInMinutes": 10
     },
-    "quoteMessagesConfig": {
-        "minimumReactions": 2,
-        "boardChannelPattern": "quotes",
+    "quoteBoardConfig": {
+        "minimumReactionsToTrigger": 5,
+        "channel": "quotes",
         "reactionEmoji": "⭐"
     },
     "memberCountCategoryPattern": "Info",
