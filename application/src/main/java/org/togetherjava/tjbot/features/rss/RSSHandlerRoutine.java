@@ -456,8 +456,9 @@ public final class RSSHandlerRoutine implements Routine {
 
     private boolean isBackingOff(String url) {
         FailureState state = circuitBreaker.getIfPresent(url);
-        if (state == null)
+        if (state == null) {
             return false;
+        }
 
         long waitHours = calculateWaitHours(state.count());
         Instant retryAt = state.lastFailure().plus(waitHours, ChronoUnit.HOURS);
