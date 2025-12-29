@@ -1,6 +1,6 @@
 package org.togetherjava.tjbot.features.rss;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
-record FailureState(int count, ZonedDateTime lastFailure) {
+record FailureState(int count, Instant lastFailure) {
 }

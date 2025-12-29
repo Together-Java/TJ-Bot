@@ -28,11 +28,10 @@ import org.togetherjava.tjbot.features.Routine;
 import javax.annotation.Nonnull;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +73,6 @@ public final class RSSHandlerRoutine implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(RSSHandlerRoutine.class);
     private static final int MAX_CONTENTS = 1000;
-    private static final ZonedDateTime ZONED_TIME_MIN =
-            ZonedDateTime.of(LocalDateTime.MIN, ZoneId.systemDefault());
     private static final String HTTP_USER_AGENT =
             "TJ-Bot/1.0 (+https://github.com/Together-Java/TJ-Bot)";
     private final RssReader rssReader;
@@ -181,7 +178,7 @@ public final class RSSHandlerRoutine implements Routine {
     private Optional<Predicate<Item>> prepareItemPostPredicate(RSSFeed feedConfig,
             List<Item> rssItems) {
         Optional<RssFeedRecord> rssFeedRecord = getRssFeedRecordFromDatabase(feedConfig);
-        Optional<ZonedDateTime> lastPostedDate =
+        Optional<Instant> lastPostedDate =
                 getLatestPostDateFromItems(rssItems, feedConfig.dateFormatterPattern());
 
         lastPostedDate.ifPresent(
@@ -191,16 +188,15 @@ public final class RSSHandlerRoutine implements Routine {
             return Optional.empty();
         }
 
-        Optional<ZonedDateTime> lastSavedDate = getLastSavedDateFromDatabaseRecord(
-                rssFeedRecord.orElseThrow(), feedConfig.dateFormatterPattern());
+        Optional<Instant> lastSavedDate =
+                getLastSavedDateFromDatabaseRecord(rssFeedRecord.orElseThrow());
 
         if (lastSavedDate.isEmpty()) {
             return Optional.empty();
         }
 
         return Optional.of(item -> {
-            ZonedDateTime itemPubDate =
-                    getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
+            Instant itemPubDate = getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
             return itemPubDate.isAfter(lastSavedDate.orElseThrow());
         });
     }
@@ -223,16 +219,13 @@ public final class RSSHandlerRoutine implements Routine {
      * record.
      *
      * @param rssRecord an existing RSS feed record to retrieve the last saved date from
-     * @param dateFormatterPattern the pattern used to parse the date from the database record
      * @return An {@link Optional} containing the last saved date if it could be retrieved and
      *         parsed successfully, otherwise an empty {@link Optional}
      */
-    private Optional<ZonedDateTime> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord,
-            String dateFormatterPattern) throws DateTimeParseException {
+    private Optional<Instant> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord)
+            throws DateTimeParseException {
         try {
-            ZonedDateTime savedDate =
-                    getZonedDateTime(rssRecord.getLastDate(), dateFormatterPattern);
-            return Optional.of(savedDate);
+            return Optional.of(Instant.parse(rssRecord.getLastDate()));
         } catch (DateTimeParseException _) {
             return Optional.empty();
         }
@@ -243,13 +236,13 @@ public final class RSSHandlerRoutine implements Routine {
      *
      * @param items the list of items to retrieve the latest post date from
      * @param dateFormatterPattern the pattern used to parse the date from the database record
-     * @return the latest post date as a {@link ZonedDateTime} object, or null if the list is empty
+     * @return the latest post date as a {@link Instant} object, or null if the list is empty
      */
-    private Optional<ZonedDateTime> getLatestPostDateFromItems(List<Item> items,
+    private Optional<Instant> getLatestPostDateFromItems(List<Item> items,
             String dateFormatterPattern) {
         return items.stream()
             .map(item -> getDateTimeFromItem(item, dateFormatterPattern))
-            .max(ZonedDateTime::compareTo);
+            .max(Instant::compareTo);
     }
 
     /**
@@ -277,10 +270,10 @@ public final class RSSHandlerRoutine implements Routine {
      * @throws DateTimeParseException if the date cannot be parsed
      */
     private void updateLastDateToDatabase(RSSFeed feedConfig, @Nullable RssFeedRecord rssFeedRecord,
-            ZonedDateTime lastPostedDate) {
+            Instant lastPostedDate) {
         DateTimeFormatter dateTimeFormatter =
                 DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
-        String lastDateStr = lastPostedDate.format(dateTimeFormatter);
+        String lastDateStr = lastPostedDate.toString();
 
         if (rssFeedRecord == null) {
             database.write(context -> context.newRecord(RSS_FEED)
@@ -297,22 +290,22 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     /**
-     * Attempts to get a {@link ZonedDateTime} from an {@link Item} with a provided string date time
+     * Attempts to get a {@link Instant} from an {@link Item} with a provided string date time
      * format.
      * <p>
      * If either of the function inputs are null or a {@link DateTimeParseException} is caught, the
-     * oldest-possible {@link ZonedDateTime} will get returned instead.
+     * oldest-possible {@link Instant} will get returned instead.
      *
      * @param item The {@link Item} from which to extract the date.
      * @param dateTimeFormat The format of the date time string.
-     * @return The computed {@link ZonedDateTime}
+     * @return The computed {@link Instant}
      * @throws DateTimeParseException if the date cannot be parsed
      */
-    private static ZonedDateTime getDateTimeFromItem(Item item, String dateTimeFormat)
+    private static Instant getDateTimeFromItem(Item item, String dateTimeFormat)
             throws DateTimeParseException {
         Optional<String> pubDate = item.getPubDate();
 
-        return pubDate.map(s -> getZonedDateTime(s, dateTimeFormat)).orElse(ZONED_TIME_MIN);
+        return pubDate.map(s -> getInstantTimeFromFormat(s, dateTimeFormat)).orElse(Instant.MIN);
 
     }
 
@@ -334,7 +327,7 @@ public final class RSSHandlerRoutine implements Routine {
             // If this throws a DateTimeParseException then it's certain
             // that the format pattern defined in the config and the
             // feed's actual format differ.
-            getZonedDateTime(firstRssFeedPubDate.get(), feedConfig.dateFormatterPattern());
+            getInstantTimeFromFormat(firstRssFeedPubDate.get(), feedConfig.dateFormatterPattern());
         } catch (DateTimeParseException _) {
             return false;
         }
@@ -384,7 +377,7 @@ public final class RSSHandlerRoutine implements Routine {
         // Set the item's timestamp to the embed if found
         item.getPubDate()
             .ifPresent(date -> embedBuilder
-                .setTimestamp(getZonedDateTime(date, feedConfig.dateFormatterPattern())));
+                .setTimestamp(getInstantTimeFromFormat(date, feedConfig.dateFormatterPattern())));
 
         embedBuilder.setTitle(title, titleLink);
         embedBuilder.setAuthor(item.getChannel().getLink());
@@ -428,7 +421,7 @@ public final class RSSHandlerRoutine implements Routine {
                         "Possibly dead RSS feed URL: {} - Failed {} times. Please remove it from config.",
                         rssUrl, newCount);
             }
-            circuitBreaker.put(rssUrl, new FailureState(newCount, ZonedDateTime.now()));
+            circuitBreaker.put(rssUrl, new FailureState(newCount, Instant.now()));
 
             long blacklistedHours = calculateWaitHours(newCount);
 
@@ -441,21 +434,19 @@ public final class RSSHandlerRoutine implements Routine {
     }
 
     /**
-     * Helper function for parsing a given date value to a {@link ZonedDateTime} with a given
-     * format.
+     * Helper function for parsing a given date value to a {@link Instant} with a given format.
      *
      * @param date the date value to parse, can be null
-     * @param format the format pattern to use for parsing
-     * @return the parsed {@link ZonedDateTime} object
+     * @return the parsed {@link Instant} object
      * @throws DateTimeParseException if the date cannot be parsed
      */
-    private static ZonedDateTime getZonedDateTime(@Nullable String date, String format)
+    private static Instant getInstantTimeFromFormat(@Nullable String date, String datePattern)
             throws DateTimeParseException {
         if (date == null) {
-            return ZONED_TIME_MIN;
+            return Instant.MIN;
         }
 
-        return ZonedDateTime.parse(date, DateTimeFormatter.ofPattern(format));
+        return Instant.from(DateTimeFormatter.ofPattern(datePattern).parse(date));
     }
 
     private long calculateWaitHours(int failureCount) {
@@ -469,8 +460,8 @@ public final class RSSHandlerRoutine implements Routine {
             return false;
 
         long waitHours = calculateWaitHours(state.count());
-        ZonedDateTime retryAt = state.lastFailure().plusHours(waitHours);
+        Instant retryAt = state.lastFailure().plus(waitHours, ChronoUnit.HOURS);
 
-        return ZonedDateTime.now().isBefore(retryAt);
+        return Instant.now().isBefore(retryAt);
     }
 }
