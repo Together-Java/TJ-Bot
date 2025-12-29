@@ -271,8 +271,6 @@ public final class RSSHandlerRoutine implements Routine {
      */
     private void updateLastDateToDatabase(RSSFeed feedConfig, @Nullable RssFeedRecord rssFeedRecord,
             Instant lastPostedDate) {
-        DateTimeFormatter dateTimeFormatter =
-                DateTimeFormatter.ofPattern(feedConfig.dateFormatterPattern());
         String lastDateStr = lastPostedDate.toString();
 
         if (rssFeedRecord == null) {
