@@ -1,6 +1,7 @@
 package org.togetherjava.tjbot.features.basic;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -114,7 +115,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      * @return the board text channel
      */
     private Optional<TextChannel> findQuoteBoardChannel(JDA jda, long guildId) {
-        var guild = jda.getGuildById(guildId);
+        Guild guild = jda.getGuildById(guildId);
 
         if (guild == null) {
             throw new IllegalStateException(
