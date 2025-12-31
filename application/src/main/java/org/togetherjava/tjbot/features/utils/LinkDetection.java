@@ -1,18 +1,17 @@
 package org.togetherjava.tjbot.features.utils;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.concurrent.CompletableFuture;
-
 import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Utility class to detect links.
@@ -63,25 +62,21 @@ public class LinkDetection {
     public static boolean containsLink(String content) {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
+
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
         HttpClient client = HttpClient.newHttpClient();
 
         HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-                .method("HEAD", HttpRequest.BodyPublishers.noBody())
-                .build();
+            .method("HEAD", HttpRequest.BodyPublishers.noBody())
+            .build();
 
         return client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
-                .thenApply(response -> response.statusCode() >= 400)
-                .exceptionally(ignored -> true);
+            .thenApply(response -> response.statusCode() >= 400)
+            .exceptionally(ignored -> true);
     }
-    public static CompletableFuture<String> replaceDeadLinks(
-            String text,
-            String replacement
-    ) {
-        Set<LinkFilter> filters = Set.of(
-                LinkFilter.SUPPRESSED,
-                LinkFilter.NON_HTTP_SCHEME
-        );
+
+    public static CompletableFuture<String> replaceDeadLinks(String text, String replacement) {
+        Set<LinkFilter> filters = Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME);
 
         List<String> links = extractLinks(text, filters);
 
@@ -91,25 +86,18 @@ public class LinkDetection {
 
         StringBuilder result = new StringBuilder(text);
 
-        List<CompletableFuture<Void>> checks = links.stream()
-                .map(link ->
-                        isLinkBroken(link).thenAccept(isDead -> {
-                            if (isDead) {
-                                int index = result.indexOf(link);
-                                if (index != -1) {
-                                    result.replace(
-                                            index,
-                                            index + link.length(),
-                                            replacement
-                                    );
-                                }
-                            }
-                        })
-                )
-                .toList();
+        List<CompletableFuture<Void>> checks =
+                links.stream().map(link -> isLinkBroken(link).thenAccept(isDead -> {
+                    if (isDead) {
+                        int index = result.indexOf(link);
+                        if (index != -1) {
+                            result.replace(index, index + link.length(), replacement);
+                        }
+                    }
+                })).toList();
 
         return CompletableFuture.allOf(checks.toArray(new CompletableFuture[0]))
-                .thenApply(v -> result.toString());
+            .thenApply(v -> result.toString());
     }
 
     private static Optional<String> toLink(Url url, Set<LinkFilter> filter) {
