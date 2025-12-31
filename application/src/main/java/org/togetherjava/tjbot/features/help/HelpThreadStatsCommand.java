@@ -18,7 +18,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.avg;
+import static org.jooq.impl.DSL.count;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.min;
 import static org.togetherjava.tjbot.db.generated.Tables.HELP_THREADS;
 
 /**
