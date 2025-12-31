@@ -1,23 +1,27 @@
 package org.togetherjava.tjbot.features.utils;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.concurrent.CompletableFuture;
-
 import com.linkedin.urls.Url;
 import com.linkedin.urls.detection.UrlDetector;
 import com.linkedin.urls.detection.UrlDetectorOptions;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Utility class to detect links.
  */
 public class LinkDetection {
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
+    private static final Set<LinkFilter> DEFAULT_FILTERS =
+            Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME);
 
     /**
      * Possible ways to filter a link.
@@ -63,53 +67,58 @@ public class LinkDetection {
     public static boolean containsLink(String content) {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
+
+    @SuppressWarnings("java:S2095")
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
-        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
+            .method("HEAD", HttpRequest.BodyPublishers.noBody())
+            .build();
 
-        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-                .method("HEAD", HttpRequest.BodyPublishers.noBody())
-                .build();
+        return HTTP_CLIENT.sendAsync(headRequest, HttpResponse.BodyHandlers.discarding())
+            .thenApply(response -> {
+                int status = response.statusCode();
+                if (status >= 200 && status < 400) {
+                    return false;
+                }
+                return status >= 400 ? true : null;
+            })
+            .exceptionally(ignored -> null)
+            .thenCompose(result -> {
+                if (result != null) {
+                    return CompletableFuture.completedFuture(result);
+                }
+                HttpRequest getRequest = HttpRequest.newBuilder(URI.create(url)).GET().build();
 
-        return client.sendAsync(request, HttpResponse.BodyHandlers.discarding())
-                .thenApply(response -> response.statusCode() >= 400)
-                .exceptionally(ignored -> true);
+                return HTTP_CLIENT.sendAsync(getRequest, HttpResponse.BodyHandlers.discarding())
+                    .thenApply(resp -> resp.statusCode() >= 400)
+                    .exceptionally(ignored -> true);
+            });
     }
-    public static CompletableFuture<String> replaceDeadLinks(
-            String text,
-            String replacement
-    ) {
-        Set<LinkFilter> filters = Set.of(
-                LinkFilter.SUPPRESSED,
-                LinkFilter.NON_HTTP_SCHEME
-        );
 
-        List<String> links = extractLinks(text, filters);
+    public static CompletableFuture<String> replaceDeadLinks(String text, String replacement) {
+        List<String> links = extractLinks(text, DEFAULT_FILTERS);
 
         if (links.isEmpty()) {
             return CompletableFuture.completedFuture(text);
         }
 
-        StringBuilder result = new StringBuilder(text);
+        List<CompletableFuture<String>> deadLinkFutures = links.stream()
+            .distinct()
+            .map(link -> isLinkBroken(link).thenApply(isBroken -> isBroken ? link : null))
+            .toList();
 
-        List<CompletableFuture<Void>> checks = links.stream()
-                .map(link ->
-                        isLinkBroken(link).thenAccept(isDead -> {
-                            if (isDead) {
-                                int index = result.indexOf(link);
-                                if (index != -1) {
-                                    result.replace(
-                                            index,
-                                            index + link.length(),
-                                            replacement
-                                    );
-                                }
-                            }
-                        })
-                )
-                .toList();
-
-        return CompletableFuture.allOf(checks.toArray(new CompletableFuture[0]))
-                .thenApply(v -> result.toString());
+        return CompletableFuture.allOf(deadLinkFutures.toArray(new CompletableFuture[0]))
+            .thenApply(ignored -> deadLinkFutures.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
+                .toList())
+            .thenApply(deadLinks -> {
+                String result = text;
+                for (String deadLink : deadLinks) {
+                    result = result.replace(deadLink, replacement);
+                }
+                return result;
+            });
     }
 
     private static Optional<String> toLink(Url url, Set<LinkFilter> filter) {
