@@ -68,7 +68,6 @@ public class LinkDetection {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
 
-    @SuppressWarnings("java:S2095")
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
         HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
             .method("HEAD", HttpRequest.BodyPublishers.noBody())
@@ -77,21 +76,17 @@ public class LinkDetection {
         return HTTP_CLIENT.sendAsync(headRequest, HttpResponse.BodyHandlers.discarding())
             .thenApply(response -> {
                 int status = response.statusCode();
-                if (status >= 200 && status < 400) {
-                    return false;
-                }
-                return status >= 400 ? true : null;
+                return status < 200 || status >= 400;
             })
-            .exceptionally(ignored -> null)
+            .exceptionally(ignored -> true)
             .thenCompose(result -> {
-                if (result != null) {
-                    return CompletableFuture.completedFuture(result);
+                if (!result) {
+                    return CompletableFuture.completedFuture(false);
                 }
                 HttpRequest getRequest = HttpRequest.newBuilder(URI.create(url)).GET().build();
-
                 return HTTP_CLIENT.sendAsync(getRequest, HttpResponse.BodyHandlers.discarding())
                     .thenApply(resp -> resp.statusCode() >= 400)
-                    .exceptionally(ignored -> true);
+                    .exceptionally(ignored -> true); // still never null
             });
     }
 
