@@ -80,7 +80,7 @@ public class LinkDetection {
             })
             .exceptionally(ignored -> true)
             .thenCompose(result -> {
-                if (!result) {
+                if (!Boolean.TRUE.equals(result)) {
                     return CompletableFuture.completedFuture(false);
                 }
                 HttpRequest getRequest = HttpRequest.newBuilder(URI.create(url)).GET().build();
@@ -99,7 +99,9 @@ public class LinkDetection {
 
         List<CompletableFuture<String>> deadLinkFutures = links.stream()
             .distinct()
-            .map(link -> isLinkBroken(link).thenApply(isBroken -> isBroken ? link : null))
+            .map(link -> isLinkBroken(link)
+                .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? link : null))
+
             .toList();
 
         return CompletableFuture.allOf(deadLinkFutures.toArray(new CompletableFuture[0]))
