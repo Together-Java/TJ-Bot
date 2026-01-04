@@ -61,7 +61,7 @@ public class DynamicVoiceChat extends VoiceReceiverAdapter {
                 moveMember(guild, member, newChannel);
                 sendWarningEmbed(newChannel);
             })
-            .queue(newChannel -> logger.info("Successfully created {} voice channel.",
+            .queue(newChannel -> logger.trace("Successfully created {} voice channel.",
                     newChannel.getName()),
                     error -> logger.error("Failed to create dynamic voice channel", error));
     }
