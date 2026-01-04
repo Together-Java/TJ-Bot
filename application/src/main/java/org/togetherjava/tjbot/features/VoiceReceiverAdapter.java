@@ -8,6 +8,13 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceVideoEvent;
 
 import java.util.regex.Pattern;
 
+/**
+ * Adapter implementation of a {@link VoiceReceiver}. A new receiver can then be registered by
+ * adding it to {@link Features}.
+ * <p>
+ * {@link #onVoiceUpdate(GuildVoiceUpdateEvent)} like the other provided methods can be overridden
+ * if desired. The default implementation is empty, the adapter will not react to such events.
+ */
 public class VoiceReceiverAdapter implements VoiceReceiver {
 
     private final Pattern channelNamePattern;
