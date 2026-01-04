@@ -18,7 +18,13 @@ import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class DynamicVoiceChat extends VoiceReceiverAdapter {
+/**
+ * Handles dynamic voice channel creation and deletion based on user activity.
+ * <p>
+ * When a member joins a configured root channel, a temporary copy is created and the member is
+ * moved into it. Once the channel becomes empty, it is deleted.
+ */
+public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DynamicVoiceChat.class);
     private final List<Pattern> dynamicVoiceChannelPatterns;
 
