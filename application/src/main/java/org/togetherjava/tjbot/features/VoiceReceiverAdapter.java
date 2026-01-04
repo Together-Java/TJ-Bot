@@ -8,6 +8,9 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceVideoEvent;
 
 import java.util.regex.Pattern;
 
+/**
+ * Default implementation of {@link VoiceReceiver}.
+ */
 public class VoiceReceiverAdapter implements VoiceReceiver {
 
     private final Pattern channelNamePattern;
