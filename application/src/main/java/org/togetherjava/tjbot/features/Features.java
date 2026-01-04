@@ -77,6 +77,7 @@ import org.togetherjava.tjbot.features.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
+import org.togetherjava.tjbot.features.voicechat.DynamicVoiceChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -160,6 +161,9 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
+
+        // Voice receivers
+        features.add(new DynamicVoiceChat(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));

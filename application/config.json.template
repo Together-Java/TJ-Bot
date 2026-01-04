@@ -199,5 +199,10 @@
         "rolePattern": "Top Helper.*",
         "assignmentChannelPattern": "community-commands",
         "announcementChannelPattern": "hall-of-fame"
-    }
+    },
+    "dynamicVoiceChannelPatterns": [
+        "Gaming",
+        "Support/Studying Room",
+        "Chit Chat"
+    ]
 }
