@@ -68,7 +68,7 @@ public class DynamicVoiceChat extends VoiceReceiverAdapter {
 
     private void moveMember(Guild guild, Member member, AudioChannel channel) {
         guild.moveVoiceMember(member, channel)
-            .queue(_ -> logger.info(
+            .queue(_ -> logger.trace(
                     "Successfully moved {} to newly created dynamic voice channel {}",
                     member.getEffectiveName(), channel.getName()),
                     error -> logger.error(
@@ -86,7 +86,7 @@ public class DynamicVoiceChat extends VoiceReceiverAdapter {
         }
 
         channel.delete()
-            .queue(_ -> logger.info("Deleted dynamically created voice channel: {} ",
+            .queue(_ -> logger.trace("Deleted dynamically created voice channel: {} ",
                     channel.getName()),
                     error -> logger.error("Failed to delete dynamically created voice channel: {} ",
                             channel.getName(), error));
