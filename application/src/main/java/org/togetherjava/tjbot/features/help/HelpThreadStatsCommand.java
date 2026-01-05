@@ -97,7 +97,7 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
                     .filterWhere(
                             HELP_THREADS.TICKET_STATUS.eq(HelpSystemHelper.TicketStatus.ACTIVE.val))
                     .as(OPEN_NOW_ALIAS),
-                        count().filterWhere(HELP_THREADS.PARTICIPANTS.eq(1)).as(GHOST_NOW_ALIAS),
+                        count().filterWhere(HELP_THREADS.PARTICIPANTS.eq(0)).as(GHOST_NOW_ALIAS),
                         avg(HELP_THREADS.PARTICIPANTS).as(AVERAGE_PARTICIPANTS_ALIAS),
                         avg(HELP_THREADS.MESSAGE_COUNT).as(AVERAGE_MESSAGE_COUNT_ALIAS),
                         avg(durationInSeconds(HELP_THREADS.CLOSED_AT, HELP_THREADS.CREATED_AT))
