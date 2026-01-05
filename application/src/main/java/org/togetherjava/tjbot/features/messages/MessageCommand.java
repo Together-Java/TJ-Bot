@@ -62,37 +62,37 @@ public final class MessageCommand extends SlashCommandAdapter {
     public MessageCommand() {
         super("message", "Provides commands to work with messages", CommandVisibility.GUILD);
 
-        getData().addSubcommands(new SubcommandData(Subcommand.RAW.name,
+        SubcommandData raw = new SubcommandData(Subcommand.RAW.name,
                 "View the raw content of a message, without Discord interpreting any of its content")
             .addOption(OptionType.CHANNEL, SRC_CHANNEL_OPTION,
                     "where to find the message to retrieve content from", true)
             .addOption(OptionType.STRING, CONTENT_MESSAGE_ID_OPTION,
-                    "the id of the message to read content from", true),
+                    "the id of the message to read content from", true);
+
+        SubcommandData post =
                 new SubcommandData(Subcommand.POST.name, "Let this bot post a message")
                     .addOption(OptionType.CHANNEL, DEST_CHANNEL_OPTION, DEST_CHANNEL_DESCRIPTION,
                             true)
-                    .addOption(OptionType.STRING, CONTENT_OPTION, CONTENT_DESCRIPTION, true),
-                new SubcommandData(Subcommand.POST_WITH_MESSAGE.name,
-                        "Let this bot post a message. Content is retrieved from the given message.")
-                    .addOption(OptionType.CHANNEL, DEST_CHANNEL_OPTION, DEST_CHANNEL_DESCRIPTION,
-                            true)
-                    .addOption(OptionType.STRING, CONTENT_MESSAGE_ID_OPTION,
-                            CONTENT_MESSAGE_ID_DESCRIPTION, true),
-                new SubcommandData(Subcommand.EDIT.name,
-                        "Edits a message posted by this bot, the old content is replaced")
-                    .addOption(OptionType.CHANNEL, SRC_CHANNEL_OPTION, EDIT_SRC_CHANNEL_DESCRIPTION,
-                            true)
-                    .addOption(OptionType.STRING, EDIT_MESSAGE_ID_OPTION,
-                            EDIT_MESSAGE_ID_DESCRIPTION, true)
-                    .addOption(OptionType.STRING, CONTENT_OPTION, CONTENT_DESCRIPTION, true),
-                new SubcommandData(Subcommand.EDIT_WITH_MESSAGE.name,
-                        "Edits a message posted by this bot. Content is retrieved from the given message.")
-                    .addOption(OptionType.CHANNEL, SRC_CHANNEL_OPTION, EDIT_SRC_CHANNEL_DESCRIPTION,
-                            true)
-                    .addOption(OptionType.STRING, EDIT_MESSAGE_ID_OPTION,
-                            EDIT_MESSAGE_ID_DESCRIPTION, true)
-                    .addOption(OptionType.STRING, CONTENT_MESSAGE_ID_OPTION,
-                            CONTENT_MESSAGE_ID_DESCRIPTION, true));
+                    .addOption(OptionType.STRING, CONTENT_OPTION, CONTENT_DESCRIPTION, true);
+        SubcommandData postWithMessage = new SubcommandData(Subcommand.POST_WITH_MESSAGE.name,
+                "Let this bot post a message. Content is retrieved from the given message.")
+            .addOption(OptionType.CHANNEL, DEST_CHANNEL_OPTION, DEST_CHANNEL_DESCRIPTION, true)
+            .addOption(OptionType.STRING, CONTENT_MESSAGE_ID_OPTION, CONTENT_MESSAGE_ID_DESCRIPTION,
+                    true);
+
+        SubcommandData edit = new SubcommandData(Subcommand.EDIT.name,
+                "Edits a message posted by this bot, the old content is replaced")
+            .addOption(OptionType.CHANNEL, SRC_CHANNEL_OPTION, EDIT_SRC_CHANNEL_DESCRIPTION, true)
+            .addOption(OptionType.STRING, EDIT_MESSAGE_ID_OPTION, EDIT_MESSAGE_ID_DESCRIPTION, true)
+            .addOption(OptionType.STRING, CONTENT_OPTION, CONTENT_DESCRIPTION, true);
+        SubcommandData editWithMessage = new SubcommandData(Subcommand.EDIT_WITH_MESSAGE.name,
+                "Edits a message posted by this bot. Content is retrieved from the given message.")
+            .addOption(OptionType.CHANNEL, SRC_CHANNEL_OPTION, EDIT_SRC_CHANNEL_DESCRIPTION, true)
+            .addOption(OptionType.STRING, EDIT_MESSAGE_ID_OPTION, EDIT_MESSAGE_ID_DESCRIPTION, true)
+            .addOption(OptionType.STRING, CONTENT_MESSAGE_ID_OPTION, CONTENT_MESSAGE_ID_DESCRIPTION,
+                    true);
+
+        getData().addSubcommands(raw, post, postWithMessage, edit, editWithMessage);
     }
 
     /**
