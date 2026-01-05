@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jooq.DSLContext;
@@ -85,7 +86,7 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        long days = event.getOption(DURATION_OPTION, 1L, OptionMapping::getAsLong)
+        long days = event.getOption(DURATION_OPTION, 1L, OptionMapping::getAsLong);
         Instant startDate = Instant.now().minus(days, ChronoUnit.DAYS);
 
         event.deferReply().queue();
