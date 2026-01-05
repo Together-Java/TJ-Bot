@@ -17,10 +17,10 @@ import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 
 import java.awt.Color;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import static org.jooq.impl.DSL.avg;
 import static org.jooq.impl.DSL.count;
@@ -67,8 +67,7 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
     private final Database database;
 
-    private static final int COOLDOWN_VALUE = 1;
-    private static final ChronoUnit COOLDOWN_UNIT = ChronoUnit.MINUTES;
+    private static final Duration COOLDOWN_DURATION = Duration.ofMinutes(1);
 
     private final Cache<Long, Instant> cooldownCache;
 
@@ -91,10 +90,8 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
         getData().addOptions(durationOption);
         this.database = database;
-        this.cooldownCache = Caffeine.newBuilder()
-            .maximumSize(500)
-            .expireAfterWrite(COOLDOWN_VALUE, TimeUnit.of(COOLDOWN_UNIT))
-            .build();
+        this.cooldownCache =
+                Caffeine.newBuilder().maximumSize(500).expireAfterWrite(COOLDOWN_DURATION).build();
     }
 
     @Override
@@ -104,8 +101,9 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
         Instant lastUsage = this.cooldownCache.getIfPresent(channelId);
         if (lastUsage != null) {
-            long secondsLeft = COOLDOWN_UNIT.getDuration().getSeconds()
-                    - ChronoUnit.SECONDS.between(lastUsage, now);
+            Duration elapsed = Duration.between(lastUsage, now);
+            // to avoid displaying -1 when elapsed just crosses cooldown
+            long secondsLeft = Math.max(0, COOLDOWN_DURATION.minus(elapsed).toSeconds());
 
             event
                 .reply("This command is on cooldown! Please wait " + secondsLeft + " more seconds.")
