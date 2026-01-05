@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.features.help;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -18,6 +20,7 @@ import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static org.jooq.impl.DSL.avg;
 import static org.jooq.impl.DSL.count;
@@ -64,6 +67,12 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
     private final Database database;
 
+    private static final int COOLDOWN_VALUE = 1;
+    private static final ChronoUnit COOLDOWN_UNIT = ChronoUnit.MINUTES;
+
+    private final Cache<Long, Instant> cooldownCache;
+
+
     /**
      * Creates an instance of the command.
      *
@@ -82,10 +91,31 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
         getData().addOptions(durationOption);
         this.database = database;
+        this.cooldownCache = Caffeine.newBuilder()
+            .maximumSize(500)
+            .expireAfterWrite(COOLDOWN_VALUE, TimeUnit.of(COOLDOWN_UNIT))
+            .build();
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
+        long channelId = event.getChannel().getIdLong();
+        Instant now = Instant.now();
+
+        Instant lastUsage = this.cooldownCache.getIfPresent(channelId);
+        if (lastUsage != null) {
+            long secondsLeft = COOLDOWN_UNIT.getDuration().getSeconds()
+                    - ChronoUnit.SECONDS.between(lastUsage, now);
+
+            event
+                .reply("This command is on cooldown! Please wait " + secondsLeft + " more seconds.")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        cooldownCache.put(channelId, now);
+
         long days = event.getOption(DURATION_OPTION, 1L, OptionMapping::getAsLong);
         Instant startDate = Instant.now().minus(days, ChronoUnit.DAYS);
 
