@@ -85,9 +85,7 @@ public class HelpThreadStatsCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        long days = event.getOption(DURATION_OPTION) != null
-                ? Objects.requireNonNull(event.getOption(DURATION_OPTION)).getAsLong()
-                : 1;
+        long days = event.getOption(DURATION_OPTION, 1L, OptionMapping::getAsLong)
         Instant startDate = Instant.now().minus(days, ChronoUnit.DAYS);
 
         event.deferReply().queue();
