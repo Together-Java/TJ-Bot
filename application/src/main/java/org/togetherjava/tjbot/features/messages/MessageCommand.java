@@ -200,9 +200,9 @@ public final class MessageCommand extends SlashCommandAdapter {
         switch (Subcommand.fromName(event.getSubcommandName())) {
             case RAW -> rawMessage(event);
             case POST -> postMessage(event);
-            case POST_WITH_MESSAGE -> postMessageWithMessage(event);
+            case POST_WITH_MESSAGE -> postMessageUsingMessageContent(event);
             case EDIT -> editMessage(event);
-            case EDIT_WITH_MESSAGE -> editMessageWithMessage(event);
+            case EDIT_WITH_MESSAGE -> editMessageUsingMessageContent(event);
             default -> throw new AssertionError(
                     "Unexpected subcommand '%s'".formatted(event.getSubcommandName()));
         }
@@ -252,7 +252,7 @@ public final class MessageCommand extends SlashCommandAdapter {
                     failure -> handleActionFailed(failure, event, action));
     }
 
-    private void postMessageWithMessage(CommandInteraction event) {
+    private void postMessageUsingMessageContent(CommandInteraction event) {
         Subcommand action = Subcommand.POST_WITH_MESSAGE;
         Optional<TextChannel> destChannelOpt = handleExpectMessageChannel(
                 Objects.requireNonNull(event.getOption(DEST_CHANNEL_OPTION)).getAsChannel(), event);
@@ -307,7 +307,7 @@ public final class MessageCommand extends SlashCommandAdapter {
         }, failure -> handleMessageRetrieveFailed(failure, event, editingMessageId));
     }
 
-    private void editMessageWithMessage(CommandInteraction event) {
+    private void editMessageUsingMessageContent(CommandInteraction event) {
         Subcommand action = Subcommand.EDIT_WITH_MESSAGE;
         Optional<TextChannel> srcChannelOpt = handleExpectMessageChannel(
                 Objects.requireNonNull(event.getOption(SRC_CHANNEL_OPTION)).getAsChannel(), event);
