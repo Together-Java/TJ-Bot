@@ -68,6 +68,28 @@ public class LinkDetection {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
 
+    /**
+     * Checks whether the given URL is considered broken.
+     *
+     * <p>
+     * A link is considered broken if:
+     * <ul>
+     * <li>The URL is invalid or malformed</li>
+     * <li>An HTTP request fails</li>
+     * <li>The HTTP response status code is outside the 200–399 range</li>
+     * </ul>
+     *
+     * <p>
+     * Notes:
+     * <ul>
+     * <li>Status code {@code 200} is considered valid, even if the response body is empty</li>
+     * <li>The response body content is not inspected</li>
+     * </ul>
+     *
+     * @param url the URL to check
+     * @return a future completing with {@code true} if the link is broken
+     */
+
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
         HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
             .method("HEAD", HttpRequest.BodyPublishers.noBody())
@@ -89,6 +111,34 @@ public class LinkDetection {
                     .exceptionally(ignored -> true); // still never null
             });
     }
+
+    /**
+     * Replaces all broken links in the given text with the provided replacement string.
+     *
+     * <p>
+     * Example:
+     * 
+     * <pre>{@code
+     * replaceDeadLinks("""
+     *         Test
+     *         http://deadlink/1
+     *         http://workinglink/1
+     *         """, "broken")
+     * }</pre>
+     *
+     * <p>
+     * Results in:
+     * 
+     * <pre>{@code
+     * Test
+     * broken
+     * http://workinglink/1
+     * }</pre>
+     *
+     * @param text the input text containing URLs
+     * @param replacement the string to replace broken links with
+     * @return a future containing the modified text
+     */
 
     public static CompletableFuture<String> replaceDeadLinks(String text, String replacement) {
         List<String> links = extractLinks(text, DEFAULT_FILTERS);
