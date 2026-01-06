@@ -19,6 +19,7 @@ import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -59,8 +60,7 @@ public class Application {
                 throw new IOException("InputStream is null when loading " + configPath);
             }
 
-            String content = new String(stream.readAllBytes());
-            config = Config.load(content);
+            config = Config.load(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
 
         } catch (IOException e) {
             logger.error("Unable to load the configuration file from path '{}'", configPath, e);
