@@ -1,10 +1,11 @@
 package org.togetherjava.tjbot.features.chatgpt;
 
-import com.theokanning.openai.OpenAiHttpException;
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.completion.chat.ChatMessageRole;
-import com.theokanning.openai.service.OpenAiService;
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.ChatModel;
+import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.ResponseOutputText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +14,8 @@ import org.togetherjava.tjbot.config.Config;
 import javax.annotation.Nullable;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service used to communicate to OpenAI API to generate responses.
@@ -26,30 +27,8 @@ public class ChatGptService {
     /** The maximum number of tokens allowed for the generated answer. */
     private static final int MAX_TOKENS = 3_000;
 
-    /**
-     * This parameter reduces the likelihood of the AI repeating itself. A higher frequency penalty
-     * makes the model less likely to repeat the same lines verbatim. It helps in generating more
-     * diverse and varied responses.
-     */
-    private static final double FREQUENCY_PENALTY = 0.5;
-
-    /**
-     * This parameter controls the randomness of the AI's responses. A higher temperature results in
-     * more varied, unpredictable, and creative responses. Conversely, a lower temperature makes the
-     * model's responses more deterministic and conservative.
-     */
-    private static final double TEMPERATURE = 0.8;
-
-    /**
-     * n: This parameter specifies the number of responses to generate for each prompt. If n is more
-     * than 1, the AI will generate multiple different responses to the same prompt, each one being
-     * a separate iteration based on the input.
-     */
-    private static final int MAX_NUMBER_OF_RESPONSES = 1;
-    private static final String AI_MODEL = "gpt-3.5-turbo";
-
     private boolean isDisabled = false;
-    private OpenAiService openAiService;
+    private OpenAIClient openAIClient;
 
     /**
      * Creates instance of ChatGPTService
@@ -63,23 +42,7 @@ public class ChatGptService {
             isDisabled = true;
             return;
         }
-
-        openAiService = new OpenAiService(apiKey, TIMEOUT);
-
-        ChatMessage setupMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), """
-                For code supplied for review, refer to the old code supplied rather than
-                rewriting the code. DON'T supply a corrected version of the code.\s""");
-        ChatCompletionRequest systemSetupRequest = ChatCompletionRequest.builder()
-            .model(AI_MODEL)
-            .messages(List.of(setupMessage))
-            .frequencyPenalty(FREQUENCY_PENALTY)
-            .temperature(TEMPERATURE)
-            .maxTokens(50)
-            .n(MAX_NUMBER_OF_RESPONSES)
-            .build();
-
-        // Sending the system setup message to ChatGPT.
-        openAiService.createChatCompletion(systemSetupRequest);
+        openAIClient = OpenAIOkHttpClient.builder().apiKey(apiKey).timeout(TIMEOUT).build();
     }
 
     /**
@@ -98,32 +61,35 @@ public class ChatGptService {
         }
 
         String contextText = context == null ? "" : ", Context: %s.".formatted(context);
-        String fullQuestion = "(KEEP IT CONCISE, NOT MORE THAN 280 WORDS%s) - %s"
-            .formatted(contextText, question);
+        String inputPrompt = """
+                For code supplied for review, refer to the old code supplied rather than
+                rewriting the code. DON'T supply a corrected version of the code.
 
-        ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(), fullQuestion);
-        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-            .model(AI_MODEL)
-            .messages(List.of(chatMessage))
-            .frequencyPenalty(FREQUENCY_PENALTY)
-            .temperature(TEMPERATURE)
-            .maxTokens(MAX_TOKENS)
-            .n(MAX_NUMBER_OF_RESPONSES)
-            .build();
-        logger.debug("ChatGpt Request: {}", fullQuestion);
+                KEEP IT CONCISE, NOT MORE THAN 280 WORDS
+                
+                %s
+                Question: %s
+                """.formatted(contextText, question);
+
+        logger.debug("ChatGpt request: {}", inputPrompt);
 
         String response = null;
         try {
-            response = openAiService.createChatCompletion(chatCompletionRequest)
-                .getChoices()
-                .getFirst()
-                .getMessage()
-                .getContent();
-        } catch (OpenAiHttpException openAiHttpException) {
-            logger.warn(
-                    "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
-                    openAiHttpException.getMessage(), openAiHttpException.code,
-                    openAiHttpException.type, openAiHttpException.statusCode);
+            ResponseCreateParams params = ResponseCreateParams.builder()
+                .model(ChatModel.GPT_5_NANO)
+                .input(inputPrompt)
+                .maxOutputTokens(MAX_TOKENS)
+                .build();
+
+            Response chatGptResponse = openAIClient.responses().create(params);
+
+            response = chatGptResponse.output()
+                .stream()
+                .flatMap(item -> item.message().stream())
+                .flatMap(message -> message.content().stream())
+                .flatMap(content -> content.outputText().stream())
+                .map(ResponseOutputText::text)
+                .collect(Collectors.joining("\n"));
         } catch (RuntimeException runtimeException) {
             logger.warn("There was an error using the OpenAI API: {}",
                     runtimeException.getMessage());
