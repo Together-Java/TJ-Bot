@@ -6,14 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 
 /**
- * Configuration of the application. Create instances using {@link #load(Path)}.
+ * Configuration of the application. Create instances using {@link #load(String)}.
  */
 public final class Config {
     private final String databasePath;
