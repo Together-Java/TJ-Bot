@@ -21,6 +21,7 @@ import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.Guilds;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,9 +59,9 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
      * @param config used to get api key and channel names.
      * @see org.togetherjava.tjbot.features.Features
      */
-    public FileSharingMessageListener(Config config) {
+    public FileSharingMessageListener(Config config, Secrets secrets) {
         super(Pattern.compile(".*"));
-        githubApiKey = config.getGitHubApiKey();
+        githubApiKey = secrets.getGitHubApiKey();
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
         isSoftModRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();

@@ -45,6 +45,7 @@ import org.togetherjava.tjbot.features.componentids.ComponentId;
 import org.togetherjava.tjbot.features.componentids.ComponentIdParser;
 import org.togetherjava.tjbot.features.componentids.ComponentIdStore;
 import org.togetherjava.tjbot.features.componentids.InvalidComponentIdFormatException;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -95,9 +96,9 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * @param database the database that commands may use to persist data
      * @param config the configuration to use for this system
      */
-    public BotCore(JDA jda, Database database, Config config) {
+    public BotCore(JDA jda, Database database, Config config, Secrets secrets) {
         this.config = config;
-        Collection<Feature> features = Features.createFeatures(jda, database, config);
+        Collection<Feature> features = Features.createFeatures(jda, database, config, secrets);
 
         // Message receivers
         features.stream()

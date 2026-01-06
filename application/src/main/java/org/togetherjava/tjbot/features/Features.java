@@ -78,6 +78,7 @@ import org.togetherjava.tjbot.features.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -88,7 +89,7 @@ import java.util.Collection;
  * it with the system.
  * <p>
  * To add a new slash command, extend the commands returned by
- * {@link #createFeatures(JDA, Database, Config)}.
+ * {@link #createFeatures(JDA, Database, Config, Secrets)}.
  */
 public class Features {
     private Features() {
@@ -106,19 +107,21 @@ public class Features {
      * @param config the configuration features should use
      * @return a collection of all features
      */
-    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
+    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config,
+            Secrets secrets) {
         FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
-        JShellEval jshellEval = new JShellEval(config.getJshell(), config.getGitHubApiKey());
+        JShellEval jshellEval = new JShellEval(config.getJshell(), secrets.getJshellBaseUrl(),
+                secrets.getGitHubApiKey());
 
         TagSystem tagSystem = new TagSystem(database);
         BookmarksSystem bookmarksSystem = new BookmarksSystem(config, database);
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        GitHubReference githubReference = new GitHubReference(config);
+        GitHubReference githubReference = new GitHubReference(config, secrets);
         CodeMessageHandler codeMessageHandler =
                 new CodeMessageHandler(blacklistConfig.special(), jshellEval);
-        ChatGptService chatGptService = new ChatGptService(config);
+        ChatGptService chatGptService = new ChatGptService(secrets);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
@@ -153,7 +156,7 @@ public class Features {
         features.add(new SuggestionsUpDownVoter(config));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
         features.add(new MediaOnlyChannelListener(config));
-        features.add(new FileSharingMessageListener(config));
+        features.add(new FileSharingMessageListener(config, secrets));
         features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
         features.add(githubReference);
         features.add(codeMessageHandler);

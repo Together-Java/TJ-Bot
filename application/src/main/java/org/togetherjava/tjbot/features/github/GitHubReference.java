@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.awt.Color;
 import java.io.FileNotFoundException;
@@ -67,6 +68,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             DateTimeFormatter.ofPattern("dd MMM, yyyy").withZone(ZoneOffset.UTC);
     private final Predicate<String> hasGithubIssueReferenceEnabled;
     private final Config config;
+    private final Secrets secrets;
 
     /**
      * The repositories that are searched when looking for an issue.
@@ -81,8 +83,9 @@ public final class GitHubReference extends MessageReceiverAdapter {
      *
      * @param config The Config to get allowed channel pattern for feature.
      */
-    public GitHubReference(Config config) {
+    public GitHubReference(Config config, Secrets secrets) {
         this.config = config;
+        this.secrets = secrets;
         this.hasGithubIssueReferenceEnabled =
                 Pattern.compile(config.getGitHubReferencingEnabledChannelPattern())
                     .asMatchPredicate();
@@ -96,7 +99,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
         try {
             repositories = new ArrayList<>();
 
-            GitHub githubApi = GitHub.connectUsingOAuth(config.getGitHubApiKey());
+            GitHub githubApi = GitHub.connectUsingOAuth(secrets.getGitHubApiKey());
 
             for (long repoId : config.getGitHubRepositories()) {
                 repositories.add(githubApi.getRepositoryById(repoId));
@@ -104,7 +107,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
         } catch (IOException ex) {
             logger.warn(
                     "The GitHub key ({}) used in this config is invalid. Skipping GitHubReference feature – {}",
-                    config.getGitHubApiKey(), ex.getMessage());
+                    secrets.getGitHubApiKey(), ex.getMessage());
         }
     }
 

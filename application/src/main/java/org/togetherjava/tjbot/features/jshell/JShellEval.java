@@ -38,10 +38,10 @@ public class JShellEval {
      * @param config the JShell configuration to use
      * @param gistApiToken token of Gist api in case a JShell result is uploaded here
      */
-    public JShellEval(JShellConfig config, String gistApiToken) {
+    public JShellEval(JShellConfig config, String baseUrl, String gistApiToken) {
         this.gistApiToken = gistApiToken;
         this.api = new JShellApi(new ObjectMapper().registerModule(new Jdk17SealedClassesModule()),
-                config.baseUrl());
+                baseUrl);
         this.renderer = new ResultRenderer();
 
         this.rateLimiter = new RateLimiter(Duration.ofSeconds(config.rateLimitWindowSeconds()),

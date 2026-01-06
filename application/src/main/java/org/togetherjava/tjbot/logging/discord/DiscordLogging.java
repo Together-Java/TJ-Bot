@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.logging.LogMarkers;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.net.URI;
 import java.util.Optional;
@@ -34,23 +35,24 @@ public final class DiscordLogging {
      * <p>
      * Disables the feature if the config is set up incorrectly.
      *
-     * @param botConfig to get the logging details from, such as the Discord webhook urls
+     * @param botConfig to get the logging details from
+     * @param secrets to get the details such as the Discord webhook urls
      */
-    public static void startDiscordLogging(Config botConfig) {
+    public static void startDiscordLogging(Config botConfig, Secrets secrets) {
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         Configuration logConfig = context.getConfiguration();
 
-        addAppenders(logConfig, botConfig);
+        addAppenders(logConfig, botConfig, secrets);
 
         context.updateLoggers();
     }
 
-    private static void addAppenders(Configuration logConfig, Config botConfig) {
-        parseWebhookUri(botConfig.getLogInfoChannelWebhook(), "info")
+    private static void addAppenders(Configuration logConfig, Config botConfig, Secrets secrets) {
+        parseWebhookUri(secrets.getLogInfoChannelWebhook(), "info")
             .ifPresent(webhookUri -> addDiscordLogAppender("DiscordInfo", createInfoRangeFilter(),
                     webhookUri, botConfig.getSourceCodeBaseUrl(), logConfig));
 
-        parseWebhookUri(botConfig.getLogErrorChannelWebhook(), "error")
+        parseWebhookUri(secrets.getLogErrorChannelWebhook(), "error")
             .ifPresent(webhookUri -> addDiscordLogAppender("DiscordError", createErrorRangeFilter(),
                     webhookUri, botConfig.getSourceCodeBaseUrl(), logConfig));
     }

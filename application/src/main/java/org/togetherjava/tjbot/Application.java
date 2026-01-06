@@ -15,6 +15,7 @@ import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.logging.LogMarkers;
 import org.togetherjava.tjbot.logging.discord.DiscordLogging;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,6 +35,7 @@ public class Application {
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private static final String DEFAULT_CONFIG_PATH = "config.json";
+    private static final String DEFAULT_SECRETS_PATH = "secrets.json";
 
     /**
      * Starts the application.
@@ -58,11 +60,21 @@ public class Application {
             return;
         }
 
+        Path secretsPath = Path.of(args.length == 1 ? args[0] : DEFAULT_SECRETS_PATH);
+        Secrets secrets;
+        try {
+            secrets = Secrets.load(secretsPath);
+        } catch (IOException e) {
+            logger.error("Unable to load the configuration file from path '{}'",
+                    configPath.toAbsolutePath(), e);
+            return;
+        }
+
         Thread.setDefaultUncaughtExceptionHandler(Application::onUncaughtException);
         Runtime.getRuntime().addShutdownHook(new Thread(Application::onShutdown));
-        DiscordLogging.startDiscordLogging(config);
+        DiscordLogging.startDiscordLogging(config, secrets);
 
-        runBot(config);
+        runBot(config, secrets);
     }
 
     /**
@@ -71,7 +83,7 @@ public class Application {
      * @param config the configuration to run the bot with
      */
     @SuppressWarnings("WeakerAccess")
-    public static void runBot(Config config) {
+    public static void runBot(Config config, Secrets secrets) {
         logger.info("Starting bot...");
 
         Path databasePath = Path.of(config.getDatabasePath());
@@ -82,13 +94,13 @@ public class Application {
             }
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
-            JDA jda = JDABuilder.createDefault(config.getToken())
+            JDA jda = JDABuilder.createDefault(secrets.getToken())
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                 .build();
 
             jda.awaitReady();
 
-            BotCore core = new BotCore(jda, database, config);
+            BotCore core = new BotCore(jda, database, config, secrets);
             CommandReloading.reloadCommands(jda, core);
             core.scheduleRoutines(jda);
 
