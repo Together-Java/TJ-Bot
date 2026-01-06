@@ -66,7 +66,7 @@ public class ChatGptService {
                 rewriting the code. DON'T supply a corrected version of the code.
 
                 KEEP IT CONCISE, NOT MORE THAN 280 WORDS
-                
+
                 %s
                 Question: %s
                 """.formatted(contextText, question);
