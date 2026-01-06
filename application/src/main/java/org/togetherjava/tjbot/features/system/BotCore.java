@@ -95,6 +95,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * @param jda the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
      * @param config the configuration to use for this system
+     * @param secrets the secrets to use for this system
      */
     public BotCore(JDA jda, Database database, Config config, Secrets secrets) {
         this.config = config;

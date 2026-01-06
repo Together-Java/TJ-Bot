@@ -82,6 +82,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
      * a predicate for matching allowed channels for feature and acquires repositories.
      *
      * @param config The Config to get allowed channel pattern for feature.
+     * @param secrets The Secrets to get the GitHub API key.
      */
     public GitHubReference(Config config, Secrets secrets) {
         this.config = config;

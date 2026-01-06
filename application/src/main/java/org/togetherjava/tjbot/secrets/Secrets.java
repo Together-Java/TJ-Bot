@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 
+/**
+ * This class contains secrets such as API keys, tokens etc., used by the application.
+ */
 public class Secrets {
     private final String token;
     private final String githubApiKey;
@@ -35,6 +38,13 @@ public class Secrets {
         this.jshellBaseUrl = Objects.requireNonNull(jshellBaseUrl);
     }
 
+    /**
+     * Loads the configuration from the given file.
+     *
+     * @param path the location to secrets file
+     * @return the loaded configuration
+     * @throws IOException if the file could not be loaded
+     */
     public static Secrets load(Path path) throws IOException {
         return new ObjectMapper().registerModule(new JavaTimeModule())
             .readValue(path.toFile(), Secrets.class);

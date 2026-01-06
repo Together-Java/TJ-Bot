@@ -88,6 +88,7 @@ public class Application {
      * Runs an instance of the bot, connecting to the given token and using the given database.
      *
      * @param config the configuration to run the bot with
+     * @param secrets the secrets to run the bot with
      */
     @SuppressWarnings("WeakerAccess")
     public static void runBot(Config config, Secrets secrets) {

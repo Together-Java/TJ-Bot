@@ -56,7 +56,8 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
     /**
      * Creates a new instance.
      *
-     * @param config used to get api key and channel names.
+     * @param config used to get channel names.
+     * @param secrets used to get api key
      * @see org.togetherjava.tjbot.features.Features
      */
     public FileSharingMessageListener(Config config, Secrets secrets) {

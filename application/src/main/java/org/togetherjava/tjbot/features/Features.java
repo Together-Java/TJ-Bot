@@ -105,6 +105,7 @@ public class Features {
      * @param jda the JDA instance commands will be registered at
      * @param database the database of the application, which features can use to persist data
      * @param config the configuration features should use
+     * @param secrets the secrets features may need
      * @return a collection of all features
      */
     public static Collection<Feature> createFeatures(JDA jda, Database database, Config config,

@@ -36,6 +36,7 @@ public class JShellEval {
      * Creates a JShell evaluation instance
      * 
      * @param config the JShell configuration to use
+     * @param baseUrl the base URL for the JSHell API
      * @param gistApiToken token of Gist api in case a JShell result is uploaded here
      */
     public JShellEval(JShellConfig config, String baseUrl, String gistApiToken) {
