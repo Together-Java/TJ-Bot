@@ -1,6 +1,4 @@
 {
-    "token": "<put_your_token_here>",
-    "githubApiKey": "<your_github_personal_access_token>",
     "databasePath": "local-database.db",
     "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
     "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
@@ -159,12 +157,8 @@
     ],
     "githubReferencingEnabledChannelPattern": "server-suggestions|tjbot-discussion|modernjava-discussion",
     "githubRepositories": [403389278,587644974,601602394],
-    "logInfoChannelWebhook": "<put_your_webhook_here>",
-    "logErrorChannelWebhook": "<put_your_webhook_here>",
-    "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
     "sourceCodeBaseUrl": "https://github.com/Together-Java/TJ-Bot/blob/master/application/src/main/java/",
     "jshell": {
-        "baseUrl": "<put_jshell_rest_api_url_here>",
         "rateLimitWindowSeconds": 10,
         "rateLimitRequestsInWindow": 3
     },
