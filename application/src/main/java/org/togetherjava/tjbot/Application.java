@@ -18,6 +18,7 @@ import org.togetherjava.tjbot.logging.discord.DiscordLogging;
 import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
@@ -34,7 +35,7 @@ public class Application {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
-    private static final String DEFAULT_CONFIG_PATH = "config.json";
+    private static final String DEFAULT_CONFIG_PATH = "/config.json";
     private static final String DEFAULT_SECRETS_PATH = "secrets.json";
 
     /**
@@ -50,13 +51,19 @@ public class Application {
                     + DEFAULT_CONFIG_PATH + "' will be assumed.");
         }
 
-        Path configPath = Path.of(args.length == 1 ? args[0] : DEFAULT_CONFIG_PATH);
+        String configPath = args.length == 1 ? args[0] : DEFAULT_CONFIG_PATH;
         Config config;
-        try {
-            config = Config.load(configPath);
+
+        try (InputStream stream = Application.class.getResourceAsStream(configPath)) {
+            if (stream == null) {
+                throw new IOException("InputStream is null when loading " + configPath);
+            }
+
+            String content = new String(stream.readAllBytes());
+            config = Config.load(content);
+
         } catch (IOException e) {
-            logger.error("Unable to load the configuration file from path '{}'",
-                    configPath.toAbsolutePath(), e);
+            logger.error("Unable to load the configuration file from path '{}'", configPath, e);
             return;
         }
 
@@ -66,7 +73,7 @@ public class Application {
             secrets = Secrets.load(secretsPath);
         } catch (IOException e) {
             logger.error("Unable to load the configuration file from path '{}'",
-                    configPath.toAbsolutePath(), e);
+                    secretsPath.toAbsolutePath(), e);
             return;
         }
 

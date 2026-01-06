@@ -127,13 +127,13 @@ public final class Config {
     /**
      * Loads the configuration from the given file.
      *
-     * @param path the configuration file, as JSON object
+     * @param content the configuration file, as Stringified JSON object
      * @return the loaded configuration
      * @throws IOException if the file could not be loaded
      */
-    public static Config load(Path path) throws IOException {
+    public static Config load(String content) throws IOException {
         return new ObjectMapper().registerModule(new JavaTimeModule())
-            .readValue(path.toFile(), Config.class);
+            .readValue(content, Config.class);
     }
 
     /**
