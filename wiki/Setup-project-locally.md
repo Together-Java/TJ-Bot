@@ -98,14 +98,13 @@ See the following guide if you still have to create a server and a bot first:
 
 ![Discord Developer Portal - Bot Token](https://i.imgur.com/IB5W8vZ.png)
 
-To run the bot, you will need a `config.json` file with specific content. You can find a template for this file, with meaningful default values, in `application/config.json.template`.
+To run the bot, you will need a `secrets.json` file with specific content. You can find a template for this file, with meaningful default values, in `application/secrets.json.template`.
 
 Replace `<your_token_here>` with your bot token; you can also adjust the other settings if you want.
 
 ### IntelliJ
 
-1. put the configuration file to `TJ-Bot\application\config.json` or run the program with a single argument, the path to your config file
-2. in the Gradle view, click the `run` task and start it
+1. in the Gradle view, click the `run` task and start it
 
 ![Bot runs](https://i.imgur.com/KdsSsx0.png)
 
