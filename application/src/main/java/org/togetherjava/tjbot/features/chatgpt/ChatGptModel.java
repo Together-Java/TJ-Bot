@@ -31,6 +31,9 @@ public enum ChatGptModel {
         this.chatModel = chatModel;
     }
 
+    /**
+     * @return the underlying OpenAI model used by this enum.
+     */
     public ChatModel toChatModel() {
         return chatModel;
     }
