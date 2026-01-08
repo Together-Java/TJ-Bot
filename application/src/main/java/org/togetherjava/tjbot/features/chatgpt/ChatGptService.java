@@ -76,7 +76,7 @@ public class ChatGptService {
         String response = null;
         try {
             ResponseCreateParams params = ResponseCreateParams.builder()
-                .model(ChatModel.GPT_5_NANO)
+                .model(ChatModel.GPT_5_MINI)
                 .input(inputPrompt)
                 .maxOutputTokens(MAX_TOKENS)
                 .build();
