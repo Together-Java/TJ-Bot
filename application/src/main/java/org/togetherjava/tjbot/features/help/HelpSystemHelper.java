@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.help;
 
-import com.openai.models.ChatModel;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -26,6 +25,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.HelpThreads;
 import org.togetherjava.tjbot.db.generated.tables.records.HelpThreadsRecord;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.Guilds;
@@ -144,7 +144,7 @@ public final class HelpSystemHelper {
         String context =
                 "Category %s on a Java Q&A discord server. You may use markdown syntax for the response"
                     .formatted(matchingTag.getName());
-        chatGptAnswer = chatGptService.ask(question, context, ChatModel.GPT_3_5_TURBO);
+        chatGptAnswer = chatGptService.ask(question, context, ChatGptModel.FAST);
 
         if (chatGptAnswer.isEmpty()) {
             return useChatGptFallbackMessage(threadChannel);
