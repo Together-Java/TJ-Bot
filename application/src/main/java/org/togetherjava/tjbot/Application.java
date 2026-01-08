@@ -36,7 +36,8 @@ public class Application {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
-    private static final String DEFAULT_CONFIG_PATH = "config.json";
+    private static final String DEFAULT_CONFIG_PATH_DISK = "config.json";
+    private static final String DEFAULT_CONFIG_PATH_RESOURCES = "/config.json";
     private static final String DEFAULT_SECRETS_PATH = "secrets.json";
 
     /**
@@ -64,9 +65,9 @@ public class Application {
         if (args.length > 0) {
             configPath = args[0];
         } else if (useIncludedConfig) {
-            configPath = "/" + DEFAULT_CONFIG_PATH;
+            configPath = DEFAULT_CONFIG_PATH_RESOURCES;
         } else {
-            configPath = DEFAULT_CONFIG_PATH;
+            configPath = DEFAULT_CONFIG_PATH_DISK;
         }
 
         Config config;
