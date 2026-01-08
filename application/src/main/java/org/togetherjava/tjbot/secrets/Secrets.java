@@ -19,6 +19,7 @@ public class Secrets {
     private final String logErrorChannelWebhook;
     private final String openaiApiKey;
     private final String jshellBaseUrl;
+    private final String wolframAlphaAppId;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -29,13 +30,15 @@ public class Secrets {
             @JsonProperty(value = "logErrorChannelWebhook",
                     required = true) String logErrorChannelWebhook,
             @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
-            @JsonProperty(value = "jshellBaseUrl", required = true) String jshellBaseUrl) {
+            @JsonProperty(value = "jshellBaseUrl", required = true) String jshellBaseUrl,
+            @JsonProperty(value = "wolframAlphaAppId", required = true) String wolframAlphaAppId) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.logInfoChannelWebhook = Objects.requireNonNull(logInfoChannelWebhook);
         this.logErrorChannelWebhook = Objects.requireNonNull(logErrorChannelWebhook);
         this.openaiApiKey = Objects.requireNonNull(openaiApiKey);
         this.jshellBaseUrl = Objects.requireNonNull(jshellBaseUrl);
+        this.wolframAlphaAppId = Objects.requireNonNull(wolframAlphaAppId);
     }
 
     /**
@@ -87,6 +90,15 @@ public class Secrets {
      */
     public String getLogErrorChannelWebhook() {
         return logErrorChannelWebhook;
+    }
+
+    /**
+     * Gets the application ID used to connect to the WolframAlpha API.
+     *
+     * @return the application ID for the WolframAlpha API
+     */
+    public String getWolframAlphaAppId() {
+        return wolframAlphaAppId;
     }
 
     /**

@@ -200,7 +200,7 @@ public class Features {
         features.add(new QuarantineCommand(actionsStore, config));
         features.add(new UnquarantineCommand(actionsStore, config));
         features.add(new WhoIsCommand());
-        features.add(new WolframAlphaCommand(config));
+        features.add(new WolframAlphaCommand(secrets));
         features.add(new GitHubCommand(githubReference));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper));

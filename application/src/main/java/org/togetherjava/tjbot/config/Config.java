@@ -29,7 +29,6 @@ public final class Config {
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
     private final ScamBlockerConfig scamBlocker;
-    private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
     private final List<String> blacklistedFileExtension;
     private final String mediaOnlyChannelPattern;
@@ -68,13 +67,11 @@ public final class Config {
             @JsonProperty(value = "quarantinedRolePattern",
                     required = true) String quarantinedRolePattern,
             @JsonProperty(value = "scamBlocker", required = true) ScamBlockerConfig scamBlocker,
-            @JsonProperty(value = "wolframAlphaAppId", required = true) String wolframAlphaAppId,
             @JsonProperty(value = "helpSystem", required = true) HelpSystemConfig helpSystem,
             @JsonProperty(value = "mediaOnlyChannelPattern",
                     required = true) String mediaOnlyChannelPattern,
             @JsonProperty(value = "blacklistedFileExtension",
                     required = true) List<String> blacklistedFileExtension,
-
             @JsonProperty(value = "githubReferencingEnabledChannelPattern",
                     required = true) String githubReferencingEnabledChannelPattern,
             @JsonProperty(value = "githubRepositories",
@@ -107,7 +104,6 @@ public final class Config {
         this.suggestions = Objects.requireNonNull(suggestions);
         this.quarantinedRolePattern = Objects.requireNonNull(quarantinedRolePattern);
         this.scamBlocker = Objects.requireNonNull(scamBlocker);
-        this.wolframAlphaAppId = Objects.requireNonNull(wolframAlphaAppId);
         this.helpSystem = Objects.requireNonNull(helpSystem);
         this.mediaOnlyChannelPattern = Objects.requireNonNull(mediaOnlyChannelPattern);
         this.blacklistedFileExtension = Objects.requireNonNull(blacklistedFileExtension);
@@ -266,15 +262,6 @@ public final class Config {
      */
     public ScamBlockerConfig getScamBlocker() {
         return scamBlocker;
-    }
-
-    /**
-     * Gets the application ID used to connect to the WolframAlpha API.
-     *
-     * @return the application ID for the WolframAlpha API
-     */
-    public String getWolframAlphaAppId() {
-        return wolframAlphaAppId;
     }
 
     /**
