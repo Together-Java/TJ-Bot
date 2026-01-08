@@ -36,34 +36,44 @@ public class Application {
     }
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
-    private static final String DEFAULT_CONFIG_PATH = "/config.json";
+    private static final String DEFAULT_CONFIG_PATH = "config.json";
     private static final String DEFAULT_SECRETS_PATH = "secrets.json";
 
     /**
      * Starts the application.
+     * <p>
+     * Note: By default the configuration file will be loaded from a config.json unless overridden
+     * by either: 1. Setting the USE_INCLUDED_CONFIG environment variable to true, which will use
+     * the config.json packed in the built jar. 2. Passing a program argument including the path to
+     * the config file.
      *
      * @param args command line arguments - [the path to the configuration file (optional, by
      *        default "config.json")]
      */
     public static void main(final String[] args) {
-        if (args.length > 1) {
-            throw new IllegalArgumentException("Expected no or one argument but " + args.length
-                    + " arguments were provided. The first argument is the path to the configuration file. If no argument was provided, '"
-                    + DEFAULT_CONFIG_PATH + "' will be assumed.");
+        boolean useIncludedConfig;
+        try {
+            useIncludedConfig = Boolean.parseBoolean(System.getenv("USE_INCLUDED_CONFIG"));
+            logger.info("Using config.json included in jar");
+        } catch (Exception _) {
+            useIncludedConfig = false;
         }
 
-        String configPath = args.length == 1 ? args[0] : DEFAULT_CONFIG_PATH;
+        String configPath;
+
+        if (args.length > 0) {
+            configPath = args[0];
+        } else if (useIncludedConfig) {
+            configPath = "/" + DEFAULT_CONFIG_PATH;
+        } else {
+            configPath = DEFAULT_CONFIG_PATH;
+        }
+
         Config config;
-
-        try (InputStream stream = Application.class.getResourceAsStream(configPath)) {
-            if (stream == null) {
-                throw new IOException("InputStream is null when loading " + configPath);
-            }
-
-            config = Config.load(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
-
+        try {
+            config = loadConfig(useIncludedConfig, configPath);
         } catch (IOException e) {
-            logger.error("Unable to load the configuration file from path '{}'", configPath, e);
+            logger.error("Unable to load the configuration file '{}'", configPath, e);
             return;
         }
 
@@ -82,6 +92,47 @@ public class Application {
         DiscordLogging.startDiscordLogging(config, secrets);
 
         runBot(config, secrets);
+    }
+
+    /**
+     * Attempts to load the configuration file and return a new {@code Config}.
+     *
+     * @param useIncludedConfig if the config should be loaded from the resources' directory.
+     * @param configPath the location of the config file.
+     * @return a new {@code Config} object
+     * @throws IOException if the configuration file could not be loaded.
+     */
+    private static Config loadConfig(boolean useIncludedConfig, String configPath)
+            throws IOException {
+        return useIncludedConfig ? loadConfigFromResource(configPath)
+                : loadConfigFromFile(Path.of(configPath));
+    }
+
+    /**
+     * Loads a configuration file from the application resources directory.
+     *
+     * @param configPath the location of the configuration file
+     * @return a new {@code Config} object
+     * @throws IOException if the configuration file could not be loaded
+     */
+    private static Config loadConfigFromResource(String configPath) throws IOException {
+        try (InputStream stream = Application.class.getResourceAsStream(configPath)) {
+            if (stream == null) {
+                throw new IOException("InputStream is null when loading " + configPath);
+            }
+            return Config.load(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
+        }
+    }
+
+    /**
+     * Loads a configuration file from a specified path.
+     *
+     * @param configPath the location of the configuration file
+     * @return a new {@code Config} object
+     * @throws IOException if the configuration file could not be loaded
+     */
+    private static Config loadConfigFromFile(Path configPath) throws IOException {
+        return Config.load(configPath);
     }
 
     /**

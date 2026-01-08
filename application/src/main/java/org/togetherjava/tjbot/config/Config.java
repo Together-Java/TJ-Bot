@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -120,7 +121,7 @@ public final class Config {
     }
 
     /**
-     * Loads the configuration from the given file.
+     * Loads the configuration from the String payload.
      *
      * @param content the configuration file, as Stringified JSON object
      * @return the loaded configuration
@@ -129,6 +130,18 @@ public final class Config {
     public static Config load(String content) throws IOException {
         return new ObjectMapper().registerModule(new JavaTimeModule())
             .readValue(content, Config.class);
+    }
+
+    /**
+     * Loads the configuration from the given file.
+     *
+     * @param path the configuration file
+     * @return the loaded configuration
+     * @throws IOException if the file could not be loaded
+     */
+    public static Config load(Path path) throws IOException {
+        return new ObjectMapper().registerModule(new JavaTimeModule())
+            .readValue(path.toFile(), Config.class);
     }
 
     /**
