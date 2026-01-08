@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.features.chatgpt;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.openai.models.ChatModel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
@@ -82,8 +83,8 @@ public final class ChatGptCommand extends SlashCommandAdapter {
 
         String question = event.getValue(QUESTION_INPUT).getAsString();
 
-        Optional<String> chatgptResponse =
-                chatGptService.ask(question, "You may use markdown syntax for the response");
+        Optional<String> chatgptResponse = chatGptService.ask(question,
+                "You may use markdown syntax for the response", ChatModel.GPT_5_MINI);
         if (chatgptResponse.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }

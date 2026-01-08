@@ -51,11 +51,12 @@ public class ChatGptService {
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
      * @param context The category of asked question, to set the context(eg. Java, Database, Other
      *        etc).
+     * @param chatModel The AI model to use for this request.
      * @return response from ChatGPT as a String.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      */
-    public Optional<String> ask(String question, @Nullable String context) {
+    public Optional<String> ask(String question, @Nullable String context, ChatModel chatModel) {
         if (isDisabled) {
             return Optional.empty();
         }
@@ -76,7 +77,7 @@ public class ChatGptService {
         String response = null;
         try {
             ResponseCreateParams params = ResponseCreateParams.builder()
-                .model(ChatModel.GPT_5_MINI)
+                .model(chatModel)
                 .input(inputPrompt)
                 .maxOutputTokens(MAX_TOKENS)
                 .build();

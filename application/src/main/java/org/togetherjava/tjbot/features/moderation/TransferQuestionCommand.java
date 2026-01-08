@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.moderation;
 
+import com.openai.models.ChatModel;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -98,7 +99,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String chatGptTitleRequest =
                 "Summarize the following question into a concise title or heading not more than 5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
-        Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
+        Optional<String> chatGptTitle =
+                chatGptService.ask(chatGptTitleRequest, null, ChatModel.GPT_3_5_TURBO);
         String title = chatGptTitle.orElse(createTitle(originalMessage));
         if (title.startsWith("\"") && title.endsWith("\"")) {
             title = title.substring(1, title.length() - 1);
