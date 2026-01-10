@@ -303,7 +303,7 @@ public final class RSSHandlerRoutine implements Routine {
             throws DateTimeParseException {
         Optional<String> pubDate = item.getPubDate();
 
-        return pubDate.map(s -> getInstantTimeFromFormat(s, dateTimeFormat)).orElse(Instant.MIN);
+        return pubDate.map(s -> parseDateTime(s, dateTimeFormat)).orElse(Instant.MIN);
 
     }
 
@@ -325,7 +325,7 @@ public final class RSSHandlerRoutine implements Routine {
             // If this throws a DateTimeParseException then it's certain
             // that the format pattern defined in the config and the
             // feed's actual format differ.
-            getInstantTimeFromFormat(firstRssFeedPubDate.get(), feedConfig.dateFormatterPattern());
+            parseDateTime(firstRssFeedPubDate.get(), feedConfig.dateFormatterPattern());
         } catch (DateTimeParseException _) {
             return false;
         }
@@ -374,8 +374,8 @@ public final class RSSHandlerRoutine implements Routine {
 
         // Set the item's timestamp to the embed if found
         item.getPubDate()
-            .ifPresent(date -> embedBuilder
-                .setTimestamp(getInstantTimeFromFormat(date, feedConfig.dateFormatterPattern())));
+            .ifPresent(dateTime -> embedBuilder
+                .setTimestamp(parseDateTime(dateTime, feedConfig.dateFormatterPattern())));
 
         embedBuilder.setTitle(title, titleLink);
         embedBuilder.setAuthor(item.getChannel().getLink());
@@ -434,17 +434,17 @@ public final class RSSHandlerRoutine implements Routine {
     /**
      * Helper function for parsing a given date value to a {@link Instant} with a given format.
      *
-     * @param date the date value to parse, can be null
+     * @param dateTime the date and time value to parse, can be null
      * @return the parsed {@link Instant} object
      * @throws DateTimeParseException if the date cannot be parsed
      */
-    private static Instant getInstantTimeFromFormat(@Nullable String date, String datePattern)
+    private static Instant parseDateTime(@Nullable String dateTime, String datePattern)
             throws DateTimeParseException {
-        if (date == null) {
+        if (dateTime == null) {
             return Instant.MIN;
         }
 
-        return Instant.from(DateTimeFormatter.ofPattern(datePattern).parse(date));
+        return Instant.from(DateTimeFormatter.ofPattern(datePattern).parse(dateTime));
     }
 
     private long calculateWaitHours(int failureCount) {
