@@ -25,6 +25,7 @@ import java.util.Optional;
  * which it will respond with an AI generated answer.
  */
 public final class ChatGptCommand extends SlashCommandAdapter {
+    private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.HIGH_QUALITY;
     public static final String COMMAND_NAME = "chatgpt";
     private static final String QUESTION_INPUT = "question";
     private static final int MAX_MESSAGE_INPUT_LENGTH = 200;
@@ -82,8 +83,8 @@ public final class ChatGptCommand extends SlashCommandAdapter {
 
         String question = event.getValue(QUESTION_INPUT).getAsString();
 
-        Optional<String> chatgptResponse =
-                chatGptService.ask(question, "You may use markdown syntax for the response");
+        Optional<String> chatgptResponse = chatGptService.ask(question,
+                "You may use markdown syntax for the response", CHAT_GPT_MODEL);
         if (chatgptResponse.isPresent()) {
             userIdToAskedAtCache.put(event.getMember().getId(), Instant.now());
         }
@@ -96,7 +97,8 @@ public final class ChatGptCommand extends SlashCommandAdapter {
         String response = chatgptResponse.orElse(errorResponse);
         SelfUser selfUser = event.getJDA().getSelfUser();
 
-        MessageEmbed responseEmbed = helper.generateGptResponseEmbed(response, selfUser, question);
+        MessageEmbed responseEmbed =
+                helper.generateGptResponseEmbed(response, selfUser, question, CHAT_GPT_MODEL);
 
         event.getHook().sendMessageEmbeds(responseEmbed).queue();
     }

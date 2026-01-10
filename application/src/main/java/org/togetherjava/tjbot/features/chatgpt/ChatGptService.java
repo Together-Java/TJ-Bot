@@ -2,7 +2,6 @@ package org.togetherjava.tjbot.features.chatgpt;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
-import com.openai.models.ChatModel;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputText;
@@ -51,11 +50,12 @@ public class ChatGptService {
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
      * @param context The category of asked question, to set the context(eg. Java, Database, Other
      *        etc).
+     * @param chatModel The AI model to use for this request.
      * @return response from ChatGPT as a String.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      */
-    public Optional<String> ask(String question, @Nullable String context) {
+    public Optional<String> ask(String question, @Nullable String context, ChatGptModel chatModel) {
         if (isDisabled) {
             return Optional.empty();
         }
@@ -76,7 +76,7 @@ public class ChatGptService {
         String response = null;
         try {
             ResponseCreateParams params = ResponseCreateParams.builder()
-                .model(ChatModel.GPT_5_NANO)
+                .model(chatModel.toChatModel())
                 .input(inputPrompt)
                 .maxOutputTokens(MAX_TOKENS)
                 .build();
