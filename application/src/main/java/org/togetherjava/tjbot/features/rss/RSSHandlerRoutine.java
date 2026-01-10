@@ -29,6 +29,7 @@ import javax.annotation.Nonnull;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -188,16 +189,24 @@ public final class RSSHandlerRoutine implements Routine {
             return Optional.empty();
         }
 
-        Optional<Instant> lastSavedDate =
-                getLastSavedDateFromDatabaseRecord(rssFeedRecord.orElseThrow());
+        Instant lastSavedDate;
+        try {
+            lastSavedDate = getLastSavedDateFromDatabaseRecord(rssFeedRecord.orElseThrow());
+        } catch (DateTimeParseException _) {
+            Optional<Instant> convertedDate = convertDateTimeToInstant(feedConfig);
 
-        if (lastSavedDate.isEmpty()) {
-            return Optional.empty();
+            if (convertedDate.isEmpty()) {
+                return Optional.empty();
+            }
+
+            lastSavedDate = convertedDate.get();
         }
+
+        final Instant convertedLastSavedDate = lastSavedDate;
 
         return Optional.of(item -> {
             Instant itemPubDate = getDateTimeFromItem(item, feedConfig.dateFormatterPattern());
-            return itemPubDate.isAfter(lastSavedDate.orElseThrow());
+            return itemPubDate.isAfter(convertedLastSavedDate);
         });
     }
 
@@ -222,13 +231,9 @@ public final class RSSHandlerRoutine implements Routine {
      * @return An {@link Optional} containing the last saved date if it could be retrieved and
      *         parsed successfully, otherwise an empty {@link Optional}
      */
-    private Optional<Instant> getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord)
+    private Instant getLastSavedDateFromDatabaseRecord(RssFeedRecord rssRecord)
             throws DateTimeParseException {
-        try {
-            return Optional.of(Instant.parse(rssRecord.getLastDate()));
-        } catch (DateTimeParseException _) {
-            return Optional.empty();
-        }
+        return Instant.parse(rssRecord.getLastDate());
     }
 
     /**
@@ -330,6 +335,31 @@ public final class RSSHandlerRoutine implements Routine {
             return false;
         }
         return true;
+    }
+
+    private Optional<Instant> convertDateTimeToInstant(RSSFeed feedConfig) {
+        Optional<RssFeedRecord> feedOptional = getRssFeedRecordFromDatabase(feedConfig);
+        String dateTimeFormat = feedConfig.dateFormatterPattern();
+
+        if (feedOptional.isEmpty() || dateTimeFormat.isEmpty()) {
+            return Optional.empty();
+        }
+
+        RssFeedRecord feedRecord = feedOptional.get();
+        String lastDate = feedRecord.getLastDate();
+
+        ZonedDateTime zonedDateTime;
+        try {
+            zonedDateTime =
+                    ZonedDateTime.parse(lastDate, DateTimeFormatter.ofPattern(dateTimeFormat));
+        } catch (DateTimeParseException exception) {
+            logger.error(
+                    "Attempted to convert date time from database ({}) to instant, but failed:",
+                    lastDate, exception);
+            return Optional.empty();
+        }
+
+        return Optional.of(zonedDateTime.toInstant());
     }
 
     /**
