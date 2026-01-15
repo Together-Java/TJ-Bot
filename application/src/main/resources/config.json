@@ -1,0 +1,137 @@
+{
+    "databasePath": "/home/bot/database/database.db",
+    "projectWebsite": "https://github.com/Together-Java/TJ-Bot",
+    "discordGuildInvite": "https://discord.com/invite/XXFUXzK",
+    "modAuditLogChannelPattern": "mod-audit-log",
+    "mutedRolePattern": "Muted",
+    "heavyModerationRolePattern": "Moderator",
+    "softModerationRolePattern": "Moderator|Community Ambassador",
+    "tagManageRolePattern": "Moderator|Community Ambassador|Top Helper.*",
+    "excludeCodeAutoDetectionRolePattern": "Moderator|Community Ambassador|Expert|Top Helper.*",
+    "suggestions": {
+        "channelPattern": "server-suggestions",
+        "upVoteEmoteName": "upvote",
+        "downVoteEmoteName": "downvote"
+    },
+    "quarantinedRolePattern": "Quarantined",
+    "scamBlocker": {
+        "mode": "AUTO_DELETE_AND_QUARANTINE",
+        "reportChannelPattern": "community-commands",
+        "trustedUserRolePattern": "Top Helper.*|Moderator|Community Ambassador|Expert",
+        "botTrapChannelPattern": "ignore-me",
+        "suspiciousKeywords": ["nitro", "boob", "sexy", "sexi", "esex", "jobcord", "steam", "gift", "onlyfans", "bitcoin", "btc", "promo", "trader", "trading", "whatsapp", "crypto", "^claim", "^teen$", "adobe", "^hack$", "hacks", "steamcommunity", "freenitro", "^earn$", "^earning", ".exe$", "mrbeast"],
+        "hostWhitelist": ["discord.com", "discord.media", "discordapp.com", "discordapp.net", "discordstatus.com", "cwiki.apache.org", "help.gradle.org", "thehackernews.com", "gradle.org", "youtube.com", "www.youtube.com", "cdn.discordapp.com", "media.discordapp.net", "store.steampowered.com", "help.steampowered.com", "learn.microsoft.com"],
+        "hostBlacklist": ["bit.ly", "gg.gg", "dsaocrdgift.xyz", "twitchcsgo.cfd", "link-hub.net", "discord.gg", "teletype.in", "t.me", "corematrix.us", "u.to", "steamcommunity.com", "goo.su", "telegra.ph", "shorturl.at", "cheatings.xyz", "transfer.sh", "tobimoller.space"],
+        "suspiciousHostKeywords": ["discord", "nitro", "premium", "deepfake", "free", "cheat", "crypto", "telegra", "telety"],
+        "isHostSimilarToKeywordDistanceThreshold": 2,
+        "suspiciousAttachmentsThreshold": 3,
+        "suspiciousAttachmentNamePattern": "(image|\\d{1,2})\\.[^.]{0,5}"
+    },
+    "helpSystem": {
+        "helpForumPattern": "questions",
+        "categories": [
+            "Java",
+            "Frameworks",
+            "Spring",
+            "JavaFX|Swing",
+            "IDE",
+            "Build Tools",
+            "Database",
+            "Android",
+            "Minecraft",
+            "Kotlin",
+            "C|C++",
+            "Algorithms",
+            "Math",
+            "Architecture",
+            "Code Review",
+            "Together Java Bot",
+            "Other"
+        ],
+        "categoryRoleSuffix": " - Helper"
+    },
+    "mediaOnlyChannelPattern": "memes|educational-media|resources|ide-themes-config",
+    "blacklistedFileExtension": [
+        "application",
+        "bat",
+        "cmd",
+        "com",
+        "cpl",
+        "exe",
+        "gadget",
+        "hta",
+        "inf",
+        "jse",
+        "lnk",
+        "msc",
+        "msh",
+        "msh1",
+        "msh1xml",
+        "msh2",
+        "msh2xml",
+        "mshxml",
+        "msi",
+        "msp",
+        "pif",
+        "ps1",
+        "ps1xml",
+        "ps2",
+        "ps2xml",
+        "psc1",
+        "psc2",
+        "rar",
+        "scf",
+        "scr",
+        "vb",
+        "vbe",
+        "vbs",
+        "ws",
+        "wsc",
+        "wsf",
+        "wsh"
+    ],
+    "githubReferencingEnabledChannelPattern": "server-suggestions|tjbot-discussion|modernjava-discussion",
+    "githubRepositories": [403389278,587644974,601602394],
+    "modMailChannelPattern": "modmail",
+    "projectsChannelPattern": "projects",
+    "sourceCodeBaseUrl": "https://github.com/Together-Java/TJ-Bot/blob/master/application/src/main/java/",
+    "jshell": {
+        "rateLimitWindowSeconds": 10,
+        "rateLimitRequestsInWindow": 3
+    },
+    "helperPruneConfig": {
+        "roleFullLimit": 250,
+        "roleFullThreshold": 245,
+        "pruneMemberAmount": 7,
+        "inactivateAfterDays": 90,
+        "recentlyJoinedDays": 4
+    },
+    "featureBlacklist": {
+        "normal": [],
+        "special": []
+    },
+    "memberCountCategoryPattern": "Info",
+    "selectRolesChannelPattern": "select-your-roles",
+    "rssConfig": {
+        "feeds": [
+            {
+                "url":"https://inside.java/feed.xml",
+                "targetChannelPattern": "java-news-and-changes",
+                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssXXX"
+            },
+            {
+                "url":"https://www.youtube.com/feeds/videos.xml?playlist_id=UUSHmRtPmgnQ04CMUpSUqPfhxQ",
+                "targetChannelPattern": "today-i-teach",
+                "dateFormatterPattern": "yyyy-MM-dd'T'HH:mm:ssXXX"
+            }
+        ],
+        "fallbackChannelPattern": "java-news-and-changes",
+        "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
+        "pollIntervalInMinutes": 10
+    },
+    "topHelpers": {
+        "rolePattern": "Top Helper.*",
+        "assignmentChannelPattern": "community-commands",
+        "announcementChannelPattern": "hall-of-fame"
+    }
+}

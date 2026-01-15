@@ -6,9 +6,9 @@ import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.utils.FileUpload;
 
-import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -37,14 +37,14 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     /**
      * Creates a new instance.
      *
-     * @param config the config to use
+     * @param secrets containing the Wolfram app id
      */
-    public WolframAlphaCommand(Config config) {
+    public WolframAlphaCommand(Secrets secrets) {
         super("wolfram-alpha", "Renders mathematical queries using WolframAlpha",
                 CommandVisibility.GUILD);
         getData().addOption(OptionType.STRING, QUERY_OPTION, "the query to send to WolframAlpha",
                 true);
-        appId = config.getWolframAlphaAppId();
+        appId = secrets.getWolframAlphaAppId();
     }
 
     @Override

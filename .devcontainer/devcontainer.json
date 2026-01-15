@@ -31,8 +31,5 @@
         }
       }
     }
-  },
-  "postCreateCommand": {
-    "config": "cp application/config.json.template application/config.json"
   }
 }

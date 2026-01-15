@@ -8,7 +8,7 @@ import com.openai.models.responses.ResponseOutputText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.secrets.Secrets;
 
 import javax.annotation.Nullable;
 
@@ -32,10 +32,10 @@ public class ChatGptService {
     /**
      * Creates instance of ChatGPTService
      *
-     * @param config needed for token to OpenAI API.
+     * @param secrets needed for token to OpenAI API.
      */
-    public ChatGptService(Config config) {
-        String apiKey = config.getOpenaiApiKey();
+    public ChatGptService(Secrets secrets) {
+        String apiKey = secrets.getOpenaiApiKey();
         boolean keyIsDefaultDescription = apiKey.startsWith("<") && apiKey.endsWith(">");
         if (apiKey.isBlank() || keyIsDefaultDescription) {
             isDisabled = true;

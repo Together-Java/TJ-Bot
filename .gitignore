@@ -144,7 +144,7 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/netbeans,intellij,java,gradle,eclipse
 application/db/
-config.json
+secrets.json
 application/config.json
 *.db
 *.db-shm
