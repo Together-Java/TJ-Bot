@@ -48,6 +48,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final RoleApplicationSystemConfig roleApplicationSystemConfig;
     private final TopHelpersConfig topHelpers;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
@@ -102,6 +103,8 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
+            @JsonProperty(value = "roleApplicationSystem",
+                    required = true) RoleApplicationSystemConfig roleApplicationSystemConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
@@ -137,6 +140,7 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.roleApplicationSystemConfig = roleApplicationSystemConfig;
         this.topHelpers = Objects.requireNonNull(topHelpers);
     }
 
@@ -438,6 +442,15 @@ public final class Config {
      */
     public String getMemberCountCategoryPattern() {
         return memberCountCategoryPattern;
+    }
+
+    /**
+     * The configuration related to the application form.
+     *
+     * @return the application form config
+     */
+    public RoleApplicationSystemConfig getRoleApplicationSystemConfig() {
+        return roleApplicationSystemConfig;
     }
 
     /**
