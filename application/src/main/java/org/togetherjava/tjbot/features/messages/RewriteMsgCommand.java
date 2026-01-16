@@ -1,21 +1,25 @@
 package org.togetherjava.tjbot.features.messages;
 
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
- * The implemented command is {@code /rewrite}, which allows users to have their message rewritten
- * in a clearer, more professional, or better structured form using ChatGPT AI.
+ * The implemented command is {@code /rewrite-msg}, which allows users to have their message
+ * rewritten in a clearer, more professional, or better structured form using ChatGPT AI.
  * <p>
  * The rewritten message is shown as an ephemeral message visible only to the user who triggered the
  * command, making it perfect for getting quick writing improvements without cluttering the channel.
@@ -24,33 +28,49 @@ import java.util.Optional;
  */
 public final class RewriteMsgCommand extends SlashCommandAdapter {
     private static final Logger logger = LoggerFactory.getLogger(RewriteMsgCommand.class);
-    public static final String COMMAND_NAME = "rewrite";
+    public static final String COMMAND_NAME = "rewrite-msg";
     private static final String MESSAGE_OPTION = "message";
     private static final String TONE_OPTION = "tone";
     private static final int MAX_MESSAGE_LENGTH = 500;
     private static final int MIN_MESSAGE_LENGTH = 3;
+    private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.HIGH_QUALITY;
 
-    private final RewriteMsgService rewriteMsgService;
+    private final ChatGptService chatGptService;
 
+    private static String buildResponse(String userMessage, String rewrittenMessage, MsgTone tone) {
+        final String toneLabel = tone.displayName;
 
-    public RewriteMsgCommand(RewriteMsgService rewriteMsgService) {
-        super(COMMAND_NAME, "Rewrite your message in a clearer, more professional form",
-                CommandVisibility.GUILD);
+        return """
+                **Rewritten message (%s)**
 
-        this.rewriteMsgService = rewriteMsgService;
+                **Original:**
+                %s
 
-        logger.debug("Initializing RewriteMsgCommand with ChatGptService and HelpSystemHelper");
+                **Rewritten:**
+                %s""".formatted(toneLabel, userMessage, rewrittenMessage);
+    }
 
-        final OptionData toneOption = new OptionData(OptionType.STRING, TONE_OPTION,
-                "The tone/style for the rewritten message (default: "
-                        + RewriteMsgTone.CLEAR.getDisplayName() + ")",
-                false);
+    private static String buildChatGptPrompt(String userMessage, MsgTone tone) {
+        return """
+                Please rewrite the following message to make it clearer, more professional, \
+                and better structured. Maintain the original meaning while improving the quality \
+                of the writing. Do NOT use em-dashes (—). %s
 
-        logger.debug("Adding tone choices to command options");
-        Arrays.stream(RewriteMsgTone.values()).forEach(tone -> {
-            toneOption.addChoice(tone.getDisplayName(), tone.name());
-            logger.debug("Added tone choice: {} ({})", tone.getDisplayName(), tone.name());
-        });
+                If the message is already well-written, provide minor improvements.
+
+                Original message:
+                %s""".formatted(tone.description, userMessage);
+    }
+
+    /**
+     * Creates the slash command definition and configures available options for rewriting messages.
+     *
+     * @param chatGptService service for interacting with ChatGPT
+     */
+    public RewriteMsgCommand(ChatGptService chatGptService) {
+        super(COMMAND_NAME, "Let AI rephrase and improve your message", CommandVisibility.GUILD);
+
+        this.chatGptService = chatGptService;
 
         final OptionData messageOption =
                 new OptionData(OptionType.STRING, MESSAGE_OPTION, "The message you want to rewrite",
@@ -58,50 +78,76 @@ public final class RewriteMsgCommand extends SlashCommandAdapter {
                     .setMinLength(MIN_MESSAGE_LENGTH)
                     .setMaxLength(MAX_MESSAGE_LENGTH);
 
-        logger.debug("Configured message option: min={}, max={}", MIN_MESSAGE_LENGTH,
-                MAX_MESSAGE_LENGTH);
+        final OptionData toneOption = new OptionData(OptionType.STRING, TONE_OPTION,
+                "The tone/style for the rewritten message (default: " + MsgTone.CLEAR.displayName
+                        + ")",
+                false);
 
-        super.getData().addOptions(messageOption, toneOption);
-        logger.debug("RewriteMsgCommand initialization complete");
+        Arrays.stream(MsgTone.values())
+            .forEach(tone -> toneOption.addChoice(tone.displayName, tone.name()));
+
+        getData().addOptions(messageOption, toneOption);
     }
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        logger.debug("onSlashCommand method invoked");
-        event.deferReply(true).queue();
-        logger.debug("Reply deferred as ephemeral");
-
-        final String userId = event.getUser().getId();
-
-        logger.info("Rewrite command triggered by user: {}", userId);
-
         final String userMessage =
-                this.rewriteMsgService.validateMsg(event.getOption(MESSAGE_OPTION), userId);
+                Objects.requireNonNull(event.getOption(MESSAGE_OPTION)).getAsString();
 
-        final RewriteMsgTone tone =
-                this.rewriteMsgService.parseTone(event.getOption(TONE_OPTION), userId);
+        final MsgTone tone = parseTone(event.getOption(TONE_OPTION), event.getUser().getId());
 
-        final Optional<String> rewrittenMessage =
-                this.rewriteMsgService.rewrite(userMessage, tone, userId);
+        event.deferReply(true).queue();
 
-        final Optional<MessageEmbed> responseEmbed =
-                this.rewriteMsgService.buildResponse(userMessage, rewrittenMessage.orElse(null),
-                        tone, userId, event.getJDA().getSelfUser());
+        final Optional<String> rewrittenMessage = this.rewrite(userMessage, tone);
 
-        logger.debug("Sending embed response to user: {}", userId);
-
-        if (responseEmbed.isPresent()) {
+        if (rewrittenMessage.isEmpty()) {
+            logger.debug("Failed to obtain a response for /rewrite-msg, original message: '{}'",
+                    userMessage);
             event.getHook()
-                .sendMessageEmbeds(responseEmbed.get())
-                .queue(_ -> logger.info("Rewrite response sent successfully to user: {}", userId),
-                        error -> logger.error("Failed to send rewrite response to user: {}", userId,
-                                error));
-        } else {
-            logger.error("Failed to build response embed for user: {}", userId);
-            event.getHook()
-                .sendMessage(
+                .editOriginal(
                         "An error occurred while processing your request. Please try again later.")
                 .queue();
+            return;
+        }
+
+        final String response = buildResponse(userMessage, rewrittenMessage.orElseThrow(), tone);
+
+        event.getHook().editOriginal(response).queue();
+    }
+
+    private MsgTone parseTone(@Nullable OptionMapping toneOption, String userId)
+            throws IllegalArgumentException {
+        if (toneOption == null) {
+            logger.debug("Tone option not provided for user: {}, using default CLEAR", userId);
+            return MsgTone.CLEAR;
+        }
+
+        final String toneValue = toneOption.getAsString();
+        final MsgTone tone = MsgTone.valueOf(toneValue);
+
+        logger.debug("Parsed tone '{}' for user: {}", tone.displayName, userId);
+
+        return tone;
+    }
+
+    private Optional<String> rewrite(String userMessage, MsgTone tone) {
+        final String rewritePrompt = buildChatGptPrompt(userMessage, tone);
+
+        return chatGptService.ask(rewritePrompt, tone.displayName, CHAT_GPT_MODEL);
+    }
+
+    private enum MsgTone {
+        CLEAR("Clear", "Make it clear and easy to understand."),
+        PRO("Pro", "Use a professional and polished tone."),
+        DETAILED("Detailed", "Expand with more detail and explanation."),
+        TECHNICAL("Technical", "Use technical and specialized language where appropriate.");
+
+        private final String displayName;
+        private final String description;
+
+        MsgTone(String displayName, String description) {
+            this.displayName = displayName;
+            this.description = description;
         }
     }
 }

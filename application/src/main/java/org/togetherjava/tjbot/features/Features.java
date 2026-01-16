@@ -42,7 +42,6 @@ import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCom
 import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.features.messages.MessageCommand;
 import org.togetherjava.tjbot.features.messages.RewriteMsgCommand;
-import org.togetherjava.tjbot.features.messages.RewriteMsgService;
 import org.togetherjava.tjbot.features.moderation.BanCommand;
 import org.togetherjava.tjbot.features.moderation.KickCommand;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
@@ -128,7 +127,6 @@ public class Features {
         TopHelpersService topHelpersService = new TopHelpersService(database);
         TopHelpersAssignmentRoutine topHelpersAssignmentRoutine =
                 new TopHelpersAssignmentRoutine(config, topHelpersService);
-        RewriteMsgService rewriteService = new RewriteMsgService(chatGptService, helpSystemHelper);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -210,7 +208,7 @@ public class Features {
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
-        features.add(new RewriteMsgCommand(rewriteService));
+        features.add(new RewriteMsgCommand(chatGptService));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
