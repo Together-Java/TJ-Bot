@@ -37,8 +37,8 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     // I will leave this here as a constant since I don't see a justification for naming
     // this category name into something different.
     private static final String ARCHIVE_CATEGORY_NAME = "Voice Channel Archives";
-    private static final int CLEAN_CHANNELS_AMOUNT = 2;
-    private static final int MINIMUM_CHANNELS_AMOUNT = 3;
+    private static final int CLEAN_CHANNELS_AMOUNT = 25;
+    private static final int MINIMUM_CHANNELS_AMOUNT = 50;
 
     private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
     private final List<Pattern> dynamicVoiceChannelPatterns;
