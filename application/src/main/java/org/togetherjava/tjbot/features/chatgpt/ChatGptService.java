@@ -39,9 +39,11 @@ public class ChatGptService {
         boolean keyIsDefaultDescription = apiKey.startsWith("<") && apiKey.endsWith(">");
         if (apiKey.isBlank() || keyIsDefaultDescription) {
             isDisabled = true;
+            logger.warn("ChatGPT service is disabled: API key is not configured");
             return;
         }
         openAIClient = OpenAIOkHttpClient.builder().apiKey(apiKey).timeout(TIMEOUT).build();
+        logger.info("ChatGPT service initialized successfully");
     }
 
     /**
@@ -56,10 +58,6 @@ public class ChatGptService {
      *      Tokens</a>.
      */
     public Optional<String> ask(String question, @Nullable String context, ChatGptModel chatModel) {
-        if (isDisabled) {
-            return Optional.empty();
-        }
-
         String contextText = context == null ? "" : ", Context: %s.".formatted(context);
         String inputPrompt = """
                 For code supplied for review, refer to the old code supplied rather than
@@ -71,35 +69,71 @@ public class ChatGptService {
                 Question: %s
                 """.formatted(contextText, question);
 
-        logger.debug("ChatGpt request: {}", inputPrompt);
+        return sendPrompt(inputPrompt, chatModel);
+    }
 
-        String response = null;
+    /**
+     * Prompt ChatGPT with a raw prompt and receive a response without any prefix wrapping.
+     * <p>
+     * Use this method when you need full control over the prompt structure without the service's
+     * opinionated formatting (e.g., for iterative refinement or specialized use cases).
+     *
+     * @param inputPrompt The raw prompt to send to ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @param chatModel The AI model to use for this request.
+     * @return response from ChatGPT as a String.
+     * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
+     *      Tokens</a>.
+     */
+    public Optional<String> askRaw(String inputPrompt, ChatGptModel chatModel) {
+        return sendPrompt(inputPrompt, chatModel);
+    }
+
+    /**
+     * Sends a prompt to the ChatGPT API and returns the response.
+     *
+     * @param prompt The prompt to send to ChatGPT.
+     * @param chatModel The AI model to use for this request.
+     * @return response from ChatGPT as a String.
+     */
+    private Optional<String> sendPrompt(String prompt, ChatGptModel chatModel) {
+        if (isDisabled) {
+            logger.warn("ChatGPT request attempted but service is disabled");
+            return Optional.empty();
+        }
+
+        logger.debug("ChatGpt request: {}", prompt);
+
         try {
             ResponseCreateParams params = ResponseCreateParams.builder()
                 .model(chatModel.toChatModel())
-                .input(inputPrompt)
+                .input(prompt)
                 .maxOutputTokens(MAX_TOKENS)
                 .build();
 
             Response chatGptResponse = openAIClient.responses().create(params);
 
-            response = chatGptResponse.output()
+            String response = chatGptResponse.output()
                 .stream()
                 .flatMap(item -> item.message().stream())
                 .flatMap(message -> message.content().stream())
                 .flatMap(content -> content.outputText().stream())
                 .map(ResponseOutputText::text)
                 .collect(Collectors.joining("\n"));
-        } catch (RuntimeException runtimeException) {
-            logger.warn("There was an error using the OpenAI API: {}",
-                    runtimeException.getMessage());
-        }
 
-        logger.debug("ChatGpt Response: {}", response);
-        if (response == null) {
+            logger.debug("ChatGpt Response: {}", response);
+
+            if (response.isBlank()) {
+                logger.warn("ChatGPT returned an empty response");
+                return Optional.empty();
+            }
+
+            logger.debug("ChatGpt response received successfully, length: {} characters",
+                    response.length());
+            return Optional.of(response);
+        } catch (RuntimeException runtimeException) {
+            logger.error("Error communicating with OpenAI API: {}", runtimeException.getMessage(),
+                    runtimeException);
             return Optional.empty();
         }
-
-        return Optional.of(response);
     }
 }
