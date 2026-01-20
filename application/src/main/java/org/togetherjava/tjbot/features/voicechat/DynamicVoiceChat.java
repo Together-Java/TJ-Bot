@@ -4,10 +4,14 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageHistory;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.managers.channel.middleman.AudioChannelManager;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,21 +20,34 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
  * Handles dynamic voice channel creation and deletion based on user activity.
  * <p>
  * When a member joins a configured root channel, a temporary copy is created and the member is
- * moved into it. Once the channel becomes empty, it is deleted.
+ * moved into it. Once the channel becomes empty, it is archived and further deleted using a
+ * {@link VoiceChatCleanupStrategy}.
  */
 public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DynamicVoiceChat.class);
+
+    // @christolis: Unless somebody is willing to make the category name configurable,
+    // I will leave this here as a constant since I don't see a justification for naming
+    // this category name into something different.
+    private static final String ARCHIVE_CATEGORY_NAME = "Voice Channel Archives";
+    private static final int CLEAN_CHANNELS_AMOUNT = 2;
+    private static final int MINIMUM_CHANNELS_AMOUNT = 3;
+
+    private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
     private final List<Pattern> dynamicVoiceChannelPatterns;
 
     public DynamicVoiceChat(Config config) {
         this.dynamicVoiceChannelPatterns =
                 config.getDynamicVoiceChannelPatterns().stream().map(Pattern::compile).toList();
+        this.voiceChatCleanupStrategy =
+                new OldestVoiceChatCleanup(CLEAN_CHANNELS_AMOUNT, MINIMUM_CHANNELS_AMOUNT);
     }
 
     @Override
@@ -45,7 +62,17 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
 
         if (channelLeft != null && !eventHappenOnDynamicRootChannel(channelLeft)) {
             logger.debug("Event happened on left channel {}", channelLeft);
-            deleteDynamicVoiceChannel(channelLeft);
+
+            MessageHistory messageHistory = channelLeft.asVoiceChannel().getHistory();
+            messageHistory.retrievePast(2).queue(messages -> {
+                // Don't forget that there is always one
+                // embed message sent by the bot every time.
+                if (messages.size() > 1) {
+                    archiveDynamicVoiceChannel(channelLeft);
+                } else {
+                    channelLeft.delete().queue();
+                }
+            });
         }
     }
 
@@ -82,20 +109,40 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                             member.getNickname(), channel.getName(), error));
     }
 
-    private void deleteDynamicVoiceChannel(AudioChannelUnion channel) {
+    private void archiveDynamicVoiceChannel(AudioChannelUnion channel) {
         int memberCount = channel.getMembers().size();
+        String channelName = channel.getName();
 
         if (memberCount > 0) {
-            logger.debug("Voice channel {} not empty ({} members), so not removing.",
-                    channel.getName(), memberCount);
+            logger.debug("Voice channel {} not empty ({} members), so not removing.", channelName,
+                    memberCount);
             return;
         }
 
-        channel.delete()
-            .queue(_ -> logger.trace("Deleted dynamically created voice channel: {} ",
-                    channel.getName()),
-                    error -> logger.error("Failed to delete dynamically created voice channel: {} ",
-                            channel.getName(), error));
+        Optional<Category> archiveCategoryOptional = channel.getGuild()
+            .getCategoryCache()
+            .stream()
+            .filter(c -> c.getName().equalsIgnoreCase(ARCHIVE_CATEGORY_NAME))
+            .findFirst();
+
+        AudioChannelManager<?, ?> channelManager = channel.getManager();
+        RestAction<Void> restActionChain =
+                channelManager.setName(String.format("%s (Archived)", channelName))
+                    .and(channel.getPermissionContainer().getManager().clearOverridesAdded());
+
+        if (archiveCategoryOptional.isEmpty()) {
+            logger.warn("Could not find archive category. Attempting to create one...");
+            channel.getGuild()
+                .createCategory(ARCHIVE_CATEGORY_NAME)
+                .queue(newCategory -> restActionChain.and(channelManager.setParent(newCategory))
+                    .queue());
+            return;
+        }
+
+        archiveCategoryOptional.ifPresent(archiveCategory -> restActionChain
+            .and(channelManager.setParent(archiveCategory))
+            .queue(_ -> voiceChatCleanupStrategy.cleanup(archiveCategory.getVoiceChannels()),
+                    err -> logger.error("Could not archive dynamic voice chat", err)));
     }
 
     private void sendWarningEmbed(VoiceChannel channel) {
