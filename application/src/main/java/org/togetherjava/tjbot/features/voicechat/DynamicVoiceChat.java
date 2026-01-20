@@ -33,9 +33,6 @@ import java.util.regex.Pattern;
 public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DynamicVoiceChat.class);
 
-    // @christolis: Unless somebody is willing to make the category name configurable,
-    // I will leave this here as a constant since I don't see a justification for naming
-    // this category name into something different.
     private static final String ARCHIVE_CATEGORY_NAME = "Voice Channel Archives";
     private static final int CLEAN_CHANNELS_AMOUNT = 25;
     private static final int MINIMUM_CHANNELS_AMOUNT = 50;
