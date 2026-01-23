@@ -17,11 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.config.DynamicVoiceChatConfig;
 import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * Handles dynamic voice channel creation and deletion based on user activity.
@@ -33,18 +32,15 @@ import java.util.regex.Pattern;
 public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DynamicVoiceChat.class);
 
-    private static final String ARCHIVE_CATEGORY_NAME = "Voice Channel Archives";
-    private static final int CLEAN_CHANNELS_AMOUNT = 25;
-    private static final int MINIMUM_CHANNELS_AMOUNT = 50;
-
     private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
-    private final List<Pattern> dynamicVoiceChannelPatterns;
+    private final DynamicVoiceChatConfig dynamicVoiceChannelConfig;
 
     public DynamicVoiceChat(Config config) {
-        this.dynamicVoiceChannelPatterns =
-                config.getDynamicVoiceChannelPatterns().stream().map(Pattern::compile).toList();
+        this.dynamicVoiceChannelConfig = config.getDynamicVoiceChatConfig();
+
         this.voiceChatCleanupStrategy =
-                new OldestVoiceChatCleanup(CLEAN_CHANNELS_AMOUNT, MINIMUM_CHANNELS_AMOUNT);
+                new OldestVoiceChatCleanup(dynamicVoiceChannelConfig.cleanChannelsAmount(),
+                        dynamicVoiceChannelConfig.minimumChannelsAmount());
     }
 
     @Override
@@ -74,7 +70,8 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     }
 
     private boolean eventHappenOnDynamicRootChannel(AudioChannelUnion channel) {
-        return dynamicVoiceChannelPatterns.stream()
+        return dynamicVoiceChannelConfig.dynamicChannelPatterns()
+            .stream()
             .anyMatch(pattern -> pattern.matcher(channel.getName()).matches());
     }
 
@@ -119,7 +116,8 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         Optional<Category> archiveCategoryOptional = channel.getGuild()
             .getCategoryCache()
             .stream()
-            .filter(c -> c.getName().equalsIgnoreCase(ARCHIVE_CATEGORY_NAME))
+            .filter(c -> c.getName()
+                .equalsIgnoreCase(dynamicVoiceChannelConfig.archiveCategoryPattern()))
             .findFirst();
 
         AudioChannelManager<?, ?> channelManager = channel.getManager();
@@ -130,7 +128,7 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         if (archiveCategoryOptional.isEmpty()) {
             logger.warn("Could not find archive category. Attempting to create one...");
             channel.getGuild()
-                .createCategory(ARCHIVE_CATEGORY_NAME)
+                .createCategory(dynamicVoiceChannelConfig.archiveCategoryPattern())
                 .queue(newCategory -> restActionChain.and(channelManager.setParent(newCategory))
                     .queue());
             return;

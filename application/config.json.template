@@ -205,9 +205,14 @@
         "assignmentChannelPattern": "community-commands",
         "announcementChannelPattern": "hall-of-fame"
     },
-    "dynamicVoiceChannelPatterns": [
-        "Gaming",
-        "Support/Studying Room",
-        "Chit Chat"
-    ]
+    "dynamicVoiceChatConfig": {
+        "dynamicChannelPatterns": [
+            "Gaming",
+            "Support/Studying Room",
+            "Chit Chat"
+        ],
+        "archiveCategoryPattern": "Voice Channel Archives",
+        "cleanChannelsAmount": 20,
+        "minimumChannelsAmount": 40
+    }
 }

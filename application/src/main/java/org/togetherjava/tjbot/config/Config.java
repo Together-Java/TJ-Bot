@@ -50,7 +50,7 @@ public final class Config {
     private final String memberCountCategoryPattern;
     private final QuoteBoardConfig quoteBoardConfig;
     private final TopHelpersConfig topHelpers;
-    private final List<String> dynamicVoiceChannelPatterns;
+    private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -107,8 +107,8 @@ public final class Config {
             @JsonProperty(value = "quoteBoardConfig",
                     required = true) QuoteBoardConfig quoteBoardConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
-            @JsonProperty(value = "dynamicVoiceChannelPatterns",
-                    required = true) List<String> dynamicVoiceChannelPatterns) {
+            @JsonProperty(value = "dynamicVoiceChatConfig",
+                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -145,7 +145,7 @@ public final class Config {
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
         this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
         this.topHelpers = Objects.requireNonNull(topHelpers);
-        this.dynamicVoiceChannelPatterns = Objects.requireNonNull(dynamicVoiceChannelPatterns);
+        this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
     }
 
     /**
@@ -479,11 +479,11 @@ public final class Config {
     }
 
     /**
-     * Gets the list of voice channel patterns that are treated dynamically.
+     * Gets the dynamic voice chat configuration
      *
-     * @return the list of dynamic voice channel patterns
+     * @return the dynamic voice chat configuration
      */
-    public List<String> getDynamicVoiceChannelPatterns() {
-        return dynamicVoiceChannelPatterns;
+    public DynamicVoiceChatConfig getDynamicVoiceChatConfig() {
+        return dynamicVoiceChatConfig;
     }
 }
