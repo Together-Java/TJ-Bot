@@ -150,6 +150,7 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
 
         archiveCategoryOptional.ifPresent(archiveCategory -> restActionChain
             .and(channelManager.setParent(archiveCategory))
+            .and(channelManager.sync(archiveCategory))
             .queue(_ -> voiceChatCleanupStrategy.cleanup(archiveCategory.getVoiceChannels()),
                     err -> logger.error("Could not archive dynamic voice chat", err)));
     }
