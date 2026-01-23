@@ -204,5 +204,15 @@
         "rolePattern": "Top Helper.*",
         "assignmentChannelPattern": "community-commands",
         "announcementChannelPattern": "hall-of-fame"
+    },
+    "dynamicVoiceChatConfig": {
+        "dynamicChannelPatterns": [
+            "Gaming",
+            "Support/Studying Room",
+            "Chit Chat"
+        ],
+        "archiveCategoryPattern": "Voice Channel Archives",
+        "cleanChannelsAmount": 20,
+        "minimumChannelsAmount": 40
     }
 }
