@@ -89,7 +89,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
             return;
         }
 
-        TextChannel boardChannel = boardChannelOptional.get();
+        TextChannel boardChannel = boardChannelOptional.orElseThrow();
 
         if (boardChannel.getId().equals(event.getChannel().getId())) {
             logger.debug("Someone tried to react with the react emoji to the quotes channel.");
