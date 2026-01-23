@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageHistory;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
@@ -51,6 +52,13 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
 
     @Override
     public void onVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+        Member member = event.getMember();
+        User user = member.getUser();
+
+        if (user.isBot()) {
+            return;
+        }
+
         AudioChannelUnion channelJoined = event.getChannelJoined();
         AudioChannelUnion channelLeft = event.getChannelLeft();
 
