@@ -80,22 +80,28 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
 
         final long guildId = event.getGuild().getIdLong();
 
-        Optional<TextChannel> boardChannel = findQuoteBoardChannel(event.getJDA(), guildId);
+        Optional<TextChannel> boardChannelOptional = findQuoteBoardChannel(event.getJDA(), guildId);
 
-        if (boardChannel.isEmpty()) {
+        if (boardChannelOptional.isEmpty()) {
             logger.warn(
                     "Could not find board channel with pattern '{}' in server with ID '{}'. Skipping reaction handling...",
                     this.config.channel(), guildId);
             return;
         }
 
-        logger.debug("Forwarding message to quote board channel: {}", boardChannel.get().getName());
+        TextChannel boardChannel = boardChannelOptional.get();
+
+        if (boardChannel.getId().equals(event.getChannel().getId())) {
+            logger.debug("Someone tried to react with the react emoji to the quotes channel.");
+            return;
+        }
+
+        logger.debug("Forwarding message to quote board channel: {}", boardChannel.getName());
 
         event.retrieveMessage()
-            .queue(message -> markAsProcessed(message)
-                .flatMap(v -> message.forwardTo(boardChannel.orElseThrow()))
+            .queue(message -> markAsProcessed(message).flatMap(v -> message.forwardTo(boardChannel))
                 .queue(_ -> logger.debug("Message forwarded to quote board channel: {}",
-                        boardChannel.get().getName())),
+                        boardChannel.getName())),
 
                     e -> logger.warn(
                             "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
