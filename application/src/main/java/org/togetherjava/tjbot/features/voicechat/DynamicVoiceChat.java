@@ -35,6 +35,12 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
     private final DynamicVoiceChatConfig dynamicVoiceChannelConfig;
 
+    /**
+     * Creates a new instance of {@code DynamicVoiceChat}
+     *
+     * @param config the configurations needed for this feature. See:
+     *        {@link org.togetherjava.tjbot.config.DynamicVoiceChatConfig}
+     */
     public DynamicVoiceChat(Config config) {
         this.dynamicVoiceChannelConfig = config.getDynamicVoiceChatConfig();
 

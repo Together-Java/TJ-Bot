@@ -23,6 +23,10 @@ public record DynamicVoiceChatConfig(
         @JsonProperty(value = "cleanChannelsAmount") int cleanChannelsAmount,
         @JsonProperty(value = "minimumChannelsAmount", required = true) int minimumChannelsAmount) {
 
+    /**
+     * Constructs an instance of {@code DynamicVoiceChatConfig} and throws if
+     * {@code dynamicChannelPatterns} or @{code archiveCategoryPattern} is null.
+     */
     public DynamicVoiceChatConfig {
         Objects.requireNonNull(dynamicChannelPatterns);
         Objects.requireNonNull(archiveCategoryPattern);
