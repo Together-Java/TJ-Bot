@@ -15,7 +15,7 @@ import java.util.Objects;
 @JsonRootName("quoteBoardConfig")
 public record QuoteBoardConfig(
         @JsonProperty(value = "minimumScoreToTrigger", required = true) float minimumScoreToTrigger,
-        @JsonProperty(required = true) String channel,
+        @JsonProperty(value = "channel", required = true) String channel,
         @JsonProperty(value = "botEmoji", required = true) String botEmoji,
         @JsonProperty(value = "defaultEmojiScore", required = true) float defaultEmojiScore,
         @JsonProperty(value = "emojiScores", required = true) Map<String, Float> emojiScores) {
@@ -25,8 +25,9 @@ public record QuoteBoardConfig(
      *
      * @param minimumScoreToTrigger the minimum amount of reaction score for a message to be quoted
      * @param channel the pattern for the board channel
-     * @param defaultEmojiScore the default score of an emoji if it's not in the emojiScores map
      * @param botEmoji the emoji with which the bot will mark quoted messages
+     * @param defaultEmojiScore the default score of an emoji if it's not in the emojiScores map
+     * @param emojiScores a map of each emoji's custom score
      */
     public QuoteBoardConfig {
         if (minimumScoreToTrigger <= 0) {
