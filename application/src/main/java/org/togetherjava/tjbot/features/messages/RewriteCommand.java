@@ -15,7 +15,6 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * The implemented command is {@code /rewrite}, which allows users to have their message rewritten
@@ -93,11 +92,12 @@ public final class RewriteCommand extends SlashCommandAdapter {
         }
 
         String userMessage = messageOption.getAsString();
+
         MessageTone tone = parseTone(event.getOption(TONE_OPTION));
 
         event.deferReply(true).queue();
 
-        Optional<String> rewrittenMessage = rewrite(userMessage, tone);
+        String rewrittenMessage = rewrite(userMessage, tone);
 
         if (rewrittenMessage.isEmpty()) {
             logger.debug("Failed to obtain a response for /{}, original message: '{}'",
@@ -111,11 +111,9 @@ public final class RewriteCommand extends SlashCommandAdapter {
             return;
         }
 
-        String rewrittenText = rewrittenMessage.orElseThrow();
+        logger.debug("Rewrite successful; rewritten message length: {}", rewrittenMessage.length());
 
-        logger.debug("Rewrite successful; rewritten message length: {}", rewrittenText.length());
-
-        event.getHook().sendMessage(rewrittenText).setEphemeral(true).queue();
+        event.getHook().sendMessage(rewrittenMessage).setEphemeral(true).queue();
     }
 
     private MessageTone parseTone(@Nullable OptionMapping toneOption)
@@ -129,33 +127,35 @@ public final class RewriteCommand extends SlashCommandAdapter {
         return MessageTone.valueOf(toneOption.getAsString());
     }
 
-    private Optional<String> rewrite(String userMessage, MessageTone tone) {
+    private String rewrite(String userMessage, MessageTone tone) {
 
         String rewritePrompt = createAiPrompt(userMessage, tone);
 
         ChatGptModel aiModel = tone.model;
 
-        Optional<String> attempt = chatGptService.askRaw(rewritePrompt, aiModel);
+        String attempt = askAi(rewritePrompt, aiModel);
 
-        if (attempt.isEmpty()) {
-            return attempt;
-        }
-
-        String response = attempt.get();
-
-        if (response.length() <= MAX_MESSAGE_LENGTH) {
+        if (attempt.length() <= MAX_MESSAGE_LENGTH) {
             return attempt;
         }
 
         logger.debug("Rewritten message exceeded {} characters; retrying with stricter constraint",
                 MAX_MESSAGE_LENGTH);
 
-        String shortenPrompt = rewritePrompt
-                + "\n\nConstraint reminder: Your previous rewrite exceeded " + MAX_MESSAGE_LENGTH
-                + " characters. Provide a revised rewrite strictly under " + MAX_MESSAGE_LENGTH
-                + " characters while preserving meaning and tone.";
+        String shortenPrompt =
+                """
+                        %s
 
-        return chatGptService.askRaw(shortenPrompt, aiModel);
+                        Constraint reminder: Your previous rewrite exceeded %d characters.
+                        Provide a revised rewrite strictly under %d characters while preserving meaning and tone.
+                        """
+                    .formatted(rewritePrompt, MAX_MESSAGE_LENGTH, MAX_MESSAGE_LENGTH);
+
+        return askAi(shortenPrompt, aiModel);
+    }
+
+    private String askAi(String shortenPrompt, ChatGptModel aiModel) {
+        return chatGptService.askRaw(shortenPrompt, aiModel).orElse("");
     }
 
     private static String createAiPrompt(String userMessage, MessageTone tone) {
