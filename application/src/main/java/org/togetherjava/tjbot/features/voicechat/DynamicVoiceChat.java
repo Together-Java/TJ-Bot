@@ -3,9 +3,8 @@ package org.togetherjava.tjbot.features.voicechat;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.Category;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
@@ -13,7 +12,6 @@ import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.managers.channel.middleman.AudioChannelManager;
 import net.dv8tion.jda.api.requests.RestAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +49,7 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     }
 
     @Override
-    public void onVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+    public void onVoiceUpdate(GuildVoiceUpdateEvent event) {
         Member member = event.getMember();
         User user = member.getUser();
 
@@ -62,18 +60,28 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         AudioChannelUnion channelJoined = event.getChannelJoined();
         AudioChannelUnion channelLeft = event.getChannelLeft();
 
-        if (channelJoined != null && eventHappenOnDynamicRootChannel(channelJoined)) {
+        if (channelJoined != null && isVoiceChannel(channelJoined)) {
+            handleVoiceChannelJoin(event, channelJoined);
+        }
+
+        if (channelLeft != null && isVoiceChannel(channelLeft)) {
+            handleVoiceChannelLeave(channelLeft);
+        }
+    }
+
+    private void handleVoiceChannelJoin(GuildVoiceUpdateEvent event,
+            AudioChannelUnion channelJoined) {
+        if (eventHappenOnDynamicRootChannel(channelJoined)) {
             logger.debug("Event happened on joined channel {}", channelJoined);
             createDynamicVoiceChannel(event, channelJoined.asVoiceChannel());
         }
+    }
 
-        if (channelLeft != null && !eventHappenOnDynamicRootChannel(channelLeft)) {
+    private void handleVoiceChannelLeave(AudioChannelUnion channelLeft) {
+        if (!eventHappenOnDynamicRootChannel(channelLeft)) {
             logger.debug("Event happened on left channel {}", channelLeft);
 
-            MessageHistory messageHistory = channelLeft.asVoiceChannel().getHistory();
-            messageHistory.retrievePast(2).queue(messages -> {
-                // Don't forget that there is always one
-                // embed message sent by the bot every time.
+            channelLeft.asVoiceChannel().getHistory().retrievePast(2).queue(messages -> {
                 if (messages.size() > 1) {
                     archiveDynamicVoiceChannel(channelLeft);
                 } else {
@@ -89,8 +97,7 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
             .anyMatch(pattern -> pattern.matcher(channel.getName()).matches());
     }
 
-    private void createDynamicVoiceChannel(@NotNull GuildVoiceUpdateEvent event,
-            VoiceChannel channel) {
+    private void createDynamicVoiceChannel(GuildVoiceUpdateEvent event, VoiceChannel channel) {
         Guild guild = event.getGuild();
         Member member = event.getMember();
         String newChannelName = "%s's %s".formatted(member.getEffectiveName(), channel.getName());
@@ -140,11 +147,8 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                     .and(channel.getPermissionContainer().getManager().clearOverridesAdded());
 
         if (archiveCategoryOptional.isEmpty()) {
-            logger.warn("Could not find archive category. Attempting to create one...");
-            channel.getGuild()
-                .createCategory(dynamicVoiceChannelConfig.archiveCategoryPattern())
-                .queue(newCategory -> restActionChain.and(channelManager.setParent(newCategory))
-                    .queue());
+            logger.error("Could not find category matching {}",
+                    dynamicVoiceChannelConfig.archiveCategoryPattern());
             return;
         }
 
@@ -155,17 +159,22 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                     err -> logger.error("Could not archive dynamic voice chat", err)));
     }
 
-    private void sendWarningEmbed(VoiceChannel channel) {
-        MessageEmbed messageEmbed = new EmbedBuilder()
-            .addField("👋 Heads up!",
-                    """
-                            This is a **temporary** voice chat channel. Messages sent here will be *cleared* once \
-                            the channel is deleted when everyone leaves. If you need to keep something important, \
-                            make sure to save it elsewhere. 💬
-                            """,
-                    false)
-            .build();
+    private static void sendWarningEmbed(VoiceChannel channel) {
+        channel
+            .sendMessageEmbeds(
+                    new EmbedBuilder()
+                        .addField("👋 Heads up!",
+                                """
+                                        This is a **temporary** voice chat channel. Messages sent here will be *cleared* once \
+                                        the channel is deleted when everyone leaves. If you need to keep something important, \
+                                        make sure to save it elsewhere. 💬
+                                        """,
+                                false)
+                        .build())
+            .queue();
+    }
 
-        channel.sendMessageEmbeds(messageEmbed).queue();
+    private static boolean isVoiceChannel(AudioChannelUnion channel) {
+        return channel.getType() == ChannelType.VOICE;
     }
 }
