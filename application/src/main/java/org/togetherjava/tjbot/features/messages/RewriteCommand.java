@@ -35,33 +35,25 @@ public final class RewriteCommand extends SlashCommandAdapter {
     private static final int MAX_MESSAGE_LENGTH = Message.MAX_CONTENT_LENGTH;
     private static final int MIN_MESSAGE_LENGTH = 3;
 
+    private static final String AI_REWRITE_PROMPT_TEMPLATE = """
+            You are rewriting a Discord text chat message for clarity and professionalism.
+            Keep it conversational and casual, not email or formal document format.
+
+            Tone: %s
+
+            Rewrite the message to:
+            - Improve clarity and structure
+            - Maintain the original meaning
+            - Avoid em-dashes (—)
+            - Stay under %d characters (strict limit)
+
+            If the message is already well-written, make only minor improvements.
+
+            Message to rewrite:
+            %s
+            """.stripIndent();
+
     private final ChatGptService chatGptService;
-
-    private static ChatGptModel selectAiModel(MessageTone tone) {
-        return switch (tone) {
-            case CLEAR, PROFESSIONAL -> ChatGptModel.FASTEST;
-            case DETAILED, TECHNICAL -> ChatGptModel.HIGH_QUALITY;
-        };
-    }
-
-    private static String createAiPrompt(String userMessage, MessageTone tone) {
-        return """
-                You are rewriting a Discord text chat message for clarity and professionalism.
-                Keep it conversational and casual—NOT email or formal document format.
-
-                Tone: %s
-
-                Rewrite the message to:
-                - Improve clarity and structure
-                - Maintain the original meaning
-                - Avoid em-dashes (—)
-                - Stay under %d characters (strict limit)
-
-                If the message is already well-written, make only minor improvements.
-
-                Message to rewrite:
-                %s""".stripIndent().formatted(tone.description, MAX_MESSAGE_LENGTH, userMessage);
-    }
 
     /**
      * Creates the slash command definition and configures available options for rewriting messages.
@@ -73,13 +65,13 @@ public final class RewriteCommand extends SlashCommandAdapter {
 
         this.chatGptService = chatGptService;
 
-        final OptionData messageOption =
+        OptionData messageOption =
                 new OptionData(OptionType.STRING, MESSAGE_OPTION, "The message you want to rewrite",
                         true)
                     .setMinLength(MIN_MESSAGE_LENGTH)
                     .setMaxLength(MAX_MESSAGE_LENGTH);
 
-        final OptionData toneOption = new OptionData(OptionType.STRING, TONE_OPTION,
+        OptionData toneOption = new OptionData(OptionType.STRING, TONE_OPTION,
                 "The tone/style for the rewritten message (default: "
                         + MessageTone.CLEAR.displayName + ")",
                 false);
@@ -93,14 +85,15 @@ public final class RewriteCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
 
-        final OptionMapping messageOption = event.getOption(MESSAGE_OPTION);
+        OptionMapping messageOption = event.getOption(MESSAGE_OPTION);
 
         if (messageOption == null) {
-            throw new IllegalStateException("Required option '" + MESSAGE_OPTION + "' is missing");
+            throw new IllegalArgumentException(
+                    "Required option '" + MESSAGE_OPTION + "' is missing");
         }
 
-        final String userMessage = messageOption.getAsString();
-        final MessageTone tone = parseTone(event.getOption(TONE_OPTION));
+        String userMessage = messageOption.getAsString();
+        MessageTone tone = parseTone(event.getOption(TONE_OPTION));
 
         event.deferReply(true).queue();
 
@@ -118,7 +111,7 @@ public final class RewriteCommand extends SlashCommandAdapter {
             return;
         }
 
-        final String rewrittenText = rewrittenMessage.orElseThrow();
+        String rewrittenText = rewrittenMessage.orElseThrow();
 
         logger.debug("Rewrite successful; rewritten message length: {}", rewrittenText.length());
 
@@ -133,16 +126,14 @@ public final class RewriteCommand extends SlashCommandAdapter {
             return MessageTone.CLEAR;
         }
 
-        final String toneValue = toneOption.getAsString();
-
-        return MessageTone.valueOf(toneValue);
+        return MessageTone.valueOf(toneOption.getAsString());
     }
 
     private Optional<String> rewrite(String userMessage, MessageTone tone) {
 
-        final ChatGptModel aiModel = selectAiModel(tone);
+        String rewritePrompt = createAiPrompt(userMessage, tone);
 
-        final String rewritePrompt = createAiPrompt(userMessage, tone);
+        ChatGptModel aiModel = tone.model;
 
         Optional<String> attempt = chatGptService.askRaw(rewritePrompt, aiModel);
 
@@ -150,16 +141,16 @@ public final class RewriteCommand extends SlashCommandAdapter {
             return attempt;
         }
 
-        final String response = attempt.get();
+        String response = attempt.get();
 
-        if (response.length() <= Message.MAX_CONTENT_LENGTH) {
+        if (response.length() <= MAX_MESSAGE_LENGTH) {
             return attempt;
         }
 
         logger.debug("Rewritten message exceeded {} characters; retrying with stricter constraint",
                 MAX_MESSAGE_LENGTH);
 
-        final String shortenPrompt = rewritePrompt
+        String shortenPrompt = rewritePrompt
                 + "\n\nConstraint reminder: Your previous rewrite exceeded " + MAX_MESSAGE_LENGTH
                 + " characters. Provide a revised rewrite strictly under " + MAX_MESSAGE_LENGTH
                 + " characters while preserving meaning and tone.";
@@ -167,18 +158,27 @@ public final class RewriteCommand extends SlashCommandAdapter {
         return chatGptService.askRaw(shortenPrompt, aiModel);
     }
 
+    private static String createAiPrompt(String userMessage, MessageTone tone) {
+        return AI_REWRITE_PROMPT_TEMPLATE.formatted(tone.description, MAX_MESSAGE_LENGTH,
+                userMessage);
+    }
+
     private enum MessageTone {
-        CLEAR("Clear", "Make it clear and easy to understand."),
-        PROFESSIONAL("Professional", "Use a professional and polished tone."),
-        DETAILED("Detailed", "Expand with more detail and explanation."),
-        TECHNICAL("Technical", "Use technical and specialized language where appropriate.");
+        CLEAR("Clear", "Make it clear and easy to understand.", ChatGptModel.FASTEST),
+        PROFESSIONAL("Professional", "Use a professional and polished tone.", ChatGptModel.FASTEST),
+        DETAILED("Detailed", "Expand with more detail and explanation.", ChatGptModel.HIGH_QUALITY),
+        TECHNICAL("Technical", "Use technical and specialized language where appropriate.",
+                ChatGptModel.HIGH_QUALITY);
 
         private final String displayName;
         private final String description;
+        private final ChatGptModel model;
 
-        MessageTone(String displayName, String description) {
+        MessageTone(String displayName, String description, ChatGptModel model) {
             this.displayName = displayName;
             this.description = description;
+            this.model = model;
         }
     }
+
 }
