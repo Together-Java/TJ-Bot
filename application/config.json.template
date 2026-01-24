@@ -195,9 +195,34 @@
         "pollIntervalInMinutes": 10
     },
     "quoteBoardConfig": {
-        "minimumReactionsToTrigger": 5,
+        "minimumScoreToTrigger": 5.0,
         "channel": "quotes",
-        "reactionEmoji": "⭐"
+        "botEmoji": "⭐",
+        "defaultEmojiScore": 0.5,
+        "emojiScores": {
+            "😬": -0.5,
+            "💔": -0.5,
+            "😐": -0.5,
+            "😊": -0.5,
+            "🖕": -0.5,
+            "👎": -0.5,
+            "💩": -0.5,
+            "🤢": -0.5,
+            "🤮": -0.5,
+            "🤬": -0.5,
+            "😡": -0.5,
+            "😒": -0.5,
+            "🤨": -0.5,
+
+            "🇷🇺": 0.0,
+            "🇵🇸": 0.0,
+            "🇮🇱": 0.0,
+            "🏳️‍🌈": 0.0,
+
+            "⭐": 1.0,
+
+            "youtube:1464573182206804010": 0.0
+        }
     },
     "memberCountCategoryPattern": "Info",
     "topHelpers": {
