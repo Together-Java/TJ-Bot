@@ -81,6 +81,12 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         if (!eventHappenOnDynamicRootChannel(channelLeft)) {
             logger.debug("Event happened on left channel {}", channelLeft);
 
+            if (hasMembers(channelLeft)) {
+                logger.debug("Voice channel {} not empty, so not doing anything.",
+                        channelLeft.getName());
+                return;
+            }
+
             channelLeft.asVoiceChannel().getHistory().retrievePast(2).queue(messages -> {
                 if (messages.size() > 1) {
                     archiveDynamicVoiceChannel(channelLeft);
@@ -124,15 +130,12 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                             member.getNickname(), channel.getName(), error));
     }
 
-    private void archiveDynamicVoiceChannel(AudioChannelUnion channel) {
-        int memberCount = channel.getMembers().size();
-        String channelName = channel.getName();
+    private boolean hasMembers(AudioChannelUnion channel) {
+        return !channel.getMembers().isEmpty();
+    }
 
-        if (memberCount > 0) {
-            logger.debug("Voice channel {} not empty ({} members), so not removing.", channelName,
-                    memberCount);
-            return;
-        }
+    private void archiveDynamicVoiceChannel(AudioChannelUnion channel) {
+        String channelName = channel.getName();
 
         Optional<Category> archiveCategoryOptional = channel.getGuild()
             .getCategoryCache()
