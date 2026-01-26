@@ -59,14 +59,10 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         Member member = event.getMember();
         User user = member.getUser();
 
-        if (user.isBot()) {
-            return;
-        }
-
         AudioChannelUnion channelJoined = event.getChannelJoined();
         AudioChannelUnion channelLeft = event.getChannelLeft();
 
-        if (channelJoined != null && isVoiceChannel(channelJoined)) {
+        if (channelJoined != null && isVoiceChannel(channelJoined) && !user.isBot()) {
             handleVoiceChannelJoin(event, channelJoined);
         }
 
