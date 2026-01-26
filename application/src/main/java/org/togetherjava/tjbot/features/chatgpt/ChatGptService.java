@@ -5,7 +5,6 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputText;
-import net.dv8tion.jda.api.entities.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +23,11 @@ public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
 
-    /** The maximum number of tokens allowed for the generated answer. */
-    private static final int MAX_TOKENS = Message.MAX_CONTENT_LENGTH;
+    /**
+     * The maximum number of tokens allowed for the generated answer. This value is appropriate for
+     * Discord's 2000 character message limit.
+     */
+    private static final int MAX_TOKENS = 500;
 
     private boolean isDisabled = false;
     private OpenAIClient openAIClient;

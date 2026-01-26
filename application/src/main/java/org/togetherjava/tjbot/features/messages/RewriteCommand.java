@@ -48,6 +48,8 @@ public final class RewriteCommand extends SlashCommandAdapter {
 
             If the message is already well-written, make only minor improvements.
 
+            Reply with ONLY the rewritten message, nothing else (greetings, preamble, etc).
+
             Message to rewrite:
             %s
             """.stripIndent();
