@@ -20,6 +20,7 @@ import org.togetherjava.tjbot.config.DynamicVoiceChatConfig;
 import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles dynamic voice channel creation and deletion based on user activity.
@@ -30,6 +31,7 @@ import java.util.Optional;
  */
 public final class DynamicVoiceChat extends VoiceReceiverAdapter {
     private static final Logger logger = LoggerFactory.getLogger(DynamicVoiceChat.class);
+    private static final long DELETE_VOICE_CHANNEL_ACTION_DELAY_MS = 500L;
 
     private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
     private final DynamicVoiceChatConfig dynamicVoiceChannelConfig;
@@ -87,13 +89,14 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                 return;
             }
 
-            channelLeft.asVoiceChannel().getHistory().retrievePast(2).queue(messages -> {
+            channelLeft.asVoiceChannel().getHistory().retrievePast(2).onSuccess(messages -> {
                 if (messages.size() > 1) {
                     archiveDynamicVoiceChannel(channelLeft);
                 } else {
-                    channelLeft.delete().queue();
+                    channelLeft.delete()
+                        .queueAfter(DELETE_VOICE_CHANNEL_ACTION_DELAY_MS, TimeUnit.MILLISECONDS);
                 }
-            });
+            }).queue();
         }
     }
 
