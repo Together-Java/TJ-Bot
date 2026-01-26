@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.features.voicechat;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,6 +22,7 @@ import org.togetherjava.tjbot.config.DynamicVoiceChatConfig;
 import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles dynamic voice channel creation and deletion based on user activity.
@@ -33,6 +36,9 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
 
     private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
     private final DynamicVoiceChatConfig dynamicVoiceChannelConfig;
+
+    private final Cache<Long, Boolean> deletedChannels =
+            Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
 
     /**
      * Creates a new instance of {@code DynamicVoiceChat}
@@ -53,14 +59,10 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         Member member = event.getMember();
         User user = member.getUser();
 
-        if (user.isBot()) {
-            return;
-        }
-
         AudioChannelUnion channelJoined = event.getChannelJoined();
         AudioChannelUnion channelLeft = event.getChannelLeft();
 
-        if (channelJoined != null && isVoiceChannel(channelJoined)) {
+        if (channelJoined != null && isVoiceChannel(channelJoined) && !user.isBot()) {
             handleVoiceChannelJoin(event, channelJoined);
         }
 
@@ -77,7 +79,13 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         }
     }
 
-    private void handleVoiceChannelLeave(AudioChannelUnion channelLeft) {
+    private synchronized void handleVoiceChannelLeave(AudioChannelUnion channelLeft) {
+        long channelId = channelLeft.getIdLong();
+
+        if (Boolean.TRUE.equals(deletedChannels.getIfPresent(channelId))) {
+            return;
+        }
+
         if (!eventHappenOnDynamicRootChannel(channelLeft)) {
             logger.debug("Event happened on left channel {}", channelLeft);
 
@@ -91,7 +99,12 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                 if (messages.size() > 1) {
                     archiveDynamicVoiceChannel(channelLeft);
                 } else {
-                    channelLeft.delete().queue();
+                    deletedChannels.put(channelId, true);
+                    try {
+                        channelLeft.delete().queue();
+                    } catch (Exception _) {
+                        // Ignore
+                    }
                 }
             });
         }
