@@ -99,8 +99,12 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                 if (messages.size() > 1) {
                     archiveDynamicVoiceChannel(channelLeft);
                 } else {
-                    channelLeft.delete().queue();
                     deletedChannels.put(channelId, true);
+                    try {
+                        channelLeft.delete().queue();
+                    } catch (Exception _) {
+                        // Ignore
+                    }
                 }
             });
         }
