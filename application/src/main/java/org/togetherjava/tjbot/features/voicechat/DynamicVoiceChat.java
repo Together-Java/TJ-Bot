@@ -79,7 +79,7 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
         }
     }
 
-    private void handleVoiceChannelLeave(AudioChannelUnion channelLeft) {
+    private synchronized void handleVoiceChannelLeave(AudioChannelUnion channelLeft) {
         long channelId = channelLeft.getIdLong();
 
         if (Boolean.TRUE.equals(deletedChannels.getIfPresent(channelId))) {
