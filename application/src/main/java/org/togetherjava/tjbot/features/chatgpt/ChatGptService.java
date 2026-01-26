@@ -23,11 +23,8 @@ public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
 
-    /**
-     * The maximum number of tokens allowed for the generated answer. This value is appropriate for
-     * Discord's 2000 character message limit.
-     */
-    private static final int MAX_TOKENS = 500;
+    /** The maximum number of tokens allowed for the generated answer. */
+    private static final int MAX_TOKENS = 1000;
 
     private boolean isDisabled = false;
     private OpenAIClient openAIClient;
