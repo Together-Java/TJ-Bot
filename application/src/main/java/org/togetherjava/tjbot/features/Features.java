@@ -41,6 +41,7 @@ import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
 import org.togetherjava.tjbot.features.messages.MessageCommand;
+import org.togetherjava.tjbot.features.messages.RewriteCommand;
 import org.togetherjava.tjbot.features.moderation.BanCommand;
 import org.togetherjava.tjbot.features.moderation.KickCommand;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
@@ -211,6 +212,7 @@ public class Features {
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
+        features.add(new RewriteCommand(chatGptService));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
