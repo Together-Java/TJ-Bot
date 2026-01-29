@@ -2,6 +2,12 @@ package org.togetherjava.tjbot.features.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceDeafenEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMuteEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceStreamEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceVideoEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -13,9 +19,12 @@ import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionE
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +41,7 @@ import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.features.UserContextCommand;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.VoiceReceiver;
 import org.togetherjava.tjbot.features.componentids.ComponentId;
 import org.togetherjava.tjbot.features.componentids.ComponentIdParser;
 import org.togetherjava.tjbot.features.componentids.ComponentIdStore;
@@ -75,6 +85,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     private final ComponentIdParser componentIdParser;
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
+    private final Map<Pattern, VoiceReceiver> channelNameToVoiceReceiver = new HashMap<>();
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -95,6 +106,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             .map(MessageReceiver.class::cast)
             .forEach(messageReceiver -> channelNameToMessageReceiver
                 .put(messageReceiver.getChannelNamePattern(), messageReceiver));
+
+        // Voice receivers
+        features.stream()
+            .filter(VoiceReceiver.class::isInstance)
+            .map(VoiceReceiver.class::cast)
+            .forEach(voiceReceiver -> channelNameToVoiceReceiver
+                .put(voiceReceiver.getChannelNamePattern(), voiceReceiver));
 
         // Event receivers
         features.stream()
@@ -238,9 +256,117 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         }
     }
 
+    @Override
+    public void onMessageReactionAdd(final MessageReactionAddEvent event) {
+        if (event.isFromGuild()) {
+            getMessageReceiversSubscribedTo(event.getChannel())
+                .forEach(messageReceiver -> messageReceiver.onMessageReactionAdd(event));
+        }
+    }
+
+    /**
+     * Calculates the correct voice channel to act upon.
+     *
+     * <p>
+     * If there is a <code>channelJoined</code> and a <code>channelLeft</code>, then the
+     * <code>channelJoined</code> is prioritized and returned. Otherwise, it returns
+     * <code>channelLeft</code>.
+     *
+     * <p>
+     * This is an essential method due to the need of updating both channel categories that a member
+     * utilizes. For example, take the scenario of a user browsing through voice channels:
+     *
+     * <pre>
+     *     - User joins General -> channelJoined = General | channelLeft = null
+     *     - User switches to Gaming -> channelJoined = Gaming | channelLeft = General
+     *     - User leaves Discord -> channelJoined = null | channelLeft = Gaming
+     * </pre>
+     *
+     * <p>
+     * This way, we make sure that all relevant voice channels are updated.
+     *
+     * @param channelJoined the channel that the member has connected to, if any
+     * @param channelLeft the channel that the member left from, if any
+     * @return the join channel if not null, otherwise the leave channel, otherwise an empty
+     *         optional
+     */
+    private Optional<Channel> selectPreferredAudioChannel(@Nullable AudioChannelUnion channelJoined,
+            @Nullable AudioChannelUnion channelLeft) {
+        if (channelJoined != null) {
+            return Optional.of(channelJoined);
+        }
+
+        return Optional.ofNullable(channelLeft);
+    }
+
+    @Override
+    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+        selectPreferredAudioChannel(event.getChannelJoined(), event.getChannelLeft())
+            .ifPresent(channel -> getVoiceReceiversSubscribedTo(channel)
+                .forEach(voiceReceiver -> voiceReceiver.onVoiceUpdate(event)));
+    }
+
+    @Override
+    public void onGuildVoiceVideo(@NotNull GuildVoiceVideoEvent event) {
+        AudioChannelUnion channel = event.getVoiceState().getChannel();
+
+        if (channel == null) {
+            return;
+        }
+
+        getVoiceReceiversSubscribedTo(channel)
+            .forEach(voiceReceiver -> voiceReceiver.onVideoToggle(event));
+    }
+
+    @Override
+    public void onGuildVoiceStream(@NotNull GuildVoiceStreamEvent event) {
+        AudioChannelUnion channel = event.getVoiceState().getChannel();
+
+        if (channel == null) {
+            return;
+        }
+
+        getVoiceReceiversSubscribedTo(channel)
+            .forEach(voiceReceiver -> voiceReceiver.onStreamToggle(event));
+    }
+
+    @Override
+    public void onGuildVoiceMute(@NotNull GuildVoiceMuteEvent event) {
+        AudioChannelUnion channel = event.getVoiceState().getChannel();
+
+        if (channel == null) {
+            return;
+        }
+
+        getVoiceReceiversSubscribedTo(channel)
+            .forEach(voiceReceiver -> voiceReceiver.onMuteToggle(event));
+    }
+
+    @Override
+    public void onGuildVoiceDeafen(@NotNull GuildVoiceDeafenEvent event) {
+        AudioChannelUnion channel = event.getVoiceState().getChannel();
+
+        if (channel == null) {
+            return;
+        }
+
+        getVoiceReceiversSubscribedTo(channel)
+            .forEach(voiceReceiver -> voiceReceiver.onDeafenToggle(event));
+    }
+
     private Stream<MessageReceiver> getMessageReceiversSubscribedTo(Channel channel) {
         String channelName = channel.getName();
         return channelNameToMessageReceiver.entrySet()
+            .stream()
+            .filter(patternAndReceiver -> patternAndReceiver.getKey()
+                .matcher(channelName)
+                .matches())
+            .map(Map.Entry::getValue);
+    }
+
+    private Stream<VoiceReceiver> getVoiceReceiversSubscribedTo(Channel channel) {
+        String channelName = channel.getName();
+        return channelNameToVoiceReceiver.entrySet()
             .stream()
             .filter(patternAndReceiver -> patternAndReceiver.getKey()
                 .matcher(channelName)

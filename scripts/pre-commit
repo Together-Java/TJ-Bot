@@ -44,6 +44,14 @@ if [ "$spotlessExitCode" -ne 0 ]; then
   exit "$spotlessExitCode"
 fi
 
+echo "**Running Sonarlint checks**"
+./gradlew sonarlintMain
+sonarlintExitCode=$?
+if [ "$sonarlintExitCode" -ne 0 ]; then
+  pop_stash
+  exit "$sonarlintMain"
+fi
+
 # Spotless possibly found changes, apply them, excluding untracked files
 git add -u
 

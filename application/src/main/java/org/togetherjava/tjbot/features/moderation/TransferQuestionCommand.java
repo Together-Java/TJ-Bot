@@ -31,6 +31,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
@@ -98,7 +99,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
         String chatGptTitleRequest =
                 "Summarize the following question into a concise title or heading not more than 5 words, remove quotations if any: %s"
                     .formatted(originalMessage);
-        Optional<String> chatGptTitle = chatGptService.ask(chatGptTitleRequest, null);
+        Optional<String> chatGptTitle =
+                chatGptService.ask(chatGptTitleRequest, null, ChatGptModel.FASTEST);
         String title = chatGptTitle.orElse(createTitle(originalMessage));
         if (title.startsWith("\"") && title.endsWith("\"")) {
             title = title.substring(1, title.length() - 1);

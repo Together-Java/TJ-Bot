@@ -1,10 +1,10 @@
 package org.togetherjava.tjbot.features.chatgpt;
 
-import com.theokanning.openai.OpenAiHttpException;
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.completion.chat.ChatMessageRole;
-import com.theokanning.openai.service.OpenAiService;
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.responses.Response;
+import com.openai.models.responses.ResponseCreateParams;
+import com.openai.models.responses.ResponseOutputText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,8 +13,8 @@ import org.togetherjava.tjbot.config.Config;
 import javax.annotation.Nullable;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service used to communicate to OpenAI API to generate responses.
@@ -24,32 +24,10 @@ public class ChatGptService {
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
 
     /** The maximum number of tokens allowed for the generated answer. */
-    private static final int MAX_TOKENS = 3_000;
-
-    /**
-     * This parameter reduces the likelihood of the AI repeating itself. A higher frequency penalty
-     * makes the model less likely to repeat the same lines verbatim. It helps in generating more
-     * diverse and varied responses.
-     */
-    private static final double FREQUENCY_PENALTY = 0.5;
-
-    /**
-     * This parameter controls the randomness of the AI's responses. A higher temperature results in
-     * more varied, unpredictable, and creative responses. Conversely, a lower temperature makes the
-     * model's responses more deterministic and conservative.
-     */
-    private static final double TEMPERATURE = 0.8;
-
-    /**
-     * n: This parameter specifies the number of responses to generate for each prompt. If n is more
-     * than 1, the AI will generate multiple different responses to the same prompt, each one being
-     * a separate iteration based on the input.
-     */
-    private static final int MAX_NUMBER_OF_RESPONSES = 1;
-    private static final String AI_MODEL = "gpt-3.5-turbo";
+    private static final int MAX_TOKENS = 1000;
 
     private boolean isDisabled = false;
-    private OpenAiService openAiService;
+    private OpenAIClient openAIClient;
 
     /**
      * Creates instance of ChatGPTService
@@ -61,25 +39,11 @@ public class ChatGptService {
         boolean keyIsDefaultDescription = apiKey.startsWith("<") && apiKey.endsWith(">");
         if (apiKey.isBlank() || keyIsDefaultDescription) {
             isDisabled = true;
+            logger.warn("ChatGPT service is disabled: API key is not configured");
             return;
         }
-
-        openAiService = new OpenAiService(apiKey, TIMEOUT);
-
-        ChatMessage setupMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), """
-                For code supplied for review, refer to the old code supplied rather than
-                rewriting the code. DON'T supply a corrected version of the code.\s""");
-        ChatCompletionRequest systemSetupRequest = ChatCompletionRequest.builder()
-            .model(AI_MODEL)
-            .messages(List.of(setupMessage))
-            .frequencyPenalty(FREQUENCY_PENALTY)
-            .temperature(TEMPERATURE)
-            .maxTokens(50)
-            .n(MAX_NUMBER_OF_RESPONSES)
-            .build();
-
-        // Sending the system setup message to ChatGPT.
-        openAiService.createChatCompletion(systemSetupRequest);
+        openAIClient = OpenAIOkHttpClient.builder().apiKey(apiKey).timeout(TIMEOUT).build();
+        logger.info("ChatGPT service initialized successfully");
     }
 
     /**
@@ -88,52 +52,88 @@ public class ChatGptService {
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
      * @param context The category of asked question, to set the context(eg. Java, Database, Other
      *        etc).
+     * @param chatModel The AI model to use for this request.
      * @return response from ChatGPT as a String.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
      *      Tokens</a>.
      */
-    public Optional<String> ask(String question, @Nullable String context) {
-        if (isDisabled) {
-            return Optional.empty();
-        }
-
+    public Optional<String> ask(String question, @Nullable String context, ChatGptModel chatModel) {
         String contextText = context == null ? "" : ", Context: %s.".formatted(context);
-        String fullQuestion = "(KEEP IT CONCISE, NOT MORE THAN 280 WORDS%s) - %s"
-            .formatted(contextText, question);
+        String inputPrompt = """
+                For code supplied for review, refer to the old code supplied rather than
+                rewriting the code. DON'T supply a corrected version of the code.
 
-        ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(), fullQuestion);
-        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-            .model(AI_MODEL)
-            .messages(List.of(chatMessage))
-            .frequencyPenalty(FREQUENCY_PENALTY)
-            .temperature(TEMPERATURE)
-            .maxTokens(MAX_TOKENS)
-            .n(MAX_NUMBER_OF_RESPONSES)
-            .build();
-        logger.debug("ChatGpt Request: {}", fullQuestion);
+                KEEP IT CONCISE, NOT MORE THAN 280 WORDS
 
-        String response = null;
-        try {
-            response = openAiService.createChatCompletion(chatCompletionRequest)
-                .getChoices()
-                .getFirst()
-                .getMessage()
-                .getContent();
-        } catch (OpenAiHttpException openAiHttpException) {
-            logger.warn(
-                    "There was an error using the OpenAI API: {} Code: {} Type: {} Status Code: {}",
-                    openAiHttpException.getMessage(), openAiHttpException.code,
-                    openAiHttpException.type, openAiHttpException.statusCode);
-        } catch (RuntimeException runtimeException) {
-            logger.warn("There was an error using the OpenAI API: {}",
-                    runtimeException.getMessage());
-        }
+                %s
+                Question: %s
+                """.formatted(contextText, question);
 
-        logger.debug("ChatGpt Response: {}", response);
-        if (response == null) {
+        return sendPrompt(inputPrompt, chatModel);
+    }
+
+    /**
+     * Prompt ChatGPT with a raw prompt and receive a response without any prefix wrapping.
+     * <p>
+     * Use this method when you need full control over the prompt structure without the service's
+     * opinionated formatting (e.g., for iterative refinement or specialized use cases).
+     *
+     * @param inputPrompt The raw prompt to send to ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @param chatModel The AI model to use for this request.
+     * @return response from ChatGPT as a String.
+     * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
+     *      Tokens</a>.
+     */
+    public Optional<String> askRaw(String inputPrompt, ChatGptModel chatModel) {
+        return sendPrompt(inputPrompt, chatModel);
+    }
+
+    /**
+     * Sends a prompt to the ChatGPT API and returns the response.
+     *
+     * @param prompt The prompt to send to ChatGPT.
+     * @param chatModel The AI model to use for this request.
+     * @return response from ChatGPT as a String.
+     */
+    private Optional<String> sendPrompt(String prompt, ChatGptModel chatModel) {
+        if (isDisabled) {
+            logger.warn("ChatGPT request attempted but service is disabled");
             return Optional.empty();
         }
 
-        return Optional.of(response);
+        logger.debug("ChatGpt request: {}", prompt);
+
+        try {
+            ResponseCreateParams params = ResponseCreateParams.builder()
+                .model(chatModel.toChatModel())
+                .input(prompt)
+                .maxOutputTokens(MAX_TOKENS)
+                .build();
+
+            Response chatGptResponse = openAIClient.responses().create(params);
+
+            String response = chatGptResponse.output()
+                .stream()
+                .flatMap(item -> item.message().stream())
+                .flatMap(message -> message.content().stream())
+                .flatMap(content -> content.outputText().stream())
+                .map(ResponseOutputText::text)
+                .collect(Collectors.joining("\n"));
+
+            logger.debug("ChatGpt Response: {}", response);
+
+            if (response.isBlank()) {
+                logger.warn("ChatGPT returned an empty response");
+                return Optional.empty();
+            }
+
+            logger.debug("ChatGpt response received successfully, length: {} characters",
+                    response.length());
+            return Optional.of(response);
+        } catch (RuntimeException runtimeException) {
+            logger.error("Error communicating with OpenAI API: {}", runtimeException.getMessage(),
+                    runtimeException);
+            return Optional.empty();
+        }
     }
 }

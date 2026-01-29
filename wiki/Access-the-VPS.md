@@ -18,7 +18,7 @@ ssh-keygen -t ed25519 -C "your_email@address.here" -f ~/.ssh/together-java-vps
 4. Add the following entry to your `.ssh/config` file:
 ```
 Host togetherjava
-HostName togetherjava.duckdns.org
+HostName togetherjava.org
 IdentityFile ~/.ssh/together-java-vps
 User root
 Port 22
