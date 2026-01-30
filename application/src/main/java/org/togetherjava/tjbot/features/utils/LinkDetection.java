@@ -15,26 +15,54 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Utility class to detect links.
+ * Utility methods for working with links inside arbitrary text.
+ *
+ * <p>This class can:
+ * <ul>
+ *   <li>Extract HTTP(S) links from text</li>
+ *   <li>Check whether a link is reachable via HTTP</li>
+ *   <li>Replace broken links asynchronously</li>
+ * </ul>
+ *
+ * <p>It is intentionally stateless and uses asynchronous HTTP requests
+ * to avoid blocking calling threads.
  */
+
 public class LinkDetection {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
+    /**
+     * Default filters applied when extracting links from text.
+     *
+     * <p>These filters intentionally ignore:
+     * <ul>
+     *   <li>Suppressed links like {@code <https://example.com>}</li>
+     *   <li>Non-HTTP(S) schemes such as {@code ftp://} or {@code file://}</li>
+     * </ul>
+     *
+     * <p>This reduces false positives when scanning chat messages
+     * or source-code snippets.
+     */
 
     private static final Set<LinkFilter> DEFAULT_FILTERS =
             Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME);
 
     /**
-     * Possible ways to filter a link.
-     *
-     * @see LinkDetection
+     * Filters that control which detected URLs are returned by {@link #extractLinks}.
      */
     public enum LinkFilter {
         /**
-         * Filters links suppressed with {@literal <url>}.
+         * Ignores URLs that are wrapped in angle brackets,
+         * e.g. {@code <https://example.com>}.
+         *
+         * <p>Such links are often intentionally suppressed in chat platforms.
          */
         SUPPRESSED,
         /**
-         * Filters links that are not using http scheme.
+         * Ignores URLs that do not use the HTTP or HTTPS scheme.
+         *
+         * <p>This helps avoid false positives such as {@code ftp://},
+         * {@code file://}, or scheme-less matches.
          */
         NON_HTTP_SCHEME
     }
@@ -44,101 +72,125 @@ public class LinkDetection {
     }
 
     /**
-     * Extracts all links from the given content.
+     * Extracts HTTP(S) links from the given text.
      *
-     * @param content the content to search through
-     * @param filter the filters applied to the urls
-     * @return a list of all found links, can be empty
+     * <p>The text is scanned using a URL detector, then filtered and normalized
+     * according to the provided {@link LinkFilter}s.
+     *
+     * <p>Example:
+     * <pre>{@code
+     * Set<LinkFilter> filters = Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME);
+     * extractLinks("Visit https://example.com and <ftp://skip.me>", filters)
+     * // returns ["https://example.com"]
+     * }</pre>
+     *
+     * @param content the text to scan for links
+     * @param filter a set of filters controlling which detected links are returned
+     * @return a list of extracted links in the order they appear in the text
      */
+
     public static List<String> extractLinks(String content, Set<LinkFilter> filter) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
-            .stream()
-            .map(url -> toLink(url, filter))
-            .flatMap(Optional::stream)
-            .toList();
+                .stream()
+                .map(url -> toLink(url, filter))
+                .flatMap(Optional::stream)
+                .toList();
     }
 
     /**
-     * Checks whether the given content contains a link.
+     * Checks whether the given text contains at least one detectable URL.
      *
-     * @param content the content to search through
-     * @return true if the content contains at least one link
+     * <p>This method performs a lightweight detection only and does not
+     * apply any {@link LinkFilter}s.
+     *
+     * @param content the text to scan
+     * @return {@code true} if at least one URL-like pattern is detected
      */
+
     public static boolean containsLink(String content) {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
 
     /**
-     * Checks whether the given URL is considered broken.
+     * Asynchronously checks whether a URL is considered broken.
      *
-     * <p>
-     * A link is considered broken if:
+     * <p>The check is performed in two steps:
+     * <ol>
+     *   <li>A {@code HEAD} request is sent first (cheap and fast)</li>
+     *   <li>If that fails or returns an error, a {@code GET} request is used as a fallback</li>
+     * </ol>
+     *
+     * <p>A link is considered broken if:
      * <ul>
-     * <li>The URL is invalid or malformed</li>
-     * <li>An HTTP request fails</li>
-     * <li>The HTTP response status code is outside the 200–399 range</li>
+     *   <li>The URL is malformed or unreachable</li>
+     *   <li>The HTTP request fails with an exception</li>
+     *   <li>The response status code is 4xx (client error) or 5xx (server error)</li>
      * </ul>
      *
-     * <p>
-     * Notes:
-     * <ul>
-     * <li>Status code {@code 200} is considered valid, even if the response body is empty</li>
-     * <li>The response body content is not inspected</li>
-     * </ul>
+     * <p>Successful responses (2xx) and redirects (3xx) are considered valid links.
+     * The response body is never inspected.
      *
      * @param url the URL to check
-     * @return a future completing with {@code true} if the link is broken
+     * @return a {@code CompletableFuture} completing with {@code true} if the link is broken,
+     *         {@code false} otherwise
      */
 
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
         HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
-            .method("HEAD", HttpRequest.BodyPublishers.noBody())
-            .build();
+                .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                .build();
 
         return HTTP_CLIENT.sendAsync(headRequest, HttpResponse.BodyHandlers.discarding())
-            .thenApply(response -> {
-                int status = response.statusCode();
-                return status < 200 || status >= 400;
-            })
-            .exceptionally(ignored -> true)
-            .thenCompose(result -> {
-                if (!Boolean.TRUE.equals(result)) {
-                    return CompletableFuture.completedFuture(false);
-                }
-                HttpRequest getRequest = HttpRequest.newBuilder(URI.create(url)).GET().build();
-                return HTTP_CLIENT.sendAsync(getRequest, HttpResponse.BodyHandlers.discarding())
-                    .thenApply(resp -> resp.statusCode() >= 400)
-                    .exceptionally(ignored -> true); // still never null
-            });
+                .thenApply(response -> {
+                    int status = response.statusCode();
+                    // 2xx and 3xx are success, 4xx and 5xx are errors
+                    return status >= 400;
+                })
+                .exceptionally(ignored -> true)
+                .thenCompose(result -> {
+                    if (!Boolean.TRUE.equals(result)) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    HttpRequest fallbackGetRequest = HttpRequest.newBuilder(URI.create(url)).GET().build();
+                    return HTTP_CLIENT.sendAsync(fallbackGetRequest, HttpResponse.BodyHandlers.discarding())
+                            .thenApply(resp -> resp.statusCode() >= 400)
+                            .exceptionally(ignored -> true);
+                });
     }
 
     /**
-     * Replaces all broken links in the given text with the provided replacement string.
+     * Replaces all broken HTTP(S) links in the given text.
      *
-     * <p>
-     * Example:
-     * 
+     * <p>Each detected link is checked asynchronously using
+     * {@link #isLinkBroken(String)}. Only links confirmed as broken
+     * are replaced. Duplicate URLs are checked only once and all occurrences
+     * are replaced if found to be broken.
+     *
+     * <p>This method does not block - all link checks are performed
+     * asynchronously and combined into a single {@code CompletableFuture}.
+     *
+     * <p>Example:
      * <pre>{@code
      * replaceDeadLinks("""
-     *         Test
-     *         http://deadlink/1
-     *         http://workinglink/1
-     *         """, "broken")
+     *   Test
+     *   http://deadlink/1
+     *   http://workinglink/1
+     * """, "(broken link)")
      * }</pre>
      *
-     * <p>
-     * Results in:
-     * 
+     * <p>Results in:
      * <pre>{@code
      * Test
-     * broken
+     * (broken link)
      * http://workinglink/1
      * }</pre>
      *
      * @param text the input text containing URLs
-     * @param replacement the string to replace broken links with
-     * @return a future containing the modified text
+     * @param replacement the string used to replace broken links
+     * @return a {@code CompletableFuture} that completes with the modified text,
+     *         or the original text if no broken links were found
      */
+
 
     public static CompletableFuture<String> replaceDeadLinks(String text, String replacement) {
         List<String> links = extractLinks(text, DEFAULT_FILTERS);
@@ -148,25 +200,43 @@ public class LinkDetection {
         }
 
         List<CompletableFuture<String>> deadLinkFutures = links.stream()
-            .distinct()
-            .map(link -> isLinkBroken(link)
-                .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? link : null))
+                .distinct()
+                .map(link -> isLinkBroken(link)
+                        .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? link : null))
 
-            .toList();
+                .toList();
 
         return CompletableFuture.allOf(deadLinkFutures.toArray(new CompletableFuture[0]))
-            .thenApply(ignored -> deadLinkFutures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .toList())
-            .thenApply(deadLinks -> {
-                String result = text;
-                for (String deadLink : deadLinks) {
-                    result = result.replace(deadLink, replacement);
-                }
-                return result;
-            });
+                .thenApply(ignored -> deadLinkFutures.stream()
+                        .map(CompletableFuture::join)
+                        .filter(Objects::nonNull)
+                        .toList())
+                .thenApply(deadLinks -> {
+                    String result = text;
+                    for (String deadLink : deadLinks) {
+                        result = result.replace(deadLink, replacement);
+                    }
+                    return result;
+                });
     }
+
+    /**
+     * Converts a detected {@link Url} into a normalized link string.
+     *
+     * <p>Applies the provided {@link LinkFilter}s:
+     * <ul>
+     *   <li>{@link LinkFilter#SUPPRESSED} - filters URLs wrapped in angle brackets</li>
+     *   <li>{@link LinkFilter#NON_HTTP_SCHEME} - filters non-HTTP(S) schemes</li>
+     * </ul>
+     *
+     * <p>Additionally removes trailing punctuation such as commas or periods
+     * from the detected URL.
+     *
+     * @param url the detected URL
+     * @param filter active link filters to apply
+     * @return an {@link Optional} containing the normalized link,
+     *         or {@code Optional.empty()} if the link should be filtered out
+     */
 
     private static Optional<String> toLink(Url url, Set<LinkFilter> filter) {
         String raw = url.getOriginalUrl();
@@ -188,5 +258,4 @@ public class LinkDetection {
         }
         return Optional.of(link);
     }
-
 }
