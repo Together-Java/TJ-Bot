@@ -12,8 +12,12 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.UserInteractionType;
@@ -28,7 +32,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 
 /**
  * Listens for new help threads being created. That is, a user posted a question in the help forum.
@@ -38,6 +44,7 @@ import java.util.stream.Collectors;
  */
 public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
+    private static final Logger log = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
     private final HelpSystemHelper helper;
 
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
@@ -46,6 +53,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         .build();
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
+    private static final int FIRST_MESSAGE_ONLY = 1;
 
     /**
      * Creates a new instance.
@@ -167,9 +175,22 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         ThreadChannel channel = event.getChannel().asThreadChannel();
         Member interactionUser = Objects.requireNonNull(event.getMember());
 
+        Consumer<Throwable> handleParentMessageDeleted = error -> {
+            if (error instanceof ErrorResponseException ere
+                    && ere.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                channel.getIterableHistory().reverse().limit(FIRST_MESSAGE_ONLY).queue(messages -> {
+                    if (!messages.isEmpty()) {
+                        handleDismiss(interactionUser, channel, messages.getFirst(), event, args);
+                    }
+                });
+            } else {
+                log.error("Failed to retrieve start message: ", error);
+            }
+        };
+
         channel.retrieveStartMessage()
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
-                    event, args));
+                    event, args), handleParentMessageDeleted);
 
     }
 
