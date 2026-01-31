@@ -2,9 +2,16 @@ package org.togetherjava.tjbot.features.chatgpt;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.files.FileCreateParams;
+import com.openai.models.files.FileObject;
+import com.openai.models.files.FilePurpose;
 import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputText;
+import com.openai.models.responses.Tool;
+import com.openai.models.responses.WebSearchTool;
+import com.openai.models.vectorstores.VectorStore;
+import com.openai.models.vectorstores.VectorStoreCreateParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +19,10 @@ import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -22,6 +32,8 @@ import java.util.stream.Collectors;
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
+
+    private static final String VECTOR_STORE_XKCD = "xkcd-comics";
 
     /** The maximum number of tokens allowed for the generated answer. */
     private static final int MAX_TOKENS = 1000;
@@ -89,13 +101,102 @@ public class ChatGptService {
     }
 
     /**
+     * Sends a prompt to the ChatGPT API with web capabilities and returns the response.
+     *
+     * @param prompt The prompt to send to ChatGPT.
+     * @param chatModel The AI model to use for this request.
+     * @return response from ChatGPT as a String.
+     */
+    public Optional<String> sendWebPrompt(String prompt, ChatGptModel chatModel) {
+        Tool webSearchTool = Tool
+            .ofWebSearch(WebSearchTool.builder().type(WebSearchTool.Type.WEB_SEARCH).build());
+
+        return sendPrompt(prompt, chatModel, List.of(webSearchTool));
+    }
+
+    /**
      * Sends a prompt to the ChatGPT API and returns the response.
      *
      * @param prompt The prompt to send to ChatGPT.
      * @param chatModel The AI model to use for this request.
      * @return response from ChatGPT as a String.
      */
-    private Optional<String> sendPrompt(String prompt, ChatGptModel chatModel) {
+    public Optional<String> sendPrompt(String prompt, ChatGptModel chatModel) {
+        return sendPrompt(prompt, chatModel, List.of());
+    }
+
+    public Optional<String> getUploadedFileId(String filePath) {
+        return openAIClient.files()
+            .list()
+            .items()
+            .stream()
+            .filter(fileObj -> fileObj.filename().equalsIgnoreCase(filePath))
+            .map(FileObject::id)
+            .findFirst();
+    }
+
+    public Optional<String> uploadFileIfNotExists(Path filePath, FilePurpose purpose) {
+        if (isDisabled) {
+            logger.warn("ChatGPT file upload attempted but service is disabled");
+            return Optional.empty();
+        }
+
+        File file = filePath.toFile();
+        if (!file.exists()) {
+            logger.warn("Could not find file '{}' to upload to ChatGPT", filePath);
+            return Optional.empty();
+        }
+
+        if (getUploadedFileId(filePath.toString()).isPresent()) {
+            logger.warn("File '{}' already exists.", filePath);
+            return Optional.empty();
+        }
+
+        FileCreateParams fileCreateParams =
+                FileCreateParams.builder().file(filePath).purpose(purpose).build();
+
+        FileObject fileObj = openAIClient.files().create(fileCreateParams);
+        String id = fileObj.id();
+
+        logger.info("Uploaded file to ChatGPT with ID {}", id);
+        return Optional.of(id);
+    }
+
+    public String createOrGetXkcdVectorStore(String fileId) {
+        List<VectorStore> vectorStores = openAIClient.vectorStores()
+            .list()
+            .items()
+            .stream()
+            .filter(vectorStore -> vectorStore.name().equalsIgnoreCase(VECTOR_STORE_XKCD))
+            .toList();
+        Optional<VectorStore> vectorStore = vectorStores.stream().findFirst();
+
+        if (vectorStore.isPresent()) {
+            return vectorStore.get().id();
+        }
+
+        VectorStoreCreateParams params = VectorStoreCreateParams.builder()
+            .name(VECTOR_STORE_XKCD)
+            .fileIds(List.of(fileId))
+            .build();
+
+        VectorStore newVectorStore = openAIClient.vectorStores().create(params);
+        String vectorStoreId = newVectorStore.id();
+
+        logger.info("Created vector store {} with XKCD data", vectorStoreId);
+
+        return vectorStoreId;
+    }
+
+    /**
+     * Sends a prompt to the ChatGPT API and returns the response.
+     *
+     * @param prompt The prompt to send to ChatGPT.
+     * @param chatModel The AI model to use for this request.
+     * @param tools The list of OpenAPI tools to enhance the prompt's answers.
+     * @return response from ChatGPT as a String.
+     */
+    public Optional<String> sendPrompt(String prompt, ChatGptModel chatModel, List<Tool> tools) {
         if (isDisabled) {
             logger.warn("ChatGPT request attempted but service is disabled");
             return Optional.empty();
@@ -107,6 +208,7 @@ public class ChatGptService {
             ResponseCreateParams params = ResponseCreateParams.builder()
                 .model(chatModel.toChatModel())
                 .input(prompt)
+                .tools(tools)
                 .maxOutputTokens(MAX_TOKENS)
                 .build();
 

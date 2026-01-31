@@ -81,6 +81,7 @@ import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
 import org.togetherjava.tjbot.features.voicechat.DynamicVoiceChat;
+import org.togetherjava.tjbot.features.xkcd.XkcdCommand;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -213,6 +214,7 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
+        features.add(new XkcdCommand(chatGptService));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
