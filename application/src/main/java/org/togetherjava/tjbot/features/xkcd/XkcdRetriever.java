@@ -27,6 +27,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
+/**
+ * Retrieves and caches XKCD comic posts from the official XKCD JSON API.
+ * <p>
+ * This class handles fetching XKCD comics (1-{@value #XKCD_POSTS_AMOUNT}, excluding the joke comic
+ * #404) using concurrent HTTP requests with rate limiting via semaphore and thread pool.
+ * <p>
+ * Posts are cached locally in {@value #SAVED_XKCD_PATH} as JSON and uploaded to OpenAI using the
+ * provided {@link ChatGptService} if not already present.
+ */
 public class XkcdRetriever {
 
     private static final Logger logger = LoggerFactory.getLogger(XkcdRetriever.class);
@@ -74,6 +83,18 @@ public class XkcdRetriever {
         fetchAllXkcdPosts(savedXckdsPath);
     }
 
+    public Optional<XkcdPost> getXkcdPost(int id) {
+        return Optional.ofNullable(xkcdPosts.get(id));
+    }
+
+    public String getXkcdUploadedFileId() {
+        return xkcdUploadedFileId;
+    }
+
+    public Map<Integer, XkcdPost> getXkcdPosts() {
+        return xkcdPosts;
+    }
+
     private void fetchAllXkcdPosts(Path savedXckdsPath) {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         Semaphore semaphore = new Semaphore(FETCH_XKCD_POSTS_SEMAPHORE_SIZE);
@@ -105,11 +126,7 @@ public class XkcdRetriever {
                 SAVED_XKCD_PATH);
     }
 
-    public Optional<XkcdPost> getXkcdPost(int id) {
-        return Optional.ofNullable(xkcdPosts.get(id));
-    }
-
-    public CompletableFuture<Optional<XkcdPost>> retrieveXkcdPost(int id) {
+    private CompletableFuture<Optional<XkcdPost>> retrieveXkcdPost(int id) {
         HttpRequest request =
                 HttpRequest.newBuilder(URI.create(String.format(XKCD_GET_URL, id))).build();
 
@@ -150,7 +167,7 @@ public class XkcdRetriever {
 
     }
 
-    public void saveToFile(Path path, Map<Integer, XkcdPost> posts) {
+    private void saveToFile(Path path, Map<Integer, XkcdPost> posts) {
         try {
             objectMapper.writeValue(path.toFile(), posts);
             logger.info("Saved XKCD posts to '{}'", path);
@@ -173,13 +190,5 @@ public class XkcdRetriever {
         } catch (IOException e) {
             logger.error("Failed to load XKCD posts from {}", path, e);
         }
-    }
-
-    public String getXkcdUploadedFileId() {
-        return xkcdUploadedFileId;
-    }
-
-    public Map<Integer, XkcdPost> getXkcdPosts() {
-        return xkcdPosts;
     }
 }
