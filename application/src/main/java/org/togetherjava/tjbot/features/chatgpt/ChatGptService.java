@@ -162,7 +162,7 @@ public class ChatGptService {
         return Optional.of(id);
     }
 
-    public String createOrGetXkcdVectorStore(String fileId) {
+    public String createOrGetVectorStore(String fileId) {
         List<VectorStore> vectorStores = openAIClient.vectorStores()
             .list()
             .items()

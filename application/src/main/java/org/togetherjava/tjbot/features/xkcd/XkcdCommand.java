@@ -124,8 +124,7 @@ public final class XkcdCommand extends SlashCommandAdapter {
                 event.deferReply().queue();
 
                 String xkcdComicsFileId = xkcdRetriever.getXkcdUploadedFileId();
-                String xkcdVectorStore =
-                        chatGptService.createOrGetXkcdVectorStore(xkcdComicsFileId);
+                String xkcdVectorStore = chatGptService.createOrGetVectorStore(xkcdComicsFileId);
                 FileSearchTool fileSearch =
                         FileSearchTool.builder().vectorStoreIds(List.of(xkcdVectorStore)).build();
 
