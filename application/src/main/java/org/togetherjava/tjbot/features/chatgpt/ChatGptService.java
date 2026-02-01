@@ -19,7 +19,7 @@ import org.togetherjava.tjbot.config.Config;
 
 import javax.annotation.Nullable;
 
-import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -141,8 +141,7 @@ public class ChatGptService {
             return Optional.empty();
         }
 
-        File file = filePath.toFile();
-        if (!file.exists()) {
+        if (!Files.notExists(filePath)) {
             logger.warn("Could not find file '{}' to upload to ChatGPT", filePath);
             return Optional.empty();
         }
