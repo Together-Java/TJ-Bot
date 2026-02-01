@@ -36,6 +36,9 @@ public class XkcdRetriever {
     private static final String XKCD_GET_URL = "https://xkcd.com/%d/info.0.json";
     public static final String SAVED_XKCD_PATH = "xkcd.generated.json";
     private static final int XKCD_POSTS_AMOUNT = 3201;
+    private static final int FETCH_XCKD_POSTS_POOL_SIZE = 20;
+    private static final int FETCH_XKCD_POSTS_SEMAPHORE_SIZE = 10;
+    private static final int FETCH_XKCD_POSTS_THREAD_SLEEP_MS = 50;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<Integer, XkcdPost> xkcdPosts = new HashMap<>();
@@ -66,33 +69,34 @@ public class XkcdRetriever {
             return;
         }
 
+        logger.info("Could not find XKCD posts locally saved in '{}' so will fetch...",
+                SAVED_XKCD_PATH);
+        fetchAllXkcdPosts(savedXckdsPath);
+    }
+
+    private void fetchAllXkcdPosts(Path savedXckdsPath) {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        Semaphore semaphore = new Semaphore(10);
+        Semaphore semaphore = new Semaphore(FETCH_XKCD_POSTS_SEMAPHORE_SIZE);
 
-        logger.info("Could not find file '{}', fetching {} XKCD posts...", SAVED_XKCD_PATH,
-                XKCD_POSTS_AMOUNT);
-        try (ExecutorService executor = Executors.newFixedThreadPool(20)) {
-            try {
-                CompletableFuture.allOf(IntegerRange.of(1, XKCD_POSTS_AMOUNT)
-                    .toIntStream()
-                    .filter(id -> id != 404) // XKCD has a joke on comic ID 404 so exclude
-                    .mapToObj(xkcdId -> CompletableFuture.runAsync(() -> {
-                        semaphore.acquireUninterruptibly();
-                        try {
-                            Optional<XkcdPost> postOptional = this.retrieveXkcdPost(xkcdId).join();
-                            postOptional.ifPresent(post -> xkcdPosts.put(xkcdId, post));
+        logger.info("Fetching {} XKCD posts...", XKCD_POSTS_AMOUNT);
+        try (ExecutorService executor = Executors.newFixedThreadPool(FETCH_XCKD_POSTS_POOL_SIZE)) {
+            CompletableFuture.allOf(IntegerRange.of(1, XKCD_POSTS_AMOUNT)
+                .toIntStream()
+                .filter(id -> id != 404) // XKCD has a joke on comic ID 404 so exclude
+                .mapToObj(xkcdId -> CompletableFuture.runAsync(() -> {
+                    semaphore.acquireUninterruptibly();
+                    try {
+                        Optional<XkcdPost> postOptional = this.retrieveXkcdPost(xkcdId).join();
+                        postOptional.ifPresent(post -> xkcdPosts.put(xkcdId, post));
 
-                            Thread.sleep(50);
-                        } catch (InterruptedException _) {
-                            Thread.currentThread().interrupt();
-                        } finally {
-                            semaphore.release();
-                        }
-                    }, executor))
-                    .toArray(CompletableFuture[]::new)).join();
-            } finally {
-                executor.shutdown();
-            }
+                        Thread.sleep(FETCH_XKCD_POSTS_THREAD_SLEEP_MS);
+                    } catch (InterruptedException _) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        semaphore.release();
+                    }
+                }, executor))
+                .toArray(CompletableFuture[]::new)).join();
         }
 
         saveToFile(savedXckdsPath, xkcdPosts);

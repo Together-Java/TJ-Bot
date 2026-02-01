@@ -49,6 +49,7 @@ public final class XkcdCommand extends SlashCommandAdapter {
     public static final String SUBCOMMAND_CUSTOM = "custom";
     public static final String LAST_MESSAGES_AMOUNT_OPTION_NAME = "amount";
     public static final String XKCD_ID_OPTION_NAME = "id";
+    private static final String VECTOR_STORE_XKCD = "xkcd-comics";
     public static final int MAXIMUM_MESSAGE_HISTORY = 100;
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
     private static final Pattern XKCD_POST_PATTERN = Pattern.compile("^\\D*(\\d+)");
@@ -119,37 +120,8 @@ public final class XkcdCommand extends SlashCommandAdapter {
             .getHistory()
             .retrievePast(messagesAmount)
             .queue(messages -> {
-                String discordChat = formatDiscordChatHistory(messages);
-
                 event.deferReply().queue();
-
-                String xkcdComicsFileId = xkcdRetriever.getXkcdUploadedFileId();
-                String xkcdVectorStore = chatGptService.createOrGetVectorStore(xkcdComicsFileId);
-                FileSearchTool fileSearch =
-                        FileSearchTool.builder().vectorStoreIds(List.of(xkcdVectorStore)).build();
-
-                Tool tool = Tool.ofFileSearch(fileSearch);
-
-                Optional<String> responseOptional = chatGptService.sendPrompt(
-                        getChatgptRelevantPrompt(discordChat), CHAT_GPT_MODEL, List.of(tool));
-
-                Optional<Integer> responseIdOptional =
-                        getXkcdIdFromMessage(responseOptional.orElseThrow());
-
-                if (responseIdOptional.isEmpty()) {
-                    event.getHook().setEphemeral(true).sendMessage(CHATGPT_NO_ID_MESSAGE).queue();
-                    return;
-                }
-
-                int responseId = responseIdOptional.orElseThrow();
-
-                logger.debug("Response: {}", responseOptional.orElseThrow());
-
-                logger.debug("ChatGPT chose XKCD ID: {}", responseId);
-                Optional<MessageEmbed> embedOptional =
-                        constructEmbed(responseId, "Most relevant XKCD according to ChatGPT.");
-
-                embedOptional.ifPresent(embed -> event.getHook().sendMessageEmbeds(embed).queue());
+                sendRelevantXkcdEmbedFromMessages(messages, event);
             }, error -> logger.error("Failed to retrieve the chat history in #{}",
                     messageChannelUnion.getName(), error));
     }
@@ -174,6 +146,36 @@ public final class XkcdCommand extends SlashCommandAdapter {
                         .queue();
                     logger.error("Could not find XKCD with ID #{}", xkcdId);
                 });
+    }
+
+    private void sendRelevantXkcdEmbedFromMessages(List<Message> messages,
+            SlashCommandInteractionEvent event) {
+        String discordChat = formatDiscordChatHistory(messages);
+        String xkcdComicsFileId = xkcdRetriever.getXkcdUploadedFileId();
+        String xkcdVectorStore =
+                chatGptService.createOrGetVectorStore(xkcdComicsFileId, VECTOR_STORE_XKCD);
+        FileSearchTool fileSearch =
+                FileSearchTool.builder().vectorStoreIds(List.of(xkcdVectorStore)).build();
+
+        Tool tool = Tool.ofFileSearch(fileSearch);
+
+        Optional<String> responseOptional = chatGptService
+            .sendPrompt(getChatgptRelevantPrompt(discordChat), CHAT_GPT_MODEL, List.of(tool));
+
+        Optional<Integer> responseIdOptional = getXkcdIdFromMessage(responseOptional.orElseThrow());
+
+        if (responseIdOptional.isEmpty()) {
+            event.getHook().setEphemeral(true).sendMessage(CHATGPT_NO_ID_MESSAGE).queue();
+            return;
+        }
+
+        int responseId = responseIdOptional.orElseThrow();
+
+        logger.debug("ChatGPT chose XKCD ID: {}", responseId);
+        Optional<MessageEmbed> embedOptional =
+                constructEmbed(responseId, "Most relevant XKCD according to ChatGPT.");
+
+        embedOptional.ifPresent(embed -> event.getHook().sendMessageEmbeds(embed).queue());
     }
 
     private Optional<MessageEmbed> constructEmbed(int xkcdId, String footer) {

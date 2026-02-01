@@ -9,7 +9,6 @@ import com.openai.models.responses.Response;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputText;
 import com.openai.models.responses.Tool;
-import com.openai.models.responses.WebSearchTool;
 import com.openai.models.vectorstores.VectorStore;
 import com.openai.models.vectorstores.VectorStoreCreateParams;
 import org.slf4j.Logger;
@@ -32,8 +31,6 @@ import java.util.stream.Collectors;
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
-
-    private static final String VECTOR_STORE_XKCD = "xkcd-comics";
 
     /** The maximum number of tokens allowed for the generated answer. */
     private static final int MAX_TOKENS = 1000;
@@ -101,20 +98,6 @@ public class ChatGptService {
     }
 
     /**
-     * Sends a prompt to the ChatGPT API with web capabilities and returns the response.
-     *
-     * @param prompt The prompt to send to ChatGPT.
-     * @param chatModel The AI model to use for this request.
-     * @return response from ChatGPT as a String.
-     */
-    public Optional<String> sendWebPrompt(String prompt, ChatGptModel chatModel) {
-        Tool webSearchTool = Tool
-            .ofWebSearch(WebSearchTool.builder().type(WebSearchTool.Type.WEB_SEARCH).build());
-
-        return sendPrompt(prompt, chatModel, List.of(webSearchTool));
-    }
-
-    /**
      * Sends a prompt to the ChatGPT API and returns the response.
      *
      * @param prompt The prompt to send to ChatGPT.
@@ -125,6 +108,13 @@ public class ChatGptService {
         return sendPrompt(prompt, chatModel, List.of());
     }
 
+    /**
+     * Lists all files uploaded to OpenAI and returns the ID of the first file matching the given
+     * filename (case-insensitive).
+     *
+     * @param filePath The filename to search for among uploaded files.
+     * @return An Optional containing the file ID if found, or empty if no matching file exists.
+     */
     public Optional<String> getUploadedFileId(String filePath) {
         return openAIClient.files()
             .list()
@@ -135,6 +125,18 @@ public class ChatGptService {
             .findFirst();
     }
 
+    /**
+     * Uploads the specified file to OpenAI if it exists locally and hasn't been uploaded before.
+     *
+     * @param filePath The local path to the file to upload.
+     * @param purpose The OpenAI file purpose (e.g., {@link FilePurpose#ASSISTANTS})
+     * @return an Optional containing the uploaded file ID, or empty if:
+     *         <ul>
+     *         <li>service is disabled</li>
+     *         <li>file doesn't exist locally</li>
+     *         <li>file with matching name already uploaded</li>
+     *         </ul>
+     */
     public Optional<String> uploadFileIfNotExists(Path filePath, FilePurpose purpose) {
         if (isDisabled) {
             logger.warn("ChatGPT file upload attempted but service is disabled");
@@ -161,29 +163,40 @@ public class ChatGptService {
         return Optional.of(id);
     }
 
-    public String createOrGetVectorStore(String fileId) {
+    /**
+     * Creates a new vector store with the given file ID if none exists or returns the ID of the
+     * existing vector store with that name.
+     * <p>
+     * You can use this for RAG purposes, it is an effective way to give ChatGPT extra information
+     * from what it has been trained.
+     *
+     * @param fileId The ID of the file to include in the new vector store.
+     * @return The vector store ID (existing or newly created).
+     */
+    public String createOrGetVectorStore(String fileId, String vectorStoreName) {
         List<VectorStore> vectorStores = openAIClient.vectorStores()
             .list()
             .items()
             .stream()
-            .filter(vectorStore -> vectorStore.name().equalsIgnoreCase(VECTOR_STORE_XKCD))
+            .filter(vectorStore -> vectorStore.name().equalsIgnoreCase(vectorStoreName))
             .toList();
         Optional<VectorStore> vectorStore = vectorStores.stream().findFirst();
 
         if (vectorStore.isPresent()) {
-            return vectorStore.get().id();
+            String vectorStoreId = vectorStore.get().id();
+            logger.debug("Got vector store {}", vectorStoreId);
+            return vectorStoreId;
         }
 
         VectorStoreCreateParams params = VectorStoreCreateParams.builder()
-            .name(VECTOR_STORE_XKCD)
+            .name(vectorStoreName)
             .fileIds(List.of(fileId))
             .build();
 
         VectorStore newVectorStore = openAIClient.vectorStores().create(params);
         String vectorStoreId = newVectorStore.id();
 
-        logger.info("Created vector store {} with XKCD data", vectorStoreId);
-
+        logger.debug("Created vector store {}", vectorStoreId);
         return vectorStoreId;
     }
 
