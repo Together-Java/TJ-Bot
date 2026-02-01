@@ -43,7 +43,7 @@ public class XkcdRetriever {
     private static final HttpClient CLIENT =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private static final String XKCD_GET_URL = "https://xkcd.com/%d/info.0.json";
-    public static final String SAVED_XKCD_PATH = "xkcd.generated.json";
+    private static final String SAVED_XKCD_PATH = "xkcd.generated.json";
     private static final int XKCD_POSTS_AMOUNT = 3201;
     private static final int FETCH_XCKD_POSTS_POOL_SIZE = 20;
     private static final int FETCH_XKCD_POSTS_SEMAPHORE_SIZE = 10;
@@ -51,8 +51,8 @@ public class XkcdRetriever {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<Integer, XkcdPost> xkcdPosts = new HashMap<>();
-    private String xkcdUploadedFileId;
     private final ChatGptService chatGptService;
+    private String xkcdUploadedFileId;
 
     public XkcdRetriever(ChatGptService chatGptService) {
         this.chatGptService = chatGptService;

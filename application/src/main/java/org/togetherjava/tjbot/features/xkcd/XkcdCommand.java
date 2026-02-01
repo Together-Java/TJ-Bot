@@ -44,16 +44,15 @@ public final class XkcdCommand extends SlashCommandAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(XkcdCommand.class);
 
-    public static final String COMMAND_NAME = "xkcd";
-    public static final String SUBCOMMAND_RELEVANT = "relevant";
-    public static final String SUBCOMMAND_CUSTOM = "custom";
-    public static final String LAST_MESSAGES_AMOUNT_OPTION_NAME = "amount";
-    public static final String XKCD_ID_OPTION_NAME = "id";
+    private static final String COMMAND_NAME = "xkcd";
+    private static final String SUBCOMMAND_RELEVANT = "relevant";
+    private static final String SUBCOMMAND_CUSTOM = "custom";
+    private static final String LAST_MESSAGES_AMOUNT_OPTION_NAME = "amount";
+    private static final String XKCD_ID_OPTION_NAME = "id";
+    private static final int MAXIMUM_MESSAGE_HISTORY = 100;
     private static final String VECTOR_STORE_XKCD = "xkcd-comics";
-    public static final int MAXIMUM_MESSAGE_HISTORY = 100;
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
     private static final Pattern XKCD_POST_PATTERN = Pattern.compile("^\\D*(\\d+)");
-
     private static final String CHATGPT_NO_ID_MESSAGE =
             "ChatGPT could not respond with a XKCD post ID.";
 
