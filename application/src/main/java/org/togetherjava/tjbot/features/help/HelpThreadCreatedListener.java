@@ -53,7 +53,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         .build();
     private final ComponentIdInteractor componentIdInteractor =
             new ComponentIdInteractor(getInteractionType(), getName());
-    private static final int FIRST_MESSAGE_ONLY = 1;
 
     /**
      * Creates a new instance.
@@ -167,6 +166,25 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
+    private Consumer<Throwable> handleParentMessageDeleted(Member user, ThreadChannel channel,
+            ButtonInteractionEvent event, List<String> args) {
+        int noOfMessages = 1; // we only care about first message from channel history
+        return error -> {
+            if (error instanceof ErrorResponseException ere
+                    && ere.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                channel.getIterableHistory().reverse().limit(noOfMessages).queue(messages -> {
+                    if (!messages.isEmpty()) {
+                        handleDismiss(user, channel, messages.getFirst(), event, args);
+                    }
+                });
+            } else {
+                log.error(
+                        "Trying to dismiss AI help message for thread: {}, unable to find original message.",
+                        channel.getId(), error);
+            }
+        };
+    }
+
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
         // This method handles chatgpt's automatic response "dismiss" button
@@ -175,22 +193,10 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         ThreadChannel channel = event.getChannel().asThreadChannel();
         Member interactionUser = Objects.requireNonNull(event.getMember());
 
-        Consumer<Throwable> handleParentMessageDeleted = error -> {
-            if (error instanceof ErrorResponseException ere
-                    && ere.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                channel.getIterableHistory().reverse().limit(FIRST_MESSAGE_ONLY).queue(messages -> {
-                    if (!messages.isEmpty()) {
-                        handleDismiss(interactionUser, channel, messages.getFirst(), event, args);
-                    }
-                });
-            } else {
-                log.error("Failed to retrieve start message: ", error);
-            }
-        };
-
         channel.retrieveStartMessage()
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
-                    event, args), handleParentMessageDeleted);
+                    event, args),
+                    handleParentMessageDeleted(interactionUser, channel, event, args));
 
     }
 
