@@ -20,11 +20,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -36,25 +39,23 @@ import java.util.concurrent.Semaphore;
  * Posts are cached locally in {@value #SAVED_XKCD_PATH} as JSON and uploaded to OpenAI using the
  * provided {@link ChatGptService} if not already present.
  */
-public class XkcdRetriever {
+public class XkcdService {
 
-    private static final Logger logger = LoggerFactory.getLogger(XkcdRetriever.class);
+    private static final Logger logger = LoggerFactory.getLogger(XkcdService.class);
 
     private static final HttpClient CLIENT =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     private static final String XKCD_GET_URL = "https://xkcd.com/%d/info.0.json";
     private static final String SAVED_XKCD_PATH = "xkcd.generated.json";
     private static final int XKCD_POSTS_AMOUNT = 3201;
-    private static final int FETCH_XCKD_POSTS_POOL_SIZE = 20;
     private static final int FETCH_XKCD_POSTS_SEMAPHORE_SIZE = 10;
-    private static final int FETCH_XKCD_POSTS_THREAD_SLEEP_MS = 50;
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<Integer, XkcdPost> xkcdPosts = new HashMap<>();
     private final ChatGptService chatGptService;
     private String xkcdUploadedFileId;
 
-    public XkcdRetriever(ChatGptService chatGptService) {
+    public XkcdService(ChatGptService chatGptService) {
         this.chatGptService = chatGptService;
 
         Optional<String> xkcdUploadedFileIdOptional =
@@ -97,27 +98,30 @@ public class XkcdRetriever {
 
     private void fetchAllXkcdPosts(Path savedXckdsPath) {
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        Semaphore semaphore = new Semaphore(FETCH_XKCD_POSTS_SEMAPHORE_SIZE);
 
         logger.info("Fetching {} XKCD posts...", XKCD_POSTS_AMOUNT);
-        try (ExecutorService executor = Executors.newFixedThreadPool(FETCH_XCKD_POSTS_POOL_SIZE)) {
-            CompletableFuture.allOf(IntegerRange.of(1, XKCD_POSTS_AMOUNT)
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            Semaphore semaphore = new Semaphore(FETCH_XKCD_POSTS_SEMAPHORE_SIZE);
+            List<? extends Future<?>> futures = IntegerRange.of(1, XKCD_POSTS_AMOUNT)
                 .toIntStream()
                 .filter(id -> id != 404) // XKCD has a joke on comic ID 404 so exclude
-                .mapToObj(xkcdId -> CompletableFuture.runAsync(() -> {
+                .mapToObj(xkcdId -> executor.submit(() -> {
                     semaphore.acquireUninterruptibly();
-                    try {
-                        Optional<XkcdPost> postOptional = this.retrieveXkcdPost(xkcdId).join();
-                        postOptional.ifPresent(post -> xkcdPosts.put(xkcdId, post));
+                    retrieveXkcdPost(xkcdId).join().ifPresent(post -> xkcdPosts.put(xkcdId, post));
+                    semaphore.release();
+                }))
+                .toList();
 
-                        Thread.sleep(FETCH_XKCD_POSTS_THREAD_SLEEP_MS);
-                    } catch (InterruptedException _) {
-                        Thread.currentThread().interrupt();
-                    } finally {
-                        semaphore.release();
-                    }
-                }, executor))
-                .toArray(CompletableFuture[]::new)).join();
+            try {
+                for (Future<?> future : futures) {
+                    future.get();
+                }
+            } catch (InterruptedException e) {
+                logger.error("Failed to wait for future", e);
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                logger.error("Could not get result from future", e);
+            }
         }
 
         saveToFile(savedXckdsPath, xkcdPosts);

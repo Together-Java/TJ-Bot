@@ -167,8 +167,10 @@ public class ChatGptService {
      * Creates a new vector store with the given file ID if none exists or returns the ID of the
      * existing vector store with that name.
      * <p>
-     * You can use this for RAG purposes, it is an effective way to give ChatGPT extra information
-     * from what it has been trained.
+     * A vector store indexes document content as embeddings for semantic search. You can use this
+     * for RAG (Retrieval-Augmented Generation), where the model retrieves relevant context from
+     * your documents before generating responses, effectively giving it access to information
+     * beyond its training data.
      *
      * @param fileId The ID of the file to include in the new vector store.
      * @return The vector store ID (existing or newly created).

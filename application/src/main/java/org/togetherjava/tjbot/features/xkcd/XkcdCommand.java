@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import org.apache.commons.lang3.IntegerRange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
  * <li>{@code /xkcd custom <id>} - Posts a specific XKCD comic by ID from local cache.</li>
  * </ul>
  *
- * Relies on {@link XkcdRetriever} for local XKCD data and {@link ChatGptService} for AI-powered
+ * Relies on {@link XkcdService} for local XKCD data and {@link ChatGptService} for AI-powered
  * relevance matching via OpenAI's file search tool and vector stores.
  */
 public final class XkcdCommand extends SlashCommandAdapter {
@@ -50,6 +51,7 @@ public final class XkcdCommand extends SlashCommandAdapter {
     private static final String LAST_MESSAGES_AMOUNT_OPTION_NAME = "amount";
     private static final String XKCD_ID_OPTION_NAME = "id";
     private static final int MAXIMUM_MESSAGE_HISTORY = 100;
+    private static final int MESSAGE_HISTORY_CUTOFF_SIZE_KB = 40_000;
     private static final String VECTOR_STORE_XKCD = "xkcd-comics";
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
     private static final Pattern XKCD_POST_PATTERN = Pattern.compile("^\\D*(\\d+)");
@@ -57,14 +59,14 @@ public final class XkcdCommand extends SlashCommandAdapter {
             "ChatGPT could not respond with a XKCD post ID.";
 
     private final ChatGptService chatGptService;
-    private final XkcdRetriever xkcdRetriever;
+    private final XkcdService xkcdService;
 
     public XkcdCommand(ChatGptService chatGptService) {
         super(COMMAND_NAME, "Post a relevant XKCD from the chat or your own",
                 CommandVisibility.GLOBAL);
 
         this.chatGptService = chatGptService;
-        this.xkcdRetriever = new XkcdRetriever(chatGptService);
+        this.xkcdService = new XkcdService(chatGptService);
 
         OptionData lastMessagesAmountOption =
                 new OptionData(OptionType.INTEGER, LAST_MESSAGES_AMOUNT_OPTION_NAME,
@@ -81,7 +83,7 @@ public final class XkcdCommand extends SlashCommandAdapter {
                 "The XKCD number to post to the chat")
             .setMinValue(0)
             .setRequired(true)
-            .setMaxValue(xkcdRetriever.getXkcdPosts().size());
+            .setMaxValue(xkcdService.getXkcdPosts().size());
 
         SubcommandData customSubcommand = new SubcommandData(SUBCOMMAND_CUSTOM,
                 "Post your own XKCD regardless of the recent chat messages")
@@ -149,8 +151,9 @@ public final class XkcdCommand extends SlashCommandAdapter {
 
     private void sendRelevantXkcdEmbedFromMessages(List<Message> messages,
             SlashCommandInteractionEvent event) {
-        String discordChat = formatDiscordChatHistory(messages);
-        String xkcdComicsFileId = xkcdRetriever.getXkcdUploadedFileId();
+        List<Message> discordChatCutoff = cutoffDiscordChatHistory(messages);
+        String discordChatFormatted = formatDiscordChatHistory(discordChatCutoff);
+        String xkcdComicsFileId = xkcdService.getXkcdUploadedFileId();
         String xkcdVectorStore =
                 chatGptService.createOrGetVectorStore(xkcdComicsFileId, VECTOR_STORE_XKCD);
         FileSearchTool fileSearch =
@@ -158,8 +161,8 @@ public final class XkcdCommand extends SlashCommandAdapter {
 
         Tool tool = Tool.ofFileSearch(fileSearch);
 
-        Optional<String> responseOptional = chatGptService
-            .sendPrompt(getChatgptRelevantPrompt(discordChat), CHAT_GPT_MODEL, List.of(tool));
+        Optional<String> responseOptional = chatGptService.sendPrompt(
+                getChatgptRelevantPrompt(discordChatFormatted), CHAT_GPT_MODEL, List.of(tool));
 
         Optional<Integer> responseIdOptional = getXkcdIdFromMessage(responseOptional.orElseThrow());
 
@@ -174,11 +177,15 @@ public final class XkcdCommand extends SlashCommandAdapter {
         Optional<MessageEmbed> embedOptional =
                 constructEmbed(responseId, "Most relevant XKCD according to ChatGPT.");
 
-        embedOptional.ifPresent(embed -> event.getHook().sendMessageEmbeds(embed).queue());
+        embedOptional.ifPresentOrElse(embed -> event.getHook().sendMessageEmbeds(embed).queue(),
+                () -> event.getHook()
+                    .setEphemeral(true)
+                    .sendMessage("I could not find post with ID " + responseId)
+                    .queue());
     }
 
     private Optional<MessageEmbed> constructEmbed(int xkcdId, String footer) {
-        Optional<XkcdPost> xkcdPostOptional = xkcdRetriever.getXkcdPost(xkcdId);
+        Optional<XkcdPost> xkcdPostOptional = xkcdService.getXkcdPost(xkcdId);
 
         if (xkcdPostOptional.isEmpty()) {
             logger.warn("Could not find XKCD post with ID {} from local map", xkcdId);
@@ -218,6 +225,23 @@ public final class XkcdCommand extends SlashCommandAdapter {
                     message.getContentRaw()))
             .collect(Collectors.toSet())
             .toString();
+    }
+
+    private List<Message> cutoffDiscordChatHistory(List<Message> messages) {
+        int cutoffMessageIndex = (int) IntegerRange.of(0, messages.size() - 1)
+            .toIntStream()
+            .map(index -> countMessagesLength(messages.subList(0, index)))
+            .filter(length -> length < MESSAGE_HISTORY_CUTOFF_SIZE_KB)
+            .count();
+
+        return messages.subList(0, cutoffMessageIndex);
+    }
+
+    private int countMessagesLength(List<Message> messages) {
+        return messages.stream()
+            .mapToInt(message -> message.getContentRaw().length()
+                    + message.getAuthor().getName().length())
+            .sum();
     }
 
     private static String getChatgptRelevantPrompt(String discordChat) {
