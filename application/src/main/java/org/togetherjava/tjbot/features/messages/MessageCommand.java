@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.messages;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -140,6 +142,15 @@ public final class MessageCommand extends SlashCommandAdapter {
         }
     }
 
+    private boolean handleChecks(Member author, IReplyCallback event) {
+        if (!author.hasPermission(Permission.KICK_MEMBERS)) {
+            event.reply("You can not execute this command.").setEphemeral(true).queue();
+            return false;
+        }
+
+        return true;
+    }
+
     private static void handleMessageRetrieveFailed(Throwable failure, IDeferrableCallback event,
             long messageId) {
         handleMessageRetrieveFailed(failure, event, List.of(messageId));
@@ -197,6 +208,16 @@ public final class MessageCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
+        Member member = event.getMember();
+
+        if (member == null) {
+            return;
+        }
+
+        if (!handleChecks(event.getMember(), event)) {
+            return;
+        }
+
         switch (Subcommand.fromName(event.getSubcommandName())) {
             case RAW -> rawMessage(event);
             case POST -> postMessage(event);
