@@ -48,7 +48,9 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final QuoteBoardConfig quoteBoardConfig;
     private final TopHelpersConfig topHelpers;
+    private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -102,7 +104,11 @@ public final class Config {
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
             @JsonProperty(value = "selectRolesChannelPattern",
                     required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers) {
+            @JsonProperty(value = "quoteBoardConfig",
+                    required = true) QuoteBoardConfig quoteBoardConfig,
+            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
+            @JsonProperty(value = "dynamicVoiceChatConfig",
+                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -137,7 +143,9 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
+        this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
         this.topHelpers = Objects.requireNonNull(topHelpers);
+        this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
     }
 
     /**
@@ -432,6 +440,18 @@ public final class Config {
     }
 
     /**
+     * The configuration of the quote messages config.
+     *
+     * <p>
+     * >The configuration of the quote board feature. Quotes user selected messages.
+     *
+     * @return configuration of quote messages config
+     */
+    public QuoteBoardConfig getQuoteBoardConfig() {
+        return quoteBoardConfig;
+    }
+
+    /**
      * Gets the pattern matching the category that is used to display the total member count.
      *
      * @return the categories name types
@@ -456,5 +476,14 @@ public final class Config {
      */
     public TopHelpersConfig getTopHelpers() {
         return topHelpers;
+    }
+
+    /**
+     * Gets the dynamic voice chat configuration
+     *
+     * @return the dynamic voice chat configuration
+     */
+    public DynamicVoiceChatConfig getDynamicVoiceChatConfig() {
+        return dynamicVoiceChatConfig;
     }
 }

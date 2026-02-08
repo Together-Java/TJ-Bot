@@ -57,7 +57,7 @@ dependencies {
 
     implementation 'io.mikael:urlbuilder:2.0.9'
 
-    implementation 'org.jsoup:jsoup:1.21.1'
+    implementation 'org.jsoup:jsoup:1.22.1'
 
     implementation 'org.scilab.forge:jlatexmath:1.0.7'
     implementation 'org.scilab.forge:jlatexmath-font-greek:1.0.7'
@@ -69,7 +69,7 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
     implementation "com.sigpwned:jackson-modules-java17-sealed-classes:2.19.0.0"
 
-	implementation 'com.github.freva:ascii-table:1.8.0'
+	implementation 'com.github.freva:ascii-table:1.9.0'
 
     implementation 'io.github.url-detector:url-detector:0.1.23'
 
@@ -80,14 +80,13 @@ dependencies {
     implementation 'org.apache.commons:commons-text:1.15.0'
     implementation 'com.apptasticsoftware:rssreader:3.12.0'
 
-    testImplementation 'org.mockito:mockito-core:5.20.0'
+    testImplementation 'org.mockito:mockito-core:5.21.0'
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
     testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 
-    implementation "com.theokanning.openai-gpt3-java:api:$chatGPTVersion"
-    implementation "com.theokanning.openai-gpt3-java:service:$chatGPTVersion"
+    implementation "com.openai:openai-java:$chatGPTVersion"
 }
 
 application {

@@ -1,0 +1,30 @@
+when:
+  branch:
+    - develop
+    - master
+  event: push
+
+steps:
+  publish:
+    image: eclipse-temurin:25-jdk
+    environment:
+      REGISTRY_USER:
+        from_secret: REGISTRY_USER
+      REGISTRY_PASSWORD:
+        from_secret: REGISTRY_PASSWORD
+      BRANCH_NAME: ${CI_COMMIT_BRANCH}
+    commands:
+      - echo ${CI_COMMIT_BRANCH}
+      - ./gradlew jib
+
+  deploy:
+    image: alpine
+    depends_on:
+      - publish
+    environment:
+      WATCHTOWER_TOKEN:
+        from_secret: WATCHTOWER_TOKEN
+    commands:
+      - apk add --no-cache curl
+      - | 
+        curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" https://togetherjava.org:5003/v1/update

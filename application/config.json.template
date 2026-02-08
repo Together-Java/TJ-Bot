@@ -194,10 +194,25 @@
         "videoLinkPattern": "http(s)?://www\\.youtube.com.*",
         "pollIntervalInMinutes": 10
     },
+    "quoteBoardConfig": {
+        "minimumReactionsToTrigger": 5,
+        "channel": "quotes",
+        "reactionEmoji": "⭐"
+    },
     "memberCountCategoryPattern": "Info",
     "topHelpers": {
         "rolePattern": "Top Helper.*",
         "assignmentChannelPattern": "community-commands",
         "announcementChannelPattern": "hall-of-fame"
+    },
+    "dynamicVoiceChatConfig": {
+        "dynamicChannelPatterns": [
+            "Gaming",
+            "Support/Studying Room",
+            "Chit Chat"
+        ],
+        "archiveCategoryPattern": "Voice Channel Archives",
+        "cleanChannelsAmount": 20,
+        "minimumChannelsAmount": 40
     }
 }

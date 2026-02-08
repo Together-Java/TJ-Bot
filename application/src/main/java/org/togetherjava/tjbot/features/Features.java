@@ -8,6 +8,7 @@ import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
+import org.togetherjava.tjbot.features.basic.QuoteBoardForwarder;
 import org.togetherjava.tjbot.features.basic.RoleSelectCommand;
 import org.togetherjava.tjbot.features.basic.SlashCommandEducator;
 import org.togetherjava.tjbot.features.basic.SuggestionsUpDownVoter;
@@ -40,6 +41,8 @@ import org.togetherjava.tjbot.features.jshell.JShellEval;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
+import org.togetherjava.tjbot.features.messages.MessageCommand;
+import org.togetherjava.tjbot.features.messages.RewriteCommand;
 import org.togetherjava.tjbot.features.moderation.BanCommand;
 import org.togetherjava.tjbot.features.moderation.KickCommand;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
@@ -78,6 +81,7 @@ import org.togetherjava.tjbot.features.tophelper.TopHelpersCommand;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersMessageListener;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersPurgeMessagesRoutine;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
+import org.togetherjava.tjbot.features.voicechat.DynamicVoiceChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -161,6 +165,10 @@ public class Features {
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new SlashCommandEducator());
         features.add(new PinnedNotificationRemover(config));
+        features.add(new QuoteBoardForwarder(config));
+
+        // Voice receivers
+        features.add(new DynamicVoiceChat(config));
 
         // Event receivers
         features.add(new RejoinModerationRoleListener(actionsStore, config));
@@ -204,6 +212,8 @@ public class Features {
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
         features.add(new JShellCommand(jshellEval));
+        features.add(new MessageCommand());
+        features.add(new RewriteCommand(chatGptService));
         features.add(new HelpThreadStatsCommand(database));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
