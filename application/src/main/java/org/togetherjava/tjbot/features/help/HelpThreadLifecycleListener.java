@@ -96,8 +96,14 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         }
 
         long threadId = threadChannel.getIdLong();
-        int messageCount = threadChannel.getMessageCount();
-        int participantsExceptAuthor = threadChannel.getMemberCount() - 1;
+        int messageCount = threadChannel.getMessageCount(); // TODO: to be replaced with participant
+                                                            // message count
+        long threadOwnerId = threadChannel.getOwnerIdLong();
+        int participantsExceptAuthor = (int) threadChannel.getMembers()
+            .stream()
+            .filter(threadMember -> threadMember.getIdLong() != threadOwnerId)
+            .filter(m -> !m.getUser().isBot())
+            .count();
 
         database.write(context -> context.update(HELP_THREADS)
             .set(HELP_THREADS.CLOSED_AT, closedAt)
@@ -131,7 +137,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
 
     /**
      * will ignore updated tag event if all new tags belong to the categories config
-     * 
+     *
      * @param event updated tags event
      * @return boolean
      */
