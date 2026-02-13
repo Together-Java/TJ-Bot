@@ -100,7 +100,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
                     "Unable to vote on a suggestion with the configured emoji ('{}'), using fallback instead.",
                     emojiName);
             return message.addReaction(fallbackEmoji);
-        }).queue(ignored -> {
+        }).queue(_ -> {
         }, exception -> handleReactionFailure(exception, message.getIdLong()));
     }
 
