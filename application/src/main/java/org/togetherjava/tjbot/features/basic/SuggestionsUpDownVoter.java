@@ -61,7 +61,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         }, exception -> {
             if (exception instanceof ErrorResponseException responseException
                     && responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                logger.info("Create Thread skipped: ID: {}", message.getIdLong());
+                logger.info("Failed to start suggestion thread: source message deleted");
                 return;
 
             }
@@ -101,17 +101,17 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
                     emojiName);
             return message.addReaction(fallbackEmoji);
         }).queue(_ -> {
-        }, exception -> handleReactionFailure(exception, message.getIdLong()));
+        }, SuggestionsUpDownVoter::handleReactionFailure);
     }
 
-    private static void handleReactionFailure(Throwable exception, long messageId) {
+    private static void handleReactionFailure(Throwable exception) {
         if (exception instanceof ErrorResponseException responseException) {
             if (responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
                 // User blocked the bot, hence the bot can not add reactions to their messages.
                 return;
             }
             if (responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                logger.info("Reaction skipped ID: {}", messageId);
+                logger.info("Failed to react to suggestion: source message deleted");
                 return;
             }
         }
