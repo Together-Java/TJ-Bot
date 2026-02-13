@@ -57,12 +57,11 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
 
     private static void createThread(Message message) {
         String threadTitle = generateThreadTitle(message);
-        message.createThreadChannel(threadTitle).queue(null, exception -> {
+        message.createThreadChannel(threadTitle).queue(_ -> {
+        }, exception -> {
             if (exception instanceof ErrorResponseException responseException
                     && responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                logger.info(
-                        "Create Thread skipped: message was already deleted (likely by scamblocker) - ID: {}",
-                        message.getIdLong());
+                logger.info("Create Thread skipped: ID: {}", message.getIdLong());
                 return;
 
             }
@@ -102,23 +101,23 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
                     emojiName);
             return message.addReaction(fallbackEmoji);
         }).queue(ignored -> {
-        }, exception -> {
-            if (exception instanceof ErrorResponseException responseException) {
-                if (responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
-                    // User blocked the bot, hence the bot can not add reactions to their messages.
-                    // Nothing we can do here.
-                    return;
-                }
-                if (responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                    logger.info(
-                            "Reaction skipped: message was already deleted (likely by scamblocker) - ID: {}",
-                            message.getIdLong());
-                    return;
-                }
-            }
-            logger.error("Attempted to react to a suggestion, but failed", exception);
-        });
+        }, exception -> handleReactionFailure(exception, message.getIdLong()));
     }
+
+    private static void handleReactionFailure(Throwable exception, long messageId) {
+        if (exception instanceof ErrorResponseException responseException) {
+            if (responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
+                // User blocked the bot, hence the bot can not add reactions to their messages.
+                return;
+            }
+            if (responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                logger.info("Reaction skipped ID: {}", messageId);
+                return;
+            }
+        }
+        logger.error("Attempted to react to a suggestion, but failed", exception);
+    }
+
 
     private static Optional<RichCustomEmoji> getEmojiByName(String name, Guild guild) {
         return guild.getEmojisByName(name, false).stream().findAny();
