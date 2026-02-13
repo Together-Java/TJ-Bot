@@ -50,13 +50,23 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         Message message = event.getMessage();
 
         createThread(message);
+
         reactWith(config.getUpVoteEmoteName(), FALLBACK_UP_VOTE, guild, message);
         reactWith(config.getDownVoteEmoteName(), FALLBACK_DOWN_VOTE, guild, message);
     }
 
     private static void createThread(Message message) {
         String threadTitle = generateThreadTitle(message);
-        message.createThreadChannel(threadTitle).queue();
+        message.createThreadChannel(threadTitle).queue(null, exception -> {
+            if (exception instanceof ErrorResponseException responseException
+                    && responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                logger.info(
+                        "Create Thread skipped: message was already deleted (likely by scamblocker) - ID: {}",
+                        message.getIdLong());
+                return;
+
+            }
+        });
     }
 
     /**
@@ -93,13 +103,19 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
             return message.addReaction(fallbackEmoji);
         }).queue(ignored -> {
         }, exception -> {
-            if (exception instanceof ErrorResponseException responseException
-                    && responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
-                // User blocked the bot, hence the bot can not add reactions to their messages.
-                // Nothing we can do here.
-                return;
+            if (exception instanceof ErrorResponseException responseException) {
+                if (responseException.getErrorResponse() == ErrorResponse.REACTION_BLOCKED) {
+                    // User blocked the bot, hence the bot can not add reactions to their messages.
+                    // Nothing we can do here.
+                    return;
+                }
+                if (responseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
+                    logger.info(
+                            "Reaction skipped: message was already deleted (likely by scamblocker) - ID: {}",
+                            message.getIdLong());
+                    return;
+                }
             }
-
             logger.error("Attempted to react to a suggestion, but failed", exception);
         });
     }
