@@ -9,7 +9,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -37,14 +36,8 @@ public class LinkDetection {
      * Default filters applied when extracting links from text.
      *
      * <p>
-     * These filters intentionally ignore:
-     * <ul>
-     * <li>Suppressed links like {@code <https://example.com>}</li>
-     * <li>Non-HTTP(S) schemes such as {@code ftp://} or {@code file://}</li>
-     * </ul>
-     *
-     * <p>
-     * This reduces false positives when scanning chat messages or source-code snippets.
+     * Links to intentionally ignore in order to reduce false positives when scanning chat messages
+     * or source-code snippets.
      */
 
     private static final Set<LinkFilter> DEFAULT_FILTERS =
@@ -76,7 +69,7 @@ public class LinkDetection {
     }
 
     /**
-     * Extracts HTTP(S) links from the given text.
+     * Extracts links from the given text.
      *
      * <p>
      * The text is scanned using a URL detector, then filtered and normalized according to the
@@ -84,7 +77,7 @@ public class LinkDetection {
      *
      * <p>
      * Example:
-     * 
+     *
      * <pre>{@code
      * Set<LinkFilter> filters = Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME);
      * extractLinks("Visit https://example.com and <ftp://skip.me>", filters)
@@ -98,10 +91,24 @@ public class LinkDetection {
 
     public static List<String> extractLinks(String content, Set<LinkFilter> filter) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
-            .stream()
-            .map(url -> toLink(url, filter))
-            .flatMap(Optional::stream)
-            .toList();
+                .stream()
+                .map(url -> toLink(url, filter))
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    /**
+     * Extracts links from the given text using default filters.
+     *
+     * <p>
+     * This is a convenience method that uses {@link #DEFAULT_FILTERS}.
+     *
+     * @param content the text to scan for links
+     * @return a list of extracted links in the order they appear in the text
+     * @see #extractLinks(String, Set)
+     */
+    public static List<String> extractLinks(String content) {
+        return extractLinks(content, DEFAULT_FILTERS);
     }
 
     /**
@@ -122,13 +129,6 @@ public class LinkDetection {
      * Asynchronously checks whether a URL is considered broken.
      *
      * <p>
-     * The check is performed in two steps:
-     * <ol>
-     * <li>A {@code HEAD} request is sent first (cheap and fast)</li>
-     * <li>If that fails or returns an error, a {@code GET} request is used as a fallback</li>
-     * </ol>
-     *
-     * <p>
      * A link is considered broken if:
      * <ul>
      * <li>The URL is malformed or unreachable</li>
@@ -146,32 +146,34 @@ public class LinkDetection {
      */
 
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
+        // Try HEAD request first (cheap and fast)
         HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
-            .method("HEAD", HttpRequest.BodyPublishers.noBody())
-            .build();
+                .method("HEAD", HttpRequest.BodyPublishers.noBody())
+                .build();
 
         return HTTP_CLIENT.sendAsync(headRequest, HttpResponse.BodyHandlers.discarding())
-            .thenApply(response -> {
-                int status = response.statusCode();
-                // 2xx and 3xx are success, 4xx and 5xx are errors
-                return status >= 400;
-            })
-            .exceptionally(ignored -> true)
-            .thenCompose(result -> {
-                if (!Boolean.TRUE.equals(result)) {
-                    return CompletableFuture.completedFuture(false);
-                }
-                HttpRequest fallbackGetRequest =
-                        HttpRequest.newBuilder(URI.create(url)).GET().build();
-                return HTTP_CLIENT
-                    .sendAsync(fallbackGetRequest, HttpResponse.BodyHandlers.discarding())
-                    .thenApply(resp -> resp.statusCode() >= 400)
-                    .exceptionally(ignored -> true);
-            });
+                .thenApply(response -> {
+                    int status = response.statusCode();
+                    // 2xx and 3xx are success, 4xx and 5xx are errors
+                    return status >= 400;
+                })
+                .exceptionally(_ -> true)
+                .thenCompose(result -> {
+                    if (!Boolean.TRUE.equals(result)) {
+                        return CompletableFuture.completedFuture(false);
+                    }
+                    // If HEAD fails, fall back to GET request (some servers don't support HEAD)
+                    HttpRequest fallbackGetRequest =
+                            HttpRequest.newBuilder(URI.create(url)).GET().build();
+                    return HTTP_CLIENT
+                            .sendAsync(fallbackGetRequest, HttpResponse.BodyHandlers.discarding())
+                            .thenApply(resp -> resp.statusCode() >= 400)
+                            .exceptionally(_ -> true);
+                });
     }
 
     /**
-     * Replaces all broken HTTP(S) links in the given text.
+     * Replaces all broken links in the given text.
      *
      * <p>
      * Each detected link is checked asynchronously using {@link #isLinkBroken(String)}. Only links
@@ -184,9 +186,9 @@ public class LinkDetection {
      *
      * <p>
      * Example:
-     * 
+     *
      * <pre>{@code
-     * replaceDeadLinks("""
+     * replaceBrokenLinks("""
      *           Test
      *           http://deadlink/1
      *           http://workinglink/1
@@ -195,7 +197,7 @@ public class LinkDetection {
      *
      * <p>
      * Results in:
-     * 
+     *
      * <pre>{@code
      * Test
      * (broken link)
@@ -208,47 +210,39 @@ public class LinkDetection {
      *         text if no broken links were found
      */
 
-
-    public static CompletableFuture<String> replaceDeadLinks(String text, String replacement) {
+    public static CompletableFuture<String> replaceBrokenLinks(String text, String replacement) {
         List<String> links = extractLinks(text, DEFAULT_FILTERS);
 
         if (links.isEmpty()) {
             return CompletableFuture.completedFuture(text);
         }
 
-        List<CompletableFuture<String>> deadLinkFutures = links.stream()
-            .distinct()
-            .map(link -> isLinkBroken(link)
-                .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? link : null))
+        List<CompletableFuture<Optional<String>>> brokenLinkFutures = links.stream()
+                .distinct()
+                .map(link -> isLinkBroken(link)
+                        .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? Optional.of(link) : Optional.<String>empty()))
+                .toList();
 
-            .toList();
-
-        return CompletableFuture.allOf(deadLinkFutures.toArray(new CompletableFuture[0]))
-            .thenApply(ignored -> deadLinkFutures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .toList())
-            .thenApply(deadLinks -> {
-                String result = text;
-                for (String deadLink : deadLinks) {
-                    result = result.replace(deadLink, replacement);
-                }
-                return result;
-            });
+        return CompletableFuture.allOf(brokenLinkFutures.toArray(new CompletableFuture[0]))
+                .thenApply(_ -> brokenLinkFutures.stream()
+                        .map(CompletableFuture::join)
+                        .flatMap(Optional::stream)
+                        .toList())
+                .thenApply(brokenLinks -> {
+                    String result = text;
+                    for (String brokenLink : brokenLinks) {
+                        result = result.replace(brokenLink, replacement);
+                    }
+                    return result;
+                });
     }
 
     /**
      * Converts a detected {@link Url} into a normalized link string.
      *
      * <p>
-     * Applies the provided {@link LinkFilter}s:
-     * <ul>
-     * <li>{@link LinkFilter#SUPPRESSED} - filters URLs wrapped in angle brackets</li>
-     * <li>{@link LinkFilter#NON_HTTP_SCHEME} - filters non-HTTP(S) schemes</li>
-     * </ul>
-     *
-     * <p>
-     * Additionally removes trailing punctuation such as commas or periods from the detected URL.
+     * Applies the provided {@link LinkFilter}s. Additionally removes trailing punctuation such as
+     * commas or periods from the detected URL.
      *
      * @param url the detected URL
      * @param filter active link filters to apply
