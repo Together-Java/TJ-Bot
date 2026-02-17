@@ -9,6 +9,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -91,10 +92,10 @@ public class LinkDetection {
 
     public static List<String> extractLinks(String content, Set<LinkFilter> filter) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
-                .stream()
-                .map(url -> toLink(url, filter))
-                .flatMap(Optional::stream)
-                .toList();
+            .stream()
+            .map(url -> toLink(url, filter))
+            .flatMap(Optional::stream)
+            .toList();
     }
 
     /**
@@ -148,28 +149,28 @@ public class LinkDetection {
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
         // Try HEAD request first (cheap and fast)
         HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
-                .method("HEAD", HttpRequest.BodyPublishers.noBody())
-                .build();
+            .method("HEAD", HttpRequest.BodyPublishers.noBody())
+            .build();
 
         return HTTP_CLIENT.sendAsync(headRequest, HttpResponse.BodyHandlers.discarding())
-                .thenApply(response -> {
-                    int status = response.statusCode();
-                    // 2xx and 3xx are success, 4xx and 5xx are errors
-                    return status >= 400;
-                })
-                .exceptionally(_ -> true)
-                .thenCompose(result -> {
-                    if (!Boolean.TRUE.equals(result)) {
-                        return CompletableFuture.completedFuture(false);
-                    }
-                    // If HEAD fails, fall back to GET request (some servers don't support HEAD)
-                    HttpRequest fallbackGetRequest =
-                            HttpRequest.newBuilder(URI.create(url)).GET().build();
-                    return HTTP_CLIENT
-                            .sendAsync(fallbackGetRequest, HttpResponse.BodyHandlers.discarding())
-                            .thenApply(resp -> resp.statusCode() >= 400)
-                            .exceptionally(_ -> true);
-                });
+            .thenApply(response -> {
+                int status = response.statusCode();
+                // 2xx and 3xx are success, 4xx and 5xx are errors
+                return status >= 400;
+            })
+            .exceptionally(_ -> true)
+            .thenCompose(result -> {
+                if (!Boolean.TRUE.equals(result)) {
+                    return CompletableFuture.completedFuture(false);
+                }
+                // If HEAD fails, fall back to GET request (some servers don't support HEAD)
+                HttpRequest fallbackGetRequest =
+                        HttpRequest.newBuilder(URI.create(url)).GET().build();
+                return HTTP_CLIENT
+                    .sendAsync(fallbackGetRequest, HttpResponse.BodyHandlers.discarding())
+                    .thenApply(resp -> resp.statusCode() >= 400)
+                    .exceptionally(_ -> true);
+            });
     }
 
     /**
@@ -210,6 +211,7 @@ public class LinkDetection {
      *         text if no broken links were found
      */
 
+
     public static CompletableFuture<String> replaceBrokenLinks(String text, String replacement) {
         List<String> links = extractLinks(text, DEFAULT_FILTERS);
 
@@ -217,24 +219,23 @@ public class LinkDetection {
             return CompletableFuture.completedFuture(text);
         }
 
-        List<CompletableFuture<Optional<String>>> brokenLinkFutures = links.stream()
-                .distinct()
-                .map(link -> isLinkBroken(link)
-                        .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? Optional.of(link) : Optional.<String>empty()))
-                .toList();
+        List<CompletableFuture<String>> brokenLinkFutures = links.stream()
+            .distinct()
+            .map(link -> isLinkBroken(link).thenApply(isBroken -> isBroken ? link : null))
+            .toList();
 
         return CompletableFuture.allOf(brokenLinkFutures.toArray(new CompletableFuture[0]))
-                .thenApply(_ -> brokenLinkFutures.stream()
-                        .map(CompletableFuture::join)
-                        .flatMap(Optional::stream)
-                        .toList())
-                .thenApply(brokenLinks -> {
-                    String result = text;
-                    for (String brokenLink : brokenLinks) {
-                        result = result.replace(brokenLink, replacement);
-                    }
-                    return result;
-                });
+            .thenApply(_ -> brokenLinkFutures.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
+                .toList())
+            .thenApply(brokenLinks -> {
+                String result = text;
+                for (String brokenLink : brokenLinks) {
+                    result = result.replace(brokenLink, replacement);
+                }
+                return result;
+            });
     }
 
     /**
