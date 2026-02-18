@@ -9,7 +9,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -219,16 +218,20 @@ public class LinkDetection {
             return CompletableFuture.completedFuture(text);
         }
 
-        List<CompletableFuture<String>> brokenLinkFutures = links.stream()
-            .distinct()
-            .map(link -> isLinkBroken(link).thenApply(isBroken -> isBroken ? link : null))
-            .toList();
+        List<String> distinctLinks = links.stream().distinct().toList();
+        List<CompletableFuture<Boolean>> brokenCheckFutures =
+                distinctLinks.stream().map(LinkDetection::isLinkBroken).toList();
 
-        return CompletableFuture.allOf(brokenLinkFutures.toArray(new CompletableFuture[0]))
-            .thenApply(_ -> brokenLinkFutures.stream()
-                .map(CompletableFuture::join)
-                .filter(Objects::nonNull)
-                .toList())
+        return CompletableFuture.allOf(brokenCheckFutures.toArray(new CompletableFuture[0]))
+            .thenApply(_ -> {
+                List<String> brokenLinks = new java.util.ArrayList<>();
+                for (int i = 0; i < distinctLinks.size(); i++) {
+                    if (Boolean.TRUE.equals(brokenCheckFutures.get(i).join())) {
+                        brokenLinks.add(distinctLinks.get(i));
+                    }
+                }
+                return brokenLinks;
+            })
             .thenApply(brokenLinks -> {
                 String result = text;
                 for (String brokenLink : brokenLinks) {
