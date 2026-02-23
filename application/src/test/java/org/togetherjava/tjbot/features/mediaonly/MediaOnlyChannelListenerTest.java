@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.messages.MessageSnapshot;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -109,6 +110,51 @@ final class MediaOnlyChannelListenerTest {
             List<Message.Attachment> attachments) {
         MessageReceivedEvent event =
                 jdaTester.createMessageReceiveEvent(message, attachments, ChannelType.TEXT);
+        mediaOnlyChannelListener.onMessageReceived(event);
+        return event;
+    }
+
+
+    @Test
+    void keepsForwardedMessageWithAttachment() {
+        // GIVEN a forwarded message that contains an attachment inside the snapshot
+        MessageCreateData message = new MessageCreateBuilder().setContent("any").build();
+
+        MessageSnapshot snapshot = mock(MessageSnapshot.class);
+        when(snapshot.getAttachments()).thenReturn(List.of(mock(Message.Attachment.class)));
+        when(snapshot.getEmbeds()).thenReturn(List.of());
+        when(snapshot.getContentRaw()).thenReturn("");
+
+        // WHEN sending the forwarded message
+        MessageReceivedEvent event = sendMessageWithSnapshots(message, List.of(snapshot));
+
+        // THEN it does not get deleted
+        verify(event.getMessage(), never()).delete();
+    }
+
+    @Test
+    void deletesForwardedMessageWithoutMedia() {
+        // GIVEN a forwarded message that contains no media inside the snapshot
+        MessageCreateData message = new MessageCreateBuilder().setContent("any").build();
+
+        MessageSnapshot snapshot = mock(MessageSnapshot.class);
+        when(snapshot.getAttachments()).thenReturn(List.of());
+        when(snapshot.getEmbeds()).thenReturn(List.of());
+        when(snapshot.getContentRaw()).thenReturn("just some text, no media");
+
+        // WHEN sending the forwarded message
+        MessageReceivedEvent event = sendMessageWithSnapshots(message, List.of(snapshot));
+
+        // THEN it gets deleted
+        verify(event.getMessage()).delete();
+    }
+
+    // Добавить этот вспомогательный метод рядом с существующим sendMessage():
+    private MessageReceivedEvent sendMessageWithSnapshots(MessageCreateData message,
+                                                          List<MessageSnapshot> snapshots) {
+        MessageReceivedEvent event =
+                jdaTester.createMessageReceiveEvent(message, List.of(), ChannelType.TEXT);
+        when(event.getMessage().getMessageSnapshots()).thenReturn(snapshots);
         mediaOnlyChannelListener.onMessageReceived(event);
         return event;
     }

@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageType;
+import net.dv8tion.jda.api.entities.messages.MessageSnapshot;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -13,6 +14,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
 import java.awt.Color;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -51,9 +53,49 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
     }
 
+//    private boolean messageHasNoMediaAttached(Message message) {
+//        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
+//                && !message.getContentRaw().contains("http");
+//    }
+
+    /**
+     * Checks whether the given message has no media attached.
+     * <p>
+     * A message is considered to have media if it contains attachments, embeds,
+     * or a URL in its text content. For forwarded messages, the snapshots are also
+     * checked for media.
+     *
+     * @param message the message to check
+     * @return {@code true} if the message has no media, {@code false} otherwise
+     */
     private boolean messageHasNoMediaAttached(Message message) {
-        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
-                && !message.getContentRaw().contains("http");
+        if (hasMedia(message.getAttachments(), message.getEmbeds(), message.getContentRaw())) {
+            return false;
+        }
+        // checks forwarded snapshots
+        for (MessageSnapshot snapshot : message.getMessageSnapshots()) {
+            if (hasMedia(snapshot.getAttachments(), snapshot.getEmbeds(), snapshot.getContentRaw())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /**
+     * Checks whether the given content contains any media.
+     * <p>
+     * Media is considered present if there are attachments, embeds,
+     * or a URL (identified by {@code "http"}) in the text content.
+     *
+     * @param attachments the attachments of the message or snapshot
+     * @param embeds the embeds of the message or snapshot
+     * @param content the raw text content of the message or snapshot
+     */
+
+    private boolean hasMedia(List<Message.Attachment> attachments,
+                             List<MessageEmbed> embeds, String content) {
+        return !attachments.isEmpty()
+                || !embeds.isEmpty()
+                || content.contains("http");
     }
 
     private MessageCreateData createNotificationMessage(Message message) {
