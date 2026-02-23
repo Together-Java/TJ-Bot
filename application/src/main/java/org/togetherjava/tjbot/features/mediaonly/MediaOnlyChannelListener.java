@@ -53,11 +53,6 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
     }
 
-//    private boolean messageHasNoMediaAttached(Message message) {
-//        return message.getAttachments().isEmpty() && message.getEmbeds().isEmpty()
-//                && !message.getContentRaw().contains("http");
-//    }
-
     /**
      * Checks whether the given message has no media attached.
      * <p>
@@ -72,13 +67,9 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         if (hasMedia(message.getAttachments(), message.getEmbeds(), message.getContentRaw())) {
             return false;
         }
-        // checks forwarded snapshots
-        for (MessageSnapshot snapshot : message.getMessageSnapshots()) {
-            if (hasMedia(snapshot.getAttachments(), snapshot.getEmbeds(), snapshot.getContentRaw())) {
-                return false;
-            }
-        }
-        return true;
+
+        return message.getMessageSnapshots().stream().noneMatch(snapshot ->
+                hasMedia(snapshot.getAttachments(), snapshot.getEmbeds(), snapshot.getContentRaw()));
     }
     /**
      * Checks whether the given content contains any media.
@@ -90,7 +81,6 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
      * @param embeds the embeds of the message or snapshot
      * @param content the raw text content of the message or snapshot
      */
-
     private boolean hasMedia(List<Message.Attachment> attachments,
                              List<MessageEmbed> embeds, String content) {
         return !attachments.isEmpty()

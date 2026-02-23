@@ -149,7 +149,6 @@ final class MediaOnlyChannelListenerTest {
         verify(event.getMessage()).delete();
     }
 
-    // Добавить этот вспомогательный метод рядом с существующим sendMessage():
     private MessageReceivedEvent sendMessageWithSnapshots(MessageCreateData message,
                                                           List<MessageSnapshot> snapshots) {
         MessageReceivedEvent event =
