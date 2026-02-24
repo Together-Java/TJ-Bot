@@ -150,7 +150,7 @@ final class MediaOnlyChannelListenerTest {
     }
 
     private MessageReceivedEvent sendMessageWithSnapshots(MessageCreateData message,
-                                                          List<MessageSnapshot> snapshots) {
+            List<MessageSnapshot> snapshots) {
         MessageReceivedEvent event =
                 jdaTester.createMessageReceiveEvent(message, List.of(), ChannelType.TEXT);
         when(event.getMessage().getMessageSnapshots()).thenReturn(snapshots);
