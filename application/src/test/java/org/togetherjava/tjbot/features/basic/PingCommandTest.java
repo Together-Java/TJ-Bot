@@ -6,13 +6,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.features.analytics.AnalyticsService;
 import org.togetherjava.tjbot.jda.JdaTester;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 final class PingCommandTest {
     private JdaTester jdaTester;
     private SlashCommand command;
+    private AnalyticsService analyticsService;
 
     private SlashCommandInteractionEvent triggerSlashCommand() {
         SlashCommandInteractionEvent event =
@@ -24,7 +27,8 @@ final class PingCommandTest {
     @BeforeEach
     void setUp() {
         jdaTester = new JdaTester();
-        command = jdaTester.spySlashCommand(new PingCommand());
+        analyticsService = mock(AnalyticsService.class);
+        command = jdaTester.spySlashCommand(new PingCommand(analyticsService));
     }
 
     @Test

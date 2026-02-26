@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.analytics.AnalyticsService;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.QuoteBoardForwarder;
@@ -128,6 +129,7 @@ public class Features {
         TopHelpersService topHelpersService = new TopHelpersService(database);
         TopHelpersAssignmentRoutine topHelpersAssignmentRoutine =
                 new TopHelpersAssignmentRoutine(config, topHelpersService);
+        AnalyticsService analyticsService = new AnalyticsService(database);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -184,7 +186,7 @@ public class Features {
 
         // Slash commands
         features.add(new LogLevelCommand());
-        features.add(new PingCommand());
+        features.add(new PingCommand(analyticsService));
         features.add(new TeXCommand());
         features.add(new TagCommand(tagSystem));
         features.add(new TagManageCommand(tagSystem, modAuditLogWriter));
