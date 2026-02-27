@@ -36,24 +36,24 @@ public final class AnalyticsService {
      * This method should be called by commands after they complete execution to track usage
      * patterns and error rates.
      *
-     * @param guildId the guild ID where the command was executed
+     * @param channelId the channel ID where the command was executed
      * @param commandName the name of the command that was executed
      * @param userId the ID of the user who executed the command
      * @param success whether the command executed successfully
      * @param errorMessage optional error message if the command failed (null if successful)
      */
-    public void recordCommandExecution(long guildId, String commandName, long userId,
+    public void recordCommandExecution(long channelId, String commandName, long userId,
             boolean success, @Nullable String errorMessage) {
 
         database.write(context -> context
-            .insertInto(DSL.table("command_usage"), DSL.field("guild_id"),
+            .insertInto(DSL.table("command_usage"), DSL.field("channel_id"),
                     DSL.field("command_name"), DSL.field("user_id"), DSL.field("executed_at"),
                     DSL.field("success"), DSL.field("error_message"))
-            .values(guildId, commandName, userId, DSL.currentTimestamp(), success, errorMessage)
+            .values(channelId, commandName, userId, DSL.currentTimestamp(), success, errorMessage)
             .execute());
 
         if (!success && errorMessage != null) {
-            logger.warn("Command '{}' failed in guild {} with error: {}", commandName, guildId,
+            logger.warn("Command '{}' failed on channel {} with error: {}", commandName, channelId,
                     errorMessage);
         }
     }
@@ -61,24 +61,24 @@ public final class AnalyticsService {
     /**
      * Records a successful command execution.
      *
-     * @param guildId the guild ID where the command was executed
+     * @param channelId the channel ID where the command was executed
      * @param commandName the name of the command that was executed
      * @param userId the ID of the user who executed the command
      */
-    public void recordCommandSuccess(long guildId, String commandName, long userId) {
-        recordCommandExecution(guildId, commandName, userId, true, null);
+    public void recordCommandSuccess(long channelId, String commandName, long userId) {
+        recordCommandExecution(channelId, commandName, userId, true, null);
     }
 
     /**
      * Records a failed command execution.
      *
-     * @param guildId the guild ID where the command was executed
+     * @param channelId the channel ID where the command was executed
      * @param commandName the name of the command that was executed
      * @param userId the ID of the user who executed the command
      * @param errorMessage a description of what went wrong
      */
-    public void recordCommandFailure(long guildId, String commandName, long userId,
+    public void recordCommandFailure(long channelId, String commandName, long userId,
             String errorMessage) {
-        recordCommandExecution(guildId, commandName, userId, false, errorMessage);
+        recordCommandExecution(channelId, commandName, userId, false, errorMessage);
     }
 }
