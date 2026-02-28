@@ -93,3 +93,23 @@ application {
     mainClass = 'org.togetherjava.tjbot.Application'
     applicationDefaultJvmArgs = ["--enable-native-access=ALL-UNNAMED"]
 }
+
+def generatedBuildPropertiesDir = file("build/resources/main/")
+tasks.register('generateBuildProperties') {
+    def outputFile = new File(generatedBuildPropertiesDir, "build.properties")
+
+    doLast {
+        if (!generatedBuildPropertiesDir.exists()) {
+            generatedBuildPropertiesDir.mkdirs()
+        }
+        def props = new Properties()
+        props['app.git-version'] = version
+        props['app.build-date'] = new Date().format('yyyy-MM-dd HH:mm:ss:S z')
+
+        outputFile.withWriter { writer ->
+            props.store(writer, null)
+        }
+    }
+}
+
+processResources.dependsOn generateBuildProperties

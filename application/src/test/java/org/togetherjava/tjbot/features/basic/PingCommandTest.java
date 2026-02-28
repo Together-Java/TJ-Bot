@@ -4,10 +4,12 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.jda.JdaTester;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 
 final class PingCommandTest {
@@ -35,6 +37,8 @@ final class PingCommandTest {
         SlashCommandInteractionEvent event = triggerSlashCommand();
 
         // THEN the bot replies with pong
-        verify(event).reply("Pong!");
+        ArgumentCaptor<String> replyMessageCaptor = ArgumentCaptor.forClass(String.class);
+        verify(event).reply(replyMessageCaptor.capture());
+        assertTrue(replyMessageCaptor.getValue().startsWith("Pong!"));
     }
 }
