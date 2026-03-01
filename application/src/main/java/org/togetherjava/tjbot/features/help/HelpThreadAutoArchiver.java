@@ -89,8 +89,8 @@ public final class HelpThreadAutoArchiver implements Routine {
                     """
                             Your question has been closed due to inactivity.
 
-                            If it was not resolved yet, feel free to just post a message below
-                            to reopen it, or create a new thread.
+                            If it was not resolved yet, **click the button below** to keep it
+                            open, or feel free to create a new thread.
 
                             Note that usually the reason for nobody calling back is that your
                             question may have been not well asked and hence no one felt confident
