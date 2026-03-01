@@ -47,6 +47,10 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private static final Logger log = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
     private final HelpSystemHelper helper;
 
+    private static final String MARK_ACTIVE_ID = "mark-active";
+    private final ComponentIdInteractor inactivityInteractor =
+            new ComponentIdInteractor(UserInteractionType.OTHER, "thread-inactivity");
+
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
         .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
@@ -187,7 +191,16 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        // This method handles chatgpt's automatic response "dismiss" button
+        // Check if the button belongs to the "thread-inactivity" namespace
+        if (inactivityInteractor.isMatch(event.getComponentId())) {
+            String subId = inactivityInteractor.getComponentId(event.getComponentId());
+
+            if (subId.equals("mark-active")) {
+                handleMarkActiveInteraction(event);
+                return; // EXIT: This logic is owned by handleMarkActiveInteraction
+            }
+        }
+        // Handle chatgpt's automatic response "dismiss" button
         event.deferEdit().queue();
 
         ThreadChannel channel = event.getChannel().asThreadChannel();
@@ -247,5 +260,18 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         }
 
         helper.writeHelpThreadToDatabase(authorId, threadChannel);
+    }
+
+    private void handleMarkActiveInteraction(ButtonInteractionEvent event) {
+        event.deferEdit().queue();
+
+        if (event.getChannel() instanceof ThreadChannel thread) {
+            // Reopen the thread so people can chat, then delete the bot's warning
+            thread.getManager().setArchived(false).queue();
+            event.getMessage().delete().queue();
+
+            log.info("Thread {} was manually reactivated via button by {}",
+                    thread.getId(), event.getUser().getName());
+        }
     }
 }

@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
@@ -128,41 +129,48 @@ public final class HelpThreadAutoArchiver implements Routine {
                     () -> triggerAuthorIdNotFoundArchiveFlow(threadChannel, embed));
     }
 
-    private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId,
-            MessageEmbed embed) {
+    private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId, MessageEmbed embed) {
 
+        // --- UPDATED: Added ActionRow with custom namespace ID ---
         Function<Member, RestAction<Message>> sendEmbedWithMention =
-                member -> threadChannel.sendMessage(member.getAsMention()).addEmbeds(embed);
+                member -> threadChannel.sendMessage(member.getAsMention())
+                        .addEmbeds(embed)
+                        .addActionRow(Button.primary("OTHER:thread-inactivity:mark-active", "Mark Active"));
 
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
-                () -> threadChannel.sendMessageEmbeds(embed);
+                () -> threadChannel.sendMessageEmbeds(embed)
+                        .addActionRow(Button.primary("OTHER:thread-inactivity:mark-active", "Mark Active"));
+        // ---------------------------------------------------------
 
         threadChannel.getGuild()
-            .retrieveMemberById(authorId)
-            .mapToResult()
-            .flatMap(authorResults -> {
-                if (authorResults.isFailure()) {
-                    logger.info(
-                            "Trying to archive a thread ({}), but OP ({}) left the server, sending embed without mention",
-                            threadChannel.getId(), authorId, authorResults.getFailure());
+                .retrieveMemberById(authorId)
+                .mapToResult()
+                .flatMap(authorResults -> {
+                    if (authorResults.isFailure()) {
+                        logger.info(
+                                "Trying to archive a thread ({}), but OP ({}) left the server, sending embed without mention",
+                                threadChannel.getId(), authorId, authorResults.getFailure());
 
-                    return sendEmbedWithoutMention.get();
-                }
+                        return sendEmbedWithoutMention.get();
+                    }
 
-                return sendEmbedWithMention.apply(authorResults.get());
-            })
-            .flatMap(_ -> threadChannel.getManager().setArchived(true))
-            .queue();
+                    return sendEmbedWithMention.apply(authorResults.get());
+                })
+                .flatMap(_ -> threadChannel.getManager().setArchived(true))
+                .queue();
     }
 
-    private void triggerAuthorIdNotFoundArchiveFlow(ThreadChannel threadChannel,
-            MessageEmbed embed) {
+    private void triggerAuthorIdNotFoundArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
 
         logger.info(
                 "Was unable to find a matching thread for id: {} in DB, archiving thread without mentioning OP",
                 threadChannel.getId());
+
+        // --- UPDATED: Added ActionRow with custom namespace ID ---
         threadChannel.sendMessageEmbeds(embed)
-            .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
-            .queue();
+                .addActionRow(Button.primary("OTHER:thread-inactivity:mark-active", "Mark Active"))
+                .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
+                .queue();
+        // ---------------------------------------------
     }
 }
