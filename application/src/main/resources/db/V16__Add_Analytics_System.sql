@@ -1,9 +1,9 @@
 CREATE TABLE command_usage
 (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_id    INTEGER NOT NULL,
+    channel_id    BIGINT  NOT NULL,
     command_name  TEXT    NOT NULL,
-    user_id       INTEGER NOT NULL,
+    user_id       BIGINT  NOT NULL,
     executed_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     success       BOOLEAN NOT NULL DEFAULT TRUE,
     error_message TEXT

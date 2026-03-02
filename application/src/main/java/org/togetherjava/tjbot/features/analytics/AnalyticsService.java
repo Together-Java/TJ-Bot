@@ -1,11 +1,13 @@
 package org.togetherjava.tjbot.features.analytics;
 
 import org.jetbrains.annotations.Nullable;
-import org.jooq.impl.DSL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.db.generated.tables.CommandUsage;
+
+import java.time.Instant;
 
 /**
  * Service for tracking and recording command usage analytics.
@@ -45,12 +47,14 @@ public final class AnalyticsService {
     public void recordCommandExecution(long channelId, String commandName, long userId,
             boolean success, @Nullable String errorMessage) {
 
-        database.write(context -> context
-            .insertInto(DSL.table("command_usage"), DSL.field("channel_id"),
-                    DSL.field("command_name"), DSL.field("user_id"), DSL.field("executed_at"),
-                    DSL.field("success"), DSL.field("error_message"))
-            .values(channelId, commandName, userId, DSL.currentTimestamp(), success, errorMessage)
-            .execute());
+        database.write(context -> context.newRecord(CommandUsage.COMMAND_USAGE)
+            .setChannelId(channelId)
+            .setCommandName(commandName)
+            .setUserId(userId)
+            .setExecutedAt(Instant.now())
+            .setSuccess(success)
+            .setErrorMessage(errorMessage)
+            .insert());
 
         if (!success && errorMessage != null) {
             logger.warn("Command '{}' failed on channel {} with error: {}", commandName, channelId,
