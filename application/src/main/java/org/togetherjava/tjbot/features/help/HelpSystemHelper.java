@@ -420,6 +420,17 @@ public final class HelpSystemHelper {
 
 
     /**
+     * Generates a component ID for the "Mark Active" button, derived from the given interactor's
+     * namespace.
+     *
+     * @param interactor the component ID interactor whose namespace should be used
+     * @return a valid component ID string for the mark-active button
+     */
+    public String generateMarkActiveId(ComponentIdInteractor interactor) {
+        return interactor.generateComponentId("mark-active");
+    }
+
+    /**
      * will be used to filter a tag based on categories config
      * 
      * @param tag applied tag

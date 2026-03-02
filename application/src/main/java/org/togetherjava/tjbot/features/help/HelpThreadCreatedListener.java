@@ -166,6 +166,16 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
+    /**
+     * Returns the component ID interactor used by this listener, so that other components (e.g. the
+     * archiver) can generate IDs within the same namespace.
+     *
+     * @return the component ID interactor
+     */
+    public ComponentIdInteractor getComponentIdInteractor() {
+        return componentIdInteractor;
+    }
+
     private Consumer<Throwable> handleParentMessageDeleted(Member user, ThreadChannel channel,
             ButtonInteractionEvent event, List<String> args) {
         int noOfMessages = 1; // we only care about first message from channel history
@@ -261,12 +271,13 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         if (event.getChannel() instanceof ThreadChannel thread) {
             Message botClosedThreadMessage = event.getMessage();
 
-            thread.getManager().setArchived(false)
-                    .flatMap(v -> botClosedThreadMessage.delete())
-                    .queue();
+            thread.getManager()
+                .setArchived(false)
+                .flatMap(v -> botClosedThreadMessage.delete())
+                .queue();
 
-            log.debug("Thread {} was manually reactivated via button by {}",
-                    thread.getId(), event.getUser().getId());
+            log.debug("Thread {} was manually reactivated via button by {}", thread.getId(),
+                    event.getUser().getId());
         }
     }
 }

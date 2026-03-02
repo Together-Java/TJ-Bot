@@ -144,7 +144,10 @@ public class Features {
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
-        features.add(new HelpThreadAutoArchiver(helpSystemHelper));
+        HelpThreadCreatedListener helpThreadCreatedListener =
+                new HelpThreadCreatedListener(helpSystemHelper);
+        features.add(new HelpThreadAutoArchiver(helpSystemHelper,
+                helpThreadCreatedListener.getComponentIdInteractor()));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
@@ -173,7 +176,7 @@ public class Features {
         features.add(new RejoinModerationRoleListener(actionsStore, config));
         features.add(new GuildLeaveCloseThreadListener(config));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
-        features.add(new HelpThreadCreatedListener(helpSystemHelper));
+        features.add(helpThreadCreatedListener);
         features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
         features.add(new ProjectsThreadCreatedListener(config));
 

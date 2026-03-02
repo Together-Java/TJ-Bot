@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.Routine;
+import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -32,16 +33,21 @@ public final class HelpThreadAutoArchiver implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
     private static final int SCHEDULE_MINUTES = 60;
     private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
+    private static final String MARK_ACTIVE_LABEL = "Mark Active";
 
     private final HelpSystemHelper helper;
+    private final ComponentIdInteractor componentIdInteractor;
 
     /**
      * Creates a new instance.
      *
      * @param helper the helper to use
+     * @param componentIdInteractor the interactor used to generate component IDs for buttons
      */
-    public HelpThreadAutoArchiver(HelpSystemHelper helper) {
+    public HelpThreadAutoArchiver(HelpSystemHelper helper,
+            ComponentIdInteractor componentIdInteractor) {
         this.helper = helper;
+        this.componentIdInteractor = componentIdInteractor;
     }
 
     @Override
@@ -129,44 +135,50 @@ public final class HelpThreadAutoArchiver implements Routine {
                     () -> triggerAuthorIdNotFoundArchiveFlow(threadChannel, embed));
     }
 
-    private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId, MessageEmbed embed) {
+    private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId,
+            MessageEmbed embed) {
+
+        String markActiveId = helper.generateMarkActiveId(componentIdInteractor);
 
         Function<Member, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.getAsMention())
-                        .addEmbeds(embed)
-                        .addActionRow(Button.primary("OTHER:chatpgt-answer:mark-active", "Mark Active"));
+                    .addEmbeds(embed)
+                    .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL));
 
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
                 () -> threadChannel.sendMessageEmbeds(embed)
-                        .addActionRow(Button.primary("OTHER:chatpgt-answer:mark-active", "Mark Active"));
+                    .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL));
 
         threadChannel.getGuild()
-                .retrieveMemberById(authorId)
-                .mapToResult()
-                .flatMap(authorResults -> {
-                    if (authorResults.isFailure()) {
-                        logger.info(
-                                "Trying to archive a thread ({}), but OP ({}) left the server, sending embed without mention",
-                                threadChannel.getId(), authorId, authorResults.getFailure());
+            .retrieveMemberById(authorId)
+            .mapToResult()
+            .flatMap(authorResults -> {
+                if (authorResults.isFailure()) {
+                    logger.info(
+                            "Trying to archive a thread ({}), but OP ({}) left the server, sending embed without mention",
+                            threadChannel.getId(), authorId, authorResults.getFailure());
 
-                        return sendEmbedWithoutMention.get();
-                    }
+                    return sendEmbedWithoutMention.get();
+                }
 
-                    return sendEmbedWithMention.apply(authorResults.get());
-                })
-                .flatMap(_ -> threadChannel.getManager().setArchived(true))
-                .queue();
+                return sendEmbedWithMention.apply(authorResults.get());
+            })
+            .flatMap(_ -> threadChannel.getManager().setArchived(true))
+            .queue();
     }
 
-    private void triggerAuthorIdNotFoundArchiveFlow(ThreadChannel threadChannel, MessageEmbed embed) {
+    private void triggerAuthorIdNotFoundArchiveFlow(ThreadChannel threadChannel,
+            MessageEmbed embed) {
 
         logger.info(
                 "Was unable to find a matching thread for id: {} in DB, archiving thread without mentioning OP",
                 threadChannel.getId());
 
+        String markActiveId = helper.generateMarkActiveId(componentIdInteractor);
+
         threadChannel.sendMessageEmbeds(embed)
-                .addActionRow(Button.primary("OTHER:chatpgt-answer:mark-active", "Mark Active"))
-                .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
-                .queue();
+            .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL))
+            .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
+            .queue();
     }
 }
