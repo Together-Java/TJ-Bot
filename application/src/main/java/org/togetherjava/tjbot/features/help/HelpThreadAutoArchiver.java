@@ -55,7 +55,7 @@ public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
 
     @Override
     public String getName() {
-        return "thread-inactivity";
+        return "help-thread-auto-archiver";
     }
 
     @Override
@@ -70,25 +70,22 @@ public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        if (args.contains(MARK_ACTIVE_ID)) {
-            onInactivityButton(event);
-        }
+        onMarkActiveButton(event);
     }
 
-    private void onInactivityButton(ButtonInteractionEvent event) {
+    private void onMarkActiveButton(ButtonInteractionEvent event) {
         event.deferEdit().queue();
 
-        if (event.getChannel() instanceof ThreadChannel thread) {
-            Message botClosedThreadMessage = event.getMessage();
+        ThreadChannel thread = event.getChannel().asThreadChannel();
+        Message botClosedThreadMessage = event.getMessage();
 
-            thread.getManager()
-                .setArchived(false)
-                .flatMap(_ -> botClosedThreadMessage.delete())
-                .queue();
+        thread.getManager()
+            .setArchived(false)
+            .flatMap(_ -> botClosedThreadMessage.delete())
+            .queue();
 
-            logger.debug("Thread {} was manually reactivated via button by user {}", thread.getId(),
-                    event.getUser().getId());
-        }
+        logger.debug("Thread {} was manually reactivated via button by user {}", thread.getId(),
+                event.getUser().getId());
     }
 
     @Override
