@@ -9,6 +9,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -210,7 +211,6 @@ public class LinkDetection {
      *         text if no broken links were found
      */
 
-
     public static CompletableFuture<String> replaceBrokenLinks(String text, String replacement) {
         List<String> links = extractLinks(text, DEFAULT_FILTERS);
 
@@ -218,27 +218,28 @@ public class LinkDetection {
             return CompletableFuture.completedFuture(text);
         }
 
-        List<String> distinctLinks = links.stream().distinct().toList();
-        List<CompletableFuture<Boolean>> brokenCheckFutures =
-                distinctLinks.stream().map(LinkDetection::isLinkBroken).toList();
+        // Can't filter yet - we won't know which links are broken until the futures complete
+        List<CompletableFuture<String>> brokenLinkFutures = links.stream()
+            .distinct()
+            .map(link -> isLinkBroken(link)
+                .thenApply(isBroken -> Boolean.TRUE.equals(isBroken) ? link : null))
+            .toList();
 
-        return CompletableFuture.allOf(brokenCheckFutures.toArray(new CompletableFuture[0]))
-            .thenApply(_ -> {
-                List<String> brokenLinks = new java.util.ArrayList<>();
-                for (int i = 0; i < distinctLinks.size(); i++) {
-                    if (Boolean.TRUE.equals(brokenCheckFutures.get(i).join())) {
-                        brokenLinks.add(distinctLinks.get(i));
-                    }
-                }
-                return brokenLinks;
-            })
-            .thenApply(brokenLinks -> {
-                String result = text;
-                for (String brokenLink : brokenLinks) {
-                    result = result.replace(brokenLink, replacement);
-                }
-                return result;
-            });
+        return CompletableFuture.allOf(brokenLinkFutures.toArray(CompletableFuture[]::new))
+            .thenApply(_ -> brokenLinkFutures.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
+                .toList())
+            .thenApply(brokenLinks -> replaceLinks(brokenLinks, text, replacement));
+    }
+
+    private static String replaceLinks(List<String> linksToReplace, String text,
+            String replacement) {
+        String result = text;
+        for (String link : linksToReplace) {
+            result = result.replace(link, replacement);
+        }
+        return result;
     }
 
     /**
@@ -260,7 +261,8 @@ public class LinkDetection {
             // URL escapes, such as "<http://example.com>" should be skipped
             return Optional.empty();
         }
-        // Not interested in other schemes, also to filter out matches without scheme.
+        // Not interested in other schemes, also to filter out matches without scheme (Skip non-HTTP
+        // schemes)
         // It detects a lot of such false-positives in Java snippets
         if (filter.contains(LinkFilter.NON_HTTP_SCHEME) && !raw.startsWith("http")) {
             return Optional.empty();
