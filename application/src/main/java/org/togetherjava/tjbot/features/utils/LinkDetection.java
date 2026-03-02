@@ -29,7 +29,6 @@ import java.util.concurrent.CompletableFuture;
  * It is intentionally stateless and uses asynchronous HTTP requests to avoid blocking calling
  * threads.
  */
-
 public class LinkDetection {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
 
@@ -40,7 +39,6 @@ public class LinkDetection {
      * Links to intentionally ignore in order to reduce false positives when scanning chat messages
      * or source-code snippets.
      */
-
     private static final Set<LinkFilter> DEFAULT_FILTERS =
             Set.of(LinkFilter.SUPPRESSED, LinkFilter.NON_HTTP_SCHEME);
 
@@ -89,7 +87,6 @@ public class LinkDetection {
      * @param filter a set of filters controlling which detected links are returned
      * @return a list of extracted links in the order they appear in the text
      */
-
     public static List<String> extractLinks(String content, Set<LinkFilter> filter) {
         return new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect()
             .stream()
@@ -121,7 +118,6 @@ public class LinkDetection {
      * @param content the text to scan
      * @return {@code true} if at least one URL-like pattern is detected
      */
-
     public static boolean containsLink(String content) {
         return !(new UrlDetector(content, UrlDetectorOptions.BRACKET_MATCH).detect().isEmpty());
     }
@@ -145,7 +141,6 @@ public class LinkDetection {
      * @return a {@code CompletableFuture} completing with {@code true} if the link is broken,
      *         {@code false} otherwise
      */
-
     public static CompletableFuture<Boolean> isLinkBroken(String url) {
         // Try HEAD request first (cheap and fast)
         HttpRequest headRequest = HttpRequest.newBuilder(URI.create(url))
@@ -210,7 +205,6 @@ public class LinkDetection {
      * @return a {@code CompletableFuture} that completes with the modified text, or the original
      *         text if no broken links were found
      */
-
     public static CompletableFuture<String> replaceBrokenLinks(String text, String replacement) {
         List<String> links = extractLinks(text, DEFAULT_FILTERS);
 
@@ -254,7 +248,6 @@ public class LinkDetection {
      * @return an {@link Optional} containing the normalized link, or {@code Optional.empty()} if
      *         the link should be filtered out
      */
-
     private static Optional<String> toLink(Url url, Set<LinkFilter> filter) {
         String raw = url.getOriginalUrl();
         if (filter.contains(LinkFilter.SUPPRESSED) && raw.contains(">")) {
