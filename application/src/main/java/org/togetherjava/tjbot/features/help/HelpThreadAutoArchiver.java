@@ -178,7 +178,7 @@ public final class HelpThreadAutoArchiver implements Routine {
 
         threadChannel.sendMessageEmbeds(embed)
             .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL))
-            .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
+            .flatMap(_ -> threadChannel.getManager().setArchived(true))
             .queue();
     }
 }

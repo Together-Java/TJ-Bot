@@ -273,10 +273,10 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
             thread.getManager()
                 .setArchived(false)
-                .flatMap(v -> botClosedThreadMessage.delete())
+                .flatMap(_ -> botClosedThreadMessage.delete())
                 .queue();
 
-            log.debug("Thread {} was manually reactivated via button by {}", thread.getId(),
+            log.debug("Thread {} was manually reactivated via button by user {}", thread.getId(),
                     event.getUser().getId());
         }
     }
