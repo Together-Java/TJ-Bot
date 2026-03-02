@@ -47,10 +47,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     private static final Logger log = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
     private final HelpSystemHelper helper;
 
-    private static final String MARK_ACTIVE_ID = "mark-active";
-    private final ComponentIdInteractor inactivityInteractor =
-            new ComponentIdInteractor(UserInteractionType.OTHER, "thread-inactivity");
-
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
         .expireAfterAccess(2, TimeUnit.of(ChronoUnit.MINUTES))
@@ -191,16 +187,14 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        // Check if the button belongs to the "thread-inactivity" namespace
-        if (inactivityInteractor.isMatch(event.getComponentId())) {
-            String subId = inactivityInteractor.getComponentId(event.getComponentId());
-
-            if (subId.equals("mark-active")) {
-                handleMarkActiveInteraction(event);
-                return; // EXIT: This logic is owned by handleMarkActiveInteraction
-            }
+        if (args.contains("mark-active")) {
+            onInactivityButton(event);
+        } else {
+            onAiHelpDismissButton(event, args);
         }
-        // Handle chatgpt's automatic response "dismiss" button
+    }
+
+    private void onAiHelpDismissButton(ButtonInteractionEvent event, List<String> args) {
         event.deferEdit().queue();
 
         ThreadChannel channel = event.getChannel().asThreadChannel();
@@ -210,7 +204,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
                     event, args),
                     handleParentMessageDeleted(interactionUser, channel, event, args));
-
     }
 
     private boolean isPostAuthor(Member interactionUser, Message message) {
@@ -262,16 +255,18 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         helper.writeHelpThreadToDatabase(authorId, threadChannel);
     }
 
-    private void handleMarkActiveInteraction(ButtonInteractionEvent event) {
+    private void onInactivityButton(ButtonInteractionEvent event) {
         event.deferEdit().queue();
 
         if (event.getChannel() instanceof ThreadChannel thread) {
-            // Reopen the thread so people can chat, then delete the bot's warning
-            thread.getManager().setArchived(false).queue();
-            event.getMessage().delete().queue();
+            Message botClosedThreadMessage = event.getMessage();
 
-            log.info("Thread {} was manually reactivated via button by {}",
-                    thread.getId(), event.getUser().getName());
+            thread.getManager().setArchived(false)
+                    .flatMap(v -> botClosedThreadMessage.delete())
+                    .queue();
+
+            log.debug("Thread {} was manually reactivated via button by {}",
+                    thread.getId(), event.getUser().getId());
         }
     }
 }

@@ -131,16 +131,14 @@ public final class HelpThreadAutoArchiver implements Routine {
 
     private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId, MessageEmbed embed) {
 
-        // --- UPDATED: Added ActionRow with custom namespace ID ---
         Function<Member, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.getAsMention())
                         .addEmbeds(embed)
-                        .addActionRow(Button.primary("OTHER:thread-inactivity:mark-active", "Mark Active"));
+                        .addActionRow(Button.primary("OTHER:chatpgt-answer:mark-active", "Mark Active"));
 
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
                 () -> threadChannel.sendMessageEmbeds(embed)
-                        .addActionRow(Button.primary("OTHER:thread-inactivity:mark-active", "Mark Active"));
-        // ---------------------------------------------------------
+                        .addActionRow(Button.primary("OTHER:chatpgt-answer:mark-active", "Mark Active"));
 
         threadChannel.getGuild()
                 .retrieveMemberById(authorId)
@@ -166,11 +164,9 @@ public final class HelpThreadAutoArchiver implements Routine {
                 "Was unable to find a matching thread for id: {} in DB, archiving thread without mentioning OP",
                 threadChannel.getId());
 
-        // --- UPDATED: Added ActionRow with custom namespace ID ---
         threadChannel.sendMessageEmbeds(embed)
-                .addActionRow(Button.primary("OTHER:thread-inactivity:mark-active", "Mark Active"))
+                .addActionRow(Button.primary("OTHER:chatpgt-answer:mark-active", "Mark Active"))
                 .flatMap(sentEmbed -> threadChannel.getManager().setArchived(true))
                 .queue();
-        // ---------------------------------------------
     }
 }
