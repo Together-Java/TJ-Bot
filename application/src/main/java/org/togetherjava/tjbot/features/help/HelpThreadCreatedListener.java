@@ -166,16 +166,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         componentIdInteractor.acceptComponentIdGenerator(generator);
     }
 
-    /**
-     * Returns the component ID interactor used by this listener, so that other components (e.g. the
-     * archiver) can generate IDs within the same namespace.
-     *
-     * @return the component ID interactor
-     */
-    public ComponentIdInteractor getComponentIdInteractor() {
-        return componentIdInteractor;
-    }
-
     private Consumer<Throwable> handleParentMessageDeleted(Member user, ThreadChannel channel,
             ButtonInteractionEvent event, List<String> args) {
         int noOfMessages = 1; // we only care about first message from channel history
@@ -197,11 +187,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        if (args.contains("mark-active")) {
-            onInactivityButton(event);
-        } else {
-            onAiHelpDismissButton(event, args);
-        }
+        onAiHelpDismissButton(event, args);
     }
 
     private void onAiHelpDismissButton(ButtonInteractionEvent event, List<String> args) {
@@ -263,21 +249,5 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         }
 
         helper.writeHelpThreadToDatabase(authorId, threadChannel);
-    }
-
-    private void onInactivityButton(ButtonInteractionEvent event) {
-        event.deferEdit().queue();
-
-        if (event.getChannel() instanceof ThreadChannel thread) {
-            Message botClosedThreadMessage = event.getMessage();
-
-            thread.getManager()
-                .setArchived(false)
-                .flatMap(_ -> botClosedThreadMessage.delete())
-                .queue();
-
-            log.debug("Thread {} was manually reactivated via button by user {}", thread.getId(),
-                    event.getUser().getId());
-        }
     }
 }

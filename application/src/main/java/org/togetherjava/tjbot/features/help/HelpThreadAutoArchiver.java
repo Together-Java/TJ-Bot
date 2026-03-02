@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
@@ -15,6 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.Routine;
+import org.togetherjava.tjbot.features.UserInteractionType;
+import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 
 import java.time.Duration;
@@ -29,25 +33,62 @@ import java.util.function.Supplier;
  * Routine, which periodically checks all help threads and archives them if there has not been any
  * recent activity.
  */
-public final class HelpThreadAutoArchiver implements Routine {
+public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(HelpThreadAutoArchiver.class);
     private static final int SCHEDULE_MINUTES = 60;
     private static final Duration ARCHIVE_AFTER_INACTIVITY_OF = Duration.ofHours(12);
     private static final String MARK_ACTIVE_LABEL = "Mark Active";
+    private static final String MARK_ACTIVE_ID = "mark-active";
 
     private final HelpSystemHelper helper;
-    private final ComponentIdInteractor componentIdInteractor;
+    private final ComponentIdInteractor inactivityInteractor =
+            new ComponentIdInteractor(getInteractionType(), getName());
 
     /**
      * Creates a new instance.
      *
      * @param helper the helper to use
-     * @param componentIdInteractor the interactor used to generate component IDs for buttons
      */
-    public HelpThreadAutoArchiver(HelpSystemHelper helper,
-            ComponentIdInteractor componentIdInteractor) {
+    public HelpThreadAutoArchiver(HelpSystemHelper helper) {
         this.helper = helper;
-        this.componentIdInteractor = componentIdInteractor;
+    }
+
+    @Override
+    public String getName() {
+        return "thread-inactivity";
+    }
+
+    @Override
+    public UserInteractionType getInteractionType() {
+        return UserInteractionType.OTHER;
+    }
+
+    @Override
+    public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
+        inactivityInteractor.acceptComponentIdGenerator(generator);
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        if (args.contains(MARK_ACTIVE_ID)) {
+            onInactivityButton(event);
+        }
+    }
+
+    private void onInactivityButton(ButtonInteractionEvent event) {
+        event.deferEdit().queue();
+
+        if (event.getChannel() instanceof ThreadChannel thread) {
+            Message botClosedThreadMessage = event.getMessage();
+
+            thread.getManager()
+                .setArchived(false)
+                .flatMap(_ -> botClosedThreadMessage.delete())
+                .queue();
+
+            logger.debug("Thread {} was manually reactivated via button by user {}", thread.getId(),
+                    event.getUser().getId());
+        }
     }
 
     @Override
@@ -138,7 +179,7 @@ public final class HelpThreadAutoArchiver implements Routine {
     private void triggerArchiveFlow(ThreadChannel threadChannel, long authorId,
             MessageEmbed embed) {
 
-        String markActiveId = helper.generateMarkActiveId(componentIdInteractor);
+        String markActiveId = inactivityInteractor.generateComponentId(MARK_ACTIVE_ID);
 
         Function<Member, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.getAsMention())
@@ -174,7 +215,7 @@ public final class HelpThreadAutoArchiver implements Routine {
                 "Was unable to find a matching thread for id: {} in DB, archiving thread without mentioning OP",
                 threadChannel.getId());
 
-        String markActiveId = helper.generateMarkActiveId(componentIdInteractor);
+        String markActiveId = inactivityInteractor.generateComponentId(MARK_ACTIVE_ID);
 
         threadChannel.sendMessageEmbeds(embed)
             .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL))

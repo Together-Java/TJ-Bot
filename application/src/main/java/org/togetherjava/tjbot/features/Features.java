@@ -146,8 +146,7 @@ public class Features {
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         HelpThreadCreatedListener helpThreadCreatedListener =
                 new HelpThreadCreatedListener(helpSystemHelper);
-        features.add(new HelpThreadAutoArchiver(helpSystemHelper,
-                helpThreadCreatedListener.getComponentIdInteractor()));
+        features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
