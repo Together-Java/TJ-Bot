@@ -125,6 +125,8 @@ public class Features {
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
+        HelpThreadCreatedListener helpThreadCreatedListener =
+                new HelpThreadCreatedListener(helpSystemHelper);
         TopHelpersService topHelpersService = new TopHelpersService(database);
         TopHelpersAssignmentRoutine topHelpersAssignmentRoutine =
                 new TopHelpersAssignmentRoutine(config, topHelpersService);
@@ -145,8 +147,6 @@ public class Features {
         features
             .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
-        HelpThreadCreatedListener helpThreadCreatedListener =
-                new HelpThreadCreatedListener(helpSystemHelper);
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
