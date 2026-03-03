@@ -215,4 +215,7 @@
         "cleanChannelsAmount": 20,
         "minimumChannelsAmount": 40
     }
+    "cakeDayConfig": {
+        "rolePattern": "Cake Day"
+    }
 }

@@ -49,8 +49,9 @@ public final class Config {
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
     private final QuoteBoardConfig quoteBoardConfig;
-    private final TopHelpersConfig topHelpers;
     private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
+    private final TopHelpersConfig topHelpers;
+    private final CakeDayConfig cakeDayConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -108,7 +109,8 @@ public final class Config {
                     required = true) QuoteBoardConfig quoteBoardConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
             @JsonProperty(value = "dynamicVoiceChatConfig",
-                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
+                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig,
+            @JsonProperty(value = "cakeDayConfig", required = true) CakeDayConfig cakeDayConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -143,9 +145,10 @@ public final class Config {
         this.featureBlacklistConfig = Objects.requireNonNull(featureBlacklistConfig);
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
-        this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
         this.topHelpers = Objects.requireNonNull(topHelpers);
+        this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
         this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
+        this.cakeDayConfig = Objects.requireNonNull(cakeDayConfig);
     }
 
     /**
@@ -437,6 +440,15 @@ public final class Config {
      */
     public String getSelectRolesChannelPattern() {
         return selectRolesChannelPattern;
+    }
+
+    /**
+     * Retrieves the Cake Day configuration.
+     *
+     * @return the cake-day feature configuration
+     */
+    public CakeDayConfig getCakeDayConfig() {
+        return cakeDayConfig;
     }
 
     /**
