@@ -187,7 +187,10 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        // This method handles chatgpt's automatic response "dismiss" button
+        onAiHelpDismissButton(event, args);
+    }
+
+    private void onAiHelpDismissButton(ButtonInteractionEvent event, List<String> args) {
         event.deferEdit().queue();
 
         ThreadChannel channel = event.getChannel().asThreadChannel();
@@ -197,7 +200,6 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             .queue(forumPostMessage -> handleDismiss(interactionUser, channel, forumPostMessage,
                     event, args),
                     handleParentMessageDeleted(interactionUser, channel, event, args));
-
     }
 
     private boolean isPostAuthor(Member interactionUser, Message message) {
