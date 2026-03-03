@@ -74,7 +74,7 @@ public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
     }
 
     private void onMarkActiveButton(ButtonInteractionEvent event) {
-        event.deferEdit().queue();
+        event.reply("You have marked the thread as active.").setEphemeral(true).queue();
 
         ThreadChannel thread = event.getChannel().asThreadChannel();
         Message botClosedThreadMessage = event.getMessage();
