@@ -2,7 +2,7 @@
  * Analytics system for collecting and persisting bot activity metrics.
  * <p>
  * This package provides services and components that record events for later analysis and reporting
- * across multiple feature areas, not limited to commands.
+ * across multiple feature areas.
  */
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault

@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.features.basic;
 
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
@@ -12,7 +11,6 @@ import org.togetherjava.tjbot.features.SlashCommandAdapter;
  * The implemented command is {@code /ping}, upon which the bot will respond with {@code Pong!}.
  */
 public final class PingCommand extends SlashCommandAdapter {
-
     /**
      * Creates an instance of the ping pong command.
      */
@@ -27,12 +25,6 @@ public final class PingCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            event.reply("This command can only be used in a server!").setEphemeral(true).queue();
-            return;
-        }
-
         event.reply("Pong!").queue();
     }
 }

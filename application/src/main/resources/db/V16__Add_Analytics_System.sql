@@ -1,13 +1,6 @@
-CREATE TABLE command_usage
+CREATE TABLE analytics
 (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_id    BIGINT  NOT NULL,
-    command_name  TEXT    NOT NULL,
-    user_id       BIGINT  NOT NULL,
-    executed_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    success       BOOLEAN NOT NULL DEFAULT TRUE,
-    error_message TEXT
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    event       TEXT      NOT NULL,
+    happened_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE INDEX idx_command_usage_channel ON command_usage(channel_id);
-CREATE INDEX idx_command_usage_command_name ON command_usage(command_name);

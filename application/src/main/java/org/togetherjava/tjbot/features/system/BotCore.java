@@ -41,7 +41,7 @@ import org.togetherjava.tjbot.features.UserContextCommand;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.VoiceReceiver;
-import org.togetherjava.tjbot.features.analytics.AnalyticsService;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentId;
 import org.togetherjava.tjbot.features.componentids.ComponentIdParser;
 import org.togetherjava.tjbot.features.componentids.ComponentIdStore;
@@ -85,7 +85,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
     private final ComponentIdStore componentIdStore;
     private final Map<Pattern, MessageReceiver> channelNameToMessageReceiver = new HashMap<>();
     private final Map<Pattern, VoiceReceiver> channelNameToVoiceReceiver = new HashMap<>();
-    private final AnalyticsService analyticsService;
+    private final Metrics metrics;
 
     /**
      * Creates a new command system which uses the given database to allow commands to persist data.
@@ -95,12 +95,11 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
      * @param jda the JDA instance that this command system will be used with
      * @param database the database that commands may use to persist data
      * @param config the configuration to use for this system
+     * @param metrics the metrics service for tracking analytics
      */
-    public BotCore(JDA jda, Database database, Config config) {
-        Collection<Feature> features = Features.createFeatures(jda, database, config);
-
-        // Initialize analytics service
-        analyticsService = new AnalyticsService(database);
+    public BotCore(JDA jda, Database database, Config config, Metrics metrics) {
+        this.metrics = metrics;
+        Collection<Feature> features = Features.createFeatures(jda, database, config, metrics);
 
         // Message receivers
         features.stream()
@@ -383,22 +382,14 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", name, event.getId(),
                 event.getGuild());
         COMMAND_SERVICE.execute(() -> {
-            try {
-                requireUserInteractor(UserInteractionType.SLASH_COMMAND.getPrefixedName(name),
-                        SlashCommand.class)
-                    .onSlashCommand(event);
 
+            SlashCommand interactor = requireUserInteractor(
+                    UserInteractionType.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class);
 
-                analyticsService.recordCommandSuccess(event.getChannel().getIdLong(), name,
-                        event.getUser().getIdLong());
-            } catch (Exception ex) {
+            metrics.count("slash-" + name);
 
-                analyticsService.recordCommandFailure(event.getChannel().getIdLong(), name,
-                        event.getUser().getIdLong(),
-                        ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
+            interactor.onSlashCommand(event);
 
-                throw ex;
-            }
         });
     }
 
