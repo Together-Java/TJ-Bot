@@ -432,7 +432,7 @@ public final class RSSHandlerRoutine implements Routine {
 
             long blacklistedHours = calculateWaitHours(newCount);
 
-            logger.warn(
+            logger.debug(
                     "RSS fetch failed for {} (Attempt #{}). Backing off for {} hours. Reason: {}",
                     rssUrl, newCount, blacklistedHours, e.getMessage(), e);
 
