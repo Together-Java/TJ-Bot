@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
-import org.togetherjava.tjbot.db.generated.tables.Analytics;
+import org.togetherjava.tjbot.db.generated.tables.MetricEvents;
 
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
@@ -37,7 +37,7 @@ public final class Metrics {
     public void count(String event) {
         logger.debug("Counting new record for event: {}", event);
         Instant moment = Instant.now();
-        service.submit(() -> persist(event, moment));
+        service.submit(() -> processEvent(event, moment));
 
     }
 
@@ -46,13 +46,11 @@ public final class Metrics {
      * @param event the event to save
      * @param happenedAt the moment when the event is dispatched
      */
-    private void persist(String event, Instant happenedAt) {
-        logger.debug("Persisting event: {}, at {}", event, happenedAt);
-        database.write(context -> context.newRecord(Analytics.ANALYTICS)
+    private void processEvent(String event, Instant happenedAt) {
+        database.write(context -> context.newRecord(MetricEvents.METRIC_EVENTS)
             .setEvent(event)
             .setHappenedAt(happenedAt)
             .insert());
-        logger.debug("Event {} persisted successfully", event);
     }
 
 }

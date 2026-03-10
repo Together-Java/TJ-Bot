@@ -1,6 +1,6 @@
-CREATE TABLE analytics
+CREATE TABLE metric_events
 (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     event       TEXT      NOT NULL,
-    happened_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    happened_at TIMESTAMP NOT NULL
 );
