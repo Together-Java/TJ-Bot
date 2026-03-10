@@ -39,19 +39,18 @@ public final class Metrics {
         Instant moment = Instant.now();
         service.submit(() -> persist(event, moment));
 
-        logger.debug("Event {} new record saved successfully", event);
     }
 
     /**
      *
      * @param event the event to save
-     * @param moment the moment when the event is dispatched
+     * @param happenedAt the moment when the event is dispatched
      */
-    private void persist(String event, Instant moment) {
-        logger.debug("Persisting event: {}, at {}", event, moment);
+    private void persist(String event, Instant happenedAt) {
+        logger.debug("Persisting event: {}, at {}", event, happenedAt);
         database.write(context -> context.newRecord(Analytics.ANALYTICS)
             .setEvent(event)
-            .setHappenedAt(moment)
+            .setHappenedAt(happenedAt)
             .insert());
         logger.debug("Event {} persisted successfully", event);
     }
