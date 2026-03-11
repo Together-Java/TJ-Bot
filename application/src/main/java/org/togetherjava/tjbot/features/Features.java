@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
 import org.togetherjava.tjbot.features.basic.QuoteBoardForwarder;
@@ -90,7 +91,7 @@ import java.util.Collection;
  * it with the system.
  * <p>
  * To add a new slash command, extend the commands returned by
- * {@link #createFeatures(JDA, Database, Config)}.
+ * {@link #createFeatures(JDA, Database, Config, Metrics)}.
  */
 public class Features {
     private Features() {
@@ -106,9 +107,12 @@ public class Features {
      * @param jda the JDA instance commands will be registered at
      * @param database the database of the application, which features can use to persist data
      * @param config the configuration features should use
+     * @param metrics the metrics service for tracking analytics
      * @return a collection of all features
      */
-    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config) {
+    @SuppressWarnings("unused")
+    public static Collection<Feature> createFeatures(JDA jda, Database database, Config config,
+            Metrics metrics) {
         FeatureBlacklistConfig blacklistConfig = config.getFeatureBlacklistConfig();
         JShellEval jshellEval = new JShellEval(config.getJshell(), config.getGitHubApiKey());
 

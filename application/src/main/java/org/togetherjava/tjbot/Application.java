@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.Features;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.logging.LogMarkers;
 import org.togetherjava.tjbot.logging.discord.DiscordLogging;
@@ -82,13 +83,15 @@ public class Application {
             }
             Database database = new Database("jdbc:sqlite:" + databasePath.toAbsolutePath());
 
+            Metrics metrics = new Metrics(database);
+
             JDA jda = JDABuilder.createDefault(config.getToken())
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT)
                 .build();
 
             jda.awaitReady();
 
-            BotCore core = new BotCore(jda, database, config);
+            BotCore core = new BotCore(jda, database, config, metrics);
             CommandReloading.reloadCommands(jda, core);
             core.scheduleRoutines(jda);
 
