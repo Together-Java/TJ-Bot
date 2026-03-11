@@ -17,6 +17,7 @@ import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
@@ -52,6 +53,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
 
     private final ComponentIdInteractor componentIdInteractor;
+    private final Metrics metrics;
     private final Map<String, CodeAction> labelToCodeAction;
 
     /**
@@ -71,9 +73,12 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
      * @param blacklist the feature blacklist, used to test if certain code actions should be
      *        disabled
      * @param jshellEval used to execute java code and build visual result
+     * @param metrics to track events
      */
-    public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval) {
+    public CodeMessageHandler(FeatureBlacklist<String> blacklist, JShellEval jshellEval,
+            Metrics metrics) {
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
+        this.metrics = metrics;
 
         List<CodeAction> codeActions = blacklist
             .filterStream(Stream.of(new FormatCodeCommand(), new EvalCodeCommand(jshellEval)),
@@ -183,6 +188,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 CodeFence code = extractCodeOrFallback(originalMessage.get().getContentRaw());
 
                 // Apply the selected action
+                metrics.count("code_action-" + codeAction.getLabel());
                 return event.getHook()
                     .editOriginalEmbeds(codeAction.apply(code))
                     .setActionRow(createButtons(originalMessageId, codeAction));

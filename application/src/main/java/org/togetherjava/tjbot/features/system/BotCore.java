@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.features.system;
+﻿package org.togetherjava.tjbot.features.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.Channel;
@@ -384,7 +384,6 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         COMMAND_SERVICE.execute(() -> {
             SlashCommand interactor = requireUserInteractor(
                     UserInteractionType.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class);
-
             String eventName = "slash-" + name;
             if (event.getSubcommandName() != null) {
                 eventName += "_" + event.getSubcommandName();
@@ -459,10 +458,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         logger.debug("Received message context command '{}' (#{}) on guild '{}'", name,
                 event.getId(), event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractionType.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
-                MessageContextCommand.class)
-            .onMessageContext(event));
+        COMMAND_SERVICE.execute(() -> {
+            MessageContextCommand userInteractor = requireUserInteractor(
+                    UserInteractionType.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
+                    MessageContextCommand.class);
+            metrics.count("msg_ctx-" + name);
+            userInteractor.onMessageContext(event);
+        });
     }
 
     @Override
@@ -471,10 +473,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         logger.debug("Received user context command '{}' (#{}) on guild '{}'", name, event.getId(),
                 event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractionType.USER_CONTEXT_COMMAND.getPrefixedName(name),
-                UserContextCommand.class)
-            .onUserContext(event));
+        COMMAND_SERVICE.execute(() -> {
+            UserContextCommand userInteractor = requireUserInteractor(
+                    UserInteractionType.USER_CONTEXT_COMMAND.getPrefixedName(name),
+                    UserContextCommand.class);
+            metrics.count("user_ctx-" + name);
+            userInteractor.onUserContext(event);
+        });
     }
 
     /**

@@ -236,7 +236,6 @@ public final class HelpSystemHelper {
     }
 
     void writeHelpThreadToDatabase(long authorId, ThreadChannel threadChannel) {
-
         Instant createdAt = threadChannel.getTimeCreated().toInstant();
 
         String appliedTags = threadChannel.getAppliedTags()

@@ -24,6 +24,7 @@ import org.togetherjava.tjbot.config.RSSFeedsConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.RssFeedRecord;
 import org.togetherjava.tjbot.features.Routine;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import javax.annotation.Nonnull;
 
@@ -85,6 +86,7 @@ public final class RSSHandlerRoutine implements Routine {
     private final Map<RSSFeed, Predicate<String>> targetChannelPatterns;
     private final int interval;
     private final Database database;
+    private final Metrics metrics;
 
     private final Cache<String, FailureState> circuitBreaker =
             Caffeine.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).maximumSize(500).build();
@@ -99,11 +101,14 @@ public final class RSSHandlerRoutine implements Routine {
      *
      * @param config The configuration containing RSS feed details.
      * @param database The database for storing RSS feed data.
+     * @param metrics to track events
      */
-    public RSSHandlerRoutine(Config config, Database database) {
+    public RSSHandlerRoutine(Config config, Database database, Metrics metrics) {
         this.config = config.getRSSFeedsConfig();
         this.interval = this.config.pollIntervalInMinutes();
         this.database = database;
+        this.metrics = metrics;
+
         this.fallbackChannelPattern =
                 Pattern.compile(this.config.fallbackChannelPattern()).asMatchPredicate();
         isVideoLink = Pattern.compile(this.config.videoLinkPattern()).asMatchPredicate();
@@ -260,6 +265,7 @@ public final class RSSHandlerRoutine implements Routine {
      * @param feedConfig the RSS feed configuration
      */
     private void postItem(List<TextChannel> textChannels, Item rssItem, RSSFeed feedConfig) {
+        metrics.count("rss-item_posted");
         MessageCreateData message = constructMessage(rssItem, feedConfig);
         textChannels.forEach(channel -> channel.sendMessage(message).queue());
     }

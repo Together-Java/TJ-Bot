@@ -27,6 +27,7 @@ import org.togetherjava.tjbot.config.ScamBlockerConfig;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.moderation.ModerationAction;
@@ -75,6 +76,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final ScamHistoryStore scamHistoryStore;
     private final Predicate<String> isRequiredRole;
 
+    private final Metrics metrics;
     private final ComponentIdInteractor componentIdInteractor;
 
     /**
@@ -83,9 +85,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
      * @param actionsStore to store quarantine actions in
      * @param scamHistoryStore to store and retrieve scam history from
      * @param config the config to use for this
+     * @param metrics to track events
      */
     public ScamBlocker(ModerationActionsStore actionsStore, ScamHistoryStore scamHistoryStore,
-            Config config) {
+            Config config, Metrics metrics) {
         this.actionsStore = actionsStore;
         this.scamHistoryStore = scamHistoryStore;
         this.config = config;
@@ -102,6 +105,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         isRequiredRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
 
+        this.metrics = metrics;
         componentIdInteractor = new ComponentIdInteractor(getInteractionType(), getName());
     }
 
@@ -164,6 +168,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     }
 
     private void takeAction(MessageReceivedEvent event) {
+        metrics.count("scam-detected");
         switch (mode) {
             case OFF -> throw new AssertionError(
                     "The OFF-mode should be detected earlier already to prevent expensive computation");

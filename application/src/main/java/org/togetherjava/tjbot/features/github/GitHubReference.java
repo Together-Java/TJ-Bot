@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import java.awt.Color;
 import java.io.FileNotFoundException;
@@ -67,6 +68,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             DateTimeFormatter.ofPattern("dd MMM, yyyy").withZone(ZoneOffset.UTC);
     private final Predicate<String> hasGithubIssueReferenceEnabled;
     private final Config config;
+    private final Metrics metrics;
 
     /**
      * The repositories that are searched when looking for an issue.
@@ -80,9 +82,11 @@ public final class GitHubReference extends MessageReceiverAdapter {
      * a predicate for matching allowed channels for feature and acquires repositories.
      *
      * @param config The Config to get allowed channel pattern for feature.
+     * @param metrics to track events
      */
-    public GitHubReference(Config config) {
+    public GitHubReference(Config config, Metrics metrics) {
         this.config = config;
+        this.metrics = metrics;
         this.hasGithubIssueReferenceEnabled =
                 Pattern.compile(config.getGitHubReferencingEnabledChannelPattern())
                     .asMatchPredicate();
@@ -142,6 +146,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
                 ? message.getChannel().asThreadChannel()
                 : message.getChannel().asTextChannel();
 
+        metrics.count("gh_reference");
         for (List<MessageEmbed> messageEmbeds : partition) {
             if (isFirstBatch) {
                 message.replyEmbeds(messageEmbeds).mentionRepliedUser(mentionRepliedUser).queue();

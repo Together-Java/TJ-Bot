@@ -18,6 +18,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.Guilds;
@@ -46,6 +47,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
             new ComponentIdInteractor(getInteractionType(), getName());
 
     private final String githubApiKey;
+    private final Metrics metrics;
     private final Set<String> extensionFilter = Set.of("txt", "java", "gradle", "xml", "kt", "json",
             "fxml", "css", "c", "h", "cpp", "py", "yml");
 
@@ -56,11 +58,13 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
      * Creates a new instance.
      *
      * @param config used to get api key and channel names.
+     * @param metrics to track events
      * @see org.togetherjava.tjbot.features.Features
      */
-    public FileSharingMessageListener(Config config) {
+    public FileSharingMessageListener(Config config, Metrics metrics) {
         super(Pattern.compile(".*"));
         githubApiKey = config.getGitHubApiKey();
+        this.metrics = metrics;
         isHelpForumName =
                 Pattern.compile(config.getHelpSystem().getHelpForumPattern()).asMatchPredicate();
         isSoftModRole = Pattern.compile(config.getSoftModerationRolePattern()).asMatchPredicate();
@@ -112,6 +116,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
             new GitHubBuilder().withOAuthToken(githubApiKey).build().getGist(gistId).delete();
             event.deferEdit().queue();
             event.getHook().deleteOriginal().queue();
+            metrics.count("file_sharing-deleted");
         } catch (IOException e) {
             logger.warn("Failed to delete gist with id {}", gistId, e);
         }
@@ -190,6 +195,7 @@ public final class FileSharingMessageListener extends MessageReceiverAdapter
                 componentIdInteractor.generateComponentId(message.getAuthor().getId(), gistId),
                 "Delete");
 
+        metrics.count("file_sharing-uploaded");
         message.reply(messageContent).setActionRow(gist, delete).queue();
     }
 

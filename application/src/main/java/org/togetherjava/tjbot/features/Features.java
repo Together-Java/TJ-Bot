@@ -121,18 +121,18 @@ public class Features {
         ModerationActionsStore actionsStore = new ModerationActionsStore(database);
         ModAuditLogWriter modAuditLogWriter = new ModAuditLogWriter(config);
         ScamHistoryStore scamHistoryStore = new ScamHistoryStore(database);
-        GitHubReference githubReference = new GitHubReference(config);
+        GitHubReference githubReference = new GitHubReference(config, metrics);
         CodeMessageHandler codeMessageHandler =
-                new CodeMessageHandler(blacklistConfig.special(), jshellEval);
-        ChatGptService chatGptService = new ChatGptService(config);
+                new CodeMessageHandler(blacklistConfig.special(), jshellEval, metrics);
+        ChatGptService chatGptService = new ChatGptService(config, metrics);
         HelpSystemHelper helpSystemHelper = new HelpSystemHelper(config, database, chatGptService);
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
         HelpThreadCreatedListener helpThreadCreatedListener =
-                new HelpThreadCreatedListener(helpSystemHelper);
+                new HelpThreadCreatedListener(helpSystemHelper, metrics);
         TopHelpersService topHelpersService = new TopHelpersService(database);
         TopHelpersAssignmentRoutine topHelpersAssignmentRoutine =
-                new TopHelpersAssignmentRoutine(config, topHelpersService);
+                new TopHelpersAssignmentRoutine(config, topHelpersService, metrics);
 
         // NOTE The system can add special system relevant commands also by itself,
         // hence this list may not necessarily represent the full list of all commands actually
@@ -147,22 +147,22 @@ public class Features {
         features.add(new ScamHistoryPurgeRoutine(scamHistoryStore));
         features.add(new HelpThreadMetadataPurger(database));
         features.add(new HelpThreadActivityUpdater(helpSystemHelper));
-        features
-            .add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter, database));
+        features.add(new AutoPruneHelperRoutine(config, helpSystemHelper, modAuditLogWriter,
+                database, metrics));
         features.add(new HelpThreadAutoArchiver(helpSystemHelper));
         features.add(new LeftoverBookmarksCleanupRoutine(bookmarksSystem));
         features.add(new MarkHelpThreadCloseInDBRoutine(database, helpThreadLifecycleListener));
         features.add(new MemberCountDisplayRoutine(config));
-        features.add(new RSSHandlerRoutine(config, database));
+        features.add(new RSSHandlerRoutine(config, database, metrics));
         features.add(topHelpersAssignmentRoutine);
 
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
-        features.add(new SuggestionsUpDownVoter(config));
-        features.add(new ScamBlocker(actionsStore, scamHistoryStore, config));
-        features.add(new MediaOnlyChannelListener(config));
-        features.add(new FileSharingMessageListener(config));
-        features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter));
+        features.add(new SuggestionsUpDownVoter(config, metrics));
+        features.add(new ScamBlocker(actionsStore, scamHistoryStore, config, metrics));
+        features.add(new MediaOnlyChannelListener(config, metrics));
+        features.add(new FileSharingMessageListener(config, metrics));
+        features.add(new BlacklistedAttachmentListener(config, modAuditLogWriter, metrics));
         features.add(githubReference);
         features.add(codeMessageHandler);
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
@@ -171,11 +171,11 @@ public class Features {
         features.add(new QuoteBoardForwarder(config));
 
         // Voice receivers
-        features.add(new DynamicVoiceChat(config));
+        features.add(new DynamicVoiceChat(config, metrics));
 
         // Event receivers
-        features.add(new RejoinModerationRoleListener(actionsStore, config));
-        features.add(new GuildLeaveCloseThreadListener(config));
+        features.add(new RejoinModerationRoleListener(actionsStore, config, metrics));
+        features.add(new GuildLeaveCloseThreadListener(config, metrics));
         features.add(new LeftoverBookmarksListener(bookmarksSystem));
         features.add(helpThreadCreatedListener);
         features.add(new HelpThreadLifecycleListener(helpSystemHelper, database));
@@ -190,7 +190,7 @@ public class Features {
         features.add(new LogLevelCommand());
         features.add(new PingCommand());
         features.add(new TeXCommand());
-        features.add(new TagCommand(tagSystem));
+        features.add(new TagCommand(tagSystem, metrics));
         features.add(new TagManageCommand(tagSystem, modAuditLogWriter));
         features.add(new TagsCommand(tagSystem));
         features.add(new WarnCommand(actionsStore));
@@ -210,7 +210,7 @@ public class Features {
         features.add(new WolframAlphaCommand(config));
         features.add(new GitHubCommand(githubReference));
         features.add(new ModMailCommand(jda, config));
-        features.add(new HelpThreadCommand(config, helpSystemHelper));
+        features.add(new HelpThreadCommand(config, helpSystemHelper, metrics));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper));

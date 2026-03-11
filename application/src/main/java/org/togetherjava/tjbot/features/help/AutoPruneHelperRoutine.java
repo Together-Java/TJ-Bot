@@ -12,6 +12,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.HelperPruneConfig;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.features.Routine;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 
 import javax.annotation.Nullable;
@@ -45,6 +46,7 @@ public final class AutoPruneHelperRoutine implements Routine {
     private final HelpSystemHelper helper;
     private final ModAuditLogWriter modAuditLogWriter;
     private final Database database;
+    private final Metrics metrics;
     private final List<String> allCategories;
     private final Predicate<String> selectYourRolesChannelNamePredicate;
 
@@ -55,13 +57,15 @@ public final class AutoPruneHelperRoutine implements Routine {
      * @param helper the helper to use
      * @param modAuditLogWriter to inform mods when manual pruning becomes necessary
      * @param database to determine whether a user is inactive
+     * @param metrics to track events
      */
     public AutoPruneHelperRoutine(Config config, HelpSystemHelper helper,
-            ModAuditLogWriter modAuditLogWriter, Database database) {
+            ModAuditLogWriter modAuditLogWriter, Database database, Metrics metrics) {
         allCategories = config.getHelpSystem().getCategories();
         this.helper = helper;
         this.modAuditLogWriter = modAuditLogWriter;
         this.database = database;
+        this.metrics = metrics;
 
         HelperPruneConfig helperPruneConfig = config.getHelperPruneConfig();
         roleFullLimit = helperPruneConfig.roleFullLimit();
@@ -108,6 +112,7 @@ public final class AutoPruneHelperRoutine implements Routine {
 
         if (isRoleFull(withRole)) {
             logger.debug("Helper role {} is full, starting to prune.", targetRole.getName());
+            metrics.count("autoprune_helper-" + targetRole.getName());
             pruneRole(targetRole, withRole, selectRoleChannel, when);
         }
     }
