@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.features.github;
 
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import org.kohsuke.github.GHIssue;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
 
     private static final String TITLE_OPTION = "title";
     private static final Logger logger = LoggerFactory.getLogger(GitHubCommand.class);
+    private static final int MAX_SUGGESTED_CHOICES = 25;
 
     private final GitHubReference reference;
 
@@ -98,10 +100,13 @@ public final class GitHubCommand extends SlashCommandAdapter {
         String[] issueData = titleOption.split(" ", 2);
         String targetIssueTitle = issueData[1];
 
+        event.deferReply().queue();
+        InteractionHook hook = event.getHook();
+
         reference.findIssue(issueId, targetIssueTitle)
-            .ifPresentOrElse(issue -> event.replyEmbeds(reference.generateReply(issue)).queue(),
-                    () -> event.reply("Could not find the issue you are looking for.")
-                        .setEphemeral(true)
+            .ifPresentOrElse(
+                    issue -> hook.editOriginalEmbeds(reference.generateReply(issue)).queue(),
+                    () -> hook.editOriginal("Could not find the issue you are looking for.")
                         .queue());
     }
 
@@ -109,17 +114,21 @@ public final class GitHubCommand extends SlashCommandAdapter {
     public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
         String title = event.getOption(TITLE_OPTION).getAsString();
 
+        List<String> choices;
         if (title.isEmpty()) {
-            event.replyChoiceStrings(autocompleteGHIssueCache.stream().limit(25).toList()).queue();
+            choices = autocompleteGHIssueCache.stream().limit(MAX_SUGGESTED_CHOICES).toList();
         } else {
             Queue<String> closestSuggestions =
                     new PriorityQueue<>(Comparator.comparingInt(suggestionScorer(title)));
-
             closestSuggestions.addAll(autocompleteGHIssueCache);
-
-            List<String> choices = Stream.generate(closestSuggestions::poll).limit(25).toList();
-            event.replyChoiceStrings(choices).queue();
+            choices =
+                    Stream.generate(closestSuggestions::poll).limit(MAX_SUGGESTED_CHOICES).toList();
         }
+
+        if (choices.isEmpty()) {
+            choices = List.of("no issue found");
+        }
+        event.replyChoiceStrings(choices).queue();
 
         if (isCacheExpired()) {
             updateCache();
