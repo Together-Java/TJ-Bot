@@ -1,4 +1,4 @@
-﻿package org.togetherjava.tjbot.features.system;
+package org.togetherjava.tjbot.features.system;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.Channel;
@@ -384,6 +384,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         COMMAND_SERVICE.execute(() -> {
             SlashCommand interactor = requireUserInteractor(
                     UserInteractionType.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class);
+
             String eventName = "slash-" + name;
             if (event.getSubcommandName() != null) {
                 eventName += "_" + event.getSubcommandName();
