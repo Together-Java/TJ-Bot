@@ -126,7 +126,7 @@ public final class GitHubCommand extends SlashCommandAdapter {
         }
 
         if (choices.isEmpty()) {
-            choices = List.of("no issue found");
+            choices = List.of("No issues found");
         }
         event.replyChoiceStrings(choices).queue();
 
