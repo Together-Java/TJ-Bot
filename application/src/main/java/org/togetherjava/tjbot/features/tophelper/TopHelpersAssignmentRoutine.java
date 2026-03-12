@@ -1,6 +1,11 @@
 package org.togetherjava.tjbot.features.tophelper;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu.Builder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -10,9 +15,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
@@ -171,11 +173,10 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
                 ```""".formatted(timeRange.description(),
                 TopHelpersService.asAsciiTable(topHelpers, members));
 
-        StringSelectMenu.Builder menu =
-                StringSelectMenu.create(componentIdInteractor.generateComponentId())
-                    .setPlaceholder("Select the Top Helpers")
-                    .setMinValues(1)
-                    .setMaxValues(topHelpers.size());
+        Builder menu = StringSelectMenu.create(componentIdInteractor.generateComponentId())
+            .setPlaceholder("Select the Top Helpers")
+            .setMinValues(1)
+            .setMaxValues(topHelpers.size());
 
         Map<Long, Member> userIdToMember = TopHelpersService.mapUserIdToMember(members);
         topHelpers.stream()
@@ -184,9 +185,9 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             .forEach(menu::addOptions);
 
         MessageCreateData message = new MessageCreateBuilder().setContent(content)
-            .addActionRow(menu.build())
-            .addActionRow(Button
-                .danger(componentIdInteractor.generateComponentId(CANCEL_BUTTON_NAME), "Cancel"))
+            .addComponents(ActionRow.of(menu.build()))
+            .addComponents(ActionRow.of(Button
+                .danger(componentIdInteractor.generateComponentId(CANCEL_BUTTON_NAME), "Cancel")))
             .build();
 
         channel.sendMessage(message).queue();
@@ -274,11 +275,12 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
                 + topHelperList + "\nShould I send a generic announcement?";
         event.getHook()
             .editOriginal(content)
-            .setActionRow(
-                    Button.success(componentIdInteractor.generateComponentId(successButtonArgs),
-                            "Yes"),
-                    Button.danger(componentIdInteractor.generateComponentId(NO_MESSAGE_BUTTON_NAME),
-                            "No"))
+            .setComponents(
+                    ActionRow.of(Button.success(
+                            componentIdInteractor.generateComponentId(successButtonArgs), "Yes")),
+                    ActionRow.of(Button.danger(
+                            componentIdInteractor.generateComponentId(NO_MESSAGE_BUTTON_NAME),
+                            "No")))
             .queue();
     }
 

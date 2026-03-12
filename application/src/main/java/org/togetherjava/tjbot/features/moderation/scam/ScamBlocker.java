@@ -2,6 +2,9 @@ package org.togetherjava.tjbot.features.moderation.scam;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -13,8 +16,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -269,7 +270,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
         MessageCreateBuilder messageBuilder = new MessageCreateBuilder().setEmbeds(embed);
         if (!confirmDialog.isEmpty()) {
-            messageBuilder.setActionRow(confirmDialog);
+            messageBuilder.setComponents(ActionRow.of(confirmDialog));
         }
         MessageCreateData message = messageBuilder.build();
 

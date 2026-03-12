@@ -1,11 +1,12 @@
 package org.togetherjava.tjbot.features.mathcommands;
 
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IDeferrableCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.scilab.forge.jlatexmath.ParseException;
 import org.scilab.forge.jlatexmath.TeXConstants;
@@ -115,7 +116,8 @@ public final class TeXCommand extends SlashCommandAdapter {
         event.getHook()
             .editOriginalAttachments(
                     FileUpload.fromData(renderedTextImageStream.toByteArray(), "tex.png"))
-            .setActionRow(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete"))
+            .setComponents(ActionRow
+                .of(Button.of(ButtonStyle.DANGER, generateComponentId(userID), "Delete")))
             .queue();
     }
 

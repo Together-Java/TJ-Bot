@@ -1,6 +1,9 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -13,7 +16,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
@@ -173,7 +175,7 @@ public final class HelpSystemHelper {
         MessageEmbed responseEmbed =
                 generateGptResponseEmbed(answer, selfUser, originalQuestion, CHAT_GPT_MODEL);
         return post.flatMap(_ -> threadChannel.sendMessageEmbeds(responseEmbed)
-            .addActionRow(generateDismissButton(componentIdInteractor, messageId.get())));
+            .addComponents(generateDismissButton(componentIdInteractor, messageId.get())));
     }
 
     /**
@@ -205,9 +207,10 @@ public final class HelpSystemHelper {
             .build();
     }
 
-    private Button generateDismissButton(ComponentIdInteractor componentIdInteractor, String id) {
+    private MessageTopLevelComponent generateDismissButton(
+            ComponentIdInteractor componentIdInteractor, String id) {
         String buttonId = componentIdInteractor.generateComponentId(id);
-        return Button.danger(buttonId, "Dismiss");
+        return ActionRow.of(Button.danger(buttonId, "Dismiss"));
     }
 
     private Optional<String> prepareChatGptQuestion(ThreadChannel threadChannel,

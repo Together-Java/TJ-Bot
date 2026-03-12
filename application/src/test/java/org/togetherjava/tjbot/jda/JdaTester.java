@@ -2,6 +2,7 @@ package org.togetherjava.tjbot.jda;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -21,8 +22,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.Response;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -42,6 +41,7 @@ import net.dv8tion.jda.internal.entities.EntityBuilder;
 import net.dv8tion.jda.internal.entities.GuildImpl;
 import net.dv8tion.jda.internal.entities.MemberImpl;
 import net.dv8tion.jda.internal.entities.RoleImpl;
+import net.dv8tion.jda.internal.entities.SelfMemberImpl;
 import net.dv8tion.jda.internal.entities.SelfUserImpl;
 import net.dv8tion.jda.internal.entities.UserImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.PrivateChannelImpl;
@@ -169,7 +169,7 @@ public final class JdaTester {
         rateLimiter =
                 new SequentialRestRateLimiter(new RestRateLimiter.RateLimitConfig(RATE_LIMIT_POOL,
                         RestRateLimiter.GlobalRateLimit.create(), true));
-        Member selfMember = spy(new MemberImpl(guild, selfUser));
+        Member selfMember = spy(new SelfMemberImpl(guild, selfUser));
         member = spy(new MemberImpl(guild, user));
         textChannel = spy(new TextChannelImpl(TEXT_CHANNEL_ID, guild));
         threadChannel = spy(
@@ -211,8 +211,8 @@ public final class JdaTester {
 
         replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
-        when(replyAction.addActionRow(anyCollection())).thenReturn(replyAction);
-        when(replyAction.addActionRow(ArgumentMatchers.<ItemComponent>any()))
+        when(replyAction.addComponents(anyCollection())).thenReturn(replyAction);
+        when(replyAction.addComponents(ArgumentMatchers.<MessageTopLevelComponent>any()))
             .thenReturn(replyAction);
         when(replyAction.setContent(anyString())).thenReturn(replyAction);
         when(replyAction.addFiles(anyCollection())).thenReturn(replyAction);
@@ -223,7 +223,7 @@ public final class JdaTester {
 
         doNothing().when(webhookMessageEditAction).queue();
         doReturn(webhookMessageEditAction).when(webhookMessageEditAction)
-            .setActionRow(any(ItemComponent.class));
+            .setComponents(any(MessageTopLevelComponent.class));
 
         when(guild.getGuildChannelById(anyLong())).thenReturn(textChannel);
         doReturn(everyoneRole).when(guild).getPublicRole();
@@ -752,11 +752,7 @@ public final class JdaTester {
         when(receivedMessage.getContentStripped()).thenReturn(clientMessage.getContent());
 
         when(receivedMessage.getComponents()).thenReturn(clientMessage.getComponents());
-        when(receivedMessage.getButtons()).thenReturn(clientMessage.getComponents()
-            .stream()
-            .map(LayoutComponent::getButtons)
-            .flatMap(List::stream)
-            .toList());
+        when(receivedMessage.getComponentTree()).thenReturn(clientMessage.getComponentTree());
 
         List<Message.Attachment> attachments = clientMessage.getAttachments()
             .stream()
