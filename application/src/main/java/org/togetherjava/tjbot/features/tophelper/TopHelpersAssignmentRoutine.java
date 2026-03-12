@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.config.TopHelpersConfig;
 import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.Guilds;
@@ -65,6 +66,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
 
     private final TopHelpersConfig config;
     private final TopHelpersService service;
+    private final Metrics metrics;
     private final Predicate<String> roleNamePredicate;
     private final Predicate<String> assignmentChannelNamePredicate;
     private final Predicate<String> announcementChannelNamePredicate;
@@ -75,10 +77,12 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
      * 
      * @param config the config to use
      * @param service the service to use to compute Top Helpers
+     * @param metrics to track events
      */
-    public TopHelpersAssignmentRoutine(Config config, TopHelpersService service) {
+    public TopHelpersAssignmentRoutine(Config config, TopHelpersService service, Metrics metrics) {
         this.config = config.getTopHelpers();
         this.service = service;
+        this.metrics = metrics;
 
         roleNamePredicate = Pattern.compile(this.config.getRolePattern()).asMatchPredicate();
         assignmentChannelNamePredicate =
@@ -255,6 +259,9 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             guild.addRoleToMember(UserSnowflake.fromId(userToAddRoleTo), topHelperRole).queue();
         }
 
+        for (long topHelperUserId : selectedTopHelperIds) {
+            metrics.count("top_helper-" + topHelperUserId);
+        }
         reportRoleManageSuccess(event);
     }
 

@@ -20,6 +20,7 @@ import net.dv8tion.jda.api.requests.restaction.WebhookMessageEditAction;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -56,6 +57,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
     public static final String COMMAND_NAME = "help-thread";
 
     private final HelpSystemHelper helper;
+    private final Metrics metrics;
     private final Map<String, Subcommand> nameToSubcommand;
     private final Map<Subcommand, Cache<Long, Instant>> subcommandToCooldownCache;
     private final Map<Subcommand, BiConsumer<SlashCommandInteractionEvent, ThreadChannel>> subcommandToEventHandler;
@@ -65,8 +67,9 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
      *
      * @param config the config to use
      * @param helper the helper to use
+     * @param metrics to track events
      */
-    public HelpThreadCommand(Config config, HelpSystemHelper helper) {
+    public HelpThreadCommand(Config config, HelpSystemHelper helper, Metrics metrics) {
         super(COMMAND_NAME, "Help thread specific commands", CommandVisibility.GUILD);
 
         OptionData categoryChoices =
@@ -93,6 +96,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         getData().addSubcommands(Subcommand.RESET_ACTIVITY.toSubcommandData());
 
         this.helper = helper;
+        this.metrics = metrics;
 
         Supplier<Cache<Long, Instant>> createCooldownCache = () -> Caffeine.newBuilder()
             .maximumSize(1_000)
@@ -158,6 +162,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.deferReply().queue();
         refreshCooldownFor(Subcommand.CHANGE_CATEGORY, helpThread);
 
+        metrics.count("help-category-" + category);
         helper.changeChannelCategory(helpThread, category)
             .flatMap(_ -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
                     helpThread, category))

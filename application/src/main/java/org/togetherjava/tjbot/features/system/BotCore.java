@@ -459,10 +459,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         logger.debug("Received message context command '{}' (#{}) on guild '{}'", name,
                 event.getId(), event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractionType.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
-                MessageContextCommand.class)
-            .onMessageContext(event));
+        COMMAND_SERVICE.execute(() -> {
+            MessageContextCommand userInteractor = requireUserInteractor(
+                    UserInteractionType.MESSAGE_CONTEXT_COMMAND.getPrefixedName(name),
+                    MessageContextCommand.class);
+            metrics.count("msg_ctx-" + name);
+            userInteractor.onMessageContext(event);
+        });
     }
 
     @Override
@@ -471,10 +474,13 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
 
         logger.debug("Received user context command '{}' (#{}) on guild '{}'", name, event.getId(),
                 event.getGuild());
-        COMMAND_SERVICE.execute(() -> requireUserInteractor(
-                UserInteractionType.USER_CONTEXT_COMMAND.getPrefixedName(name),
-                UserContextCommand.class)
-            .onUserContext(event));
+        COMMAND_SERVICE.execute(() -> {
+            UserContextCommand userInteractor = requireUserInteractor(
+                    UserInteractionType.USER_CONTEXT_COMMAND.getPrefixedName(name),
+                    UserContextCommand.class);
+            metrics.count("user_ctx-" + name);
+            userInteractor.onUserContext(event);
+        });
     }
 
     /**

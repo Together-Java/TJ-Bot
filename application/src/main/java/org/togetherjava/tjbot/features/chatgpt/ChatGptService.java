@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import javax.annotation.Nullable;
 
@@ -28,14 +29,18 @@ public class ChatGptService {
 
     private boolean isDisabled = false;
     private OpenAIClient openAIClient;
+    private Metrics metrics;
 
     /**
      * Creates instance of ChatGPTService
      *
      * @param config needed for token to OpenAI API.
+     * @param metrics to track events
      */
-    public ChatGptService(Config config) {
+    public ChatGptService(Config config, Metrics metrics) {
         String apiKey = config.getOpenaiApiKey();
+        this.metrics = metrics;
+
         boolean keyIsDefaultDescription = apiKey.startsWith("<") && apiKey.endsWith(">");
         if (apiKey.isBlank() || keyIsDefaultDescription) {
             isDisabled = true;
@@ -111,6 +116,7 @@ public class ChatGptService {
                 .build();
 
             Response chatGptResponse = openAIClient.responses().create(params);
+            metrics.count("chatgpt-prompted");
 
             String response = chatGptResponse.output()
                 .stream()

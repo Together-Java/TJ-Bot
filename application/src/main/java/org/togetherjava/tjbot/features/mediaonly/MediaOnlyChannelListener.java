@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import java.awt.Color;
 import java.util.List;
@@ -26,13 +27,18 @@ import java.util.regex.Pattern;
  */
 public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
+    private final Metrics metrics;
+
     /**
      * Creates a MediaOnlyChannelListener to receive all message sent in MediaOnly channel.
      *
      * @param config to find MediaOnly channels
+     * @param metrics metrics
      */
-    public MediaOnlyChannelListener(Config config) {
+    public MediaOnlyChannelListener(Config config, Metrics metrics) {
         super(Pattern.compile(config.getMediaOnlyChannelPattern()));
+
+        this.metrics = metrics;
     }
 
     @Override
@@ -47,6 +53,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         }
 
         if (messageHasNoMediaAttached(message)) {
+            metrics.count("media_only_channel-msg_deleted");
             message.delete().flatMap(_ -> dmUser(message)).queue(_ -> {
             }, failure -> tempNotifyUserInChannel(message));
         }
@@ -87,6 +94,19 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
         return !attachments.isEmpty() || !embeds.isEmpty() || content.contains("http");
     }
 
+    private RestAction<Message> dmUser(Message message) {
+        return message.getAuthor()
+            .openPrivateChannel()
+            .flatMap(channel -> channel.sendMessage(createNotificationMessage(message)));
+    }
+
+    private void tempNotifyUserInChannel(Message message) {
+        message.getChannel()
+            .sendMessage(createNotificationMessage(message))
+            .queue(notificationMessage -> notificationMessage.delete()
+                .queueAfter(1, TimeUnit.MINUTES));
+    }
+
     private MessageCreateData createNotificationMessage(Message message) {
         String originalMessageContent = message.getContentRaw();
 
@@ -99,18 +119,5 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
                 + " Hey there, you posted a message without media (image, video, link) in a media-only channel. Please see the description of the channel for details and then repost with media attached, thanks 😀")
             .setEmbeds(originalMessageEmbed)
             .build();
-    }
-
-    private RestAction<Message> dmUser(Message message) {
-        return message.getAuthor()
-            .openPrivateChannel()
-            .flatMap(channel -> channel.sendMessage(createNotificationMessage(message)));
-    }
-
-    private void tempNotifyUserInChannel(Message message) {
-        message.getChannel()
-            .sendMessage(createNotificationMessage(message))
-            .queue(notificationMessage -> notificationMessage.delete()
-                .queueAfter(1, TimeUnit.MINUTES));
     }
 }

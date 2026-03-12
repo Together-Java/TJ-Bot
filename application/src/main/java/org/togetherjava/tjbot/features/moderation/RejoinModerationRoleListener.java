@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.EventReceiver;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public final class RejoinModerationRoleListener implements EventReceiver {
 
     private final ModerationActionsStore actionsStore;
     private final List<ModerationRole> moderationRoles;
+    private final Metrics metrics;
 
     /**
      * Constructs an instance.
@@ -39,9 +41,12 @@ public final class RejoinModerationRoleListener implements EventReceiver {
      * @param actionsStore used to store actions issued by this command and to retrieve whether a
      *        user should be e.g. muted
      * @param config the config to use for this
+     * @param metrics to track events
      */
-    public RejoinModerationRoleListener(ModerationActionsStore actionsStore, Config config) {
+    public RejoinModerationRoleListener(ModerationActionsStore actionsStore, Config config,
+            Metrics metrics) {
         this.actionsStore = actionsStore;
+        this.metrics = metrics;
 
         moderationRoles = List.of(
                 new ModerationRole("mute", ModerationAction.MUTE, ModerationAction.UNMUTE,
@@ -93,8 +98,10 @@ public final class RejoinModerationRoleListener implements EventReceiver {
         return false;
     }
 
-    private static void applyModerationRole(ModerationRole moderationRole, Member member) {
+    private void applyModerationRole(ModerationRole moderationRole, Member member) {
         Guild guild = member.getGuild();
+
+        metrics.count("mod-user_rejoined_reapplied_role");
         logger.info(LogMarkers.SENSITIVE,
                 "Reapplied existing {} to user '{}' ({}) in guild '{}' after rejoining.",
                 moderationRole.actionName, member.getUser().getName(), member.getId(),

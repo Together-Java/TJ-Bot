@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.DynamicVoiceChatConfig;
 import org.togetherjava.tjbot.features.VoiceReceiverAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +37,7 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
 
     private final VoiceChatCleanupStrategy voiceChatCleanupStrategy;
     private final DynamicVoiceChatConfig dynamicVoiceChannelConfig;
+    private final Metrics metrics;
 
     private final Cache<Long, Boolean> deletedChannels =
             Caffeine.newBuilder().expireAfterWrite(5, TimeUnit.MINUTES).build();
@@ -45,9 +47,11 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
      *
      * @param config the configurations needed for this feature. See:
      *        {@link org.togetherjava.tjbot.config.DynamicVoiceChatConfig}
+     * @param metrics to track events
      */
-    public DynamicVoiceChat(Config config) {
+    public DynamicVoiceChat(Config config, Metrics metrics) {
         this.dynamicVoiceChannelConfig = config.getDynamicVoiceChatConfig();
+        this.metrics = metrics;
 
         this.voiceChatCleanupStrategy =
                 new OldestVoiceChatCleanup(dynamicVoiceChannelConfig.cleanChannelsAmount(),
@@ -128,9 +132,10 @@ public final class DynamicVoiceChat extends VoiceReceiverAdapter {
                 moveMember(guild, member, newChannel);
                 sendWarningEmbed(newChannel);
             })
-            .queue(newChannel -> logger.trace("Successfully created {} voice channel.",
-                    newChannel.getName()),
-                    error -> logger.error("Failed to create dynamic voice channel", error));
+            .queue(newChannel -> {
+                logger.trace("Successfully created {} voice channel.", newChannel.getName());
+                metrics.count("dynamic_voice_channel-created");
+            }, error -> logger.error("Failed to create dynamic voice channel", error));
     }
 
     private void moveMember(Guild guild, Member member, AudioChannel channel) {

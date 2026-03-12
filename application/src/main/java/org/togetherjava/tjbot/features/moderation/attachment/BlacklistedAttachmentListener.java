@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
@@ -25,6 +26,7 @@ import java.util.function.UnaryOperator;
  */
 public final class BlacklistedAttachmentListener extends MessageReceiverAdapter {
     private final ModAuditLogWriter modAuditLogWriter;
+    private final Metrics metrics;
     private final List<String> blacklistedFileExtensions;
 
     /**
@@ -32,9 +34,12 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
      *
      * @param config to find the blacklisted media attachments
      * @param modAuditLogWriter to inform the mods about the suspicious attachment
+     * @param metrics to track events
      */
-    public BlacklistedAttachmentListener(Config config, ModAuditLogWriter modAuditLogWriter) {
+    public BlacklistedAttachmentListener(Config config, ModAuditLogWriter modAuditLogWriter,
+            Metrics metrics) {
         this.modAuditLogWriter = modAuditLogWriter;
+        this.metrics = metrics;
         blacklistedFileExtensions = config.getBlacklistedFileExtensions();
     }
 
@@ -49,6 +54,7 @@ public final class BlacklistedAttachmentListener extends MessageReceiverAdapter 
     }
 
     private void handleBadMessage(Message message) {
+        metrics.count("blacklisted_attachment-deleted");
         message.delete().flatMap(_ -> dmUser(message)).queue(_ -> warnMods(message));
     }
 

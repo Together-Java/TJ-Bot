@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.SuggestionsConfig;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -28,16 +29,19 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
     private static final int THREAD_TITLE_MAX_LENGTH = 60;
 
     private final SuggestionsConfig config;
+    private final Metrics metrics;
 
     /**
      * Creates a new listener to receive all message sent in suggestion channels.
      *
      * @param config the config to use for this
+     * @param metrics to track events
      */
-    public SuggestionsUpDownVoter(Config config) {
+    public SuggestionsUpDownVoter(Config config, Metrics metrics) {
         super(Pattern.compile(config.getSuggestions().getChannelPattern()));
 
         this.config = config.getSuggestions();
+        this.metrics = metrics;
     }
 
     @Override
@@ -49,6 +53,7 @@ public final class SuggestionsUpDownVoter extends MessageReceiverAdapter {
         Guild guild = event.getGuild();
         Message message = event.getMessage();
 
+        metrics.count("suggestion");
         createThread(message);
 
         reactWith(config.getUpVoteEmoteName(), FALLBACK_UP_VOTE, guild, message);

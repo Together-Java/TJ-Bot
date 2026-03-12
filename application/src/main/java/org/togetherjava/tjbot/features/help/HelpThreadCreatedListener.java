@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.LinkDetection;
@@ -31,6 +32,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -46,6 +48,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
     private static final Logger log = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
     private final HelpSystemHelper helper;
+    private final Metrics metrics;
 
     private final Cache<Long, Instant> threadIdToCreatedAtCache = Caffeine.newBuilder()
         .maximumSize(1_000)
@@ -58,9 +61,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
      * Creates a new instance.
      *
      * @param helper to work with the help threads
+     * @param metrics to track events
      */
-    public HelpThreadCreatedListener(HelpSystemHelper helper) {
+    public HelpThreadCreatedListener(HelpSystemHelper helper, Metrics metrics) {
         this.helper = helper;
+        this.metrics = metrics;
     }
 
     @Override
@@ -88,6 +93,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     }
 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
+        metrics.count("help-question_posted");
         threadChannel.retrieveStartMessage().flatMap(message -> {
             registerThreadDataInDB(message, threadChannel);
             return sendHelperHeadsUp(threadChannel)
@@ -121,10 +127,11 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
 
     private RestAction<Message> sendHelperHeadsUp(ThreadChannel threadChannel) {
         String alternativeMention = "Helper";
-        String helperMention = helper.getCategoryTagOfChannel(threadChannel)
-            .map(ForumTag::getName)
-            .flatMap(category -> helper.handleFindRoleForCategory(category,
-                    threadChannel.getGuild()))
+        Optional<String> forumTagName =
+                helper.getCategoryTagOfChannel(threadChannel).map(ForumTag::getName);
+        forumTagName.ifPresent(name -> metrics.count("help-category-" + name));
+        String helperMention = forumTagName.flatMap(
+                category -> helper.handleFindRoleForCategory(category, threadChannel.getGuild()))
             .map(Role::getAsMention)
             .orElse(alternativeMention);
 
@@ -233,6 +240,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
             return;
         }
 
+        metrics.count("help-ai_dismiss");
         RestAction<Void> deleteMessages = event.getMessage().delete();
         for (String id : args) {
             deleteMessages = deleteMessages.and(channel.deleteMessageById(id));

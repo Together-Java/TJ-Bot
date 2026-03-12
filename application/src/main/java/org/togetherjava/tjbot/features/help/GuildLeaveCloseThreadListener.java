@@ -7,20 +7,24 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.EventReceiver;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 
 /**
  * Remove all thread channels associated to a user when they leave the guild.
  */
 public final class GuildLeaveCloseThreadListener extends ListenerAdapter implements EventReceiver {
     private final String helpForumPattern;
+    private final Metrics metrics;
 
     /**
      * Creates a new instance.
      *
      * @param config the config to get help forum channel pattern from
+     * @param metrics to track events
      */
-    public GuildLeaveCloseThreadListener(Config config) {
+    public GuildLeaveCloseThreadListener(Config config, Metrics metrics) {
         this.helpForumPattern = config.getHelpSystem().getHelpForumPattern();
+        this.metrics = metrics;
     }
 
     @Override
@@ -35,8 +39,11 @@ public final class GuildLeaveCloseThreadListener extends ListenerAdapter impleme
             .queue(threads -> threads.stream()
                 .filter(thread -> thread.getOwnerIdLong() == event.getUser().getIdLong())
                 .filter(thread -> thread.getParentChannel().getName().matches(helpForumPattern))
-                .forEach(thread -> thread.sendMessageEmbeds(embed)
-                    .flatMap(_ -> thread.getManager().setArchived(true))
-                    .queue()));
+                .forEach(thread -> {
+                    metrics.count("op_left_thread");
+                    thread.sendMessageEmbeds(embed)
+                        .flatMap(_ -> thread.getManager().setArchived(true))
+                        .queue();
+                }));
     }
 }

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.jda.JdaTester;
 
 import java.util.List;
@@ -34,7 +35,7 @@ final class MediaOnlyChannelListenerTest {
         Config config = mock(Config.class);
         when(config.getMediaOnlyChannelPattern()).thenReturn("any");
 
-        mediaOnlyChannelListener = new MediaOnlyChannelListener(config);
+        mediaOnlyChannelListener = new MediaOnlyChannelListener(config, mock(Metrics.class));
     }
 
     @Test

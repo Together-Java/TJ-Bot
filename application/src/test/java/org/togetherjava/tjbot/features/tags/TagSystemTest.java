@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.jda.JdaTester;
 
 import java.util.Optional;
@@ -16,9 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 final class TagSystemTest {
     private TagSystem system;
@@ -56,8 +55,9 @@ final class TagSystemTest {
     @Test
     void handleIsUnknownTag() {
         insertTagRaw("known", "foo");
-        SlashCommandInteractionEvent event =
-                jdaTester.createSlashCommandInteractionEvent(new TagCommand(system)).build();
+        SlashCommandInteractionEvent event = jdaTester
+            .createSlashCommandInteractionEvent(new TagCommand(system, mock(Metrics.class)))
+            .build();
 
         assertFalse(system.handleIsUnknownTag("known", event));
         verify(event, never()).reply(anyString());

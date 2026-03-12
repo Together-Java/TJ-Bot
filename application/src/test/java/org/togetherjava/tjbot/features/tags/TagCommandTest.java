@@ -10,14 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.Tags;
 import org.togetherjava.tjbot.features.SlashCommand;
+import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.jda.JdaTester;
 import org.togetherjava.tjbot.jda.SlashCommandInteractionEventBuilder;
 
 import javax.annotation.Nullable;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 final class TagCommandTest {
     private TagSystem system;
@@ -29,7 +29,7 @@ final class TagCommandTest {
         Database database = Database.createMemoryDatabase(Tags.TAGS);
         system = spy(new TagSystem(database));
         jdaTester = new JdaTester();
-        command = new TagCommand(system);
+        command = new TagCommand(system, mock(Metrics.class));
     }
 
     private SlashCommandInteractionEvent triggerSlashCommand(String id,
