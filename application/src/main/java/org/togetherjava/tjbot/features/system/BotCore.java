@@ -382,14 +382,16 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
         logger.debug("Received slash command '{}' (#{}) on guild '{}'", name, event.getId(),
                 event.getGuild());
         COMMAND_SERVICE.execute(() -> {
-
             SlashCommand interactor = requireUserInteractor(
                     UserInteractionType.SLASH_COMMAND.getPrefixedName(name), SlashCommand.class);
 
-            metrics.count("slash-" + name);
+            String eventName = "slash-" + name;
+            if (event.getSubcommandName() != null) {
+                eventName += "_" + event.getSubcommandName();
+            }
+            metrics.count(eventName);
 
             interactor.onSlashCommand(event);
-
         });
     }
 
