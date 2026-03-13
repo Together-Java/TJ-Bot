@@ -53,4 +53,7 @@ public final class Metrics {
             .insert());
     }
 
+    public ExecutorService getExecutorService() {
+        return service;
+    }
 }
