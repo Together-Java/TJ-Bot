@@ -130,6 +130,10 @@ public final class GitHubReference extends MessageReceiverAdapter {
             findIssue(issueId, defaultRepoId).ifPresent(issue -> embeds.add(generateReply(issue)));
         }
 
+        if (embeds.isEmpty()) {
+            return;
+        }
+
         replyBatchEmbeds(embeds, message, false);
     }
 
