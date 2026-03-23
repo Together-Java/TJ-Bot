@@ -45,12 +45,16 @@ public final class Metrics {
     }
 
     /**
-     * Track an event execution with custom dimensions.
+     * Track an event execution with additional contextual data.
      *
-     * @param event the event to save
-     * @param dimensions key-value pairs providing additional context for the event
+     * @param event the name of the event to record (e.g. "user_signup", "purchase")
+     * @param dimensions optional key-value pairs providing extra context about the event. These are
+     *        often referred to as "metadata" and can include things like: userId: "12345", name:
+     *        "John Smith", channel_name: "chit-chat" etc. This data helps with filtering, grouping,
+     *        and analyzing events later. Note: A value for a metric should be a Java primitive
+     *        (String, int, double, long float).
      */
-    public void count(String event, Map<String, String> dimensions) {
+    public void count(String event, Map<String, Object> dimensions) {
         logger.debug("Counting new record for event: {}", event);
 
         Instant happenedAt = Instant.now();
@@ -60,7 +64,7 @@ public final class Metrics {
                 dimensions.isEmpty() ? null : serializedDimensions));
     }
 
-    private static String serializeDimensions(Map<String, String> dimensions) {
+    private static String serializeDimensions(Map<String, Object> dimensions) {
         try {
             return OBJECT_MAPPER.writeValueAsString(dimensions);
         } catch (JsonProcessingException e) {
