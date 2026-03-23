@@ -24,3 +24,18 @@ UPDATE metric_events
 SET event = 'top_helper',
     dimensions = json_object('userId', CAST(SUBSTR(event, LENGTH('top_helper-') + 1) AS INTEGER))
 WHERE event LIKE 'top_helper-%';
+
+UPDATE metric_events
+SET event = 'slash',
+    dimensions = json_object(
+        'name', SUBSTR(event, LENGTH('slash-') + 1, INSTR(SUBSTR(event, LENGTH('slash-') + 1), '_') - 1),
+        'subCommandName', SUBSTR(event, LENGTH('slash-') + 1 + INSTR(SUBSTR(event, LENGTH('slash-') + 1), '_'))
+    )
+WHERE event LIKE 'slash-%'
+  AND INSTR(SUBSTR(event, LENGTH('slash-') + 1), '_') > 0;
+
+UPDATE metric_events
+SET event = 'slash',
+    dimensions = json_object('name', SUBSTR(event, LENGTH('slash-') + 1))
+WHERE event LIKE 'slash-%'
+  AND INSTR(SUBSTR(event, LENGTH('slash-') + 1), '_') = 0;
