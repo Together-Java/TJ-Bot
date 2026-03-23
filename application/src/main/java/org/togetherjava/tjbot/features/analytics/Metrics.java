@@ -52,8 +52,12 @@ public final class Metrics {
      */
     public void count(String event, Map<String, String> dimensions) {
         logger.debug("Counting new record for event: {}", event);
-        service.submit(() -> processEvent(event, Instant.now(),
-                dimensions.isEmpty() ? null : serializeDimensions(dimensions)));
+
+        Instant happenedAt = Instant.now();
+        String serializedDimensions = serializeDimensions(dimensions);
+
+        service.submit(() -> processEvent(event, happenedAt,
+                dimensions.isEmpty() ? null : serializedDimensions));
     }
 
     private static String serializeDimensions(Map<String, String> dimensions) {
