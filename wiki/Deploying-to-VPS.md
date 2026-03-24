@@ -12,9 +12,8 @@ Most of our repositories use two primary branches:
 ## `develop` branch
 The develop branch contains ongoing development work and changes that are not yet released to production.
 
-In some repositories, this branch may automatically deploy to a testing or staging environment. For example:
-
-* TJ-Bot – Changes pushed to develop are deployed to a testing server.
+In some repositories, this branch may automatically deploy to a testing or staging environment. 
+For example in TJ-Bot, changes pushed to develop are deployed to a testing server.
 
 This branch should be considered unstable and under active development.
 
@@ -86,10 +85,10 @@ Requirements:
 
 Steps:
 
-* BVisit: https://woodpecker.togetherjava.org/repos
-* Click Add repository
+* Visit: https://woodpecker.togetherjava.org/repos
+* Click "Add repository"
 * Locate the repository
-* Click Enable
+* Click "Enable"
 
 ## 2. Configure Repository Secrets
 
