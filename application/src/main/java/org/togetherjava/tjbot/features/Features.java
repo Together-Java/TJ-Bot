@@ -6,6 +6,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.config.FeatureBlacklistConfig;
 import org.togetherjava.tjbot.db.Database;
+import org.togetherjava.tjbot.features.analytics.EmojiTrackerListener;
 import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.basic.MemberCountDisplayRoutine;
 import org.togetherjava.tjbot.features.basic.PingCommand;
@@ -159,6 +160,7 @@ public class Features {
         // Message receivers
         features.add(new TopHelpersMessageListener(database, config));
         features.add(new SuggestionsUpDownVoter(config, metrics));
+        features.add(new EmojiTrackerListener(metrics));
         features.add(new ScamBlocker(actionsStore, scamHistoryStore, config, metrics));
         features.add(new MediaOnlyChannelListener(config, metrics));
         features.add(new FileSharingMessageListener(config, metrics));
