@@ -8,22 +8,16 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
-import java.util.regex.Pattern;
-
 /**
- * Listener that tracks emoji usage across all channels for analytics purposes.
+ * Listener that tracks custom emoji usage across all channels for analytics purposes.
  * <p>
- * Counts emojis used in messages and reactions so admins can see which emojis are unused and should
- * be removed.
+ * Counts custom emojis used in messages and reactions so admins can see which emojis are unused and
+ * should be removed.
  * <p>
- * Custom emojis are tracked by their Discord ID (e.g. {@code emoji-custom-123456789}) rather than
- * by name, since emoji names are not unique and may change over time. Animated custom emojis are
- * tracked separately (e.g. {@code emoji-custom-animated-123456789}). Unicode emojis are tracked by
- * name (e.g. {@code emoji-unicode-thumbsup}).
+ * Custom emojis are tracked by their Discord ID (e.g. {@code emoji-custom-123456789}). Animated
+ * custom emojis are tracked separately (e.g. {@code emoji-custom-animated-123456789}).
  */
 public final class EmojiTrackerListener extends MessageReceiverAdapter {
-    private static final Pattern ALL_CHANNELS = Pattern.compile(".*");
-
     private final Metrics metrics;
 
     /**
@@ -32,14 +26,14 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
      * @param metrics to track emoji usage events
      */
     public EmojiTrackerListener(Metrics metrics) {
-        super(ALL_CHANNELS);
+        super();
 
         this.metrics = metrics;
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+        if (event.isWebhookMessage()) {
             return;
         }
 
@@ -48,19 +42,12 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
-        if (event.getUser() != null && event.getUser().isBot()) {
+        EmojiUnion emoji = event.getEmoji();
+        if (emoji.getType() != Emoji.Type.CUSTOM) {
             return;
         }
 
-        trackEmojiUnion(event.getEmoji());
-    }
-
-    private void trackEmojiUnion(EmojiUnion emoji) {
-        if (emoji.getType() == Emoji.Type.CUSTOM) {
-            trackCustomEmoji(emoji.asCustom());
-        } else {
-            metrics.count("emoji-unicode-" + emoji.asUnicode().getName());
-        }
+        trackCustomEmoji(emoji.asCustom());
     }
 
     private void trackCustomEmoji(CustomEmoji emoji) {
