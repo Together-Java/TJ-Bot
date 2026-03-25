@@ -44,6 +44,7 @@ In certain circumstances, you have the following data protection rights:
 
 The databases may store
 * `user_id` of users (the unique id of a Discord account),
+* `user_name` of users (the username of a Discord account), stored as part of metric event dimensions when tracking command usage (e.g. slash commands, tag lookups),
 * `timestamp`s of actions (for example when a command has been used),
 * `guild_id` of guilds the **bot** is member of (the unique id of a Discord guild),
 * `channel_id` of channels belonging to guilds the **bot** is member of (the unique id of a Discord channel),
@@ -51,7 +52,8 @@ The databases may store
 *  `participant_count` of no of people who participated in help thread discussions,
 *  `tags` aka categories to which these help threads belong to,
 *  `timestamp`s for both when thread was created and closed,
-*  `message_count` the no of messages that were sent in lifecycle of any help thread
+*  `message_count` the no of messages that were sent in lifecycle of any help thread,
+*  `dimensions` optional JSON metadata attached to metric events, which may include the `user_name` of the user who triggered the event and contextual details such as the command name or tag id
 
 _Note: Help threads are just threads that are created via forum channels, used for anyone to ask questions and get help
 in certain problems._
