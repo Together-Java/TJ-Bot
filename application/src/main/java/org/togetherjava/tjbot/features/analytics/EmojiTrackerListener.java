@@ -43,8 +43,8 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
         event.getMessage()
             .getMentions()
             .getCustomEmojis()
-            .forEach(customEmoji -> metrics.count(METRIC_NAME, Map.of("type", "message", "id",
-                    customEmoji.getIdLong(), "animated", customEmoji.isAnimated())));
+            .forEach(customEmoji -> trackCustomEmoji("message", customEmoji.getIdLong(),
+                    customEmoji.isAnimated()));
     }
 
     @Override
