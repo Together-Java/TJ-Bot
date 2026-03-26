@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -91,7 +92,8 @@ public final class TagCommand extends SlashCommandAdapter {
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
-        metrics.count("tag-" + id);
+        metrics.count("tag", Map.of("id", id, "user", event.getUser().getName(), "userId",
+                event.getUser().getIdLong()));
 
         String tagContent = tagSystem.getTag(id).orElseThrow();
         MessageEmbed contentEmbed = new EmbedBuilder().setDescription(tagContent)

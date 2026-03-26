@@ -260,7 +260,7 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
         }
 
         for (long topHelperUserId : selectedTopHelperIds) {
-            metrics.count("top_helper-" + topHelperUserId);
+            metrics.count("top_helper", Map.of("userId", topHelperUserId));
         }
         reportRoleManageSuccess(event);
     }

@@ -112,7 +112,7 @@ public final class AutoPruneHelperRoutine implements Routine {
 
         if (isRoleFull(withRole)) {
             logger.debug("Helper role {} is full, starting to prune.", targetRole.getName());
-            metrics.count("autoprune_helper-" + targetRole.getName());
+            metrics.count("autoprune_helper", Map.of("role", targetRole.getName()));
             pruneRole(targetRole, withRole, selectRoleChannel, when);
         }
     }

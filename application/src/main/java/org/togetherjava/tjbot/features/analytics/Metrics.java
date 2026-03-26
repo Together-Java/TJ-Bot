@@ -1,12 +1,17 @@
 package org.togetherjava.tjbot.features.analytics;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.MetricEvents;
 
+import javax.annotation.Nullable;
+
 import java.time.Instant;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,6 +20,7 @@ import java.util.concurrent.Executors;
  */
 public final class Metrics {
     private static final Logger logger = LoggerFactory.getLogger(Metrics.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final Database database;
 
@@ -35,21 +41,48 @@ public final class Metrics {
      * @param event the event to save
      */
     public void count(String event) {
-        logger.debug("Counting new record for event: {}", event);
-        Instant moment = Instant.now();
-        service.submit(() -> processEvent(event, moment));
+        count(event, Map.of());
+    }
 
+    /**
+     * Track an event execution with additional contextual data.
+     *
+     * @param event the name of the event to record (e.g. "user_signup", "purchase")
+     * @param dimensions optional key-value pairs providing extra context about the event. These are
+     *        often referred to as "metadata" and can include things like: userId: "12345", name:
+     *        "John Smith", channel_name: "chit-chat" etc. This data helps with filtering, grouping,
+     *        and analyzing events later. Note: A value for a metric should be a Java primitive
+     *        (String, int, double, long float).
+     */
+    public void count(String event, Map<String, Object> dimensions) {
+        logger.debug("Counting new record for event: {}", event);
+
+        Instant happenedAt = Instant.now();
+        String serializedDimensions = serializeDimensions(dimensions);
+
+        service.submit(() -> processEvent(event, happenedAt,
+                dimensions.isEmpty() ? null : serializedDimensions));
+    }
+
+    private static String serializeDimensions(Map<String, Object> dimensions) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(dimensions);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Failed to serialize dimensions", e);
+        }
     }
 
     /**
      *
      * @param event the event to save
      * @param happenedAt the moment when the event is dispatched
+     * @param dimensionsJson optional JSON-serialized dimensions, or null
      */
-    private void processEvent(String event, Instant happenedAt) {
+    private void processEvent(String event, Instant happenedAt, @Nullable String dimensionsJson) {
         database.write(context -> context.newRecord(MetricEvents.METRIC_EVENTS)
             .setEvent(event)
             .setHappenedAt(happenedAt)
+            .setDimensions(dimensionsJson)
             .insert());
     }
 
