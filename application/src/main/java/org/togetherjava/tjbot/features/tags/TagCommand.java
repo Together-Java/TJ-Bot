@@ -92,7 +92,8 @@ public final class TagCommand extends SlashCommandAdapter {
         if (tagSystem.handleIsUnknownTag(id, event)) {
             return;
         }
-        metrics.count("tag", Map.of("id", id, "user", event.getUser().getName()));
+        metrics.count("tag", Map.of("id", id, "user", event.getUser().getName(), "userId",
+                event.getUser().getIdLong()));
 
         String tagContent = tagSystem.getTag(id).orElseThrow();
         MessageEmbed contentEmbed = new EmbedBuilder().setDescription(tagContent)

@@ -388,6 +388,7 @@ public final class BotCore extends ListenerAdapter implements CommandProvider {
             Map<String, Object> dimensions = new HashMap<>();
             dimensions.put("name", name);
             dimensions.put("user", event.getUser().getName());
+            dimensions.put("userId", event.getUser().getIdLong());
 
             if (event.getSubcommandName() != null) {
                 dimensions.put("subCommandName", event.getSubcommandName());
