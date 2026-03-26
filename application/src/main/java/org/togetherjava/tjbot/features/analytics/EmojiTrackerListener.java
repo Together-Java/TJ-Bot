@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 
+import java.util.Map;
+
 /**
  * Listener that tracks custom emoji usage across all channels for analytics purposes.
  * <p>
@@ -18,6 +20,7 @@ import org.togetherjava.tjbot.features.MessageReceiverAdapter;
  * custom emojis are tracked separately (e.g. {@code emoji-custom-animated-123456789}).
  */
 public final class EmojiTrackerListener extends MessageReceiverAdapter {
+    private static final String METRIC_NAME = "emoji";
     private final Metrics metrics;
 
     /**
@@ -37,7 +40,11 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
             return;
         }
 
-        event.getMessage().getMentions().getCustomEmojis().forEach(this::trackCustomEmoji);
+        event.getMessage()
+            .getMentions()
+            .getCustomEmojis()
+            .forEach(customEmoji -> metrics.count(METRIC_NAME, Map.of("type", "message", "id",
+                    customEmoji.getIdLong(), "animated", customEmoji.isAnimated())));
     }
 
     @Override
@@ -47,11 +54,12 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
             return;
         }
 
-        trackCustomEmoji(emoji.asCustom());
+        CustomEmoji customEmoji = emoji.asCustom();
+
+        trackCustomEmoji("reaction", customEmoji.getIdLong(), customEmoji.isAnimated());
     }
 
-    private void trackCustomEmoji(CustomEmoji emoji) {
-        String prefix = emoji.isAnimated() ? "emoji-custom-animated-" : "emoji-custom-";
-        metrics.count(prefix + emoji.getIdLong());
+    private void trackCustomEmoji(String type, long id, boolean isAnimated) {
+        metrics.count(METRIC_NAME, Map.of("type", type, "id", id, "animated", isAnimated));
     }
 }
