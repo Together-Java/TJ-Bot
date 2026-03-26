@@ -162,7 +162,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         event.deferReply().queue();
         refreshCooldownFor(Subcommand.CHANGE_CATEGORY, helpThread);
 
-        metrics.count(COMMAND_NAME, Map.of(CHANGE_CATEGORY_SUBCOMMAND, category));
+        metrics.count("help-category", Map.of(CHANGE_CATEGORY_SUBCOMMAND, category));
         helper.changeChannelCategory(helpThread, category)
             .flatMap(_ -> sendCategoryChangedMessage(helpThread.getGuild(), event.getHook(),
                     helpThread, category))
