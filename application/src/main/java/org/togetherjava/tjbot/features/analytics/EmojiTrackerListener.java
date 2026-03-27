@@ -44,7 +44,7 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
             .getMentions()
             .getCustomEmojis()
             .forEach(customEmoji -> trackCustomEmoji("message", customEmoji.getIdLong(),
-                    customEmoji.isAnimated()));
+                    customEmoji.isAnimated(), customEmoji.getName()));
     }
 
     @Override
@@ -56,10 +56,12 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
 
         CustomEmoji customEmoji = emoji.asCustom();
 
-        trackCustomEmoji("reaction", customEmoji.getIdLong(), customEmoji.isAnimated());
+        trackCustomEmoji("reaction", customEmoji.getIdLong(), customEmoji.isAnimated(),
+                customEmoji.getName());
     }
 
-    private void trackCustomEmoji(String type, long id, boolean isAnimated) {
-        metrics.count(METRIC_NAME, Map.of("type", type, "id", id, "animated", isAnimated));
+    private void trackCustomEmoji(String type, long id, boolean isAnimated, String name) {
+        metrics.count(METRIC_NAME,
+                Map.of("type", type, "id", id, "animated", isAnimated, "name", name));
     }
 }
