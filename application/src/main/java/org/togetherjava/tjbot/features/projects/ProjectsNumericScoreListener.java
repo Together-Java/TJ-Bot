@@ -4,6 +4,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
@@ -17,11 +18,13 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.NumericScoreConfig;
 import org.togetherjava.tjbot.features.EventReceiver;
+import org.togetherjava.tjbot.features.Routine;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,8 +46,13 @@ import java.util.stream.Stream;
  * <p>
  * Score formula: {@code 1 (base for OP) + upvotes - downvotes}, where the OP's own votes are
  * excluded. The displayed emoji is determined by the configured score-to-emoji mapping.
+ *
+ * <p>
+ * On startup, a routine scan corrects any missing or stale score emojis on all active posts,
+ * recovering from bot downtime.
  */
-public final class ProjectsNumericScoreListener extends ListenerAdapter implements EventReceiver {
+public final class ProjectsNumericScoreListener extends ListenerAdapter
+        implements EventReceiver, Routine {
 
     private static final Logger logger =
             LoggerFactory.getLogger(ProjectsNumericScoreListener.class);
@@ -67,6 +75,40 @@ public final class ProjectsNumericScoreListener extends ListenerAdapter implemen
             .stream()
             .collect(Collectors.toMap(NumericScoreConfig::forumId,
                     ProjectsNumericScoreListener::buildScoreEmojiSet));
+    }
+
+    @Override
+    public Schedule createSchedule() {
+        // Run immediately on startup, then daily as a maintenance check
+        return new Schedule(ScheduleMode.FIXED_RATE, 0, 24, TimeUnit.HOURS);
+    }
+
+    @Override
+    public void runRoutine(JDA jda) {
+        forumIdToConfig.forEach((forumId, cfg) -> syncForum(forumId, cfg, jda));
+    }
+
+    private void syncForum(long forumId, NumericScoreConfig cfg, JDA jda) {
+        ForumChannel forum = jda.getChannelById(ForumChannel.class, forumId);
+        if (forum == null) {
+            logger.warn("Numeric score: forum channel {} not found or not cached, skipping sync",
+                    forumId);
+            return;
+        }
+
+        List<ThreadChannel> activeThreads = forum.getThreadChannels()
+            .stream()
+            .filter(t -> !t.isArchived())
+            .toList();
+
+        logger.debug("Syncing score emojis for {} active threads in forum {}", activeThreads.size(),
+                forum.getName());
+
+        Guild guild = forum.getGuild();
+        activeThreads.forEach(thread -> thread.retrieveMessageById(thread.getIdLong())
+            .queue(post -> refreshScore(post, thread, guild, jda),
+                    e -> logger.warn("Failed to retrieve post for thread {} during sync",
+                            thread.getId(), e)));
     }
 
     @Override
@@ -93,8 +135,8 @@ public final class ProjectsNumericScoreListener extends ListenerAdapter implemen
         addVoteEmoji(cfg.downVoteEmoteName(), guild, post);
 
         Emoji initialEmoji = Emoji.fromUnicode(scoreToEmojiStr(BASE_SCORE, cfg));
-        post.addReaction(initialEmoji).queue(_ -> {
-        }, e -> logger.warn("Failed to add initial score emoji to post {}", post.getId(), e));
+        post.addReaction(initialEmoji).queue(_ -> {}, e -> logger
+            .warn("Failed to add initial score emoji to post {}", post.getId(), e));
     }
 
     @Override
@@ -123,8 +165,8 @@ public final class ProjectsNumericScoreListener extends ListenerAdapter implemen
         if (isScoreEmoji(reacted, forumId)) {
             event.retrieveUser()
                 .flatMap(user -> event.getReaction().removeReaction(user))
-                .queue(_ -> {
-                }, e -> logger.warn("Failed to remove score emoji added by user {} on post {}",
+                .queue(_ -> {}, e -> logger.warn(
+                        "Failed to remove score emoji added by user {} on post {}",
                         event.getUserId(), event.getMessageId(), e));
             return;
         }
