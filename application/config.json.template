@@ -214,5 +214,15 @@
         "archiveCategoryPattern": "Voice Channel Archives",
         "cleanChannelsAmount": 20,
         "minimumChannelsAmount": 40
-    }
+    },
+    "numericScoreConfig": [
+        {
+            "forumId": "<the_forum_channel_id>",
+            "upVoteEmoteName": "peepo_yes",
+            "downVoteEmoteName": "peepo_no",
+            "zeroScore": "0️⃣",
+            "positiveScores": ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"],
+            "negativeScores": ["🟡", "🟠", "🔴"]
+        }
+    ]
 }

@@ -51,6 +51,7 @@ public final class Config {
     private final QuoteBoardConfig quoteBoardConfig;
     private final TopHelpersConfig topHelpers;
     private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
+    private final List<NumericScoreConfig> numericScoreConfigs;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -108,7 +109,9 @@ public final class Config {
                     required = true) QuoteBoardConfig quoteBoardConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
             @JsonProperty(value = "dynamicVoiceChatConfig",
-                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
+                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig,
+            @JsonProperty(value = "numericScoreConfig",
+                    required = true) List<NumericScoreConfig> numericScoreConfigs) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -146,6 +149,7 @@ public final class Config {
         this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
         this.topHelpers = Objects.requireNonNull(topHelpers);
         this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
+        this.numericScoreConfigs = Objects.requireNonNull(numericScoreConfigs);
     }
 
     /**
@@ -485,5 +489,14 @@ public final class Config {
      */
     public DynamicVoiceChatConfig getDynamicVoiceChatConfig() {
         return dynamicVoiceChatConfig;
+    }
+
+    /**
+     * Gets the list of numeric score configurations for project forum channels.
+     *
+     * @return the numeric score configurations
+     */
+    public List<NumericScoreConfig> getNumericScoreConfigs() {
+        return Collections.unmodifiableList(numericScoreConfigs);
     }
 }
