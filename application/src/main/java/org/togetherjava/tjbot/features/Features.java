@@ -220,7 +220,7 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
-        features.add(new NumericScoreFeature(config.getNumericScoreConfig()));
+        features.add(new NumericScoreFeature(database, config.getNumericScoreConfig()));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();

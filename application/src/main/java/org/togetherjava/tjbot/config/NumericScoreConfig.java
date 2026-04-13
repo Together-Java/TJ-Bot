@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.config;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * Configuration of the numeric score feature.
@@ -14,7 +13,6 @@ import java.util.stream.Stream;
  * @param zeroScoreEmoji the emoji for the score zero
  * @param positiveScoresEmojis the emojis for positive scores starting at 1 ascending
  * @param negativeScoresEmojis the emojis for negative scores starting at -1 descending
- * @param addedEmojiBlackList the blacklisted emojis on top of score emojis
  */
 public record NumericScoreConfig(@JsonProperty(value = "forumId", required = true) long forumId,
         @JsonProperty(value = "upvoteEmoji", required = true) String upvoteEmoji,
@@ -23,12 +21,5 @@ public record NumericScoreConfig(@JsonProperty(value = "forumId", required = tru
         @JsonProperty(value = "positiveScoresEmojis",
                 required = true) List<String> positiveScoresEmojis,
         @JsonProperty(value = "negativeScoresEmojis",
-                required = true) List<String> negativeScoresEmojis,
-        @JsonProperty(value = "addedEmojiBlackList",
-                required = true) List<String> addedEmojiBlackList) {
-    public Stream<String> streamAllBlacklistedEmojis() {
-        return Stream.concat(
-                Stream.concat(positiveScoresEmojis.stream(), negativeScoresEmojis.stream()),
-                Stream.concat(Stream.of(zeroScoreEmoji), addedEmojiBlackList.stream()));
-    }
+                required = true) List<String> negativeScoresEmojis) {
 }

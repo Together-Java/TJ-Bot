@@ -215,15 +215,18 @@
         "cleanChannelsAmount": 20,
         "minimumChannelsAmount": 40
     },
-    "numericScoreConfig": {
-        "12345678901234567890": {
-            "zeroScore": "0️⃣",
-            "positiveScores": [
+    "numericScoreConfig": [
+        {
+            "forumId": 123456789123456789,
+            "upvoteEmoji": "upvote",
+            "downvoteEmoji": "downvote",
+            "zeroScoreEmoji": "0️⃣",
+            "positiveScoresEmojis": [
                 "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"
             ],
-            "negativeScores": [
+            "negativeScoresEmojis": [
                 "🟡", "🟠", "🔴"
             ]
         }
-    }
+    ]
 }
