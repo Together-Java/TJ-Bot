@@ -179,6 +179,7 @@
         "normal": [
         ],
         "special": [
+            "AutoAIResponse"
         ]
     },
     "selectRolesChannelPattern": "select-your-roles",

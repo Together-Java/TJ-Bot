@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.config.FeatureBlacklist;
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
 public final class HelpThreadCreatedListener extends ListenerAdapter
         implements EventReceiver, UserInteractor {
     private static final Logger log = LoggerFactory.getLogger(HelpThreadCreatedListener.class);
+    private final FeatureBlacklist<String> specialBlacklist;
     private final HelpSystemHelper helper;
     private final Metrics metrics;
 
@@ -60,10 +62,13 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
     /**
      * Creates a new instance.
      *
+     * @param specialBlacklist the special blacklist
      * @param helper to work with the help threads
      * @param metrics to track events
      */
-    public HelpThreadCreatedListener(HelpSystemHelper helper, Metrics metrics) {
+    public HelpThreadCreatedListener(FeatureBlacklist<String> specialBlacklist,
+            HelpSystemHelper helper, Metrics metrics) {
+        this.specialBlacklist = specialBlacklist;
         this.helper = helper;
         this.metrics = metrics;
     }
@@ -96,10 +101,13 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         metrics.count("help-question_posted");
         threadChannel.retrieveStartMessage().flatMap(message -> {
             registerThreadDataInDB(message, threadChannel);
-            return sendHelperHeadsUp(threadChannel)
-                .flatMap(_ -> HelpThreadCreatedListener.isContextSufficient(message),
-                        _ -> createAIResponse(threadChannel, message))
-                .flatMap(_ -> pinOriginalQuestion(message));
+            RestAction<Message> messageRestAction = sendHelperHeadsUp(threadChannel);
+            if (specialBlacklist.isEnabled("AutoAIResponse")) {
+                messageRestAction = messageRestAction.flatMap(
+                        _ -> HelpThreadCreatedListener.isContextSufficient(message),
+                        _ -> createAIResponse(threadChannel, message));
+            }
+            return messageRestAction.flatMap(_ -> pinOriginalQuestion(message));
         }).queue();
     }
 
