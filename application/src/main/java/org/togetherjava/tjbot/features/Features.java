@@ -66,6 +66,7 @@ import org.togetherjava.tjbot.features.moderation.scam.ScamBlocker;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.features.moderation.temp.TemporaryModerationRoutine;
+import org.togetherjava.tjbot.features.numericscore.NumericScoreFeature;
 import org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener;
 import org.togetherjava.tjbot.features.reminder.RemindRoutine;
 import org.togetherjava.tjbot.features.reminder.ReminderCommand;
@@ -219,6 +220,7 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
+        features.add(new NumericScoreFeature(config.getNumericScoreConfig()));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
