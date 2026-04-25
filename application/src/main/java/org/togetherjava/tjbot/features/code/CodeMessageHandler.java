@@ -188,7 +188,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 CodeFence code = extractCodeOrFallback(originalMessage.get().getContentRaw());
 
                 // Apply the selected action
-                metrics.count("code_action-" + codeAction.getLabel());
+                metrics.count("code_action", Map.of("name", codeAction.getLabel()));
                 return event.getHook()
                     .editOriginalEmbeds(codeAction.apply(code))
                     .setActionRow(createButtons(originalMessageId, codeAction));
