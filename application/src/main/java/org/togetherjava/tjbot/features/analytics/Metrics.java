@@ -97,7 +97,7 @@ public final class Metrics {
         }
     }
 
-    void processEvent(String event, Instant happenedAt, @Nullable String dimensionsJson) {
+    private void processEvent(String event, Instant happenedAt, @Nullable String dimensionsJson) {
         database.write(context -> context.newRecord(MetricEvents.METRIC_EVENTS)
             .setEvent(event)
             .setHappenedAt(happenedAt)
