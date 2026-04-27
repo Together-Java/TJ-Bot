@@ -13,8 +13,6 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Logger name="org.togetherjava.tjbot" level="debug"/>
-
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
