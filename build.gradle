@@ -13,7 +13,7 @@ version '1.0-SNAPSHOT'
 
 ext {
     jooqVersion = '3.21.2'
-    jacksonVersion = '2.19.1'
+    jacksonVersion = '2.21.3'
     chatGPTVersion = '4.33.0'
     junitVersion = '6.0.0'
 }
