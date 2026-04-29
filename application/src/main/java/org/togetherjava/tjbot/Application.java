@@ -18,9 +18,11 @@ import org.togetherjava.tjbot.logging.LogMarkers;
 import org.togetherjava.tjbot.logging.discord.DiscordLogging;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
  * Main class of the application. Use {@link #main(String[])} to start an instance of it.
@@ -35,6 +37,8 @@ public class Application {
 
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
     private static final String DEFAULT_CONFIG_PATH = "config.json";
+    private static final String DEFAULT_BUILD_PROPERTIES_PATH = "build.properties";
+    private static final Properties BUILD_PROPERTIES = new Properties();
 
     /**
      * Starts the application.
@@ -57,6 +61,20 @@ public class Application {
             logger.error("Unable to load the configuration file from path '{}'",
                     configPath.toAbsolutePath(), e);
             return;
+        }
+
+        try (InputStream input = Application.class.getClassLoader()
+            .getResourceAsStream(DEFAULT_BUILD_PROPERTIES_PATH)) {
+            if (input == null) {
+                logger.warn(
+                        "Unable to find {} file, you might not see properties like the git commit of this build",
+                        DEFAULT_BUILD_PROPERTIES_PATH);
+            } else {
+                BUILD_PROPERTIES.load(input);
+            }
+        } catch (IOException e) {
+            logger.error("Exception while trying to load {} file", DEFAULT_BUILD_PROPERTIES_PATH,
+                    e);
         }
 
         Thread.setDefaultUncaughtExceptionHandler(Application::onUncaughtException);
@@ -123,4 +141,7 @@ public class Application {
         logger.error("Unknown error in thread {}.", failingThread.getName(), failure);
     }
 
+    public static Properties getBuildProperties() {
+        return BUILD_PROPERTIES;
+    }
 }

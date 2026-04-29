@@ -2,8 +2,11 @@ package org.togetherjava.tjbot.features.basic;
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 
+import org.togetherjava.tjbot.Application;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+
+import java.util.Properties;
 
 /**
  * Implementation of an example command to illustrate how to respond to a user.
@@ -25,6 +28,11 @@ public final class PingCommand extends SlashCommandAdapter {
      */
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        event.reply("Pong!").queue();
+        Properties buildProperties = Application.getBuildProperties();
+        String response = "Pong! Running on version %s (%s)".formatted(
+                buildProperties.getProperty("app.git-version"),
+                buildProperties.getProperty("app.build-date"));
+
+        event.reply(response).queue();
     }
 }

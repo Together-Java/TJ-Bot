@@ -8,8 +8,12 @@ repositories {
     mavenCentral()
 }
 
+def gitDescribeOutput = providers.exec {
+    commandLine("git", "describe", "--tags")
+}.standardOutput.asText.get().trim()
+
 group 'org.togetherjava'
-version '1.0-SNAPSHOT'
+version gitDescribeOutput
 
 ext {
     jooqVersion = '3.21.2'
