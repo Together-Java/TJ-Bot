@@ -29,6 +29,7 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.Guilds;
+import org.togetherjava.tjbot.features.utils.LinkDetection;
 
 import java.awt.Color;
 import java.time.Instant;
@@ -41,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,6 +59,7 @@ import static org.togetherjava.tjbot.features.utils.MessageUtils.mentionGuildSla
 public final class HelpSystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(HelpSystemHelper.class);
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
+    private static final String BROKEN_LINK_REPLACEMENT = "(broken link removed)";
 
     static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
@@ -74,6 +77,7 @@ public final class HelpSystemHelper {
 
     private final Database database;
     private final ChatGptService chatGptService;
+    private final Function<String, CompletableFuture<String>> brokenLinkReplacer;
     private static final int MAX_QUESTION_LENGTH = 200;
     private static final int MIN_QUESTION_LENGTH = 10;
     private static final String CHATGPT_FAILURE_MESSAGE =
@@ -87,9 +91,16 @@ public final class HelpSystemHelper {
      * @param chatGptService the service used to ask ChatGPT questions via the API.
      */
     public HelpSystemHelper(Config config, Database database, ChatGptService chatGptService) {
+        this(config, database, chatGptService,
+                answer -> LinkDetection.replaceBrokenLinks(answer, BROKEN_LINK_REPLACEMENT));
+    }
+
+    HelpSystemHelper(Config config, Database database, ChatGptService chatGptService,
+            Function<String, CompletableFuture<String>> brokenLinkReplacer) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
         this.chatGptService = chatGptService;
+        this.brokenLinkReplacer = brokenLinkReplacer;
 
         isTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
         helpForumPattern = helpConfig.getHelpForumPattern();
@@ -188,6 +199,7 @@ public final class HelpSystemHelper {
     public MessageEmbed generateGptResponseEmbed(String answer, SelfUser selfUser, String title,
             ChatGptModel model) {
         String responseByGptFooter = "- AI generated response using %s model".formatted(model);
+        String sanitizedAnswer = sanitizeBrokenLinks(answer);
 
         int embedTitleLimit = MessageEmbed.TITLE_MAX_LENGTH;
         String capitalizedTitle = Character.toUpperCase(title.charAt(0)) + title.substring(1);
@@ -199,10 +211,19 @@ public final class HelpSystemHelper {
         return new EmbedBuilder()
             .setAuthor(selfUser.getName(), null, selfUser.getEffectiveAvatarUrl())
             .setTitle(titleForEmbed)
-            .setDescription(answer)
+            .setDescription(sanitizedAnswer)
             .setColor(Color.pink)
             .setFooter(responseByGptFooter)
             .build();
+    }
+
+    private String sanitizeBrokenLinks(String answer) {
+        try {
+            return brokenLinkReplacer.apply(answer).join();
+        } catch (RuntimeException runtimeException) {
+            logger.debug("Failed to replace broken links in ChatGPT response", runtimeException);
+            return answer;
+        }
     }
 
     private Button generateDismissButton(ComponentIdInteractor componentIdInteractor, String id) {
