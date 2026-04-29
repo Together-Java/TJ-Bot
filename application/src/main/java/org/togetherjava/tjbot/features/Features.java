@@ -38,6 +38,7 @@ import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
 import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
 import org.togetherjava.tjbot.features.jshell.JShellEval;
+import org.togetherjava.tjbot.features.leaderboard.LeaderboardCommand;
 import org.togetherjava.tjbot.features.mathcommands.TeXCommand;
 import org.togetherjava.tjbot.features.mathcommands.wolframalpha.WolframAlphaCommand;
 import org.togetherjava.tjbot.features.mediaonly.MediaOnlyChannelListener;
@@ -202,6 +203,7 @@ public class Features {
         features.add(new AuditCommand(actionsStore));
         features.add(new MuteCommand(actionsStore, config));
         features.add(new UnmuteCommand(actionsStore, config));
+        features.add(new LeaderboardCommand(config));
         features.add(new TopHelpersCommand(topHelpersService, topHelpersAssignmentRoutine));
         features.add(new RoleSelectCommand());
         features.add(new NoteCommand(actionsStore));
