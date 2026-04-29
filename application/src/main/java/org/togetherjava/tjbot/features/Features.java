@@ -130,7 +130,7 @@ public class Features {
         HelpThreadLifecycleListener helpThreadLifecycleListener =
                 new HelpThreadLifecycleListener(helpSystemHelper, database);
         HelpThreadCreatedListener helpThreadCreatedListener =
-                new HelpThreadCreatedListener(helpSystemHelper, metrics);
+                new HelpThreadCreatedListener(blacklistConfig.special(), helpSystemHelper, metrics);
         TopHelpersService topHelpersService = new TopHelpersService(database);
         TopHelpersAssignmentRoutine topHelpersAssignmentRoutine =
                 new TopHelpersAssignmentRoutine(config, topHelpersService, metrics);
