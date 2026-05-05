@@ -51,6 +51,7 @@ public final class Config {
     private final QuoteBoardConfig quoteBoardConfig;
     private final TopHelpersConfig topHelpers;
     private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
+    private final List<NumericScoreConfig> numericScoreConfig;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -108,7 +109,9 @@ public final class Config {
                     required = true) QuoteBoardConfig quoteBoardConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
             @JsonProperty(value = "dynamicVoiceChatConfig",
-                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
+                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig,
+            @JsonProperty(value = "numericScoreConfig",
+                    required = true) List<NumericScoreConfig> numericScoreConfig) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -146,6 +149,7 @@ public final class Config {
         this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
         this.topHelpers = Objects.requireNonNull(topHelpers);
         this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
+        this.numericScoreConfig = numericScoreConfig;
     }
 
     /**
@@ -485,5 +489,14 @@ public final class Config {
      */
     public DynamicVoiceChatConfig getDynamicVoiceChatConfig() {
         return dynamicVoiceChatConfig;
+    }
+
+    /**
+     * Gets the numeric score configuration.
+     *
+     * @return numeric score configuration
+     */
+    public List<NumericScoreConfig> getNumericScoreConfig() {
+        return numericScoreConfig;
     }
 }
