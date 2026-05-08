@@ -55,16 +55,6 @@ public final class Metrics {
     }
 
     /**
-     * Track an event execution with flag for async execution.
-     * 
-     * @param event the event to save
-     * @param doAsync the async flag
-     */
-    public void count(String event, boolean doAsync) {
-        count(event, Map.of(), doAsync);
-    }
-
-    /**
      * Track an event execution with additional contextual data.
      *
      * @param event the name of the event to record (e.g. "user_signup", "purchase")
@@ -73,6 +63,7 @@ public final class Metrics {
      *        "John Smith", channel_name: "chit-chat" etc. This data helps with filtering, grouping,
      *        and analyzing events later. Note: A value for a metric should be a Java primitive
      *        (String, int, double, long float).
+     * @param doAsync A flag to enable/disable async event process.
      */
     void count(String event, Map<String, Object> dimensions, boolean doAsync) {
         logger.debug("Counting new record for event: {}", event);
@@ -97,22 +88,18 @@ public final class Metrics {
         }
     }
 
+    /**
+     * Process event persistence.
+     *
+     * @param event the event to save
+     * @param happenedAt the moment when the event is dispatched
+     * @param dimensionsJson optional JSON-serialized dimensions, or null
+     */
     private void processEvent(String event, Instant happenedAt, @Nullable String dimensionsJson) {
         database.write(context -> context.newRecord(MetricEvents.METRIC_EVENTS)
             .setEvent(event)
             .setHappenedAt(happenedAt)
             .setDimensions(dimensionsJson)
             .insert());
-    }
-
-    /**
-     * Exposes the underlying executor service.
-     * <p>
-     * Intended for test teardown only.
-     *
-     * @return the executor service backing this instance
-     */
-    public ExecutorService getExecutorService() {
-        return service;
     }
 }
