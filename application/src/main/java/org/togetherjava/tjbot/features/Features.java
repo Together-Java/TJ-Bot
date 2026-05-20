@@ -34,6 +34,7 @@ import org.togetherjava.tjbot.features.help.HelpThreadCommand;
 import org.togetherjava.tjbot.features.help.HelpThreadCreatedListener;
 import org.togetherjava.tjbot.features.help.HelpThreadLifecycleListener;
 import org.togetherjava.tjbot.features.help.HelpThreadMetadataPurger;
+import org.togetherjava.tjbot.features.help.HelpThreadStatsCommand;
 import org.togetherjava.tjbot.features.help.MarkHelpThreadCloseInDBRoutine;
 import org.togetherjava.tjbot.features.help.PinnedNotificationRemover;
 import org.togetherjava.tjbot.features.jshell.JShellCommand;
@@ -219,6 +220,7 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
+        features.add(new HelpThreadStatsCommand(database));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();

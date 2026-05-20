@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.events.channel.update.ChannelUpdateAppliedTagsEvent;
@@ -83,6 +85,11 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         updateThreadStatusToActive(threadId);
     }
 
+    private boolean isNonBotParticipant(long threadOwnerId, Member threadMember) {
+        User targetUser = threadMember.getUser();
+        return threadOwnerId != targetUser.getIdLong() && !targetUser.isBot();
+    }
+
     void handleArchiveStatus(Instant closedAt, long id, JDA jda) {
         ThreadChannel threadChannel = jda.getThreadChannelById(id);
         if (threadChannel == null) {
@@ -96,8 +103,13 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
         }
 
         long threadId = threadChannel.getIdLong();
-        int messageCount = threadChannel.getMessageCount();
-        int participantsExceptAuthor = threadChannel.getMemberCount() - 1;
+        int messageCount = threadChannel.getMessageCount(); // TODO: to be replaced with participant
+                                                            // message count
+        long threadOwnerId = threadChannel.getOwnerIdLong();
+        int participantsExceptAuthor = (int) threadChannel.getMembers()
+            .stream()
+            .filter(threadMember -> isNonBotParticipant(threadOwnerId, threadMember))
+            .count();
 
         database.write(context -> context.update(HELP_THREADS)
             .set(HELP_THREADS.CLOSED_AT, closedAt)
@@ -131,7 +143,7 @@ public final class HelpThreadLifecycleListener extends ListenerAdapter implement
 
     /**
      * will ignore updated tag event if all new tags belong to the categories config
-     * 
+     *
      * @param event updated tags event
      * @return boolean
      */
