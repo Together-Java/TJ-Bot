@@ -15,7 +15,7 @@ ext {
     jooqVersion = '3.21.2'
     jacksonVersion = '2.19.1'
     chatGPTVersion = '4.36.0'
-    junitVersion = '6.0.0'
+    junitVersion = '6.1.0'
 }
 
 // Skips sonarlint during the build, useful for testing purposes.
