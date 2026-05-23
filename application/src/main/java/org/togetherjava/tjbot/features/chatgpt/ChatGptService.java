@@ -1,19 +1,22 @@
 package org.togetherjava.tjbot.features.chatgpt;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
-import com.openai.models.responses.Response;
-import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.ResponseOutputText;
+import com.openai.core.JsonValue;
+import com.openai.models.responses.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.analytics.Metrics;
+import org.togetherjava.tjbot.features.chatgpt.schema.ResponseSchema;
 
 import javax.annotation.Nullable;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,8 @@ import java.util.stream.Collectors;
 public class ChatGptService {
     private static final Logger logger = LoggerFactory.getLogger(ChatGptService.class);
     private static final Duration TIMEOUT = Duration.ofSeconds(90);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String DEFAULT_SCHEMA_NAME = "response";
 
     /** The maximum number of tokens allowed for the generated answer. */
     private static final int MAX_TOKENS = 1000;
@@ -74,7 +79,7 @@ public class ChatGptService {
                 Question: %s
                 """.formatted(contextText, question);
 
-        return sendPrompt(inputPrompt, chatModel);
+        return sendPrompt(inputPrompt, chatModel, null);
     }
 
     /**
@@ -90,7 +95,23 @@ public class ChatGptService {
      *      Tokens</a>.
      */
     public Optional<String> askRaw(String inputPrompt, ChatGptModel chatModel) {
-        return sendPrompt(inputPrompt, chatModel);
+        return sendPrompt(inputPrompt, chatModel, null);
+    }
+
+    /**
+     * Prompt ChatGPT with a raw prompt and receive a JSON response conforming to the given schema.
+     * <p>
+     * Uses OpenAI's structured outputs feature so the model is constrained to return JSON matching
+     * the supplied schema.
+     *
+     * @param inputPrompt The raw prompt to send to ChatGPT. Max is {@value MAX_TOKENS} tokens.
+     * @param chatModel The AI model to use for this request.
+     * @param schema The JSON schema the response must conform to.
+     * @return response from ChatGPT as a JSON string conforming to {@code schema}.
+     */
+    public Optional<String> askRaw(String inputPrompt, ChatGptModel chatModel,
+            ResponseSchema schema) {
+        return sendPrompt(inputPrompt, chatModel, schema);
     }
 
     /**
@@ -98,9 +119,11 @@ public class ChatGptService {
      *
      * @param prompt The prompt to send to ChatGPT.
      * @param chatModel The AI model to use for this request.
+     * @param schema Optional JSON schema constraining the model output; {@code null} for free-form.
      * @return response from ChatGPT as a String.
      */
-    private Optional<String> sendPrompt(String prompt, ChatGptModel chatModel) {
+    private Optional<String> sendPrompt(String prompt, ChatGptModel chatModel,
+            @Nullable ResponseSchema schema) {
         if (isDisabled) {
             logger.warn("ChatGPT request attempted but service is disabled");
             return Optional.empty();
@@ -109,11 +132,16 @@ public class ChatGptService {
         logger.debug("ChatGpt request: {}", prompt);
 
         try {
-            ResponseCreateParams params = ResponseCreateParams.builder()
+            ResponseCreateParams.Builder paramsBuilder = ResponseCreateParams.builder()
                 .model(chatModel.toChatModel())
                 .input(prompt)
-                .maxOutputTokens(MAX_TOKENS)
-                .build();
+                .maxOutputTokens(MAX_TOKENS);
+
+            if (schema != null) {
+                paramsBuilder.text(buildTextConfig(schema));
+            }
+
+            ResponseCreateParams params = paramsBuilder.build();
 
             Response chatGptResponse = openAIClient.responses().create(params);
             metrics.count("chatgpt-prompted");
@@ -141,5 +169,24 @@ public class ChatGptService {
                     runtimeException);
             return Optional.empty();
         }
+    }
+
+    private static ResponseTextConfig buildTextConfig(ResponseSchema schema) {
+        Map<String, Object> schemaMap =
+                OBJECT_MAPPER.convertValue(schema, new TypeReference<>() {});
+
+        ResponseFormatTextJsonSchemaConfig.Schema.Builder schemaBuilder =
+                ResponseFormatTextJsonSchemaConfig.Schema.builder();
+        schemaMap.forEach(
+                (key, value) -> schemaBuilder.putAdditionalProperty(key, JsonValue.from(value)));
+
+        ResponseFormatTextJsonSchemaConfig jsonSchemaConfig =
+                ResponseFormatTextJsonSchemaConfig.builder()
+                    .name(DEFAULT_SCHEMA_NAME)
+                    .strict(true)
+                    .schema(schemaBuilder.build())
+                    .build();
+
+        return ResponseTextConfig.builder().format(jsonSchemaConfig).build();
     }
 }
