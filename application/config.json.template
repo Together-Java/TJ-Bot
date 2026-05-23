@@ -199,6 +199,10 @@
         "channel": "quotes",
         "reactionEmoji": "⭐"
     },
+    "roleApplicationSystem": {
+        "submissionsChannelPattern": "staff-applications",
+        "defaultQuestion": "What makes you a good addition to the team?"
+    },
     "memberCountCategoryPattern": "Info",
     "topHelpers": {
         "rolePattern": "Top Helper.*",

@@ -48,6 +48,7 @@ public final class Config {
     private final RSSFeedsConfig rssFeedsConfig;
     private final String selectRolesChannelPattern;
     private final String memberCountCategoryPattern;
+    private final RoleApplicationSystemConfig roleApplicationSystemConfig;
     private final QuoteBoardConfig quoteBoardConfig;
     private final TopHelpersConfig topHelpers;
     private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
@@ -106,6 +107,8 @@ public final class Config {
                     required = true) String selectRolesChannelPattern,
             @JsonProperty(value = "quoteBoardConfig",
                     required = true) QuoteBoardConfig quoteBoardConfig,
+            @JsonProperty(value = "roleApplicationSystem",
+                    required = true) RoleApplicationSystemConfig roleApplicationSystemConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
             @JsonProperty(value = "dynamicVoiceChatConfig",
                     required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
@@ -144,6 +147,7 @@ public final class Config {
         this.rssFeedsConfig = Objects.requireNonNull(rssFeedsConfig);
         this.selectRolesChannelPattern = Objects.requireNonNull(selectRolesChannelPattern);
         this.quoteBoardConfig = Objects.requireNonNull(quoteBoardConfig);
+        this.roleApplicationSystemConfig = roleApplicationSystemConfig;
         this.topHelpers = Objects.requireNonNull(topHelpers);
         this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
     }
@@ -458,6 +462,15 @@ public final class Config {
      */
     public String getMemberCountCategoryPattern() {
         return memberCountCategoryPattern;
+    }
+
+    /**
+     * The configuration related to the application form.
+     *
+     * @return the application form config
+     */
+    public RoleApplicationSystemConfig getRoleApplicationSystemConfig() {
+        return roleApplicationSystemConfig;
     }
 
     /**

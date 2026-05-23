@@ -69,6 +69,7 @@ import org.togetherjava.tjbot.features.moderation.temp.TemporaryModerationRoutin
 import org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener;
 import org.togetherjava.tjbot.features.reminder.RemindRoutine;
 import org.togetherjava.tjbot.features.reminder.ReminderCommand;
+import org.togetherjava.tjbot.features.roleapplication.CreateRoleApplicationCommand;
 import org.togetherjava.tjbot.features.rss.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.features.system.LogLevelCommand;
@@ -219,6 +220,7 @@ public class Features {
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
+        features.add(new CreateRoleApplicationCommand(config));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();
