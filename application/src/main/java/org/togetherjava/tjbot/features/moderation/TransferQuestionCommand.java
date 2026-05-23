@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.moderation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -12,13 +13,9 @@ import net.dv8tion.jda.api.entities.channel.forums.ForumTag;
 import net.dv8tion.jda.api.entities.channel.forums.ForumTagSnowflake;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
@@ -33,10 +30,14 @@ import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
+import org.togetherjava.tjbot.features.chatgpt.schema.Property;
+import org.togetherjava.tjbot.features.chatgpt.schema.ResponseSchema;
+import org.togetherjava.tjbot.features.chatgpt.schema.Type;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
 import java.awt.Color;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -45,28 +46,25 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
- * This command can be used to transfer questions asked in any channel to the helper forum. The user
- * is given the chance to edit details of the question and upon submitting, the original message
- * will be deleted and recreated in the helper forum. The original author is notified and redirected
- * to the new post.
+ * This command transfers a question asked in any channel to the helper forum. The AI generates the
+ * post title and selects the most fitting tag; the original message body is reused verbatim. On
+ * success the original message is deleted and its author is notified and redirected to the new
+ * post.
  */
 public final class TransferQuestionCommand extends BotCommandAdapter
         implements MessageContextCommand {
     private static final Logger logger = LoggerFactory.getLogger(TransferQuestionCommand.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String COMMAND_NAME = "transfer-question";
-    private static final String MODAL_TITLE_ID = "transferID";
-    private static final String MODAL_INPUT_ID = "transferQuestion";
-    private static final String MODAL_TAG = "tags";
     private static final int TITLE_MAX_LENGTH = 50;
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_MIN_LENGTH = 3;
     private static final Color EMBED_COLOR = new Color(50, 164, 168);
-    private static final int INPUT_MAX_LENGTH = Message.MAX_CONTENT_LENGTH;
-    private static final int INPUT_MIN_LENGTH = 3;
+
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
     private final ChatGptService chatGptService;
-
+    private final ResponseSchema transferSchema;
 
     /**
      * Creates a new instance.
@@ -82,6 +80,9 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         tags = config.getHelpSystem().getCategories();
         this.chatGptService = chatGptService;
+        this.transferSchema = new ResponseSchema(
+                Map.of("title", Property.of(Type.STRING), "tag", Property.of(Type.STRING)),
+                List.of("title", "tag"));
     }
 
     @Override
@@ -90,88 +91,68 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             return;
         }
 
-        String originalMessage = event.getTarget().getContentRaw();
-        String originalMessageId = event.getTarget().getId();
-        String originalChannelId = event.getTarget().getChannel().getId();
-        String authorId = event.getTarget().getAuthor().getId();
-        String mostCommonTag = tags.getFirst();
-
-        String chatGptTitleRequest =
-                "Summarize the following question into a concise title or heading not more than 5 words, remove quotations if any: %s"
-                    .formatted(originalMessage);
-        Optional<String> chatGptTitle =
-                chatGptService.ask(chatGptTitleRequest, null, ChatGptModel.FASTEST);
-        String title = chatGptTitle.orElse(createTitle(originalMessage));
-        if (title.startsWith("\"") && title.endsWith("\"")) {
-            title = title.substring(1, title.length() - 1);
-        }
-
-        if (title.length() > TITLE_MAX_LENGTH) {
-            title = title.substring(0, TITLE_MAX_LENGTH);
-        }
-
-        TextInput modalTitle = TextInput.create(MODAL_TITLE_ID, "Title", TextInputStyle.SHORT)
-            .setMaxLength(TITLE_MAX_LENGTH)
-            .setMinLength(TITLE_MIN_LENGTH)
-            .setPlaceholder("Describe the question in short")
-            .setValue(title)
-            .build();
-
-        TextInput.Builder modalInputBuilder =
-                TextInput.create(MODAL_INPUT_ID, "Question", TextInputStyle.PARAGRAPH)
-                    .setRequiredRange(INPUT_MIN_LENGTH, INPUT_MAX_LENGTH)
-                    .setPlaceholder("Contents of the question");
-
-        if (!isQuestionTooShort(originalMessage)) {
-            String trimmedMessage = getMessageUptoMaxLimit(originalMessage);
-            modalInputBuilder.setValue(trimmedMessage);
-        }
-
-        TextInput modalTag = TextInput.create(MODAL_TAG, "Most fitting tag", TextInputStyle.SHORT)
-            .setValue(mostCommonTag)
-            .setPlaceholder("Suitable tag for the question")
-            .build();
-
-        String modalComponentId =
-                generateComponentId(authorId, originalMessageId, originalChannelId);
-        Modal transferModal = Modal.create(modalComponentId, "Transfer this question")
-            .addActionRow(modalTitle)
-            .addActionRow(modalInputBuilder.build())
-            .addActionRow(modalTag)
-            .build();
-
-        event.replyModal(transferModal).queue();
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
         event.deferReply(true).queue();
 
-        String authorId = args.getFirst();
-        String messageId = args.get(1);
-        String channelId = args.get(2);
-        ForumChannel helperForum = getHelperForum(event.getJDA());
+        Message message = event.getTarget();
+        String authorId = message.getAuthor().getId();
+        String messageId = message.getId();
+        String channelId = message.getChannelId();
+        String content = message.getContentRaw();
 
-        // Has been handled if original message was deleted by now.
-        // Deleted messages cause retrieveMessageById to fail.
+        AiTransferResult ai = askAi(content)
+            .orElseGet(() -> new AiTransferResult(createTitle(content), tags.getFirst()));
+        String title = sanitizeTitle(ai.title());
+        String tag = ai.tag();
+
         Consumer<Message> notHandledAction =
-                _ -> transferFlow(event, channelId, authorId, messageId);
+                _ -> transferFlow(event, channelId, authorId, messageId, title, tag, content);
 
         Consumer<Throwable> handledAction = failure -> {
             if (failure instanceof ErrorResponseException errorResponseException
                     && errorResponseException.getErrorResponse() == ErrorResponse.UNKNOWN_MESSAGE) {
-                alreadyHandled(event, helperForum);
+                alreadyHandled(event);
                 return;
             }
-            logger.warn("Unknown error occurred on modal submission during question transfer.",
-                    failure);
+            logger.warn("Unknown error occurred during question transfer.", failure);
         };
 
         event.getChannel().retrieveMessageById(messageId).queue(notHandledAction, handledAction);
     }
 
-    private void transferFlow(ModalInteractionEvent event, String channelId, String authorId,
-            String messageId) {
+    private Optional<AiTransferResult> askAi(String content) {
+        String prompt = """
+                Summarize the following question into a concise title (max 5 words, no quotes) \
+                and pick the single most fitting tag from this list: %s.
+
+                Question: %s
+                """.formatted(tags, content);
+
+        return chatGptService.askRaw(prompt, ChatGptModel.FAST, transferSchema)
+            .flatMap(this::parseAi);
+    }
+
+    private Optional<AiTransferResult> parseAi(String json) {
+        try {
+            return Optional.of(OBJECT_MAPPER.readValue(json, AiTransferResult.class));
+        } catch (Exception e) {
+            logger.warn("Failed to parse AI transfer response: {}", json, e);
+            return Optional.empty();
+        }
+    }
+
+    private static String sanitizeTitle(String raw) {
+        String title = raw;
+        if (title.startsWith("\"") && title.endsWith("\"")) {
+            title = title.substring(1, title.length() - 1);
+        }
+        if (title.length() > TITLE_MAX_LENGTH) {
+            title = title.substring(0, TITLE_MAX_LENGTH);
+        }
+        return title;
+    }
+
+    private void transferFlow(MessageContextInteractionEvent event, String channelId,
+            String authorId, String messageId, String title, String tag, String content) {
         Function<ForumPostData, WebhookMessageCreateAction<Message>> sendMessageToTransferrer =
                 post -> event.getHook()
                     .sendMessage("Transferred to %s"
@@ -179,7 +160,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         event.getJDA()
             .retrieveUserById(authorId)
-            .flatMap(fetchedUser -> createForumPost(event, fetchedUser))
+            .flatMap(fetchedUser -> createForumPost(event, fetchedUser, title, tag, content))
             .flatMap(createdForumPost -> dmUser(event.getChannel(), createdForumPost,
                     event.getGuild())
                 .and(sendMessageToTransferrer.apply(createdForumPost)))
@@ -187,7 +168,8 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             .queue();
     }
 
-    private void alreadyHandled(ModalInteractionEvent event, ForumChannel helperForum) {
+    private void alreadyHandled(MessageContextInteractionEvent event) {
+        ForumChannel helperForum = getHelperForum(event.getJDA());
         event.getHook()
             .sendMessage(
                     "It appears that someone else has already transferred this question. Kindly see %s for details."
@@ -216,30 +198,24 @@ public final class TransferQuestionCommand extends BotCommandAdapter
                 && titleCompact.length() <= TITLE_MAX_LENGTH;
     }
 
-    private RestAction<ForumPostData> createForumPost(ModalInteractionEvent event,
-            User originalUser) {
-        String originalMessage = event.getValue(MODAL_INPUT_ID).getAsString();
-
-        MessageEmbed embedForPost = makeEmbedForPost(originalUser, originalMessage);
+    private RestAction<ForumPostData> createForumPost(MessageContextInteractionEvent event,
+            User originalUser, String title, String tagQuery, String content) {
+        MessageEmbed embedForPost = makeEmbedForPost(originalUser, content);
 
         MessageCreateData forumMessage = new MessageCreateBuilder()
             .addContent("%s has a question:".formatted(originalUser.getAsMention()))
             .setEmbeds(embedForPost)
             .build();
 
-        String forumTitle = event.getValue(MODAL_TITLE_ID).getAsString();
-        String transferQuestionTag = event.getValue(MODAL_TAG).getAsString();
-
         ForumChannel questionsForum = getHelperForum(event.getJDA());
         String mostCommonTag = tags.getFirst();
 
-        String queryTag =
-                StringDistances.closestMatch(transferQuestionTag, tags).orElse(mostCommonTag);
+        String queryTag = StringDistances.closestMatch(tagQuery, tags).orElse(mostCommonTag);
 
         ForumTag tag = getTagOrDefault(questionsForum.getAvailableTagsByName(queryTag, true),
                 () -> questionsForum.getAvailableTagsByName(mostCommonTag, true).getFirst());
 
-        return questionsForum.createForumPost(forumTitle, forumMessage)
+        return questionsForum.createForumPost(title, forumMessage)
             .setTags(ForumTagSnowflake.fromId(tag.getId()))
             .map(createdPost -> new ForumPostData(createdPost, originalUser));
     }
@@ -299,16 +275,15 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private record ForumPostData(ForumPost forumPost, User author) {
     }
 
+    private record AiTransferResult(String title, String tag) {
+    }
+
     private boolean isBotMessageTransfer(User author) {
         return author.isBot();
     }
 
     private void handleBotMessageTransfer(MessageContextInteractionEvent event) {
         event.reply("Cannot transfer messages from a bot.").setEphemeral(true).queue();
-    }
-
-    private boolean isQuestionTooShort(String question) {
-        return question.length() < INPUT_MIN_LENGTH;
     }
 
     private boolean isInvalidForTransfer(MessageContextInteractionEvent event) {
@@ -319,11 +294,5 @@ public final class TransferQuestionCommand extends BotCommandAdapter
             return true;
         }
         return false;
-    }
-
-    private String getMessageUptoMaxLimit(String originalMessage) {
-        return originalMessage.length() > INPUT_MAX_LENGTH
-                ? originalMessage.substring(0, INPUT_MAX_LENGTH)
-                : originalMessage;
     }
 }
