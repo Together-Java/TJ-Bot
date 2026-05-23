@@ -91,8 +91,9 @@ public final class RoleApplicationHandler {
         }
 
         User applicant = event.getUser();
+        String authorWithId = String.format("%s (id: %s)", applicant.getName(), applicant.getId());
         EmbedBuilder embed =
-                new EmbedBuilder().setAuthor(applicant.getName(), null, applicant.getAvatarUrl())
+                new EmbedBuilder().setAuthor(authorWithId, null, applicant.getAvatarUrl())
                     .setColor(CreateRoleApplicationCommand.AMBIENT_COLOR)
                     .setFooter("Submitted at")
                     .setTimestamp(Instant.now());
