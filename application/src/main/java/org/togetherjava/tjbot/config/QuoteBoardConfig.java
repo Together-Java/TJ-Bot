@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 
 import org.togetherjava.tjbot.features.basic.QuoteBoardForwarder;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,7 +19,8 @@ public record QuoteBoardConfig(
         @JsonProperty(value = "channel", required = true) String channel,
         @JsonProperty(value = "botEmoji", required = true) String botEmoji,
         @JsonProperty(value = "defaultEmojiScore", required = true) float defaultEmojiScore,
-        @JsonProperty(value = "emojiScores", required = true) Map<String, Float> emojiScores) {
+        @JsonProperty(value = "emojiScores", required = true) Map<String, Float> emojiScores,
+        @JsonProperty(value = "allowChannels", required = true) List<String> allowChannels) {
 
     /**
      * Creates a QuoteBoardConfig.

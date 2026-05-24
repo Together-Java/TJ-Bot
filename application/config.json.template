@@ -222,7 +222,14 @@
             "⭐": 1.0,
 
             "youtube:1464573182206804010": 0.0
-        }
+        },
+        "allowChannels": [
+            "chit-chat",
+            "career-talk",
+            "geek-speek",
+            "expert-java-talk",
+            "ai-talk"
+        ]
     },
     "roleApplicationSystem": {
         "submissionsChannelPattern": "staff-applications",
