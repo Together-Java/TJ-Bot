@@ -59,13 +59,6 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
         logger.debug("Received MessageReactionAddEvent: messageId={}, channelId={}, userId={}",
                 event.getMessageId(), event.getChannel().getId(), event.getUserId());
 
-        final MessageReaction messageReaction = event.getReaction();
-
-        if (hasAlreadyForwardedMessage(event.getJDA(), messageReaction)) {
-            logger.debug("Message has already been forwarded by the bot. Skipping.");
-            return;
-        }
-
         final long guildId = event.getGuild().getIdLong();
 
         Optional<TextChannel> boardChannelOptional = findQuoteBoardChannel(event.getJDA(), guildId);
@@ -85,6 +78,11 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
         }
 
         event.retrieveMessage().queue(message -> {
+            if (hasAlreadyForwardedMessage(message)) {
+                logger.debug("Message has already been forwarded by the bot. Skipping.");
+                return;
+            }
+
             float emojiScore = calculateMessageScore(message.getReactions());
 
             if (emojiScore < config.minimumScoreToTrigger()) {
@@ -137,16 +135,13 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
     }
 
     /**
-     * Checks a {@link MessageReaction} to see if the bot has reacted to it.
+     * Checks whether the bot has already reacted to the given message with its marker emoji.
      */
-    private boolean hasAlreadyForwardedMessage(JDA jda, MessageReaction messageReaction) {
-        if (!botEmoji.equals(messageReaction.getEmoji())) {
-            return false;
-        }
-
-        return messageReaction.retrieveUsers()
-            .parallelStream()
-            .anyMatch(user -> jda.getSelfUser().getIdLong() == user.getIdLong());
+    private boolean hasAlreadyForwardedMessage(Message message) {
+        return message.getReactions()
+            .stream()
+            .filter(reaction -> botEmoji.equals(reaction.getEmoji()))
+            .anyMatch(MessageReaction::isSelf);
     }
 
     private float calculateMessageScore(List<MessageReaction> reactions) {
