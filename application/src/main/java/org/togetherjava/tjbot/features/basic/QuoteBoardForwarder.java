@@ -59,6 +59,11 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
         logger.debug("Received MessageReactionAddEvent: messageId={}, channelId={}, userId={}",
                 event.getMessageId(), event.getChannel().getId(), event.getUserId());
 
+        if (!config.allowChannels().contains(event.getChannel().getName())) {
+            logger.debug("Skipping as reaction occurred in non-whitelisted channel");
+            return;
+        }
+
         final long guildId = event.getGuild().getIdLong();
 
         Optional<TextChannel> boardChannelOptional = findQuoteBoardChannel(event.getJDA(), guildId);
