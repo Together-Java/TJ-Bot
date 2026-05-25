@@ -166,7 +166,7 @@ public class ChatGptService {
             ResponseCreateParams params = paramsBuilder.build();
 
             Response chatGptResponse = openAIClient.responses().create(params);
-            metrics.count("chatgpt-prompted");
+            logMetric();
 
             String response = chatGptResponse.output()
                 .stream()
@@ -253,7 +253,7 @@ public class ChatGptService {
                 listener.onThinking(round);
                 Response response = openAIClient.responses()
                     .create(buildRequestParams(chatModel, conversation, systemPrompt, openAiTools));
-                metrics.count("chatgpt-prompted");
+                logMetric();
 
                 List<ResponseFunctionToolCall> toolCalls = response.output()
                     .stream()
@@ -300,7 +300,7 @@ public class ChatGptService {
         try {
             Response response = openAIClient.responses()
                 .create(buildRequestParams(chatModel, conversation, forcedInstructions, List.of()));
-            metrics.count("chatgpt-prompted");
+            logMetric();
             return finalAnswerFrom(response);
         } catch (RuntimeException e) {
             logger.error("Forced final-answer call failed: {}", e.getMessage(), e);
@@ -486,5 +486,9 @@ public class ChatGptService {
                     .build();
 
         return ResponseTextConfig.builder().format(jsonSchemaConfig).build();
+    }
+
+    private void logMetric() {
+        metrics.count("chatgpt-prompted");
     }
 }
