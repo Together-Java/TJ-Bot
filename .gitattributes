@@ -1,5 +1,7 @@
-# This will do normalization to LF on index (staging area) 
-* text=auto
+# Normalize to LF in the index AND in the working tree on all platforms.
+# Spotless enforces LF, so without eol=lf, Windows/WSL checkouts get CRLF and
+# every spotlessApply rewrites every file.
+* text=auto eol=lf
 
 # Explicit for linux files
 *.sh     text eol=lf

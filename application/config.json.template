@@ -162,6 +162,7 @@
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>",
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
+    "tavilyApiKey": "<create an account on https://www.tavily.com/ to get an API key for free>",
     "sourceCodeBaseUrl": "https://github.com/Together-Java/TJ-Bot/blob/master/application/src/main/java/",
     "jshell": {
         "baseUrl": "<put_jshell_rest_api_url_here>",

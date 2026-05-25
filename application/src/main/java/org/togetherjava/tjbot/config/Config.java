@@ -52,6 +52,7 @@ public final class Config {
     private final QuoteBoardConfig quoteBoardConfig;
     private final TopHelpersConfig topHelpers;
     private final DynamicVoiceChatConfig dynamicVoiceChatConfig;
+    private final String tavilyApiKey;
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -111,7 +112,8 @@ public final class Config {
                     required = true) RoleApplicationSystemConfig roleApplicationSystemConfig,
             @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
             @JsonProperty(value = "dynamicVoiceChatConfig",
-                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig) {
+                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig,
+            @JsonProperty(value = "tavilyApiKey", required = true) String tavilyApiKey) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -150,6 +152,7 @@ public final class Config {
         this.roleApplicationSystemConfig = roleApplicationSystemConfig;
         this.topHelpers = Objects.requireNonNull(topHelpers);
         this.dynamicVoiceChatConfig = Objects.requireNonNull(dynamicVoiceChatConfig);
+        this.tavilyApiKey = Objects.requireNonNull(tavilyApiKey);
     }
 
     /**
@@ -498,5 +501,14 @@ public final class Config {
      */
     public DynamicVoiceChatConfig getDynamicVoiceChatConfig() {
         return dynamicVoiceChatConfig;
+    }
+
+    /**
+     * Gets the api key for the tavily API
+     * 
+     * @return the Tavily API key
+     */
+    public String getTavilyApiKey() {
+        return tavilyApiKey;
     }
 }

@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.chatgpt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
@@ -12,10 +14,17 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.chatgpt.schema.ResponseSchema;
+import org.togetherjava.tjbot.features.chatgpt.tools.ChatGptTool;
+import org.togetherjava.tjbot.features.chatgpt.tools.Parameter;
+import org.togetherjava.tjbot.features.chatgpt.tools.ToolResult;
 
 import javax.annotation.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,9 +41,12 @@ public class ChatGptService {
     /** The maximum number of tokens allowed for the generated answer. */
     private static final int MAX_TOKENS = 1000;
 
+    /** Safety cap on tool-call rounds for a single {@code askWithTools} invocation. */
+    private static final int MAX_TOOL_ROUNDS = 8;
+
     private boolean isDisabled = false;
     private OpenAIClient openAIClient;
-    private Metrics metrics;
+    private final Metrics metrics;
 
     /**
      * Creates instance of ChatGPTService
@@ -60,8 +72,8 @@ public class ChatGptService {
      * Prompt ChatGPT with a question and receive a response.
      *
      * @param question The question being asked of ChatGPT. Max is {@value MAX_TOKENS} tokens.
-     * @param context The category of asked question, to set the context(eg. Java, Database, Other
-     *        etc).
+     * @param context The category of asked question, to set the context(e.g. Java, Database, Other
+     *        etc.).
      * @param chatModel The AI model to use for this request.
      * @return response from ChatGPT as a String.
      * @see <a href="https://platform.openai.com/docs/guides/chat/managing-tokens">ChatGPT
@@ -169,6 +181,264 @@ public class ChatGptService {
                     runtimeException);
             return Optional.empty();
         }
+    }
+
+    /**
+     * Prompt ChatGPT with a question and a set of tools the model is allowed to call.
+     * <p>
+     * The service loops: each turn it sends the conversation, executes any tool calls the model
+     * requests, appends their results, and continues until the model returns a final text answer
+     * (or {@link #MAX_TOOL_ROUNDS} is reached).
+     *
+     * @param userPrompt the user-facing question
+     * @param chatModel the AI model to use
+     * @param tools tools the model may invoke; pass an empty collection to disable tool use
+     * @param systemPrompt optional system instructions framing the assistant's behaviour
+     * @return the model's final text response, or empty on error / no answer
+     */
+    public Optional<String> askWithTools(String userPrompt, ChatGptModel chatModel,
+            List<? extends ChatGptTool<?>> tools, @Nullable String systemPrompt) {
+        return askWithTools(userPrompt, chatModel, tools, systemPrompt,
+                ChatGptProgressListener.NO_OP);
+    }
+
+    /**
+     * Variant of {@link #askWithTools(String, ChatGptModel, List, String)} that reports progress
+     * (per-turn thinking and tool invocations) through {@code listener} so callers can surface
+     * intermediate state to the user.
+     *
+     * @param userPrompt the user-facing question
+     * @param chatModel the AI model to use
+     * @param tools tools the model may invoke; pass an empty collection to disable tool use
+     * @param systemPrompt optional system instructions framing the assistant's behaviour;
+     *        {@code null} or blank skips the instructions field
+     * @param listener receives per-turn and per-tool-call callbacks; use
+     *        {@link ChatGptProgressListener#NO_OP} when progress is not needed
+     * @return the model's final text response, or empty on error, blank response, or if the
+     *         {@link #MAX_TOOL_ROUNDS tool-round cap} is exceeded without a final answer
+     */
+    public Optional<String> askWithTools(String userPrompt, ChatGptModel chatModel,
+            List<? extends ChatGptTool<?>> tools, @Nullable String systemPrompt,
+            ChatGptProgressListener listener) {
+        if (isDisabled) {
+            logger.warn("ChatGPT request attempted but service is disabled");
+            return Optional.empty();
+        }
+
+        Map<String, ChatGptTool<?>> toolsByName = new LinkedHashMap<>();
+        for (ChatGptTool<?> tool : tools) {
+            toolsByName.put(tool.name(), tool);
+        }
+
+        List<ResponseInputItem> conversation = new ArrayList<>();
+        conversation.add(ResponseInputItem.ofEasyInputMessage(EasyInputMessage.builder()
+            .role(EasyInputMessage.Role.USER)
+            .content(userPrompt)
+            .build()));
+
+        List<Tool> openAiTools = toOpenAiTools(toolsByName.values());
+
+        try {
+            for (int round = 0; round < MAX_TOOL_ROUNDS; round++) {
+                listener.onThinking(round);
+                Response response = openAIClient.responses()
+                    .create(buildRequestParams(chatModel, conversation, systemPrompt, openAiTools));
+                metrics.count("chatgpt-prompted");
+
+                List<ResponseFunctionToolCall> toolCalls = response.output()
+                    .stream()
+                    .flatMap(item -> item.functionCall().stream())
+                    .toList();
+
+                if (toolCalls.isEmpty()) {
+                    return finalAnswerFrom(response);
+                }
+                appendToolCallsToConversation(conversation, response, toolCalls, toolsByName,
+                        listener);
+            }
+            logger.warn("ChatGPT exceeded {} tool rounds without a final answer", MAX_TOOL_ROUNDS);
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            logger.error("Error during tool-enabled ChatGPT call: {}", e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    private static ResponseCreateParams buildRequestParams(ChatGptModel chatModel,
+            List<ResponseInputItem> conversation, @Nullable String systemPrompt,
+            List<Tool> openAiTools) {
+        ResponseCreateParams.Builder builder = ResponseCreateParams.builder()
+            .model(chatModel.toChatModel())
+            .inputOfResponse(List.copyOf(conversation))
+            .maxOutputTokens(MAX_TOKENS);
+        if (systemPrompt != null && !systemPrompt.isBlank()) {
+            builder.instructions(systemPrompt);
+        }
+        if (!openAiTools.isEmpty()) {
+            builder.tools(openAiTools).toolChoice(ToolChoiceOptions.AUTO);
+        }
+        return builder.build();
+    }
+
+    private static Optional<String> finalAnswerFrom(Response response) {
+        String text = extractText(response);
+        if (text.isBlank()) {
+            logger.warn("ChatGPT returned an empty response (tools-enabled)");
+            return Optional.empty();
+        }
+        return Optional.of(text);
+    }
+
+    private void appendToolCallsToConversation(List<ResponseInputItem> conversation,
+            Response response, List<ResponseFunctionToolCall> toolCalls,
+            Map<String, ChatGptTool<?>> toolsByName, ChatGptProgressListener listener) {
+        for (ResponseOutputItem item : response.output()) {
+            toInputItem(item).ifPresent(conversation::add);
+        }
+        for (ResponseFunctionToolCall call : toolCalls) {
+            String output = executeTool(toolsByName, call, listener);
+            conversation.add(ResponseInputItem
+                .ofFunctionCallOutput(ResponseInputItem.FunctionCallOutput.builder()
+                    .callId(call.callId())
+                    .output(output)
+                    .build()));
+        }
+    }
+
+    private String executeTool(Map<String, ChatGptTool<?>> toolsByName,
+            ResponseFunctionToolCall call, ChatGptProgressListener listener) {
+        ChatGptTool<?> tool = toolsByName.get(call.name());
+        if (tool == null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("ChatGPT requested unknown tool '{}' with args {}", call.name(),
+                        call.arguments());
+            }
+            return toolErrorJson("Unknown tool: " + call.name());
+        }
+        Map<String, String> arguments = parseArguments(call.arguments());
+        if (logger.isInfoEnabled()) {
+            logger.info("ChatGPT invoking tool '{}' with args {}", call.name(), arguments);
+        }
+        listener.onToolStart(call.name(), arguments);
+        long startNanos = System.nanoTime();
+        try {
+            ToolResult<?> result = tool.run(arguments);
+            long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
+            boolean errored = result.error().isError();
+            if (logger.isInfoEnabled()) {
+                if (errored) {
+                    logger.info("Tool '{}' returned error after {} ms: {}", call.name(), elapsedMs,
+                            result.error().errorMessage());
+                } else {
+                    logger.info("Tool '{}' completed in {} ms", call.name(), elapsedMs);
+                }
+            }
+            listener.onToolEnd(call.name(), errored, elapsedMs);
+            return OBJECT_MAPPER.writeValueAsString(result);
+        } catch (JsonProcessingException e) {
+            logger.warn("Tool {} produced unserializable result", call.name(), e);
+            listener.onToolEnd(call.name(), true, (System.nanoTime() - startNanos) / 1_000_000L);
+            return toolErrorJson("Failed to serialize result of " + call.name());
+        } catch (RuntimeException e) {
+            logger.error("Tool {} threw", call.name(), e);
+            listener.onToolEnd(call.name(), true, (System.nanoTime() - startNanos) / 1_000_000L);
+            return toolErrorJson("Tool " + call.name() + " failed: " + e.getMessage());
+        }
+    }
+
+    private static Map<String, String> parseArguments(@Nullable String json) {
+        if (json == null || json.isBlank()) {
+            return Map.of();
+        }
+        try {
+            JsonNode root = OBJECT_MAPPER.readTree(json);
+            if (!root.isObject()) {
+                return Map.of();
+            }
+            Map<String, String> args = new LinkedHashMap<>();
+            root.properties().forEach(entry -> {
+                JsonNode value = entry.getValue();
+                if (value == null || value.isNull()) {
+                    args.put(entry.getKey(), "");
+                } else if (value.isValueNode()) {
+                    args.put(entry.getKey(), value.asText());
+                } else {
+                    args.put(entry.getKey(), value.toString());
+                }
+            });
+            return args;
+        } catch (JsonProcessingException e) {
+            logger.warn("Failed to parse tool arguments JSON: {}", json, e);
+            return Map.of();
+        }
+    }
+
+    private static String toolErrorJson(String message) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(Map.of("error", message));
+        } catch (JsonProcessingException _) {
+            return "{\"error\":\"tool failure\"}";
+        }
+    }
+
+    private static Optional<ResponseInputItem> toInputItem(ResponseOutputItem item) {
+        return item.functionCall()
+            .map(ResponseInputItem::ofFunctionCall)
+            .or(() -> item.reasoning().map(ResponseInputItem::ofReasoning))
+            .or(() -> item.message().map(ResponseInputItem::ofResponseOutputMessage));
+    }
+
+    private static String extractText(Response response) {
+        return response.output()
+            .stream()
+            .flatMap(item -> item.message().stream())
+            .flatMap(message -> message.content().stream())
+            .flatMap(content -> content.outputText().stream())
+            .map(ResponseOutputText::text)
+            .collect(Collectors.joining("\n"));
+    }
+
+    private static List<Tool> toOpenAiTools(Collection<? extends ChatGptTool<?>> tools) {
+        List<Tool> result = new ArrayList<>(tools.size());
+        for (ChatGptTool<?> tool : tools) {
+            result.add(Tool.ofFunction(toFunctionTool(tool)));
+        }
+        return result;
+    }
+
+    private static FunctionTool toFunctionTool(ChatGptTool<?> tool) {
+        FunctionTool.Parameters.Builder schemaBuilder = FunctionTool.Parameters.builder();
+        Map<String, Object> schema = buildParametersSchema(tool.parameters());
+        schema.forEach(
+                (key, value) -> schemaBuilder.putAdditionalProperty(key, JsonValue.from(value)));
+
+        return FunctionTool.builder()
+            .name(tool.name())
+            .description(tool.description())
+            .parameters(schemaBuilder.build())
+            .strict(false)
+            .build();
+    }
+
+    private static Map<String, Object> buildParametersSchema(List<Parameter> parameters) {
+        Map<String, Object> schema = new LinkedHashMap<>();
+        schema.put("type", "object");
+
+        Map<String, Object> properties = new LinkedHashMap<>();
+        List<String> required = new ArrayList<>();
+        for (Parameter parameter : parameters) {
+            Map<String, Object> property = new LinkedHashMap<>();
+            property.put("type", parameter.type().toJsonSchemaType());
+            property.put("description", parameter.description());
+            properties.put(parameter.name(), property);
+            if (parameter.required()) {
+                required.add(parameter.name());
+            }
+        }
+        schema.put("properties", properties);
+        schema.put("required", required);
+        schema.put("additionalProperties", false);
+        return schema;
     }
 
     private static ResponseTextConfig buildTextConfig(ResponseSchema schema) {

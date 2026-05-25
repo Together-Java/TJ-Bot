@@ -19,6 +19,8 @@ import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksCleanupRoutine
 import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksListener;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
+import org.togetherjava.tjbot.features.chatgpt.tools.web.FetchUrlTool;
+import org.togetherjava.tjbot.features.chatgpt.tools.web.WebSearchTool;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
@@ -88,6 +90,7 @@ import org.togetherjava.tjbot.features.voicechat.DynamicVoiceChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Utility class that offers all features that should be registered by the system, such as commands.
@@ -218,7 +221,10 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper, metrics));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
+
+        features.add(new ChatGptCommand(chatGptService, helpSystemHelper,
+                List.of(new WebSearchTool(config.getTavilyApiKey()), new FetchUrlTool())));
+
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
