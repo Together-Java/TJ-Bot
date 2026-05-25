@@ -44,6 +44,16 @@ public class ChatGptService {
     /** Safety cap on tool-call rounds for a single {@code askWithTools} invocation. */
     private static final int MAX_TOOL_ROUNDS = 8;
 
+    /**
+     * Appended to the system prompt for the forced-finish call after the tool-round cap is hit, so
+     * the model produces text instead of asking for another tool.
+     */
+    private static final String FORCE_FINAL_ANSWER_INSTRUCTION = """
+            You have reached the maximum number of tool-call rounds. Do NOT call any more tools.
+            Answer the user's question now using only what you have already gathered. If you do
+            not have enough information for a complete answer, give your best partial response
+            and say plainly what you could not determine.""";
+
     private boolean isDisabled = false;
     private OpenAIClient openAIClient;
     private final Metrics metrics;
@@ -256,8 +266,10 @@ public class ChatGptService {
                 appendToolCallsToConversation(conversation, response, toolCalls, toolsByName,
                         listener);
             }
-            logger.warn("ChatGPT exceeded {} tool rounds without a final answer", MAX_TOOL_ROUNDS);
-            return Optional.empty();
+            logger.warn(
+                    "ChatGPT exceeded {} tool rounds; forcing a final answer with tools disabled",
+                    MAX_TOOL_ROUNDS);
+            return forceFinalAnswer(chatModel, conversation, systemPrompt);
         } catch (RuntimeException e) {
             logger.error("Error during tool-enabled ChatGPT call: {}", e.getMessage(), e);
             return Optional.empty();
@@ -278,6 +290,22 @@ public class ChatGptService {
             builder.tools(openAiTools).toolChoice(ToolChoiceOptions.AUTO);
         }
         return builder.build();
+    }
+
+    private Optional<String> forceFinalAnswer(ChatGptModel chatModel,
+            List<ResponseInputItem> conversation, @Nullable String systemPrompt) {
+        String forcedInstructions =
+                systemPrompt == null || systemPrompt.isBlank() ? FORCE_FINAL_ANSWER_INSTRUCTION
+                        : systemPrompt + "\n\n" + FORCE_FINAL_ANSWER_INSTRUCTION;
+        try {
+            Response response = openAIClient.responses()
+                .create(buildRequestParams(chatModel, conversation, forcedInstructions, List.of()));
+            metrics.count("chatgpt-prompted");
+            return finalAnswerFrom(response);
+        } catch (RuntimeException e) {
+            logger.error("Forced final-answer call failed: {}", e.getMessage(), e);
+            return Optional.empty();
+        }
     }
 
     private static Optional<String> finalAnswerFrom(Response response) {
