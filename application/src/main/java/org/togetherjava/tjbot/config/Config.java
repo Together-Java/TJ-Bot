@@ -504,8 +504,11 @@ public final class Config {
     }
 
     /**
-     * Gets the api key for the tavily API
-     * 
+     * Gets the API key for Tavily ({@link <a href="https://www.tavily.com">tavily.com</a>}), a
+     * search engine API tailored for LLMs. It is used by the ChatGPT command to power the AI-driven
+     * web search tool, allowing the assistant to fetch up-to-date information from the web when
+     * answering user questions.
+     *
      * @return the Tavily API key
      */
     public String getTavilyApiKey() {
