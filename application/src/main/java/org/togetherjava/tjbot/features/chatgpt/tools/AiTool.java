@@ -13,7 +13,7 @@ import java.util.Map;
  *
  * @param <T> result payload type, serialized to JSON when returned to the model
  */
-public interface ChatGptTool<T> {
+public interface AiTool<T> {
 
     /**
      * Stable identifier used by the model to invoke this tool. Must be unique within the tool list
@@ -37,15 +37,15 @@ public interface ChatGptTool<T> {
      *
      * @return the list of parameters; may be empty if the tool takes no arguments
      */
-    List<Parameter> parameters();
+    List<AiToolParameter> parameters();
 
     /**
      * Executes the tool with the arguments the model produced.
      *
-     * @param arguments argument map keyed by {@link Parameter#name()}; values are the raw string
-     *        form (objects/arrays appear as their JSON text). Missing optional arguments are absent
-     *        from the map rather than mapped to {@code null}.
+     * @param arguments argument map keyed by {@link AiToolParameter#name()}; values are the raw
+     *        string form (objects/arrays appear as their JSON text). Missing optional arguments are
+     *        absent from the map rather than mapped to {@code null}.
      * @return the outcome — either a successful payload or a failure envelope; never {@code null}
      */
-    ToolResult<T> run(Map<String, String> arguments);
+    AiToolResult<T> run(Map<String, String> arguments);
 }

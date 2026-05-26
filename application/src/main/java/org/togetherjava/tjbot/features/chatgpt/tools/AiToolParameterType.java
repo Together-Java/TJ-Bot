@@ -1,10 +1,10 @@
 package org.togetherjava.tjbot.features.chatgpt.tools;
 
 /**
- * Coarse value types a {@link Parameter} may declare. Translated to the corresponding JSON schema
- * {@code type} keyword so OpenAI can validate the model's tool-call arguments.
+ * Coarse value types a {@link AiToolParameter} may declare. Translated to the corresponding JSON
+ * schema {@code type} keyword so OpenAI can validate the model's tool-call arguments.
  */
-public enum ParameterType {
+public enum AiToolParameterType {
     STRING,
     INT,
     DOUBLE,

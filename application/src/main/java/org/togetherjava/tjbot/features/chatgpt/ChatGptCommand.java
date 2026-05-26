@@ -17,7 +17,7 @@ import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
-import org.togetherjava.tjbot.features.chatgpt.tools.ChatGptTool;
+import org.togetherjava.tjbot.features.chatgpt.tools.AiTool;
 import org.togetherjava.tjbot.features.help.HelpSystemHelper;
 
 import java.time.Duration;
@@ -56,7 +56,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
 
     private final ChatGptService chatGptService;
     private final HelpSystemHelper helper;
-    private final List<ChatGptTool<?>> tools;
+    private final List<AiTool<?>> tools;
     private final Executor worker = Executors.newCachedThreadPool(runnable -> {
         Thread thread = new Thread(runnable, "chatgpt-worker");
         thread.setDaemon(true);
@@ -74,7 +74,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
      * @param tools tools the model may invoke while answering; pass an empty list to disable
      */
     public ChatGptCommand(ChatGptService chatGptService, HelpSystemHelper helper,
-            List<ChatGptTool<?>> tools) {
+            List<AiTool<?>> tools) {
         super(COMMAND_NAME, "Ask the ChatGPT AI a question!", CommandVisibility.GUILD);
 
         this.chatGptService = chatGptService;
@@ -129,7 +129,7 @@ public final class ChatGptCommand extends SlashCommandAdapter {
         MessageChannelUnion channel = event.getChannel();
         String userId = Objects.requireNonNull(event.getMember()).getId();
         boolean thinkingEnabled = !args.isEmpty() && Boolean.parseBoolean(args.getFirst());
-        List<ChatGptTool<?>> activeTools = thinkingEnabled ? tools : List.<ChatGptTool<?>>of();
+        List<AiTool<?>> activeTools = thinkingEnabled ? tools : List.<AiTool<?>>of();
 
         ChatGptProgressEmbed progress = new ChatGptProgressEmbed(hook, selfUser, question);
         hook.editOriginalEmbeds(progress.initialEmbed()).queue();

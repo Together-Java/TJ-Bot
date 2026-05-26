@@ -1,5 +1,7 @@
 package org.togetherjava.tjbot.features.chatgpt;
 
+import org.togetherjava.tjbot.features.chatgpt.tools.AiTool;
+
 import java.util.Map;
 
 /**
@@ -27,8 +29,7 @@ public interface ChatGptProgressListener {
     /**
      * Invoked immediately before a tool is executed.
      *
-     * @param toolName the {@link org.togetherjava.tjbot.features.chatgpt.tools.ChatGptTool#name()
-     *        name} of the tool the model has chosen to call
+     * @param toolName the {@link AiTool#name() name} of the tool the model has chosen to call
      * @param arguments parsed argument map the model produced; values are raw string form
      *        (objects/arrays appear as JSON text). Never {@code null}; may be empty.
      */

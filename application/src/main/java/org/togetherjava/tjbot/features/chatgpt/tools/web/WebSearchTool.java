@@ -2,10 +2,7 @@ package org.togetherjava.tjbot.features.chatgpt.tools.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.togetherjava.tjbot.features.chatgpt.tools.ChatGptTool;
-import org.togetherjava.tjbot.features.chatgpt.tools.Parameter;
-import org.togetherjava.tjbot.features.chatgpt.tools.ParameterType;
-import org.togetherjava.tjbot.features.chatgpt.tools.ToolResult;
+import org.togetherjava.tjbot.features.chatgpt.tools.*;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,7 +18,7 @@ import java.util.Map;
  * API</a>. Requires a Tavily API key passed at construction (typically wired in from
  * {@code Config}).
  */
-public final class WebSearchTool implements ChatGptTool<TavilyResponse> {
+public final class WebSearchTool implements AiTool<TavilyResponse> {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final HttpClient HTTP_CLIENT =
@@ -58,19 +55,19 @@ public final class WebSearchTool implements ChatGptTool<TavilyResponse> {
     }
 
     @Override
-    public List<Parameter> parameters() {
-        return List.of(new Parameter(QUERY_PARAM, "The search query, in natural language",
-                ParameterType.STRING, true));
+    public List<AiToolParameter> parameters() {
+        return List.of(new AiToolParameter(QUERY_PARAM, "The search query, in natural language",
+                AiToolParameterType.STRING, true));
     }
 
     @Override
-    public ToolResult<TavilyResponse> run(Map<String, String> arguments) {
+    public AiToolResult<TavilyResponse> run(Map<String, String> arguments) {
         String query = arguments.get(QUERY_PARAM);
         if (query == null || query.isBlank()) {
-            return ToolResult.failed("Missing required parameter: " + QUERY_PARAM);
+            return AiToolResult.failed("Missing required parameter: " + QUERY_PARAM);
         }
         if (apiKey.isBlank()) {
-            return ToolResult.failed("Tavily API key is not configured");
+            return AiToolResult.failed("Tavily API key is not configured");
         }
 
         Map<String, Object> body = Map.of("api_key", apiKey, QUERY_PARAM, query, "max_results",
@@ -88,19 +85,19 @@ public final class WebSearchTool implements ChatGptTool<TavilyResponse> {
             response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
-            return ToolResult.failed("Web search interrupted");
+            return AiToolResult.failed("Web search interrupted");
         } catch (IOException e) {
-            return ToolResult.failed("Failed to send request: " + e.getMessage());
+            return AiToolResult.failed("Failed to send request: " + e.getMessage());
         }
 
         if (response.statusCode() != 200) {
-            return ToolResult.failed("Tavily returned HTTP " + response.statusCode());
+            return AiToolResult.failed("Tavily returned HTTP " + response.statusCode());
         }
 
         try {
-            return ToolResult.ok(OBJECT_MAPPER.readValue(response.body(), TavilyResponse.class));
+            return AiToolResult.ok(OBJECT_MAPPER.readValue(response.body(), TavilyResponse.class));
         } catch (IOException e) {
-            return ToolResult.failed("Failed to parse Tavily response: " + e.getMessage());
+            return AiToolResult.failed("Failed to parse Tavily response: " + e.getMessage());
         }
     }
 }

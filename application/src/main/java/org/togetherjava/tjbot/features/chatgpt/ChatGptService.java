@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.chatgpt.schema.ResponseSchema;
-import org.togetherjava.tjbot.features.chatgpt.tools.ChatGptTool;
-import org.togetherjava.tjbot.features.chatgpt.tools.Parameter;
-import org.togetherjava.tjbot.features.chatgpt.tools.ToolResult;
+import org.togetherjava.tjbot.features.chatgpt.tools.AiTool;
+import org.togetherjava.tjbot.features.chatgpt.tools.AiToolParameter;
+import org.togetherjava.tjbot.features.chatgpt.tools.AiToolResult;
 
 import javax.annotation.Nullable;
 
@@ -207,7 +207,7 @@ public class ChatGptService {
      * @return the model's final text response, or empty on error / no answer
      */
     public Optional<String> askWithTools(String userPrompt, ChatGptModel chatModel,
-            List<? extends ChatGptTool<?>> tools, @Nullable String systemPrompt) {
+            List<? extends AiTool<?>> tools, @Nullable String systemPrompt) {
         return askWithTools(userPrompt, chatModel, tools, systemPrompt,
                 ChatGptProgressListener.NO_OP);
     }
@@ -228,15 +228,15 @@ public class ChatGptService {
      *         {@link #MAX_TOOL_ROUNDS tool-round cap} is exceeded without a final answer
      */
     public Optional<String> askWithTools(String userPrompt, ChatGptModel chatModel,
-            List<? extends ChatGptTool<?>> tools, @Nullable String systemPrompt,
+            List<? extends AiTool<?>> tools, @Nullable String systemPrompt,
             ChatGptProgressListener listener) {
         if (isDisabled) {
             logger.warn("ChatGPT request attempted but service is disabled");
             return Optional.empty();
         }
 
-        Map<String, ChatGptTool<?>> toolsByName = new LinkedHashMap<>();
-        for (ChatGptTool<?> tool : tools) {
+        Map<String, AiTool<?>> toolsByName = new LinkedHashMap<>();
+        for (AiTool<?> tool : tools) {
             toolsByName.put(tool.name(), tool);
         }
 
@@ -319,7 +319,7 @@ public class ChatGptService {
 
     private void appendToolCallsToConversation(List<ResponseInputItem> conversation,
             Response response, List<ResponseFunctionToolCall> toolCalls,
-            Map<String, ChatGptTool<?>> toolsByName, ChatGptProgressListener listener) {
+            Map<String, AiTool<?>> toolsByName, ChatGptProgressListener listener) {
         for (ResponseOutputItem item : response.output()) {
             toInputItem(item).ifPresent(conversation::add);
         }
@@ -333,9 +333,9 @@ public class ChatGptService {
         }
     }
 
-    private String executeTool(Map<String, ChatGptTool<?>> toolsByName,
-            ResponseFunctionToolCall call, ChatGptProgressListener listener) {
-        ChatGptTool<?> tool = toolsByName.get(call.name());
+    private String executeTool(Map<String, AiTool<?>> toolsByName, ResponseFunctionToolCall call,
+            ChatGptProgressListener listener) {
+        AiTool<?> tool = toolsByName.get(call.name());
         if (tool == null) {
             if (logger.isInfoEnabled()) {
                 logger.info("ChatGPT requested unknown tool '{}' with args {}", call.name(),
@@ -350,7 +350,7 @@ public class ChatGptService {
         listener.onToolStart(call.name(), arguments);
         long startNanos = System.nanoTime();
         try {
-            ToolResult<?> result = tool.run(arguments);
+            AiToolResult<?> result = tool.run(arguments);
             long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000L;
             boolean errored = result.error().isError();
             if (logger.isInfoEnabled()) {
@@ -426,15 +426,15 @@ public class ChatGptService {
             .collect(Collectors.joining("\n"));
     }
 
-    private static List<Tool> toOpenAiTools(Collection<? extends ChatGptTool<?>> tools) {
+    private static List<Tool> toOpenAiTools(Collection<? extends AiTool<?>> tools) {
         List<Tool> result = new ArrayList<>(tools.size());
-        for (ChatGptTool<?> tool : tools) {
+        for (AiTool<?> tool : tools) {
             result.add(Tool.ofFunction(toFunctionTool(tool)));
         }
         return result;
     }
 
-    private static FunctionTool toFunctionTool(ChatGptTool<?> tool) {
+    private static FunctionTool toFunctionTool(AiTool<?> tool) {
         FunctionTool.Parameters.Builder schemaBuilder = FunctionTool.Parameters.builder();
         Map<String, Object> schema = buildParametersSchema(tool.parameters());
         schema.forEach(
@@ -448,19 +448,20 @@ public class ChatGptService {
             .build();
     }
 
-    private static Map<String, Object> buildParametersSchema(List<Parameter> parameters) {
+    private static Map<String, Object> buildParametersSchema(
+            List<AiToolParameter> aiToolParameters) {
         Map<String, Object> schema = new LinkedHashMap<>();
         schema.put("type", "object");
 
         Map<String, Object> properties = new LinkedHashMap<>();
         List<String> required = new ArrayList<>();
-        for (Parameter parameter : parameters) {
+        for (AiToolParameter aiToolParameter : aiToolParameters) {
             Map<String, Object> property = new LinkedHashMap<>();
-            property.put("type", parameter.type().toJsonSchemaType());
-            property.put("description", parameter.description());
-            properties.put(parameter.name(), property);
-            if (parameter.required()) {
-                required.add(parameter.name());
+            property.put("type", aiToolParameter.type().toJsonSchemaType());
+            property.put("description", aiToolParameter.description());
+            properties.put(aiToolParameter.name(), property);
+            if (aiToolParameter.required()) {
+                required.add(aiToolParameter.name());
             }
         }
         schema.put("properties", properties);

@@ -2,10 +2,7 @@ package org.togetherjava.tjbot.features.chatgpt.tools.web;
 
 import org.jspecify.annotations.Nullable;
 
-import org.togetherjava.tjbot.features.chatgpt.tools.ChatGptTool;
-import org.togetherjava.tjbot.features.chatgpt.tools.Parameter;
-import org.togetherjava.tjbot.features.chatgpt.tools.ParameterType;
-import org.togetherjava.tjbot.features.chatgpt.tools.ToolResult;
+import org.togetherjava.tjbot.features.chatgpt.tools.*;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,7 +19,7 @@ import java.util.regex.Pattern;
  * Example tool: fetches an http(s) URL and returns the page as clean extracted text. Useful for the
  * model to read documentation, articles, or other public web pages.
  */
-public final class FetchUrlTool implements ChatGptTool<FetchUrlResult> {
+public final class FetchUrlTool implements AiTool<FetchUrlResult> {
 
     private static final HttpClient HTTP_CLIENT =
             HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
@@ -55,24 +52,26 @@ public final class FetchUrlTool implements ChatGptTool<FetchUrlResult> {
     }
 
     @Override
-    public List<Parameter> parameters() {
-        return List.of(new Parameter(URL_PARAM, "The URL to fetch", ParameterType.STRING, true),
-                new Parameter(MAX_LENGTH_PARAM,
+    public List<AiToolParameter> parameters() {
+        return List.of(
+                new AiToolParameter(URL_PARAM, "The URL to fetch", AiToolParameterType.STRING,
+                        true),
+                new AiToolParameter(MAX_LENGTH_PARAM,
                         "Optional maximum characters of extracted text, up to " + MAX_MAX_LENGTH
                                 + ". Defaults to " + DEFAULT_MAX_LENGTH + ".",
-                        ParameterType.INT, false));
+                        AiToolParameterType.INT, false));
     }
 
     @Override
-    public ToolResult<FetchUrlResult> run(Map<String, String> arguments) {
+    public AiToolResult<FetchUrlResult> run(Map<String, String> arguments) {
         String url = arguments.get(URL_PARAM);
         if (url == null || url.isBlank()) {
-            return ToolResult.failed("Missing required parameter: " + URL_PARAM);
+            return AiToolResult.failed("Missing required parameter: " + URL_PARAM);
         }
 
         Integer maxLength = parsePositiveInt(arguments.get(MAX_LENGTH_PARAM));
         if (maxLength == null || maxLength > MAX_MAX_LENGTH) {
-            return ToolResult
+            return AiToolResult
                 .failed(MAX_LENGTH_PARAM + " must be a positive integer up to " + MAX_MAX_LENGTH);
         }
 
@@ -80,11 +79,11 @@ public final class FetchUrlTool implements ChatGptTool<FetchUrlResult> {
         try {
             uri = URI.create(url);
         } catch (IllegalArgumentException e) {
-            return ToolResult.failed("Invalid URL: " + e.getMessage());
+            return AiToolResult.failed("Invalid URL: " + e.getMessage());
         }
         String scheme = uri.getScheme();
         if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
-            return ToolResult.failed("URL scheme must be http or https");
+            return AiToolResult.failed("URL scheme must be http or https");
         }
 
         try {
@@ -106,14 +105,14 @@ public final class FetchUrlTool implements ChatGptTool<FetchUrlResult> {
                 text = text.substring(0, maxLength) + "\n...[truncated]";
             }
 
-            return ToolResult.ok(new FetchUrlResult(url, response.statusCode(),
+            return AiToolResult.ok(new FetchUrlResult(url, response.statusCode(),
                     response.headers().firstValue("Content-Type").orElse("unknown"), title, text,
                     truncated));
         } catch (InterruptedException _) {
             Thread.currentThread().interrupt();
-            return ToolResult.failed("Fetch interrupted");
+            return AiToolResult.failed("Fetch interrupted");
         } catch (IOException e) {
-            return ToolResult.failed("Failed to fetch URL: " + e.getMessage());
+            return AiToolResult.failed("Failed to fetch URL: " + e.getMessage());
         }
     }
 
