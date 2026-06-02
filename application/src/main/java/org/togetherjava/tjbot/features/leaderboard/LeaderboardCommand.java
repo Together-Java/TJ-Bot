@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +17,13 @@ import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
 import org.togetherjava.tjbot.features.utils.Colors;
 
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -40,6 +43,9 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
     private static final String BULLET = "▸";
 
     private final Config config;
+
+    private final Map<Long, Map<Long, Integer>> winsByGuild = new ConcurrentHashMap<>();
+    private final Map<Long, OffsetDateTime> lastFetchedPerGuild = new ConcurrentHashMap<>();
 
     public LeaderboardCommand(Config config) {
         super(COMMAND_NAME, "Show the all-time top helpers leaderboard", CommandVisibility.GUILD);
@@ -71,58 +77,87 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
             return;
         }
 
-        hallOfFame.getIterableHistory().takeAsync(HISTORY_LIMIT).thenAccept(messages -> {
-            Map<Long, Integer> winsByUser = countWins(messages);
+        long guildId = guild.getIdLong();
+        InteractionHook hook = event.getHook();
 
-            List<Map.Entry<Long, Integer>> sorted = winsByUser.entrySet()
-                .stream()
-                .sorted(Map.Entry.<Long, Integer>comparingByValue(Comparator.reverseOrder()))
-                .limit(TOP_LIMIT)
-                .toList();
+        if (!winsByGuild.containsKey(guildId)) {
+            hallOfFame.getIterableHistory().takeAsync(HISTORY_LIMIT).thenAccept(messages -> {
+                Map<Long, Integer> wins = new HashMap<>();
+                countWinsInto(messages, wins);
+                winsByGuild.put(guildId, new ConcurrentHashMap<>(wins));
 
-            if (sorted.isEmpty()) {
-                event.getHook().editOriginal("No top helper data found.").queue();
-                return;
-            }
-
-            List<Long> ids = sorted.stream().map(Map.Entry::getKey).toList();
-
-            guild.retrieveMembersByIds(ids).onSuccess(members -> {
-                Map<Long, Member> memberById = TopHelpersService.mapUserIdToMember(members);
-
-                StringJoiner description = new StringJoiner("\n");
-                for (int i = 0; i < sorted.size(); i++) {
-                    Map.Entry<Long, Integer> entry = sorted.get(i);
-                    Member member = memberById.get(entry.getKey());
-                    String name = TopHelpersService.getUsernameDisplay(member);
-                    int wins = entry.getValue();
-                    description.add("%s **%s** — %d month%s".formatted(rankPrefix(i), name, wins,
-                            wins == 1 ? "" : "s"));
+                if (!messages.isEmpty()) {
+                    lastFetchedPerGuild.put(guildId, messages.getFirst().getTimeCreated());
                 }
 
-                EmbedBuilder embed = new EmbedBuilder().setTitle("🏆 Top Helpers — Hall of Fame")
-                    .setDescription(description.toString())
-                    .setColor(Colors.SUCCESS_COLOR)
-                    .setFooter("Times awarded Top Helper");
-
-                event.getHook().editOriginalEmbeds(embed.build()).queue();
-
-            }).onError(error -> {
-                logger.error("Failed to retrieve members for leaderboard", error);
-                event.getHook()
-                    .editOriginal("Failed to load member data, please try again.")
-                    .queue();
+                sendLeaderboard(guild, wins, hook);
+            }).exceptionally(error -> {
+                logger.error("Failed to read hall of fame channel", error);
+                hook.editOriginal("Failed to read the hall of fame channel.").queue();
+                return null;
             });
+        } else {
+            OffsetDateTime lastFetched = lastFetchedPerGuild.get(guildId);
+            Map<Long, Integer> cachedWins = winsByGuild.get(guildId);
 
-        }).exceptionally(error -> {
-            logger.error("Failed to read hall of fame channel", error);
-            event.getHook().editOriginal("Failed to read the hall of fame channel.").queue();
-            return null;
+            hallOfFame.getIterableHistory()
+                .takeWhileAsync(HISTORY_LIMIT, msg -> msg.getTimeCreated().isAfter(lastFetched))
+                .thenAccept(newMessages -> {
+                    if (!newMessages.isEmpty()) {
+                        countWinsInto(newMessages, cachedWins);
+                        lastFetchedPerGuild.put(guildId, newMessages.getFirst().getTimeCreated());
+                    }
+                    sendLeaderboard(guild, cachedWins, hook);
+                })
+                .exceptionally(error -> {
+                    logger.error("Failed to read hall of fame channel", error);
+                    hook.editOriginal("Failed to read the hall of fame channel.").queue();
+                    return null;
+                });
+        }
+    }
+
+    private void sendLeaderboard(Guild guild, Map<Long, Integer> wins, InteractionHook hook) {
+        List<Map.Entry<Long, Integer>> sorted = wins.entrySet()
+            .stream()
+            .sorted(Map.Entry.<Long, Integer>comparingByValue(Comparator.reverseOrder()))
+            .limit(TOP_LIMIT)
+            .toList();
+
+        if (sorted.isEmpty()) {
+            hook.editOriginal("No top helper data found.").queue();
+            return;
+        }
+
+        List<Long> ids = sorted.stream().map(Map.Entry::getKey).toList();
+
+        guild.retrieveMembersByIds(ids).onSuccess(members -> {
+            Map<Long, Member> memberById = TopHelpersService.mapUserIdToMember(members);
+
+            StringJoiner description = new StringJoiner("\n");
+            for (int i = 0; i < sorted.size(); i++) {
+                Map.Entry<Long, Integer> entry = sorted.get(i);
+                Member member = memberById.get(entry.getKey());
+                String name = TopHelpersService.getUsernameDisplay(member);
+                int winCount = entry.getValue();
+                description.add("%s **%s** — %d month%s".formatted(rankPrefix(i), name, winCount,
+                        winCount == 1 ? "" : "s"));
+            }
+
+            EmbedBuilder embed = new EmbedBuilder().setTitle("🏆 Top Helpers — Hall of Fame")
+                .setDescription(description.toString())
+                .setColor(Colors.SUCCESS_COLOR)
+                .setFooter("Times awarded Top Helper");
+
+            hook.editOriginalEmbeds(embed.build()).queue();
+
+        }).onError(error -> {
+            logger.error("Failed to retrieve members for leaderboard", error);
+            hook.editOriginal("Failed to load member data, please try again.").queue();
         });
     }
 
-    private static Map<Long, Integer> countWins(List<Message> messages) {
-        Map<Long, Integer> wins = new HashMap<>();
+    private static void countWinsInto(List<Message> messages, Map<Long, Integer> wins) {
         for (Message message : messages) {
             String content = message.getContentRaw();
             if (!content.toLowerCase().contains("top helper")) {
@@ -132,7 +167,6 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
                 wins.merge(user.getIdLong(), 1, Integer::sum);
             }
         }
-        return wins;
     }
 
     private static String rankPrefix(int zeroBasedIndex) {
