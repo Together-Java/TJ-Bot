@@ -17,12 +17,12 @@ import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.tophelper.TopHelpersService;
 import org.togetherjava.tjbot.features.utils.Colors;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -45,7 +45,7 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
     private final Config config;
 
     private final Map<Long, Map<Long, Integer>> winsByGuild = new ConcurrentHashMap<>();
-    private final Map<Long, OffsetDateTime> lastFetchedPerGuild = new ConcurrentHashMap<>();
+    private final Map<Long, Instant> lastFetchedPerGuild = new ConcurrentHashMap<>();
 
     public LeaderboardCommand(Config config) {
         super(COMMAND_NAME, "Show the all-time top helpers leaderboard", CommandVisibility.GUILD);
@@ -80,47 +80,38 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
         long guildId = guild.getIdLong();
         InteractionHook hook = event.getHook();
 
-        if (!winsByGuild.containsKey(guildId)) {
-            hallOfFame.getIterableHistory().takeAsync(HISTORY_LIMIT).thenAccept(messages -> {
-                Map<Long, Integer> wins = new HashMap<>();
-                countWinsInto(messages, wins);
-                winsByGuild.put(guildId, new ConcurrentHashMap<>(wins));
+        Map<Long, Integer> cachedWins =
+                winsByGuild.computeIfAbsent(guildId, _ -> new ConcurrentHashMap<>());
+        Instant lastFetched = lastFetchedPerGuild.get(guildId);
 
-                if (!messages.isEmpty()) {
-                    lastFetchedPerGuild.put(guildId, messages.getFirst().getTimeCreated());
-                }
+        fetchNewMessages(hallOfFame, lastFetched).thenAccept(newMessages -> {
+            if (!newMessages.isEmpty()) {
+                countWinsInto(newMessages, cachedWins);
+                lastFetchedPerGuild.put(guildId,
+                        newMessages.getFirst().getTimeCreated().toInstant());
+            }
+            sendLeaderboard(guild, cachedWins, hook);
+        }).exceptionally(error -> {
+            logger.error("Failed to read hall of fame channel", error);
+            hook.editOriginal("Failed to read the hall of fame channel.").queue();
+            return null;
+        });
+    }
 
-                sendLeaderboard(guild, wins, hook);
-            }).exceptionally(error -> {
-                logger.error("Failed to read hall of fame channel", error);
-                hook.editOriginal("Failed to read the hall of fame channel.").queue();
-                return null;
-            });
-        } else {
-            OffsetDateTime lastFetched = lastFetchedPerGuild.get(guildId);
-            Map<Long, Integer> cachedWins = winsByGuild.get(guildId);
-
-            hallOfFame.getIterableHistory()
-                .takeWhileAsync(HISTORY_LIMIT, msg -> msg.getTimeCreated().isAfter(lastFetched))
-                .thenAccept(newMessages -> {
-                    if (!newMessages.isEmpty()) {
-                        countWinsInto(newMessages, cachedWins);
-                        lastFetchedPerGuild.put(guildId, newMessages.getFirst().getTimeCreated());
-                    }
-                    sendLeaderboard(guild, cachedWins, hook);
-                })
-                .exceptionally(error -> {
-                    logger.error("Failed to read hall of fame channel", error);
-                    hook.editOriginal("Failed to read the hall of fame channel.").queue();
-                    return null;
-                });
+    private static CompletableFuture<List<Message>> fetchNewMessages(TextChannel channel,
+            Instant lastFetched) {
+        if (lastFetched == null) {
+            return channel.getIterableHistory().takeAsync(HISTORY_LIMIT);
         }
+        return channel.getIterableHistory()
+            .takeWhileAsync(HISTORY_LIMIT,
+                    msg -> msg.getTimeCreated().toInstant().isAfter(lastFetched));
     }
 
     private void sendLeaderboard(Guild guild, Map<Long, Integer> wins, InteractionHook hook) {
         List<Map.Entry<Long, Integer>> sorted = wins.entrySet()
             .stream()
-            .sorted(Map.Entry.<Long, Integer>comparingByValue(Comparator.reverseOrder()))
+            .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
             .limit(TOP_LIMIT)
             .toList();
 
