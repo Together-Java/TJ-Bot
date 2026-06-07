@@ -43,6 +43,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -82,6 +83,8 @@ public final class HelpSystemHelper {
     private static final int MIN_QUESTION_LENGTH = 10;
     private static final String CHATGPT_FAILURE_MESSAGE =
             "You can use %s to ask ChatGPT about your question while you wait for a human to respond.";
+    private static final int LINK_CHECK_TIMEOUT_SECONDS = 10;
+
 
     /**
      * Creates a new instance.
@@ -219,7 +222,9 @@ public final class HelpSystemHelper {
 
     private String sanitizeBrokenLinks(String answer) {
         try {
-            return brokenLinkReplacer.apply(answer).join();
+            return brokenLinkReplacer.apply(answer)
+                .orTimeout(LINK_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .join();
         } catch (RuntimeException runtimeException) {
             logger.debug("Failed to replace broken links in ChatGPT response", runtimeException);
             return answer;
