@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,13 +55,7 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
 
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            event.reply("This command can only be used inside a server.")
-                .setEphemeral(true)
-                .queue();
-            return;
-        }
+        Guild guild = Objects.requireNonNull(event.getGuild());
 
         event.deferReply().queue();
 
@@ -73,7 +68,10 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
             .orElse(null);
 
         if (hallOfFame == null) {
-            event.getHook().editOriginal("Could not find the hall of fame channel.").queue();
+            event.getHook()
+                .editOriginal(
+                        "Could not find channel matching '%s'.".formatted(channelPattern.pattern()))
+                .queue();
             return;
         }
 
