@@ -37,20 +37,23 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
     private static final String COMMAND_NAME = "leaderboard";
     private static final int TOP_LIMIT = 10;
     private static final int HISTORY_LIMIT = 500;
+    private static final String TOP_HELPER_KEYWORD = "top helper";
+    private static final String LEADERBOARD_TITLE = "Top Helpers — Hall of Fame";
 
     private static final String MEDAL_FIRST = "🥇";
     private static final String MEDAL_SECOND = "🥈";
     private static final String MEDAL_THIRD = "🥉";
     private static final String BULLET = "▸";
 
-    private final Config config;
+    private final Pattern announcementChannelPattern;
 
     private final Map<Long, Map<Long, Integer>> winsByGuild = new ConcurrentHashMap<>();
     private final Map<Long, Instant> lastFetchedPerGuild = new ConcurrentHashMap<>();
 
     public LeaderboardCommand(Config config) {
         super(COMMAND_NAME, "Show the all-time top helpers leaderboard", CommandVisibility.GUILD);
-        this.config = config;
+        this.announcementChannelPattern =
+                Pattern.compile(config.getTopHelpers().getAnnouncementChannelPattern());
     }
 
     @Override
@@ -59,18 +62,16 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
 
         event.deferReply().queue();
 
-        Pattern channelPattern =
-                Pattern.compile(config.getTopHelpers().getAnnouncementChannelPattern());
         TextChannel hallOfFame = guild.getTextChannels()
             .stream()
-            .filter(channel -> channelPattern.matcher(channel.getName()).find())
+            .filter(channel -> announcementChannelPattern.matcher(channel.getName()).find())
             .findFirst()
             .orElse(null);
 
         if (hallOfFame == null) {
             event.getHook()
-                .editOriginal(
-                        "Could not find channel matching '%s'.".formatted(channelPattern.pattern()))
+                .editOriginal("Could not find channel matching `%s`."
+                    .formatted(announcementChannelPattern.pattern()))
                 .queue();
             return;
         }
@@ -133,7 +134,7 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
                         winCount == 1 ? "" : "s"));
             }
 
-            EmbedBuilder embed = new EmbedBuilder().setTitle("🏆 Top Helpers — Hall of Fame")
+            EmbedBuilder embed = new EmbedBuilder().setTitle("🏆 " + LEADERBOARD_TITLE)
                 .setDescription(description.toString())
                 .setColor(Colors.SUCCESS_COLOR)
                 .setFooter("Times awarded Top Helper");
@@ -149,7 +150,8 @@ public final class LeaderboardCommand extends SlashCommandAdapter {
     private static void countWinsInto(List<Message> messages, Map<Long, Integer> wins) {
         for (Message message : messages) {
             String content = message.getContentRaw();
-            if (!content.toLowerCase().contains("top helper")) {
+            if (!content.toLowerCase().contains(TOP_HELPER_KEYWORD)
+                    || content.contains(LEADERBOARD_TITLE)) {
                 continue;
             }
             for (User user : message.getMentions().getUsers()) {
