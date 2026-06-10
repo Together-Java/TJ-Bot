@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -25,6 +26,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.componentids.Lifespan;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.awt.Color;
@@ -36,6 +38,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Implements the /report command, which allows users to report a selected offensive message from
@@ -53,14 +56,18 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private final Predicate<String> modMailChannelNamePredicate;
     private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
+    private final ModerationActionsStore moderationActionsStore;
 
     /**
      * Creates a new instance.
      *
      * @param config to get the channel to forward reports to
+     * @param moderationActionsStore to get the required information of the reported user
      */
-    public ReportCommand(Config config) {
+    public ReportCommand(Config config, ModerationActionsStore moderationActionsStore) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
+
+        this.moderationActionsStore = Objects.requireNonNull(moderationActionsStore);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -182,9 +189,12 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .build();
 
+        String historyButtonId = generateComponentId(Lifespan.PERMANENT, reportedMessage.authorID);
+
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"));
+                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"),
+                            Button.primary(historyButtonId, "View user history"));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
@@ -222,7 +232,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
-            Instant timestamp, String authorName, String authorAvatarUrl) {
+            Instant timestamp, String authorName, String authorAvatarUrl, String authorID) {
         static ReportedMessage ofArgs(List<String> args) {
             String content = args.getFirst();
             String id = args.get(1);
@@ -231,8 +241,47 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             Instant timestamp = Instant.parse(args.get(4));
             String authorName = args.get(5);
             String authorAvatarUrl = args.get(6);
+            String authorID = args.get(7);
             return new ReportedMessage(content, id, jumpUrl, channelID, timestamp, authorName,
-                    authorAvatarUrl);
+                    authorAvatarUrl, authorID);
         }
     }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        if (args.isEmpty()) {
+            event.reply("Error: Target user context lost").setEphemeral(true).queue();
+            return;
+        }
+
+        long guildId = Objects.requireNonNull(event.getGuild()).getIdLong();
+        long targetUserId = Long.parseLong(args.getFirst());
+
+        List<ActionRecord> actions =
+                moderationActionsStore.getActionsByTargetAscending(guildId, targetUserId);
+
+        EmbedBuilder embedBuilder = new EmbedBuilder()
+            .setTitle("Moderation History for User (ID: " + targetUserId + ")")
+            .setColor(Color.ORANGE)
+            .setTimestamp(Instant.now());
+
+        if (actions.isEmpty()) {
+            embedBuilder.setDescription("No mutes, warnings, or punishments found.");
+        } else {
+            String historyContent = actions.stream()
+                .map(action -> String.format(
+                        "• **%s** (Case #%d) - Reason: *%s* (Issued: <t:%d:R>)",
+                        action.actionType(), action.caseId(),
+                        MessageUtils.abbreviate(action.reason(), 100),
+                        action.issuedAt().getEpochSecond()))
+                .collect(Collectors.joining("\n"));
+
+            embedBuilder.setDescription(
+                    MessageUtils.abbreviate(historyContent, MessageEmbed.DESCRIPTION_MAX_LENGTH));
+        }
+
+        event.replyEmbeds(embedBuilder.build()).setEphemeral(true).queue();
+
+    }
+
 }

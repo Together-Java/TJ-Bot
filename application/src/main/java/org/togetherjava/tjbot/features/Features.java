@@ -219,7 +219,7 @@ public class Features {
         features.add(new GitHubCommand(githubReference));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper, metrics));
-        features.add(new ReportCommand(config));
+        features.add(new ReportCommand(config, actionsStore));
         features.add(new BookmarksCommand(bookmarksSystem));
 
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper,
