@@ -62,7 +62,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
      * Creates a new instance.
      *
      * @param config to get the channel to forward reports to
-     * @param moderationActionsStore to get the required information of the reported user
+     * @param moderationActionsStore to get the history of moderation actions against the reported
+     *        user
      */
     public ReportCommand(Config config, ModerationActionsStore moderationActionsStore) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
@@ -189,12 +190,12 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .build();
 
-        String historyButtonId = generateComponentId(Lifespan.PERMANENT, reportedMessage.authorID);
+        String historyButtonId = generateComponentId(Lifespan.REGULAR, reportedMessage.authorId);
 
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
                     .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"),
-                            Button.primary(historyButtonId, "View user history"));
+                            Button.primary(historyButtonId, "View history"));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
@@ -232,7 +233,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
-            Instant timestamp, String authorName, String authorAvatarUrl, String authorID) {
+            Instant timestamp, String authorName, String authorAvatarUrl, String authorId) {
         static ReportedMessage ofArgs(List<String> args) {
             String content = args.getFirst();
             String id = args.get(1);
@@ -241,34 +242,29 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             Instant timestamp = Instant.parse(args.get(4));
             String authorName = args.get(5);
             String authorAvatarUrl = args.get(6);
-            String authorID = args.get(7);
+            String authorId = args.get(7);
             return new ReportedMessage(content, id, jumpUrl, channelID, timestamp, authorName,
-                    authorAvatarUrl, authorID);
+                    authorAvatarUrl, authorId);
         }
     }
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        if (args.isEmpty()) {
-            event.reply("Error: Target user context lost").setEphemeral(true).queue();
-            return;
-        }
 
-        long guildId = Objects.requireNonNull(event.getGuild()).getIdLong();
-        long targetUserId = Long.parseLong(args.getFirst());
+        long guildId = event.getGuild().getIdLong();
+        long reportedUserId = Long.parseLong(args.getFirst());
 
-        List<ActionRecord> actions =
-                moderationActionsStore.getActionsByTargetAscending(guildId, targetUserId);
+        List<ActionRecord> actionsAgainstReportedUser =
+                moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId);
 
         EmbedBuilder embedBuilder = new EmbedBuilder()
-            .setTitle("Moderation History for User (ID: " + targetUserId + ")")
-            .setColor(Color.ORANGE)
-            .setTimestamp(Instant.now());
+            .setTitle("Moderation History for User (ID: " + reportedUserId + ")")
+            .setColor(Color.ORANGE);
 
-        if (actions.isEmpty()) {
-            embedBuilder.setDescription("No mutes, warnings, or punishments found.");
-        } else {
-            String historyContent = actions.stream()
+        String description = "User has a clean record.";
+
+        if (!actionsAgainstReportedUser.isEmpty()) {
+            String historyContent = actionsAgainstReportedUser.stream()
                 .map(action -> String.format(
                         "• **%s** (Case #%d) - Reason: *%s* (Issued: <t:%d:R>)",
                         action.actionType(), action.caseId(),
@@ -276,9 +272,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                         action.issuedAt().getEpochSecond()))
                 .collect(Collectors.joining("\n"));
 
-            embedBuilder.setDescription(
-                    MessageUtils.abbreviate(historyContent, MessageEmbed.DESCRIPTION_MAX_LENGTH));
+            description =
+                    MessageUtils.abbreviate(historyContent, MessageEmbed.DESCRIPTION_MAX_LENGTH);
         }
+
+        embedBuilder.setDescription(description);
 
         event.replyEmbeds(embedBuilder.build()).setEphemeral(true).queue();
 
