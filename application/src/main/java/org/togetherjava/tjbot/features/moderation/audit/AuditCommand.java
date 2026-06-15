@@ -126,7 +126,7 @@ public final class AuditCommand extends SlashCommandAdapter {
                     pageNumberInLimits, totalPages, guildId, targetId, callerId));
     }
 
-    private List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
+    public static List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
         for (int i = 0; i < actions.size(); i++) {
             if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
@@ -148,7 +148,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             .setColor(ModerationUtils.AMBIENT_COLOR);
     }
 
-    private static String createSummaryMessageDescription(Collection<ActionRecord> actions) {
+    public static String createSummaryMessageDescription(Collection<ActionRecord> actions) {
         int actionAmount = actions.size();
 
         String shortSummary = "There are **%s actions** against the user."
@@ -192,7 +192,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         });
     }
 
-    private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
+    public static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
         return jda.retrieveUserById(action.authorId())
             .map(author -> author == null ? "(unknown user)" : author.getName())
             .map(authorText -> {

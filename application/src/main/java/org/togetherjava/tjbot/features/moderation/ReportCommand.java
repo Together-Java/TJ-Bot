@@ -27,6 +27,7 @@ import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
+import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.awt.Color;
@@ -38,7 +39,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Implements the /report command, which allows users to report a selected offensive message from
@@ -195,7 +195,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
                     .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"),
-                            Button.primary(historyButtonId, "View history"));
+                            Button.primary(historyButtonId, "Audit"));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
@@ -250,36 +250,50 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        event.deferReply().setEphemeral(true).queue();
 
         long guildId = event.getGuild().getIdLong();
         long reportedUserId = Long.parseLong(args.getFirst());
 
-        List<ActionRecord> actionsAgainstReportedUser =
+        List<ActionRecord> actions =
                 moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId);
 
-        EmbedBuilder embedBuilder = new EmbedBuilder()
-            .setTitle("Moderation History for User (ID: " + reportedUserId + ")")
-            .setColor(Color.ORANGE);
+        event.getJDA().retrieveUserById(reportedUserId).queue(user -> {
+            EmbedBuilder auditEmbed =
+                    new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
+                        .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
+                        .setColor(Color.BLACK)
+                        .setDescription(AuditCommand.createSummaryMessageDescription(actions));
 
-        String description = "User has a clean record.";
+            List<List<ActionRecord>> pages = AuditCommand.groupActionsByPages(actions);
 
-        if (!actionsAgainstReportedUser.isEmpty()) {
-            String historyContent = actionsAgainstReportedUser.stream()
-                .map(action -> String.format(
-                        "• **%s** (Case #%d) - Reason: *%s* (Issued: <t:%d:R>)",
-                        action.actionType(), action.caseId(),
-                        MessageUtils.abbreviate(action.reason(), 100),
-                        action.issuedAt().getEpochSecond()))
-                .collect(Collectors.joining("\n"));
+            if (pages.isEmpty()) {
+                event.getHook().sendMessageEmbeds(auditEmbed.build()).queue();
+                return;
+            }
 
-            description =
-                    MessageUtils.abbreviate(historyContent, MessageEmbed.DESCRIPTION_MAX_LENGTH);
-        }
+            List<net.dv8tion.jda.api.requests.RestAction<MessageEmbed.Field>> fieldTasks =
+                    pages.getLast()
+                        .stream()
+                        .map(action -> AuditCommand.actionToField(action, event.getJDA()))
+                        .toList();
 
-        embedBuilder.setDescription(description);
+            net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks).queue(fields -> {
+                fields.forEach(auditEmbed::addField);
 
-        event.replyEmbeds(embedBuilder.build()).setEphemeral(true).queue();
+                if (pages.size() > 1) {
+                    auditEmbed.setFooter(
+                            "Showing page %d/%d (Most recent actions). Use /audit to view full history."
+                                .formatted(pages.size(), pages.size()));
+                }
 
+                event.getHook().sendMessageEmbeds(auditEmbed.build()).queue();
+            }, throwable -> event.getHook()
+                .sendMessage("Could not load moderation history fields.")
+                .queue());
+        }, throwable -> event.getHook()
+            .sendMessage("Could not retrieve audit data for this user.")
+            .queue());
     }
 
 }
