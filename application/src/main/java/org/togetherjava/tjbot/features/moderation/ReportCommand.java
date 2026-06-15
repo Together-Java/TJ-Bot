@@ -27,7 +27,6 @@ import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
-import org.togetherjava.tjbot.features.moderation.audit.AuditCommand;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.awt.Color;
@@ -263,9 +262,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
                         .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
                         .setColor(Color.BLACK)
-                        .setDescription(AuditCommand.createSummaryMessageDescription(actions));
+                        .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
 
-            List<List<ActionRecord>> pages = AuditCommand.groupActionsByPages(actions);
+            List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
 
             if (pages.isEmpty()) {
                 event.getHook().sendMessageEmbeds(auditEmbed.build()).queue();
@@ -275,7 +274,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             List<net.dv8tion.jda.api.requests.RestAction<MessageEmbed.Field>> fieldTasks =
                     pages.getLast()
                         .stream()
-                        .map(action -> AuditCommand.actionToField(action, event.getJDA()))
+                        .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
                         .toList();
 
             net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks).queue(fields -> {

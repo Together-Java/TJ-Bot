@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.utils.TimeUtil;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
@@ -22,21 +21,16 @@ import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.moderation.ActionRecord;
-import org.togetherjava.tjbot.features.moderation.ModerationAction;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
 
 import javax.annotation.Nullable;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * This command lists all moderation actions that have been taken against a given user, for example
@@ -49,7 +43,6 @@ public final class AuditCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "user";
     private static final String COMMAND_NAME = "audit";
     private static final String ACTION_VERB = "audit";
-    private static final int MAX_PAGE_LENGTH = 10;
     private static final String PREVIOUS_BUTTON_LABEL = "⬅";
     private static final String NEXT_BUTTON_LABEL = "➡";
     private final ModerationActionsStore actionsStore;
@@ -101,8 +94,8 @@ public final class AuditCommand extends SlashCommandAdapter {
 
     /**
      * @param pageNumber page number to display when actions are divided into pages and each page
-     *        can contain {@link AuditCommand#MAX_PAGE_LENGTH} actions, {@code -1} encodes the last
-     *        page
+     *        can contain {@link ModerationUtils#groupActionsByPages(List)} actions, {@code -1}
+     *        encodes the last page
      */
     private <R extends MessageRequest<R>> RestAction<R> auditUser(
             Supplier<R> messageBuilderSupplier, long guildId, long targetId, long callerId,
@@ -126,17 +119,8 @@ public final class AuditCommand extends SlashCommandAdapter {
                     pageNumberInLimits, totalPages, guildId, targetId, callerId));
     }
 
-    public static List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
-        List<List<ActionRecord>> groupedActions = new ArrayList<>();
-        for (int i = 0; i < actions.size(); i++) {
-            if (i % AuditCommand.MAX_PAGE_LENGTH == 0) {
-                groupedActions.add(new ArrayList<>(AuditCommand.MAX_PAGE_LENGTH));
-            }
-
-            groupedActions.getLast().add(actions.get(i));
-        }
-
-        return groupedActions;
+    private static List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
+        return ModerationUtils.groupActionsByPages(actions);
     }
 
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
@@ -144,33 +128,9 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
             .setAuthor(user.getName(), null, avatarOrDefaultUrl)
-            .setDescription(createSummaryMessageDescription(actions))
+            .setDescription(ModerationUtils.createSummaryMessageDescription(actions)) // Redirected
+                                                                                      // here
             .setColor(ModerationUtils.AMBIENT_COLOR);
-    }
-
-    public static String createSummaryMessageDescription(Collection<ActionRecord> actions) {
-        int actionAmount = actions.size();
-
-        String shortSummary = "There are **%s actions** against the user."
-            .formatted(actionAmount == 0 ? "no" : actionAmount);
-
-        if (actionAmount == 0) {
-            return shortSummary;
-        }
-
-        // Summary of all actions with their count, like "- Warn: 5", descending
-        Map<ModerationAction, Long> actionTypeToCount = actions.stream()
-            .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
-
-        String typeCountSummary = actionTypeToCount.entrySet()
-            .stream()
-            .filter(typeAndCount -> typeAndCount.getValue() > 0)
-            .sorted(Map.Entry.<ModerationAction, Long>comparingByValue().reversed())
-            .map(typeAndCount -> "- **%s**: %d".formatted(typeAndCount.getKey(),
-                    typeAndCount.getValue()))
-            .collect(Collectors.joining("\n"));
-
-        return shortSummary + "\n" + typeCountSummary;
     }
 
     private RestAction<EmbedBuilder> attachEmbedFields(EmbedBuilder auditEmbed,
@@ -192,26 +152,8 @@ public final class AuditCommand extends SlashCommandAdapter {
         });
     }
 
-    public static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
-        return jda.retrieveUserById(action.authorId())
-            .map(author -> author == null ? "(unknown user)" : author.getName())
-            .map(authorText -> {
-                String expiresAtFormatted = action.actionExpiresAt() == null ? ""
-                        : "\nTemporary action, expires at: " + formatTime(action.actionExpiresAt());
-
-                String fieldName = "%s by %s".formatted(action.actionType().name(), authorText);
-                String fieldDescription = """
-                        %s
-                        Issued at: %s%s
-                        """.formatted(action.reason(), formatTime(action.issuedAt()),
-                        expiresAtFormatted);
-
-                return new MessageEmbed.Field(fieldName, fieldDescription, false);
-            });
-    }
-
-    private static String formatTime(Instant when) {
-        return TimeUtil.getDateTimeString(when.atOffset(ZoneOffset.UTC));
+    private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
+        return ModerationUtils.actionToField(action, jda);
     }
 
     private <R extends MessageRequest<R>> R attachPageTurnButtons(
