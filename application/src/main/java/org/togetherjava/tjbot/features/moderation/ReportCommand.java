@@ -32,6 +32,7 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -189,7 +190,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AMBIENT_COLOR)
             .build();
 
-        String historyButtonId = generateComponentId(Lifespan.REGULAR, reportedMessage.authorId);
+        String historyButtonId =
+                generateComponentId(Lifespan.REGULAR, reportedMessage.authorId, "0");
 
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
@@ -249,13 +251,20 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        event.deferReply().setEphemeral(true).queue();
+        event.deferEdit().queue();
 
-        long guildId = event.getGuild().getIdLong();
-        long reportedUserId = Long.parseLong(args.getFirst());
+        Guild guild =
+                Objects.requireNonNull(event.getGuild(), "Guild cannot be null for this command.");
+        long guildId = guild.getIdLong();
 
-        List<ActionRecord> actions =
-                moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId);
+        long reportedUserId = Long.parseLong(args.get(0));
+        int targetPage = Integer.parseInt(args.get(1));
+
+        List<ActionRecord> actions = new java.util.ArrayList<>(
+                moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId));
+
+        Collections.reverse(actions);
+        List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
 
         event.getJDA().retrieveUserById(reportedUserId).queue(user -> {
             EmbedBuilder auditEmbed =
@@ -264,33 +273,49 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                         .setColor(Color.BLACK)
                         .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
 
-            List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
-
             if (pages.isEmpty()) {
-                event.getHook().sendMessageEmbeds(auditEmbed.build()).queue();
+                event.getHook()
+                    .editOriginalEmbeds(auditEmbed.build())
+                    .setComponents(Collections.emptyList())
+                    .queue();
                 return;
             }
 
+            int currentPageIndex = Math.clamp(targetPage, 0, pages.size() - 1);
+
             List<net.dv8tion.jda.api.requests.RestAction<MessageEmbed.Field>> fieldTasks =
-                    pages.getLast()
+                    pages.get(currentPageIndex)
                         .stream()
                         .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
                         .toList();
 
             net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks).queue(fields -> {
+                auditEmbed.clearFields();
                 fields.forEach(auditEmbed::addField);
 
-                if (pages.size() > 1) {
-                    auditEmbed.setFooter(
-                            "Showing page %d/%d (Most recent actions). Use /audit to view full history."
-                                .formatted(pages.size(), pages.size()));
-                }
+                auditEmbed.setFooter("Page %d/%d (Most recent first)"
+                    .formatted(currentPageIndex + 1, pages.size()));
 
-                event.getHook().sendMessageEmbeds(auditEmbed.build()).queue();
-            }, throwable -> event.getHook()
+                String prevButtonId = generateComponentId(Lifespan.REGULAR,
+                        String.valueOf(reportedUserId), String.valueOf(currentPageIndex - 1));
+                String nextButtonId = generateComponentId(Lifespan.REGULAR,
+                        String.valueOf(reportedUserId), String.valueOf(currentPageIndex + 1));
+
+                Button prevButton = Button.primary(prevButtonId, "◀ Previous")
+                    .withDisabled(currentPageIndex == 0);
+
+                Button nextButton = Button.primary(nextButtonId, "Next ▶")
+                    .withDisabled(currentPageIndex == pages.size() - 1);
+
+                event.getHook()
+                    .editOriginalEmbeds(auditEmbed.build())
+                    .setActionRow(prevButton, nextButton)
+                    .queue();
+
+            }, _ -> event.getHook()
                 .sendMessage("Could not load moderation history fields.")
                 .queue());
-        }, throwable -> event.getHook()
+        }, _ -> event.getHook()
             .sendMessage("Could not retrieve audit data for this user.")
             .queue());
     }
