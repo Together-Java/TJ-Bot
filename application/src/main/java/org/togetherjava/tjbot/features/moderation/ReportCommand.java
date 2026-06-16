@@ -267,15 +267,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         event.getJDA()
             .retrieveUserById(reportedUserId)
-            .queue(user -> renderAuditEmbed(event, user, actions, pages, targetPage),
-                    _ -> event.getHook()
-                        .sendMessage("Could not retrieve audit data for this user.")
-                        .queue());
+            .flatMap(user -> prepareAuditEmbedTasks(event, user, actions, pages, targetPage))
+            .queue(fields -> {
+            }, _ -> event.getHook()
+                .sendMessage("Could not load audit data for this user.")
+                .queue());
     }
 
-    private void renderAuditEmbed(ButtonInteractionEvent event,
-            net.dv8tion.jda.api.entities.User user, List<ActionRecord> actions,
-            List<List<ActionRecord>> pages, int targetPage) {
+    private net.dv8tion.jda.api.requests.RestAction<List<MessageEmbed.Field>> prepareAuditEmbedTasks(
+            ButtonInteractionEvent event, net.dv8tion.jda.api.entities.User user,
+            List<ActionRecord> actions, List<List<ActionRecord>> pages, int targetPage) {
+
         EmbedBuilder auditEmbed =
                 new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
                     .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
@@ -283,11 +285,10 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
 
         if (pages.isEmpty()) {
-            event.getHook()
+            return event.getHook()
                 .editOriginalEmbeds(auditEmbed.build())
                 .setComponents(Collections.emptyList())
-                .queue();
-            return;
+                .map(_ -> Collections.emptyList());
         }
 
         int currentPageIndex = Math.clamp(targetPage, 0, pages.size() - 1);
@@ -298,12 +299,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
                     .toList();
 
-        net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks)
-            .queue(fields -> finalizeAndSendEmbed(event, auditEmbed, fields, user.getIdLong(),
-                    currentPageIndex, pages.size()),
-                    _ -> event.getHook()
-                        .sendMessage("Could not load moderation history fields.")
-                        .queue());
+        return net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks).map(fields -> {
+            finalizeAndSendEmbed(event, auditEmbed, fields, user.getIdLong(), currentPageIndex,
+                    pages.size());
+            return fields;
+        });
     }
 
     private void finalizeAndSendEmbed(ButtonInteractionEvent event, EmbedBuilder auditEmbed,
