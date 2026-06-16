@@ -262,62 +262,73 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         List<ActionRecord> actions = new java.util.ArrayList<>(
                 moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId));
-
         Collections.reverse(actions);
         List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
 
-        event.getJDA().retrieveUserById(reportedUserId).queue(user -> {
-            EmbedBuilder auditEmbed =
-                    new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
-                        .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
-                        .setColor(Color.BLACK)
-                        .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
+        event.getJDA()
+            .retrieveUserById(reportedUserId)
+            .queue(user -> renderAuditEmbed(event, user, actions, pages, targetPage),
+                    _ -> event.getHook()
+                        .sendMessage("Could not retrieve audit data for this user.")
+                        .queue());
+    }
 
-            if (pages.isEmpty()) {
-                event.getHook()
-                    .editOriginalEmbeds(auditEmbed.build())
-                    .setComponents(Collections.emptyList())
-                    .queue();
-                return;
-            }
+    private void renderAuditEmbed(ButtonInteractionEvent event,
+            net.dv8tion.jda.api.entities.User user, List<ActionRecord> actions,
+            List<List<ActionRecord>> pages, int targetPage) {
+        EmbedBuilder auditEmbed =
+                new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
+                    .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
+                    .setColor(Color.BLACK)
+                    .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
 
-            int currentPageIndex = Math.clamp(targetPage, 0, pages.size() - 1);
+        if (pages.isEmpty()) {
+            event.getHook()
+                .editOriginalEmbeds(auditEmbed.build())
+                .setComponents(Collections.emptyList())
+                .queue();
+            return;
+        }
 
-            List<net.dv8tion.jda.api.requests.RestAction<MessageEmbed.Field>> fieldTasks =
-                    pages.get(currentPageIndex)
-                        .stream()
-                        .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
-                        .toList();
+        int currentPageIndex = Math.clamp(targetPage, 0, pages.size() - 1);
 
-            net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks).queue(fields -> {
-                auditEmbed.clearFields();
-                fields.forEach(auditEmbed::addField);
+        List<net.dv8tion.jda.api.requests.RestAction<MessageEmbed.Field>> fieldTasks =
+                pages.get(currentPageIndex)
+                    .stream()
+                    .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
+                    .toList();
 
-                auditEmbed.setFooter("Page %d/%d (Most recent first)"
-                    .formatted(currentPageIndex + 1, pages.size()));
+        net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks)
+            .queue(fields -> finalizeAndSendEmbed(event, auditEmbed, fields, user.getIdLong(),
+                    currentPageIndex, pages.size()),
+                    _ -> event.getHook()
+                        .sendMessage("Could not load moderation history fields.")
+                        .queue());
+    }
 
-                String prevButtonId = generateComponentId(Lifespan.REGULAR,
-                        String.valueOf(reportedUserId), String.valueOf(currentPageIndex - 1));
-                String nextButtonId = generateComponentId(Lifespan.REGULAR,
-                        String.valueOf(reportedUserId), String.valueOf(currentPageIndex + 1));
+    private void finalizeAndSendEmbed(ButtonInteractionEvent event, EmbedBuilder auditEmbed,
+            List<MessageEmbed.Field> fields, long reportedUserId, int currentPageIndex,
+            int totalPages) {
+        auditEmbed.clearFields();
+        fields.forEach(auditEmbed::addField);
 
-                Button prevButton = Button.primary(prevButtonId, "◀ Previous")
-                    .withDisabled(currentPageIndex == 0);
+        auditEmbed.setFooter(
+                "Page %d/%d (Most recent first)".formatted(currentPageIndex + 1, totalPages));
 
-                Button nextButton = Button.primary(nextButtonId, "Next ▶")
-                    .withDisabled(currentPageIndex == pages.size() - 1);
+        String prevButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
+                String.valueOf(currentPageIndex - 1));
+        String nextButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
+                String.valueOf(currentPageIndex + 1));
 
-                event.getHook()
-                    .editOriginalEmbeds(auditEmbed.build())
-                    .setActionRow(prevButton, nextButton)
-                    .queue();
+        Button prevButton =
+                Button.primary(prevButtonId, "◀ Previous").withDisabled(currentPageIndex == 0);
+        Button nextButton = Button.primary(nextButtonId, "Next ▶")
+            .withDisabled(currentPageIndex == totalPages - 1);
 
-            }, _ -> event.getHook()
-                .sendMessage("Could not load moderation history fields.")
-                .queue());
-        }, _ -> event.getHook()
-            .sendMessage("Could not retrieve audit data for this user.")
-            .queue());
+        event.getHook()
+            .editOriginalEmbeds(auditEmbed.build())
+            .setActionRow(prevButton, nextButton)
+            .queue();
     }
 
 }
