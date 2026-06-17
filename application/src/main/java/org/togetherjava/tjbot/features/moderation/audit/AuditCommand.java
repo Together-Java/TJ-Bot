@@ -128,8 +128,7 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
             .setAuthor(user.getName(), null, avatarOrDefaultUrl)
-            .setDescription(ModerationUtils.createSummaryMessageDescription(actions)) // Redirected
-                                                                                      // here
+            .setDescription(ModerationUtils.createSummaryMessageDescription(actions))
             .setColor(ModerationUtils.AMBIENT_COLOR);
     }
 
