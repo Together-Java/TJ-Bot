@@ -3,10 +3,7 @@ package org.togetherjava.tjbot.features.moderation;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -17,6 +14,7 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
@@ -268,15 +266,15 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         event.getJDA()
             .retrieveUserById(reportedUserId)
             .flatMap(user -> prepareAuditEmbedTasks(event, user, actions, pages, targetPage))
-            .queue(fields -> {
-            }, _ -> event.getHook()
+            .onErrorFlatMap(_ -> event.getHook()
                 .sendMessage("Could not load audit data for this user.")
-                .queue());
+                .map(msg -> null))
+            .queue();
     }
 
-    private net.dv8tion.jda.api.requests.RestAction<List<MessageEmbed.Field>> prepareAuditEmbedTasks(
-            ButtonInteractionEvent event, net.dv8tion.jda.api.entities.User user,
-            List<ActionRecord> actions, List<List<ActionRecord>> pages, int targetPage) {
+    private RestAction<List<MessageEmbed.Field>> prepareAuditEmbedTasks(
+            ButtonInteractionEvent event, User user, List<ActionRecord> actions,
+            List<List<ActionRecord>> pages, int targetPage) {
 
         EmbedBuilder auditEmbed =
                 new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
@@ -287,30 +285,29 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         if (pages.isEmpty()) {
             return event.getHook()
                 .editOriginalEmbeds(auditEmbed.build())
-                .setComponents(Collections.emptyList())
-                .map(_ -> Collections.emptyList());
+                .setComponents(List.of())
+                .map(_ -> List.of());
         }
 
         int currentPageIndex = Math.clamp(targetPage, 0, pages.size() - 1);
 
-        List<net.dv8tion.jda.api.requests.RestAction<MessageEmbed.Field>> fieldTasks =
-                pages.get(currentPageIndex)
-                    .stream()
-                    .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
-                    .toList();
+        List<RestAction<MessageEmbed.Field>> fetchFieldActions = pages.get(currentPageIndex)
+            .stream()
+            .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
+            .toList();
 
-        return net.dv8tion.jda.api.requests.RestAction.allOf(fieldTasks).map(fields -> {
-            finalizeAndSendEmbed(event, auditEmbed, fields, user.getIdLong(), currentPageIndex,
+        return RestAction.allOf(fetchFieldActions).map(embedFields -> {
+            finalizeAndSendEmbed(event, auditEmbed, embedFields, user.getIdLong(), currentPageIndex,
                     pages.size());
-            return fields;
+            return embedFields;
         });
     }
 
     private void finalizeAndSendEmbed(ButtonInteractionEvent event, EmbedBuilder auditEmbed,
-            List<MessageEmbed.Field> fields, long reportedUserId, int currentPageIndex,
+            List<MessageEmbed.Field> embedFields, long reportedUserId, int currentPageIndex,
             int totalPages) {
         auditEmbed.clearFields();
-        fields.forEach(auditEmbed::addField);
+        embedFields.forEach(auditEmbed::addField);
 
         auditEmbed.setFooter(
                 "Page %d/%d (Most recent first)".formatted(currentPageIndex + 1, totalPages));
