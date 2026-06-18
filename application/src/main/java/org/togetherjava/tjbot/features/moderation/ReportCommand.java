@@ -290,7 +290,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         List<RestAction<MessageEmbed.Field>> fetchFieldActions = pages.get(currentPageIndex)
             .stream()
-            .map(actionRecord -> ModerationUtils.actionToEmbedField(actionRecord, event.getJDA()))
+            .map(actionRecord -> ModerationUtils.moderationActionToEmbedField(actionRecord,
+                    event.getJDA()))
             .toList();
 
         return RestAction.allOf(fetchFieldActions).map(embedFields -> {

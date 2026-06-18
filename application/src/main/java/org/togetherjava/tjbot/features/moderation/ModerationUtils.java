@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
+import net.dv8tion.jda.api.utils.TimeUtil;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,9 +54,9 @@ public class ModerationUtils {
      */
     private static final int REASON_MAX_LENGTH = 512;
     /**
-     * The maximum amount of moderation actions displayed on a single page
+     * The maximum amount of moderation actions displayed on a single audit log page
      */
-    private static final int MAX_PAGE_LENGTH = 10;
+    private static final int MAX_AUDIT_PAGE_LENGTH = 10;
     /**
      * Human-readable text representing the duration of a permanent action, will be shown to the
      * user as option for selection.
@@ -457,42 +458,44 @@ public class ModerationUtils {
     /**
      * Splits a list of moderation records into discrete pages capped at 10 items each.
      *
-     * @param actions the list of chronological actions against a target
+     * @param moderationActions the list of chronological actions against a target
      * @return a list of sub-lists where each sub-list contains a maximum of 10 items
      */
-    public static List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
-        List<List<ActionRecord>> groupedActions = new ArrayList<>();
+    public static List<List<ActionRecord>> groupActionsByPages(
+            List<ActionRecord> moderationActions) {
+        List<List<ActionRecord>> groupedModerationActions = new ArrayList<>();
 
-        for (int i = 0; i < actions.size(); i++) {
-            if (i % MAX_PAGE_LENGTH == 0) {
-                groupedActions.add(new ArrayList<>(MAX_PAGE_LENGTH));
+        for (int i = 0; i < moderationActions.size(); i++) {
+            if (i % MAX_AUDIT_PAGE_LENGTH == 0) {
+                groupedModerationActions.add(new ArrayList<>(MAX_AUDIT_PAGE_LENGTH));
             }
-            groupedActions.getLast().add(actions.get(i));
+            groupedModerationActions.getLast().add(moderationActions.get(i));
         }
 
-        return groupedActions;
+        return groupedModerationActions;
     }
 
     /**
      * Generates a structural text overview outlining the count total of each action type.
      *
-     * @param actions a collection of history records
+     * @param moderationActions a collection of history records
      * @return a formatted markdown description summary
      */
-    public static String createSummaryMessageDescription(Collection<ActionRecord> actions) {
-        int actionAmount = actions.size();
+    public static String createSummaryMessageDescription(
+            Collection<ActionRecord> moderationActions) {
+        int moderationActionAmount = moderationActions.size();
 
         String shortSummary = "There are **%s actions** against the user."
-            .formatted(actionAmount == 0 ? "no" : actionAmount);
+            .formatted(moderationActionAmount == 0 ? "no" : moderationActionAmount);
 
-        if (actionAmount == 0) {
+        if (moderationActionAmount == 0) {
             return shortSummary;
         }
 
-        Map<ModerationAction, Long> actionTypeToCount = actions.stream()
+        Map<ModerationAction, Long> moderationActionTypeToCount = moderationActions.stream()
             .collect(Collectors.groupingBy(ActionRecord::actionType, Collectors.counting()));
 
-        String typeCountSummary = actionTypeToCount.entrySet()
+        String typeCountSummary = moderationActionTypeToCount.entrySet()
             .stream()
             .filter(typeAndCount -> typeAndCount.getValue() > 0)
             .sorted(Map.Entry.<ModerationAction, Long>comparingByValue().reversed())
@@ -506,28 +509,27 @@ public class ModerationUtils {
     /**
      * Converts an action record item asynchronously into a formatted embed data field.
      *
-     * @param actionRecord the moderation action history record to convert
+     * @param moderationActionRecord the moderation action history record to convert
      * @param jda the active JDA instance used to resolve the moderator's handle
      * @return a rest action that resolves to the embed field representing the moderation action
      */
-    public static RestAction<MessageEmbed.Field> actionToEmbedField(ActionRecord actionRecord,
-            JDA jda) {
-        return jda.retrieveUserById(actionRecord.authorId())
+    public static RestAction<MessageEmbed.Field> moderationActionToEmbedField(
+            ActionRecord moderationActionRecord, JDA jda) {
+        return jda.retrieveUserById(moderationActionRecord.authorId())
             .map(author -> author == null ? "(unknown user)" : author.getName())
             .map(authorText -> {
-                String expiresAtFormatted = actionRecord.actionExpiresAt() == null ? ""
-                        : "\nTemporary action, expires at: "
-                                + net.dv8tion.jda.api.utils.TimeUtil.getDateTimeString(
-                                        actionRecord.actionExpiresAt().atOffset(ZoneOffset.UTC));
+                String expiresAtFormatted = moderationActionRecord.actionExpiresAt() == null ? ""
+                        : "\nTemporary action, expires at: " + TimeUtil.getDateTimeString(
+                                moderationActionRecord.actionExpiresAt().atOffset(ZoneOffset.UTC));
 
-                String embedFieldName =
-                        "%s by %s".formatted(actionRecord.actionType().name(), authorText);
+                String embedFieldName = "%s by %s"
+                    .formatted(moderationActionRecord.actionType().name(), authorText);
                 String embedFieldDescription = """
                         %s
                         Issued at: %s%s
-                        """.formatted(actionRecord.reason(),
-                        net.dv8tion.jda.api.utils.TimeUtil
-                            .getDateTimeString(actionRecord.issuedAt().atOffset(ZoneOffset.UTC)),
+                        """.formatted(moderationActionRecord.reason(),
+                        TimeUtil.getDateTimeString(
+                                moderationActionRecord.issuedAt().atOffset(ZoneOffset.UTC)),
                         expiresAtFormatted);
 
                 return new MessageEmbed.Field(embedFieldName, embedFieldDescription, false);
