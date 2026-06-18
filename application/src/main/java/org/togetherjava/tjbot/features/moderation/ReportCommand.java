@@ -30,10 +30,7 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -249,7 +246,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        event.deferEdit().queue();
+        event.deferReply(true).queue();
 
         Guild guild =
                 Objects.requireNonNull(event.getGuild(), "Guild cannot be null for this command.");
@@ -258,7 +255,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         long reportedUserId = Long.parseLong(args.get(0));
         int targetPage = Integer.parseInt(args.get(1));
 
-        List<ActionRecord> actions = new java.util.ArrayList<>(
+        List<ActionRecord> actions = new ArrayList<>(
                 moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId));
         Collections.reverse(actions);
         List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
@@ -293,7 +290,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         List<RestAction<MessageEmbed.Field>> fetchFieldActions = pages.get(currentPageIndex)
             .stream()
-            .map(action -> ModerationUtils.actionToField(action, event.getJDA()))
+            .map(actionRecord -> ModerationUtils.actionToEmbedField(actionRecord, event.getJDA()))
             .toList();
 
         return RestAction.allOf(fetchFieldActions).map(embedFields -> {

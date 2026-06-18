@@ -152,7 +152,7 @@ public final class AuditCommand extends SlashCommandAdapter {
     }
 
     private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
-        return ModerationUtils.actionToField(action, jda);
+        return ModerationUtils.actionToEmbedField(action, jda);
     }
 
     private <R extends MessageRequest<R>> R attachPageTurnButtons(

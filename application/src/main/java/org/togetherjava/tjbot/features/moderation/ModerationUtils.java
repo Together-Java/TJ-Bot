@@ -53,6 +53,10 @@ public class ModerationUtils {
      */
     private static final int REASON_MAX_LENGTH = 512;
     /**
+     * The maximum amount of moderation actions displayed on a single page
+     */
+    private static final int MAX_PAGE_LENGTH = 10;
+    /**
      * Human-readable text representing the duration of a permanent action, will be shown to the
      * user as option for selection.
      */
@@ -458,11 +462,10 @@ public class ModerationUtils {
      */
     public static List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
         List<List<ActionRecord>> groupedActions = new ArrayList<>();
-        final int maxPageLength = 10;
 
         for (int i = 0; i < actions.size(); i++) {
-            if (i % maxPageLength == 0) {
-                groupedActions.add(new ArrayList<>(maxPageLength));
+            if (i % MAX_PAGE_LENGTH == 0) {
+                groupedActions.add(new ArrayList<>(MAX_PAGE_LENGTH));
             }
             groupedActions.getLast().add(actions.get(i));
         }
@@ -503,29 +506,31 @@ public class ModerationUtils {
     /**
      * Converts an action record item asynchronously into a formatted embed data field.
      *
-     * @param action the record data item
+     * @param actionRecord the moderation action history record to convert
      * @param jda the active JDA instance used to resolve the moderator's handle
-     * @return a field representation task mapping out the execution card detail
+     * @return a rest action that resolves to the embed field representing the moderation action
      */
-    public static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
-        return jda.retrieveUserById(action.authorId())
+    public static RestAction<MessageEmbed.Field> actionToEmbedField(ActionRecord actionRecord,
+            JDA jda) {
+        return jda.retrieveUserById(actionRecord.authorId())
             .map(author -> author == null ? "(unknown user)" : author.getName())
             .map(authorText -> {
-                String expiresAtFormatted = action.actionExpiresAt() == null ? ""
-                        : "\nTemporary action, expires at: " + net.dv8tion.jda.api.utils.TimeUtil
-                            .getDateTimeString(action.actionExpiresAt().atOffset(ZoneOffset.UTC));
+                String expiresAtFormatted = actionRecord.actionExpiresAt() == null ? ""
+                        : "\nTemporary action, expires at: "
+                                + net.dv8tion.jda.api.utils.TimeUtil.getDateTimeString(
+                                        actionRecord.actionExpiresAt().atOffset(ZoneOffset.UTC));
 
-                String fieldName = "%s by %s".formatted(action.actionType().name(), authorText);
-                String fieldDescription =
-                        """
-                                %s
-                                Issued at: %s%s
-                                """.formatted(action.reason(),
-                                net.dv8tion.jda.api.utils.TimeUtil
-                                    .getDateTimeString(action.issuedAt().atOffset(ZoneOffset.UTC)),
-                                expiresAtFormatted);
+                String embedFieldName =
+                        "%s by %s".formatted(actionRecord.actionType().name(), authorText);
+                String embedFieldDescription = """
+                        %s
+                        Issued at: %s%s
+                        """.formatted(actionRecord.reason(),
+                        net.dv8tion.jda.api.utils.TimeUtil
+                            .getDateTimeString(actionRecord.issuedAt().atOffset(ZoneOffset.UTC)),
+                        expiresAtFormatted);
 
-                return new MessageEmbed.Field(fieldName, fieldDescription, false);
+                return new MessageEmbed.Field(embedFieldName, embedFieldDescription, false);
             });
     }
 
