@@ -175,10 +175,11 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
         long guildId = message.getGuild().getIdLong();
         long authorId = author.getIdLong();
-        String componentId = generateComponentId(String.valueOf(guildId), String.valueOf(authorId));
+        String[] args = {String.valueOf(guildId), String.valueOf(authorId)};
 
         return auditChannel.sendMessageEmbeds(reportEmbed)
-            .addActionRow(Button.success(componentId, "Yes"), Button.danger(componentId, "No"));
+            .addActionRow(Button.success(generateComponentId(args), "Yes"),
+                    Button.danger(generateComponentId(args), "No"));
     }
 
     private static String createDescription(Message target) {
