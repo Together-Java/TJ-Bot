@@ -128,7 +128,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             return false;
         }
 
-        event.reply("You just reported message as scam, please wait a bit.")
+        event.reply("You just reported a message as scam, please wait a bit.")
             .setEphemeral(true)
             .queue();
         return true;
