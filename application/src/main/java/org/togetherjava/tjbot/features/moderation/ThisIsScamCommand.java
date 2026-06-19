@@ -182,6 +182,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
                     Button.danger(generateComponentId(args), "No"));
     }
 
+    @SuppressWarnings("squid:S3457") // %n is wrong, markdown must use \n
     private static String createDescription(Message target) {
         String content = target.getContentStripped();
         String description = content.isBlank() ? "(empty message)" : content;
