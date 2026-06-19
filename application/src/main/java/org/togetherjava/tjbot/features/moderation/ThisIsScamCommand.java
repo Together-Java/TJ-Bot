@@ -15,7 +15,6 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
@@ -217,10 +216,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         List<MessageEmbed> embeds = new ArrayList<>(event.getMessage().getEmbeds());
         embeds.add(resultEmbed);
 
-        List<Button> disabledButtons =
-                event.getMessage().getButtons().stream().map(Button::asDisabled).toList();
-
-        event.editMessageEmbeds(embeds).setComponents(ActionRow.of(disabledButtons)).queue();
+        event.editMessageEmbeds(embeds).setComponents().queue();
 
         if (!isScam) {
             return;
