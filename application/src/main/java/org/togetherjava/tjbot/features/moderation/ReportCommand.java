@@ -265,7 +265,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .flatMap(user -> prepareAuditEmbedTasks(event, user, actions, pages, targetPage))
             .onErrorFlatMap(_ -> event.getHook()
                 .sendMessage("Could not load audit data for this user.")
-                .map(msg -> null))
+                .map(_ -> null))
             .queue();
     }
 
