@@ -24,10 +24,10 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.ModAuditLogGuildProcess;
 import org.togetherjava.tjbot.features.Routine;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
@@ -50,7 +50,6 @@ public final class ModAuditLogRoutine implements Routine {
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogRoutine.class);
     private static final int CHECK_AUDIT_LOG_START_HOUR = 4;
     private static final int CHECK_AUDIT_LOG_EVERY_HOURS = 8;
-    private static final Color AMBIENT_COLOR = Color.decode("#4FC3F7");
 
     private final Database database;
     private final Config config;
@@ -277,7 +276,7 @@ public final class ModAuditLogRoutine implements Routine {
             return new EmbedBuilder().setAuthor(author.getName(), null, avatarOrDefaultUrl)
                 .setDescription(description)
                 .setTimestamp(timestamp)
-                .setColor(AMBIENT_COLOR)
+                .setColor(AmbientColors.MODERATION_AUDIT_ACTION)
                 .build();
         }
     }

@@ -34,11 +34,11 @@ import org.togetherjava.tjbot.features.moderation.ModerationAction;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
-import java.awt.Color;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -60,7 +60,6 @@ import java.util.stream.Collectors;
  */
 public final class ScamBlocker extends MessageReceiverAdapter implements UserInteractor {
     private static final Logger logger = LoggerFactory.getLogger(ScamBlocker.class);
-    private static final Color AMBIENT_COLOR = Color.decode("#CFBFF5");
     private static final Set<ScamBlockerConfig.Mode> MODES_WITH_IMMEDIATE_DELETION =
             EnumSet.of(ScamBlockerConfig.Mode.AUTO_DELETE_BUT_APPROVE_QUARANTINE,
                     ScamBlockerConfig.Mode.AUTO_DELETE_AND_QUARANTINE);
@@ -268,7 +267,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .setTitle(reportTitle)
             .setAuthor(author.getName(), null, avatarOrDefaultUrl)
             .setTimestamp(event.getMessage().getTimeCreated())
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.SCAM_BLOCKER)
             .setFooter(author.getId())
             .build();
 

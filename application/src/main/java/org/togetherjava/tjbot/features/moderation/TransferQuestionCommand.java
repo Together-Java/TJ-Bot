@@ -33,9 +33,9 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.chatgpt.schema.Property;
 import org.togetherjava.tjbot.features.chatgpt.schema.ResponseSchema;
 import org.togetherjava.tjbot.features.chatgpt.schema.Type;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
-import java.awt.Color;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,7 +59,6 @@ public final class TransferQuestionCommand extends BotCommandAdapter
     private static final int TITLE_MAX_LENGTH = 50;
     private static final Pattern TITLE_GUESS_COMPACT_REMOVAL_PATTERN = Pattern.compile("\\W");
     private static final int TITLE_MIN_LENGTH = 3;
-    private static final Color EMBED_COLOR = new Color(50, 164, 168);
 
     private final Predicate<String> isHelpForumName;
     private final List<String> tags;
@@ -268,7 +267,7 @@ public final class TransferQuestionCommand extends BotCommandAdapter
 
         return new EmbedBuilder().setAuthor(originalUser.getName(), null, avatarOrDefaultUrl)
             .setDescription(originalMessage)
-            .setColor(EMBED_COLOR)
+            .setColor(AmbientColors.QUESTION_TRANSFER)
             .build();
     }
 

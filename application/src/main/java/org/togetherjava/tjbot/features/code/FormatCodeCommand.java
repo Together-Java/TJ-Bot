@@ -3,6 +3,7 @@ package org.togetherjava.tjbot.features.code;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.CodeFence;
 import org.togetherjava.tjbot.formatter.Formatter;
 
@@ -29,7 +30,7 @@ final class FormatCodeCommand implements CodeAction {
 
         return new EmbedBuilder().setTitle("Formatted code")
             .setDescription(formattedCodeFence.toMarkdown())
-            .setColor(CodeMessageHandler.AMBIENT_COLOR)
+            .setColor(AmbientColors.CODE)
             .build();
     }
 

@@ -9,7 +9,8 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
+
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -33,8 +34,9 @@ final class PurgeHelper {
      */
     static void sendConfirmationDialog(IReplyCallback event, String title, String description,
             String confirmComponentId, String cancelComponentId) {
-        EmbedBuilder embed =
-                new EmbedBuilder().setTitle(title).setDescription(description).setColor(Color.RED);
+        EmbedBuilder embed = new EmbedBuilder().setTitle(title)
+            .setDescription(description)
+            .setColor(AmbientColors.PURGE_CONFIRMATION);
 
         event.replyEmbeds(embed.build())
             .setEphemeral(true)

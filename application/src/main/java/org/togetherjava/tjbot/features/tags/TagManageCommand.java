@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.moderation.audit.ModAuditLogWriter;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
 
@@ -112,7 +113,7 @@ public final class TagManageCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder().setTitle("Success")
                 .setDescription("Successfully %s tag '%s'.".formatted(actionVerb, id))
-                .setColor(TagSystem.AMBIENT_COLOR)
+                .setColor(AmbientColors.TAGS)
                 .build())
             .queue();
     }

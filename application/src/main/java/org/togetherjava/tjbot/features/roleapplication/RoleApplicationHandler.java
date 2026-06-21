@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.RoleApplicationSystemConfig;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -94,7 +95,7 @@ public final class RoleApplicationHandler {
         String authorWithId = String.format("%s (id: %s)", applicant.getName(), applicant.getId());
         EmbedBuilder embed =
                 new EmbedBuilder().setAuthor(authorWithId, null, applicant.getAvatarUrl())
-                    .setColor(CreateRoleApplicationCommand.AMBIENT_COLOR)
+                    .setColor(AmbientColors.ROLE_MANAGEMENT)
                     .setFooter("Submitted at")
                     .setTimestamp(Instant.now());
 

@@ -20,6 +20,7 @@ import org.togetherjava.tjbot.features.UserInteractionType;
 import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -154,7 +155,7 @@ public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
 
                             With enough info, someone knows the answer for sure 👍"""
                         .formatted(linkHowToAsk))
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .setColor(AmbientColors.HELP)
             .build();
 
         handleArchiveFlow(threadChannel, embed);

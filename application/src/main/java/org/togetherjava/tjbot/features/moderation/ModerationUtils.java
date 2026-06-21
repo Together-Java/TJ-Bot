@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -50,11 +50,6 @@ public class ModerationUtils {
      * user as option for selection.
      */
     static final String PERMANENT_DURATION = "permanent";
-    /**
-     * The ambient color used by moderation actions, often used to streamline the color theme of
-     * embeds.
-     */
-    public static final Color AMBIENT_COLOR = Color.decode("#895FE8");
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -299,7 +294,7 @@ public class ModerationUtils {
         return new EmbedBuilder().setAuthor(author.getName(), null, avatarOrDefaultUrl)
             .setDescription(description)
             .setTimestamp(Instant.now())
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.MODERATION)
             .build();
     }
 
@@ -391,7 +386,7 @@ public class ModerationUtils {
                     .setTitle(actionTitle)
                     .setDescription(description)
                     .addField("Reason", reason, false)
-                    .setColor(ModerationUtils.AMBIENT_COLOR);
+                    .setColor(AmbientColors.MODERATION);
 
         if (!showModmailAdvice) {
             return new CompletedRestAction<>(guild.getJDA(), modActionEmbed);
