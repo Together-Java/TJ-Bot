@@ -34,6 +34,9 @@ import org.togetherjava.tjbot.logging.LogMarkers;
 import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -162,6 +165,8 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
     private MessageCreateAction reportToMods(Message message, TextChannel auditChannel) {
         User author = message.getAuthor();
         String description = createDescription(message);
+        long accountAgeDays = ChronoUnit.DAYS.between(author.getTimeCreated(),
+                OffsetDateTime.now(ZoneOffset.UTC));
 
         MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Is this Scam?")
             .setDescription(
@@ -169,7 +174,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             .setAuthor(author.getName(), null, author.getEffectiveAvatarUrl())
             .setTimestamp(message.getTimeCreated())
             .setColor(AMBIENT_COLOR)
-            .setFooter(author.getId())
+            .setFooter("%s - account age %d days".formatted(author.getId(), accountAgeDays))
             .build();
 
         long guildId = message.getGuild().getIdLong();
