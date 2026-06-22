@@ -190,22 +190,20 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         String content = target.getContentStripped();
         String description = content.isBlank() ? "(message had no text content)" : content;
 
+        String attachmentText = "_none_";
         List<Message.Attachment> attachments = target.getAttachments();
         if (!attachments.isEmpty()) {
-            String attachmentInfo = attachments.stream()
+            attachmentText = attachments.stream()
                 .map(Message.Attachment::getFileName)
-                .collect(Collectors.joining("\n"));
-            description += """
-
-
-                    Attachments:
-                    """ + attachmentInfo;
+                .collect(Collectors.joining("\n- ", "\n- ", ""));
         }
 
         description += """
 
 
-                [Go to message](%s)""".formatted(target.getJumpUrl());
+                Attachments: %s
+                [Go to message](%s)
+                """.formatted(attachmentText, target.getJumpUrl());
         return description;
     }
 
