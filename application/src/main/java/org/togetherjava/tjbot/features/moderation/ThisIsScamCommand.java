@@ -61,16 +61,16 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
     private static final Duration USER_COMMAND_COOLDOWN = Duration.ofMinutes(1);
     private static final Color AMBIENT_COLOR = Color.decode("#CFBFF5");
 
+    private final Config config;
+    private final ModerationActionsStore actionsStore;
+    private final Predicate<String> isModAuditLogChannel;
+
     private final Cache<Long, Instant> reportedMessageToTimestamp =
             Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofDays(1)).build();
     private final Cache<Long, Instant> userToLastCommandUse = Caffeine.newBuilder()
         .maximumSize(10_000)
         .expireAfterWrite(USER_COMMAND_COOLDOWN)
         .build();
-
-    private final Config config;
-    private final ModerationActionsStore actionsStore;
-    private final Predicate<String> isModAuditLogChannel;
 
     /**
      * Creates a new instance.
@@ -96,7 +96,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             return;
         }
 
-        Optional<TextChannel> modAuditLog = getModAuditLogChannel(event);
+        Optional<TextChannel> modAuditLog = findModAuditLogChannel(event);
         if (modAuditLog.isEmpty()) {
             event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
             return;
@@ -114,9 +114,9 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
     }
 
     private boolean handleIsOnCooldown(MessageContextInteractionEvent event) {
-        Instant lastCommandUse = userToLastCommandUse.getIfPresent(event.getUser().getIdLong());
-        Runnable isNotOnCooldownAction =
-                () -> userToLastCommandUse.put(event.getUser().getIdLong(), Instant.now());
+        long userId = event.getUser().getIdLong();
+        Instant lastCommandUse = userToLastCommandUse.getIfPresent(userId);
+        Runnable isNotOnCooldownAction = () -> userToLastCommandUse.put(userId, Instant.now());
 
         if (lastCommandUse == null) {
             isNotOnCooldownAction.run();
@@ -147,7 +147,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         return false;
     }
 
-    private Optional<TextChannel> getModAuditLogChannel(MessageContextInteractionEvent event) {
+    private Optional<TextChannel> findModAuditLogChannel(MessageContextInteractionEvent event) {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Optional<TextChannel> modAuditLogChannel =
                 Guilds.findTextChannel(guild, isModAuditLogChannel);
@@ -181,20 +181,26 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
                     Button.danger(generateComponentId(args), "No"));
     }
 
-    @SuppressWarnings("squid:S3457") // %n is wrong, markdown must use \n
     private static String createDescription(Message target) {
         String content = target.getContentStripped();
-        String description = content.isBlank() ? "(empty message)" : content;
+        String description = content.isBlank() ? "(message had no text content)" : content;
 
         List<Message.Attachment> attachments = target.getAttachments();
         if (!attachments.isEmpty()) {
             String attachmentInfo = attachments.stream()
                 .map(Message.Attachment::getFileName)
                 .collect(Collectors.joining("\n"));
-            description += "\n\nAttachments:\n" + attachmentInfo;
+            description += """
+
+
+                    Attachments:
+                    """ + attachmentInfo;
         }
 
-        description += "\n\n[Go to message](%s)".formatted(target.getJumpUrl());
+        description += """
+
+
+                [Go to message](%s)""".formatted(target.getJumpUrl());
         return description;
     }
 
