@@ -285,7 +285,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
                         This means you can no longer interact with anyone in the server until you have been unquarantined again.
 
                         Potentially your account got compromised.
-                        After you regained control of your account make sure you secure it properly, for example using 2FA.
+                        After you regained control of your account make sure you secure it properly, for example by using 2FA.
                         You can then join back our server and contact the mods to get unquarantined.""";
 
         return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
