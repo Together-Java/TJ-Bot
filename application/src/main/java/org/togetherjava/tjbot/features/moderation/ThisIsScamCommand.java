@@ -281,8 +281,12 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
     private RestAction<Boolean> sendQuarantineDm(User target, Guild guild) {
         String description =
                 """
-                        Hey there, sorry to tell you but unfortunately you have been put under quarantine.
-                        This means you can no longer interact with anyone in the server until you have been unquarantined again.""";
+                        Hey there, sorry to tell you but unfortunately you have been put under quarantine after sending scam.
+                        This means you can no longer interact with anyone in the server until you have been unquarantined again.
+
+                        Potentially your account got compromised.
+                        After you regained control of your account make sure you secure it properly, for example using 2FA.
+                        You can then join back our server and contact the mods to get unquarantined.""";
 
         return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
                 ACTION_TITLE, description, ACTION_REASON, true), target);
