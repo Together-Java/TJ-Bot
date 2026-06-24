@@ -98,7 +98,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             return;
         }
 
-        Optional<TextChannel> modAuditLog = findModAuditLogChannel(event);
+        Optional<TextChannel> modAuditLog = findModMailChannel(event);
         if (modAuditLog.isEmpty()) {
             event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
             return;
@@ -149,7 +149,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         return false;
     }
 
-    private Optional<TextChannel> findModAuditLogChannel(MessageContextInteractionEvent event) {
+    private Optional<TextChannel> findModMailChannel(MessageContextInteractionEvent event) {
         Guild guild = Objects.requireNonNull(event.getGuild());
         Optional<TextChannel> modMailChannel = Guilds.findTextChannel(guild, isModMailChannel);
         if (modMailChannel.isEmpty()) {
