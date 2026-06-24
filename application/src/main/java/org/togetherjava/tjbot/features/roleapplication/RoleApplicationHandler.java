@@ -18,8 +18,8 @@ import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -35,7 +35,7 @@ public final class RoleApplicationHandler {
     private static final Logger logger = LoggerFactory.getLogger(RoleApplicationHandler.class);
 
     private static final int APPLICATION_SUBMIT_COOLDOWN_MINUTES = 5;
-    private final Cache<Member, OffsetDateTime> applicationSubmitCooldown;
+    private final Cache<Member, Instant> applicationSubmitCooldown;
     private final Predicate<String> applicationChannelPattern;
     private final RoleApplicationSystemConfig roleApplicationSystemConfig;
 
@@ -125,10 +125,6 @@ public final class RoleApplicationHandler {
             .findFirst();
     }
 
-    public Cache<Member, OffsetDateTime> getApplicationSubmitCooldown() {
-        return applicationSubmitCooldown;
-    }
-
     void submitApplicationFromModalInteraction(ModalInteractionEvent event, List<String> args) {
         Guild guild = event.getGuild();
 
@@ -150,13 +146,13 @@ public final class RoleApplicationHandler {
                 .queue();
         }
 
-        applicationSubmitCooldown.put(event.getMember(), OffsetDateTime.now());
+        applicationSubmitCooldown.put(Objects.requireNonNull(event.getMember()), Instant.now());
     }
 
     long getMemberCooldownMinutes(Member member) {
-        OffsetDateTime timeSentCache = getApplicationSubmitCooldown().getIfPresent(member);
+        Instant timeSentCache = applicationSubmitCooldown.getIfPresent(member);
         if (timeSentCache != null) {
-            Duration duration = Duration.between(timeSentCache, OffsetDateTime.now());
+            Duration duration = Duration.between(timeSentCache, Instant.now());
             return APPLICATION_SUBMIT_COOLDOWN_MINUTES - duration.toMinutes();
         }
         return 0L;

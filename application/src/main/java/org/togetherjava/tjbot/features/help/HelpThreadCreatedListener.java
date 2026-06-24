@@ -89,7 +89,7 @@ public final class HelpThreadCreatedListener extends ListenerAdapter
         Instant now = Instant.now();
         // NOTE It is necessary to do the "check if exists, otherwise insert" atomic
         Instant createdAt = threadIdToCreatedAtCache.get(threadChannelId, _ -> now);
-        return createdAt != now;
+        return !createdAt.equals(now);
     }
 
     private void handleHelpThreadCreated(ThreadChannel threadChannel) {
