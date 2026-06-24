@@ -267,7 +267,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .setTitle(reportTitle)
             .setAuthor(author.getName(), null, avatarOrDefaultUrl)
             .setTimestamp(event.getMessage().getTimeCreated())
-            .setColor(AmbientColors.SCAM_BLOCKER)
+            .setColor(AmbientColors.MODERATION_SCAM)
             .setFooter(author.getId())
             .build();
 

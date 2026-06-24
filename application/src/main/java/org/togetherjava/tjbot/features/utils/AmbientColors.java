@@ -23,12 +23,12 @@ public final class AmbientColors {
     public static final Color MODERATION = Color.decode("#895FE8");
     public static final Color MODERATION_AUDIT_ACTION = Color.decode("#4FC3F7");
     public static final Color MODERATION_AUDIT_LOG = Color.decode("#3788AC");
+    public static final Color MODERATION_SCAM = Color.decode("#CFBFF5");
     public static final Color MODMAIL = Color.BLACK;
     public static final Color PURGE_CONFIRMATION = Color.RED;
     public static final Color QUESTION_TRANSFER = Color.decode("#32A4A8");
     public static final Color REMINDER = Color.decode("#F7F492");
     public static final Color ROLE_MANAGEMENT = Color.decode("#18DD88");
-    public static final Color SCAM_BLOCKER = Color.decode("#CFBFF5");
     public static final Color TAGS = Color.decode("#FA8072");
     public static final Color WOLFRAM_ALPHA = Color.decode("#4290F5");
 

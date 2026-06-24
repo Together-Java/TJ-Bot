@@ -27,6 +27,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
@@ -62,7 +63,6 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
     private static final String FAILED_MESSAGE =
             "Sorry, there was an issue forwarding your scam report to the moderators. We are investigating.";
     private static final Duration USER_COMMAND_COOLDOWN = Duration.ofMinutes(1);
-    private static final Color AMBIENT_COLOR = Color.decode("#CFBFF5");
 
     private final Config config;
     private final ModerationActionsStore actionsStore;
@@ -173,7 +173,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
                     MessageUtils.abbreviate(description, MessageEmbed.DESCRIPTION_MAX_LENGTH))
             .setAuthor(author.getName(), null, author.getEffectiveAvatarUrl())
             .setTimestamp(message.getTimeCreated())
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.MODERATION_SCAM)
             .setFooter("%s - account age %d days".formatted(author.getId(), accountAgeDays))
             .build();
 
