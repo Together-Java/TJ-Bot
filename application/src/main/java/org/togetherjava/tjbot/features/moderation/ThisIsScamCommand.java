@@ -66,7 +66,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
     private final Config config;
     private final ModerationActionsStore actionsStore;
-    private final Predicate<String> isModAuditLogChannel;
+    private final Predicate<String> isModMailChannel;
 
     private final Cache<Long, Instant> reportedMessageToTimestamp =
             Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofDays(1)).build();
@@ -86,8 +86,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
         this.config = Objects.requireNonNull(config);
         this.actionsStore = Objects.requireNonNull(actionsStore);
-        isModAuditLogChannel =
-                Pattern.compile(config.getModAuditLogChannelPattern()).asMatchPredicate();
+        isModMailChannel = Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
     }
 
     @Override
@@ -152,8 +151,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
     private Optional<TextChannel> findModAuditLogChannel(MessageContextInteractionEvent event) {
         Guild guild = Objects.requireNonNull(event.getGuild());
-        Optional<TextChannel> modAuditLogChannel =
-                Guilds.findTextChannel(guild, isModAuditLogChannel);
+        Optional<TextChannel> modAuditLogChannel = Guilds.findTextChannel(guild, isModMailChannel);
         if (modAuditLogChannel.isEmpty()) {
             logger.warn(
                     "Cannot find the designated mod audit log channel in guild '{}' with the pattern '{}'",
