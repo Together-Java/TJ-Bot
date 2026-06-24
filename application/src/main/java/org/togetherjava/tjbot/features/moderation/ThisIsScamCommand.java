@@ -151,13 +151,13 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
     private Optional<TextChannel> findModAuditLogChannel(MessageContextInteractionEvent event) {
         Guild guild = Objects.requireNonNull(event.getGuild());
-        Optional<TextChannel> modAuditLogChannel = Guilds.findTextChannel(guild, isModMailChannel);
-        if (modAuditLogChannel.isEmpty()) {
+        Optional<TextChannel> modMailChannel = Guilds.findTextChannel(guild, isModMailChannel);
+        if (modMailChannel.isEmpty()) {
             logger.warn(
                     "Cannot find the designated mod audit log channel in guild '{}' with the pattern '{}'",
                     guild.getId(), config.getModAuditLogChannelPattern());
         }
-        return modAuditLogChannel;
+        return modMailChannel;
     }
 
     private MessageCreateAction reportToMods(Message message, TextChannel auditChannel) {
