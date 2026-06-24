@@ -66,7 +66,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
     private final Config config;
     private final ModerationActionsStore actionsStore;
-    private final Predicate<String> isModAuditLogChannel;
+    private final Predicate<String> isModMailChannel;
 
     private final Cache<Long, Instant> reportedMessageToTimestamp =
             Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofDays(1)).build();
@@ -86,8 +86,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
         this.config = Objects.requireNonNull(config);
         this.actionsStore = Objects.requireNonNull(actionsStore);
-        isModAuditLogChannel =
-                Pattern.compile(config.getModAuditLogChannelPattern()).asMatchPredicate();
+        isModMailChannel = Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
     }
 
     @Override
@@ -99,7 +98,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             return;
         }
 
-        Optional<TextChannel> modAuditLog = findModAuditLogChannel(event);
+        Optional<TextChannel> modAuditLog = findModMailChannel(event);
         if (modAuditLog.isEmpty()) {
             event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
             return;
@@ -150,16 +149,15 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         return false;
     }
 
-    private Optional<TextChannel> findModAuditLogChannel(MessageContextInteractionEvent event) {
+    private Optional<TextChannel> findModMailChannel(MessageContextInteractionEvent event) {
         Guild guild = Objects.requireNonNull(event.getGuild());
-        Optional<TextChannel> modAuditLogChannel =
-                Guilds.findTextChannel(guild, isModAuditLogChannel);
-        if (modAuditLogChannel.isEmpty()) {
+        Optional<TextChannel> modMailChannel = Guilds.findTextChannel(guild, isModMailChannel);
+        if (modMailChannel.isEmpty()) {
             logger.warn(
                     "Cannot find the designated mod audit log channel in guild '{}' with the pattern '{}'",
                     guild.getId(), config.getModAuditLogChannelPattern());
         }
-        return modAuditLogChannel;
+        return modMailChannel;
     }
 
     private MessageCreateAction reportToMods(Message message, TextChannel auditChannel) {
