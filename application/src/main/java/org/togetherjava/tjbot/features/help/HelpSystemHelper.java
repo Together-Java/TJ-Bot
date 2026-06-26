@@ -28,9 +28,9 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,8 +57,6 @@ import static org.togetherjava.tjbot.features.utils.MessageUtils.mentionGuildSla
 public final class HelpSystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(HelpSystemHelper.class);
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
-
-    static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
     private final Predicate<String> isTagManageRole;
     private final Predicate<String> isHelpForumName;
@@ -200,7 +198,7 @@ public final class HelpSystemHelper {
             .setAuthor(selfUser.getName(), null, selfUser.getEffectiveAvatarUrl())
             .setTitle(titleForEmbed)
             .setDescription(answer)
-            .setColor(Color.pink)
+            .setColor(AmbientColors.HELP_CHAT_GPT_RESPONSE)
             .setFooter(responseByGptFooter)
             .build();
     }

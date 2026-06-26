@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id "com.diffplug.spotless" version "8.6.0"
+    id "com.diffplug.spotless" version "8.7.0"
     id "org.sonarqube" version "7.3.0.8198"
     id "name.remal.sonarlint" version "7.1.0"
 }
@@ -14,7 +14,7 @@ version '1.0-SNAPSHOT'
 ext {
     jooqVersion = '3.21.2'
     jacksonVersion = '2.19.1'
-    chatGPTVersion = '4.39.1'
+    chatGPTVersion = '4.41.0'
     junitVersion = '6.1.0'
 }
 

@@ -25,9 +25,9 @@ import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -46,7 +46,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final String REPORT_REASON_INPUT_ID = "reportReason";
     private static final int COOLDOWN_DURATION_VALUE = 3;
     private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private static final Color AMBIENT_COLOR = Color.BLACK;
     private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
     private final Predicate<String> modMailChannelNamePredicate;
     private final Predicate<String> configModGroupPattern;
@@ -177,12 +176,12 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     MessageEmbed.DESCRIPTION_MAX_LENGTH))
             .setAuthor(reportedMessage.authorName, null, reportedMessage.authorAvatarUrl)
             .setTimestamp(reportedMessage.timestamp)
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.MODMAIL)
             .build();
 
         MessageEmbed reportReasonEmbed = new EmbedBuilder().setTitle("Reason")
             .setDescription(reportReason)
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.MODMAIL)
             .build();
 
         String historyButtonId =

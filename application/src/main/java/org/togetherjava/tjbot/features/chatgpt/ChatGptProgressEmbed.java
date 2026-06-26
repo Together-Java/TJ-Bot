@@ -5,7 +5,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 
-import java.awt.Color;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +105,7 @@ final class ChatGptProgressEmbed implements ChatGptProgressListener {
             .setAuthor(selfUser.getName(), null, selfUser.getEffectiveAvatarUrl())
             .setTitle(title)
             .setDescription(String.join("\n", currentLines))
-            .setColor(Color.gray)
+            .setColor(AmbientColors.CHAT_GPT_PROGRESS)
             .setFooter("One moment, putting an answer together for you.")
             .build();
     }

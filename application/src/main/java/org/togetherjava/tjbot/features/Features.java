@@ -53,6 +53,7 @@ import org.togetherjava.tjbot.features.moderation.NoteCommand;
 import org.togetherjava.tjbot.features.moderation.QuarantineCommand;
 import org.togetherjava.tjbot.features.moderation.RejoinModerationRoleListener;
 import org.togetherjava.tjbot.features.moderation.ReportCommand;
+import org.togetherjava.tjbot.features.moderation.ThisIsScamCommand;
 import org.togetherjava.tjbot.features.moderation.TransferQuestionCommand;
 import org.togetherjava.tjbot.features.moderation.UnbanCommand;
 import org.togetherjava.tjbot.features.moderation.UnmuteCommand;
@@ -191,6 +192,7 @@ public class Features {
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
+        features.add(new ThisIsScamCommand(config, actionsStore));
 
         // User context commands
 

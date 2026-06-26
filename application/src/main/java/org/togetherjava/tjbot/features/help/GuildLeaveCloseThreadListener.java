@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.EventReceiver;
 import org.togetherjava.tjbot.features.analytics.Metrics;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 /**
  * Remove all thread channels associated to a user when they leave the guild.
@@ -31,7 +32,7 @@ public final class GuildLeaveCloseThreadListener extends ListenerAdapter impleme
     public void onGuildMemberRemove(GuildMemberRemoveEvent event) {
         MessageEmbed embed = new EmbedBuilder().setTitle("OP left")
             .setDescription("Closing thread...")
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .setColor(AmbientColors.HELP)
             .build();
 
         event.getGuild()

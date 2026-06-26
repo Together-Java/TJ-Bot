@@ -12,8 +12,8 @@ import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
 import org.togetherjava.tjbot.features.analytics.Metrics;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
-import java.awt.Color;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -112,7 +112,7 @@ public final class MediaOnlyChannelListener extends MessageReceiverAdapter {
 
         MessageEmbed originalMessageEmbed =
                 new EmbedBuilder().setDescription(originalMessageContent)
-                    .setColor(Color.ORANGE)
+                    .setColor(AmbientColors.MEDIA_WARNING)
                     .build();
 
         return new MessageCreateBuilder().setContent(message.getAuthor().getAsMention()

@@ -27,6 +27,7 @@ import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
@@ -223,8 +224,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
 
         pageToShow = Math.clamp(pageToShow, 1, totalPages);
 
-        EmbedBuilder remindersEmbed = new EmbedBuilder().setTitle("Pending reminders")
-            .setColor(RemindRoutine.AMBIENT_COLOR);
+        EmbedBuilder remindersEmbed =
+                new EmbedBuilder().setTitle("Pending reminders").setColor(AmbientColors.REMINDER);
         MessageCreateBuilder pendingRemindersPage = new MessageCreateBuilder();
 
         if (pendingReminders.isEmpty()) {

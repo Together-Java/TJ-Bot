@@ -51,7 +51,7 @@ public final class ProjectsThreadCreatedListener extends ListenerAdapter impleme
     private boolean wasThreadAlreadyHandled(long threadChannelId) {
         Instant now = Instant.now();
         Instant createdAt = threadIdToCreatedAtCache.get(threadChannelId, any -> now);
-        return createdAt != now;
+        return !createdAt.equals(now);
     }
 
     private boolean isPostMessage(ThreadChannel threadChannel, MessageReceivedEvent event) {

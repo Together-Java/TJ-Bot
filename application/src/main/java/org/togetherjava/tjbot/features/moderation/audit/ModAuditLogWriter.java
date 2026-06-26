@@ -10,11 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.nio.charset.StandardCharsets;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
@@ -29,8 +29,6 @@ import java.util.regex.Pattern;
  * to log an entry.
  */
 public final class ModAuditLogWriter {
-    private static final Color EMBED_COLOR = Color.decode("#3788AC");
-
     private static final Logger logger = LoggerFactory.getLogger(ModAuditLogWriter.class);
 
     private final Config config;
@@ -68,7 +66,7 @@ public final class ModAuditLogWriter {
         EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(title)
             .setDescription(description)
             .setTimestamp(timestamp)
-            .setColor(EMBED_COLOR);
+            .setColor(AmbientColors.MODERATION_AUDIT_LOG);
         if (author != null) {
             embedBuilder.setAuthor(author.getName(), null, author.getAvatarUrl());
         }

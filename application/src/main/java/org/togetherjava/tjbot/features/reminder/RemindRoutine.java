@@ -14,10 +14,10 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.PendingRemindersRecord;
 import org.togetherjava.tjbot.features.Routine;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
@@ -34,7 +34,6 @@ import static org.togetherjava.tjbot.db.generated.Tables.PENDING_REMINDERS;
  */
 public final class RemindRoutine implements Routine {
     static final Logger logger = LoggerFactory.getLogger(RemindRoutine.class);
-    static final Color AMBIENT_COLOR = Color.decode("#F7F492");
     private static final int SCHEDULE_INTERVAL_SECONDS = 30;
     private final Database database;
     private static final int MAX_FAILURE_RETRY = 3;
@@ -116,7 +115,7 @@ public final class RemindRoutine implements Routine {
             .setDescription(content)
             .setFooter("reminder from")
             .setTimestamp(createdAt)
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.REMINDER)
             .build();
     }
 

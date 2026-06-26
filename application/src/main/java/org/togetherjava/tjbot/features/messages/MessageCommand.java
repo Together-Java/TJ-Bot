@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
-import java.awt.Color;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
@@ -51,8 +51,6 @@ public final class MessageCommand extends SlashCommandAdapter {
     private static final String CONTENT_DESCRIPTION = "the content of the message";
     static final String EDIT_MESSAGE_ID_OPTION = "edit-message-id";
     private static final String EDIT_MESSAGE_ID_DESCRIPTION = "the id of the message to edit";
-
-    private static final Color AMBIENT_COLOR = new Color(24, 109, 221, 255);
 
     private static final String CONTENT_FILE_NAME = "content.md";
 
@@ -180,7 +178,7 @@ public final class MessageCommand extends SlashCommandAdapter {
         event.getHook()
             .editOriginalEmbeds(new EmbedBuilder().setTitle("Success")
                 .setDescription("Successfully %s message.".formatted(action.getActionVerbPast()))
-                .setColor(MessageCommand.AMBIENT_COLOR)
+                .setColor(AmbientColors.MESSAGE_MANAGEMENT)
                 .build())
             .queue();
     }

@@ -29,11 +29,13 @@ import org.togetherjava.tjbot.features.analytics.Metrics;
 import javax.annotation.Nonnull;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -434,7 +436,7 @@ public final class RSSHandlerRoutine implements Routine {
                         "Possibly dead RSS feed URL: {} - Failed {} times. Please remove it from config.",
                         rssUrl, newCount);
             }
-            circuitBreaker.put(rssUrl, new FailureState(newCount, ZonedDateTime.now()));
+            circuitBreaker.put(rssUrl, new FailureState(newCount, Instant.now()));
 
             long blacklistedHours = calculateWaitHours(newCount);
 
@@ -476,8 +478,8 @@ public final class RSSHandlerRoutine implements Routine {
         }
 
         long waitHours = calculateWaitHours(state.count());
-        ZonedDateTime retryAt = state.lastFailure().plusHours(waitHours);
+        Instant retryAt = state.lastFailure().plus(waitHours, ChronoUnit.HOURS);
 
-        return ZonedDateTime.now().isBefore(retryAt);
+        return Instant.now().isBefore(retryAt);
     }
 }

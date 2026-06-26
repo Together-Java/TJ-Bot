@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.db.Database;
 import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
 
@@ -33,10 +34,6 @@ public final class BookmarksSystem {
     static final int MAX_BOOKMARK_COUNT_PER_USER = 500;
     static final int MAX_NOTE_LENGTH = 150;
     private static final Duration REMOVE_BOOKMARKS_AFTER_LEAVE_DELAY = Duration.ofDays(7);
-
-    static final Color COLOR_SUCCESS = new Color(166, 218, 149);
-    static final Color COLOR_WARNING = new Color(245, 169, 127);
-    static final Color COLOR_FAILURE = new Color(238, 153, 160);
 
     private final Database database;
     private final Predicate<String> isHelpForumName;
@@ -131,15 +128,15 @@ public final class BookmarksSystem {
     }
 
     static MessageEmbed createSuccessEmbed(String content) {
-        return createColoredEmbed(content, COLOR_SUCCESS);
+        return createColoredEmbed(content, AmbientColors.BOOKMARK_SUCCESS);
     }
 
     static MessageEmbed createWarningEmbed(String content) {
-        return createColoredEmbed(content, COLOR_WARNING);
+        return createColoredEmbed(content, AmbientColors.BOOKMARK_WARNING);
     }
 
     static MessageEmbed createFailureEmbed(String content) {
-        return createColoredEmbed(content, COLOR_FAILURE);
+        return createColoredEmbed(content, AmbientColors.BOOKMARK_FAILURE);
     }
 
 }

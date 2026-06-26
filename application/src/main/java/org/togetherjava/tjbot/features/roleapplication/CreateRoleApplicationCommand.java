@@ -28,10 +28,10 @@ import org.togetherjava.tjbot.config.RoleApplicationSystemConfig;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +44,6 @@ import java.util.stream.IntStream;
  * guild.
  */
 public class CreateRoleApplicationCommand extends SlashCommandAdapter {
-    protected static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
     private static final int OPTIONAL_ROLES_AMOUNT = 5;
     private static final String ROLE_COMPONENT_ID_HEADER = "application-create";
     private static final String OPTION_PARAM_ID_DELIMITER = "_";
@@ -260,7 +259,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
                     """
                             We are always looking for community members that want to contribute to our community \
                             and take charge. If you are interested, you can apply for various positions here! 😎""")
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.ROLE_MANAGEMENT)
             .build();
     }
 
