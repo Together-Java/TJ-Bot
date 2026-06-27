@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import static org.togetherjava.tjbot.features.moderation.ModerationUtils.createSummaryMessageDescription;
+
 /**
  * This command lists all moderation actions that have been taken against a given user, for example
  * warnings, mutes and bans.
@@ -129,8 +131,6 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
             .setAuthor(user.getName(), null, avatarOrDefaultUrl)
-            .setDescription(ModerationUtils.createSummaryMessageDescription(actions))
-            .setColor(ModerationUtils.AMBIENT_COLOR);
             .setDescription(createSummaryMessageDescription(actions))
             .setColor(AmbientColors.MODERATION);
     }
