@@ -460,8 +460,9 @@ public class ModerationUtils {
             List<ActionRecord> moderationActions) {
         List<List<ActionRecord>> groupedModerationActions = new ArrayList<>();
 
-        for (int i = 0; i < moderationActions.size(); i++) {
-            if (i % MAX_AUDIT_PAGE_LENGTH == 0) {
+        for (int i = moderationActions.size() - 1; i >= 0; i--) {
+            if (groupedModerationActions.isEmpty()
+                    || groupedModerationActions.getLast().size() == MAX_AUDIT_PAGE_LENGTH) {
                 groupedModerationActions.add(new ArrayList<>(MAX_AUDIT_PAGE_LENGTH));
             }
             groupedModerationActions.getLast().add(moderationActions.get(i));
@@ -474,7 +475,7 @@ public class ModerationUtils {
      * Generates a structural text overview outlining the count total of each action type.
      *
      * @param moderationActions a collection of history records
-     * @return a formatted markdown description summary
+     * @return a formatted Markdown description summary
      */
     public static String createSummaryMessageDescription(
             Collection<ActionRecord> moderationActions) {

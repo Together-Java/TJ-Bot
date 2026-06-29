@@ -3,7 +3,11 @@ package org.togetherjava.tjbot.features.moderation;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
@@ -28,11 +32,13 @@ import org.togetherjava.tjbot.features.componentids.Lifespan;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
-import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -186,8 +192,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AmbientColors.MODMAIL)
             .build();
 
-        String historyButtonId =
-                generateComponentId(Lifespan.REGULAR, reportedMessage.authorId, "0");
+        long reportedUserId = Long.parseLong(reportedMessage.authorId);
+        int startingPage = getStartingPageForUser(guild.getIdLong(), reportedUserId);
+
+        String historyButtonId = generateComponentId(Lifespan.REGULAR, reportedMessage.authorId,
+                String.valueOf(startingPage));
 
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
@@ -247,7 +256,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        event.deferReply(true).queue();
+        if (event.getMessage().isEphemeral()) {
+            event.deferEdit().queue();
+        } else {
+            event.deferReply(true).queue();
+        }
 
         Guild guild =
                 Objects.requireNonNull(event.getGuild(), "Guild cannot be null for this command.");
@@ -265,7 +278,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .retrieveUserById(reportedUserId)
             .flatMap(user -> prepareAuditEmbedTasks(event, user, actions, pages, targetPage))
             .onErrorFlatMap(_ -> event.getHook()
-                .sendMessage("Could not load audit data for this user.")
+                .editOriginal("Could not load audit data for this user.")
                 .map(_ -> null))
             .queue();
     }
@@ -277,7 +290,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         EmbedBuilder auditEmbed =
                 new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
                     .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
-                    .setColor(Color.BLACK)
+                    .setColor(AmbientColors.MODMAIL)
                     .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
 
         if (pages.isEmpty()) {
@@ -308,8 +321,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         auditEmbed.clearFields();
         embedFields.forEach(auditEmbed::addField);
 
-        auditEmbed.setFooter(
-                "Page %d/%d (Most recent first)".formatted(currentPageIndex + 1, totalPages));
+        auditEmbed.setFooter("Page %d/%d".formatted(currentPageIndex + 1, totalPages));
 
         String prevButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
                 String.valueOf(currentPageIndex - 1));
@@ -325,6 +337,16 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .editOriginalEmbeds(auditEmbed.build())
             .setActionRow(prevButton, nextButton)
             .queue();
+    }
+
+    private int getStartingPageForUser(long guildId, long userId) {
+        List<ActionRecord> actions = new ArrayList<>(
+                moderationActionsStore.getActionsByTargetAscending(guildId, userId));
+
+        Collections.reverse(actions);
+        List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
+
+        return Math.max(0, pages.size() - 1);
     }
 
 }

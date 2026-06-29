@@ -104,7 +104,7 @@ public final class AuditCommand extends SlashCommandAdapter {
             Supplier<R> messageBuilderSupplier, long guildId, long targetId, long callerId,
             int pageNumber, JDA jda) {
         List<ActionRecord> actions = actionsStore.getActionsByTargetAscending(guildId, targetId);
-        List<List<ActionRecord>> groupedActions = groupActionsByPages(actions);
+        List<List<ActionRecord>> groupedActions = ModerationUtils.groupActionsByPages(actions);
         int totalPages = groupedActions.size();
 
         int pageNumberInLimits;
@@ -120,10 +120,6 @@ public final class AuditCommand extends SlashCommandAdapter {
                     totalPages, jda))
             .map(auditEmbed -> attachPageTurnButtons(messageBuilderSupplier, auditEmbed,
                     pageNumberInLimits, totalPages, guildId, targetId, callerId));
-    }
-
-    private static List<List<ActionRecord>> groupActionsByPages(List<ActionRecord> actions) {
-        return ModerationUtils.groupActionsByPages(actions);
     }
 
     private static EmbedBuilder createSummaryEmbed(User user, Collection<ActionRecord> actions) {
@@ -144,7 +140,8 @@ public final class AuditCommand extends SlashCommandAdapter {
 
         List<RestAction<MessageEmbed.Field>> embedFieldTasks = new ArrayList<>();
         groupedActions.get(pageNumber - 1)
-            .forEach(action -> embedFieldTasks.add(actionToField(action, jda)));
+            .forEach(action -> embedFieldTasks
+                .add(ModerationUtils.moderationActionToEmbedField(action, jda)));
 
         return RestAction.allOf(embedFieldTasks).map(embedFields -> {
             embedFields.forEach(auditEmbed::addField);
@@ -152,10 +149,6 @@ public final class AuditCommand extends SlashCommandAdapter {
             auditEmbed.setFooter("Page: " + pageNumber + "/" + totalPages);
             return auditEmbed;
         });
-    }
-
-    private static RestAction<MessageEmbed.Field> actionToField(ActionRecord action, JDA jda) {
-        return ModerationUtils.moderationActionToEmbedField(action, jda);
     }
 
     private <R extends MessageRequest<R>> R attachPageTurnButtons(
