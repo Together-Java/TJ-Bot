@@ -19,6 +19,8 @@ import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksCleanupRoutine
 import org.togetherjava.tjbot.features.bookmarks.LeftoverBookmarksListener;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
+import org.togetherjava.tjbot.features.chatgpt.tools.web.FetchUrlTool;
+import org.togetherjava.tjbot.features.chatgpt.tools.web.WebSearchTool;
 import org.togetherjava.tjbot.features.code.CodeMessageAutoDetection;
 import org.togetherjava.tjbot.features.code.CodeMessageHandler;
 import org.togetherjava.tjbot.features.code.CodeMessageManualDetection;
@@ -51,6 +53,7 @@ import org.togetherjava.tjbot.features.moderation.NoteCommand;
 import org.togetherjava.tjbot.features.moderation.QuarantineCommand;
 import org.togetherjava.tjbot.features.moderation.RejoinModerationRoleListener;
 import org.togetherjava.tjbot.features.moderation.ReportCommand;
+import org.togetherjava.tjbot.features.moderation.ThisIsScamCommand;
 import org.togetherjava.tjbot.features.moderation.TransferQuestionCommand;
 import org.togetherjava.tjbot.features.moderation.UnbanCommand;
 import org.togetherjava.tjbot.features.moderation.UnmuteCommand;
@@ -67,8 +70,11 @@ import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryPurgeRoutine;
 import org.togetherjava.tjbot.features.moderation.scam.ScamHistoryStore;
 import org.togetherjava.tjbot.features.moderation.temp.TemporaryModerationRoutine;
 import org.togetherjava.tjbot.features.projects.ProjectsThreadCreatedListener;
+import org.togetherjava.tjbot.features.purge.PurgeCommand;
+import org.togetherjava.tjbot.features.purge.PurgeMessagesByUserCommand;
 import org.togetherjava.tjbot.features.reminder.RemindRoutine;
 import org.togetherjava.tjbot.features.reminder.ReminderCommand;
+import org.togetherjava.tjbot.features.roleapplication.CreateRoleApplicationCommand;
 import org.togetherjava.tjbot.features.rss.RSSHandlerRoutine;
 import org.togetherjava.tjbot.features.system.BotCore;
 import org.togetherjava.tjbot.features.system.LogLevelCommand;
@@ -85,6 +91,7 @@ import org.togetherjava.tjbot.features.voicechat.DynamicVoiceChat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Utility class that offers all features that should be registered by the system, such as commands.
@@ -185,6 +192,7 @@ public class Features {
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
+        features.add(new ThisIsScamCommand(config, actionsStore));
 
         // User context commands
 
@@ -215,10 +223,16 @@ public class Features {
         features.add(new HelpThreadCommand(config, helpSystemHelper, metrics));
         features.add(new ReportCommand(config));
         features.add(new BookmarksCommand(bookmarksSystem));
-        features.add(new ChatGptCommand(chatGptService, helpSystemHelper));
+
+        features.add(new ChatGptCommand(chatGptService, helpSystemHelper,
+                List.of(new WebSearchTool(config.getTavilyApiKey()), new FetchUrlTool())));
+
         features.add(new JShellCommand(jshellEval));
         features.add(new MessageCommand());
         features.add(new RewriteCommand(chatGptService));
+        features.add(new CreateRoleApplicationCommand(config));
+        features.add(new PurgeCommand(modAuditLogWriter));
+        features.add(new PurgeMessagesByUserCommand(modAuditLogWriter));
 
         FeatureBlacklist<Class<?>> blacklist = blacklistConfig.normal();
         return blacklist.filterStream(features.stream(), Object::getClass).toList();

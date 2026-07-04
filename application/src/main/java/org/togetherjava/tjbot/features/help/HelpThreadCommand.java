@@ -21,6 +21,7 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.analytics.Metrics;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -209,7 +210,7 @@ public final class HelpThreadCommand extends SlashCommandAdapter {
         refreshCooldownFor(Subcommand.CLOSE, helpThread);
 
         MessageEmbed embed = new EmbedBuilder().setDescription("Closed the thread.")
-            .setColor(HelpSystemHelper.AMBIENT_COLOR)
+            .setColor(AmbientColors.HELP)
             .build();
 
         event.replyEmbeds(embed).flatMap(_ -> helpThread.getManager().setArchived(true)).queue();

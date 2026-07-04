@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -61,8 +61,6 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     private static final String TITLE_OPTION = "title";
     private static final String DESCRIPTION_OPTION = "description";
     private static final String ROLE_OPTION = "selectable-role";
-
-    private static final Color AMBIENT_COLOR = new Color(24, 221, 136, 255);
 
     private static final int OPTIONAL_ROLES_AMOUNT = 22;
 
@@ -275,7 +273,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
     private static MessageEmbed createEmbed(String title, CharSequence description) {
         return new EmbedBuilder().setTitle(title)
             .setDescription(description)
-            .setColor(AMBIENT_COLOR)
+            .setColor(AmbientColors.ROLE_MANAGEMENT)
             .build();
     }
 }

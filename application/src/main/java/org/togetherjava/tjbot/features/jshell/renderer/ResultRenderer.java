@@ -7,10 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.jshell.backend.dto.JShellResult;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
-
-import java.awt.Color;
 
 /**
  * Allows to render JShell results.
@@ -44,7 +43,7 @@ public class ResultRenderer {
         logger.error("Couldn't render JShell result {} ", result);
         return new EmbedBuilder()
             .setTitle("Couldn't render the result, please contact a moderator.")
-            .setColor(Color.RED)
+            .setColor(AmbientColors.JSHELL_RENDER_FAILURE)
             .build();
     }
 

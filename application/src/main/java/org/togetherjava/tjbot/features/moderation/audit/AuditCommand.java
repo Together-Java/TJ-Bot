@@ -25,6 +25,7 @@ import org.togetherjava.tjbot.features.moderation.ActionRecord;
 import org.togetherjava.tjbot.features.moderation.ModerationAction;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import javax.annotation.Nullable;
 
@@ -145,7 +146,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         return new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
             .setAuthor(user.getName(), null, avatarOrDefaultUrl)
             .setDescription(createSummaryMessageDescription(actions))
-            .setColor(ModerationUtils.AMBIENT_COLOR);
+            .setColor(AmbientColors.MODERATION);
     }
 
     private static String createSummaryMessageDescription(Collection<ActionRecord> actions) {

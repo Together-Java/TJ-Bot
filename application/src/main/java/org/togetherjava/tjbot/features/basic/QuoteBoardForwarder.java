@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
 public final class QuoteBoardForwarder extends MessageReceiverAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(QuoteBoardForwarder.class);
-    private final Emoji triggerReaction;
+    private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
 
@@ -48,7 +49,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      */
     public QuoteBoardForwarder(Config config) {
         this.config = config.getQuoteBoardConfig();
-        this.triggerReaction = Emoji.fromUnicode(this.config.reactionEmoji());
+        this.botEmoji = Emoji.fromUnicode(this.config.botEmoji());
 
         this.isQuoteBoardChannelName = Pattern.compile(this.config.channel()).asMatchPredicate();
     }
@@ -58,23 +59,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
         logger.debug("Received MessageReactionAddEvent: messageId={}, channelId={}, userId={}",
                 event.getMessageId(), event.getChannel().getId(), event.getUserId());
 
-        final MessageReaction messageReaction = event.getReaction();
-
-        if (!messageReaction.getEmoji().equals(triggerReaction)) {
-            logger.debug("Reaction emoji '{}' does not match trigger emoji '{}'. Ignoring.",
-                    messageReaction.getEmoji(), triggerReaction);
-            return;
-        }
-
-        if (hasAlreadyForwardedMessage(event.getJDA(), messageReaction)) {
-            logger.debug("Message has already been forwarded by the bot. Skipping.");
-            return;
-        }
-
-        long reactionCount = messageReaction.retrieveUsers().stream().count();
-        if (reactionCount < config.minimumReactions()) {
-            logger.debug("Reaction count {} is less than minimum required {}. Skipping.",
-                    reactionCount, config.minimumReactions());
+        if (!config.allowChannels().contains(event.getChannel().getName())) {
+            logger.debug("Skipping as reaction occurred in non-whitelisted channel");
             return;
         }
 
@@ -96,21 +82,32 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
             return;
         }
 
-        logger.debug("Forwarding message to quote board channel: {}", boardChannel.getName());
+        event.retrieveMessage().queue(message -> {
+            if (hasAlreadyForwardedMessage(message)) {
+                logger.debug("Message has already been forwarded by the bot. Skipping.");
+                return;
+            }
 
-        event.retrieveMessage()
-            .queue(message -> markAsProcessed(message).flatMap(v -> message.forwardTo(boardChannel))
+            float emojiScore = calculateMessageScore(message.getReactions());
+
+            if (emojiScore < config.minimumScoreToTrigger()) {
+                return;
+            }
+
+            logger.debug("Attempting to forward message to quote board channel: {}",
+                    boardChannel.getName());
+
+            markAsProcessed(message).flatMap(_ -> message.forwardTo(boardChannel))
                 .queue(_ -> logger.debug("Message forwarded to quote board channel: {}",
-                        boardChannel.getName())),
-
-                    e -> logger.warn(
-                            "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
-                            e));
-
+                        boardChannel.getName()),
+                        e -> logger.warn(
+                                "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
+                                e));
+        });
     }
 
     private RestAction<Void> markAsProcessed(Message message) {
-        return message.addReaction(triggerReaction);
+        return message.addReaction(botEmoji);
     }
 
     /**
@@ -143,15 +140,25 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
     }
 
     /**
-     * Checks a {@link MessageReaction} to see if the bot has reacted to it.
+     * Checks whether the bot has already reacted to the given message with its marker emoji.
      */
-    private boolean hasAlreadyForwardedMessage(JDA jda, MessageReaction messageReaction) {
-        if (!triggerReaction.equals(messageReaction.getEmoji())) {
-            return false;
-        }
+    private boolean hasAlreadyForwardedMessage(Message message) {
+        return message.getReactions()
+            .stream()
+            .filter(reaction -> botEmoji.equals(reaction.getEmoji()))
+            .anyMatch(MessageReaction::isSelf);
+    }
 
-        return messageReaction.retrieveUsers()
-            .parallelStream()
-            .anyMatch(user -> jda.getSelfUser().getIdLong() == user.getIdLong());
+    private float calculateMessageScore(List<MessageReaction> reactions) {
+        return (float) reactions.stream()
+            .mapToDouble(reaction -> reaction.getCount() * getEmojiScore(reaction.getEmoji()))
+            .sum();
+    }
+
+    private float getEmojiScore(EmojiUnion emoji) {
+        float defaultScore = config.defaultEmojiScore();
+        String reactionCode = emoji.getAsReactionCode();
+
+        return config.emojiScores().getOrDefault(reactionCode, defaultScore);
     }
 }

@@ -162,6 +162,7 @@
     "logInfoChannelWebhook": "<put_your_webhook_here>",
     "logErrorChannelWebhook": "<put_your_webhook_here>",
     "openaiApiKey": "<check pins in #tjbot_discussion for the key>",
+    "tavilyApiKey": "<create an account on https://www.tavily.com/ to get an API key for free>",
     "sourceCodeBaseUrl": "https://github.com/Together-Java/TJ-Bot/blob/master/application/src/main/java/",
     "jshell": {
         "baseUrl": "<put_jshell_rest_api_url_here>",
@@ -195,9 +196,45 @@
         "pollIntervalInMinutes": 10
     },
     "quoteBoardConfig": {
-        "minimumReactionsToTrigger": 5,
+        "minimumScoreToTrigger": 5.0,
         "channel": "quotes",
-        "reactionEmoji": "⭐"
+        "botEmoji": "⭐",
+        "defaultEmojiScore": 0.5,
+        "emojiScores": {
+            "😬": -0.5,
+            "💔": -0.5,
+            "😐": -0.5,
+            "😊": -0.5,
+            "🖕": -0.5,
+            "👎": -0.5,
+            "💩": -0.5,
+            "🤢": -0.5,
+            "🤮": -0.5,
+            "🤬": -0.5,
+            "😡": -0.5,
+            "😒": -0.5,
+            "🤨": -0.5,
+
+            "🇷🇺": 0.0,
+            "🇵🇸": 0.0,
+            "🇮🇱": 0.0,
+            "🏳️‍🌈": 0.0,
+
+            "⭐": 1.0,
+
+            "youtube:1464573182206804010": 0.0
+        },
+        "allowChannels": [
+            "chit-chat",
+            "career-talk",
+            "geek-speek",
+            "expert-java-talk",
+            "ai-talk"
+        ]
+    },
+    "roleApplicationSystem": {
+        "submissionsChannelPattern": "staff-applications",
+        "defaultQuestion": "What makes you a good addition to the team?"
     },
     "memberCountCategoryPattern": "Info",
     "topHelpers": {

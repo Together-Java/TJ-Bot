@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ public final class TagsCommand extends SlashCommandAdapter {
         event
             .replyEmbeds(new EmbedBuilder().setTitle("All available tags")
                 .setDescription(tagListText)
-                .setColor(TagSystem.AMBIENT_COLOR)
+                .setColor(AmbientColors.TAGS)
                 .build())
             .setEphemeral(true)
             .queue();

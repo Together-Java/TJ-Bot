@@ -26,7 +26,6 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,8 +48,6 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
     private static final Logger logger = LoggerFactory.getLogger(CodeMessageHandler.class);
 
     private static final String DELETE_CUE = "delete";
-
-    static final Color AMBIENT_COLOR = Color.decode("#FDFD96");
 
     private final ComponentIdInteractor componentIdInteractor;
     private final Metrics metrics;

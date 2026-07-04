@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
@@ -72,9 +73,10 @@ final class DiscordLogForwarder {
      */
     private static final int MAX_EMBED_DESCRIPTION_SHORT = 400;
 
-    private static final Map<Level, Integer> LEVEL_TO_AMBIENT_COLOR =
-            Map.of(Level.TRACE, 0x00B362, Level.DEBUG, 0x00A5CE, Level.INFO, 0xAC59FF, Level.WARN,
-                    0xDFDF00, Level.ERROR, 0xBF2200, Level.FATAL, 0xFF8484);
+    private static final Map<Level, Integer> LEVEL_TO_LOG_COLOR = Map.of(Level.TRACE,
+            AmbientColors.LOG_RAW_TRACE, Level.DEBUG, AmbientColors.LOG_RAW_DEBUG, Level.INFO,
+            AmbientColors.LOG_RAW_INFO, Level.WARN, AmbientColors.LOG_RAW_WARN, Level.ERROR,
+            AmbientColors.LOG_RAW_ERROR, Level.FATAL, AmbientColors.LOG_RAW_FATAL);
 
     private final WebhookClient webhookClient;
     private final String sourceCodeBaseUrl;
@@ -180,7 +182,7 @@ final class DiscordLogForwarder {
             String authorName = event.getLoggerName();
             String authorUrl = linkToSource(event.getSource(), sourceCodeBaseUrl).orElse(null);
             String title = event.getLevel().name();
-            int colorDecimal = Objects.requireNonNull(LEVEL_TO_AMBIENT_COLOR.get(event.getLevel()));
+            int colorDecimal = Objects.requireNonNull(LEVEL_TO_LOG_COLOR.get(event.getLevel()));
             String description =
                     MessageUtils.abbreviate(describeLogEvent(event), MAX_EMBED_DESCRIPTION);
             Instant timestamp = Instant.ofEpochMilli(event.getInstant().getEpochMillisecond());

@@ -28,10 +28,10 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptCommand;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptModel;
 import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.LinkDetection;
 
-import java.awt.Color;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,8 +61,6 @@ public final class HelpSystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(HelpSystemHelper.class);
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
     private static final String BROKEN_LINK_REPLACEMENT = "(broken link removed)";
-
-    static final Color AMBIENT_COLOR = new Color(255, 255, 165);
 
     private final Predicate<String> isTagManageRole;
     private final Predicate<String> isHelpForumName;
@@ -215,7 +213,7 @@ public final class HelpSystemHelper {
             .setAuthor(selfUser.getName(), null, selfUser.getEffectiveAvatarUrl())
             .setTitle(titleForEmbed)
             .setDescription(sanitizedAnswer)
-            .setColor(Color.pink)
+            .setColor(AmbientColors.HELP_CHAT_GPT_RESPONSE)
             .setFooter(responseByGptFooter)
             .build();
     }

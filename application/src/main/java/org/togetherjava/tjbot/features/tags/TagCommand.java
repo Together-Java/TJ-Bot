@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.utils.messages.MessageEditBuilder;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.analytics.Metrics;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.LinkDetection;
 import org.togetherjava.tjbot.features.utils.LinkPreview;
 import org.togetherjava.tjbot.features.utils.LinkPreviews;
@@ -99,7 +100,7 @@ public final class TagCommand extends SlashCommandAdapter {
         MessageEmbed contentEmbed = new EmbedBuilder().setDescription(tagContent)
             .setFooter(event.getUser().getName() + " • used " + event.getCommandString())
             .setTimestamp(Instant.now())
-            .setColor(TagSystem.AMBIENT_COLOR)
+            .setColor(AmbientColors.TAGS)
             .build();
 
         Optional<String> replyToUserMention = Optional.ofNullable(replyToUserOption)

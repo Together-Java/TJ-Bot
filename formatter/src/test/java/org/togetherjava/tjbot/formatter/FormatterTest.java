@@ -116,7 +116,7 @@ final class FormatterTest {
                                 public MessageEmbed apply(CodeFence codeFence){String formattedCode=formatCode(codeFence.code()); \
                                 CodeFence formattedCodeFence=new CodeFence(codeFence.language(),formattedCode); \
                                 return new EmbedBuilder().setTitle("Formatted code").setDescription(formattedCodeFence.toMarkdown()) \
-                                .setColor(CodeMessageHandler.AMBIENT_COLOR).build();}
+                                .setColor(AmbientColors.CODE).build();}
                                 private String formatCode(String code){for(SnippetFormatter.SnippetKind snippetKind: \
                                 SnippetFormatter.SnippetKind.values()){try{List<Replacement>replacements= \
                                 formatter.format(snippetKind,code,List.of(Range.closedOpen(0,code.length())),2,false); \
@@ -145,7 +145,7 @@ final class FormatterTest {
                                   public MessageEmbed apply(CodeFence codeFence) {
                                     String formattedCode = formatCode(codeFence.code());
                                     CodeFence formattedCodeFence = new CodeFence(codeFence.language(), formattedCode);
-                                    return new EmbedBuilder().setTitle("Formatted code").setDescription(formattedCodeFence.toMarkdown()).setColor(CodeMessageHandler.AMBIENT_COLOR).build();
+                                    return new EmbedBuilder().setTitle("Formatted code").setDescription(formattedCodeFence.toMarkdown()).setColor(AmbientColors.CODE).build();
                                   }
                                   private String formatCode(String code) {
                                     for (SnippetFormatter.SnippetKind snippetKind : SnippetFormatter.SnippetKind.values()) {

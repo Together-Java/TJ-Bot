@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 
 import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
+import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.awt.Color;
@@ -95,11 +96,11 @@ final class BookmarksListRemoveHandler {
         switch (requestType) {
             case LIST -> {
                 title = "Bookmarks List";
-                color = BookmarksSystem.COLOR_SUCCESS;
+                color = AmbientColors.BOOKMARK_SUCCESS;
             }
             case REMOVE -> {
                 title = "Remove Bookmarks";
-                color = BookmarksSystem.COLOR_WARNING;
+                color = AmbientColors.BOOKMARK_WARNING;
             }
             default -> throw new IllegalArgumentException("Unknown request type: " + requestType);
         }
