@@ -158,14 +158,14 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         if (scamHistoryStore.hasRecentScamDuplicate(message)) {
-            takeActionWasAlreadyReported(message, guild);
+            takeActionWasAlreadyReported(message);
             return;
         }
 
         takeAction(message, guild);
     }
 
-    private void takeActionWasAlreadyReported(Message message, Guild guild) {
+    private void takeActionWasAlreadyReported(Message message) {
         // The user recently send the same scam already, and that was already reported and handled
         addScamToHistory(message);
 
@@ -180,7 +180,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         switch (mode) {
             case OFF -> throw new AssertionError(
                     "The OFF-mode should be detected earlier already to prevent expensive computation");
-            case ONLY_LOG -> takeActionLogOnly(message, guild);
+            case ONLY_LOG -> takeActionLogOnly(message);
             case APPROVE_FIRST -> takeActionApproveFirst(message, guild);
             case AUTO_DELETE_BUT_APPROVE_QUARANTINE ->
                 takeActionAutoDeleteButApproveQuarantine(message, guild);
@@ -189,7 +189,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
     }
 
-    private void takeActionLogOnly(Message message, Guild guild) {
+    private void takeActionLogOnly(Message message) {
         addScamToHistory(message);
         logScamMessage(message);
     }
