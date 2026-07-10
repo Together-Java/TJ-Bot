@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
@@ -125,7 +126,16 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() || event.isWebhookMessage()) {
+        handleMessage(event.getMessage(), event.getGuild());
+    }
+
+    @Override
+    public void onMessageUpdated(MessageUpdateEvent event) {
+        handleMessage(event.getMessage(), event.getGuild());
+    }
+
+    private void handleMessage(Message message, Guild guild) {
+        if (message.getAuthor().isBot() || message.isWebhookMessage()) {
             return;
         }
 
@@ -134,12 +144,11 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         boolean isSafe = true;
-        if (event.getChannel() instanceof TextChannel textChannel
+        if (message.getChannel() instanceof TextChannel textChannel
                 && isBotTrapChannel.test(textChannel)) {
             isSafe = false;
         }
 
-        Message message = event.getMessage();
         if (isSafe && scamDetector.isScam(message)) {
             isSafe = false;
         }
@@ -149,81 +158,84 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         if (scamHistoryStore.hasRecentScamDuplicate(message)) {
-            takeActionWasAlreadyReported(event);
+            takeActionWasAlreadyReported(message, guild);
             return;
         }
 
-        takeAction(event);
+        takeAction(message, guild);
     }
 
-    private void takeActionWasAlreadyReported(MessageReceivedEvent event) {
+    private void takeActionWasAlreadyReported(Message message, Guild guild) {
         // The user recently send the same scam already, and that was already reported and handled
-        addScamToHistory(event);
+        addScamToHistory(message);
 
         boolean shouldDeleteMessage = MODES_WITH_IMMEDIATE_DELETION.contains(mode);
         if (shouldDeleteMessage) {
-            deleteMessage(event);
+            deleteMessage(message);
         }
     }
 
-    private void takeAction(MessageReceivedEvent event) {
+    private void takeAction(Message message, Guild guild) {
         metrics.count("scam-detected");
         switch (mode) {
             case OFF -> throw new AssertionError(
                     "The OFF-mode should be detected earlier already to prevent expensive computation");
-            case ONLY_LOG -> takeActionLogOnly(event);
-            case APPROVE_FIRST -> takeActionApproveFirst(event);
+            case ONLY_LOG -> takeActionLogOnly(message, guild);
+            case APPROVE_FIRST -> takeActionApproveFirst(message, guild);
             case AUTO_DELETE_BUT_APPROVE_QUARANTINE ->
-                takeActionAutoDeleteButApproveQuarantine(event);
-            case AUTO_DELETE_AND_QUARANTINE -> takeActionAutoDeleteAndQuarantine(event);
+                takeActionAutoDeleteButApproveQuarantine(message, guild);
+            case AUTO_DELETE_AND_QUARANTINE -> takeActionAutoDeleteAndQuarantine(message, guild);
             default -> throw new IllegalArgumentException("Mode not supported: " + mode);
         }
     }
 
-    private void takeActionLogOnly(MessageReceivedEvent event) {
-        addScamToHistory(event);
-        logScamMessage(event);
+    private void takeActionLogOnly(Message message, Guild guild) {
+        addScamToHistory(message);
+        logScamMessage(message);
     }
 
-    private void takeActionApproveFirst(MessageReceivedEvent event) {
-        addScamToHistory(event);
-        logScamMessage(event);
-        reportScamMessage(event, "Is this scam?", createConfirmDialog(event));
+    private void takeActionApproveFirst(Message message, Guild guild) {
+        addScamToHistory(message);
+        logScamMessage(message);
+        reportScamMessage(message, guild, "Is this scam?", createConfirmDialog(message, guild));
     }
 
-    private void takeActionAutoDeleteButApproveQuarantine(MessageReceivedEvent event) {
-        addScamToHistory(event);
-        logScamMessage(event);
-        deleteMessage(event);
-        reportScamMessage(event, "Is this scam? (already deleted)", createConfirmDialog(event));
+    private void takeActionAutoDeleteButApproveQuarantine(Message message, Guild guild) {
+        addScamToHistory(message);
+        logScamMessage(message);
+        deleteMessage(message);
+        reportScamMessage(message, guild, "Is this scam? (already deleted)",
+                createConfirmDialog(message, guild));
     }
 
-    private void takeActionAutoDeleteAndQuarantine(MessageReceivedEvent event) {
-        addScamToHistory(event);
-        logScamMessage(event);
-        deleteMessage(event);
-        quarantineAuthor(event);
-        dmUser(event);
-        reportScamMessage(event, "Detected and handled scam", List.of());
+    private void takeActionAutoDeleteAndQuarantine(Message message, Guild guild) {
+        addScamToHistory(message);
+        logScamMessage(message);
+        deleteMessage(message);
+        quarantineAuthor(message, guild);
+        dmUser(message, guild);
+        reportScamMessage(message, guild, "Detected and handled scam", List.of());
     }
 
-    private void addScamToHistory(MessageReceivedEvent event) {
-        scamHistoryStore.addScam(event.getMessage(), MODES_WITH_IMMEDIATE_DELETION.contains(mode));
+    private void addScamToHistory(Message message) {
+        scamHistoryStore.addScam(message, MODES_WITH_IMMEDIATE_DELETION.contains(mode));
     }
 
-    private void logScamMessage(MessageReceivedEvent event) {
+    private void logScamMessage(Message message) {
         logger.warn(LogMarkers.SENSITIVE,
                 "Detected a scam message ('{}') from user '{}' in channel '{}' of guild '{}'.",
-                event.getMessageId(), event.getAuthor().getId(), event.getChannel().getId(),
-                event.getGuild().getId());
+                message.getId(), message.getAuthor().getId(), message.getChannel().getId(),
+                message.getGuild().getId());
     }
 
-    private void deleteMessage(MessageReceivedEvent event) {
-        event.getMessage().delete().queue();
+    private void deleteMessage(Message message) {
+        message.delete().queue();
     }
 
-    private void quarantineAuthor(MessageReceivedEvent event) {
-        quarantineAuthor(event.getGuild(), event.getMember(), event.getJDA().getSelfUser());
+    private void quarantineAuthor(Message message, Guild guild) {
+        quarantineAuthor(guild,
+                Objects.requireNonNull(message.getMember(), "Author must not be null"),
+                message.getJDA().getSelfUser());
     }
 
     private void quarantineAuthor(Guild guild, Member author, SelfUser bot) {
@@ -239,9 +251,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             .queue();
     }
 
-    private void reportScamMessage(MessageReceivedEvent event, String reportTitle,
+    private void reportScamMessage(Message message, Guild guild, String reportTitle,
             List<? extends Button> confirmDialog) {
-        Guild guild = event.getGuild();
         Optional<TextChannel> reportChannel = getReportChannel(guild);
         if (reportChannel.isEmpty()) {
             logger.warn(
@@ -250,10 +261,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
             return;
         }
 
-        User author = event.getAuthor();
+        User author = message.getAuthor();
         String avatarOrDefaultUrl = author.getEffectiveAvatarUrl();
-        String content = event.getMessage().getContentStripped();
-        List<Message.Attachment> attachments = event.getMessage().getAttachments();
+        String content = message.getContentStripped();
+        List<Message.Attachment> attachments = message.getAttachments();
 
         if (!attachments.isEmpty()) {
             String attachmentInfo = attachments.stream()
@@ -266,7 +277,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         MessageEmbed embed = new EmbedBuilder().setDescription(content)
             .setTitle(reportTitle)
             .setAuthor(author.getName(), null, avatarOrDefaultUrl)
-            .setTimestamp(event.getMessage().getTimeCreated())
+            .setTimestamp(message.getTimeCreated())
             .setColor(AmbientColors.MODERATION_SCAM)
             .setFooter(author.getId())
             .build();
@@ -275,13 +286,13 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         if (!confirmDialog.isEmpty()) {
             messageBuilder.setActionRow(confirmDialog);
         }
-        MessageCreateData message = messageBuilder.build();
+        MessageCreateData messageData = messageBuilder.build();
 
-        reportChannel.orElseThrow().sendMessage(message).queue();
+        reportChannel.orElseThrow().sendMessage(messageData).queue();
     }
 
-    private void dmUser(MessageReceivedEvent event) {
-        dmUser(event.getGuild(), event.getAuthor().getIdLong(), event.getJDA());
+    private void dmUser(Message message, Guild guild) {
+        dmUser(guild, message.getAuthor().getIdLong(), message.getJDA());
     }
 
     private void dmUser(Guild guild, long userId, JDA jda) {
@@ -312,11 +323,10 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         return Guilds.findTextChannel(guild, isReportChannelName);
     }
 
-    private List<Button> createConfirmDialog(MessageReceivedEvent event) {
-        ComponentIdArguments args = new ComponentIdArguments(mode, event.getGuild().getIdLong(),
-                event.getChannel().getIdLong(), event.getMessageIdLong(),
-                event.getAuthor().getIdLong(),
-                ScamHistoryStore.hashMessageContent(event.getMessage()));
+    private List<Button> createConfirmDialog(Message message, Guild guild) {
+        ComponentIdArguments args = new ComponentIdArguments(mode, guild.getIdLong(),
+                message.getChannel().getIdLong(), message.getIdLong(),
+                message.getAuthor().getIdLong(), ScamHistoryStore.hashMessageContent(message));
 
         return List.of(Button.success(generateComponentId(args), "Yes"),
                 Button.danger(generateComponentId(args), "No"));
