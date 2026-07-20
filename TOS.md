@@ -69,6 +69,6 @@ Any claim related to **Together Java**'s **bot** shall be governed by the laws o
 
 ## Contact
 
-People may get in contact through e-mail at [together.java.tjbot@gmail.com](mailto:together.java.tjbot@gmail.com), or through **Together Java**'s [official Discord](https://discord.com/invite/XXFUXzK).
+People may get in contact through e-mail at [contact@togetherjava.org](mailto:contact@togetherjava.org), or through **Together Java**'s [official Discord](https://discord.com/invite/XXFUXzK).
 
 Other ways of support may be provided but are not guaranteed.

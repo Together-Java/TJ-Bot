@@ -99,7 +99,7 @@ Data may be dropped from cache pre-maturely through actions such as removing the
 
 ## Removal of Data
 
-Removal of the data can be requested through e-mail at [together.java.tjbot@gmail.com](mailto:together.java.tjbot@gmail.com).
+Removal of the data can be requested through e-mail at [contact@togetherjava.org](mailto:contact@togetherjava.org).
 
 For security reasons will we ask you to provide us with proof of ownership of the Server, that you wish the data to be removed of. Only a server owner may request removal of data and requesting it will result in the bot being removed from the Server, if still present on it.
 
@@ -121,6 +121,6 @@ This policy is not applicable to any information collected by **bot** instances 
 
 ## Contact
 
-People may get in contact through e-mail at [together.java.tjbot@gmail.com](mailto:together.java.tjbot@gmail.com), or through **Together Java**'s [official Discord](https://discord.com/invite/XXFUXzK).
+People may get in contact through e-mail at [contact@togetherjava.org](mailto:contact@togetherjava.org), or through **Together Java**'s [official Discord](https://discord.com/invite/XXFUXzK).
 
 Other ways of support may be provided but are not guaranteed.
