@@ -45,6 +45,9 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     private static final Logger logger = LoggerFactory.getLogger(QuoteBoardForwarder.class);
     private static final int CLEANUP_INTERVAL_HOURS = 1;
     private static final int MAX_MESSAGE_AGE_DAYS = 7;
+    // MessageId with a Map of Emojis and reacted users
+    // <MessageId, Map<Emoji, Set<UserId>>>
+    private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
@@ -132,8 +135,6 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
         reactions.keySet().removeIf(messageId -> TimeUtil.getTimeCreated(messageId).isBefore(cutoff));
     }
 
-    // MessageId with a Map of Emojis and reacted users
-    private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
 
     private RestAction<Void> markAsProcessed(Message message) {
         return message.addReaction(botEmoji);
