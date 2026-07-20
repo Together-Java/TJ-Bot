@@ -184,7 +184,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
         if (reacts == null) {
             return 0;
         }
-        var scores = new AtomicReference<Float>(0.0F);
+        var scores = new AtomicReference<>(0.0F);
         reacts.keySet().forEach(emojiCode ->
             scores.updateAndGet(v -> v + getEmojiScore(emojiCode)));
         return scores.get();
