@@ -48,6 +48,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     // MessageId with a Map of Emojis and reacted users
     // <MessageId, Map<Emoji, Set<UserId>>>
     private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
+    private final String TJ_BOT_USER_ID = "884898473676271646";
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
@@ -175,8 +176,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
             return false;
         }
         var emojis = messageReactions.keySet();
-        // Does the Bot ID in the set of reacted user IDs
-        return emojis.contains("884898473676271646");
+        return emojis.contains(TJ_BOT_USER_ID);
     }
 
     private float calcReactionScore(Long messageId) {
