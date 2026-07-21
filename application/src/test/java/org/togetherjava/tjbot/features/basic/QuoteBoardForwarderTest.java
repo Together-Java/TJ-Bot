@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.requests.RestAction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.QuoteBoardConfig;
 import org.togetherjava.tjbot.jda.JdaTester;
@@ -32,14 +33,8 @@ class QuoteBoardForwarderTest {
     void setUp() {
         jdaTester = new JdaTester();
         Config config = mock(Config.class);
-        when(config.getQuoteBoardConfig()).thenReturn(new QuoteBoardConfig(
-            2.0F,
-            "quotes",
-            "✅",
-            1.0F,
-            Map.of("⭐", 2.0F),
-            List.of("general")
-        ));
+        when(config.getQuoteBoardConfig()).thenReturn(new QuoteBoardConfig(2.0F, "quotes", "✅",
+                1.0F, Map.of("⭐", 2.0F), List.of("general")));
         forwarder = new QuoteBoardForwarder(config);
     }
 
@@ -82,7 +77,7 @@ class QuoteBoardForwarderTest {
         var oldMessageId = toSnowflake(oldTime);
         var newTime = Instant.now();
         var newMessageId = toSnowflake(newTime);
-        
+
         reactions.put(oldMessageId, new java.util.HashMap<>());
         reactions.put(newMessageId, new java.util.HashMap<>());
 
@@ -127,7 +122,7 @@ class QuoteBoardForwarderTest {
         when(reaction.getEmoji()).thenReturn(emoji);
         when(event.getReaction()).thenReturn(reaction);
         when(event.getUserIdLong()).thenReturn(userId);
-        
+
         return event;
     }
 }

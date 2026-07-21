@@ -2,6 +2,8 @@ package org.togetherjava.tjbot.features.help;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -9,7 +11,6 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
@@ -182,11 +183,11 @@ public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
         Function<Member, RestAction<Message>> sendEmbedWithMention =
                 member -> threadChannel.sendMessage(member.getAsMention())
                     .addEmbeds(embed)
-                    .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL));
+                    .setComponents(ActionRow.of(Button.primary(markActiveId, MARK_ACTIVE_LABEL)));
 
         Supplier<RestAction<Message>> sendEmbedWithoutMention =
                 () -> threadChannel.sendMessageEmbeds(embed)
-                    .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL));
+                    .setComponents(ActionRow.of(Button.primary(markActiveId, MARK_ACTIVE_LABEL)));
 
         threadChannel.getGuild()
             .retrieveMemberById(authorId)
@@ -216,7 +217,7 @@ public final class HelpThreadAutoArchiver implements Routine, UserInteractor {
         String markActiveId = inactivityInteractor.generateComponentId(MARK_ACTIVE_ID);
 
         threadChannel.sendMessageEmbeds(embed)
-            .addActionRow(Button.primary(markActiveId, MARK_ACTIVE_LABEL))
+            .setComponents(ActionRow.of(Button.primary(markActiveId, MARK_ACTIVE_LABEL)))
             .flatMap(_ -> threadChannel.getManager().setArchived(true))
             .queue();
     }

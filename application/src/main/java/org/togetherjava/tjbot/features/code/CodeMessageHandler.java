@@ -2,11 +2,12 @@ package org.togetherjava.tjbot.features.code;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
@@ -26,11 +27,7 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -128,7 +125,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
         }
 
         return new MessageCreateBuilder().setContent("Detected code, here are some useful tools:")
-            .setActionRow(codeActionButtons)
+            .setComponents(ActionRow.of(codeActionButtons))
             .build();
     }
 
@@ -188,7 +185,7 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
                 metrics.count("code_action", Map.of("name", codeAction.getLabel()));
                 return event.getHook()
                     .editOriginalEmbeds(codeAction.apply(code))
-                    .setActionRow(createButtons(originalMessageId, codeAction));
+                    .setComponents(ActionRow.of(createButtons(originalMessageId, codeAction)));
             })
             .queue();
     }
@@ -235,8 +232,8 @@ public final class CodeMessageHandler extends MessageReceiverAdapter implements 
 
     private Optional<CodeAction> getCurrentActionFromCodeReply(Message codeReplyMessage) {
         // The disabled action is the currently applied action
-        return codeReplyMessage.getButtons()
-            .stream()
+        var buttons = MessageUtils.getButtonsFromMessage(codeReplyMessage);
+        return buttons.stream()
             .filter(Button::isDisabled)
             .map(Button::getLabel)
             .map(labelToCodeAction::get)

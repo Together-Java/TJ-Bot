@@ -1,14 +1,15 @@
 package org.togetherjava.tjbot.features.utils;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -38,7 +39,7 @@ public final class MessageUtils {
      * @throws IllegalArgumentException when the given message does not contain any button
      */
     public static void disableButtons(Message message) {
-        List<Button> buttons = message.getButtons();
+        var buttons = getButtonsFromMessage(message);
         if (buttons.isEmpty()) {
             throw new IllegalArgumentException("Message must contain at least one button");
         }
@@ -46,6 +47,17 @@ public final class MessageUtils {
         message
             .editMessageComponents(ActionRow.of(buttons.stream().map(Button::asDisabled).toList()))
             .queue();
+    }
+
+    public static List<Button> getButtonsFromMessage(Message message) {
+        var components = message.getComponents();
+        return components.stream().map(messageTopLevelComponentUnion -> {
+            if (messageTopLevelComponentUnion instanceof ActionRow row)
+                return row.getComponents();
+            return Collections.emptyList();
+        }).map(row -> row.stream().map(Button.class::cast).toList()
+        // return the List of buttons
+        ).toList().getFirst();
     }
 
     /**

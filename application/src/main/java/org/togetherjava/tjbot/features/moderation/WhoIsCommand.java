@@ -1,11 +1,8 @@
 package org.togetherjava.tjbot.features.moderation;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.GuildVoiceState;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -18,7 +15,7 @@ import org.togetherjava.tjbot.features.utils.DiscordClientAction;
 
 import javax.annotation.CheckReturnValue;
 
-import java.awt.Color;
+import java.awt.*;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -91,7 +88,7 @@ public final class WhoIsCommand extends SlashCommandAdapter {
             final Member member, final User.Profile profile) {
         User user = member.getUser();
 
-        Color memberColor = member.getColor();
+        Color memberColor = member.getColors().getPrimary();
         Color effectiveColor = (null == memberColor) ? profile.getAccentColor() : memberColor;
 
         String description = userIdentificationToStringItem(user) + voiceStateToStringItem(member)
@@ -112,8 +109,8 @@ public final class WhoIsCommand extends SlashCommandAdapter {
     private static ReplyCallbackAction sendEmbedWithProfileAction(final IReplyCallback event,
             MessageEmbed embed, String userId) {
         return event.replyEmbeds(embed)
-            .addActionRow(
-                    DiscordClientAction.General.USER.asLinkButton("Click to see profile!", userId));
+            .setComponents(ActionRow.of(DiscordClientAction.General.USER
+                .asLinkButton("Click to see profile!", userId)));
     }
 
     private static String voiceStateToStringItem(final Member member) {
@@ -124,7 +121,8 @@ public final class WhoIsCommand extends SlashCommandAdapter {
             return "";
         }
 
-        return "\n**In voicechannel:** " + (voiceState.getChannel().getAsMention());
+        return "\n**In voicechannel:** "
+                + (Objects.requireNonNull(voiceState.getChannel()).getAsMention());
     }
 
     /**

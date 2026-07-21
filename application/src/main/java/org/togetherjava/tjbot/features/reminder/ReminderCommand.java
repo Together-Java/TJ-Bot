@@ -1,6 +1,8 @@
 package org.togetherjava.tjbot.features.reminder;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -16,7 +18,6 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.TimeFormat;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
@@ -31,11 +32,7 @@ import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.features.utils.StringDistances;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.Period;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
 
@@ -234,7 +231,8 @@ public final class ReminderCommand extends SlashCommandAdapter {
             if (totalPages > 1) {
                 pendingReminders = getPageEntries(pendingReminders, pageToShow);
                 remindersEmbed.setFooter("Page: %d/%d".formatted(pageToShow, totalPages));
-                pendingRemindersPage.addActionRow(createPageTurnButtons(pageToShow, totalPages));
+                pendingRemindersPage
+                    .setComponents(ActionRow.of(createPageTurnButtons(pageToShow, totalPages)));
             }
             pendingReminders.forEach(reminder -> addReminderAsField(reminder, remindersEmbed));
         }
