@@ -1,6 +1,9 @@
 package org.togetherjava.tjbot.features.jshell;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -11,10 +14,8 @@ import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.interactions.modals.ModalMapping;
+import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.FileUpload;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
@@ -50,7 +51,9 @@ public class JShellCommand extends SlashCommandAdapter {
     private static final String INCLUDE_STARTUP_SCRIPT_PARAMETER = "include-startup-script";
 
     private static final int MIN_MESSAGE_INPUT_LENGTH = 0;
-    private static final int MAX_MESSAGE_INPUT_LENGTH = TextInput.MAX_VALUE_LENGTH;
+    private static final int MAX_MESSAGE_INPUT_LENGTH = Label.LABEL_MAX_LENGTH; // Assuming
+                                                                                // Label.LABEL_MAX_LENGTH
+                                                                                // or similar
 
     private static final String MAX_SNIPPETS_FILE_PREFIX = " // Snippet 1000";
     private static final String MAX_SNIPPETS_EMBED_PREFIX = "Snippet 10```java\n```";
@@ -133,12 +136,14 @@ public class JShellCommand extends SlashCommandAdapter {
     private void sendEvalModal(SlashCommandInteractionEvent event, boolean startupScript) {
         TextInput body = TextInput
             .create(TEXT_INPUT_PART_ID + (startupScript ? "|" + STARTUP_SCRIPT_PARAMETER : ""),
-                    "Enter code to evaluate.", TextInputStyle.PARAGRAPH)
+                    TextInputStyle.PARAGRAPH)
             .setPlaceholder("Put your code here.")
             .setRequiredRange(MIN_MESSAGE_INPUT_LENGTH, MAX_MESSAGE_INPUT_LENGTH)
             .build();
 
-        Modal modal = Modal.create(generateComponentId(), "JShell").addActionRow(body).build();
+        Modal modal = Modal.create(generateComponentId(), "JShell")
+            .addComponents(Label.of("Enter code to evaluate.", body))
+            .build();
         event.replyModal(modal).queue();
     }
 

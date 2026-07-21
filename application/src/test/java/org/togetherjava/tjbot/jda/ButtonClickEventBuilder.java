@@ -1,12 +1,12 @@
 package org.togetherjava.tjbot.jda;
 
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 
 import org.togetherjava.tjbot.features.SlashCommand;
@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import static org.mockito.Mockito.when;
+import static org.togetherjava.tjbot.features.utils.MessageUtils.getButtonsFromMessage;
 
 /**
  * Builder to create button click events that can be used for example with
@@ -28,14 +29,14 @@ import static org.mockito.Mockito.when;
  * Among other Discord related things, the builder optionally accepts a message
  * ({@link #setMessage(Message)}) and the user who clicked on the button
  * ({@link #setUserWhoClicked(Member)} ). As well as several ways to modify the message directly for
- * convenience, such as {@link #setContent(String)} or {@link #setActionRow(ItemComponent...)}. The
- * builder is by default already setup with a valid dummy message and the user who clicked the
- * button is set to the author of the message.
+ * convenience, such as {@link #setContent(String)} or
+ * {@link #setActionRow(MessageTopLevelComponent...)}. The builder is by default already setup with
+ * a valid dummy message and the user who clicked the button is set to the author of the message.
  * <p>
  * In order to build the event, at least one button has to be added to the message and marked as
- * <i>clicked</i>. Therefore, use {@link #setActionRow(ItemComponent...)} or modify the message
- * manually using {@link #setMessage(Message)}. Then mark the desired button as clicked using
- * {@link #build(Button)} or, if the message only contains a single button,
+ * <i>clicked</i>. Therefore, use {@link #setActionRow(MessageTopLevelComponent...)} or modify the
+ * message manually using {@link #setMessage(Message)}. Then mark the desired button as clicked
+ * using {@link #build(Button)} or, if the message only contains a single button,
  * {@link #buildWithSingleButton()} will automatically select the button.
  * <p>
  * Refer to the following examples:
@@ -86,10 +87,10 @@ public final class ButtonClickEventBuilder {
     /**
      * Sets the given message that this event is associated to. Will override any data previously
      * set with the more direct methods such as {@link #setContent(String)} or
-     * {@link #setActionRow(ItemComponent...)}.
+     * {@link #setActionRow(MessageTopLevelComponent...)}.
      * <p>
      * The message must contain at least one button, or the button has to be added later with
-     * {@link #setActionRow(ItemComponent...)}.
+     * {@link #setActionRow(MessageTopLevelComponent...)}.
      *
      * @param message the message to set
      * @return this builder instance for chaining
@@ -128,12 +129,12 @@ public final class ButtonClickEventBuilder {
      * {@link #setMessage(Message)} will overwrite any content set by this.
      * <p>
      * At least one of the components must be a button before {@link #build(Button)} is called.
-     * 
+     *
      * @param components the components for this action row
      * @return this builder instance for chaining
      */
-    public ButtonClickEventBuilder setActionRow(ItemComponent... components) {
-        messageBuilder.setActionRow(components);
+    public final ButtonClickEventBuilder setActionRow(MessageTopLevelComponent... components) {
+        messageBuilder.setComponents(components);
         return this;
     }
 
@@ -192,11 +193,11 @@ public final class ButtonClickEventBuilder {
 
         // Otherwise, attempt to extract the button from the message. Only allow a single button in
         // this case to prevent ambiguity.
-        return requireSingleButton(message.getButtons());
+        return requireSingleButton(getButtonsFromMessage(message));
     }
 
     private static Button requireButtonInMessage(Button clickedButton, Message message) {
-        boolean isClickedButtonUnknown = !message.getButtons().contains(clickedButton);
+        boolean isClickedButtonUnknown = !getButtonsFromMessage(message).contains(clickedButton);
 
         if (isClickedButtonUnknown) {
             throw new IllegalArgumentException(
@@ -228,7 +229,7 @@ public final class ButtonClickEventBuilder {
         when(event.getMessage()).thenReturn(message);
         when(event.getButton()).thenReturn(clickedButton);
         when(event.getComponent()).thenReturn(clickedButton);
-        when(event.getComponentId()).thenReturn(clickedButton.getId());
+        when(event.getComponentId()).thenReturn(clickedButton.getCustomId());
         when(event.getComponentType()).thenReturn(clickedButton.getType());
 
         when(event.getMember()).thenReturn(userWhoClicked);

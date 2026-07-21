@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.features.utils;
 
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.ButtonStyle;
 import org.jetbrains.annotations.Contract;
 
 import java.util.regex.Pattern;

@@ -177,7 +177,7 @@ public class Features {
         features.add(new CodeMessageAutoDetection(config, codeMessageHandler));
         features.add(new CodeMessageManualDetection(codeMessageHandler));
         features.add(new PinnedNotificationRemover(config));
-        features.add(new QuoteBoardForwarder(config));
+        features.add(new QuoteBoardForwarder(config, jda));
 
         // Voice receivers
         features.add(new DynamicVoiceChat(config, metrics));

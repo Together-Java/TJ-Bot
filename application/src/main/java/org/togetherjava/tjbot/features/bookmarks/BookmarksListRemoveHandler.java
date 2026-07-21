@@ -2,30 +2,27 @@ package org.togetherjava.tjbot.features.bookmarks;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.selections.SelectMenu;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
-import net.dv8tion.jda.api.interactions.components.LayoutComponent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 
 import org.togetherjava.tjbot.db.generated.tables.records.BookmarksRecord;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -76,7 +73,7 @@ final class BookmarksListRemoveHandler {
 
         MessageEmbed pageEmbed = generatePageEmbed(bookmarks, requestType, 0);
 
-        Collection<LayoutComponent> components = new ArrayList<>();
+        Collection<MessageTopLevelComponent> components = new ArrayList<>();
         components.add(generateNavigationComponent(requestType, 0));
 
         if (requestType == RequestType.REMOVE) {
@@ -200,7 +197,7 @@ final class BookmarksListRemoveHandler {
         MessageEmbed pageEmbed =
                 generatePageEmbed(bookmarks, request.type, request.pageToDisplayIndex);
 
-        Collection<LayoutComponent> components = new ArrayList<>();
+        Collection<MessageTopLevelComponent> components = new ArrayList<>();
         components.add(generateNavigationComponent(request.type, request.pageToDisplayIndex));
         if (request.type == RequestType.REMOVE) {
             components.addAll(generateRemoveComponents(event.getJDA(), bookmarks, request.type,
@@ -210,7 +207,7 @@ final class BookmarksListRemoveHandler {
         event.editMessageEmbeds(pageEmbed).setComponents(components).queue();
     }
 
-    private LayoutComponent generateNavigationComponent(RequestType requestType,
+    private MessageTopLevelComponent generateNavigationComponent(RequestType requestType,
             int pageToDisplayIndex) {
         UnaryOperator<String> generateNavigationComponentId = name -> {
             Request request = new Request(requestType, name, pageToDisplayIndex, Set.of());
@@ -227,7 +224,7 @@ final class BookmarksListRemoveHandler {
         return ActionRow.of(buttonPrev, buttonNext);
     }
 
-    private List<LayoutComponent> generateRemoveComponents(JDA jda,
+    private List<MessageTopLevelComponent> generateRemoveComponents(JDA jda,
             List<? extends BookmarksRecord> bookmarks, RequestType requestType,
             int pageToDisplayIndex, Set<Long> bookmarksToRemoveChannelIDs) {
         List<PageEntry> pageEntries = getPageEntries(bookmarks, pageToDisplayIndex);

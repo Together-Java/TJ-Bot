@@ -3,21 +3,27 @@ package org.togetherjava.tjbot.features.basic;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
-import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.TimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.config.QuoteBoardConfig;
 import org.togetherjava.tjbot.features.MessageReceiverAdapter;
+import org.togetherjava.tjbot.features.Routine;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -34,9 +40,15 @@ import java.util.regex.Pattern;
  * Key points: - Trigger emoji, minimum vote count and quote-board channel pattern are supplied via
  * {@code QuoteBoardConfig}.
  */
-public final class QuoteBoardForwarder extends MessageReceiverAdapter {
+public final class QuoteBoardForwarder extends MessageReceiverAdapter implements Routine {
 
     private static final Logger logger = LoggerFactory.getLogger(QuoteBoardForwarder.class);
+    private static final int CLEANUP_INTERVAL_HOURS = 1;
+    private static final int MAX_MESSAGE_AGE_DAYS = 7;
+    // MessageId with a Map of Emojis and reacted users
+    // <MessageId, Map<Emoji, Set<UserId>>>
+    private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
+    private final JDA jda;
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
@@ -47,7 +59,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      * @param config the configuration containing settings specific to the cool messages board,
      *        including the reaction emoji and the pattern to match board channel names
      */
-    public QuoteBoardForwarder(Config config) {
+    public QuoteBoardForwarder(Config config, JDA jda) {
+        this.jda = jda;
         this.config = config.getQuoteBoardConfig();
         this.botEmoji = Emoji.fromUnicode(this.config.botEmoji());
 
@@ -58,6 +71,14 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
         logger.debug("Received MessageReactionAddEvent: messageId={}, channelId={}, userId={}",
                 event.getMessageId(), event.getChannel().getId(), event.getUserId());
+
+        var messageId = event.getMessageIdLong();
+        var messageTime = TimeUtil.getTimeCreated(messageId);
+        if (messageTime.isBefore(OffsetDateTime.now().minusDays(MAX_MESSAGE_AGE_DAYS))) {
+            logger.debug("Ignoring reaction as message is older than {} days",
+                    MAX_MESSAGE_AGE_DAYS);
+            return;
+        }
 
         if (!config.allowChannels().contains(event.getChannel().getName())) {
             logger.debug("Skipping as reaction occurred in non-whitelisted channel");
@@ -82,29 +103,46 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
             return;
         }
 
-        event.retrieveMessage().queue(message -> {
-            if (hasAlreadyForwardedMessage(message)) {
-                logger.debug("Message has already been forwarded by the bot. Skipping.");
-                return;
-            }
+        var userId = event.getUserIdLong();
+        var emoji = event.getReaction().getEmoji().getAsReactionCode();
+        reactions.computeIfAbsent(messageId, _ -> new ConcurrentHashMap<>())
+            .computeIfAbsent(emoji, _ -> ConcurrentHashMap.newKeySet())
+            .add(userId);
 
-            float emojiScore = calculateMessageScore(message.getReactions());
+        // check if we've already moved this message...
+        if (hasBotReactedToMessage(messageId)) {
+            logger.debug("Message has already been forwarded by the bot. Skipping.");
+            return;
+        }
+        // calculate the overall score of the message reactions
+        var reactionScore = calcReactionScore(messageId);
+        if (reactionScore < config.minimumScoreToTrigger())
+            return;
 
-            if (emojiScore < config.minimumScoreToTrigger()) {
-                return;
-            }
+        logger.debug("Attempting to forward message to quote board channel: {}",
+                boardChannel.getName());
 
-            logger.debug("Attempting to forward message to quote board channel: {}",
-                    boardChannel.getName());
-
-            markAsProcessed(message).flatMap(_ -> message.forwardTo(boardChannel))
+        event.retrieveMessage()
+            .queue(message -> markAsProcessed(message).flatMap(_ -> message.forwardTo(boardChannel))
                 .queue(_ -> logger.debug("Message forwarded to quote board channel: {}",
                         boardChannel.getName()),
                         e -> logger.warn(
                                 "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
-                                e));
-        });
+                                e)));
     }
+
+    @Override
+    public Schedule createSchedule() {
+        return new Schedule(ScheduleMode.FIXED_RATE, 0, CLEANUP_INTERVAL_HOURS, TimeUnit.HOURS);
+    }
+
+    @Override
+    public void runRoutine(JDA jda) {
+        OffsetDateTime cutoff = OffsetDateTime.now().minusDays(MAX_MESSAGE_AGE_DAYS);
+        reactions.keySet()
+            .removeIf(messageId -> TimeUtil.getTimeCreated(messageId).isBefore(cutoff));
+    }
+
 
     private RestAction<Void> markAsProcessed(Message message) {
         return message.addReaction(botEmoji);
@@ -125,7 +163,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
                     String.format("Guild with ID '%d' not found.", guildId));
         }
 
-        List<TextChannel> matchingChannels = guild.getTextChannelCache()
+        List<TextChannel> matchingChannels = guild.getTextChannels()
             .stream()
             .filter(channel -> isQuoteBoardChannelName.test(channel.getName()))
             .toList();
@@ -139,26 +177,27 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
         return matchingChannels.stream().findFirst();
     }
 
-    /**
-     * Checks whether the bot has already reacted to the given message with its marker emoji.
-     */
-    private boolean hasAlreadyForwardedMessage(Message message) {
-        return message.getReactions()
-            .stream()
-            .filter(reaction -> botEmoji.equals(reaction.getEmoji()))
-            .anyMatch(MessageReaction::isSelf);
+    private boolean hasBotReactedToMessage(Long messageId) {
+        Map<String, Set<Long>> messageReactions = reactions.get(messageId);
+        if (messageReactions == null) {
+            return false;
+        }
+        var emojis = messageReactions.keySet();
+        return emojis.contains(jda.getSelfUser().getApplicationId());
     }
 
-    private float calculateMessageScore(List<MessageReaction> reactions) {
-        return (float) reactions.stream()
-            .mapToDouble(reaction -> reaction.getCount() * getEmojiScore(reaction.getEmoji()))
-            .sum();
+    private float calcReactionScore(Long messageId) {
+        var reacts = reactions.get(messageId);
+        if (reacts == null) {
+            return 0;
+        }
+        var scores = new AtomicReference<>(0.0F);
+        reacts.keySet()
+            .forEach(emojiCode -> scores.updateAndGet(v -> v + getEmojiScore(emojiCode)));
+        return scores.get();
     }
 
-    private float getEmojiScore(EmojiUnion emoji) {
-        float defaultScore = config.defaultEmojiScore();
-        String reactionCode = emoji.getAsReactionCode();
-
-        return config.emojiScores().getOrDefault(reactionCode, defaultScore);
+    private float getEmojiScore(String emojiCode) {
+        return config.emojiScores().getOrDefault(emojiCode, config.defaultEmojiScore());
     }
 }

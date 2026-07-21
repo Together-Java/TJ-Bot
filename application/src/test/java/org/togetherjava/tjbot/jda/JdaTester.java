@@ -2,11 +2,9 @@ package org.togetherjava.tjbot.jda;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.components.MessageTopLevelComponent;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -21,14 +19,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import net.dv8tion.jda.api.interactions.components.ItemComponent;
-import net.dv8tion.jda.api.interactions.components.LayoutComponent;
-import net.dv8tion.jda.api.requests.ErrorResponse;
-import net.dv8tion.jda.api.requests.Response;
-import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.RestConfig;
-import net.dv8tion.jda.api.requests.RestRateLimiter;
-import net.dv8tion.jda.api.requests.SequentialRestRateLimiter;
+import net.dv8tion.jda.api.requests.*;
 import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.ConcurrentSessionController;
@@ -38,12 +29,7 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.api.utils.messages.MessageEditData;
 import net.dv8tion.jda.internal.JDAImpl;
-import net.dv8tion.jda.internal.entities.EntityBuilder;
-import net.dv8tion.jda.internal.entities.GuildImpl;
-import net.dv8tion.jda.internal.entities.MemberImpl;
-import net.dv8tion.jda.internal.entities.RoleImpl;
-import net.dv8tion.jda.internal.entities.SelfUserImpl;
-import net.dv8tion.jda.internal.entities.UserImpl;
+import net.dv8tion.jda.internal.entities.*;
 import net.dv8tion.jda.internal.entities.channel.concrete.PrivateChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.TextChannelImpl;
 import net.dv8tion.jda.internal.entities.channel.concrete.ThreadChannelImpl;
@@ -61,17 +47,13 @@ import org.mockito.stubbing.Answer;
 
 import org.togetherjava.tjbot.features.SlashCommand;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
+import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -83,19 +65,8 @@ import java.util.function.UnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.AdditionalMatchers.not;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockingDetails;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Utility class for testing {@link SlashCommand}s.
@@ -211,8 +182,8 @@ public final class JdaTester {
 
         replyAction = mock(ReplyCallbackActionImpl.class);
         when(replyAction.setEphemeral(anyBoolean())).thenReturn(replyAction);
-        when(replyAction.addActionRow(anyCollection())).thenReturn(replyAction);
-        when(replyAction.addActionRow(ArgumentMatchers.<ItemComponent>any()))
+        when(replyAction.setComponents(anyCollection())).thenReturn(replyAction);
+        when(replyAction.setComponents(ArgumentMatchers.<MessageTopLevelComponent>any()))
             .thenReturn(replyAction);
         when(replyAction.setContent(anyString())).thenReturn(replyAction);
         when(replyAction.addFiles(anyCollection())).thenReturn(replyAction);
@@ -223,7 +194,7 @@ public final class JdaTester {
 
         doNothing().when(webhookMessageEditAction).queue();
         doReturn(webhookMessageEditAction).when(webhookMessageEditAction)
-            .setActionRow(any(ItemComponent.class));
+            .setComponents(any(MessageTopLevelComponent.class));
 
         when(guild.getGuildChannelById(anyLong())).thenReturn(textChannel);
         doReturn(everyoneRole).when(guild).getPublicRole();
@@ -752,11 +723,12 @@ public final class JdaTester {
         when(receivedMessage.getContentStripped()).thenReturn(clientMessage.getContent());
 
         when(receivedMessage.getComponents()).thenReturn(clientMessage.getComponents());
-        when(receivedMessage.getButtons()).thenReturn(clientMessage.getComponents()
-            .stream()
-            .map(LayoutComponent::getButtons)
-            .flatMap(List::stream)
-            .toList());
+        when(MessageUtils.getButtonsFromMessage(receivedMessage))
+            .thenReturn(clientMessage.getComponents()
+                .stream()
+                .map(c -> ((ActionRow) c).getButtons())
+                .flatMap(List::stream)
+                .toList());
 
         List<Message.Attachment> attachments = clientMessage.getAttachments()
             .stream()

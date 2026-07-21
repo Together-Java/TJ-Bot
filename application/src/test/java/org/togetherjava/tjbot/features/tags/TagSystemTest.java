@@ -12,10 +12,7 @@ import org.togetherjava.tjbot.jda.JdaTester;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -48,8 +45,8 @@ final class TagSystemTest {
 
     @Test
     void createDeleteButton() {
-        assertEquals("foo", TagSystem.createDeleteButton("foo").getId());
-        assertEquals("fooBarFooBar", TagSystem.createDeleteButton("fooBarFooBar").getId());
+        assertEquals("foo", TagSystem.createDeleteButton("foo").getCustomId());
+        assertEquals("fooBarFooBar", TagSystem.createDeleteButton("fooBarFooBar").getCustomId());
     }
 
     @Test

@@ -1,6 +1,10 @@
 package org.togetherjava.tjbot.features.tophelper;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
@@ -10,9 +14,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ComponentInteraction;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.slf4j.Logger;
@@ -32,14 +33,7 @@ import javax.annotation.Nullable;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -188,9 +182,8 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
             .forEach(menu::addOptions);
 
         MessageCreateData message = new MessageCreateBuilder().setContent(content)
-            .addActionRow(menu.build())
-            .addActionRow(Button
-                .danger(componentIdInteractor.generateComponentId(CANCEL_BUTTON_NAME), "Cancel"))
+            .setComponents(ActionRow.of(menu.build()), ActionRow.of(Button
+                .danger(componentIdInteractor.generateComponentId(CANCEL_BUTTON_NAME), "Cancel")))
             .build();
 
         channel.sendMessage(message).queue();
@@ -281,11 +274,11 @@ public final class TopHelpersAssignmentRoutine implements Routine, UserInteracto
                 + topHelperList + "\nShould I send a generic announcement?";
         event.getHook()
             .editOriginal(content)
-            .setActionRow(
+            .setComponents(ActionRow.of(
                     Button.success(componentIdInteractor.generateComponentId(successButtonArgs),
                             "Yes"),
                     Button.danger(componentIdInteractor.generateComponentId(NO_MESSAGE_BUTTON_NAME),
-                            "No"))
+                            "No")))
             .queue();
     }
 
