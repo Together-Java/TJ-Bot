@@ -105,7 +105,7 @@ public final class GitHubReference extends MessageReceiverAdapter {
             for (long repoId : config.getGitHubRepositories()) {
                 repositories.add(githubApi.getRepositoryById(repoId));
             }
-        } catch (IOException ex) {
+        } catch (NoSuchFieldError | IOException ex) {
             logger.warn(
                     "The GitHub key ({}) used in this config is invalid. Skipping GitHubReference feature – {}",
                     config.getGitHubApiKey(), ex.getMessage());
