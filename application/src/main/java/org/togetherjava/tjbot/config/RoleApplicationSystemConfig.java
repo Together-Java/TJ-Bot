@@ -1,7 +1,7 @@
 package org.togetherjava.tjbot.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.components.label.Label;
 
 import java.util.Objects;
 
@@ -29,10 +29,10 @@ public record RoleApplicationSystemConfig(
         Objects.requireNonNull(submissionsChannelPattern);
         Objects.requireNonNull(defaultQuestion);
 
-        if (defaultQuestion.length() > TextInput.MAX_LABEL_LENGTH) {
+        if (defaultQuestion.length() > Label.LABEL_MAX_LENGTH) {
             throw new IllegalArgumentException(
                     "defaultQuestion length is too long! Cannot be greater than %d"
-                        .formatted(TextInput.MAX_LABEL_LENGTH));
+                        .formatted(Label.LABEL_MAX_LENGTH));
         }
     }
 }

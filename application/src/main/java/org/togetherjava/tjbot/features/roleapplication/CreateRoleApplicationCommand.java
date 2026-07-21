@@ -2,6 +2,12 @@ package org.togetherjava.tjbot.features.roleapplication;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -14,12 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,8 +147,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         }
 
         TextInput body = TextInput
-            .create(generateComponentId(event.getUser().getId()), config.defaultQuestion(),
-                    TextInputStyle.PARAGRAPH)
+            .create(generateComponentId(event.getUser().getId()), TextInputStyle.PARAGRAPH)
             .setRequired(true)
             .setRequiredRange(MINIMUM_ANSWER_LENGTH, MAXIMUM_ANSWER_LENGTH)
             .setPlaceholder("Enter your answer here")
@@ -165,7 +165,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
         Modal modal = Modal
             .create(generateComponentId(event.getUser().getId(), roleDisplayName),
                     String.format("Application form - %s", selectOption.getLabel()))
-            .addActionRow(ActionRow.of(body).getComponents())
+            .addComponents(Label.of(config.defaultQuestion(), body))
             .build();
 
         event.replyModal(modal).queue();
@@ -250,7 +250,7 @@ public class CreateRoleApplicationCommand extends SlashCommandAdapter {
 
         addRolesToMenu(menuBuilder, event.getOptions());
 
-        event.replyEmbeds(embed).addActionRow(menuBuilder.build()).queue();
+        event.replyEmbeds(embed).setComponents(ActionRow.of(menuBuilder.build())).queue();
     }
 
     private static MessageEmbed createApplicationEmbed() {

@@ -2,12 +2,10 @@ package org.togetherjava.tjbot.features.basic;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.IMentionable;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.RoleIcon;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.selections.SelectOption;
+import net.dv8tion.jda.api.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
@@ -16,8 +14,6 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
-import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +23,7 @@ import org.togetherjava.tjbot.features.SlashCommandAdapter;
 import org.togetherjava.tjbot.features.componentids.Lifespan;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -195,7 +187,7 @@ public final class RoleSelectCommand extends SlashCommandAdapter {
                 event.getOption(TITLE_OPTION, "Select your roles:", OptionMapping::getAsString);
         MessageEmbed embed = createEmbed(title, event.getOption(DESCRIPTION_OPTION).getAsString());
 
-        event.replyEmbeds(embed).addActionRow(menu.build()).queue();
+        event.replyEmbeds(embed).setComponents(ActionRow.of(menu.build())).queue();
     }
 
     private static SelectOption mapToSelectOption(Role role) {

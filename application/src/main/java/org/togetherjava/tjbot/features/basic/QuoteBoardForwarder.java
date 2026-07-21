@@ -48,7 +48,6 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     // MessageId with a Map of Emojis and reacted users
     // <MessageId, Map<Emoji, Set<UserId>>>
     private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
-    private final String TJ_BOT_USER_ID = "884898473676271646";
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
@@ -74,7 +73,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
         var messageId = event.getMessageIdLong();
         var messageTime = TimeUtil.getTimeCreated(messageId);
         if (messageTime.isBefore(OffsetDateTime.now().minusDays(MAX_MESSAGE_AGE_DAYS))) {
-            logger.debug("Ignoring reaction as message is older than {} days", MAX_MESSAGE_AGE_DAYS);
+            logger.debug("Ignoring reaction as message is older than {} days",
+                    MAX_MESSAGE_AGE_DAYS);
             return;
         }
 
@@ -118,11 +118,15 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
             return;
 
         logger.debug("Attempting to forward message to quote board channel: {}",
-            boardChannel.getName());
+                boardChannel.getName());
 
-        event.retrieveMessage().queue(message -> markAsProcessed(message).flatMap(_ -> message.forwardTo(boardChannel))
-            .queue(_ -> logger.debug("Message forwarded to quote board channel: {}", boardChannel.getName()),
-                    e -> logger.warn("Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.", e)));
+        event.retrieveMessage()
+            .queue(message -> markAsProcessed(message).flatMap(_ -> message.forwardTo(boardChannel))
+                .queue(_ -> logger.debug("Message forwarded to quote board channel: {}",
+                        boardChannel.getName()),
+                        e -> logger.warn(
+                                "Unknown error while attempting to retrieve and forward message for quote-board, message is ignored.",
+                                e)));
     }
 
     @Override
@@ -133,7 +137,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     @Override
     public void runRoutine(JDA jda) {
         OffsetDateTime cutoff = OffsetDateTime.now().minusDays(MAX_MESSAGE_AGE_DAYS);
-        reactions.keySet().removeIf(messageId -> TimeUtil.getTimeCreated(messageId).isBefore(cutoff));
+        reactions.keySet()
+            .removeIf(messageId -> TimeUtil.getTimeCreated(messageId).isBefore(cutoff));
     }
 
 
@@ -176,7 +181,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
             return false;
         }
         var emojis = messageReactions.keySet();
-        return emojis.contains(TJ_BOT_USER_ID);
+        String tjBotUserId = "884898473676271646";
+        return emojis.contains(tjBotUserId);
     }
 
     private float calcReactionScore(Long messageId) {
@@ -185,8 +191,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
             return 0;
         }
         var scores = new AtomicReference<>(0.0F);
-        reacts.keySet().forEach(emojiCode ->
-            scores.updateAndGet(v -> v + getEmojiScore(emojiCode)));
+        reacts.keySet()
+            .forEach(emojiCode -> scores.updateAndGet(v -> v + getEmojiScore(emojiCode)));
         return scores.get();
     }
 

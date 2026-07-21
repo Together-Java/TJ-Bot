@@ -4,19 +4,15 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.ButtonStyle;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -32,7 +28,7 @@ import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
 
-import java.awt.Color;
+import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -180,8 +176,8 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         String[] args = {String.valueOf(guildId), String.valueOf(authorId)};
 
         return auditChannel.sendMessageEmbeds(reportEmbed)
-            .addActionRow(Button.success(generateComponentId(args), "Yes"),
-                    Button.danger(generateComponentId(args), "No"));
+            .setComponents(ActionRow.of(Button.success(generateComponentId(args), "Yes"),
+                    Button.danger(generateComponentId(args), "No")));
     }
 
     private static String createDescription(Message target) {

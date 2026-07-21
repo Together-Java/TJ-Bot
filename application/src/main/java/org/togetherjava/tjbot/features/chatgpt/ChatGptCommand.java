@@ -3,6 +3,9 @@ package org.togetherjava.tjbot.features.chatgpt;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
@@ -11,9 +14,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.modals.Modal;
 
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
@@ -105,16 +106,14 @@ public final class ChatGptCommand extends SlashCommandAdapter {
         OptionMapping thinkingOption = event.getOption(THINKING_OPTION);
         boolean thinkingEnabled = thinkingOption != null && thinkingOption.getAsBoolean();
 
-        TextInput body = TextInput
-            .create(QUESTION_INPUT, "Ask ChatGPT a question or get help with code",
-                    TextInputStyle.PARAGRAPH)
+        TextInput body = TextInput.create(QUESTION_INPUT, TextInputStyle.PARAGRAPH)
             .setPlaceholder("Put your question for ChatGPT here")
             .setRequiredRange(MIN_MESSAGE_INPUT_LENGTH, MAX_MESSAGE_INPUT_LENGTH)
             .build();
 
         Modal modal =
                 Modal.create(generateComponentId(Boolean.toString(thinkingEnabled)), "ChatGPT")
-                    .addActionRow(body)
+                    .addComponents(Label.of("Ask ChatGPT a question or get help with code", body))
                     .build();
         event.replyModal(modal).queue();
     }

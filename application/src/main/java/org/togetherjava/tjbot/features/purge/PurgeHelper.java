@@ -1,11 +1,12 @@
 package org.togetherjava.tjbot.features.purge;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +41,8 @@ final class PurgeHelper {
 
         event.replyEmbeds(embed.build())
             .setEphemeral(true)
-            .addActionRow(Button.danger(confirmComponentId, "Confirm purge"),
-                    Button.secondary(cancelComponentId, "Cancel"))
+            .setComponents(ActionRow.of(Button.danger(confirmComponentId, "Confirm purge"),
+                    Button.secondary(cancelComponentId, "Cancel")))
             .queue();
     }
 
