@@ -182,7 +182,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
         }
         var emojis = messageReactions.keySet();
         String tjBotUserId = "884898473676271646";
-        return emojis.contains(tjBotUserId);
+        String tjBotDevUserId = "1026781309118459977";
+        return emojis.contains(tjBotUserId) || emojis.contains(tjBotDevUserId);
     }
 
     private float calcReactionScore(Long messageId) {
