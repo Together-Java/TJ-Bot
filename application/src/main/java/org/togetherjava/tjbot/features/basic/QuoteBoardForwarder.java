@@ -48,6 +48,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     // MessageId with a Map of Emojis and reacted users
     // <MessageId, Map<Emoji, Set<UserId>>>
     private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
+    private final JDA jda;
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
@@ -58,7 +59,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
      * @param config the configuration containing settings specific to the cool messages board,
      *        including the reaction emoji and the pattern to match board channel names
      */
-    public QuoteBoardForwarder(Config config) {
+    public QuoteBoardForwarder(Config config, JDA jda) {
+        this.jda = jda;
         this.config = config.getQuoteBoardConfig();
         this.botEmoji = Emoji.fromUnicode(this.config.botEmoji());
 
@@ -181,9 +183,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
             return false;
         }
         var emojis = messageReactions.keySet();
-        String tjBotUserId = "884898473676271646";
-        String tjBotDevUserId = "1026781309118459977";
-        return emojis.contains(tjBotUserId) || emojis.contains(tjBotDevUserId);
+        return emojis.contains(jda.getSelfUser().getApplicationId());
     }
 
     private float calcReactionScore(Long messageId) {

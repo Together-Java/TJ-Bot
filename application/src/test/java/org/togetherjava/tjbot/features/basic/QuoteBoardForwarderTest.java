@@ -35,7 +35,7 @@ class QuoteBoardForwarderTest {
         Config config = mock(Config.class);
         when(config.getQuoteBoardConfig()).thenReturn(new QuoteBoardConfig(2.0F, "quotes", "✅",
                 1.0F, Map.of("⭐", 2.0F), List.of("general")));
-        forwarder = new QuoteBoardForwarder(config);
+        forwarder = new QuoteBoardForwarder(config, jdaTester.getJdaMock());
     }
 
     private long toSnowflake(Instant instant) {
