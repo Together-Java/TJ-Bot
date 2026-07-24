@@ -45,9 +45,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     private static final Logger logger = LoggerFactory.getLogger(QuoteBoardForwarder.class);
     private static final int CLEANUP_INTERVAL_HOURS = 1;
     private static final int MAX_MESSAGE_AGE_DAYS = 7;
-    // MessageId with a Map of Emojis and reacted users
-    // <MessageId, Map<Emoji, Set<UserId>>>
-    private final Map<Long, Map<String, Set<Long>>> reactions = new ConcurrentHashMap<>();
+
+    private final Map<Long, EmojiScore> reactions = new ConcurrentHashMap<>();
     private final JDA jda;
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
@@ -104,9 +103,7 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
 
         var userId = event.getUserIdLong();
         var emoji = event.getReaction().getEmoji().getAsReactionCode();
-        reactions.computeIfAbsent(messageId, _ -> new ConcurrentHashMap<>())
-            .computeIfAbsent(emoji, _ -> ConcurrentHashMap.newKeySet())
-            .add(userId);
+        reactions.computeIfAbsent(messageId, _ -> new EmojiScore()).addReaction(emoji, userId);
 
         // check if we've already moved this message...
         if (hasBotReactedToMessage(messageId)) {
@@ -176,15 +173,13 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
     }
 
     private boolean hasBotReactedToMessage(Long messageId) {
-        Map<String, Set<Long>> messageReactions = reactions.get(messageId);
-        if (messageReactions == null) return false;
-        var emojis = messageReactions.keySet();
-        return emojis.contains(jda.getSelfUser().getApplicationId());
+        Map<String, Set<Long>> emojiAndReactions = reactions.get(messageId).reactions();
+        return emojiAndReactions.values().stream()
+            .anyMatch(users -> users.contains(jda.getSelfUser().getApplicationIdLong()));
     }
 
     private float calcReactionScore(Long messageId) {
-        var reacts = reactions.get(messageId);
-        if (reacts == null) return 0;
+        var reacts = reactions.get(messageId).reactions();
         var scores = new AtomicReference<>(0.0F);
         reacts.keySet().forEach(emojiCode -> scores.updateAndGet(v -> v + getEmojiScore(emojiCode)));
         return scores.get();
@@ -192,5 +187,16 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter implements
 
     private float getEmojiScore(String emojiCode) {
         return config.emojiScores().getOrDefault(emojiCode, config.defaultEmojiScore());
+    }
+
+    private record EmojiScore(Map<String, Set<Long>> reactions) {
+        public EmojiScore() {
+            this(new ConcurrentHashMap<>());
+        }
+
+        public void addReaction(String emojiCode, Long userId) {
+            reactions.computeIfAbsent(emojiCode, _ -> ConcurrentHashMap.newKeySet())
+                .add(userId);
+        }
     }
 }
