@@ -37,6 +37,7 @@ import java.util.regex.Pattern;
 public final class QuoteBoardForwarder extends MessageReceiverAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(QuoteBoardForwarder.class);
+    private final JDA jda;
     private final Emoji botEmoji;
     private final Predicate<String> isQuoteBoardChannelName;
     private final QuoteBoardConfig config;
@@ -47,7 +48,8 @@ public final class QuoteBoardForwarder extends MessageReceiverAdapter {
      * @param config the configuration containing settings specific to the cool messages board,
      *        including the reaction emoji and the pattern to match board channel names
      */
-    public QuoteBoardForwarder(Config config) {
+    public QuoteBoardForwarder(Config config, JDA jda) {
+        this.jda = jda;
         this.config = config.getQuoteBoardConfig();
         this.botEmoji = Emoji.fromUnicode(this.config.botEmoji());
 
