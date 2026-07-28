@@ -49,8 +49,9 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String ACTION_VERB = "ban";
     private static final String ACTION_TITLE = "Ban";
     @SuppressWarnings("StaticCollection")
-    private static final List<String> DURATIONS = List.of(ModerationUtils.PERMANENT_DURATION,
-            "1 hour", "3 hours", "1 day", "2 days", "3 days", "7 days", "30 days");
+    private static final List<String> DURATIONS =
+            List.of(ModerationUtils.PERMANENT_DURATION, "1 hour", "3 hours", "1 day", "2 days",
+                    "3 days", "7 days", "14 days", "30 days", "365 days");
     private final ModerationActionsStore actionsStore;
 
     /**
