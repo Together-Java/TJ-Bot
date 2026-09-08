@@ -14,9 +14,9 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -39,29 +39,39 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Allows users to report a message as potential scam. Moderators can confirm the report from the
- * audit log, causing the author to be quarantined plus message history getting deleted.
+ * Allows users to alert moderators about a message that violates the rules. Moderators then decide
+ * how to handle it:
+ * <ul>
+ * <li><b>Scam</b>: the author is quarantined, then banned and unbanned to delete their recent
+ * messages.</li>
+ * <li><b>Job-Ad</b>: the author is warned, then banned and unbanned to delete their recent
+ * messages.</li>
+ * <li><b>Dismiss</b>: nothing happens, the alert is closed.</li>
+ * </ul>
+ * The ban and unban only serves to delete the messages, the user is free to join back afterward.
  */
 public final class ThisIsScamCommand extends BotCommandAdapter implements MessageContextCommand {
     private static final Logger logger = LoggerFactory.getLogger(ThisIsScamCommand.class);
 
-    private static final String COMMAND_NAME = "this-is-scam";
+    private static final String COMMAND_NAME = "this-is-against-rules";
 
-    private static final String ACTION_TITLE = "Quarantine";
-    private static final String ACTION_REASON = "Message was reported and confirmed as scam";
+    private static final String SCAM_REASON = "Message was reported and confirmed as scam";
+    private static final String JOB_AD_REASON =
+            "Message was reported and confirmed as a job advertisement";
 
     private static final String FAILED_MESSAGE =
-            "Sorry, there was an issue forwarding your scam report to the moderators. We are investigating.";
+            "Sorry, there was an issue forwarding your report to the moderators. We are investigating.";
+
     private static final Duration USER_COMMAND_COOLDOWN = Duration.ofMinutes(1);
 
     private final Config config;
@@ -70,6 +80,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
     private final Cache<Long, Instant> reportedMessageToTimestamp =
             Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofDays(1)).build();
+
     private final Cache<Long, Instant> userToLastCommandUse = Caffeine.newBuilder()
         .maximumSize(10_000)
         .expireAfterWrite(USER_COMMAND_COOLDOWN)
@@ -78,8 +89,8 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
     /**
      * Creates a new instance.
      *
-     * @param config to resolve the moderation audit log channel and quarantined role
-     * @param actionsStore used to store issued quarantine actions
+     * @param config to resolve the mod mail channel and quarantined role
+     * @param actionsStore used to store issued quarantine and warn actions
      */
     public ThisIsScamCommand(Config config, ModerationActionsStore actionsStore) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
@@ -98,16 +109,18 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             return;
         }
 
-        Optional<TextChannel> modAuditLog = findModMailChannel(event);
-        if (modAuditLog.isEmpty()) {
+        Message message = event.getTarget();
+        Optional<TextChannel> modMailChannel = findModMailChannel(event);
+        if (modMailChannel.isEmpty()) {
+            reportedMessageToTimestamp.invalidate(message.getIdLong());
             event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
             return;
         }
 
-        Message message = event.getTarget();
-        reportToMods(message, modAuditLog.orElseThrow()).mapToResult().map(result -> {
+        alertMods(message, modMailChannel.orElseThrow()).mapToResult().map(result -> {
             if (result.isFailure()) {
-                logger.warn("Unable to forward a scam report to the mod audit log channel.",
+                reportedMessageToTimestamp.invalidate(message.getIdLong());
+                logger.warn("Unable to forward a report to the mod mail channel.",
                         result.getFailure());
                 return FAILED_MESSAGE;
             }
@@ -130,18 +143,14 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             return false;
         }
 
-        event.reply("You just reported a message as scam, please wait a bit.")
-            .setEphemeral(true)
-            .queue();
+        event.reply("You just reported a message, please wait a bit.").setEphemeral(true).queue();
         return true;
     }
 
     private boolean handleWasAlreadyReportedMessage(MessageContextInteractionEvent event) {
         long messageId = event.getTarget().getIdLong();
         if (reportedMessageToTimestamp.getIfPresent(messageId) != null) {
-            event.reply("This message was already reported as potential scam.")
-                .setEphemeral(true)
-                .queue();
+            event.reply("This message was already reported.").setEphemeral(true).queue();
             return true;
         }
 
@@ -154,34 +163,35 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         Optional<TextChannel> modMailChannel = Guilds.findTextChannel(guild, isModMailChannel);
         if (modMailChannel.isEmpty()) {
             logger.warn(
-                    "Cannot find the designated mod audit log channel in guild '{}' with the pattern '{}'",
-                    guild.getId(), config.getModAuditLogChannelPattern());
+                    "Cannot find the designated mod mail channel in guild '{}' with the pattern '{}'",
+                    guild.getId(), config.getModMailChannelPattern());
         }
         return modMailChannel;
     }
 
-    private MessageCreateAction reportToMods(Message message, TextChannel auditChannel) {
+    private MessageCreateAction alertMods(Message message, TextChannel modMailChannel) {
         User author = message.getAuthor();
-        String description = createDescription(message);
         long accountAgeDays = ChronoUnit.DAYS.between(author.getTimeCreated(),
                 OffsetDateTime.now(ZoneOffset.UTC));
 
-        MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Is this Scam?")
-            .setDescription(
-                    MessageUtils.abbreviate(description, MessageEmbed.DESCRIPTION_MAX_LENGTH))
+        MessageEmbed alertEmbed = new EmbedBuilder().setTitle("Rule Violation")
+            .setDescription(MessageUtils.abbreviate(createDescription(message),
+                    MessageEmbed.DESCRIPTION_MAX_LENGTH))
             .setAuthor(author.getName(), null, author.getEffectiveAvatarUrl())
             .setTimestamp(message.getTimeCreated())
             .setColor(AmbientColors.MODERATION_SCAM)
             .setFooter("%s - account age %d days".formatted(author.getId(), accountAgeDays))
             .build();
 
-        long guildId = message.getGuild().getIdLong();
-        long authorId = author.getIdLong();
-        String[] args = {String.valueOf(guildId), String.valueOf(authorId)};
+        return modMailChannel.sendMessageEmbeds(alertEmbed)
+            .addActionRow(Button.success(generateComponentId(AlertAction.SCAM, message), "Scam"),
+                    Button.success(generateComponentId(AlertAction.JOB_AD, message), "Job-Ad"),
+                    Button.danger(generateComponentId(AlertAction.DISMISS, message), "Dismiss"));
+    }
 
-        return auditChannel.sendMessageEmbeds(reportEmbed)
-            .addActionRow(Button.success(generateComponentId(args), "Yes"),
-                    Button.danger(generateComponentId(args), "No"));
+    private String generateComponentId(AlertAction action, Message message) {
+        return super.generateComponentId(String.valueOf(message.getGuild().getIdLong()),
+                String.valueOf(message.getAuthor().getIdLong()), action.name());
     }
 
     private static String createDescription(Message target) {
@@ -207,74 +217,89 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        Member moderator = Objects.requireNonNull(event.getMember());
+        List<MessageEmbed> alertEmbeds = new ArrayList<>(event.getMessage().getEmbeds());
+        AlertAction action = AlertAction.valueOf(args.get(2));
+
+        if (action == AlertAction.DISMISS) {
+            String text =
+                    "Dismissed by %s, no action executed.".formatted(moderator.getAsMention());
+            event.editMessageEmbeds(withResult(alertEmbeds, text, Color.RED))
+                .setComponents()
+                .queue();
+            return;
+        }
+
+        ErrorHandler authorGoneHandler = new ErrorHandler().handle(
+                EnumSet.of(ErrorResponse.UNKNOWN_USER, ErrorResponse.UNKNOWN_MEMBER),
+                _ -> event.reply("The user is not a member of this server anymore, nothing to do.")
+                    .setEphemeral(true)
+                    .queue());
+
         long guildId = Long.parseLong(args.get(0));
-        long targetId = Long.parseLong(args.get(1));
-
-        ButtonStyle clickedStyle = event.getButton().getStyle();
-        boolean isScam = clickedStyle == ButtonStyle.SUCCESS;
-
-        MessageEmbed resultEmbed = new EmbedBuilder()
-            .setDescription(
-                    isScam ? "This is scam. The user was quarantined and messages were deleted."
-                            : "This is not scam, no action executed.")
-            .setColor(isScam ? Color.GREEN : Color.RED)
-            .build();
-
-        List<MessageEmbed> embeds = new ArrayList<>(event.getMessage().getEmbeds());
-        embeds.add(resultEmbed);
-
-        event.editMessageEmbeds(embeds).setComponents().queue();
-
-        if (!isScam) {
-            return;
-        }
-
+        long authorId = Long.parseLong(args.get(1));
         Guild guild = Objects.requireNonNull(event.getJDA().getGuildById(guildId));
-        Member moderator = Objects.requireNonNull(event.getMember());
 
-        ErrorHandler errorHandler = new ErrorHandler()
-            .handle(ErrorResponse.UNKNOWN_USER, failure -> logger.debug(LogMarkers.SENSITIVE,
-                    "Attempted to handle user-reported scam, but user '{}' does not exist anymore.",
-                    targetId))
-            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(LogMarkers.SENSITIVE,
-                    "Attempted to handle user-reported scam, but user '{}' is not a member of guild '{}' anymore.",
-                    targetId, guildId));
-
-        guild.retrieveMemberById(targetId)
-            .queue(target -> handleConfirmedScam(guild, target, moderator, event), errorHandler);
+        guild.retrieveMemberById(authorId)
+            .queue(target -> handleConfirmedViolation(event, action, guild, moderator, target,
+                    alertEmbeds), authorGoneHandler);
     }
 
-    private void handleConfirmedScam(Guild guild, Member target, Member moderator,
-            ButtonInteractionEvent event) {
-        if (!handleCanQuarantineAndBan(guild, target, event)) {
+    /**
+     * The checks reply to the event when they fail, so they have to run before the event is
+     * acknowledged. On failure the buttons stay, so the moderator can fix the issue and retry.
+     */
+    private void handleConfirmedViolation(ButtonInteractionEvent event, AlertAction action,
+            Guild guild, Member moderator, Member target, List<MessageEmbed> alertEmbeds) {
+
+        Member bot = guild.getSelfMember();
+
+        boolean canDo;
+        if (action == AlertAction.SCAM) {
+            Role quarantinedRole = ModerationUtils.getQuarantinedRole(guild, config).orElse(null);
+            canDo = ModerationUtils.handleRoleChangeChecks(quarantinedRole, "quarantine", target,
+                    bot, moderator, guild, SCAM_REASON, event);
+        } else {
+            canDo = ModerationUtils.handleCanInteractWithTarget("ban", bot, moderator, target,
+                    event);
+        }
+
+        canDo &= ModerationUtils.handleHasBotPermissions("ban", Permission.BAN_MEMBERS, bot, guild,
+                event);
+
+        if (!canDo) {
+            logger.warn(LogMarkers.SENSITIVE,
+                    "Moderator '{}' tried to handle alert for user '{}' in guild '{}', but checks failed.",
+                    moderator.getId(), target.getId(), guild.getId());
             return;
         }
 
-        Consumer<? super Void> onSuccess = _ -> {
-        };
-        Consumer<? super Throwable> onFailure = failure -> logger.warn(LogMarkers.SENSITIVE,
-                "Failed to finish user-reported scam handling for user '{}' in guild '{}'.",
-                target.getId(), guild.getId(), failure);
+        boolean isScam = action == AlertAction.SCAM;
 
-        sendQuarantineDm(target.getUser(), guild)
-            .flatMap(hasSentDm -> quarantineUser(guild, target, moderator))
-            .flatMap(_ -> deleteMessagesByBanAndUnban(guild, target.getUser()))
-            .queue(onSuccess, onFailure);
+        RestAction<Void> handling = isScam ? quarantineAndRemove(guild, target, moderator)
+                : warnAndRemove(guild, target, moderator);
+
+        String successText =
+                isScam ? "This is scam. The user was quarantined and messages were deleted."
+                        : "This is a job-ad. The user was warned and messages were deleted.";
+
+        String pendingText = "%s is handling this alert...".formatted(moderator.getAsMention());
+
+        event.editMessageEmbeds(withResult(alertEmbeds, pendingText, Color.ORANGE))
+            .setComponents()
+            .queue(hook -> handling.queue(_ -> showResult(hook, alertEmbeds,
+                    "%s (handled by %s)".formatted(successText, moderator.getAsMention()),
+                    Color.GREEN), failure -> {
+                        logger.warn(LogMarkers.SENSITIVE,
+                                "Failed to handle alert for user '{}' in guild '{}'.",
+                                target.getId(), guild.getId(), failure);
+                        showResult(hook, alertEmbeds,
+                                "Handling this alert failed, please check the logs and handle the user manually.",
+                                Color.RED);
+                    }));
     }
 
-    private boolean handleCanQuarantineAndBan(Guild guild, Member target,
-            ButtonInteractionEvent event) {
-        Member bot = guild.getSelfMember();
-        Member moderator = Objects.requireNonNull(event.getMember());
-        Role quarantinedRole = ModerationUtils.getQuarantinedRole(guild, config).orElse(null);
-
-        return ModerationUtils.handleRoleChangeChecks(quarantinedRole, "quarantine", target, bot,
-                moderator, guild, ACTION_REASON, event)
-                && ModerationUtils.handleHasBotPermissions("ban", Permission.BAN_MEMBERS, bot,
-                        guild, event);
-    }
-
-    private RestAction<Boolean> sendQuarantineDm(User target, Guild guild) {
+    private RestAction<Void> quarantineAndRemove(Guild guild, Member target, Member moderator) {
         String description =
                 """
                         Hey there, sorry to tell you but unfortunately you have been put under quarantine after sending scam.
@@ -284,28 +309,71 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
                         After you regained control of your account make sure you secure it properly, for example by using 2FA.
                         You can then join back our server and contact the mods to get unquarantined.""";
 
-        return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
-                ACTION_TITLE, description, ACTION_REASON, true), target);
+        return sendDm(guild, target.getUser(), "Quarantine", description, SCAM_REASON)
+            .flatMap(_ -> {
+                recordAction(guild, target, moderator, ModerationAction.QUARANTINE, SCAM_REASON);
+                return guild
+                    .addRoleToMember(target,
+                            ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
+                    .reason(SCAM_REASON);
+            })
+            .flatMap(_ -> deleteMessagesByBanAndUnban(guild, target.getUser(), SCAM_REASON));
     }
 
-    private RestAction<Void> quarantineUser(Guild guild, Member target, Member moderator) {
-        logger.info(LogMarkers.SENSITIVE,
-                "'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
-                moderator.getUser().getName(), moderator.getId(), target.getUser().getName(),
-                target.getId(), guild.getName(), ACTION_REASON);
+    private RestAction<Void> warnAndRemove(Guild guild, Member target, Member moderator) {
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been warned in the server for posting a job advertisement.
+                        To delete your messages you were briefly removed from the server, you are welcome to join back.""";
 
-        actionsStore.addAction(guild.getIdLong(), moderator.getIdLong(), target.getIdLong(),
-                ModerationAction.QUARANTINE, null, ACTION_REASON);
-
-        return guild
-            .addRoleToMember(target,
-                    ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
-            .reason(ACTION_REASON);
+        return sendDm(guild, target.getUser(), "Warning", description, JOB_AD_REASON).flatMap(_ -> {
+            recordAction(guild, target, moderator, ModerationAction.WARN, JOB_AD_REASON);
+            return deleteMessagesByBanAndUnban(guild, target.getUser(), JOB_AD_REASON);
+        });
     }
 
-    private RestAction<Void> deleteMessagesByBanAndUnban(Guild guild, User target) {
+    private static RestAction<Void> deleteMessagesByBanAndUnban(Guild guild, User target,
+            String reason) {
         return guild.ban(target, 1, TimeUnit.DAYS)
-            .reason(ACTION_REASON)
-            .flatMap(_ -> guild.unban(target).reason(ACTION_REASON));
+            .reason(reason)
+            .flatMap(_ -> guild.unban(target).reason(reason));
+    }
+
+    private static RestAction<Boolean> sendDm(Guild guild, User target, String title,
+            String description, String reason) {
+        return ModerationUtils.sendModActionDm(
+                ModerationUtils.getModActionEmbed(guild, title, description, reason, true), target);
+    }
+
+    private void recordAction(Guild guild, Member target, Member moderator, ModerationAction action,
+            String reason) {
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) executed '{}' against the user '{}' ({}) in guild '{}' for reason '{}'.",
+                moderator.getUser().getName(), moderator.getId(), action,
+                target.getUser().getName(), target.getId(), guild.getName(), reason);
+
+        actionsStore.addAction(guild.getIdLong(), moderator.getIdLong(), target.getIdLong(), action,
+                null, reason);
+    }
+
+    private static List<MessageEmbed> withResult(List<MessageEmbed> alertEmbeds, String text,
+            Color color) {
+        MessageEmbed resultEmbed = new EmbedBuilder().setDescription(text).setColor(color).build();
+
+        List<MessageEmbed> embeds = new ArrayList<>(alertEmbeds);
+        embeds.add(resultEmbed);
+
+        return embeds;
+    }
+
+    private static void showResult(InteractionHook hook, List<MessageEmbed> alertEmbeds,
+            String text, Color color) {
+        hook.editOriginalEmbeds(withResult(alertEmbeds, text, color)).queue();
+    }
+
+    private enum AlertAction {
+        SCAM,
+        JOB_AD,
+        DISMISS
     }
 }
