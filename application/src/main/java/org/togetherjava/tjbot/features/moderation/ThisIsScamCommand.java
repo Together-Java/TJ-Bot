@@ -183,15 +183,19 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             .setFooter("%s - account age %d days".formatted(author.getId(), accountAgeDays))
             .build();
 
-        return modMailChannel.sendMessageEmbeds(reportEmbed)
-            .addActionRow(Button.success(generateComponentId(ReportAction.SCAM, message), "Scam"),
-                    Button.success(generateComponentId(ReportAction.JOB_AD, message), "Job-Ad"),
-                    Button.danger(generateComponentId(ReportAction.DISMISS, message), "Dismiss"));
-    }
+        String guildId = String.valueOf(message.getGuild().getIdLong());
+        String authorId = String.valueOf(author.getIdLong());
 
-    private String generateComponentId(ReportAction action, Message message) {
-        return super.generateComponentId(String.valueOf(message.getGuild().getIdLong()),
-                String.valueOf(message.getAuthor().getIdLong()), action.name());
+        return modMailChannel.sendMessageEmbeds(reportEmbed)
+            .addActionRow(
+                    Button.success(generateComponentId(guildId, authorId, ReportAction.SCAM.name()),
+                            "Scam"),
+                    Button.success(
+                            generateComponentId(guildId, authorId, ReportAction.JOB_AD.name()),
+                            "Job-Ad"),
+                    Button.danger(
+                            generateComponentId(guildId, authorId, ReportAction.DISMISS.name()),
+                            "Dismiss"));
     }
 
     private static String createDescription(Message target) {
