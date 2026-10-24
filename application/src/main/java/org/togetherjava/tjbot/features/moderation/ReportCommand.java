@@ -7,15 +7,18 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.text.TextInput;
 import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
@@ -25,11 +28,14 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
+import org.togetherjava.tjbot.features.componentids.Lifespan;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,14 +58,19 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private final Predicate<String> modMailChannelNamePredicate;
     private final Predicate<String> configModGroupPattern;
     private final String configModMailChannelPattern;
+    private final ModerationActionsStore moderationActionsStore;
 
     /**
      * Creates a new instance.
      *
      * @param config to get the channel to forward reports to
+     * @param moderationActionsStore to get the history of moderation actions against the reported
+     *        user
      */
-    public ReportCommand(Config config) {
+    public ReportCommand(Config config, ModerationActionsStore moderationActionsStore) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
+
+        this.moderationActionsStore = Objects.requireNonNull(moderationActionsStore);
 
         modMailChannelNamePredicate =
                 Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
@@ -181,9 +192,16 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AmbientColors.MODMAIL)
             .build();
 
+        long reportedUserId = Long.parseLong(reportedMessage.authorId);
+        int startingPage = getStartingPageForUser(guild.getIdLong(), reportedUserId);
+
+        String historyButtonId = generateComponentId(Lifespan.REGULAR, reportedMessage.authorId,
+                String.valueOf(startingPage));
+
         MessageCreateAction message =
                 modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"));
+                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"),
+                            Button.primary(historyButtonId, "Audit"));
 
         Optional<Role> moderatorRole = guild.getRoles()
             .stream()
@@ -221,7 +239,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
-            Instant timestamp, String authorName, String authorAvatarUrl) {
+            Instant timestamp, String authorName, String authorAvatarUrl, String authorId) {
         static ReportedMessage ofArgs(List<String> args) {
             String content = args.getFirst();
             String id = args.get(1);
@@ -230,8 +248,105 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             Instant timestamp = Instant.parse(args.get(4));
             String authorName = args.get(5);
             String authorAvatarUrl = args.get(6);
+            String authorId = args.get(7);
             return new ReportedMessage(content, id, jumpUrl, channelID, timestamp, authorName,
-                    authorAvatarUrl);
+                    authorAvatarUrl, authorId);
         }
     }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+        if (event.getMessage().isEphemeral()) {
+            event.deferEdit().queue();
+        } else {
+            event.deferReply(true).queue();
+        }
+
+        Guild guild =
+                Objects.requireNonNull(event.getGuild(), "Guild cannot be null for this command.");
+        long guildId = guild.getIdLong();
+
+        long reportedUserId = Long.parseLong(args.get(0));
+        int targetPage = Integer.parseInt(args.get(1));
+
+        List<ActionRecord> actions = new ArrayList<>(
+                moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId));
+        Collections.reverse(actions);
+        List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
+
+        event.getJDA()
+            .retrieveUserById(reportedUserId)
+            .flatMap(user -> prepareAuditEmbedTasks(event, user, actions, pages, targetPage))
+            .onErrorFlatMap(_ -> event.getHook()
+                .editOriginal("Could not load audit data for this user.")
+                .map(_ -> null))
+            .queue();
+    }
+
+    private RestAction<List<MessageEmbed.Field>> prepareAuditEmbedTasks(
+            ButtonInteractionEvent event, User user, List<ActionRecord> actions,
+            List<List<ActionRecord>> pages, int targetPage) {
+
+        EmbedBuilder auditEmbed =
+                new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
+                    .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
+                    .setColor(AmbientColors.MODMAIL)
+                    .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
+
+        if (pages.isEmpty()) {
+            return event.getHook()
+                .editOriginalEmbeds(auditEmbed.build())
+                .setComponents(List.of())
+                .map(_ -> List.of());
+        }
+
+        int currentPageIndex = Math.clamp(targetPage, 0, pages.size() - 1);
+
+        List<RestAction<MessageEmbed.Field>> fetchFieldActions = pages.get(currentPageIndex)
+            .stream()
+            .map(actionRecord -> ModerationUtils.moderationActionToEmbedField(actionRecord,
+                    event.getJDA()))
+            .toList();
+
+        return RestAction.allOf(fetchFieldActions).map(embedFields -> {
+            finalizeAndSendEmbed(event, auditEmbed, embedFields, user.getIdLong(), currentPageIndex,
+                    pages.size());
+            return embedFields;
+        });
+    }
+
+    private void finalizeAndSendEmbed(ButtonInteractionEvent event, EmbedBuilder auditEmbed,
+            List<MessageEmbed.Field> embedFields, long reportedUserId, int currentPageIndex,
+            int totalPages) {
+        auditEmbed.clearFields();
+        embedFields.forEach(auditEmbed::addField);
+
+        auditEmbed.setFooter("Page %d/%d".formatted(currentPageIndex + 1, totalPages));
+
+        String prevButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
+                String.valueOf(currentPageIndex - 1));
+        String nextButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
+                String.valueOf(currentPageIndex + 1));
+
+        Button prevButton =
+                Button.primary(prevButtonId, "◀ Previous").withDisabled(currentPageIndex == 0);
+        Button nextButton = Button.primary(nextButtonId, "Next ▶")
+            .withDisabled(currentPageIndex == totalPages - 1);
+
+        event.getHook()
+            .editOriginalEmbeds(auditEmbed.build())
+            .setActionRow(prevButton, nextButton)
+            .queue();
+    }
+
+    private int getStartingPageForUser(long guildId, long userId) {
+        List<ActionRecord> actions = new ArrayList<>(
+                moderationActionsStore.getActionsByTargetAscending(guildId, userId));
+
+        Collections.reverse(actions);
+        List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
+
+        return Math.max(0, pages.size() - 1);
+    }
+
 }
