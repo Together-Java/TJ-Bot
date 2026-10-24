@@ -79,12 +79,13 @@ public class PurgeMessagesByUserCommand extends SlashCommandAdapter {
     @Override
     public void onSlashCommand(SlashCommandInteractionEvent event) {
         Guild guild = Objects.requireNonNull(event.getGuild());
-        User targetUser = Objects.requireNonNull(event.getOption(USER_OPTION)).getAsUser();
+        OptionMapping targetOption = Objects.requireNonNull(event.getOption(USER_OPTION));
+        User targetUser = targetOption.getAsUser();
         int minutes = Objects.requireNonNull(event.getOption(MINUTES_OPTION)).getAsInt();
         OptionMapping amountOption = event.getOption(AMOUNT_OPTION);
         int amount = amountOption == null ? Integer.MAX_VALUE : amountOption.getAsInt();
 
-        Member targetMember = guild.getMember(targetUser);
+        Member targetMember = targetOption.getAsMember();
         if (targetMember == null) {
             event.reply("That user is not a member of this guild.").setEphemeral(true).queue();
             return;
@@ -137,26 +138,34 @@ public class PurgeMessagesByUserCommand extends SlashCommandAdapter {
         int amount = Integer.parseInt(args.get(3));
 
         Guild guild = Objects.requireNonNull(event.getGuild());
-        Member targetMember = guild.getMemberById(targetUserId);
-        if (targetMember == null) {
-            event.editMessage("That user is no longer a member of this guild.")
-                .setEmbeds()
-                .setComponents()
-                .queue();
-            return;
-        }
+
+        event.deferEdit().queue();
+
+        guild.retrieveMemberById(targetUserId)
+            .queue(targetMember -> startPurge(event, guild, targetMember, anchorSnowflake, amount),
+                    _ -> event.getHook()
+                        .editOriginal("That user is no longer a member of this guild.")
+                        .setEmbeds()
+                        .setComponents()
+                        .queue());
+    }
+
+    private void startPurge(ButtonInteractionEvent event, Guild guild, Member targetMember,
+            String anchorSnowflake, int amount) {
+        long targetUserId = targetMember.getIdLong();
 
         List<GuildMessageChannel> candidates = collectCandidateChannels(guild, targetMember);
         if (candidates.isEmpty()) {
-            event.editMessage("No accessible channels remain to scan.")
+            event.getHook()
+                .editOriginal("No accessible channels remain to scan.")
                 .setEmbeds()
                 .setComponents()
                 .queue();
             return;
         }
 
-        event
-            .editMessage("Purging across %d channels... this may take a while."
+        event.getHook()
+            .editOriginal("Purging across %d channels... this may take a while."
                 .formatted(candidates.size()))
             .setEmbeds()
             .setComponents()
