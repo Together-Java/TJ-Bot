@@ -44,4 +44,4 @@ Further, the code is checked automatically by [CodeQL](https://codeql.github.com
 
 ## Deployment
 
-In order for the bot to actually go live, it is deployed as [Docker](https://www.docker.com/) image, build by [jib](https://github.com/GoogleContainerTools/jib), to a VPS provided by [Hetzner](https://www.hetzner.com/) (see [[Access the VPS]] for details).
+In order for the bot to actually go live, it is deployed as a [Docker](https://www.docker.com/) image, built by [jib](https://github.com/GoogleContainerTools/jib), to a VPS provided by [Hetzner](https://www.hetzner.com/) (see [[Access the VPS]] for details).
