@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.ErrorResponse;
@@ -297,17 +296,21 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         event.editMessageEmbeds(createResponseEmbeds(alertEmbeds, pendingText, Color.ORANGE))
             .setComponents()
             .queue(hook -> {
-                Consumer<Void> onSuccess = ignored -> showResult(hook, alertEmbeds,
-                        "%s (handled by %s)".formatted(successText, moderator.getAsMention()),
-                        Color.GREEN);
+                Consumer<Void> onSuccess =
+                        ignored -> hook
+                            .editOriginalEmbeds(createResponseEmbeds(alertEmbeds,
+                                    "%s (handled by %s)".formatted(successText,
+                                            moderator.getAsMention()),
+                                    Color.GREEN))
+                            .queue();
 
                 Consumer<Throwable> onFailure = failure -> {
                     logger.warn(LogMarkers.SENSITIVE,
                             "Failed to handle alert for user '{}' in guild '{}'.", target.getId(),
                             guild.getId(), failure);
-                    showResult(hook, alertEmbeds,
+                    hook.editOriginalEmbeds(createResponseEmbeds(alertEmbeds,
                             "Handling this alert failed, please check the logs and handle the user manually.",
-                            Color.RED);
+                            Color.RED));
                 };
 
                 handling.queue(onSuccess, onFailure);
@@ -379,11 +382,6 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         embeds.add(resultEmbed);
 
         return embeds;
-    }
-
-    private static void showResult(InteractionHook hook, List<MessageEmbed> alertEmbeds,
-            String text, Color color) {
-        hook.editOriginalEmbeds(createResponseEmbeds(alertEmbeds, text, color)).queue();
     }
 
     private enum ReportAction {
