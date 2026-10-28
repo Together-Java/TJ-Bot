@@ -103,21 +103,20 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         if (handleIsOnCooldown(event)) {
             return;
         }
+
+        Optional<TextChannel> modChannel = findModChannel(event);
+        if (modChannel.isEmpty()) {
+            event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
+            return;
+        }
+
         if (handleWasAlreadyReportedMessage(event)) {
             return;
         }
 
         Message message = event.getTarget();
-        Optional<TextChannel> modChannel = findModChannel(event);
-        if (modChannel.isEmpty()) {
-            reportedMessageToTimestamp.invalidate(message.getIdLong());
-            event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
-            return;
-        }
-
         reportToMods(message, modChannel.orElseThrow()).mapToResult().map(result -> {
             if (result.isFailure()) {
-                reportedMessageToTimestamp.invalidate(message.getIdLong());
                 logger.warn("Unable to forward a report to the mod mail channel.",
                         result.getFailure());
                 return FAILED_MESSAGE;
