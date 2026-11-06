@@ -59,8 +59,9 @@ import java.util.stream.Collectors;
  * </ul>
  * The ban and unban only serves to delete the messages, the user is free to join back afterward.
  */
-public final class ThisIsScamCommand extends BotCommandAdapter implements MessageContextCommand {
-    private static final Logger logger = LoggerFactory.getLogger(ThisIsScamCommand.class);
+public final class ThisIsAgainstRulesCommand extends BotCommandAdapter
+        implements MessageContextCommand {
+    private static final Logger logger = LoggerFactory.getLogger(ThisIsAgainstRulesCommand.class);
 
     private static final String COMMAND_NAME = "this-is-against-rules";
 
@@ -90,7 +91,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
      * @param config resolve the mod channel
      * @param actionsStore used to store issued moderative actions
      */
-    public ThisIsScamCommand(Config config, ModerationActionsStore actionsStore) {
+    public ThisIsAgainstRulesCommand(Config config, ModerationActionsStore actionsStore) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
 
         this.config = Objects.requireNonNull(config);
@@ -255,7 +256,7 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
 
         Member bot = guild.getSelfMember();
 
-        boolean canExecute = switch (action) {
+        boolean canSanctionUser = switch (action) {
             case SCAM -> {
                 Role quarantinedRole =
                         ModerationUtils.getQuarantinedRole(guild, config).orElse(null);
@@ -267,10 +268,10 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
             default -> false;
         };
 
-        canExecute &= ModerationUtils.handleHasBotPermissions("ban", Permission.BAN_MEMBERS, bot,
-                guild, event);
+        canSanctionUser &= ModerationUtils.handleHasBotPermissions("ban", Permission.BAN_MEMBERS,
+                bot, guild, event);
 
-        if (!canExecute) {
+        if (!canSanctionUser) {
             logger.warn(LogMarkers.SENSITIVE,
                     "Moderator '{}' tried to execute report for user '{}' in guild '{}', but checks failed.",
                     moderator.getId(), target.getId(), guild.getId());
@@ -341,7 +342,9 @@ public final class ThisIsScamCommand extends BotCommandAdapter implements Messag
         String description =
                 """
                         Hey there, sorry to tell you but unfortunately you have been warned in the server for posting a job advertisement.
-                        To delete your messages you were briefly removed from the server, you are welcome to join back.""";
+                        Hiring, Recruiting, seeking for jobs or anything alike is not allowed in this server.
+
+                        In order to automatically remove your messages you were briefly removed from the server, you are welcome to join back.""";
 
         return sendDm(guild, target.getUser(), "Warning", description, JOB_AD_REASON).flatMap(_ -> {
             recordAction(guild, target, moderator, ModerationAction.WARN, JOB_AD_REASON);
