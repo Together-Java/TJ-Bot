@@ -45,6 +45,16 @@ public final class Metrics {
     }
 
     /**
+     * Track an event execution with dimensions provided.
+     * 
+     * @param event the event to save
+     * @param dimensions the dimensions to save
+     */
+    public void count(String event, Map<String, Object> dimensions) {
+        count(event, dimensions, true);
+    }
+
+    /**
      * Track an event execution with additional contextual data.
      *
      * @param event the name of the event to record (e.g. "user_signup", "purchase")
@@ -53,15 +63,21 @@ public final class Metrics {
      *        "John Smith", channel_name: "chit-chat" etc. This data helps with filtering, grouping,
      *        and analyzing events later. Note: A value for a metric should be a Java primitive
      *        (String, int, double, long float).
+     * @param doAsync A flag to enable/disable async event process.
      */
-    public void count(String event, Map<String, Object> dimensions) {
+    void count(String event, Map<String, Object> dimensions, boolean doAsync) {
         logger.debug("Counting new record for event: {}", event);
 
         Instant happenedAt = Instant.now();
-        String serializedDimensions = serializeDimensions(dimensions);
+        String serializedDimensions = dimensions.isEmpty() ? null : serializeDimensions(dimensions);
 
-        service.submit(() -> processEvent(event, happenedAt,
-                dimensions.isEmpty() ? null : serializedDimensions));
+        Runnable task = () -> processEvent(event, happenedAt, serializedDimensions);
+
+        if (doAsync) {
+            service.submit(task);
+        } else {
+            task.run();
+        }
     }
 
     private static String serializeDimensions(Map<String, Object> dimensions) {
@@ -73,6 +89,7 @@ public final class Metrics {
     }
 
     /**
+     * Process event persistence.
      *
      * @param event the event to save
      * @param happenedAt the moment when the event is dispatched
@@ -85,5 +102,4 @@ public final class Metrics {
             .setDimensions(dimensionsJson)
             .insert());
     }
-
 }
