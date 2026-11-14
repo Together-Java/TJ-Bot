@@ -53,7 +53,6 @@ import org.togetherjava.tjbot.features.moderation.NoteCommand;
 import org.togetherjava.tjbot.features.moderation.QuarantineCommand;
 import org.togetherjava.tjbot.features.moderation.RejoinModerationRoleListener;
 import org.togetherjava.tjbot.features.moderation.ReportCommand;
-import org.togetherjava.tjbot.features.moderation.ThisIsAgainstRulesCommand;
 import org.togetherjava.tjbot.features.moderation.TransferQuestionCommand;
 import org.togetherjava.tjbot.features.moderation.UnbanCommand;
 import org.togetherjava.tjbot.features.moderation.UnmuteCommand;
@@ -192,7 +191,7 @@ public class Features {
 
         // Message context commands
         features.add(new TransferQuestionCommand(config, chatGptService));
-        features.add(new ThisIsAgainstRulesCommand(config, actionsStore));
+        features.add(new ReportCommand(config, actionsStore));
 
         // User context commands
 
@@ -221,7 +220,6 @@ public class Features {
         features.add(new GitHubCommand(githubReference));
         features.add(new ModMailCommand(jda, config));
         features.add(new HelpThreadCommand(config, helpSystemHelper, metrics));
-        features.add(new ReportCommand(config, actionsStore));
         features.add(new BookmarksCommand(bookmarksSystem));
 
         features.add(new ChatGptCommand(chatGptService, helpSystemHelper,

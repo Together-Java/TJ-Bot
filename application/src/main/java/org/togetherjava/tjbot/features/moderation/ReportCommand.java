@@ -3,24 +3,22 @@ package org.togetherjava.tjbot.features.moderation;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.interactions.components.text.TextInput;
-import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
-import net.dv8tion.jda.api.interactions.modals.Modal;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
-import net.dv8tion.jda.api.utils.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,251 +26,261 @@ import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.BotCommandAdapter;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.MessageContextCommand;
-import org.togetherjava.tjbot.features.componentids.Lifespan;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
+import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
+import java.awt.Color;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
- * Implements the /report command, which allows users to report a selected offensive message from
- * another user. The message is then forwarded to moderators in a dedicated channel given by
- * {@link Config#getModMailChannelPattern()}.
+ * Allows users to alert moderators about a message that violates the rules. Moderators then decide
+ * how to handle it:
+ * <ul>
+ * <li><b>Scam</b>: the author is quarantined, then banned and unbanned to delete their recent
+ * messages.</li>
+ * <li><b>Job-Ad</b>: the author is warned, then banned and unbanned to delete their recent
+ * messages.</li>
+ * <li><b>Dismiss</b>: nothing happens, the alert is closed.</li>
+ * </ul>
+ * The ban and unban only serves to delete the messages, the user is free to join back afterward.
  */
 public final class ReportCommand extends BotCommandAdapter implements MessageContextCommand {
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
+
     private static final String COMMAND_NAME = "report";
-    private static final String REPORT_REASON_INPUT_ID = "reportReason";
-    private static final int COOLDOWN_DURATION_VALUE = 3;
-    private static final ChronoUnit COOLDOWN_DURATION_UNIT = ChronoUnit.MINUTES;
-    private final Cache<Long, Instant> authorToLastReportInvocation = createCooldownCache();
-    private final Predicate<String> modMailChannelNamePredicate;
-    private final Predicate<String> configModGroupPattern;
-    private final String configModMailChannelPattern;
-    private final ModerationActionsStore moderationActionsStore;
+
+    private static final String SCAM_REASON = "Message was reported and confirmed as scam";
+    private static final String JOB_AD_REASON =
+            "Message was reported and confirmed as a job advertisement";
+
+    private static final String FAILED_MESSAGE =
+            "Sorry, there was an issue forwarding your report to the moderators. We are investigating.";
+
+    private static final Duration USER_COMMAND_COOLDOWN = Duration.ofSeconds(15);
+
+    private final Config config;
+    private final ModerationActionsStore actionsStore;
+    private final Predicate<String> isModMailChannel;
+
+    private final Cache<Long, Instant> reportedMessageToTimestamp =
+            Caffeine.newBuilder().maximumSize(10_000).expireAfterWrite(Duration.ofDays(1)).build();
+    private final Cache<Long, Instant> userToLastCommandUse = Caffeine.newBuilder()
+        .maximumSize(10_000)
+        .expireAfterWrite(USER_COMMAND_COOLDOWN)
+        .build();
 
     /**
      * Creates a new instance.
      *
-     * @param config to get the channel to forward reports to
-     * @param moderationActionsStore to get the history of moderation actions against the reported
-     *        user
+     * @param config resolve the mod channel
+     * @param actionsStore used to store issued moderative actions
      */
-    public ReportCommand(Config config, ModerationActionsStore moderationActionsStore) {
+    public ReportCommand(Config config, ModerationActionsStore actionsStore) {
         super(Commands.message(COMMAND_NAME), CommandVisibility.GUILD);
 
-        this.moderationActionsStore = Objects.requireNonNull(moderationActionsStore);
-
-        modMailChannelNamePredicate =
-                Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
-
-        configModMailChannelPattern = config.getModMailChannelPattern();
-
-        configModGroupPattern =
-                Pattern.compile(config.getHeavyModerationRolePattern()).asMatchPredicate();
-    }
-
-    private Cache<Long, Instant> createCooldownCache() {
-        return Caffeine.newBuilder()
-            .maximumSize(1_000)
-            .expireAfterAccess(COOLDOWN_DURATION_VALUE, TimeUnit.of(COOLDOWN_DURATION_UNIT))
-            .build();
+        this.config = Objects.requireNonNull(config);
+        this.actionsStore = Objects.requireNonNull(actionsStore);
+        isModMailChannel = Pattern.compile(config.getModMailChannelPattern()).asMatchPredicate();
     }
 
     @Override
     public void onMessageContext(MessageContextInteractionEvent event) {
-        long userID = event.getUser().getIdLong();
-        String reportedMessageTimestamp = event.getTarget().getTimeCreated().toInstant().toString();
-
         if (handleIsOnCooldown(event)) {
             return;
         }
-        authorToLastReportInvocation.put(userID, Instant.now());
 
-        String reportedMessage = event.getTarget().getContentRaw();
-        String reportedMessageID = event.getTarget().getId();
-        String reportedMessageJumpUrl = event.getTarget().getJumpUrl();
-        String reportedMessageChannel = event.getTarget().getChannel().getId();
-        String reportedAuthorName = event.getTarget().getAuthor().getName();
-        String reportedAuthorAvatarUrl = event.getTarget().getAuthor().getEffectiveAvatarUrl();
-        String reportedAuthorID = event.getTarget().getAuthor().getId();
-
-        TextInput modalTextInput = TextInput
-            .create(REPORT_REASON_INPUT_ID, "Anonymous report to the moderators",
-                    TextInputStyle.PARAGRAPH)
-            .setPlaceholder("Why do you want to report this message?")
-            .setRequiredRange(3, 200)
-            .build();
-
-        String reportModalComponentID = generateComponentId(reportedMessage, reportedMessageID,
-                reportedMessageJumpUrl, reportedMessageChannel, reportedMessageTimestamp,
-                reportedAuthorName, reportedAuthorAvatarUrl, reportedAuthorID);
-        Modal reportModal = Modal.create(reportModalComponentID, "Report this to a moderator")
-            .addActionRow(modalTextInput)
-            .build();
-
-        event.replyModal(reportModal).queue();
-    }
-
-    private boolean handleIsOnCooldown(MessageContextInteractionEvent event) {
-        if (!isAuthorOnCooldown(event.getUser().getIdLong())) {
-            return false;
-        }
-        event
-            .reply("You can only report a message once per %s minutes."
-                .formatted(COOLDOWN_DURATION_VALUE))
-            .setEphemeral(true)
-            .queue();
-        return true;
-    }
-
-    @SuppressWarnings("squid:S2259")
-    private boolean isAuthorOnCooldown(long userId) {
-        return Optional.ofNullable(authorToLastReportInvocation.getIfPresent(userId))
-            .map(sinceCommandInvoked -> sinceCommandInvoked.plus(COOLDOWN_DURATION_VALUE,
-                    COOLDOWN_DURATION_UNIT))
-            .filter(Instant.now()::isBefore)
-            .isPresent();
-    }
-
-    @Override
-    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
-        Optional<TextChannel> modMailAuditLog = handleRequireModMailChannel(event);
-
-        if (modMailAuditLog.isEmpty()) {
+        Optional<TextChannel> modChannel = findModChannel(event);
+        if (modChannel.isEmpty()) {
+            event.reply(FAILED_MESSAGE).setEphemeral(true).queue();
             return;
         }
 
-        sendModMessage(event, args, modMailAuditLog.orElseThrow());
+        if (handleWasAlreadyReportedMessage(event)) {
+            return;
+        }
+
+        Message message = event.getTarget();
+        reportToMods(message, modChannel.orElseThrow()).mapToResult().map(result -> {
+            if (result.isFailure()) {
+                logger.warn("Unable to forward a report to the mod mail channel.",
+                        result.getFailure());
+                return FAILED_MESSAGE;
+            }
+            return "Thank you for your report, a moderator will take care of it 👍";
+        }).flatMap(response -> event.reply(response).setEphemeral(true)).queue();
     }
 
-    private Optional<TextChannel> handleRequireModMailChannel(ModalInteractionEvent event) {
-        long guildID = Objects
-            .requireNonNull(event.getGuild(),
-                    "Guild is null for ModalInteractionEvent in ReportCommand.")
-            .getIdLong();
-        Optional<TextChannel> modMailAuditLog = event.getJDA()
-            .getTextChannelCache()
-            .stream()
-            .filter(channel -> modMailChannelNamePredicate.test(channel.getName()))
-            .findAny();
-        if (modMailAuditLog.isEmpty()) {
-            event.reply(
-                    "Sorry, there was an issue sending your report to the moderators. We are investigating.")
-                .setEphemeral(true)
-                .queue();
+    private boolean handleIsOnCooldown(MessageContextInteractionEvent event) {
+        long userId = event.getUser().getIdLong();
+        Instant lastCommandUse = userToLastCommandUse.getIfPresent(userId);
+        Runnable isNotOnCooldownAction = () -> userToLastCommandUse.put(userId, Instant.now());
+
+        if (lastCommandUse == null) {
+            isNotOnCooldownAction.run();
+            return false;
+        }
+        Instant momentCooldownEnds = lastCommandUse.plus(USER_COMMAND_COOLDOWN);
+        if (Instant.now().isAfter(momentCooldownEnds)) {
+            isNotOnCooldownAction.run();
+            return false;
+        }
+
+        event.reply("You just reported a message, please wait a bit.").setEphemeral(true).queue();
+        return true;
+    }
+
+    private boolean handleWasAlreadyReportedMessage(MessageContextInteractionEvent event) {
+        long messageId = event.getTarget().getIdLong();
+        if (reportedMessageToTimestamp.getIfPresent(messageId) != null) {
+            event.reply("This message was already reported.").setEphemeral(true).queue();
+            return true;
+        }
+
+        reportedMessageToTimestamp.put(messageId, Instant.now());
+        return false;
+    }
+
+    private Optional<TextChannel> findModChannel(MessageContextInteractionEvent event) {
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        Optional<TextChannel> modMailChannel = Guilds.findTextChannel(guild, isModMailChannel);
+        if (modMailChannel.isEmpty()) {
             logger.warn(
-                    "Cannot find the designated modmail channel in server by id {} with the pattern {}",
-                    guildID, configModMailChannelPattern);
+                    "Cannot find the designated mod mail channel in guild '{}' with the pattern '{}'",
+                    guild.getId(), config.getModMailChannelPattern());
         }
-        return modMailAuditLog;
+        return modMailChannel;
     }
 
-    private MessageCreateAction createModMessage(String reportReason,
-            ReportedMessage reportedMessage, Guild guild, TextChannel modMailAuditLog) {
-        MessageEmbed reportedMessageEmbed = new EmbedBuilder().setTitle("Report")
-            .setDescription(MessageUtils.abbreviate(reportedMessage.content,
-                    MessageEmbed.DESCRIPTION_MAX_LENGTH))
-            .setAuthor(reportedMessage.authorName, null, reportedMessage.authorAvatarUrl)
-            .setTimestamp(reportedMessage.timestamp)
-            .setColor(AmbientColors.MODMAIL)
+    private MessageCreateAction reportToMods(Message message, TextChannel modMailChannel) {
+        User author = message.getAuthor();
+        String description = createDescription(message);
+        long accountAgeDays = ChronoUnit.DAYS.between(author.getTimeCreated(),
+                OffsetDateTime.now(ZoneOffset.UTC));
+
+        int modActionCount = actionsStore
+            .getActionsByTargetAscending(message.getGuildIdLong(), author.getIdLong())
+            .size();
+        String modActionsText = modActionCount == 0 ? "no" : String.valueOf(modActionCount);
+
+        MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Reported Message")
+            .setDescription(
+                    MessageUtils.abbreviate(description, MessageEmbed.DESCRIPTION_MAX_LENGTH))
+            .setAuthor(author.getName(), null, author.getEffectiveAvatarUrl())
+            .setTimestamp(message.getTimeCreated())
+            .setColor(AmbientColors.MODERATION_SCAM)
+            .setFooter("%s - account age %d days - %s actions against user"
+                .formatted(author.getId(), accountAgeDays, modActionsText))
             .build();
 
-        MessageEmbed reportReasonEmbed = new EmbedBuilder().setTitle("Reason")
-            .setDescription(reportReason)
-            .setColor(AmbientColors.MODMAIL)
-            .build();
+        String guildId = String.valueOf(message.getGuild().getIdLong());
+        String authorId = String.valueOf(author.getIdLong());
 
-        int startingPage = 0;
-        String historyButtonId = generateComponentId(Lifespan.REGULAR, reportedMessage.authorId,
-                String.valueOf(startingPage));
-
-        MessageCreateAction message =
-                modMailAuditLog.sendMessageEmbeds(reportedMessageEmbed, reportReasonEmbed)
-                    .addActionRow(Button.link(reportedMessage.jumpUrl, "Go to message"),
-                            Button.primary(historyButtonId, "Audit"));
-
-        Optional<Role> moderatorRole = guild.getRoles()
-            .stream()
-            .filter(role -> configModGroupPattern.test(role.getName()))
-            .findFirst();
-
-        moderatorRole.ifPresent(role -> message.setContent(role.getAsMention()));
-
-        return message;
+        return modMailChannel.sendMessageEmbeds(reportEmbed)
+            .addActionRow(
+                    Button.success(generateComponentId(guildId, authorId, ReportAction.SCAM.name()),
+                            "Scam"),
+                    Button.success(
+                            generateComponentId(guildId, authorId, ReportAction.JOB_AD.name()),
+                            "Job-Ad"))
+            .addActionRow(Button.danger(
+                    generateComponentId(guildId, authorId, ReportAction.DISMISS.name()), "Dismiss"),
+                    Button.primary(generateComponentId(guildId, authorId, ReportAction.AUDIT.name(),
+                            String.valueOf(0)), "Audit"),
+                    Button.link(message.getJumpUrl(), "Message"));
     }
 
-    private void sendModMessage(ModalInteractionEvent event, List<String> args,
-            TextChannel modMailAuditLog) {
-        Guild guild = event.getGuild();
-        event.deferReply().setEphemeral(true).queue();
+    private static String createDescription(Message target) {
+        String content = target.getContentStripped();
+        String description = content.isBlank() ? "(message had no text content)" : content;
 
-        InteractionHook hook = event.getHook();
-        String reportReason = event.getValue(REPORT_REASON_INPUT_ID).getAsString();
+        List<Message.Attachment> attachments = target.getAttachments();
+        if (!attachments.isEmpty()) {
+            String attachmentText = attachments.stream()
+                .map(Message.Attachment::getFileName)
+                .collect(Collectors.joining("\n- ", "\n- ", ""));
+            description += """
 
-        ReportedMessage reportedMessage = ReportedMessage.ofArgs(args);
 
-        createModMessage(reportReason, reportedMessage, guild, modMailAuditLog).mapToResult()
-            .map(ReportCommand::createUserReply)
-            .flatMap(hook::editOriginal)
-            .queue();
-    }
-
-    private static String createUserReply(Result<Message> result) {
-        if (result.isFailure()) {
-            logger.warn("Unable to forward a message report to modmail channel.",
-                    result.getFailure());
-            return "Sorry, there was an issue sending your report to the moderators. We are investigating.";
+                    Attachments: %s
+                    """.formatted(attachmentText);
         }
-        return "Thank you for reporting this message. A moderator will take care of the matter as soon as possible.";
-    }
 
-    private record ReportedMessage(String content, String id, String jumpUrl, String channelID,
-            Instant timestamp, String authorName, String authorAvatarUrl, String authorId) {
-        static ReportedMessage ofArgs(List<String> args) {
-            String content = args.getFirst();
-            String id = args.get(1);
-            String jumpUrl = args.get(2);
-            String channelID = args.get(3);
-            Instant timestamp = Instant.parse(args.get(4));
-            String authorName = args.get(5);
-            String authorAvatarUrl = args.get(6);
-            String authorId = args.get(7);
-            return new ReportedMessage(content, id, jumpUrl, channelID, timestamp, authorName,
-                    authorAvatarUrl, authorId);
-        }
+        return description;
     }
 
     @Override
     public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
-        if (event.getMessage().isEphemeral()) {
-            event.deferEdit().queue();
-        } else {
-            event.deferReply(true).queue();
+        long guildId = Long.parseLong(args.get(0));
+        long targetId = Long.parseLong(args.get(1));
+        ReportAction action = ReportAction.valueOf(args.get(2));
+
+        if (action == ReportAction.AUDIT || action == ReportAction.AUDIT_PAGE) {
+            int page = Integer.parseInt(args.get(3));
+            onAuditButtonClick(event, guildId, targetId, page, action == ReportAction.AUDIT_PAGE);
+            return;
         }
 
-        Guild guild =
-                Objects.requireNonNull(event.getGuild(), "Guild cannot be null for this command.");
-        long guildId = guild.getIdLong();
+        Member moderator = Objects.requireNonNull(event.getMember());
+        List<MessageEmbed> existingEmbeds = new ArrayList<>(event.getMessage().getEmbeds());
 
-        long reportedUserId = Long.parseLong(args.get(0));
-        int targetPage = Integer.parseInt(args.get(1));
+        if (action == ReportAction.DISMISS) {
+            event
+                .editMessageEmbeds(createResponseEmbeds(existingEmbeds,
+                        "Dismissed, no action executed.", Color.RED))
+                .setComponents()
+                .queue();
+            return;
+        }
 
-        List<ActionRecord> actions = new ArrayList<>(
-                moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId));
+        ErrorHandler errorHandler = new ErrorHandler()
+            .handle(ErrorResponse.UNKNOWN_USER, failure -> logger.debug(LogMarkers.SENSITIVE,
+                    "Attempted to handle user-reported scam, but user '{}' does not exist anymore.",
+                    targetId))
+            .handle(ErrorResponse.UNKNOWN_MEMBER, failure -> logger.debug(LogMarkers.SENSITIVE,
+                    "Attempted to handle user-reported scam, but user '{}' is not a member of guild '{}' anymore.",
+                    targetId, guildId));
+
+        Guild guild = Objects.requireNonNull(event.getJDA().getGuildById(guildId));
+
+        guild.retrieveMemberById(targetId)
+            .queue(target -> handleConfirmedViolation(event, action, guild, moderator, target,
+                    existingEmbeds), errorHandler);
+    }
+
+    private void onAuditButtonClick(ButtonInteractionEvent event, long guildId, long targetId,
+            int targetPage, boolean isPageButton) {
+        if (isPageButton) {
+            event.deferEdit().queue(_ -> loadAuditPage(event, guildId, targetId, targetPage));
+        } else {
+            event.deferReply(true).queue(_ -> loadAuditPage(event, guildId, targetId, targetPage));
+        }
+    }
+
+    private void loadAuditPage(ButtonInteractionEvent event, long guildId, long targetId,
+            int targetPage) {
+        List<ActionRecord> actions =
+                new ArrayList<>(actionsStore.getActionsByTargetAscending(guildId, targetId));
         List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
 
         event.getJDA()
-            .retrieveUserById(reportedUserId)
-            .flatMap(user -> prepareAuditEmbedTasks(event, user, actions, pages, targetPage))
+            .retrieveUserById(targetId)
+            .flatMap(user -> prepareAuditEmbedTasks(event, user, guildId, actions, pages,
+                    targetPage))
             .onErrorFlatMap(_ -> event.getHook()
                 .editOriginal("Could not load audit data for this user.")
                 .map(_ -> null))
@@ -280,7 +288,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     }
 
     private RestAction<List<MessageEmbed.Field>> prepareAuditEmbedTasks(
-            ButtonInteractionEvent event, User user, List<ActionRecord> actions,
+            ButtonInteractionEvent event, User user, long guildId, List<ActionRecord> actions,
             List<List<ActionRecord>> pages, int targetPage) {
 
         EmbedBuilder auditEmbed =
@@ -300,29 +308,28 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         List<RestAction<MessageEmbed.Field>> fetchFieldActions = pages.get(currentPageIndex)
             .stream()
-            .map(actionRecord -> ModerationUtils.moderationActionToEmbedField(actionRecord,
-                    event.getJDA()))
+            .map(action -> ModerationUtils.moderationActionToEmbedField(action, event.getJDA()))
             .toList();
 
         return RestAction.allOf(fetchFieldActions).map(embedFields -> {
-            finalizeAndSendEmbed(event, auditEmbed, embedFields, user.getIdLong(), currentPageIndex,
-                    pages.size());
+            finalizeAndSendAuditEmbed(event, auditEmbed, embedFields, guildId, user.getIdLong(),
+                    currentPageIndex, pages.size());
             return embedFields;
         });
     }
 
-    private void finalizeAndSendEmbed(ButtonInteractionEvent event, EmbedBuilder auditEmbed,
-            List<MessageEmbed.Field> embedFields, long reportedUserId, int currentPageIndex,
+    private void finalizeAndSendAuditEmbed(ButtonInteractionEvent event, EmbedBuilder auditEmbed,
+            List<MessageEmbed.Field> embedFields, long guildId, long targetId, int currentPageIndex,
             int totalPages) {
         auditEmbed.clearFields();
         embedFields.forEach(auditEmbed::addField);
 
         auditEmbed.setFooter("Page %d/%d".formatted(currentPageIndex + 1, totalPages));
 
-        String prevButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
-                String.valueOf(currentPageIndex - 1));
-        String nextButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
-                String.valueOf(currentPageIndex + 1));
+        String prevButtonId = generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                ReportAction.AUDIT_PAGE.name(), String.valueOf(currentPageIndex - 1));
+        String nextButtonId = generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                ReportAction.AUDIT_PAGE.name(), String.valueOf(currentPageIndex + 1));
 
         Button prevButton = Button.primary(prevButtonId, "⬅").withDisabled(currentPageIndex == 0);
         Button nextButton =
@@ -332,5 +339,148 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .editOriginalEmbeds(auditEmbed.build())
             .setActionRow(prevButton, nextButton)
             .queue();
+    }
+
+    private void handleConfirmedViolation(ButtonInteractionEvent event, ReportAction action,
+            Guild guild, Member moderator, Member target, List<MessageEmbed> alertEmbeds) {
+
+        Member bot = guild.getSelfMember();
+
+        boolean canSanctionUser = switch (action) {
+            case SCAM -> {
+                Role quarantinedRole =
+                        ModerationUtils.getQuarantinedRole(guild, config).orElse(null);
+                yield ModerationUtils.handleRoleChangeChecks(quarantinedRole, "quarantine", target,
+                        bot, moderator, guild, SCAM_REASON, event);
+            }
+            case JOB_AD ->
+                ModerationUtils.handleCanInteractWithTarget("ban", bot, moderator, target, event);
+            default -> false;
+        };
+
+        canSanctionUser &= ModerationUtils.handleHasBotPermissions("ban", Permission.BAN_MEMBERS,
+                bot, guild, event);
+
+        if (!canSanctionUser) {
+            logger.warn(LogMarkers.SENSITIVE,
+                    "Moderator '{}' tried to execute report for user '{}' in guild '{}', but checks failed.",
+                    moderator.getId(), target.getId(), guild.getId());
+            return;
+        }
+
+        String successText;
+        RestAction<Void> handling = switch (action) {
+            case SCAM -> {
+                successText = "This is scam. The user was quarantined and messages were deleted.";
+                yield quarantineAndRemove(guild, target, moderator);
+            }
+            case JOB_AD -> {
+                successText = "This is a job-ad. The user was warned and messages were deleted.";
+                yield warnAndRemove(guild, target, moderator);
+            }
+            default -> throw new IllegalStateException("Unknown action provided: " + action);
+        };
+
+        String pendingText = "%s is handling this alert...".formatted(moderator.getAsMention());
+
+        event.editMessageEmbeds(createResponseEmbeds(alertEmbeds, pendingText, Color.ORANGE))
+            .setComponents()
+            .queue(hook -> {
+                Consumer<Void> onSuccess =
+                        ignored -> hook
+                            .editOriginalEmbeds(createResponseEmbeds(alertEmbeds,
+                                    "%s (handled by %s)".formatted(successText,
+                                            moderator.getAsMention()),
+                                    Color.GREEN))
+                            .queue();
+
+                Consumer<Throwable> onFailure = failure -> {
+                    logger.warn(LogMarkers.SENSITIVE,
+                            "Failed to handle alert for user '{}' in guild '{}'.", target.getId(),
+                            guild.getId(), failure);
+                    hook.editOriginalEmbeds(createResponseEmbeds(alertEmbeds,
+                            "Handling this alert failed, please check the logs and handle the user manually.",
+                            Color.RED));
+                };
+
+                handling.queue(onSuccess, onFailure);
+            });
+    }
+
+    private RestAction<Void> quarantineAndRemove(Guild guild, Member target, Member moderator) {
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been put under quarantine after sending scam.
+                        This means you can no longer interact with anyone in the server until you have been unquarantined again.
+
+                        Potentially your account got compromised.
+                        After you regained control of your account make sure you secure it properly, for example by using 2FA.
+                        You can then join back our server and contact the mods to get unquarantined.""";
+
+        return sendDm(guild, target.getUser(), "Quarantine", description, SCAM_REASON)
+            .flatMap(_ -> {
+                recordAction(guild, target, moderator, ModerationAction.QUARANTINE, SCAM_REASON);
+                return guild
+                    .addRoleToMember(target,
+                            ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
+                    .reason(SCAM_REASON);
+            })
+            .flatMap(_ -> deleteMessagesByBanThenUnban(guild, target.getUser(), SCAM_REASON));
+    }
+
+    private RestAction<Void> warnAndRemove(Guild guild, Member target, Member moderator) {
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been warned in the server for posting a job advertisement.
+                        Hiring, Recruiting, seeking for jobs or anything alike is not allowed in this server.
+
+                        In order to automatically remove your messages you were briefly removed from the server, you are welcome to join back.""";
+
+        return sendDm(guild, target.getUser(), "Warning", description, JOB_AD_REASON).flatMap(_ -> {
+            recordAction(guild, target, moderator, ModerationAction.WARN, JOB_AD_REASON);
+            return deleteMessagesByBanThenUnban(guild, target.getUser(), JOB_AD_REASON);
+        }).flatMap(_ -> deleteMessagesByBanThenUnban(guild, target.getUser(), JOB_AD_REASON));
+    }
+
+    private static RestAction<Boolean> sendDm(Guild guild, User target, String title,
+            String description, String reason) {
+        return ModerationUtils.sendModActionDm(
+                ModerationUtils.getModActionEmbed(guild, title, description, reason, true), target);
+    }
+
+    private void recordAction(Guild guild, Member target, Member moderator, ModerationAction action,
+            String reason) {
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) executed '{}' against the user '{}' ({}) in guild '{}' for reason '{}'.",
+                moderator.getUser().getName(), moderator.getId(), action,
+                target.getUser().getName(), target.getId(), guild.getName(), reason);
+
+        actionsStore.addAction(guild.getIdLong(), moderator.getIdLong(), target.getIdLong(), action,
+                null, reason);
+    }
+
+    private static RestAction<Void> deleteMessagesByBanThenUnban(Guild guild, User target,
+            String reason) {
+        return guild.ban(target, 1, TimeUnit.DAYS)
+            .reason(reason)
+            .flatMap(_ -> guild.unban(target).reason(reason));
+    }
+
+    private static List<MessageEmbed> createResponseEmbeds(List<MessageEmbed> stagedEmbeds,
+            String text, Color color) {
+        MessageEmbed resultEmbed = new EmbedBuilder().setDescription(text).setColor(color).build();
+
+        List<MessageEmbed> embeds = new ArrayList<>(stagedEmbeds);
+        embeds.add(resultEmbed);
+
+        return embeds;
+    }
+
+    private enum ReportAction {
+        SCAM,
+        JOB_AD,
+        DISMISS,
+        AUDIT,
+        AUDIT_PAGE,
     }
 }
