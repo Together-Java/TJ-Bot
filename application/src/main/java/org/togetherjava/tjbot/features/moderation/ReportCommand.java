@@ -191,9 +191,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setColor(AmbientColors.MODMAIL)
             .build();
 
-        long reportedUserId = Long.parseLong(reportedMessage.authorId);
-        int startingPage = getStartingPageForUser(guild.getIdLong(), reportedUserId);
-
+        int startingPage = 0;
         String historyButtonId = generateComponentId(Lifespan.REGULAR, reportedMessage.authorId,
                 String.valueOf(startingPage));
 
@@ -335,14 +333,4 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .setActionRow(prevButton, nextButton)
             .queue();
     }
-
-    private int getStartingPageForUser(long guildId, long userId) {
-        List<ActionRecord> actions = new ArrayList<>(
-                moderationActionsStore.getActionsByTargetAscending(guildId, userId));
-
-        List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
-
-        return 0;
-    }
-
 }
