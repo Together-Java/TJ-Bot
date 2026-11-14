@@ -30,6 +30,7 @@ import org.togetherjava.tjbot.features.chatgpt.ChatGptService;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
+import org.togetherjava.tjbot.features.utils.LinkDetection;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,6 +60,7 @@ import static org.togetherjava.tjbot.features.utils.MessageUtils.mentionGuildSla
 public final class HelpSystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(HelpSystemHelper.class);
     private static final ChatGptModel CHAT_GPT_MODEL = ChatGptModel.FAST;
+    private static final String BROKEN_LINK_REPLACEMENT = "(broken link removed)";
 
     private final Predicate<String> isTagManageRole;
     private final Predicate<String> isHelpForumName;
@@ -72,10 +76,13 @@ public final class HelpSystemHelper {
 
     private final Database database;
     private final ChatGptService chatGptService;
+    private final Function<String, CompletableFuture<String>> brokenLinkReplacer;
     private static final int MAX_QUESTION_LENGTH = 200;
     private static final int MIN_QUESTION_LENGTH = 10;
     private static final String CHATGPT_FAILURE_MESSAGE =
             "You can use %s to ask ChatGPT about your question while you wait for a human to respond.";
+    private static final int LINK_CHECK_TIMEOUT_SECONDS = 10;
+
 
     /**
      * Creates a new instance.
@@ -85,9 +92,16 @@ public final class HelpSystemHelper {
      * @param chatGptService the service used to ask ChatGPT questions via the API.
      */
     public HelpSystemHelper(Config config, Database database, ChatGptService chatGptService) {
+        this(config, database, chatGptService,
+                answer -> LinkDetection.replaceBrokenLinks(answer, BROKEN_LINK_REPLACEMENT));
+    }
+
+    HelpSystemHelper(Config config, Database database, ChatGptService chatGptService,
+            Function<String, CompletableFuture<String>> brokenLinkReplacer) {
         HelpSystemConfig helpConfig = config.getHelpSystem();
         this.database = database;
         this.chatGptService = chatGptService;
+        this.brokenLinkReplacer = brokenLinkReplacer;
 
         isTagManageRole = Pattern.compile(config.getTagManageRolePattern()).asMatchPredicate();
         helpForumPattern = helpConfig.getHelpForumPattern();
@@ -186,6 +200,7 @@ public final class HelpSystemHelper {
     public MessageEmbed generateGptResponseEmbed(String answer, SelfUser selfUser, String title,
             ChatGptModel model) {
         String responseByGptFooter = "- AI generated response using %s model".formatted(model);
+        String sanitizedAnswer = sanitizeBrokenLinks(answer);
 
         int embedTitleLimit = MessageEmbed.TITLE_MAX_LENGTH;
         String capitalizedTitle = Character.toUpperCase(title.charAt(0)) + title.substring(1);
@@ -197,10 +212,21 @@ public final class HelpSystemHelper {
         return new EmbedBuilder()
             .setAuthor(selfUser.getName(), null, selfUser.getEffectiveAvatarUrl())
             .setTitle(titleForEmbed)
-            .setDescription(answer)
+            .setDescription(sanitizedAnswer)
             .setColor(AmbientColors.HELP_CHAT_GPT_RESPONSE)
             .setFooter(responseByGptFooter)
             .build();
+    }
+
+    private String sanitizeBrokenLinks(String answer) {
+        try {
+            return brokenLinkReplacer.apply(answer)
+                .orTimeout(LINK_CHECK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .join();
+        } catch (RuntimeException runtimeException) {
+            logger.debug("Failed to replace broken links in ChatGPT response", runtimeException);
+            return answer;
+        }
     }
 
     private Button generateDismissButton(ComponentIdInteractor componentIdInteractor, String id) {
