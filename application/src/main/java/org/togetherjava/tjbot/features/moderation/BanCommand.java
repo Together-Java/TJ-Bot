@@ -4,7 +4,6 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
@@ -15,7 +14,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +23,9 @@ import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This command can ban users and optionally remove their messages from the past days. Banning can
@@ -47,7 +43,6 @@ public final class BanCommand extends SlashCommandAdapter {
     private static final String REASON_OPTION = "reason";
     private static final String COMMAND_NAME = "ban";
     private static final String ACTION_VERB = "ban";
-    private static final String ACTION_TITLE = "Ban";
     @SuppressWarnings("StaticCollection")
     private static final List<String> DURATIONS =
             List.of(ModerationUtils.PERMANENT_DURATION, "1 hour", "3 hours", "1 day", "2 days",
@@ -88,30 +83,6 @@ public final class BanCommand extends SlashCommandAdapter {
         return hook.sendMessage(message).setEphemeral(true);
     }
 
-    private static RestAction<Boolean> sendDm(User target,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason, Guild guild) {
-        String durationMessage = temporaryData == null ? "Permanently" : temporaryData.duration();
-        String description =
-                """
-                        Hey there, sorry to tell you but unfortunately you have been banned from the server.
-                        If you think this was a mistake, please contact a moderator or admin of this server.""";
-
-        return ModerationUtils.sendModActionDm(ModerationUtils.getModActionEmbed(guild,
-                ACTION_TITLE, description, reason, durationMessage, false), target);
-    }
-
-    private static MessageEmbed sendFeedback(boolean hasSentDm, User target, Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
-        String durationText = "The ban duration is: "
-                + (temporaryData == null ? "permanent" : temporaryData.duration());
-        String dmNoticeText = "";
-        if (!hasSentDm) {
-            dmNoticeText = "\n(Unable to send them a DM.)";
-        }
-        return ModerationUtils.createActionResponse(author.getUser(), ModerationAction.BAN, target,
-                durationText + dmNoticeText, reason);
-    }
-
     private static Optional<RestAction<Message>> handleNotAlreadyBannedResponse(
             Throwable alreadyBannedFailure, InteractionHook hook, Guild guild, User target) {
         if (alreadyBannedFailure instanceof ErrorResponseException errorResponseException) {
@@ -133,34 +104,6 @@ public final class BanCommand extends SlashCommandAdapter {
                 target.getName(), alreadyBannedFailure);
         return Optional.of(hook.sendMessage("Failed to ban the user due to an unexpected problem.")
             .setEphemeral(true));
-    }
-
-    private RestAction<Message> banUserFlow(User target, Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
-            int deleteHistoryDays, Guild guild, SlashCommandInteractionEvent event) {
-        return sendDm(target, temporaryData, reason, guild)
-            .flatMap(hasSentDm -> banUser(target, author, temporaryData, reason, deleteHistoryDays,
-                    guild)
-                .map(banResult -> hasSentDm))
-            .map(hasSentDm -> sendFeedback(hasSentDm, target, author, temporaryData, reason))
-            .flatMap(event.getHook()::sendMessageEmbeds);
-    }
-
-    private AuditableRestAction<Void> banUser(User target, Member author,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
-            int deleteHistoryDays, Guild guild) {
-        String durationMessage =
-                temporaryData == null ? "permanently" : "for " + temporaryData.duration();
-        logger.info(LogMarkers.SENSITIVE,
-                "'{}' ({}) banned the user '{}' ({}) {} from guild '{}' and deleted their message history of the last {} days, for reason '{}'.",
-                author.getUser().getName(), author.getId(), target.getName(), target.getId(),
-                durationMessage, guild.getName(), deleteHistoryDays, reason);
-
-        Instant expiresAt = temporaryData == null ? null : temporaryData.expiresAt();
-        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationAction.BAN, expiresAt, reason);
-
-        return guild.ban(target, deleteHistoryDays, TimeUnit.DAYS).reason(reason);
     }
 
     @SuppressWarnings({"BooleanMethodNameMustStartWithQuestion", "MethodWithTooManyParameters"})
@@ -216,8 +159,10 @@ public final class BanCommand extends SlashCommandAdapter {
 
             return handleNotAlreadyBannedResponse(
                     Objects.requireNonNull(alreadyBanned.getFailure()), hook, guild, target)
-                .orElseGet(() -> banUserFlow(target, author, temporaryData.orElse(null), reason,
-                        deleteHistoryDays, guild, event));
+                .orElseGet(() -> ModerationUtils
+                    .banUser(guild, target, author, temporaryData.orElse(null), reason,
+                            deleteHistoryDays, actionsStore)
+                    .flatMap(hook::sendMessageEmbeds));
         }).queue();
     }
 }

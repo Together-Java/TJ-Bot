@@ -11,11 +11,17 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.text.TextInput;
+import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
+import net.dv8tion.jda.api.interactions.modals.Modal;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
@@ -30,6 +36,8 @@ import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
 import org.togetherjava.tjbot.logging.LogMarkers;
+
+import javax.annotation.Nullable;
 
 import java.awt.Color;
 import java.time.Duration;
@@ -55,14 +63,21 @@ import java.util.stream.Collectors;
  * messages.</li>
  * <li><b>Job-Ad</b>: the author is warned, then banned and unbanned to delete their recent
  * messages.</li>
+ * <li><b>Ban</b>: the author is banned for a custom reason and duration, optionally deleting their
+ * recent messages.</li>
+ * <li><b>Warn</b>: the author is warned for a custom reason.</li>
  * <li><b>Dismiss</b>: nothing happens, the alert is closed.</li>
  * </ul>
- * The ban and unban only serves to delete the messages, the user is free to join back afterward.
+ * For Scam and Job-Ad, the ban and unban only serves to delete the messages, the user is free to
+ * join back afterward.
  */
 public final class ReportCommand extends BotCommandAdapter implements MessageContextCommand {
     private static final Logger logger = LoggerFactory.getLogger(ReportCommand.class);
 
     private static final String COMMAND_NAME = "report";
+    private static final String REASON_INPUT = "reason";
+    private static final String DURATION_INPUT = "duration";
+    private static final String DELETE_HISTORY_INPUT = "delete-history";
 
     private static final String SCAM_REASON = "Message was reported and confirmed as scam";
     private static final String JOB_AD_REASON =
@@ -177,7 +192,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .size();
         String modActionsText = modActionCount == 0 ? "no" : String.valueOf(modActionCount);
 
-        MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Reported Message")
+        MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Message Reported")
             .setDescription(
                     MessageUtils.abbreviate(description, MessageEmbed.DESCRIPTION_MAX_LENGTH))
             .setAuthor(author.getName(), null, author.getEffectiveAvatarUrl())
@@ -196,7 +211,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                             "Scam"),
                     Button.success(
                             generateComponentId(guildId, authorId, ReportAction.JOB_AD.name()),
-                            "Job-Ad"))
+                            "Job-Ad"),
+                    Button.primary(generateComponentId(guildId, authorId, ReportAction.WARN.name()),
+                            "Warn"),
+                    Button.primary(generateComponentId(guildId, authorId, ReportAction.BAN.name()),
+                            "Ban"))
             .addActionRow(Button.danger(
                     generateComponentId(guildId, authorId, ReportAction.DISMISS.name()), "Dismiss"),
                     Button.primary(generateComponentId(guildId, authorId, ReportAction.AUDIT.name(),
@@ -229,6 +248,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         long targetId = Long.parseLong(args.get(1));
         ReportAction action = ReportAction.valueOf(args.get(2));
 
+        if (action == ReportAction.BAN || action == ReportAction.WARN) {
+            openModerationModal(event, guildId, targetId, action);
+            return;
+        }
+
         if (action == ReportAction.AUDIT || action == ReportAction.AUDIT_PAGE) {
             int page = Integer.parseInt(args.get(3));
             onAuditButtonClick(event, guildId, targetId, page, action == ReportAction.AUDIT_PAGE);
@@ -260,6 +284,205 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         guild.retrieveMemberById(targetId)
             .queue(target -> handleConfirmedViolation(event, action, guild, moderator, target,
                     existingEmbeds), errorHandler);
+    }
+
+    private void openModerationModal(ButtonInteractionEvent event, long guildId, long targetId,
+            ReportAction action) {
+        if (action == ReportAction.BAN && !ModerationUtils.handleHasAuthorPermissions("ban",
+                Permission.BAN_MEMBERS, Objects.requireNonNull(event.getMember()), event)) {
+            return;
+        }
+
+        TextInput reason = TextInput.create(REASON_INPUT, "Reason", TextInputStyle.PARAGRAPH)
+            .setPlaceholder("Why should this user be "
+                    + (action == ReportAction.BAN ? "banned?" : "warned?"))
+            .setRequired(true)
+            .setMaxLength(512)
+            .build();
+        Modal.Builder modal = Modal
+            .create(generateComponentId(String.valueOf(guildId), String.valueOf(targetId),
+                    action.name()),
+                    action == ReportAction.BAN ? "Ban reported user" : "Warn reported user")
+            .addActionRow(reason);
+        if (action == ReportAction.BAN) {
+            modal.addActionRow(TextInput
+                .create(DURATION_INPUT, "Duration (0, h or d)", TextInputStyle.SHORT)
+                .setPlaceholder("Hours or days: 1h, 3h, 1d, 7d, 30d; empty or 0 = permanent")
+                .setRequired(false)
+                .setMaxLength(20)
+                .build());
+            modal.addActionRow(TextInput
+                .create(DELETE_HISTORY_INPUT, "Delete messages (days)", TextInputStyle.SHORT)
+                .setPlaceholder("Empty or 0 = none, 1 = day, 7 = week")
+                .setValue("1")
+                .setRequired(false)
+                .setMaxLength(1)
+                .build());
+        }
+        event.replyModal(modal.build()).queue();
+    }
+
+    @Override
+    public void onModalSubmitted(ModalInteractionEvent event, List<String> args) {
+        long guildId = Long.parseLong(args.get(0));
+        long targetId = Long.parseLong(args.get(1));
+        ReportAction action = ReportAction.valueOf(args.get(2));
+        if (action != ReportAction.BAN && action != ReportAction.WARN) {
+            throw new IllegalArgumentException("Unexpected modal action: " + action);
+        }
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        if (guild.getIdLong() != guildId) {
+            event.reply("This report belongs to a different server.").setEphemeral(true).queue();
+            return;
+        }
+        Member moderator = Objects.requireNonNull(event.getMember());
+        String reason = Objects.requireNonNull(event.getValue(REASON_INPUT)).getAsString().strip();
+        if (reason.isBlank()) {
+            event.reply("Please enter a reason.").setEphemeral(true).queue();
+            return;
+        }
+        if (!ModerationUtils.handleReason(reason, event)) {
+            return;
+        }
+        if (action == ReportAction.BAN && (!ModerationUtils.handleHasAuthorPermissions("ban",
+                Permission.BAN_MEMBERS, moderator, event)
+                || !ModerationUtils.handleHasBotPermissions("ban", Permission.BAN_MEMBERS,
+                        guild.getSelfMember(), guild, event))) {
+            return;
+        }
+        Optional<ModerationUtils.TemporaryData> temporaryData;
+        try {
+            temporaryData = action == ReportAction.BAN
+                    ? ModerationUtils.parseBanDuration(
+                            Objects.requireNonNull(event.getValue(DURATION_INPUT)).getAsString())
+                    : Optional.empty();
+        } catch (IllegalArgumentException _) {
+            event.reply(
+                    "Invalid duration. Use a positive number followed by h or d (1h, 3h, 1d, 7d). Leave empty or enter 0 for permanent.")
+                .setEphemeral(true)
+                .queue();
+            return;
+        }
+
+        int deleteHistoryDays = readDeleteHistoryDays(event, action);
+        if (deleteHistoryDays == -1) {
+            return;
+        }
+
+        ModalActionData actionData =
+                new ModalActionData(action, temporaryData.orElse(null), reason, deleteHistoryDays);
+        event.deferReply(true)
+            .queue(hook -> loadModalTarget(event, hook, guild, moderator, targetId, actionData));
+    }
+
+    private int readDeleteHistoryDays(ModalInteractionEvent event, ReportAction action) {
+        if (action != ReportAction.BAN) {
+            return 0;
+        }
+        String deleteHistory =
+                Objects.requireNonNull(event.getValue(DELETE_HISTORY_INPUT)).getAsString().strip();
+        int deleteHistoryDays = switch (deleteHistory) {
+            case "", "0" -> 0;
+            case "1" -> 1;
+            case "7" -> 7;
+            default -> -1;
+        };
+        if (deleteHistoryDays == -1) {
+            event.reply(
+                    "Invalid message deletion option. Leave empty or enter 0 for none, 1 for one day, or 7 for one week.")
+                .setEphemeral(true)
+                .queue();
+        }
+        return deleteHistoryDays;
+    }
+
+    private void loadModalTarget(ModalInteractionEvent event, InteractionHook hook, Guild guild,
+            Member moderator, long targetId, ModalActionData actionData) {
+        guild.retrieveMemberById(targetId).mapToResult().flatMap(result -> {
+            if (result.isSuccess()) {
+                Member target = result.get();
+                if (!moderator.canInteract(target) || !guild.getSelfMember().canInteract(target)) {
+                    return hook.sendMessage(
+                            "You or the bot cannot moderate this user because of their role hierarchy.")
+                        .setEphemeral(true);
+                }
+            } else if (!(result.getFailure() instanceof ErrorResponseException failure)
+                    || failure.getErrorResponse() != ErrorResponse.UNKNOWN_MEMBER) {
+                logger.warn(LogMarkers.SENSITIVE,
+                        "Failed to retrieve reported member '{}' in guild '{}'.", targetId,
+                        guild.getIdLong(), result.getFailure());
+                return hook.sendMessage("Could not load the reported user. Please check the logs.")
+                    .setEphemeral(true);
+            }
+            return event.getJDA().retrieveUserById(targetId).map(target -> {
+                executeModalAction(event, hook, guild, moderator, target, actionData);
+                return null;
+            });
+        }).queue(null, failure -> {
+            logger.warn(LogMarkers.SENSITIVE, "Failed to load reported user '{}' in guild '{}'.",
+                    targetId, guild.getIdLong(), failure);
+            hook.sendMessage("Could not load the reported user. Please check the logs.")
+                .setEphemeral(true)
+                .queue();
+        });
+    }
+
+    private void executeModalAction(ModalInteractionEvent event, InteractionHook hook, Guild guild,
+            Member moderator, User target, ModalActionData actionData) {
+        Message report = Objects.requireNonNull(event.getMessage());
+        if (report.getComponents().isEmpty()) {
+            hook.sendMessage("This report has already been handled.").setEphemeral(true).queue();
+            return;
+        }
+        Consumer<MessageEmbed> onSuccess = feedback -> {
+            List<MessageEmbed> embeds = new ArrayList<>(report.getEmbeds());
+            embeds.add(feedback);
+            report.editMessageEmbeds(embeds).setComponents().queue(null, failure -> {
+                logger.warn("The moderation action succeeded, but updating report '{}' failed.",
+                        report.getId(), failure);
+                hook.sendMessage("The action succeeded, but the report could not be updated.")
+                    .setEphemeral(true)
+                    .queue();
+            });
+        };
+        if (actionData.action() == ReportAction.BAN) {
+            guild.retrieveBan(target).mapToResult().queue(result -> {
+                if (result.isSuccess()) {
+                    hook.sendMessage("This user is already banned.").setEphemeral(true).queue();
+                } else if (result.getFailure() instanceof ErrorResponseException failure
+                        && failure.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
+                    handleModalAction(hook, guild, moderator, target, actionData, onSuccess);
+                } else {
+                    logger.warn(LogMarkers.SENSITIVE, "Could not check ban for reported user '{}'.",
+                            target.getId(), result.getFailure());
+                    hook.sendMessage("Could not check whether this user is already banned.")
+                        .setEphemeral(true)
+                        .queue();
+                }
+            });
+        } else {
+            handleModalAction(hook, guild, moderator, target, actionData, onSuccess);
+        }
+    }
+
+    private void handleModalAction(InteractionHook hook, Guild guild, Member moderator, User target,
+            ModalActionData actionData, Consumer<MessageEmbed> onSuccess) {
+        RestAction<MessageEmbed> handling = actionData.action() == ReportAction.BAN
+                ? ModerationUtils.banUser(guild, target, moderator, actionData.temporaryData(),
+                        actionData.reason(), actionData.deleteHistoryDays(), actionsStore)
+                : ModerationUtils.warnUser(guild, target, moderator, actionData.reason(),
+                        actionsStore);
+        handling.queue(feedback -> {
+            onSuccess.accept(feedback);
+            hook.sendMessageEmbeds(feedback).setEphemeral(true).queue();
+        }, failure -> {
+            logger.warn(LogMarkers.SENSITIVE, "Failed to handle reported user '{}' in guild '{}'.",
+                    target.getId(), guild.getId(), failure);
+            hook.sendMessage(
+                    "The action failed. Please check the logs and handle the user manually.")
+                .setEphemeral(true)
+                .queue();
+        });
     }
 
     private void onAuditButtonClick(ButtonInteractionEvent event, long guildId, long targetId,
@@ -476,9 +699,16 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         return embeds;
     }
 
+    private record ModalActionData(ReportAction action,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
+            int deleteHistoryDays) {
+    }
+
     private enum ReportAction {
         SCAM,
         JOB_AD,
+        BAN,
+        WARN,
         DISMISS,
         AUDIT,
         AUDIT_PAGE,
