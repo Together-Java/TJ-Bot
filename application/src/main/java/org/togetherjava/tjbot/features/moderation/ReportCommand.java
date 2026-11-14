@@ -35,7 +35,6 @@ import org.togetherjava.tjbot.features.utils.MessageUtils;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -271,7 +270,6 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
         List<ActionRecord> actions = new ArrayList<>(
                 moderationActionsStore.getActionsByTargetAscending(guildId, reportedUserId));
-        Collections.reverse(actions);
         List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
 
         event.getJDA()
@@ -290,7 +288,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         EmbedBuilder auditEmbed =
                 new EmbedBuilder().setTitle("Audit log of **%s**".formatted(user.getName()))
                     .setAuthor(user.getName(), null, user.getEffectiveAvatarUrl())
-                    .setColor(AmbientColors.MODMAIL)
+                    .setColor(AmbientColors.MODERATION)
                     .setDescription(ModerationUtils.createSummaryMessageDescription(actions));
 
         if (pages.isEmpty()) {
@@ -328,10 +326,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         String nextButtonId = generateComponentId(Lifespan.REGULAR, String.valueOf(reportedUserId),
                 String.valueOf(currentPageIndex + 1));
 
-        Button prevButton =
-                Button.primary(prevButtonId, "◀ Previous").withDisabled(currentPageIndex == 0);
-        Button nextButton = Button.primary(nextButtonId, "Next ▶")
-            .withDisabled(currentPageIndex == totalPages - 1);
+        Button prevButton = Button.primary(prevButtonId, "⬅").withDisabled(currentPageIndex == 0);
+        Button nextButton =
+                Button.primary(nextButtonId, "➡").withDisabled(currentPageIndex == totalPages - 1);
 
         event.getHook()
             .editOriginalEmbeds(auditEmbed.build())
@@ -343,10 +340,9 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         List<ActionRecord> actions = new ArrayList<>(
                 moderationActionsStore.getActionsByTargetAscending(guildId, userId));
 
-        Collections.reverse(actions);
         List<List<ActionRecord>> pages = ModerationUtils.groupActionsByPages(actions);
 
-        return Math.max(0, pages.size() - 1);
+        return 0;
     }
 
 }

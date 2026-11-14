@@ -80,7 +80,7 @@ public final class AuditCommand extends SlashCommandAdapter {
         }
 
         auditUser(MessageCreateBuilder::new, guild.getIdLong(), target.getIdLong(),
-                event.getMember().getIdLong(), -1, event.getJDA())
+                event.getMember().getIdLong(), 1, event.getJDA())
             .map(MessageCreateBuilder::build)
             .flatMap(event::reply)
             .queue();
@@ -108,7 +108,9 @@ public final class AuditCommand extends SlashCommandAdapter {
         int totalPages = groupedActions.size();
 
         int pageNumberInLimits;
-        if (pageNumber == -1) {
+        if (totalPages == 0) {
+            pageNumberInLimits = 0;
+        } else if (pageNumber == -1) {
             pageNumberInLimits = totalPages;
         } else {
             pageNumberInLimits = Math.clamp(pageNumber, 1, totalPages);
