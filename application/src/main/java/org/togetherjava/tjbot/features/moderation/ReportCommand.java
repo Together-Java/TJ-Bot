@@ -192,7 +192,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .size();
         String modActionsText = modActionCount == 0 ? "no" : String.valueOf(modActionCount);
 
-        MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Reported Message")
+        MessageEmbed reportEmbed = new EmbedBuilder().setTitle("Message Reported")
             .setDescription(
                     MessageUtils.abbreviate(description, MessageEmbed.DESCRIPTION_MAX_LENGTH))
             .setAuthor(author.getName(), null, author.getEffectiveAvatarUrl())
