@@ -306,7 +306,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             .addActionRow(reason);
         if (action == ReportAction.BAN) {
             modal.addActionRow(TextInput
-                .create(DURATION_INPUT, "Duration (empty or 0 = permanent)", TextInputStyle.SHORT)
+                .create(DURATION_INPUT, "Duration (0, h or d)", TextInputStyle.SHORT)
                 .setPlaceholder("Hours or days: 1h, 3h, 1d, 7d, 30d; empty or 0 = permanent")
                 .setRequired(false)
                 .setMaxLength(20)
