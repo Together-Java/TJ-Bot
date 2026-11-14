@@ -63,7 +63,8 @@ import java.util.stream.Collectors;
  * messages.</li>
  * <li><b>Job-Ad</b>: the author is warned, then banned and unbanned to delete their recent
  * messages.</li>
- * <li><b>Ban</b>: the author is banned for a custom reason and duration.</li>
+ * <li><b>Ban</b>: the author is banned for a custom reason and duration, optionally deleting their
+ * recent messages.</li>
  * <li><b>Warn</b>: the author is warned for a custom reason.</li>
  * <li><b>Dismiss</b>: nothing happens, the alert is closed.</li>
  * </ul>
@@ -76,6 +77,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
     private static final String COMMAND_NAME = "report";
     private static final String REASON_INPUT = "reason";
     private static final String DURATION_INPUT = "duration";
+    private static final String DELETE_HISTORY_INPUT = "delete-history";
 
     private static final String SCAM_REASON = "Message was reported and confirmed as scam";
     private static final String JOB_AD_REASON =
@@ -309,6 +311,13 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 .setRequired(false)
                 .setMaxLength(20)
                 .build());
+            modal.addActionRow(TextInput
+                .create(DELETE_HISTORY_INPUT, "Delete messages (days)", TextInputStyle.SHORT)
+                .setPlaceholder("Empty or 0 = none, 1 = day, 7 = week")
+                .setValue("1")
+                .setRequired(false)
+                .setMaxLength(1)
+                .build());
         }
         event.replyModal(modal.build()).queue();
     }
@@ -355,6 +364,27 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             return;
         }
 
+        int deleteHistoryDays = 0;
+        if (action == ReportAction.BAN) {
+            String deleteHistory = Objects.requireNonNull(event.getValue(DELETE_HISTORY_INPUT))
+                .getAsString()
+                .strip();
+            deleteHistoryDays = switch (deleteHistory) {
+                case "", "0" -> 0;
+                case "1" -> 1;
+                case "7" -> 7;
+                default -> -1;
+            };
+            if (deleteHistoryDays == -1) {
+                event.reply(
+                        "Invalid message deletion option. Leave empty or enter 0 for none, 1 for one day, or 7 for one week.")
+                    .setEphemeral(true)
+                    .queue();
+                return;
+            }
+        }
+        int selectedDeleteHistoryDays = deleteHistoryDays;
+
         event.deferReply(true)
             .queue(hook -> guild.retrieveMemberById(targetId).mapToResult().flatMap(result -> {
                 if (result.isSuccess()) {
@@ -376,7 +406,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 }
                 return event.getJDA().retrieveUserById(targetId).map(target -> {
                     executeModalAction(event, hook, guild, moderator, target, action,
-                            temporaryData.orElse(null), reason);
+                            temporaryData.orElse(null), reason, selectedDeleteHistoryDays);
                     return null;
                 });
             }).queue(null, failure -> {
@@ -391,7 +421,8 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
 
     private void executeModalAction(ModalInteractionEvent event, InteractionHook hook, Guild guild,
             Member moderator, User target, ReportAction action,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason) {
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
+            int deleteHistoryDays) {
         Message report = Objects.requireNonNull(event.getMessage());
         if (report.getComponents().isEmpty()) {
             hook.sendMessage("This report has already been handled.").setEphemeral(true).queue();
@@ -415,7 +446,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 } else if (result.getFailure() instanceof ErrorResponseException failure
                         && failure.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
                     handleModalAction(hook, guild, moderator, target, action, temporaryData, reason,
-                            onSuccess);
+                            deleteHistoryDays, onSuccess);
                 } else {
                     logger.warn(LogMarkers.SENSITIVE, "Could not check ban for reported user '{}'.",
                             target.getId(), result.getFailure());
@@ -426,16 +457,16 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             });
         } else {
             handleModalAction(hook, guild, moderator, target, action, temporaryData, reason,
-                    onSuccess);
+                    deleteHistoryDays, onSuccess);
         }
     }
 
     private void handleModalAction(InteractionHook hook, Guild guild, Member moderator, User target,
             ReportAction action, @Nullable ModerationUtils.TemporaryData temporaryData,
-            String reason, Consumer<MessageEmbed> onSuccess) {
+            String reason, int deleteHistoryDays, Consumer<MessageEmbed> onSuccess) {
         RestAction<MessageEmbed> handling = action == ReportAction.BAN
-                ? ModerationUtils.banUser(guild, target, moderator, temporaryData, reason, 0,
-                        actionsStore)
+                ? ModerationUtils.banUser(guild, target, moderator, temporaryData, reason,
+                        deleteHistoryDays, actionsStore)
                 : ModerationUtils.warnUser(guild, target, moderator, reason, actionsStore);
         handling.queue(feedback -> {
             onSuccess.accept(feedback);
