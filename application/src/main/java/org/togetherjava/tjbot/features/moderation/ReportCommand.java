@@ -356,7 +356,7 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     ? ModerationUtils.parseBanDuration(
                             Objects.requireNonNull(event.getValue(DURATION_INPUT)).getAsString())
                     : Optional.empty();
-        } catch (IllegalArgumentException failure) {
+        } catch (IllegalArgumentException _) {
             event.reply(
                     "Invalid duration. Use a positive number followed by h or d (1h, 3h, 1d, 7d). Leave empty or enter 0 for permanent.")
                 .setEphemeral(true)
@@ -364,65 +364,71 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
             return;
         }
 
-        int deleteHistoryDays = 0;
-        if (action == ReportAction.BAN) {
-            String deleteHistory = Objects.requireNonNull(event.getValue(DELETE_HISTORY_INPUT))
-                .getAsString()
-                .strip();
-            deleteHistoryDays = switch (deleteHistory) {
-                case "", "0" -> 0;
-                case "1" -> 1;
-                case "7" -> 7;
-                default -> -1;
-            };
-            if (deleteHistoryDays == -1) {
-                event.reply(
-                        "Invalid message deletion option. Leave empty or enter 0 for none, 1 for one day, or 7 for one week.")
-                    .setEphemeral(true)
-                    .queue();
-                return;
-            }
+        int deleteHistoryDays = readDeleteHistoryDays(event, action);
+        if (deleteHistoryDays == -1) {
+            return;
         }
-        int selectedDeleteHistoryDays = deleteHistoryDays;
 
+        ModalActionData actionData =
+                new ModalActionData(action, temporaryData.orElse(null), reason, deleteHistoryDays);
         event.deferReply(true)
-            .queue(hook -> guild.retrieveMemberById(targetId).mapToResult().flatMap(result -> {
-                if (result.isSuccess()) {
-                    Member target = result.get();
-                    if (!moderator.canInteract(target)
-                            || !guild.getSelfMember().canInteract(target)) {
-                        return hook.sendMessage(
-                                "You or the bot cannot moderate this user because of their role hierarchy.")
-                            .setEphemeral(true);
-                    }
-                } else if (!(result.getFailure() instanceof ErrorResponseException failure)
-                        || failure.getErrorResponse() != ErrorResponse.UNKNOWN_MEMBER) {
-                    logger.warn(LogMarkers.SENSITIVE,
-                            "Failed to retrieve reported member '{}' in guild '{}'.", targetId,
-                            guildId, result.getFailure());
-                    return hook
-                        .sendMessage("Could not load the reported user. Please check the logs.")
+            .queue(hook -> loadModalTarget(event, hook, guild, moderator, targetId, actionData));
+    }
+
+    private int readDeleteHistoryDays(ModalInteractionEvent event, ReportAction action) {
+        if (action != ReportAction.BAN) {
+            return 0;
+        }
+        String deleteHistory =
+                Objects.requireNonNull(event.getValue(DELETE_HISTORY_INPUT)).getAsString().strip();
+        int deleteHistoryDays = switch (deleteHistory) {
+            case "", "0" -> 0;
+            case "1" -> 1;
+            case "7" -> 7;
+            default -> -1;
+        };
+        if (deleteHistoryDays == -1) {
+            event.reply(
+                    "Invalid message deletion option. Leave empty or enter 0 for none, 1 for one day, or 7 for one week.")
+                .setEphemeral(true)
+                .queue();
+        }
+        return deleteHistoryDays;
+    }
+
+    private void loadModalTarget(ModalInteractionEvent event, InteractionHook hook, Guild guild,
+            Member moderator, long targetId, ModalActionData actionData) {
+        guild.retrieveMemberById(targetId).mapToResult().flatMap(result -> {
+            if (result.isSuccess()) {
+                Member target = result.get();
+                if (!moderator.canInteract(target) || !guild.getSelfMember().canInteract(target)) {
+                    return hook.sendMessage(
+                            "You or the bot cannot moderate this user because of their role hierarchy.")
                         .setEphemeral(true);
                 }
-                return event.getJDA().retrieveUserById(targetId).map(target -> {
-                    executeModalAction(event, hook, guild, moderator, target, action,
-                            temporaryData.orElse(null), reason, selectedDeleteHistoryDays);
-                    return null;
-                });
-            }).queue(null, failure -> {
+            } else if (!(result.getFailure() instanceof ErrorResponseException failure)
+                    || failure.getErrorResponse() != ErrorResponse.UNKNOWN_MEMBER) {
                 logger.warn(LogMarkers.SENSITIVE,
-                        "Failed to load reported user '{}' in guild '{}'.", targetId, guildId,
-                        failure);
-                hook.sendMessage("Could not load the reported user. Please check the logs.")
-                    .setEphemeral(true)
-                    .queue();
-            }));
+                        "Failed to retrieve reported member '{}' in guild '{}'.", targetId,
+                        guild.getIdLong(), result.getFailure());
+                return hook.sendMessage("Could not load the reported user. Please check the logs.")
+                    .setEphemeral(true);
+            }
+            return event.getJDA().retrieveUserById(targetId).map(target -> {
+                executeModalAction(event, hook, guild, moderator, target, actionData);
+                return null;
+            });
+        }).queue(null, failure -> {
+            logger.warn(LogMarkers.SENSITIVE, "Failed to load reported user '{}' in guild '{}'.",
+                    targetId, guild.getIdLong(), failure);
+            hook.sendMessage("Could not load the reported user. Please check the logs.")
+                .setEphemeral(true)
+                .queue();
+        });
     }
 
     private void executeModalAction(ModalInteractionEvent event, InteractionHook hook, Guild guild,
-            Member moderator, User target, ReportAction action,
-            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
-            int deleteHistoryDays) {
+            Member moderator, User target, ModalActionData actionData) {
         Message report = Objects.requireNonNull(event.getMessage());
         if (report.getComponents().isEmpty()) {
             hook.sendMessage("This report has already been handled.").setEphemeral(true).queue();
@@ -439,14 +445,13 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     .queue();
             });
         };
-        if (action == ReportAction.BAN) {
+        if (actionData.action() == ReportAction.BAN) {
             guild.retrieveBan(target).mapToResult().queue(result -> {
                 if (result.isSuccess()) {
                     hook.sendMessage("This user is already banned.").setEphemeral(true).queue();
                 } else if (result.getFailure() instanceof ErrorResponseException failure
                         && failure.getErrorResponse() == ErrorResponse.UNKNOWN_BAN) {
-                    handleModalAction(hook, guild, moderator, target, action, temporaryData, reason,
-                            deleteHistoryDays, onSuccess);
+                    handleModalAction(hook, guild, moderator, target, actionData, onSuccess);
                 } else {
                     logger.warn(LogMarkers.SENSITIVE, "Could not check ban for reported user '{}'.",
                             target.getId(), result.getFailure());
@@ -456,18 +461,17 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                 }
             });
         } else {
-            handleModalAction(hook, guild, moderator, target, action, temporaryData, reason,
-                    deleteHistoryDays, onSuccess);
+            handleModalAction(hook, guild, moderator, target, actionData, onSuccess);
         }
     }
 
     private void handleModalAction(InteractionHook hook, Guild guild, Member moderator, User target,
-            ReportAction action, @Nullable ModerationUtils.TemporaryData temporaryData,
-            String reason, int deleteHistoryDays, Consumer<MessageEmbed> onSuccess) {
-        RestAction<MessageEmbed> handling = action == ReportAction.BAN
-                ? ModerationUtils.banUser(guild, target, moderator, temporaryData, reason,
-                        deleteHistoryDays, actionsStore)
-                : ModerationUtils.warnUser(guild, target, moderator, reason, actionsStore);
+            ModalActionData actionData, Consumer<MessageEmbed> onSuccess) {
+        RestAction<MessageEmbed> handling = actionData.action() == ReportAction.BAN
+                ? ModerationUtils.banUser(guild, target, moderator, actionData.temporaryData(),
+                        actionData.reason(), actionData.deleteHistoryDays(), actionsStore)
+                : ModerationUtils.warnUser(guild, target, moderator, actionData.reason(),
+                        actionsStore);
         handling.queue(feedback -> {
             onSuccess.accept(feedback);
             hook.sendMessageEmbeds(feedback).setEphemeral(true).queue();
@@ -693,6 +697,11 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
         embeds.add(resultEmbed);
 
         return embeds;
+    }
+
+    private record ModalActionData(ReportAction action,
+            @Nullable ModerationUtils.TemporaryData temporaryData, String reason,
+            int deleteHistoryDays) {
     }
 
     private enum ReportAction {

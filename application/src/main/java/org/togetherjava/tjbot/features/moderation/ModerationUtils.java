@@ -65,7 +65,7 @@ public class ModerationUtils {
      * user as option for selection.
      */
     static final String PERMANENT_DURATION = "permanent";
-    private static final Pattern BAN_DURATION_PATTERN = Pattern.compile("([1-9][0-9]*)\\s*([hd])");
+    private static final Pattern BAN_DURATION_PATTERN = Pattern.compile("([1-9]\\d*)\\s*([hd])");
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -430,7 +430,8 @@ public class ModerationUtils {
                             target.getId(), guild.getId(), duration, deleteHistoryDays);
                     return createActionResponse(moderator.getUser(), ModerationAction.BAN, target,
                             "The ban duration is: " + duration
-                                    + (hasSentDm ? "" : "\n(Unable to send them a DM.)"),
+                                    + (Boolean.TRUE.equals(hasSentDm) ? ""
+                                            : "\n(Unable to send them a DM.)"),
                             reason);
                 }));
     }
@@ -449,7 +450,8 @@ public class ModerationUtils {
                 recordAction(guild, target, moderator, ModerationAction.WARN, null, reason,
                         actionsStore);
                 return createActionResponse(moderator.getUser(), ModerationAction.WARN, target,
-                        hasSentDm ? "" : "(Unable to send them a DM.)", reason);
+                        Boolean.TRUE.equals(hasSentDm) ? "" : "(Unable to send them a DM.)",
+                        reason);
             });
     }
 
