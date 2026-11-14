@@ -23,6 +23,7 @@ import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
 import org.togetherjava.tjbot.features.utils.MessageUtils;
+import org.togetherjava.tjbot.logging.LogMarkers;
 
 import javax.annotation.Nullable;
 
@@ -33,8 +34,10 @@ import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -62,6 +65,7 @@ public class ModerationUtils {
      * user as option for selection.
      */
     static final String PERMANENT_DURATION = "permanent";
+    private static final Pattern BAN_DURATION_PATTERN = Pattern.compile("([1-9][0-9]*)\\s*([hd])");
 
     /**
      * Checks whether the given reason is valid. If not, it will handle the situation and respond to
@@ -379,6 +383,85 @@ public class ModerationUtils {
         };
 
         return Optional.of(new TemporaryData(Instant.now().plus(duration, unit), durationText));
+    }
+
+    /**
+     * Parses a ban duration: empty or zero for permanent, or positive hours/days such as {@code 3h}
+     * or {@code 7d}.
+     *
+     * @throws IllegalArgumentException if the duration is invalid or exceeds the supported range
+     */
+    static Optional<TemporaryData> parseBanDuration(String input) {
+        String duration = input.strip().toLowerCase(Locale.ROOT);
+        if (duration.isEmpty() || duration.equals("0")) {
+            return Optional.empty();
+        }
+        var matcher = BAN_DURATION_PATTERN.matcher(duration);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Invalid ban duration: " + input);
+        }
+        return computeTemporaryData(
+                matcher.group(1) + (matcher.group(2).equals("h") ? " hours" : " days"));
+    }
+
+    /**
+     * Bans a user, optionally deletes message history, sends a DM, and records the successful
+     * action. The caller must check permissions, role hierarchy, reason, and whether the user is
+     * banned.
+     */
+    static RestAction<MessageEmbed> banUser(Guild guild, User target, Member moderator,
+            @Nullable TemporaryData temporaryData, String reason, int deleteHistoryDays,
+            ModerationActionsStore actionsStore) {
+        String duration = temporaryData == null ? PERMANENT_DURATION : temporaryData.duration();
+        String description =
+                """
+                        Hey there, sorry to tell you but unfortunately you have been banned from the server.
+                        If you think this was a mistake, please contact a moderator or admin of this server.""";
+        return sendModActionDm(getModActionEmbed(guild, "Ban", description, reason,
+                temporaryData == null ? "Permanently" : duration, false), target)
+            .flatMap(hasSentDm -> guild.ban(target, deleteHistoryDays, TimeUnit.DAYS)
+                .reason(reason)
+                .map(_ -> {
+                    recordAction(guild, target, moderator, ModerationAction.BAN,
+                            temporaryData == null ? null : temporaryData.expiresAt(), reason,
+                            actionsStore);
+                    logger.info(LogMarkers.SENSITIVE,
+                            "Ban of user '{}' in guild '{}' has duration '{}' and deletes {} days of message history.",
+                            target.getId(), guild.getId(), duration, deleteHistoryDays);
+                    return createActionResponse(moderator.getUser(), ModerationAction.BAN, target,
+                            "The ban duration is: " + duration
+                                    + (hasSentDm ? "" : "\n(Unable to send them a DM.)"),
+                            reason);
+                }));
+    }
+
+    /**
+     * Warns a user, sends a DM, and records the action. The caller must check role hierarchy and
+     * the reason.
+     */
+    static RestAction<MessageEmbed> warnUser(Guild guild, User target, Member moderator,
+            String reason, ModerationActionsStore actionsStore) {
+        String description =
+                "Hey there, sorry to tell you but unfortunately you have been warned in the server.";
+        return sendModActionDm(getModActionEmbed(guild, "Warning", description, reason, true),
+                target)
+            .map(hasSentDm -> {
+                recordAction(guild, target, moderator, ModerationAction.WARN, null, reason,
+                        actionsStore);
+                return createActionResponse(moderator.getUser(), ModerationAction.WARN, target,
+                        hasSentDm ? "" : "(Unable to send them a DM.)", reason);
+            });
+    }
+
+    private static void recordAction(Guild guild, User target, Member moderator,
+            ModerationAction action, @Nullable Instant expiresAt, String reason,
+            ModerationActionsStore actionsStore) {
+        logger.info(LogMarkers.SENSITIVE,
+                "'{}' ({}) executed '{}' against user '{}' ({}) in guild '{}' for reason '{}'.",
+                moderator.getUser().getName(), moderator.getId(), action, target.getName(),
+                target.getId(), guild.getId(), reason);
+        actionsStore.addAction(guild.getIdLong(), moderator.getIdLong(), target.getIdLong(), action,
+                expiresAt, reason);
     }
 
     /**
