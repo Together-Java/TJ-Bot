@@ -210,11 +210,10 @@ public final class ReportCommand extends BotCommandAdapter implements MessageCon
                     Button.success(
                             generateComponentId(guildId, authorId, ReportAction.JOB_AD.name()),
                             "Job-Ad"),
-                    Button.secondary(
-                            generateComponentId(guildId, authorId, ReportAction.WARN.name()),
+                    Button.primary(generateComponentId(guildId, authorId, ReportAction.WARN.name()),
                             "Warn"),
-                    Button.secondary(
-                            generateComponentId(guildId, authorId, ReportAction.BAN.name()), "Ban"))
+                    Button.primary(generateComponentId(guildId, authorId, ReportAction.BAN.name()),
+                            "Ban"))
             .addActionRow(Button.danger(
                     generateComponentId(guildId, authorId, ReportAction.DISMISS.name()), "Dismiss"),
                     Button.primary(generateComponentId(guildId, authorId, ReportAction.AUDIT.name(),
