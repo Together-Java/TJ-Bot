@@ -27,4 +27,6 @@ steps:
     commands:
       - apk add --no-cache curl
       - | 
-        curl -H "Authorization: Bearer $WATCHTOWER_TOKEN" https://togetherjava.org:5003/v1/update
+        curl -X POST \
+          -H "Authorization: Bearer $WATCHTOWER_TOKEN" \
+          "https://togetherjava.org:5003/v1/update"
