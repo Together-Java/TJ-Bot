@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -56,64 +57,45 @@ public final class Config {
 
     @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    private Config(@JsonProperty(value = "token", required = true) String token,
-            @JsonProperty(value = "githubApiKey", required = true) String githubApiKey,
-            @JsonProperty(value = "databasePath", required = true) String databasePath,
-            @JsonProperty(value = "projectWebsite", required = true) String projectWebsite,
-            @JsonProperty(value = "discordGuildInvite", required = true) String discordGuildInvite,
-            @JsonProperty(value = "modAuditLogChannelPattern",
-                    required = true) String modAuditLogChannelPattern,
-            @JsonProperty(value = "modMailChannelPattern",
-                    required = true) String modMailChannelPattern,
-            @JsonProperty(value = "projectsChannelPattern",
-                    required = true) String projectsChannelPattern,
-            @JsonProperty(value = "mutedRolePattern", required = true) String mutedRolePattern,
-            @JsonProperty(value = "heavyModerationRolePattern",
-                    required = true) String heavyModerationRolePattern,
-            @JsonProperty(value = "softModerationRolePattern",
-                    required = true) String softModerationRolePattern,
-            @JsonProperty(value = "tagManageRolePattern",
-                    required = true) String tagManageRolePattern,
-            @JsonProperty(value = "excludeCodeAutoDetectionRolePattern",
-                    required = true) String excludeCodeAutoDetectionRolePattern,
-            @JsonProperty(value = "suggestions", required = true) SuggestionsConfig suggestions,
-            @JsonProperty(value = "quarantinedRolePattern",
-                    required = true) String quarantinedRolePattern,
-            @JsonProperty(value = "scamBlocker", required = true) ScamBlockerConfig scamBlocker,
-            @JsonProperty(value = "wolframAlphaAppId", required = true) String wolframAlphaAppId,
-            @JsonProperty(value = "helpSystem", required = true) HelpSystemConfig helpSystem,
-            @JsonProperty(value = "mediaOnlyChannelPattern",
-                    required = true) String mediaOnlyChannelPattern,
-            @JsonProperty(value = "blacklistedFileExtension",
-                    required = true) List<String> blacklistedFileExtension,
-            @JsonProperty(value = "logInfoChannelWebhook",
-                    required = true) String logInfoChannelWebhook,
-            @JsonProperty(value = "logErrorChannelWebhook",
-                    required = true) String logErrorChannelWebhook,
-            @JsonProperty(value = "githubReferencingEnabledChannelPattern",
-                    required = true) String githubReferencingEnabledChannelPattern,
-            @JsonProperty(value = "githubRepositories",
-                    required = true) List<Long> githubRepositories,
-            @JsonProperty(value = "openaiApiKey", required = true) String openaiApiKey,
-            @JsonProperty(value = "sourceCodeBaseUrl", required = true) String sourceCodeBaseUrl,
-            @JsonProperty(value = "jshell", required = true) JShellConfig jshell,
-            @JsonProperty(value = "memberCountCategoryPattern",
-                    required = true) String memberCountCategoryPattern,
-            @JsonProperty(value = "helperPruneConfig",
-                    required = true) HelperPruneConfig helperPruneConfig,
+    private Config(@JsonProperty(required = true) String token,
+            @JsonProperty(required = true) String githubApiKey,
+            @JsonProperty(required = true) String databasePath,
+            @JsonProperty(required = true) String projectWebsite,
+            @JsonProperty(required = true) String discordGuildInvite,
+            @JsonProperty(required = true) String modAuditLogChannelPattern,
+            @JsonProperty(required = true) String modMailChannelPattern,
+            @JsonProperty(required = true) String projectsChannelPattern,
+            @JsonProperty(required = true) String mutedRolePattern,
+            @JsonProperty(required = true) String heavyModerationRolePattern,
+            @JsonProperty(required = true) String softModerationRolePattern,
+            @JsonProperty(required = true) String tagManageRolePattern,
+            @JsonProperty(required = true) String excludeCodeAutoDetectionRolePattern,
+            @JsonProperty(required = true) SuggestionsConfig suggestions,
+            @JsonProperty(required = true) String quarantinedRolePattern,
+            @JsonProperty(required = true) ScamBlockerConfig scamBlocker,
+            @JsonProperty(required = true) String wolframAlphaAppId,
+            @JsonProperty(required = true) HelpSystemConfig helpSystem,
+            @JsonProperty(required = true) String mediaOnlyChannelPattern,
+            @JsonProperty(required = true) List<String> blacklistedFileExtension,
+            @JsonProperty(required = true) String logInfoChannelWebhook,
+            @JsonProperty(required = true) String logErrorChannelWebhook,
+            @JsonProperty(required = true) String githubReferencingEnabledChannelPattern,
+            @JsonProperty(required = true) List<Long> githubRepositories,
+            @JsonProperty(required = true) String openaiApiKey,
+            @JsonProperty(required = true) String sourceCodeBaseUrl,
+            @JsonProperty(required = true) JShellConfig jshell,
+            @JsonProperty(required = true) String memberCountCategoryPattern,
+            @JsonProperty(required = true) HelperPruneConfig helperPruneConfig,
             @JsonProperty(value = "featureBlacklist",
                     required = true) FeatureBlacklistConfig featureBlacklistConfig,
             @JsonProperty(value = "rssConfig", required = true) RSSFeedsConfig rssFeedsConfig,
-            @JsonProperty(value = "selectRolesChannelPattern",
-                    required = true) String selectRolesChannelPattern,
-            @JsonProperty(value = "quoteBoardConfig",
-                    required = true) QuoteBoardConfig quoteBoardConfig,
+            @JsonProperty(required = true) String selectRolesChannelPattern,
+            @JsonProperty(required = true) QuoteBoardConfig quoteBoardConfig,
             @JsonProperty(value = "roleApplicationSystem",
                     required = true) RoleApplicationSystemConfig roleApplicationSystemConfig,
-            @JsonProperty(value = "topHelpers", required = true) TopHelpersConfig topHelpers,
-            @JsonProperty(value = "dynamicVoiceChatConfig",
-                    required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig,
-            @JsonProperty(value = "tavilyApiKey", required = true) String tavilyApiKey) {
+            @JsonProperty(required = true) TopHelpersConfig topHelpers,
+            @JsonProperty(required = true) DynamicVoiceChatConfig dynamicVoiceChatConfig,
+            @JsonProperty(required = true) String tavilyApiKey) {
         this.token = Objects.requireNonNull(token);
         this.githubApiKey = Objects.requireNonNull(githubApiKey);
         this.databasePath = Objects.requireNonNull(databasePath);
@@ -164,6 +146,7 @@ public final class Config {
      */
     public static Config load(Path path) throws IOException {
         return new ObjectMapper().registerModule(new JavaTimeModule())
+            .registerModule(new ParameterNamesModule())
             .readValue(path.toFile(), Config.class);
     }
 
