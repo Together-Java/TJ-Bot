@@ -9,11 +9,15 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.TimeUtil;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -614,6 +619,37 @@ public class ModerationUtils {
                         expiresAtFormatted);
 
                 return new MessageEmbed.Field(embedFieldName, embedFieldDescription, false);
+            });
+    }
+
+    public static RestAction<Void> quarantine(Config config, Guild guild, Member target,
+            String reason, Supplier<String> selfServiceComponentId) {
+
+        return guild.addRoleToMember(target, getQuarantinedRole(guild, config).orElseThrow())
+            .reason(reason)
+            .onSuccess(_ -> {
+                Optional<TextChannel> channel = Guilds.findTextChannel(guild,
+                        Pattern.compile(config.getQuarantineChannelPattern()).asMatchPredicate());
+
+                if (channel.isEmpty()) {
+                    return;
+                }
+
+                MessageCreateData message = new MessageCreateBuilder()
+                    .setContent(
+                            """
+                                    %s
+                                    If you regained control over your account by now, feel free to click the button \
+                                    below to get back into the server. Otherwise, a moderator will get back to you here. Cheers"""
+                                .formatted(target.getAsMention()))
+                    .mentionUsers(target.getIdLong())
+                    .setActionRow(Button.primary(selfServiceComponentId.get(), "Unquarantine me"))
+                    .build();
+
+                channel.orElseThrow().sendMessage(message).queue(_ -> {
+                }, failure -> logger.warn(
+                        "unable to offer self-service unquarantine to '{}' in guild '{}'.",
+                        target.getId(), guild.getId(), failure));
             });
     }
 
