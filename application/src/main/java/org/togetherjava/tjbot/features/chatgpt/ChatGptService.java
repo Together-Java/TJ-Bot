@@ -156,6 +156,7 @@ public class ChatGptService {
         try {
             ResponseCreateParams.Builder paramsBuilder = ResponseCreateParams.builder()
                 .model(chatModel.toChatModel())
+                .reasoning(chatModel.toReasoning())
                 .input(prompt)
                 .maxOutputTokens(MAX_TOKENS);
 
