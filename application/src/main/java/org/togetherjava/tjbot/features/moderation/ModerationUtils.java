@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -622,9 +623,30 @@ public class ModerationUtils {
             });
     }
 
+    /**
+     * Quarantines the given user by recording the action and assigning the quarantine role. If the
+     * user was never quarantined in this guild before, a message pinging them with an "Unquarantine
+     * me" button is then posted in the quarantine channel.
+     * <p>
+     * The action is recorded when this method is called, the role is only assigned once the
+     * returned action is executed. The message is sent only after the role was applied, and
+     * problems offering it (e.g. missing channel) are logged and never fail the returned action.
+     *
+     * @param config the app's config, used to find the quarantine role and channel
+     * @param selfServiceComponentId supplies the button's component ID
+     * @param actionsStore the store to record the action in and to check the user's history
+     * @param guild the guild to quarantine the user in
+     * @param author the member issuing the quarantine
+     * @param target the member to quarantine
+     * @param reason the reason of the quarantine
+     * @return the action assigning the quarantine role to the target
+     * @throws java.util.NoSuchElementException if the quarantine role does not exist
+     * @see <a href="https://github.com/Together-Java/TJ-Bot/issues/1594">Issue #1594</a>
+     */
     public static RestAction<Void> quarantine(Config config,
             Supplier<String> selfServiceComponentId, ModerationActionsStore actionsStore,
-            Guild guild, Member author, Member target, String reason) {
+            Guild guild, Member author, Member target, String reason)
+            throws NoSuchElementException {
 
         boolean isFirsttime =
                 actionsStore.getActionsByTargetAscending(guild.getIdLong(), target.getIdLong())
