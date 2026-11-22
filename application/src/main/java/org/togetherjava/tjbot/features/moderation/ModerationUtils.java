@@ -622,23 +622,45 @@ public class ModerationUtils {
             });
     }
 
-    public static RestAction<Void> quarantine(Config config, Guild guild, Member target,
-            String reason, Supplier<String> selfServiceComponentId) {
+    public static RestAction<Void> quarantine(Config config,
+            Supplier<String> selfServiceComponentId, ModerationActionsStore actionsStore,
+            Guild guild, Member author, Member target, String reason) {
+
+        boolean isFirsttime =
+                actionsStore.getActionsByTargetAscending(guild.getIdLong(), target.getIdLong())
+                    .stream()
+                    .noneMatch(action -> action.actionType() == ModerationAction.QUARANTINE);
+
+        recordAction(guild, target.getUser(), author, ModerationAction.QUARANTINE, null, reason,
+                actionsStore);
 
         return guild.addRoleToMember(target, getQuarantinedRole(guild, config).orElseThrow())
             .reason(reason)
             .onSuccess(_ -> {
-                Optional<TextChannel> channel = Guilds.findTextChannel(guild,
+
+                final String guildId = guild.getId();
+                final String targetId = target.getId();
+
+                if (!isFirsttime) {
+                    logger.warn("Unable to offer self-service unquarantine to '{}' in guild '{}'.",
+                            targetId, guildId);
+                    return;
+                }
+
+                Optional<TextChannel> quarantineChannel = Guilds.findTextChannel(guild,
                         Pattern.compile(config.getQuarantineChannelPattern()).asMatchPredicate());
 
-                if (channel.isEmpty()) {
+                if (quarantineChannel.isEmpty()) {
+                    logger.warn(
+                            "Unable to offer self-service unquarantine, no channel matching '{}' in guild '{}'.",
+                            config.getQuarantineChannelPattern(), guild.getName());
                     return;
                 }
 
                 MessageCreateData message = new MessageCreateBuilder()
                     .setContent(
                             """
-                                    %s
+                                    %s.
                                     If you regained control over your account by now, feel free to click the button \
                                     below to get back into the server. Otherwise, a moderator will get back to you here. Cheers"""
                                 .formatted(target.getAsMention()))
@@ -646,11 +668,11 @@ public class ModerationUtils {
                     .setActionRow(Button.primary(selfServiceComponentId.get(), "Unquarantine me"))
                     .build();
 
-                channel.orElseThrow().sendMessage(message).queue(_ -> {
+                quarantineChannel.orElseThrow().sendMessage(message).queue(_ -> {
                 }, failure -> logger.warn(
                         "unable to offer self-service unquarantine to '{}' in guild '{}'.",
-                        target.getId(), guild.getId(), failure));
+                        targetId, guildId, failure));
+
             });
     }
-
 }

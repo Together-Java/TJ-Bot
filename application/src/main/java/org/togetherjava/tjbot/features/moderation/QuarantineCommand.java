@@ -34,7 +34,7 @@ import java.util.Objects;
 public final class QuarantineCommand extends SlashCommandAdapter {
     private static final String TARGET_OPTION = "user";
     private static final String REASON_OPTION = "reason";
-    private static final String COMMAND_NAME = "quarantine";
+    public static final String COMMAND_NAME = "quarantine";
     private static final String ACTION_VERB = "quarantine";
     private static final String ACTION_TITLE = "Quarantine";
 
@@ -95,8 +95,8 @@ public final class QuarantineCommand extends SlashCommandAdapter {
 
         sendDm(target.getUser(), reason, guild)
             .flatMap(hasSentDm -> ModerationUtils
-                .quarantine(config, guild, target, reason,
-                        () -> generateComponentId(Lifespan.PERMANENT, target.getId()))
+                .quarantine(config, () -> generateComponentId(Lifespan.PERMANENT, target.getId()),
+                        actionsStore, guild, author, target, reason)
                 .map(_ -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
             .flatMap(event.getHook()::sendMessageEmbeds)
