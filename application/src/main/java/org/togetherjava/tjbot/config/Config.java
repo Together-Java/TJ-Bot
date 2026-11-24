@@ -14,7 +14,21 @@ import java.util.Objects;
 
 
 /**
- * Configuration of the application. Create instances using {@link #load(Path)}.
+ * Configuration of the application.
+ * <p>
+ * Instances are created from the JSON configuration file by {@link #load(Path)}. Constructor
+ * parameter names correspond directly to property names in the JSON where possible, so an explicit
+ * JSON property name is redundant in those cases. For example, the {@code token} parameter already
+ * maps to the {@code "token"} property.
+ * <p>
+ * Matching parameter names are preserved by compiling with the {@code -parameters} flag and enabled
+ * through the Jackson parameter-names module. Property names must be specified explicitly only when
+ * they differ from the corresponding configuration class or constructor parameter name.
+ *
+ * @see <a href="https://github.com/Together-Java/TJ-Bot/pull/1602">PR #1602</a>
+ * @see <a href=
+ *      "https://docs.oracle.com/en/java/javase/25/docs/specs/man/javac.html#option-parameters">Java
+ *      compiler {@code -parameters} option</a>
  */
 public final class Config {
     private final String token;
