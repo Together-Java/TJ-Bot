@@ -648,10 +648,10 @@ public class ModerationUtils {
             Guild guild, Member author, Member target, String reason)
             throws NoSuchElementException {
 
-        boolean isFirsttime =
-                actionsStore.getActionsByTargetAscending(guild.getIdLong(), target.getIdLong())
-                    .stream()
-                    .noneMatch(action -> action.actionType() == ModerationAction.QUARANTINE);
+        boolean isFirstTime = actionsStore
+            .findLastActionAgainstTargetByType(guild.getIdLong(), target.getIdLong(),
+                    ModerationAction.QUARANTINE)
+            .isEmpty();
 
         recordAction(guild, target.getUser(), author, ModerationAction.QUARANTINE, null, reason,
                 actionsStore);
@@ -663,7 +663,7 @@ public class ModerationUtils {
                 final String guildId = guild.getId();
                 final String targetId = target.getId();
 
-                if (!isFirsttime) {
+                if (!isFirstTime) {
                     logger.warn("Unable to offer self-service unquarantine to '{}' in guild '{}'.",
                             targetId, guildId);
                     return;

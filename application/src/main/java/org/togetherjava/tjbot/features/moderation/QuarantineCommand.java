@@ -146,7 +146,7 @@ public final class QuarantineCommand extends SlashCommandAdapter {
         Member member = Objects.requireNonNull(event.getMember());
 
         if (!Guilds.hasMemberRole(member, ModerationUtils.getIsQuarantinedRolePredicate(config))) {
-            event.reply("You are not quarantined  anymore!").setEphemeral(true).queue();
+            event.reply("You are not quarantined anymore!").setEphemeral(true).queue();
 
             MessageUtils.disableButtons(event.getMessage());
             return;
