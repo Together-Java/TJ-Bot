@@ -229,14 +229,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     private void quarantineAuthor(MessageReceivedEvent event) {
         Guild guild = event.getGuild();
-        Member member = event.getMember();
-
-        if (member == null) {
-            logger.warn(LogMarkers.SENSITIVE,
-                    "scam message detected from a user that is not a member of the guild '{}'.",
-                    guild.getId());
-            return;
-        }
+        Member member = Objects.requireNonNull(event.getMember());
 
         quarantineAuthor(guild, member);
     }
