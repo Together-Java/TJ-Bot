@@ -33,7 +33,9 @@ sonarqube {
 
 // Install git hooks
 tasks.register('installLocalGitHook', Copy) {
-    from new File(rootProject.rootDir, 'scripts/pre-commit')
+    from(new File(rootProject.rootDir, 'scripts')) {
+        include 'pre-commit', 'pre-push'
+    }
     into new File(rootProject.rootDir, '.git/hooks')
     filePermissions {
         unix("rwxrwxr-x")
