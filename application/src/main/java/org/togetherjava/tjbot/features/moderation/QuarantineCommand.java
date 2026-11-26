@@ -6,20 +6,21 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.togetherjava.tjbot.config.Config;
 import org.togetherjava.tjbot.features.CommandVisibility;
 import org.togetherjava.tjbot.features.SlashCommandAdapter;
-import org.togetherjava.tjbot.logging.LogMarkers;
+import org.togetherjava.tjbot.features.componentids.Lifespan;
+import org.togetherjava.tjbot.features.utils.Guilds;
+import org.togetherjava.tjbot.features.utils.MessageUtils;
 
 import javax.annotation.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -31,12 +32,15 @@ import java.util.Objects;
  * an admin).
  */
 public final class QuarantineCommand extends SlashCommandAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(QuarantineCommand.class);
     private static final String TARGET_OPTION = "user";
     private static final String REASON_OPTION = "reason";
-    private static final String COMMAND_NAME = "quarantine";
+    public static final String COMMAND_NAME = "quarantine";
     private static final String ACTION_VERB = "quarantine";
     private static final String ACTION_TITLE = "Quarantine";
+
+    private static final String SELF_UNQUARANTINE_REASON =
+            "User regained control and unquarantined themselves.";
+
     private final ModerationActionsStore actionsStore;
     private final Config config;
 
@@ -85,29 +89,15 @@ public final class QuarantineCommand extends SlashCommandAdapter {
                 target.getUser(), dmNoticeText, reason);
     }
 
-    private AuditableRestAction<Void> quarantineUser(Member target, Member author, String reason,
-            Guild guild) {
-        logger.info(LogMarkers.SENSITIVE,
-                "'{}' ({}) quarantined the user '{}' ({}) in guild '{}' for reason '{}'.",
-                author.getUser().getName(), author.getId(), target.getUser().getName(),
-                target.getId(), guild.getName(), reason);
-
-        actionsStore.addAction(guild.getIdLong(), author.getIdLong(), target.getIdLong(),
-                ModerationAction.QUARANTINE, null, reason);
-
-        return guild
-            .addRoleToMember(target,
-                    ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
-            .reason(reason);
-    }
-
     private void quarantineUserFlow(Member target, Member author, String reason, Guild guild,
             SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
         sendDm(target.getUser(), reason, guild)
-            .flatMap(hasSentDm -> quarantineUser(target, author, reason, guild)
-                .map(result -> hasSentDm))
+            .flatMap(hasSentDm -> ModerationUtils
+                .quarantine(config, () -> generateComponentId(Lifespan.PERMANENT, target.getId()),
+                        actionsStore, guild, author, target, reason)
+                .map(_ -> hasSentDm))
             .map(hasSentDm -> sendFeedback(hasSentDm, target, author, reason))
             .flatMap(event.getHook()::sendMessageEmbeds)
             .queue();
@@ -147,5 +137,37 @@ public final class QuarantineCommand extends SlashCommandAdapter {
         }
 
         quarantineUserFlow(Objects.requireNonNull(target), author, reason, guild, event);
+    }
+
+    @Override
+    public void onButtonClick(ButtonInteractionEvent event, List<String> args) {
+
+        Guild guild = Objects.requireNonNull(event.getGuild());
+        Member member = Objects.requireNonNull(event.getMember());
+
+        if (!Guilds.hasMemberRole(member, ModerationUtils.getIsQuarantinedRolePredicate(config))) {
+            event.reply("You are not quarantined anymore!").setEphemeral(true).queue();
+
+            MessageUtils.disableButtons(event.getMessage());
+            return;
+        }
+
+        event.deferEdit().queue();
+
+        guild
+            .removeRoleFromMember(member,
+                    ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
+            .reason(SELF_UNQUARANTINE_REASON)
+            .queue(_ -> {
+                actionsStore.addAction(guild.getIdLong(), guild.getSelfMember().getIdLong(),
+                        event.getUser().getIdLong(), ModerationAction.UNQUARANTINE, null,
+                        SELF_UNQUARANTINE_REASON);
+
+                MessageUtils.disableButtons(event.getMessage());
+            }, _ -> event.getHook()
+                .sendMessage(
+                        "Something went wrong while trying to unquarantine your account, try to reach via /modmail.")
+                .setEphemeral(true)
+                .queue());
     }
 }

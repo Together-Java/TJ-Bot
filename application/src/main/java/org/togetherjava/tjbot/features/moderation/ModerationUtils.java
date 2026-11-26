@@ -9,11 +9,15 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.utils.Result;
 import net.dv8tion.jda.api.utils.TimeUtil;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import net.dv8tion.jda.internal.requests.CompletedRestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +40,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -617,4 +623,78 @@ public class ModerationUtils {
             });
     }
 
+    /**
+     * Quarantines the given user by recording the action and assigning the quarantine role. If the
+     * user was never quarantined in this guild before, a message pinging them with an "Unquarantine
+     * me" button is then posted in the quarantine channel.
+     * <p>
+     * The action is recorded when this method is called, the role is only assigned once the
+     * returned action is executed. The message is sent only after the role was applied, and
+     * problems offering it (e.g. missing channel) are logged and never fail the returned action.
+     *
+     * @param config the app's config, used to find the quarantine role and channel
+     * @param selfServiceComponentId supplies the button's component ID
+     * @param actionsStore the store to record the action in and to check the user's history
+     * @param guild the guild to quarantine the user in
+     * @param author the member issuing the quarantine
+     * @param target the member to quarantine
+     * @param reason the reason of the quarantine
+     * @return the action assigning the quarantine role to the target
+     * @throws java.util.NoSuchElementException if the quarantine role does not exist
+     * @see <a href="https://github.com/Together-Java/TJ-Bot/issues/1594">Issue #1594</a>
+     */
+    public static RestAction<Void> quarantine(Config config,
+            Supplier<String> selfServiceComponentId, ModerationActionsStore actionsStore,
+            Guild guild, Member author, Member target, String reason)
+            throws NoSuchElementException {
+
+        boolean isFirstTime = actionsStore
+            .findLastActionAgainstTargetByType(guild.getIdLong(), target.getIdLong(),
+                    ModerationAction.QUARANTINE)
+            .isEmpty();
+
+        recordAction(guild, target.getUser(), author, ModerationAction.QUARANTINE, null, reason,
+                actionsStore);
+
+        return guild.addRoleToMember(target, getQuarantinedRole(guild, config).orElseThrow())
+            .reason(reason)
+            .onSuccess(_ -> {
+
+                final String guildId = guild.getId();
+                final String targetId = target.getId();
+
+                if (!isFirstTime) {
+                    logger.warn("Unable to offer self-service unquarantine to '{}' in guild '{}'.",
+                            targetId, guildId);
+                    return;
+                }
+
+                Optional<TextChannel> quarantineChannel = Guilds.findTextChannel(guild,
+                        Pattern.compile(config.getQuarantineChannelPattern()).asMatchPredicate());
+
+                if (quarantineChannel.isEmpty()) {
+                    logger.warn(
+                            "Unable to offer self-service unquarantine, no channel matching '{}' in guild '{}'.",
+                            config.getQuarantineChannelPattern(), guild.getName());
+                    return;
+                }
+
+                MessageCreateData message = new MessageCreateBuilder()
+                    .setContent(
+                            """
+                                    %s.
+                                    If you regained control over your account by now, feel free to click the button \
+                                    below to get back into the server. Otherwise, a moderator will get back to you here. Cheers"""
+                                .formatted(target.getAsMention()))
+                    .mentionUsers(target.getIdLong())
+                    .setActionRow(Button.primary(selfServiceComponentId.get(), "Unquarantine me"))
+                    .build();
+
+                quarantineChannel.orElseThrow().sendMessage(message).queue(_ -> {
+                }, failure -> logger.warn(
+                        "unable to offer self-service unquarantine to '{}' in guild '{}'.",
+                        targetId, guildId, failure));
+
+            });
+    }
 }

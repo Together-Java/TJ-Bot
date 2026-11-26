@@ -31,6 +31,7 @@ public final class Config {
     private final String excludeCodeAutoDetectionRolePattern;
     private final SuggestionsConfig suggestions;
     private final String quarantinedRolePattern;
+    private final String quarantineChannelPattern;
     private final ScamBlockerConfig scamBlocker;
     private final String wolframAlphaAppId;
     private final HelpSystemConfig helpSystem;
@@ -79,6 +80,8 @@ public final class Config {
             @JsonProperty(value = "suggestions", required = true) SuggestionsConfig suggestions,
             @JsonProperty(value = "quarantinedRolePattern",
                     required = true) String quarantinedRolePattern,
+            @JsonProperty(value = "quarantineChannelPattern",
+                    required = true) String quarantineChannelPattern,
             @JsonProperty(value = "scamBlocker", required = true) ScamBlockerConfig scamBlocker,
             @JsonProperty(value = "wolframAlphaAppId", required = true) String wolframAlphaAppId,
             @JsonProperty(value = "helpSystem", required = true) HelpSystemConfig helpSystem,
@@ -131,6 +134,7 @@ public final class Config {
                 Objects.requireNonNull(excludeCodeAutoDetectionRolePattern);
         this.suggestions = Objects.requireNonNull(suggestions);
         this.quarantinedRolePattern = Objects.requireNonNull(quarantinedRolePattern);
+        this.quarantineChannelPattern = Objects.requireNonNull(quarantineChannelPattern);
         this.scamBlocker = Objects.requireNonNull(scamBlocker);
         this.wolframAlphaAppId = Objects.requireNonNull(wolframAlphaAppId);
         this.helpSystem = Objects.requireNonNull(helpSystem);
@@ -310,6 +314,15 @@ public final class Config {
      */
     public String getQuarantinedRolePattern() {
         return quarantinedRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify the channel assigned to quarantined users.
+     *
+     * @return the channel name pattern
+     */
+    public String getQuarantineChannelPattern() {
+        return quarantineChannelPattern;
     }
 
     /**

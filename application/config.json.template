@@ -18,6 +18,7 @@
         "downVoteEmoteName": "peepo_no"
     },
     "quarantinedRolePattern": "Quarantined",
+    "quarantineChannelPattern": "quarantine-zone",
     "scamBlocker": {
         "mode": "AUTO_DELETE_BUT_APPROVE_QUARANTINE",
         "reportChannelPattern": "commands",

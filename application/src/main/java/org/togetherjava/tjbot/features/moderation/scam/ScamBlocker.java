@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.SelfUser;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -30,9 +29,10 @@ import org.togetherjava.tjbot.features.UserInteractor;
 import org.togetherjava.tjbot.features.analytics.Metrics;
 import org.togetherjava.tjbot.features.componentids.ComponentIdGenerator;
 import org.togetherjava.tjbot.features.componentids.ComponentIdInteractor;
-import org.togetherjava.tjbot.features.moderation.ModerationAction;
+import org.togetherjava.tjbot.features.componentids.Lifespan;
 import org.togetherjava.tjbot.features.moderation.ModerationActionsStore;
 import org.togetherjava.tjbot.features.moderation.ModerationUtils;
+import org.togetherjava.tjbot.features.moderation.QuarantineCommand;
 import org.togetherjava.tjbot.features.moderation.modmail.ModMailCommand;
 import org.togetherjava.tjbot.features.utils.AmbientColors;
 import org.togetherjava.tjbot.features.utils.Guilds;
@@ -78,6 +78,9 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     private final Metrics metrics;
     private final ComponentIdInteractor componentIdInteractor;
 
+    private final ComponentIdInteractor quarantineComponentIds = new ComponentIdInteractor(
+            UserInteractionType.SLASH_COMMAND, QuarantineCommand.COMMAND_NAME);
+
     /**
      * Creates a new listener to receive all message sent in any channel.
      *
@@ -121,6 +124,8 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
     @Override
     public void acceptComponentIdGenerator(ComponentIdGenerator generator) {
         componentIdInteractor.acceptComponentIdGenerator(generator);
+        quarantineComponentIds.acceptComponentIdGenerator(generator);
+
     }
 
     @Override
@@ -202,7 +207,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         addScamToHistory(event);
         logScamMessage(event);
         deleteMessage(event);
-        quarantineAuthor(event);
+        quarantineAuthor(event.getGuild(), Objects.requireNonNull(event.getMember()));
         dmUser(event);
         reportScamMessage(event, "Detected and handled scam", List.of());
     }
@@ -222,20 +227,13 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         event.getMessage().delete().queue();
     }
 
-    private void quarantineAuthor(MessageReceivedEvent event) {
-        quarantineAuthor(event.getGuild(), event.getMember(), event.getJDA().getSelfUser());
-    }
-
-    private void quarantineAuthor(Guild guild, Member author, SelfUser bot) {
-        String reason = "User posted scam that was automatically detected";
-
-        actionsStore.addAction(guild.getIdLong(), bot.getIdLong(), author.getIdLong(),
-                ModerationAction.QUARANTINE, null, reason);
-
-        guild
-            .addRoleToMember(author,
-                    ModerationUtils.getQuarantinedRole(guild, config).orElseThrow())
-            .reason(reason)
+    private void quarantineAuthor(Guild guild, Member author) {
+        ModerationUtils
+            .quarantine(config,
+                    () -> quarantineComponentIds.generateComponentId(Lifespan.PERMANENT,
+                            author.getId()),
+                    actionsStore, guild, guild.getSelfMember(), author,
+                    "User posted scam that was automatically detected")
             .queue();
     }
 
@@ -356,7 +354,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         }
 
         Consumer<Member> onRetrieveAuthorSuccess = author -> {
-            quarantineAuthor(guild, author, event.getJDA().getSelfUser());
+            quarantineAuthor(guild, author);
             dmUser(guild, args.authorId, event.getJDA());
 
             // Delete all messages like this
