@@ -207,7 +207,7 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
         addScamToHistory(event);
         logScamMessage(event);
         deleteMessage(event);
-        quarantineAuthor(event);
+        quarantineAuthor(event.getGuild(), Objects.requireNonNull(event.getMember()));
         dmUser(event);
         reportScamMessage(event, "Detected and handled scam", List.of());
     }
@@ -225,13 +225,6 @@ public final class ScamBlocker extends MessageReceiverAdapter implements UserInt
 
     private void deleteMessage(MessageReceivedEvent event) {
         event.getMessage().delete().queue();
-    }
-
-    private void quarantineAuthor(MessageReceivedEvent event) {
-        Guild guild = event.getGuild();
-        Member member = Objects.requireNonNull(event.getMember());
-
-        quarantineAuthor(guild, member);
     }
 
     private void quarantineAuthor(Guild guild, Member author) {
