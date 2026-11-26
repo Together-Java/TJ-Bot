@@ -1,5 +1,6 @@
 package org.togetherjava.tjbot.features.analytics;
 
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.emoji.CustomEmoji;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.EmojiUnion;
@@ -36,32 +37,38 @@ public final class EmojiTrackerListener extends MessageReceiverAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.isWebhookMessage()) {
+        if (event.isWebhookMessage() || !event.isFromGuild()) {
             return;
         }
 
+        Guild guild = event.getGuild();
         event.getMessage()
             .getMentions()
             .getCustomEmojis()
-            .forEach(customEmoji -> trackCustomEmoji("message", customEmoji.getIdLong(),
-                    customEmoji.isAnimated(), customEmoji.getName()));
+            .forEach(customEmoji -> trackCustomEmoji(guild, "message", customEmoji));
     }
 
     @Override
     public void onMessageReactionAdd(MessageReactionAddEvent event) {
+        if (!event.isFromGuild()) {
+            return;
+        }
+
         EmojiUnion emoji = event.getEmoji();
         if (emoji.getType() != Emoji.Type.CUSTOM) {
             return;
         }
 
-        CustomEmoji customEmoji = emoji.asCustom();
-
-        trackCustomEmoji("reaction", customEmoji.getIdLong(), customEmoji.isAnimated(),
-                customEmoji.getName());
+        trackCustomEmoji(event.getGuild(), "reaction", emoji.asCustom());
     }
 
-    private void trackCustomEmoji(String type, long id, boolean isAnimated, String name) {
+    private void trackCustomEmoji(Guild guild, String type, CustomEmoji customEmoji) {
+        if (guild.getEmojiById(customEmoji.getIdLong()) == null) {
+            return;
+        }
+
         metrics.count(METRIC_NAME,
-                Map.of("type", type, "id", id, "animated", isAnimated, "name", name));
+                Map.of("type", type, "id", customEmoji.getIdLong(), "animated",
+                        customEmoji.isAnimated(), "name", customEmoji.getName()));
     }
 }
