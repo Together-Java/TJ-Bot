@@ -1,0 +1,32 @@
+#!/bin/sh
+# pre-push hook (step 1: skeleton). Classifies pushes, never blocks.
+
+ZERO_OID="0000000000000000000000000000000000000000"
+
+log() {
+  printf '[pre-push] %s\n' "$*" >&2
+}
+
+classify() {
+  local_oid=$1
+  remote_ref=$2
+  remote_oid=$3
+
+  case "$remote_ref" in refs/heads/*) ;; *) echo "skip (not a branch)"; return ;; esac
+  [ "$local_oid" = "$ZERO_OID" ] && { echo "skip (deletion)"; return; }
+  [ "$remote_oid" = "$ZERO_OID" ] && { echo "skip (new branch)"; return; }
+  if git merge-base --is-ancestor "$remote_oid" "$local_oid" 2>/dev/null; then
+    echo "fast-forward"
+  else
+    echo "NON-FAST-FORWARD (would need review check)"
+  fi
+}
+
+log "Starting history-rewrite check..."
+while read -r _local_ref local_oid remote_ref remote_oid; do
+  log "${remote_ref#refs/heads/}: $(classify "$local_oid" "$remote_ref" "$remote_oid")"
+done
+log "Check finished: push allowed."
+exit 0
+
+# test
