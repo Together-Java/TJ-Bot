@@ -17,6 +17,7 @@ import java.util.Objects;
  * Configuration of the application. Create instances using {@link #load(Path)}.
  */
 public final class Config {
+    // Jackson uses the param names by default, since we compile with -parameters
     private final String token;
     private final String githubApiKey;
     private final String databasePath;
