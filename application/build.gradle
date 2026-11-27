@@ -67,6 +67,8 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
     implementation "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion"
+    implementation "com.fasterxml.jackson.module:jackson-module-parameter-names:$jacksonVersion"
+
     implementation "com.sigpwned:jackson-modules-java17-sealed-classes:2.19.0.0"
 
 	implementation 'com.github.freva:ascii-table:1.13.0'
@@ -87,6 +89,11 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 
     implementation "com.openai:openai-java:$chatGPTVersion"
+
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters' // So Jackson can construct Config.java without explicit @JsonProperty(value = "...")
 }
 
 application {
